@@ -1,0 +1,8 @@
+infra-modules:
+  - changed-files:
+    - any-glob-to-any-file: ['infra/modules/**']
+
+infra:
+  - changed-files:
+    - any-glob-to-any-file: ['infra/**']
+    - all-globs-to-all-files: ['!infra/modules/**']
