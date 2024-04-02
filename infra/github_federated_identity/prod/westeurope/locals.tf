@@ -1,4 +1,13 @@
 locals {
+
+  prefix    = "dx"
+  env_short = "p"
+  env       = "prod"
+  location  = "westeurope"
+  project   = "${local.prefix}-${local.env_short}"
+
+  repo_name = "dx"
+
   tags = {
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
     CreatedBy   = "Terraform"
