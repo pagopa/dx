@@ -1,5 +1,6 @@
 output "federated_ci_identity" {
   value = {
+    id                  = module.federated_ci_identity[0].identity_principal_id
     client_id           = module.federated_ci_identity[0].identity_client_id
     name                = module.federated_ci_identity[0].identity_app_name
     resource_group_name = module.federated_ci_identity[0].identity_resource_group
@@ -15,6 +16,7 @@ output "federated_ci_identity" {
 
 output "federated_cd_identity" {
   value = {
+    id                  = module.federated_cd_identity[0].identity_principal_id
     client_id           = module.federated_cd_identity[0].identity_client_id
     name                = module.federated_cd_identity[0].identity_app_name
     resource_group_name = module.federated_cd_identity[0].identity_resource_group

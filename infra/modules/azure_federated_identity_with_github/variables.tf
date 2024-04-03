@@ -41,7 +41,12 @@ variable "continuos_integration" {
   default = {
     enable = true
     roles = {
-      subscription = ["Reader", "Reader and Data Access"]
+      subscription = [
+        "Reader",
+        "Reader and Data Access",
+        "PagoPA IaC Reader",
+        "DocumentDB Account Contributor"
+      ]
       resource_groups = {
         terraform-state-rg = [
           "Storage Blob Data Contributor"
