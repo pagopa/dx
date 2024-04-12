@@ -31,6 +31,9 @@ jobs:
     name: 'Terraform Plan'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
     environment: ${{ inputs.environment }}-ci
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
     permissions:
       id-token: write
       contents: read
