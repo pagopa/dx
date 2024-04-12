@@ -1,0 +1,162 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment where the resources will be deployed.
+        type: string
+        required: true
+      region:
+        description: Azure region where the resources will be deployed.
+        type: string
+        required: true
+      env_vars:
+        description: List of environment variables to set up, given in env=value format.
+        type: string
+        required: false
+      use_private_agent:
+        description: Use a private agent to run the Terraform plan.
+        type: boolean
+        required: false
+        default: false
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+
+jobs:
+  tf_plan:
+    name: 'Terraform Plan'
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    environment: ${{ inputs.environment }}-ci
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+
+      # Set the directory where the Terraform files are located
+      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
+      - name: Set directory
+        id: directory
+        run: |
+          set -e
+          if [ -z "${{ inputs.environment }}" ] || [ -z "${{ inputs.region }}" ]; then
+            echo "Both environment and region must be provided."
+            exit 1
+          else
+            # The directory is expected to be in the format
+            #  infra/resources/${{ inputs.environment }}/${{ inputs.region }}
+            # Example: infra/resources/prod/westeurope
+            echo "dir=infra/resources/${{ inputs.environment }}/${{ inputs.region }}" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Set Environment Variables
+        if: ${{ inputs.env_vars }}
+        run: |
+          for i in "${{ inputs.env_vars }}"
+          do
+            printf "%s\n" $i >> $GITHUB_ENV
+          done
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          echo "terraform_version=$(cat .terraform-version)" >> $GITHUB_OUTPUT
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform init
+
+      # Run Terraform Plan
+      # The plan output is saved in a file and then processed to remove unnecessary lines
+      # The step never fails but the result is checked in the next step
+      # This is because we want to post the plan output in the PR even if the plan fails
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          set -e
+
+          echo "no output" > plan_output_multiline.txt
+          terraform plan -lock-timeout=3000s -no-color | tee plan_output.txt
+          OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
+          echo "$OUTPUT" > plan_output_multiline.txt
+
+          if [ $? -ne 0 ]; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+          fi
+
+      # Post the plan output in the PR
+      # The plan output is posted in a comment in the PR
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        name: Post Plan on PR
+        if: success() && github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('${{ steps.directory.outputs.dir }}/plan_output_multiline.txt', 'utf8');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
+            })
+            const commentBody = `#### Terraform Plan ('${{ steps.directory.outputs.dir }}') 📖
+            <details>
+            <summary>Terraform Plan</summary>
+
+            \`\`\`hcl
+            ${output}
+            \`\`\`
+
+            </details>
+            `;
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody,
+                comment_id: botComment.id
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody,
+                issue_number: context.issue.number
+              })
+            }
+
+      # Fail the workflow if the Terraform plan failed
+      - name: Check Terraform Plan Result
+        if: always()
+        run: |
+          if [ "${{ steps.plan.outputs.result }}" == "failed" ]; then
+            echo "::error::Terraform plan failed"
+            exit 1
+          fi
