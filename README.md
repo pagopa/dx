@@ -4,7 +4,7 @@ DevEx repository for shared tools and pipelines.
 
 - [DX](#dx)
   - [GitHub Action Templates](#github-action-templates)
-    - [infra\_plan.yaml](#infra_planyaml)
+    - [infra_plan.yaml](#infra_planyaml)
       - [What it does](#what-it-does)
       - [Example](#example)
       - [Requirements](#requirements)

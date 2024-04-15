@@ -1,0 +1,15 @@
+{
+  "name": "@pagopa/dx",
+  "packageManager": "yarn@4.1.1",
+  "workspaces": [
+    "packages/**"
+  ],
+  "devDependencies": {
+    "prettier": "3.2.5",
+    "turbo": "^1.13.2",
+    "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "code-review": "turbo run typecheck format:check lint:check"
+  }
+}
