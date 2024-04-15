@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "4.0.0",
+  "version": "3.0.0",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write .",
@@ -16,13 +16,10 @@
     "@typescript-eslint/types": "^7.6.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-perfectionist": "^2.9.0",
-    "eslint-plugin-regexp": "^2.5.0",
     "eslint-plugin-vitest": "^0.5.3",
     "typescript-eslint": "^7.6.0"
   },
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.4",
-    "@types/node": "^20.12.7",
     "eslint": "^9.0.0",
     "prettier": "3.2.5"
   },
