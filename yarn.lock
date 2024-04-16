@@ -434,8 +434,6 @@ __metadata:
   dependencies:
     "@eslint-community/eslint-plugin-eslint-comments": "npm:^4.3.0"
     "@eslint/js": "npm:^9.0.0"
-    "@types/eslint-config-prettier": "npm:^6.11.3"
-    "@typescript-eslint/types": "npm:^7.6.0"
     eslint: "npm:^9.0.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-perfectionist: "npm:^2.9.0"
@@ -446,13 +444,6 @@ __metadata:
     eslint: ">=9.0.0"
   languageName: unknown
   linkType: soft
-
-"@types/eslint-config-prettier@npm:^6.11.3":
-  version: 6.11.3
-  resolution: "@types/eslint-config-prettier@npm:6.11.3"
-  checksum: 10c0/e49ef5b2cf9bfa173d678f50b392511e5567743a864552257978fcf98a876adcd41bb2fa074505ab4aae94862fb349eda2cf41aec698a4a1db77a2731b1fa1c6
-  languageName: node
-  linkType: hard
 
 "@types/json-schema@npm:^7.0.12, @types/json-schema@npm:^7.0.15":
   version: 7.0.15
@@ -569,7 +560,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:*, @typescript-eslint/types@npm:7.6.0, @typescript-eslint/types@npm:^7.6.0":
+"@typescript-eslint/types@npm:*, @typescript-eslint/types@npm:7.6.0":
   version: 7.6.0
   resolution: "@typescript-eslint/types@npm:7.6.0"
   checksum: 10c0/7ca2a307557d4d8fc9c7d43e4dc8c4841e6c5380b59dcc8b644b3d7b6a702968ff5a70b74cb7e3d3af3f3cef87e9775573b8272b1b2963d80441992ac4e7e951
