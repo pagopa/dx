@@ -9,6 +9,10 @@ on:
         description: Azure region where the resources will be deployed.
         type: string
         required: true
+      base_path:
+        description: The base path on which the script will look for Terraform projects
+        type: string
+        required: true
       env_vars:
         description: List of environment variables to set up, given in env=value format.
         type: string
@@ -57,7 +61,7 @@ jobs:
             # The directory is expected to be in the format
             #  infra/resources/${{ inputs.environment }}/${{ inputs.region }}
             # Example: infra/resources/prod/westeurope
-            echo "dir=infra/resources/${{ inputs.environment }}/${{ inputs.region }}" >> $GITHUB_OUTPUT
+            echo "dir=${{ inputs.base_path}}/${{ inputs.environment }}/${{ inputs.region }}" >> $GITHUB_OUTPUT
           fi
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
