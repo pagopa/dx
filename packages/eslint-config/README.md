@@ -28,7 +28,6 @@ This package provides PagoPA's `eslint.config.js` as an extensible shared config
 
    ```json
    {
-     ...,
      "scripts": {
        "lint": "eslint --fix",
        "lint:check": "eslint"
