@@ -65,6 +65,8 @@ Terraform definitions are intended to work for an environment in a specific regi
 
 ### GitHub SelfHosted Runner on Container App job
 
+This module helps to create the necessary infrastructure to run GitHub Actions on a self-hosted agent. Generally, this scenario pertains to infrastructure pipelines requiring access to private resources such as AKS and Storage Accounts. If there aren't private resources, please use GitHub managed runners.
+
 This module creates a Container App Job on an existing Container App Environment. It requires your repository name as input, in order to create a trigger on the GitHub Actions status of that repository. Moreover, it has a dependencies on a KeyVault where it creates a read-only access policy to access secrets.
 
 N.B. If you are adding a new Container App Job, it is likely that your repository must be added to GITHUB PAT access scope. Ask for this one-time operation to `engineering-team-cloud-eng` team.
