@@ -26,7 +26,7 @@ module "container_app_job_selfhosted_runner" {
   }
 
   job = {
-    name = replace(replace(var.repo_name, "${var.prefix}-", ""), "${var.env_short}-", "")
+    name = var.job_name == "" ? replace(replace(var.repo_name, "${var.prefix}-", ""), "${var.env_short}-", "") : var.job_name
     repo = var.repo_name
   }
 

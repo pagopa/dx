@@ -39,3 +39,8 @@ variable "key_vault_secret_name" {
   default     = "github-runner-pat"
   description = "Name of the KeyVault secret containing the GITHUB_PAT value"
 }
+
+variable "job_name" {
+  type    = string
+  default = ""
+}
