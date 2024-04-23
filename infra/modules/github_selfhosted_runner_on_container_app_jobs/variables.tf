@@ -39,3 +39,9 @@ variable "key_vault_secret_name" {
   default     = "github-runner-pat"
   description = "Name of the KeyVault secret containing the GITHUB_PAT value"
 }
+
+variable "container_app_job_name" {
+  type        = string
+  default     = ""
+  description = "(Optional) Override Container App Job name auto generated"
+}
