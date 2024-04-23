@@ -32,8 +32,8 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_container_app_environment"></a> [container\_app\_environment](#input\_container\_app\_environment) | Name and resource group of the Container App Environment to use as host | <pre>object({<br>    name                = string<br>    resource_group_name = string<br>  })</pre> | n/a | yes |
+| <a name="input_container_app_job_name"></a> [container\_app\_job\_name](#input\_container\_app\_job\_name) | (Optional) Override Container App Job name auto generated | `string` | `""` | no |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
-| <a name="input_job_name"></a> [job\_name](#input\_job\_name) | n/a | `string` | `""` | no |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Name and resource group of the KeyVault holding secrets for this job | <pre>object({<br>    name                = string<br>    resource_group_name = string<br>  })</pre> | n/a | yes |
 | <a name="input_key_vault_secret_name"></a> [key\_vault\_secret\_name](#input\_key\_vault\_secret\_name) | Name of the KeyVault secret containing the GITHUB\_PAT value | `string` | `"github-runner-pat"` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Project prefix | `string` | n/a | yes |
