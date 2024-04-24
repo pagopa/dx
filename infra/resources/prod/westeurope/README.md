@@ -10,9 +10,7 @@
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.100.0 |
+No providers.
 
 ## Modules
 
@@ -20,9 +18,7 @@ No modules.
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [azurerm_resource_group.dx_typescript](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+No resources.
 
 ## Inputs
 
@@ -30,7 +26,5 @@ No inputs.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_dx_typescript"></a> [dx\_typescript](#output\_dx\_typescript) | n/a |
+No outputs.
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

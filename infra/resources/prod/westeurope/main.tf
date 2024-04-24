@@ -18,10 +18,3 @@ provider "azurerm" {
   features {
   }
 }
-
-resource "azurerm_resource_group" "dx_typescript" {
-  name     = "dxt-${local.env_short}-identity-rg"
-  location = local.location
-
-  tags = local.tags
-}
