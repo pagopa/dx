@@ -66,7 +66,7 @@ jobs:
             # The directory is expected to be in the format
             #  infra/resources/${{ inputs.environment }}/${{ inputs.region }}
             # Example: infra/resources/prod/westeurope
-            printf "dir=%s/%s/%s" "$BASE_PATH" "$ENVIRONMENT" "$REGION" >> "$GITHUB_OUTPUT"
+            printf "dir=%q/%q/%q" "$BASE_PATH" "$ENVIRONMENT" "$REGION" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -81,7 +81,7 @@ jobs:
 
           for i in "$ENV_VARS[@]"
           do
-            printf "%s\n" "$i" >> "$GITHUB_ENV"
+            printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
       - name: Azure Login
