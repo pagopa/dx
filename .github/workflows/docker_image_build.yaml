@@ -1,0 +1,94 @@
+on:
+  workflow_call:
+    inputs:
+      dockerfile_path:
+        type: string
+        required: false
+        default: './Dockerfile'
+        description: Dockerfile path
+      dockerfile_context:
+        type: string
+        required: false
+        default: '.'
+        description: Dockerfile build context
+      docker_image_name:
+        type: string
+        required: false
+        default: ${{ github.repository }}
+        description: Docker image name, defaults to repository name
+      image_description:
+        type: string
+        required: true
+        description: A description to use as image label
+      image_authors:
+        type: string
+        required: false
+        default: PagoPA
+        description: Authors names to use as image label
+      build_args:
+        description: List of build arguments to use for Dockerfile build, given in env=value format.
+        type: string
+        required: false
+      build_platforms:
+        type: string
+        required: false
+        default: linux/amd64
+        description: Image runtime platform, supports multiple values
+
+jobs:
+
+  release:
+    name: Build and Push to Registry
+    runs-on: ubuntu-20.04
+    permissions:
+      packages: write
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Meta
+        id: meta
+        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
+        env:
+          TITLE: ${{ inputs.docker_image_name }}
+          DESCRIPTION: ${{ inputs.image_description }}
+          AUTHORS: ${{ inputs.image_authors }}
+          REPOSITORY: ${{ github.repository }}
+          IMAGE_NAME: ${{ inputs.docker_image_name }}
+        with:
+          images: ghcr.io/${{ env.TITLE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=sha
+          labels:
+            org.opencontainers.image.title=${{ env.TITLE }}
+            org.opencontainers.image.description=${{ env.DESCRIPTION }}
+            org.opencontainers.image.authors=${{ env.AUTHORS }}
+            org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
+            org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.1.0
+        with:
+          context: ${{ inputs.dockerfile_context }}
+          file: ${{ inputs.dockerfile_path }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
+          build-args: ${{ inputs.build_args }}
+          platforms: ${{ inputs.build_platforms }}

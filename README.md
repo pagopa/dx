@@ -11,6 +11,8 @@ DevEx repository for shared tools and pipelines.
     - [infra\_apply.yaml](#infra_applyyaml)
       - [What it does](#what-it-does-1)
       - [Requirements](#requirements-1)
+  - [Terraform Modules](#terraform-modules)
+    - [GitHub SelfHosted Runner on Container App job](#github-selfhosted-runner-on-container-app-job)
 
 ## GitHub Action Templates
 
@@ -58,6 +60,16 @@ This workflow is set to be run once per time, abolishing concurrent runs.
 This workflow template leverages on managed identities to authenticate with Azure. Managed identities can be easily created through the module `azure_federated_identity_with_github` available in this repository.
 
 Terraform definitions are intended to work for an environment in a specific region. Each pair environment/region is a Terraform project on its own and they will be located in the `<env>/<region>` subfolder. Every automation will expect resources to be in such folders.
+
+## Terraform Modules
+
+### GitHub SelfHosted Runner on Container App job
+
+This module helps to create the necessary infrastructure to run GitHub Actions on a self-hosted agent. Generally, this scenario pertains to infrastructure pipelines requiring access to private resources such as AKS and Storage Accounts. If there aren't private resources, please use GitHub managed runners.
+
+This module creates a Container App Job on an existing Container App Environment. It requires your repository name as input, in order to create a trigger on the GitHub Actions status of that repository. Moreover, it has a dependencies on a KeyVault where it creates a read-only access policy to access secrets.
+
+N.B. If you are adding a new Container App Job, it is likely that your repository must be added to GITHUB PAT access scope. Ask for this one-time operation to `engineering-team-cloud-eng` team.
 
 ## NPM packages
 
