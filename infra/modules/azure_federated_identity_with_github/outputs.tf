@@ -4,7 +4,7 @@ output "federated_ci_identity" {
     client_id           = module.federated_ci_identity[0].identity_client_id
     name                = module.federated_ci_identity[0].identity_app_name
     resource_group_name = module.federated_ci_identity[0].identity_resource_group
-  })
+  }, {})
 
   # precondition {
   #   condition     = var.continuos_integration.enable == true
@@ -21,7 +21,7 @@ output "federated_cd_identity" {
       client_id           = module.federated_cd_identity[0].identity_client_id
       name                = module.federated_cd_identity[0].identity_app_name
       resource_group_name = module.federated_cd_identity[0].identity_resource_group
-    }
+    }, {}
   )
 
   # precondition {
