@@ -32,10 +32,10 @@ variable "repositories" {
 variable "continuos_integration" {
   type = object({
     enable = bool
-    roles = object({
+    roles = optional(object({
       subscription    = set(string)
       resource_groups = map(list(string))
-    })
+    }))
   })
 
   default = {
@@ -61,10 +61,10 @@ variable "continuos_integration" {
 variable "continuos_delivery" {
   type = object({
     enable = bool
-    roles = object({
+    roles = optional(object({
       subscription    = set(string)
       resource_groups = map(list(string))
-    })
+    }))
   })
 
   default = {
