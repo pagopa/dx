@@ -53,7 +53,7 @@ resource "azurerm_linux_function_app" "this" {
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       AzureWebJobsStorage__accountName = azurerm_storage_account.this.name
-      SLOT_TASK_HUBNAME                = "Production"
+      SLOT_TASK_HUBNAME                = "ProductionTaskHub"
     },
     var.app_settings
   )
@@ -123,7 +123,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       AzureWebJobsStorage__accountName = azurerm_storage_account.this.name
-      SLOT_TASK_HUBNAME                = "Staging"
+      SLOT_TASK_HUBNAME                = "StagingTaskHub"
     },
     var.app_settings
   )
