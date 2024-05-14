@@ -20,13 +20,13 @@ resource "azurerm_subnet" "this" {
 }
 
 resource "azurerm_private_endpoint" "blob" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
+  name                = "${local.project}-${var.domain}-${var.app_name}-blob-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_pep_id
 
   private_service_connection {
-    name                           = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
+    name                           = "${local.project}-${var.domain}-${var.app_name}-blob-pep-${var.instance_number}"
     private_connection_resource_id = azurerm_storage_account.this.id
     is_manual_connection           = false
     subresource_names              = ["blob"]
@@ -41,13 +41,13 @@ resource "azurerm_private_endpoint" "blob" {
 }
 
 resource "azurerm_private_endpoint" "file" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
+  name                = "${local.project}-${var.domain}-${var.app_name}-file-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_pep_id
 
   private_service_connection {
-    name                           = "${local.project}-${var.domain}-${var.app_name}-pep-file-${var.instance_number}"
+    name                           = "${local.project}-${var.domain}-${var.app_name}-file-pep-${var.instance_number}"
     private_connection_resource_id = azurerm_storage_account.this.id
     is_manual_connection           = false
     subresource_names              = ["file"]
@@ -62,13 +62,13 @@ resource "azurerm_private_endpoint" "file" {
 }
 
 resource "azurerm_private_endpoint" "function_sites" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-pep-func-${var.instance_number}"
+  name                = "${local.project}-${var.domain}-${var.app_name}-func-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_pep_id
 
   private_service_connection {
-    name                           = "${local.project}-${var.domain}-${var.app_name}-pep-func-${var.instance_number}"
+    name                           = "${local.project}-${var.domain}-${var.app_name}-func-pep-${var.instance_number}"
     private_connection_resource_id = azurerm_linux_function_app.this.id
     is_manual_connection           = false
     subresource_names              = ["sites"]
@@ -83,13 +83,13 @@ resource "azurerm_private_endpoint" "function_sites" {
 }
 
 resource "azurerm_private_endpoint" "staging_function_sites" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-pep-staging-func-${var.instance_number}"
+  name                = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.subnet_pep_id
 
   private_service_connection {
-    name                           = "${local.project}-${var.domain}-${var.app_name}-pep-staging-func-${var.instance_number}"
+    name                           = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
     private_connection_resource_id = azurerm_linux_function_app_slot.this.id
     is_manual_connection           = false
     subresource_names              = ["sites"]
