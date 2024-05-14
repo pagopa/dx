@@ -6,8 +6,8 @@ resource "azurerm_storage_account" "this" {
   account_kind             = "StorageV2"
   account_replication_type = "ZRS"
 
-  public_network_access_enabled   = false
-  shared_access_key_enabled       = false
+  public_network_access_enabled = false
+  # shared_access_key_enabled       = false
   default_to_oauth_authentication = true
 
   tags = var.tags
