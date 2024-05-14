@@ -97,7 +97,7 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
   }
 
   tags = var.tags
