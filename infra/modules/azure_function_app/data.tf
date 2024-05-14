@@ -3,11 +3,11 @@ data "azurerm_virtual_network" "this" {
   resource_group_name = var.virtual_network.resource_group_name
 }
 
-data "azurerm_subnet" "pep" {
-  name                 = "pendpoints"
-  virtual_network_name = data.azurerm_virtual_network.this.name
-  resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
-}
+# data "azurerm_subnet" "pep" {
+#   name                 = "pendpoints"
+#   virtual_network_name = data.azurerm_virtual_network.this.name
+#   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
+# }
 
 data "azurerm_private_dns_zone" "storage_account_blob" {
   name                = "privatelink.blob.core.windows.net"

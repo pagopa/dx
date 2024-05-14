@@ -74,6 +74,10 @@ variable "subnet_cidr" {
   type = string
 }
 
+variable "subnet_pep_id" {
+  type = string
+}
+
 variable "virtual_network" {
   type = object({
     name                = string

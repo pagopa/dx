@@ -23,7 +23,7 @@ resource "azurerm_private_endpoint" "blob" {
   name                = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
-  subnet_id           = data.azurerm_subnet.pep.id
+  subnet_id           = var.subnet_pep_id
 
   private_service_connection {
     name                           = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
@@ -44,7 +44,7 @@ resource "azurerm_private_endpoint" "file" {
   name                = "${local.project}-${var.domain}-${var.app_name}-pep-blob-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
-  subnet_id           = data.azurerm_subnet.pep.id
+  subnet_id           = var.subnet_pep_id
 
   private_service_connection {
     name                           = "${local.project}-${var.domain}-${var.app_name}-pep-file-${var.instance_number}"
@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "function_sites" {
   name                = "${local.project}-${var.domain}-${var.app_name}-pep-func-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
-  subnet_id           = data.azurerm_subnet.pep.id
+  subnet_id           = var.subnet_pep_id
 
   private_service_connection {
     name                           = "${local.project}-${var.domain}-${var.app_name}-pep-func-${var.instance_number}"
@@ -86,7 +86,7 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
   name                = "${local.project}-${var.domain}-${var.app_name}-pep-staging-func-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
-  subnet_id           = data.azurerm_subnet.pep.id
+  subnet_id           = var.subnet_pep_id
 
   private_service_connection {
     name                           = "${local.project}-${var.domain}-${var.app_name}-pep-staging-func-${var.instance_number}"
