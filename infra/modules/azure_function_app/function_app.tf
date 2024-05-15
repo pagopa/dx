@@ -18,6 +18,7 @@ resource "azurerm_linux_function_app" "this" {
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
+  builtin_logging_enabled       = false
 
   https_only                    = true
   public_network_access_enabled = false
@@ -53,14 +54,19 @@ resource "azurerm_linux_function_app" "this" {
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       AzureWebJobsStorage__accountName = azurerm_storage_account.this.name
-      SLOT_TASK_HUBNAME                = "ProductionTaskHub"
+      SLOT_TASK_HUBNAME                = "ProductionTaskHub",
+      # https://learn.microsoft.com/en-us/azure/azure-functions/storage-considerations?tabs=azure-cli#override-the-host-id
+      AzureFunctionsWebHost__hostid = "${var.domain}-${var.app_name}-${var.instance_number}"
     },
     var.app_settings
   )
 
   sticky_settings {
     app_setting_names = concat(
-      ["SLOT_TASK_HUBNAME"],
+      [
+        "SLOT_TASK_HUBNAME",
+        "AzureFunctionsWebHost__hostid"
+      ],
       var.sticky_app_setting_names,
     )
   }
@@ -88,6 +94,7 @@ resource "azurerm_linux_function_app_slot" "this" {
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
+  builtin_logging_enabled       = false
 
   https_only                    = true
   public_network_access_enabled = false
@@ -124,6 +131,8 @@ resource "azurerm_linux_function_app_slot" "this" {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       AzureWebJobsStorage__accountName = azurerm_storage_account.this.name
       SLOT_TASK_HUBNAME                = "StagingTaskHub"
+      # https://learn.microsoft.com/en-us/azure/azure-functions/storage-considerations?tabs=azure-cli#override-the-host-id
+      AzureFunctionsWebHost__hostid = "${var.domain}-${var.app_name}-staging-${var.instance_number}"
     },
     var.app_settings
   )
