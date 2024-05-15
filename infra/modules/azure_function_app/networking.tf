@@ -61,6 +61,27 @@ resource "azurerm_private_endpoint" "file" {
   tags = var.tags
 }
 
+resource "azurerm_private_endpoint" "table" {
+  name                = "${local.project}-${var.domain}-${var.app_name}-table-pep-${var.instance_number}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.subnet_pep_id
+
+  private_service_connection {
+    name                           = "${local.project}-${var.domain}-${var.app_name}-table-pep-${var.instance_number}"
+    private_connection_resource_id = azurerm_storage_account.this.id
+    is_manual_connection           = false
+    subresource_names              = ["table"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_table.id]
+  }
+
+  tags = var.tags
+}
+
 resource "azurerm_private_endpoint" "function_sites" {
   name                = "${local.project}-${var.domain}-${var.app_name}-func-pep-${var.instance_number}"
   location            = var.location
