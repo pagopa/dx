@@ -24,6 +24,8 @@ resource "azurerm_linux_function_app" "this" {
   public_network_access_enabled = false
   virtual_network_subnet_id     = azurerm_subnet.this.id
 
+  zip_deploy_file = "${path.module}/azfunc.zip"
+
   identity {
     type = "SystemAssigned"
   }
