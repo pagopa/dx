@@ -20,10 +20,12 @@ output "function_app" {
       name = azurerm_service_plan.this.name
     }
     function_app = {
-      id   = azurerm_linux_function_app.this.id
-      name = azurerm_linux_function_app.this.name
+      id           = azurerm_linux_function_app.this.id
+      name         = azurerm_linux_function_app.this.name
+      principal_id = azurerm_linux_function_app.this.identity[0].principal_id
       slot = {
-        name = azurerm_linux_function_app_slot.this.name
+        name         = azurerm_linux_function_app_slot.this.name
+        principal_id = azurerm_linux_function_app_slot.this.identity[0].principal_id
       }
     }
   }
