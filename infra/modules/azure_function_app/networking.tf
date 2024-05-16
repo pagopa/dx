@@ -1,24 +1,3 @@
-resource "azurerm_subnet" "this" {
-  name                 = "${local.project}-${var.domain}-${var.app_name}-snet-${var.instance_number}"
-  virtual_network_name = data.azurerm_virtual_network.this.name
-  resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
-  address_prefixes     = [var.subnet_cidr]
-
-  delegation {
-    name = "default"
-
-    service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
-    }
-  }
-
-  service_endpoints = [
-    "Microsoft.Web",
-    # "Microsoft.Storage"
-  ]
-}
-
 resource "azurerm_private_endpoint" "blob" {
   name                = "${local.project}-${var.domain}-${var.app_name}-blob-pep-${var.instance_number}"
   location            = var.location
@@ -77,6 +56,27 @@ resource "azurerm_private_endpoint" "table" {
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_table.id]
+  }
+
+  tags = var.tags
+}
+
+resource "azurerm_private_endpoint" "queue" {
+  name                = "${local.project}-${var.domain}-${var.app_name}-queue-pep-${var.instance_number}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.subnet_pep_id
+
+  private_service_connection {
+    name                           = "${local.project}-${var.domain}-${var.app_name}-queue-pep-${var.instance_number}"
+    private_connection_resource_id = azurerm_storage_account.this.id
+    is_manual_connection           = false
+    subresource_names              = ["queue"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_queue.id]
   }
 
   tags = var.tags
