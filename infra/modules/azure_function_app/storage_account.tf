@@ -9,6 +9,13 @@ resource "azurerm_storage_account" "this" {
   public_network_access_enabled = false
   # shared_access_key_enabled       = false
   default_to_oauth_authentication = true
+  allow_nested_items_to_be_public = false
+
+  network_rules {
+    default_action             = "Deny"
+    virtual_network_subnet_ids = [azurerm_subnet.this.id]
+    bypass                     = ["Metrics", "Logging", "AzureServices"]
+  }
 
   tags = var.tags
 }
