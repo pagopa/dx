@@ -23,10 +23,11 @@ output "function_app" {
       id           = azurerm_linux_function_app.this.id
       name         = azurerm_linux_function_app.this.name
       principal_id = azurerm_linux_function_app.this.identity[0].principal_id
-      # slot = {
-      #   name         = azurerm_linux_function_app_slot.this.name
-      #   principal_id = azurerm_linux_function_app_slot.this.identity[0].principal_id
-      # }
+      slot = {
+        id           = try(azurerm_linux_function_app_slot.this[0].id, "No slot for this Function App")
+        name         = try(azurerm_linux_function_app_slot.this[0].name, "No slot for this Function App")
+        principal_id = try(azurerm_linux_function_app_slot.this[0].identity[0].principal_id, "No slot for this Function App")
+      }
     }
   }
 }

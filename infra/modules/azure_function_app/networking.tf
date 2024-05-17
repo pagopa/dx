@@ -1,4 +1,4 @@
-resource "azurerm_private_endpoint" "blob" {
+resource "azurerm_private_endpoint" "st_blob" {
   name                = "${local.project}-${var.domain}-${var.app_name}-blob-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -19,7 +19,7 @@ resource "azurerm_private_endpoint" "blob" {
   tags = var.tags
 }
 
-resource "azurerm_private_endpoint" "file" {
+resource "azurerm_private_endpoint" "st_file" {
   name                = "${local.project}-${var.domain}-${var.app_name}-file-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -40,7 +40,7 @@ resource "azurerm_private_endpoint" "file" {
   tags = var.tags
 }
 
-resource "azurerm_private_endpoint" "table" {
+resource "azurerm_private_endpoint" "st_table" {
   name                = "${local.project}-${var.domain}-${var.app_name}-table-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -61,7 +61,7 @@ resource "azurerm_private_endpoint" "table" {
   tags = var.tags
 }
 
-resource "azurerm_private_endpoint" "queue" {
+resource "azurerm_private_endpoint" "st_queue" {
   name                = "${local.project}-${var.domain}-${var.app_name}-queue-pep-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
@@ -97,30 +97,32 @@ resource "azurerm_private_endpoint" "function_sites" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
   }
 
   tags = var.tags
 }
 
-# resource "azurerm_private_endpoint" "staging_function_sites" {
-#   name                = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
-#   location            = var.location
-#   resource_group_name = var.resource_group_name
-#   subnet_id           = var.subnet_pep_id
+resource "azurerm_private_endpoint" "staging_function_sites" {
+  count = local.function_app.is_slot_enabled
 
-#   private_service_connection {
-#     name                           = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
-#     private_connection_resource_id = azurerm_linux_function_app_slot.this.id
-#     is_manual_connection           = false
-#     subresource_names              = ["sites"]
-#   }
+  name                = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.subnet_pep_id
 
-#   private_dns_zone_group {
-#     name                 = "private-dns-zone-group"
-#     private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
-#   }
+  private_service_connection {
+    name                           = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
+    private_connection_resource_id = azurerm_linux_function_app_slot.this[0].id
+    is_manual_connection           = false
+    subresource_names              = ["sites"]
+  }
 
-#   tags = var.tags
-# }
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
+  }
+
+  tags = var.tags
+}
 

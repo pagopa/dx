@@ -1,20 +1,8 @@
-resource "azurerm_service_plan" "this" {
-  name                   = "${local.project}-${var.domain}-${var.app_name}-asp-${var.instance_number}"
-  location               = var.location
-  resource_group_name    = var.resource_group_name
-  os_type                = "Linux"
-  sku_name               = local.function_app.sku_name
-  zone_balancing_enabled = local.function_app.zone_balancing_enabled
+resource "azurerm_linux_function_app_slot" "this" {
+  count = local.function_app.is_slot_enabled
 
-  tags = var.tags
-}
-
-resource "azurerm_linux_function_app" "this" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-func-${var.instance_number}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-
-  service_plan_id = azurerm_service_plan.this.id
+  name            = "${local.project}-${var.domain}-${var.app_name}-staging-func-${var.instance_number}"
+  function_app_id = azurerm_linux_function_app.this.id
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
@@ -54,19 +42,10 @@ resource "azurerm_linux_function_app" "this" {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
-      SLOT_TASK_HUBNAME = "ProductionTaskHub",
+      SLOT_TASK_HUBNAME = "StagingTaskHub",
     },
     var.app_settings
   )
-
-  sticky_settings {
-    app_setting_names = concat(
-      [
-        "SLOT_TASK_HUBNAME",
-      ],
-      var.sticky_app_setting_names,
-    )
-  }
 
   lifecycle {
     ignore_changes = [
@@ -78,11 +57,4 @@ resource "azurerm_linux_function_app" "this" {
   }
 
   tags = var.tags
-
-  depends_on = [
-    azurerm_private_endpoint.st_blob,
-    azurerm_private_endpoint.st_file,
-    azurerm_private_endpoint.st_queue,
-    azurerm_private_endpoint.st_table,
-  ]
 }

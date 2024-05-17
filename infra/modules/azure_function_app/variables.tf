@@ -8,14 +8,10 @@ variable "env_short" {
   description = "Environment short name"
 }
 
-variable "location_short" {
-  type        = string
-  description = "Location short name"
-}
-
 variable "location" {
   type        = string
   description = "Location name"
+  default     = "italynorth"
 }
 
 variable "prefix" {
@@ -25,8 +21,13 @@ variable "prefix" {
 
 variable "instance_number" {
   type        = string
-  description = "(Optional) Instance count for a specific resource"
+  description = "(Optional) Instance count for specific resources"
   default     = "01"
+
+  validation {
+    condition     = can(regex("^(0[1-9]|[1-9][0-9])$", var.instance_number))
+    error_message = "The variable \"instance_number\" only accepts values in the range [01-99]"
+  }
 }
 
 variable "domain" {
@@ -36,12 +37,12 @@ variable "domain" {
 
 variable "app_name" {
   type        = string
-  description = "Application name"
+  description = "Name of this single application"
 }
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resource to"
+  description = "Resource group to deploy resources to"
 }
 
 variable "application_insights_connection_string" {
@@ -55,8 +56,37 @@ variable "health_check_path" {
   description = "Endpoint where health probe is exposed"
 }
 
+variable "tier" {
+  type        = string
+  description = "Resource tiers depending on demanding workload. Allowed values are 'premium', 'standard', 'test'. Note, \"test\" does not support deployment slots."
+  default     = "premium"
+
+  validation {
+    condition     = contains(["premium", "standard", "test"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"premium\", \"standard\", or \"test\". Note, \"test\" does not support deployment slots."
+  }
+}
+
+variable "stack" {
+  type    = string
+  default = "node"
+
+  validation {
+    condition     = contains(["node", "java"], var.stack)
+    error_message = "Allowed values for \"stack\" are \"node\", \"java\". Note, you can select the version using \"node_version\" and \"java_version\" variables."
+  }
+}
+
 variable "node_version" {
-  type = number
+  type        = number
+  default     = 20
+  description = "Node version to use"
+}
+
+variable "java_version" {
+  type        = string
+  default     = 17
+  description = "Java version to use"
 }
 
 variable "ai_sampling_percentage" {
