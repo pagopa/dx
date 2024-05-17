@@ -81,6 +81,7 @@ resource "azurerm_linux_function_app" "this" {
 
   depends_on = [
     azurerm_private_endpoint.st_blob,
+    azurerm_private_endpoint.st_file,
     azurerm_private_endpoint.st_queue,
   ]
 }
