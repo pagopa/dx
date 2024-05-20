@@ -5,10 +5,6 @@ on:
         description: Environment where the resources will be deployed.
         type: string
         required: true
-      region:
-        description: Azure region where the resources will be deployed.
-        type: string
-        required: true
       base_path:
         description: The base path on which the script will look for Terraform projects
         type: string
@@ -57,19 +53,18 @@ jobs:
         id: directory
         env:
           ENVIRONMENT: ${{ inputs.environment }}
-          REGION: ${{ inputs.region }}
           BASE_PATH: ${{ inputs.base_path }}
         run: |
           set -euo pipefail
 
-          if [ -z "$ENVIRONMENT" ] || [ -z "$REGION" ]; then
-            echo "Both environment and region must be provided."
+          if [ -z "$ENVIRONMENT" ]; then
+            echo "Environment must be provided."
             exit 1
           else
             # The directory is expected to be in the format
-            #  ${inputs.base_path}/"$ENVIRONMENT"/"$REGION"
-            # Example: infra/resources/prod/westeurope
-            printf "dir=%q/%q/%q" "$BASE_PATH" "$ENVIRONMENT" "$REGION" >> "$GITHUB_OUTPUT"
+            #  ${inputs.base_path}/"$ENVIRONMENT""
+            # Example: infra/resources/prod
+            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
