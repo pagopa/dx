@@ -92,9 +92,9 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
 
   private_service_connection {
     name                           = "${local.project}-${var.domain}-${var.app_name}-staging-func-pep-${var.instance_number}"
-    private_connection_resource_id = azurerm_linux_function_app_slot.this[0].id
+    private_connection_resource_id = azurerm_linux_function_app.this.id
     is_manual_connection           = false
-    subresource_names              = ["sites"]
+    subresource_names              = ["sites-${azurerm_linux_function_app_slot.this[0].name}"]
   }
 
   private_dns_zone_group {
