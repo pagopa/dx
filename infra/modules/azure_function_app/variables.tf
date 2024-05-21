@@ -26,7 +26,7 @@ variable "instance_number" {
 
   validation {
     condition     = can(regex("^(0[1-9]|[1-9][0-9])$", var.instance_number))
-    error_message = "The variable \"instance_number\" only accepts values in the range [01-99]"
+    error_message = "The variable \"instance_number\" only accepts values in the range [01-99] as strings"
   }
 }
 
