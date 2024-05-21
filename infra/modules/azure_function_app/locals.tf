@@ -2,6 +2,10 @@ locals {
   location_short = var.location == "italynorth" ? "itn" : var.location == "westeurope" ? "weu" : var.location == "germanywestcentral" ? "gwc" : "neu"
   project        = "${var.prefix}-${var.env_short}-${local.location_short}"
 
+  app_service_plan = {
+    enable = var.app_service_plan_id == null
+  }
+
   function_app = {
     sku_name               = var.tier == "test" ? "B1" : var.tier == "standard" ? "P0v3" : "P1v3"
     zone_balancing_enabled = var.tier != "test"

@@ -45,6 +45,12 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
+variable "app_service_plan_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Set the AppService Id where you want to host the Function App"
+}
+
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true

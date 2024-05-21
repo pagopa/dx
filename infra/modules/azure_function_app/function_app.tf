@@ -1,20 +1,9 @@
-resource "azurerm_service_plan" "this" {
-  name                   = "${local.project}-${var.domain}-${var.app_name}-asp-${var.instance_number}"
-  location               = var.location
-  resource_group_name    = var.resource_group_name
-  os_type                = "Linux"
-  sku_name               = local.function_app.sku_name
-  zone_balancing_enabled = local.function_app.zone_balancing_enabled
-
-  tags = var.tags
-}
-
 resource "azurerm_linux_function_app" "this" {
   name                = "${local.project}-${var.domain}-${var.app_name}-func-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  service_plan_id = azurerm_service_plan.this.id
+  service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
