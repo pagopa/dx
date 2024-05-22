@@ -44,7 +44,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "StagingTaskHub",
     },
-    var.app_settings
+    var.slot_app_settings
   )
 
   lifecycle {

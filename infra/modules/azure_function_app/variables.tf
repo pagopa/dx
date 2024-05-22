@@ -38,6 +38,11 @@ variable "domain" {
 variable "app_name" {
   type        = string
   description = "Name of this single application"
+
+  validation {
+    condition     = length(var.app_name) > 1
+    error_message = "The variable \"app_name\" must contain at least 2 characters"
+  }
 }
 
 variable "resource_group_name" {
@@ -106,6 +111,12 @@ variable "app_settings" {
   description = "Application settings"
 }
 
+variable "slot_app_settings" {
+  type        = map(string)
+  description = "Staging slot application settings"
+  default     = {}
+}
+
 variable "sticky_app_setting_names" {
   type        = list(string)
   description = "(Optional) A list of application setting names that are not swapped between slots"
@@ -128,4 +139,10 @@ variable "virtual_network" {
     resource_group_name = string
   })
   description = "Virtual network in which to create the subnet"
+}
+
+variable "private_dns_zone_resource_group_name" {
+  type        = string
+  default     = null
+  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
 }
