@@ -79,6 +79,7 @@ jobs:
           npm pkg set --json "bundledDependencies"=true
           npm pkg set --json "files"='["**/function.json", "dist", "host.json","extensions.csproj"]'
           npx npm-pack-zip
+          mv $(jq -r .name package.json).zip ${{ env.BUNDLE_NAME }}.zip
           echo "artifact-path=$(realpath ${{ env.BUNDLE_NAME }}.zip)" >> "$GITHUB_OUTPUT"
         working-directory: ./out/apps/${{ env.WORKSPACE }}
 
