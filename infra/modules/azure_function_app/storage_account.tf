@@ -1,6 +1,6 @@
 resource "azurerm_storage_account" "this" {
-  name                     = replace("${local.project}-${var.domain}-${var.app_name}-st-${var.instance_number}", "-", "")
-  location                 = var.location
+  name                     = local.storage_account.name
+  location                 = var.environment.location
   resource_group_name      = var.resource_group_name
   account_tier             = "Standard"
   account_kind             = "StorageV2"

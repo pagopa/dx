@@ -1,6 +1,6 @@
 resource "azurerm_linux_function_app" "this" {
-  name                = "${local.project}-${var.domain}-${var.app_name}-func-${var.instance_number}"
-  location            = var.location
+  name                = "${local.project}-${var.environment.domain}-${var.environment.app_name}-func-${var.environment.instance_number}"
+  location            = var.environment.location
   resource_group_name = var.resource_group_name
 
   service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id

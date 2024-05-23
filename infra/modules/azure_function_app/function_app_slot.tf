@@ -1,7 +1,7 @@
 resource "azurerm_linux_function_app_slot" "this" {
   count = local.function_app.is_slot_enabled
 
-  name            = "${local.project}-${var.domain}-${var.app_name}-staging-func-${var.instance_number}"
+  name            = "${local.project}-${var.environment.domain}-${var.environment.app_name}-staging-func-${var.environment.instance_number}"
   function_app_id = azurerm_linux_function_app.this.id
 
   storage_account_name          = azurerm_storage_account.this.name

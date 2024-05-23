@@ -3,46 +3,47 @@ variable "tags" {
   description = "Resources tags"
 }
 
-variable "env_short" {
-  type        = string
-  description = "Environment short name"
-}
-
-variable "location" {
-  type        = string
-  description = "Location name"
-  default     = "italynorth"
-}
-
-variable "prefix" {
-  type        = string
-  description = "Project prefix"
-}
-
-variable "instance_number" {
-  type        = string
-  description = "(Optional) Instance count for specific resources"
-  default     = "01"
+variable "environment" {
+  type = object({
+    prefix          = string
+    env_short       = string
+    location        = string
+    domain          = optional(string)
+    app_name        = string
+    instance_number = string
+  })
 
   validation {
-    condition     = can(regex("^(0[1-9]|[1-9][0-9])$", var.instance_number))
-    error_message = "The variable \"instance_number\" only accepts values in the range [01-99] as strings"
+    condition     = length(var.environment.prefix) == 2
+    error_message = "The variable \"app_name\" must contain 2 characters"
   }
-}
-
-variable "domain" {
-  type        = string
-  description = "Domain of the project"
-}
-
-variable "app_name" {
-  type        = string
-  description = "Name of this single application"
 
   validation {
-    condition     = length(var.app_name) > 1
+    condition     = contains(["d", "u", "p"], var.environment.env_short)
+    error_message = "Allowed values for \"env_short\" are \"d\", \"u\", \"p\"."
+  }
+
+  validation {
+    condition     = contains(["italynorth", "westeurope", "germanywestcentral", "northeurope"], var.environment.location)
+    error_message = "Allowed values for \"location\" are \"italynorth\" \"westeurope\", \"germanywestcentral\", \"northeurope\"."
+  }
+
+  validation {
+    condition     = length(var.environment.app_name) > 1
     error_message = "The variable \"app_name\" must contain at least 2 characters"
   }
+
+  validation {
+    condition     = can(regex("^(0[1-9]|[1-9][0-9])$", var.environment.instance_number))
+    error_message = "The variable \"instance_number\" only accepts values in the range [01-99] as strings."
+  }
+
+  validation {
+    condition     = length("${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}") <= 24
+    error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}\""
+  }
+
+  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
 variable "resource_group_name" {
