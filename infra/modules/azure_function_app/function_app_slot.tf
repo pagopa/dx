@@ -40,7 +40,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
+      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "StagingTaskHub",
     },

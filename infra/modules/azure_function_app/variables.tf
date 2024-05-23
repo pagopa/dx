@@ -59,7 +59,8 @@ variable "app_service_plan_id" {
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
-  description = "Application Insights connection string"
+  default     = null
+  description = "(Optional) Application Insights connection string"
 }
 
 variable "health_check_path" {
@@ -100,7 +101,7 @@ variable "java_version" {
   description = "Java version to use"
 }
 
-variable "ai_sampling_percentage" {
+variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
   description = "(Optional) The sampling percentage of Application Insights. Default is 5"

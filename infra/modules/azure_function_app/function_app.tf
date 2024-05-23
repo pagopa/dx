@@ -21,7 +21,7 @@ resource "azurerm_linux_function_app" "this" {
     http2_enabled                          = true
     always_on                              = true
     vnet_route_all_enabled                 = true
-    application_insights_connection_string = var.application_insights_connection_string
+    application_insights_connection_string = local.application_insights.enable ? var.application_insights_connection_string : null
     health_check_path                      = var.health_check_path
     health_check_eviction_time_in_min      = 2
     ip_restriction_default_action          = "Deny"
@@ -40,12 +40,14 @@ resource "azurerm_linux_function_app" "this" {
       WEBSITE_RUN_FROM_PACKAGE = 1
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
-      # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = var.ai_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
     },
-    var.app_settings
+    var.app_settings,
+    local.application_insights.enable ? {
+      # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
+      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
+    } : {}
   )
 
   sticky_settings {

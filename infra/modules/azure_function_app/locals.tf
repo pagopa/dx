@@ -12,6 +12,10 @@ locals {
     is_slot_enabled        = var.tier == "test" ? 0 : 1
   }
 
+  application_insights = {
+    enable = var.application_insights_connection_string != null
+  }
+
   storage_account = {
     replication_type = var.tier == "test" ? "LRS" : "ZRS"
   }
