@@ -1,0 +1,148 @@
+on:
+  workflow_call:
+    inputs:
+      workspace_name:
+        type: string
+        required: true
+        description: The name of the workspace to create the artifact for.
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      resource_group_name:
+        description: Function App resource group name.
+        type: string
+        required: true
+      function_app_name:
+        description: Function App name.
+        type: string
+        required: true
+      health_check_path:
+        description: The health probe path exposed by the Function App.
+        type: string
+        required: true
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+env:
+  BUNDLE_NAME: bundle
+
+jobs:
+
+  build:
+    name: Build Artifact
+    runs-on: ubuntu-20.04
+    env:
+      WORKSPACE: ${{ inputs.workspace_name }}
+
+    steps:
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Prune
+        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        with:
+          node-version-file: ".node-version"
+          cache: "yarn"
+          cache-dependency-path: "./out/yarn.lock"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: ./out
+
+      - name: Restore turbo cache
+        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+        with:
+          path: ./out/node_modules/.cache/turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo
+
+      - name: Build
+        run: yarn build
+        working-directory: ./out
+
+      - name: Build the Function App Artifact
+        id: make-function-app-artifact
+        run: |
+          npm pkg set --json "bundledDependencies"=true
+          npm pkg set --json "files"='["**/function.json", "dist", "host.json","extensions.csproj"]'
+          npx npm-pack-zip
+          mv $(jq -r .name package.json).zip ${{ env.BUNDLE_NAME }}.zip
+          echo "artifact-path=$(realpath ${{ env.BUNDLE_NAME }}.zip)" >> "$GITHUB_OUTPUT"
+        working-directory: ./out/apps/${{ env.WORKSPACE }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy
+    if: ${{ !github.event.act }}
+    needs: [build]
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_USE_OIDC: true
+      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+      FUNCTION_APP_NAME: ${{ inputs.function_app_name}}
+      HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
+
+    steps:
+
+      - name: Download Artifact
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Staging Slot
+        uses: azure/webapps-deploy@v2
+        with:
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          slot-name: staging
+          package: ${{ env.BUNDLE_NAME }}.zip
+
+      - name: Ping Staging Health
+        run: |
+          curl \
+            --retry 5 \
+            --retry-max-time 120 \
+            --retry-all-errors \
+            -f 'https://${{ env.FUNCTION_APP_NAME }}-staging.azurewebsites.net${{ env.HEALTH_CHECK_PATH }}'
+
+      - name: Swap Staging and Production Slots
+        run: |
+          az webapp deployment slot swap \
+            -g ${{ env.RESOURCE_GROUP_NAME }} \
+            -n ${{ env.FUNCTION_APP_NAME }} \
+            --slot staging \
+            --target-slot production
