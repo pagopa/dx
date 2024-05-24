@@ -14,31 +14,6 @@ variable "environment" {
   })
 
   validation {
-    condition     = length(var.environment.prefix) == 2
-    error_message = "The variable \"app_name\" must contain 2 characters"
-  }
-
-  validation {
-    condition     = contains(["d", "u", "p"], var.environment.env_short)
-    error_message = "Allowed values for \"env_short\" are \"d\", \"u\", \"p\"."
-  }
-
-  validation {
-    condition     = contains(["italynorth", "westeurope", "germanywestcentral", "northeurope"], var.environment.location)
-    error_message = "Allowed values for \"location\" are \"italynorth\" \"westeurope\", \"germanywestcentral\", \"northeurope\"."
-  }
-
-  validation {
-    condition     = length(var.environment.app_name) > 1
-    error_message = "The variable \"app_name\" must contain at least 2 characters"
-  }
-
-  validation {
-    condition     = can(regex("^(0[1-9]|[1-9][0-9])$", var.environment.instance_number))
-    error_message = "The variable \"instance_number\" only accepts values in the range [01-99] as strings."
-  }
-
-  validation {
     condition     = length("${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}") <= 24
     error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}\""
   }
