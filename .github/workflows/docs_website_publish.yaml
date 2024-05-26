@@ -7,6 +7,9 @@ on:
     # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
 
+env:
+  WORKING_DIR: ./website
+
 defaults:
   run:
     working-directory: ./website
@@ -23,6 +26,7 @@ jobs:
         with:
           node-version: 18
           cache: yarn
+          cache-dependency-path: ${{ env.WORKING_DIR }}/yarn.lock
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
