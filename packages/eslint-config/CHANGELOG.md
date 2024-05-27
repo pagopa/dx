@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 4.0.1
+
+### Patch Changes
+
+- 351035e: Fix vitest configuration; ignore "generated" folder
+
 ## 4.0.0
 
 ### Major Changes
