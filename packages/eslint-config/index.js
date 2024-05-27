@@ -1,5 +1,4 @@
 import eslint from "@eslint/js";
-import comments from "@eslint-community/eslint-plugin-eslint-comments";
 import perfectionistNatural from "eslint-plugin-perfectionist/configs/recommended-natural";
 import prettier from "eslint-plugin-prettier/recommended";
 import vitest from "eslint-plugin-vitest";
@@ -10,7 +9,6 @@ export default [
   ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
-  comments.configs.recommended,
   prettier,
   perfectionistNatural,
   {

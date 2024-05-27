@@ -285,18 +285,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint-community/eslint-plugin-eslint-comments@npm:^4.3.0":
-  version: 4.3.0
-  resolution: "@eslint-community/eslint-plugin-eslint-comments@npm:4.3.0"
-  dependencies:
-    escape-string-regexp: "npm:^4.0.0"
-    ignore: "npm:^5.2.4"
-  peerDependencies:
-    eslint: ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
-  checksum: 10c0/d468a44ae205659b48aa8a853b2f9c95622ba0a102984fc53621dce0cb00361e3395723947848cf3db3b4f25835e0db3c6725bdfce84d6b2944362c5025fc10e
-  languageName: node
-  linkType: hard
-
 "@eslint-community/eslint-utils@npm:^4.2.0, @eslint-community/eslint-utils@npm:^4.4.0":
   version: 4.4.0
   resolution: "@eslint-community/eslint-utils@npm:4.4.0"
@@ -438,7 +426,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@pagopa/eslint-config@workspace:packages/eslint-config"
   dependencies:
-    "@eslint-community/eslint-plugin-eslint-comments": "npm:^4.3.0"
     "@eslint/js": "npm:^9.0.0"
     eslint: "npm:8.57.0"
     eslint-config-prettier: "npm:^9.1.0"
@@ -1964,7 +1951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ignore@npm:^5.2.0, ignore@npm:^5.2.4, ignore@npm:^5.3.1":
+"ignore@npm:^5.2.0, ignore@npm:^5.3.1":
   version: 5.3.1
   resolution: "ignore@npm:5.3.1"
   checksum: 10c0/703f7f45ffb2a27fb2c5a8db0c32e7dee66b33a225d28e8db4e1be6474795f606686a6e3bcc50e1aa12f2042db4c9d4a7d60af3250511de74620fbed052ea4cd
