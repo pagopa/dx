@@ -9,6 +9,7 @@
     "turbo": "^1.13.2"
   },
   "scripts": {
+    "build": "turbo run build",
     "code-review": "turbo run typecheck format:check lint:check",
     "version": "yarn changeset version && yarn --mode update-lockfile",
     "release": "yarn build && changeset publish"
