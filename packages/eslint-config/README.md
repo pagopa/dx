@@ -4,9 +4,6 @@ This package provides PagoPA's `eslint.config.js` as an extensible shared config
 
 ## Usage
 
-> [!IMPORTANT]  
-> This config requires `eslint >= 9.0`, so it uses flat config files. Learn more about ESLint 9 and flat config files in the [official documentation](https://eslint.org/docs/latest/use/configure/configuration-files).
-
 1. Install `eslint` and `@pagopa/eslint-config`
 
    ```shell
