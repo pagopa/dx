@@ -12,19 +12,21 @@ export default [
   prettier,
   perfectionistNatural,
   {
-    files: ["tests/**", "__tests__/**"],
+    files: ["**/tests/**", "**/__tests__/**"],
+    ...vitest.configs.recommended,
     rules: {
-      ...vitest.configs.recommended,
-      "prefer-called-with": ["error"],
-      "prefer-equality-matcher": ["error"],
-      "prefer-expect-resolves": ["error"],
-      "prefer-spy-on": ["error"],
-      "prefer-todo": ["error"],
+      ...vitest.configs.recommended.rules,
+      "vitest/prefer-called-with": "error",
+      "vitest/prefer-equality-matcher": "error",
+      "vitest/prefer-expect-resolves": "error",
+      "vitest/prefer-spy-on": "error",
+      "vitest/prefer-todo": "error",
+      "@typescript-eslint/no-empty-function": "off"
     },
   },
   {
     rules: {
-      "@typescript-eslint/no-unused-expressions": ["error"],
+      "@typescript-eslint/no-unused-expressions": "error",
       "@typescript-eslint/no-unused-vars": ["error", { args: "after-used" }],
       "arrow-body-style": "error",
       complexity: "error",
@@ -42,4 +44,7 @@ export default [
       radix: "error",
     },
   },
+  {
+    ignores: ["**/generated/*"],
+  }
 ];
