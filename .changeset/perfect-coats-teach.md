@@ -2,4 +2,4 @@
 "@pagopa/eslint-config": major
 ---
 
-Now is compatible with our modern codestyle (and eslint 9)
+Updated configuration to match our current code style, switched to flat config file.
