@@ -1,4 +1,4 @@
-name: Test deployment
+name: Validate GitHub Pages Website
 
 on:
   pull_request:
