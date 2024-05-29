@@ -129,6 +129,14 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
+      - name: Deploy
+        uses: azure/webapps-deploy@v2
+        if: ${{ env.USE_STAGING_SLOT == 'false' }}
+        with:
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: ${{ env.BUNDLE_NAME }}.zip
+
       - name: Deploy to Staging Slot
         uses: azure/webapps-deploy@v2
         if: ${{ env.USE_STAGING_SLOT == 'true' }}
@@ -136,14 +144,6 @@ jobs:
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: staging
-          package: ${{ env.BUNDLE_NAME }}.zip
-
-      - name: Deploy
-        uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == 'false' }}
-        with:
-          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
-          app-name: ${{ env.FUNCTION_APP_NAME }}
           package: ${{ env.BUNDLE_NAME }}.zip
 
       - name: Ping Staging Health
