@@ -21,6 +21,11 @@ on:
         description: The health probe path exposed by the Function App.
         type: string
         required: true
+      use_staging_slot:
+        description: True if artifact should be deployed to staging slot
+        type: boolean
+        required: false
+        default: true
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -108,6 +113,7 @@ jobs:
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
       FUNCTION_APP_NAME: ${{ inputs.function_app_name}}
       HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
+      USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
 
     steps:
 
@@ -125,13 +131,23 @@ jobs:
 
       - name: Deploy to Staging Slot
         uses: azure/webapps-deploy@v2
+        if: ${{ env.USE_STAGING_SLOT }}
         with:
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           app-name: ${{ env.FUNCTION_APP_NAME }}
           slot-name: staging
           package: ${{ env.BUNDLE_NAME }}.zip
 
+      - name: Deploy
+        uses: azure/webapps-deploy@v2
+        if: ${{ env.USE_STAGING_SLOT == false }}
+        with:
+          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
+          app-name: ${{ env.FUNCTION_APP_NAME }}
+          package: ${{ env.BUNDLE_NAME }}.zip
+
       - name: Ping Staging Health
+        if: ${{ env.USE_STAGING_SLOT }}
         run: |
           curl \
             --retry 5 \
@@ -140,6 +156,7 @@ jobs:
             -f 'https://${{ env.FUNCTION_APP_NAME }}-staging.azurewebsites.net${{ env.HEALTH_CHECK_PATH }}'
 
       - name: Swap Staging and Production Slots
+        if: ${{ env.USE_STAGING_SLOT }}
         run: |
           az webapp deployment slot swap \
             -g ${{ env.RESOURCE_GROUP_NAME }} \
