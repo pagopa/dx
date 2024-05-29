@@ -114,7 +114,7 @@ jobs:
           terraform plan -lock-timeout=3000s -no-color 2>&1 | tee plan_output.txt
 
           OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
-          printf "$OUTPUT" > plan_output_multiline.txt
+          printf "%s" "$OUTPUT" > plan_output_multiline.txt
 
           if grep -q "::error::Terraform exited with code" plan_output.txt; then
             echo "failed"
