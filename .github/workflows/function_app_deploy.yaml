@@ -131,7 +131,7 @@ jobs:
 
       - name: Deploy to Staging Slot
         uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT }}
+        if: ${{ env.USE_STAGING_SLOT == 'true' }}
         with:
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           app-name: ${{ env.FUNCTION_APP_NAME }}
@@ -140,14 +140,14 @@ jobs:
 
       - name: Deploy
         uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == false }}
+        if: ${{ env.USE_STAGING_SLOT == 'false' }}
         with:
           resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
           app-name: ${{ env.FUNCTION_APP_NAME }}
           package: ${{ env.BUNDLE_NAME }}.zip
 
       - name: Ping Staging Health
-        if: ${{ env.USE_STAGING_SLOT }}
+        if: ${{ env.USE_STAGING_SLOT == 'true' }}
         run: |
           curl \
             --retry 5 \
@@ -156,7 +156,7 @@ jobs:
             -f 'https://${{ env.FUNCTION_APP_NAME }}-staging.azurewebsites.net${{ env.HEALTH_CHECK_PATH }}'
 
       - name: Swap Staging and Production Slots
-        if: ${{ env.USE_STAGING_SLOT }}
+        if: ${{ env.USE_STAGING_SLOT == 'true' }}
         run: |
           az webapp deployment slot swap \
             -g ${{ env.RESOURCE_GROUP_NAME }} \
