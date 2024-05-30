@@ -18,7 +18,7 @@ locals {
 
   storage_account = {
     replication_type = var.tier == "test" ? "LRS" : "ZRS"
-    name             = "${replace(local.project, "-", "")}${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}"
+    name             = replace("${local.project}${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}", "-", "")
   }
 
   private_dns_zone = {
