@@ -2,7 +2,8 @@
   "name": "@pagopa/dx",
   "packageManager": "yarn@4.1.1",
   "workspaces": [
-    "packages/**"
+    "packages/**",
+    "website"
   ],
   "devDependencies": {
     "prettier": "3.2.5",
