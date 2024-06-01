@@ -7,12 +7,12 @@ on:
     paths:
       - "website/**"
 
-env:
-  WORKING_DIR: ./website
+# env:
+#   WORKING_DIR: ./website
 
-defaults:
-  run:
-    working-directory: ./website
+# defaults:
+#   run:
+#     working-directory: ./website
 
 jobs:
   build:
@@ -28,14 +28,21 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version-file: ".node-version"
           cache: yarn
-          cache-dependency-path: ${{ env.WORKING_DIR }}/yarn.lock
+
+      - name: Setup turbo cache
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: node_modules/.cache/turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
 
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build website
-        run: yarn build
+        run: yarn run build
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
