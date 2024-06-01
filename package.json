@@ -1,0 +1,20 @@
+{
+  "name": "@pagopa/dx",
+  "packageManager": "yarn@4.1.1",
+  "workspaces": [
+    "packages/**"
+  ],
+  "devDependencies": {
+    "prettier": "3.2.5",
+    "turbo": "^1.13.2"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "code-review": "turbo run typecheck format:check lint:check",
+    "version": "yarn changeset version && yarn --mode update-lockfile",
+    "release": "yarn build && changeset publish"
+  },
+  "dependencies": {
+    "@changesets/cli": "^2.27.1"
+  }
+}
