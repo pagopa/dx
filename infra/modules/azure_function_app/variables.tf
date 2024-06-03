@@ -14,7 +14,7 @@ variable "environment" {
   })
 
   validation {
-    condition     = length("${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}") <= 24
+    condition     = length("${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}stfn${var.environment.instance_number}") <= 24
     error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}loc${var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}\""
   }
 
