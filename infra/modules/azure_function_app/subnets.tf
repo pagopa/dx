@@ -4,6 +4,10 @@ resource "azurerm_subnet" "this" {
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   address_prefixes     = [var.subnet_cidr]
 
+  service_endpoints = [
+    "Microsoft.Web"
+  ]
+
   delegation {
     name = "default"
     service_delegation {
