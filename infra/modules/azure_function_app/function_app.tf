@@ -43,6 +43,8 @@ resource "azurerm_linux_function_app" "this" {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
     },
+    # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
+    length(azurerm_linux_function_app.this.name) > 32 ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling

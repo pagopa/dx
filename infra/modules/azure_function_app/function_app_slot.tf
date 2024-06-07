@@ -1,7 +1,7 @@
 resource "azurerm_linux_function_app_slot" "this" {
   count = local.function_app.is_slot_enabled
 
-  name            = local.function_app.slot_name
+  name            = local.function_app_slot.name
   function_app_id = azurerm_linux_function_app.this.id
 
   storage_account_name          = azurerm_storage_account.this.name
@@ -45,7 +45,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       SLOT_TASK_HUBNAME = "StagingTaskHub",
     },
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
-    length(local.function_app_slot.host_id) > 32 ? { AzureFunctionsWebHost__hostid = local.function_app_slot.truncated_host_id } : {},
+    length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
     var.slot_app_settings
   )
 
