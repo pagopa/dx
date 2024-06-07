@@ -24,4 +24,10 @@ locals {
   private_dns_zone = {
     resource_group_name = var.private_dns_zone_resource_group_name == null ? var.virtual_network.resource_group_name : var.private_dns_zone_resource_group_name
   }
+
+  function_app_slot = {
+    name = "staging"
+    host_id = "${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}"
+    truncated_host_id = substr(local.function_app_slot.host_id, length(local.function_app_slot.host_id) - 32, -1)
+  }
 }
