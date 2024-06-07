@@ -7,6 +7,7 @@ locals {
   }
 
   function_app = {
+    name                   = "${local.project}-${var.environment.domain}-${var.environment.app_name}-func-${var.environment.instance_number}"
     sku_name               = var.tier == "test" ? "B1" : var.tier == "standard" ? "P0v3" : "P1v3"
     zone_balancing_enabled = var.tier != "test"
     is_slot_enabled        = var.tier == "test" ? 0 : 1
