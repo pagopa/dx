@@ -57,6 +57,7 @@ resource "azurerm_linux_function_app" "this" {
       [
         "SLOT_TASK_HUBNAME",
       ],
+      length(local.function_app.name) > 32 ? ["AzureFunctionsWebHost__hostid"] : [],
       var.sticky_app_setting_names,
     )
   }
