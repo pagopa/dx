@@ -9,14 +9,14 @@ locals {
       time_window              = "PT1M"
       time_aggregation         = "Average"
       operator                 = "GreaterThan"
-      threshold                = var.scale_metrics.requests.upper_threshold
+      threshold                = try(var.scale_metrics.requests.upper_threshold, null)
       divide_by_instance_count = false
     }
 
     scale_action = {
       direction = "Increase"
       type      = "ChangeCount"
-      value     = var.scale_metrics.requests.increase_by
+      value     = try(var.scale_metrics.requests.increase_by, null)
       cooldown  = "PT1M"
     }
   }
@@ -31,14 +31,14 @@ locals {
       time_window              = "PT1M"
       time_aggregation         = "Average"
       operator                 = "LessThan"
-      threshold                = var.scale_metrics.requests.lower_threshold
+      threshold                = try(var.scale_metrics.requests.lower_threshold, null)
       divide_by_instance_count = false
     }
 
     scale_action = {
       direction = "Decrease"
       type      = "ChangeCount"
-      value     = var.scale_metrics.requests.decrease_by
+      value     = try(var.scale_metrics.requests.decrease_by, null)
       cooldown  = "PT10M"
     }
   }
