@@ -87,14 +87,14 @@ variable "scale_metrics" {
       decrease_by     = optional(number, 1)
     })
     cpu = object({
-      upper_threshold = number
-      lower_threshold = number
+      upper_threshold = optional(number, 70)
+      lower_threshold = optional(number, 20)
       increase_by     = optional(number, 1)
       decrease_by     = optional(number, 1)
     })
     memory = object({
-      upper_threshold = number
-      lower_threshold = number
+      upper_threshold = optional(number, 70)
+      lower_threshold = optional(number, 20)
       increase_by     = optional(number, 1)
       decrease_by     = optional(number, 1)
     })
