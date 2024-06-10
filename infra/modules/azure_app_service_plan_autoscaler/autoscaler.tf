@@ -120,6 +120,52 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         value     = local.cpu_rule_decrease.scale_action.value
       }
     }
+
+    # Memory - increase
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_increase.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_increase.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_increase.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_increase.metric_trigger.time_grain
+        statistic                = local.memory_rule_increase.metric_trigger.statistic
+        time_window              = local.memory_rule_increase.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_increase.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_increase.metric_trigger.operator
+        threshold                = local.memory_rule_increase.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_increase.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_increase.scale_action.cooldown
+        direction = local.memory_rule_increase.scale_action.direction
+        type      = local.memory_rule_increase.scale_action.type
+        value     = local.memory_rule_increase.scale_action.value
+      }
+    }
+
+    # Memory - decrease
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_decrease.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_decrease.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_decrease.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_decrease.metric_trigger.time_grain
+        statistic                = local.memory_rule_decrease.metric_trigger.statistic
+        time_window              = local.memory_rule_decrease.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_decrease.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_decrease.metric_trigger.operator
+        threshold                = local.memory_rule_decrease.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_decrease.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_decrease.scale_action.cooldown
+        direction = local.memory_rule_decrease.scale_action.direction
+        type      = local.memory_rule_decrease.scale_action.type
+        value     = local.memory_rule_decrease.scale_action.value
+      }
+    }
   }
 
   # end high load
@@ -236,6 +282,52 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         direction = local.cpu_rule_decrease.scale_action.direction
         type      = local.cpu_rule_decrease.scale_action.type
         value     = local.cpu_rule_decrease.scale_action.value
+      }
+    }
+
+    # Memory - increase
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_increase.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_increase.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_increase.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_increase.metric_trigger.time_grain
+        statistic                = local.memory_rule_increase.metric_trigger.statistic
+        time_window              = local.memory_rule_increase.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_increase.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_increase.metric_trigger.operator
+        threshold                = local.memory_rule_increase.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_increase.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_increase.scale_action.cooldown
+        direction = local.memory_rule_increase.scale_action.direction
+        type      = local.memory_rule_increase.scale_action.type
+        value     = local.memory_rule_increase.scale_action.value
+      }
+    }
+
+    # Memory - decrease
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_decrease.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_decrease.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_decrease.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_decrease.metric_trigger.time_grain
+        statistic                = local.memory_rule_decrease.metric_trigger.statistic
+        time_window              = local.memory_rule_decrease.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_decrease.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_decrease.metric_trigger.operator
+        threshold                = local.memory_rule_decrease.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_decrease.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_decrease.scale_action.cooldown
+        direction = local.memory_rule_decrease.scale_action.direction
+        type      = local.memory_rule_decrease.scale_action.type
+        value     = local.memory_rule_decrease.scale_action.value
       }
     }
   }
@@ -356,6 +448,52 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         value     = local.cpu_rule_decrease.scale_action.value
       }
     }
+
+    # Memory - increase
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_increase.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_increase.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_increase.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_increase.metric_trigger.time_grain
+        statistic                = local.memory_rule_increase.metric_trigger.statistic
+        time_window              = local.memory_rule_increase.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_increase.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_increase.metric_trigger.operator
+        threshold                = local.memory_rule_increase.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_increase.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_increase.scale_action.cooldown
+        direction = local.memory_rule_increase.scale_action.direction
+        type      = local.memory_rule_increase.scale_action.type
+        value     = local.memory_rule_increase.scale_action.value
+      }
+    }
+
+    # Memory - decrease
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_decrease.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_decrease.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_decrease.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_decrease.metric_trigger.time_grain
+        statistic                = local.memory_rule_decrease.metric_trigger.statistic
+        time_window              = local.memory_rule_decrease.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_decrease.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_decrease.metric_trigger.operator
+        threshold                = local.memory_rule_decrease.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_decrease.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_decrease.scale_action.cooldown
+        direction = local.memory_rule_decrease.scale_action.direction
+        type      = local.memory_rule_decrease.scale_action.type
+        value     = local.memory_rule_decrease.scale_action.value
+      }
+    }
   }
 
   # end low load
@@ -474,97 +612,53 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         value     = local.cpu_rule_decrease.scale_action.value
       }
     }
+
+    # Memory - increase
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_increase.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_increase.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_increase.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_increase.metric_trigger.time_grain
+        statistic                = local.memory_rule_increase.metric_trigger.statistic
+        time_window              = local.memory_rule_increase.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_increase.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_increase.metric_trigger.operator
+        threshold                = local.memory_rule_increase.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_increase.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_increase.scale_action.cooldown
+        direction = local.memory_rule_increase.scale_action.direction
+        type      = local.memory_rule_increase.scale_action.type
+        value     = local.memory_rule_increase.scale_action.value
+      }
+    }
+
+    # Memory - decrease
+    rule {
+      metric_trigger {
+        metric_name              = local.memory_rule_decrease.metric_trigger.metric_name
+        metric_resource_id       = local.memory_rule_decrease.metric_trigger.metric_resource_id
+        metric_namespace         = local.memory_rule_decrease.metric_trigger.metric_namespace
+        time_grain               = local.memory_rule_decrease.metric_trigger.time_grain
+        statistic                = local.memory_rule_decrease.metric_trigger.statistic
+        time_window              = local.memory_rule_decrease.metric_trigger.time_window
+        time_aggregation         = local.memory_rule_decrease.metric_trigger.time_aggregation
+        operator                 = local.memory_rule_decrease.metric_trigger.operator
+        threshold                = local.memory_rule_decrease.metric_trigger.threshold
+        divide_by_instance_count = local.memory_rule_decrease.metric_trigger.divide_by_instance_count
+      }
+
+      scale_action {
+        cooldown  = local.memory_rule_decrease.scale_action.cooldown
+        direction = local.memory_rule_decrease.scale_action.direction
+        type      = local.memory_rule_decrease.scale_action.type
+        value     = local.memory_rule_decrease.scale_action.value
+      }
+    }
   }
 
   tags = var.tags
-}
-
-locals {
-  requests_rule_increase = {
-    metric_trigger = {
-      metric_name              = "Requests"
-      metric_resource_id       = var.app_service_id
-      metric_namespace         = "microsoft.web/sites"
-      time_grain               = "PT1M"
-      statistic                = "Average"
-      time_window              = "PT1M"
-      time_aggregation         = "Average"
-      operator                 = "GreaterThan"
-      threshold                = var.scale_metrics.requests.upper_threshold
-      divide_by_instance_count = false
-    }
-
-    scale_action = {
-      direction = "Increase"
-      type      = "ChangeCount"
-      value     = var.scale_metrics.requests.increase_by
-      cooldown  = "PT1M"
-    }
-  }
-
-  requests_rule_decrease = {
-    metric_trigger = {
-      metric_name              = "Requests"
-      metric_resource_id       = var.app_service_id
-      metric_namespace         = "microsoft.web/sites"
-      time_grain               = "PT1M"
-      statistic                = "Average"
-      time_window              = "PT1M"
-      time_aggregation         = "Average"
-      operator                 = "GreaterThan"
-      threshold                = var.scale_metrics.requests.lower_threshold
-      divide_by_instance_count = false
-    }
-
-    scale_action = {
-      direction = "Decrease"
-      type      = "ChangeCount"
-      value     = var.scale_metrics.requests.decrease_by
-      cooldown  = "PT10M"
-    }
-  }
-
-  cpu_rule_increase = {
-    metric_trigger = {
-      metric_name              = "CpuPercentage"
-      metric_resource_id       = var.app_service_plan_id
-      metric_namespace         = "microsoft.web/serverfarms"
-      time_grain               = "PT1M"
-      statistic                = "Average"
-      time_window              = "PT1M"
-      time_aggregation         = "Average"
-      operator                 = "GreaterThan"
-      threshold                = var.scale_metrics.cpu.upper_threshold
-      divide_by_instance_count = false
-    }
-
-    scale_action = {
-      direction = "Increase"
-      type      = "ChangeCount"
-      value     = var.scale_metrics.cpu.increase_by
-      cooldown  = "PT1M"
-    }
-  }
-
-  cpu_rule_decrease = {
-    metric_trigger = {
-      metric_name              = "CpuPercentage"
-      metric_resource_id       = var.app_service_plan_id
-      metric_namespace         = "microsoft.web/serverfarms"
-      time_grain               = "PT1M"
-      statistic                = "Average"
-      time_window              = "PT5M"
-      time_aggregation         = "Average"
-      operator                 = "LessThan"
-      threshold                = var.scale_metrics.cpu.lower_threshold
-      divide_by_instance_count = false
-    }
-
-    scale_action = {
-      direction = "Decrease"
-      type      = "ChangeCount"
-      value     = var.scale_metrics.cpu.decrease_by
-      cooldown  = "PT20M"
-    }
-  }
 }
