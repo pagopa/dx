@@ -13,19 +13,15 @@ resource "github_repository" "this" {
 
   delete_branch_on_merge = false
 
-  has_projects    = false
+  has_projects    = true
 
-  has_issues      = false
-  has_downloads   = false
+  has_issues      = true
+  has_downloads   = true
 
   vulnerability_alerts = true
 
   pages {
     build_type = "workflow"
-    custom_404 = false
-    html_url   = "https://pagopa.github.io/dx/"
-    url        = "https://api.github.com/repos/pagopa/dx/pages"
-
     source {
         branch = "main"
         path   = "/"
