@@ -8,7 +8,7 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfproddx"
+    storage_account_name = "tfdevdx" #tfproddx
     container_name       = "terraform-state"
     key                  = "dx.resources.tfstate"
   }
