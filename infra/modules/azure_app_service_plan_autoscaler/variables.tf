@@ -3,32 +3,21 @@ variable "tags" {
   description = "Resources tags"
 }
 
-variable "environment" {
-  type = object({
-    prefix          = string
-    env_short       = string
-    location        = string
-    domain          = optional(string)
-    app_name        = string
-    instance_number = string
-  })
-
-  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
-}
-
 variable "resource_group_name" {
   type        = string
   description = "Resource group to deploy resources to"
 }
 
-variable "app_service_plan_id" {
+variable "app_service_name" {
   type        = string
-  description = "Set the App Service Plan Id to apply the autoscaler to"
+  description = "Set name of the App Service to monitor"
+  default     = null
 }
 
-variable "app_service_id" {
+variable "function_app_name" {
   type        = string
-  description = "Set the App Service or Function App Id to monitor"
+  description = "Set the name of the Function App to monitor"
+  default     = null
 }
 
 variable "scheduler" {
