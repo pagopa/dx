@@ -50,7 +50,7 @@ jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment }}-ci
+    environment: dev-ci #${{ inputs.environment }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true
@@ -68,8 +68,8 @@ jobs:
       - name: Set directory
         id: directory
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          BASE_PATH: ${{ inputs.base_path }}
+          ENVIRONMENT: dev #${{ inputs.environment }}
+          BASE_PATH: infra/resources/prod/westeurope #${{ inputs.base_path }}
         run: |
           set -euo pipefail
 
