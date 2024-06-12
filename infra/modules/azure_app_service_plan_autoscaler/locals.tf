@@ -1,8 +1,23 @@
 locals {
+
+  is_app_service  = var.app_service_name != null
+  is_function_app = var.function_app_name != null
+
+  base_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name
+  # base_name = regex("[^-]+-[^-]+-[^-]+-[^-]+-[^-]+", local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name)
+  # number    = regex("[0-9]+$", local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name)
+
+  # autoscale_name      = "${local.base_name}-as-${local.number}"
+  autoscale_name      = replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as")
+  resource_group_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
+  location            = local.is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
+  app_service_id      = local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
+  app_service_plan_id = local.is_app_service ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
+
   requests_rule_increase = {
     metric_trigger = {
       metric_name              = "Requests"
-      metric_resource_id       = var.app_service_id
+      metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = "Average"
@@ -24,7 +39,7 @@ locals {
   requests_rule_decrease = {
     metric_trigger = {
       metric_name              = "Requests"
-      metric_resource_id       = var.app_service_id
+      metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = "Average"
@@ -46,7 +61,7 @@ locals {
   cpu_rule_increase = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = var.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = "Average"
@@ -68,7 +83,7 @@ locals {
   cpu_rule_decrease = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = var.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = "Average"
@@ -90,7 +105,7 @@ locals {
   memory_rule_increase = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = var.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = "Average"
@@ -112,7 +127,7 @@ locals {
   memory_rule_decrease = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = var.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = "Average"

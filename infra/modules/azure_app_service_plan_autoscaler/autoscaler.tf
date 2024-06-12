@@ -1,8 +1,8 @@
 resource "azurerm_monitor_autoscale_setting" "this" {
-  name                = "${module.naming_convention.resource_name_prefix}-as-${var.environment.instance_number}"
-  resource_group_name = var.resource_group_name
-  location            = var.environment.location
-  target_resource_id  = var.app_service_plan_id
+  name                = local.autoscale_name
+  resource_group_name = local.resource_group_name
+  location            = local.location
+  target_resource_id  = local.app_service_plan_id
 
   # start high load
   dynamic "profile" {
