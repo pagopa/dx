@@ -1,0 +1,168 @@
+name: Drift Detection on prod citizen-auth
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment where the resources will be deployed.
+        type: string
+        required: true
+        default: dev
+      base_path:
+        description: The base path on which the script will look for Terraform projects
+        type: string
+        required: true
+        default: infra/resources/prod/westeurope
+      env_vars:
+        description: List of environment variables to set up, given in env=value format.
+        type: string
+        required: false
+      use_private_agent:
+        description: Use a private agent to run the Terraform plan.
+        type: boolean
+        required: false
+        default: false
+      webhook_url:
+        description: The webhook URL to send the notification to.
+        type: string
+        required: false
+  schedule:
+    - cron: '08 00 * * *'
+
+# permissions:
+#   id-token: write
+#   contents: read
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+#   DIR: "src/domains/citizen-auth"
+#   AZURE_ENVIRONMENT: prod
+
+
+jobs:
+  terraform_driftdetection_job:
+    name: Terraform Drift Detection
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    environment: ${{ inputs.environment }}-ci
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      # Set the directory where the Terraform files are located
+      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
+      - name: Set directory
+        id: directory
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          BASE_PATH: ${{ inputs.base_path }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$ENVIRONMENT" ]; then
+            echo "Environment must be provided."
+            exit 1
+          else
+            # The directory is expected to be in the format
+            #  infra/resources/${{ inputs.environment }}
+            # Example: infra/resources/prod
+            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Set Environment Variables
+        if: ${{ inputs.env_vars }}
+        env:
+          ENV_VARS: ${{ inputs.env_vars }}
+        run: |
+          set -euo pipefail
+
+          for i in "$ENV_VARS[@]"
+          do
+            printf "%q\n" "$i" >> "$GITHUB_ENV"
+          done
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          set -eu
+          terraform_version=$(cat .terraform-version)
+          printf "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+  
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform init
+          
+      # Run Terraform Plan
+      # The plan output is saved in a file and then processed to remove unnecessary lines
+      # The step never fails but the result is checked in the next step
+      # This is because we want to post the plan output in the PR even if the plan fails
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform plan -lock-timeout=3000s -no-color 2>&1 | tee plan_output.txt
+
+          OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
+          printf "%s" "$OUTPUT" > plan_output_multiline.txt
+
+          if grep -q "::error::Terraform exited with code" plan_output.txt; then
+            echo "failed"
+            exit 1
+          fi
+
+      - name: Drift Detection
+        id: drift
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          if grep -q "No changes. Your infrastructure matches the configuration." plan_output.txt; then
+              echo "No drifts in this configuration"
+              exit 0
+          else
+              changes=$(grep 'Plan: ' plan_output.txt)
+
+              add=$(echo $changes_summary | awk '{print $2}')
+              change=$(echo $changes_summary | awk '{print $5}')
+              destroy=$(echo $changes_summary | awk '{print $8}')
+
+              echo "Drift detected!"
+              echo "Resource to add: $to_add"
+              echo "Resource to change: $to_change"
+              echo "Resource to destroy: $to_destroy"
+              exit 1
+          fi
+
+      - name: Drift Notification
+        if: ${{ inputs.webhook_url }}
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}
