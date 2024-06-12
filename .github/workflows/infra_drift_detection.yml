@@ -1,6 +1,9 @@
 name: Drift Detection
 
 on:
+  push:
+    branches:
+      - EC-281-mario
   workflow_dispatch:
     inputs:
       environment:
