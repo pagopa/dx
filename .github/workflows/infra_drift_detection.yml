@@ -1,4 +1,4 @@
-name: Drift Detection on prod citizen-auth
+name: Drift Detection
 
 on:
   workflow_dispatch:
