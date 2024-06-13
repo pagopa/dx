@@ -162,10 +162,10 @@ jobs:
               echo "Resource to destroy: $to_destroy"
 
               # Save variables to environment for use in next step
-              echo "::set-env name=DRIFT_DETECTED::true"
-              echo "::set-env name=TO_ADD::$to_add"
-              echo "::set-env name=TO_CHANGE::$to_change"
-              echo "::set-env name=TO_DESTROY::$to_destroy"
+              echo "TO_ADD=$to_add" >> $GITHUB_ENV
+              echo "TO_CHANGE=$to_change" >> $GITHUB_ENV
+              echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
+              
               exit 1
           fi
       
