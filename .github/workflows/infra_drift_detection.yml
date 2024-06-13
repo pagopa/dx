@@ -80,7 +80,8 @@ jobs:
             # The directory is expected to be in the format
             #  infra/resources/${{ inputs.environment }}
             # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+            # printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+            printf "dir=%q" "$BASE_PATH" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
