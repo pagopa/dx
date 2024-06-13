@@ -151,8 +151,8 @@ jobs:
               exit 0
           else
               changes=$(grep 'Plan: ' plan_output.txt)
-              echo $changes
-
+              cat plan_output_multiline.txt
+              
               to_add=$(echo $changes | awk '{print $2}')
               to_change=$(echo $changes | awk '{print $5}')
               to_destroy=$(echo $changes | awk '{print $8}')
@@ -166,7 +166,7 @@ jobs:
               echo "TO_ADD=$to_add" >> $GITHUB_ENV
               echo "TO_CHANGE=$to_change" >> $GITHUB_ENV
               echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
-              echo "PLAN_OUTPUT=$(cat plan_output_multiline.txt)" >> $GITHUB_ENV
+              echo "PLAN_OUTPUT=$(cat plan_output.txt)" >> $GITHUB_ENV
 
               exit 1
           fi
