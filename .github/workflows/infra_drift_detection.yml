@@ -166,12 +166,6 @@ jobs:
               echo "TO_CHANGE=$to_change" >> $GITHUB_ENV
               echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
 
-              plan_output_multiline=$(cat plan_output_multiline.txt)
-              echo "PLAN_OUTPUT << EOF" >> $GITHUB_ENV
-              echo "$plan_output_multiline" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-
-
               exit 1
           fi
 
@@ -189,7 +183,9 @@ jobs:
             Owner: ${{ github.event.head_commit.author.name }}
             Commit: ${{ github.event.head_commit.message }}
             Terraform plan results:
-            ${{ env.PLAN_OUTPUT }}
+              Resource to add: ${{ env.TO_ADD }}
+              Resource to change: ${{ env.TO_CHANGE }}
+              Resource to destroy: ${{ env.TO_DESTROY }}
           footer: "Linked Repo <{repo_url}|{repo}>"
         env:
           SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
