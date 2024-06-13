@@ -5,13 +5,14 @@ resource "github_branch_default" "default_main" {
 
 resource "github_branch_protection" "protection_main" {
   repository_id = github_repository.this.name
+  force_push_bypassers            = []
   pattern       = "main"
 
-  required_status_checks {
-    strict   = false
-    contexts = []
-  }
-
+  # required_status_checks {
+  #   strict   = false
+  #   contexts = []
+  # }
+  
   require_conversation_resolution = true
   require_signed_commits          = false
 
@@ -19,6 +20,10 @@ resource "github_branch_protection" "protection_main" {
     dismiss_stale_reviews           = false
     require_code_owner_reviews      = true
     required_approving_review_count = 1
+    #
+    dismissal_restrictions          = []
+    pull_request_bypassers          = []
+    restrict_dismissals             = false
   }
 
   allows_deletions = false
