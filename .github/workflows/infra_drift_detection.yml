@@ -151,10 +151,11 @@ jobs:
               exit 0
           else
               changes=$(grep 'Plan: ' plan_output.txt)
+              echo $changes
 
-              add=$(echo $changes | awk '{print $2}')
-              change=$(echo $changes | awk '{print $5}')
-              destroy=$(echo $changes | awk '{print $8}')
+              to_add=$(echo $changes | awk '{print $2}')
+              to_change=$(echo $changes | awk '{print $5}')
+              to_destroy=$(echo $changes | awk '{print $8}')
 
               echo "Drift detected!"
               echo "Resource to add: $to_add"
