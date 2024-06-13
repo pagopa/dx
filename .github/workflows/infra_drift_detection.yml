@@ -15,7 +15,7 @@ on:
         description: The base path on which the script will look for Terraform projects
         type: string
         required: true
-        default: infra/resources/prod/westeurope
+        default: infra/resources/dev/westeurope
       env_vars:
         description: List of environment variables to set up, given in env=value format.
         type: string
@@ -69,7 +69,7 @@ jobs:
         id: directory
         env:
           ENVIRONMENT: dev #${{ inputs.environment }}
-          BASE_PATH: infra/resources/prod/westeurope #${{ inputs.base_path }}
+          BASE_PATH: infra/resources/dev/westeurope #${{ inputs.base_path }}
         run: |
           set -euo pipefail
 
