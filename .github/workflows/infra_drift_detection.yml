@@ -152,9 +152,9 @@ jobs:
           else
               changes=$(grep 'Plan: ' plan_output.txt)
 
-              add=$(echo $changes_summary | awk '{print $2}')
-              change=$(echo $changes_summary | awk '{print $5}')
-              destroy=$(echo $changes_summary | awk '{print $8}')
+              add=$(echo $changes | awk '{print $2}')
+              change=$(echo $changes | awk '{print $5}')
+              destroy=$(echo $changes | awk '{print $8}')
 
               echo "Drift detected!"
               echo "Resource to add: $to_add"
@@ -165,10 +165,12 @@ jobs:
               echo "TO_ADD=$to_add" >> $GITHUB_ENV
               echo "TO_CHANGE=$to_change" >> $GITHUB_ENV
               echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
-              
+              echo "PLAN_OUTPUT=$(cat plan_output_multiline.txt)" >> $GITHUB_ENV
+
               exit 1
           fi
-      
+
+      # How to configure: https://github.com/ravsamhq/notify-slack-action
       # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
       - name: Drift Notification
         if: ${{ always() && env.SLACK_WEBHOOK_URL }}
@@ -176,12 +178,13 @@ jobs:
         with:
           status: ${{ job.status }}
           notify_when: 'failure'
-          notification_title: "Drift detected! {workflow} has {status_message}"
+          notification_title: "Drift detected! {workflow} action is {status_message}"
           message_format: |
-            {emoji} *{workflow}* ${{ github.event.head_commit.author.name }} ${{ github.event.head_commit.message }} - {status_message} in <{repo_url}|{repo}>"
-            Resource to add: ${{ env.TO_ADD }}
-            Resource to change: ${{ env.TO_CHANGE }}
-            Resource to destroy: ${{ env.TO_DESTROY }}
+            {emoji} *{workflow}* results:
+            Owner: ${{ github.event.head_commit.author.name }}
+            Commit: ${{ github.event.head_commit.message }}
+            Terraform plan results:
+            ${{ env.PLAN_OUTPUT }}
           footer: "Linked Repo <{repo_url}|{repo}>"
         env:
           SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
