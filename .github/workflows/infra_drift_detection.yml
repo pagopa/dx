@@ -166,8 +166,9 @@ jobs:
               echo "TO_CHANGE=$to_change" >> $GITHUB_ENV
               echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
 
+              plan_output_multiline=$(cat plan_output_multiline.txt)
               echo "PLAN_OUTPUT << EOF" >> $GITHUB_ENV
-              cat plan_output_multiline.txt >> $GITHUB_ENV
+              echo "$plan_output_multiline" >> $GITHUB_ENV
               echo "EOF" >> $GITHUB_ENV
 
 
