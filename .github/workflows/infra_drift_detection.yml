@@ -165,7 +165,7 @@ jobs:
       
       # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
       - name: Drift Notification
-        if: ${{ env.SLACK_WEBHOOK_UR }}
+        if: always()
         uses: ravsamhq/notify-slack-action@v1
         with:
           status: ${{ job.status }}
