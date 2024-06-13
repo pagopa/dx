@@ -61,6 +61,7 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SLACK_WEBHOOK_UR: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       # Set the directory where the Terraform files are located
@@ -161,12 +162,13 @@ jobs:
               echo "Resource to destroy: $to_destroy"
               exit 1
           fi
-
+      
+      # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
       - name: Drift Notification
-        if: ${{ inputs.webhook_url }}
+        if: ${{ env.SLACK_WEBHOOK_UR }}
         uses: ravsamhq/notify-slack-action@v1
         with:
           status: ${{ job.status }}
           notify_when: 'failure'
         env:
-          SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}
+          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_UR }}
