@@ -27,7 +27,7 @@ on:
         type: string
         required: false
   schedule:
-    - cron: '08 00 * * *'
+    - cron: '00 08 * * *'
 
 
 env:
