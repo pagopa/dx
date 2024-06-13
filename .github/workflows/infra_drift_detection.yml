@@ -167,8 +167,8 @@ jobs:
               echo "TO_DESTROY=$to_destroy" >> $GITHUB_ENV
               {
                 echo 'PLAN_OUTPUT << EOF'
-                echo "$(cat plan_output.txt)"
-                echo 'EOF'
+                cat plan_output_multiline.txt
+                echo EOF
               } >> $GITHUB_ENV
 
               exit 1
