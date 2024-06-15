@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # Developer Experience Initiative
 
+## What this is all about
+
 Whether it's your first day or you've been an engineer at PagoPA for years, your
 goal is to make an impact. However, the multitude of tools, platforms, and
 processes can be overwhelming.
@@ -38,7 +40,7 @@ aboard! We're here to help you shine." With the right information at your
 fingertips, you'll confidently navigate our tech ecosystem, solving problems and
 creating effective solutions.
 
-## What does this mean in practice?
+## DX in practice
 
 - **Golden Paths**: We provide golden paths, aligned with our
   [Technology Radar](https://pagopa.github.io/technology-radar/index.html), to
@@ -50,9 +52,34 @@ creating effective solutions.
 - **Support**: We offer concrete support to help you apply these guidelines and
   best practices in your daily work.
 
-## I want to contribute: how can I help?
+## Current status
+
+We're currently working on the following:
+
+- [ ] Github Actions to apply changes to Azure resources
+- [ ] Terraform abstractions to deploy Typescript applicative on Azure
+- [ ] Templates for Typescript applicative (serverless, express, etc.)
+- [ ] Documentation for the above items
+
+If you wonder why we're working on these specific items, check out our
+[Achitecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
+
+We're going to update this list as we progress and - eventually - consider other
+languages (e.g., JAVA), and platforms (e.g., AWS).
+
+## How to stay updated
+
+We're glad you're interested! You may stay updated watching our
+[GitHub repository](https://github.com/pagopa/dx).
+
+We will publish a blog post with a changelog every time we release a new
+significant feature or update. You'll find these posts on our
+[documentation website](https://pagopa.github.io/dx/).
+
+## How to contribute
 
 We're always looking for contributors to help improve our documentation and
 tools. If you're interested in contributing, please check out the
 [dx repository on GitHub](https://github.com/pagopa/dx). Feel free to open an
-issue or submit a pull request with any suggestions or improvements!
+[issue](https://github.com/pagopa/dx/issues) or submit a pull request with any
+suggestions or improvements!
