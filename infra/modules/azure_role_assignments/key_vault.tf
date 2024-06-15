@@ -23,7 +23,7 @@ resource "azurerm_key_vault_access_policy" "this" {
 resource "azurerm_role_assignment" "secrets" {
   for_each = {
     for assignment in var.key_vault : "${assignment.name}|${assignment.resource_group_name}" => assignment
-    if data.azurerm_key_vault.this["${assignment.name}|${assignment.resource_group_name}"].enable_rbac_authorization == true&&
+    if data.azurerm_key_vault.this["${assignment.name}|${assignment.resource_group_name}"].enable_rbac_authorization == true &&
     try(assignment.roles.secrets, "") != ""
   }
   scope                = data.azurerm_key_vault.this["${each.value.name}|${each.value.resource_group_name}"].id
