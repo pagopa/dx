@@ -19,10 +19,10 @@ variable "cosmos" {
 variable "redis" {
   description = "A list of Redis role assignments"
   type = list(object({
-    cache_name = string
+    cache_name          = string
     resource_group_name = string
-    role     = string
-    username = string
+    role                = string
+    username            = string
   }))
 
   default = []

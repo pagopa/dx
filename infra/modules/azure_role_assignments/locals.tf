@@ -26,7 +26,7 @@ locals {
 
   key_vault = {
     vaults = distinct([for assignment in var.key_vault : { name = assignment.name, resource_group_name = assignment.resource_group_name }])
-    
+
     permissions = {
       secrets = {
         reader = ["Get", "List"]

@@ -48,10 +48,10 @@ module "roles" {
 
   redis = [
     {
-      cache_name = "io-p-itn-example-redis-01"
+      cache_name          = "io-p-itn-example-redis-01"
       resource_group_name = "io-p-itn-example-rg-01"
-      role     = "reader"
-      username = "pippo"
+      role                = "reader"
+      username            = "pippo"
     }
   ]
 
