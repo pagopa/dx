@@ -64,6 +64,9 @@ We're currently working on the following:
 If you wonder why we're working on these specific items, check out our
 [Achitecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
 
+We're going to update this list as we progress and - eventually - consider other
+languages (e.g., JAVA), and platforms (e.g., AWS).
+
 ## How to stay updated
 
 We're glad you're interested! You may stay updated watching our
