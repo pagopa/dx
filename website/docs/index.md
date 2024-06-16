@@ -6,10 +6,9 @@ sidebar_position: 1
 
 :::warning
 
-This initiative (expecially its documentation) is a work in progress.
-
-As of now (Jun 2024), we're near to release the first version of our tools and
-documentation. Stay tuned!
+This initiative (expecially its documentation) is a work in progress. As of now
+(Jun 2024), we're near to release the first version of our tools and docs. Stay
+tuned!
 
 :::
 
@@ -30,8 +29,8 @@ components as soon as you can. To do that, you need to know how to:
 - **Architect** your services using the right PaaS.
 - **Configure** your services using Infrastructure as Code.
 - **Deploy** your application logic to production.
-- **Monitor** your services and troubleshoot issues.
 - **Secure** your services and manage permissions efficiently.
+- **Monitor** your services and troubleshoot issues.
 
 All of this, ensuring everything is efficient, scalable and aligned to our
 Technology Standards.
@@ -40,6 +39,13 @@ Making these decisions can be complex and time-consuming. The
 [Developer Experience Initiative](https://github.com/pagopa/dx) (DX) is here to
 help you with _golden paths_ and best practices.
 
+### How this differs from Technology Standards iniative?
+
+While Technology Standards aim is to define best practices and guidelines for
+well architected solutions, leaving every choice to the teams, the DX initiative
+aims to provide **strongly opinionated** tools and workflows to implement the
+Technology Standards.
+
 :::info
 
 We think that engineers should focus on **provide value to end users** rather
@@ -47,7 +53,8 @@ than spending time on technical choices.
 
 :::
 
-The [DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) is
+Moreover, the
+[DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) is
 available to support you if you choose to adopt these golden paths. However,
 you're always free to make your own choices, though this might require more time
 and effort and you may miss out on some of the benefits of this support.
