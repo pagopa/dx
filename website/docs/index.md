@@ -6,8 +6,10 @@ sidebar_position: 1
 
 :::warning
 
-This initiative is a work in progress. As of now (Jun 2024), we're near to
-release the first version of our tools and documentation. Stay tuned!
+This initiative (expecially its documentation) is a work in progress.
+
+As of now (Jun 2024), we're near to release the first version of our tools and
+documentation. Stay tuned!
 
 :::
 
