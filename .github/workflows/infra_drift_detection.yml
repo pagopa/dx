@@ -140,7 +140,7 @@ jobs:
             terraform show -no-color -json plan.tfplan > plan.json
             NO_CHANGES=$(jq '.resource_changes == null or (.resource_changes | length == 0)' plan.json)
 
-            elif [ "$NO_CHANGES" = "true" ]; then
+            if [ "$NO_CHANGES" = "true" ]; then
               echo "No drifts in this configuration"
               echo "drift_found=false" >> $GITHUB_OUTPUT
               exit 0
