@@ -143,6 +143,7 @@ jobs:
           else
             terraform show -no-color -json plan.tfplan > plan.json
             echo "drift_found=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Drift Detection
         if: steps.plan.outputs.drift_found == 'true'
