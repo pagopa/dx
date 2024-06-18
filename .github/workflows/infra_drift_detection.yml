@@ -129,10 +129,10 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          set +e
           terraform plan -no-color -detailed-exitcode -out=plan.tfplan
           PLAN_EXIT_CODE=$?
-          set -e
+          echo "Plan exit: $PLAN_EXIT_CODE"
+          
           if [ $PLAN_EXIT_CODE -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
             exit 1
@@ -175,7 +175,7 @@ jobs:
       # How to configure: https://github.com/ravsamhq/notify-slack-action
       # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
       - name: Drift Notification
-        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) }}
+        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) && steps.plan.outputs.drift_found == 'true' }}
         uses: ravsamhq/notify-slack-action@2.3.0
         with:
           status: ${{ job.status }}
