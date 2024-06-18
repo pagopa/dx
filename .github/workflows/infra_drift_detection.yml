@@ -130,47 +130,45 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform plan -no-color -detailed-exitcode -out=plan.tfplan
-          PLAN_EXIT_CODE=$?
 
-          if [ $PLAN_EXIT_CODE -eq 1 ]; then
+          if [ $? -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
             echo "drift_found=false" >> $GITHUB_OUTPUT
             exit 1
-          else
-            terraform show -no-color -json plan.tfplan > plan.json
-            NO_CHANGES=$(jq '.resource_changes == null or (.resource_changes | length == 0)' plan.json)
-
-            if [ "$NO_CHANGES" = "true" ]; then
-              echo "No drifts in this configuration"
-              echo "drift_found=false" >> $GITHUB_OUTPUT
-              exit 0
-            else
-              echo "drift_found=true" >> $GITHUB_OUTPUT
-            fi
           fi
 
       - name: Drift Detection
-        if: steps.plan.outputs.drift_found == 'true'
         id: drift
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          # Count the number of resources to add, change and destroy
-          TO_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
-          TO_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
-          TO_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
-        
-          echo "Drift detected!"
-          echo "- Resources to add: $TO_ADD"
-          echo "- Resources to change: $TO_CHANGE"
-          echo "- Resources to destroy: $TO_DESTROY"
-        
-          # Salva le variabili nell'ambiente per l'utilizzo nei passaggi successivi
-          echo "TO_ADD=$TO_ADD" >> $GITHUB_ENV
-          echo "TO_CHANGE=$TO_CHANGE" >> $GITHUB_ENV
-          echo "TO_DESTROY=$TO_DESTROY" >> $GITHUB_ENV
-        
-          exit 1
+          terraform show -no-color -json plan.tfplan > plan.json
+          NO_CHANGES=$(jq '.resource_changes == null or (.resource_changes | length == 0)' plan.json)
 
+          if [ "$NO_CHANGES" = "true" ]; then
+            echo "No drifts in this configuration"
+            echo "drift_found=false" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Drift detected:"
+
+            echo "drift_found=true" >> $GITHUB_OUTPUT
+
+            # Count the number of resources to add, change and destroy
+            TO_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
+            TO_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
+            TO_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
+          
+            echo " - Resources to add: $TO_ADD"
+            echo " - Resources to change: $TO_CHANGE"
+            echo " - Resources to destroy: $TO_DESTROY"
+          
+            # Salva le variabili nell'ambiente per l'utilizzo nei passaggi successivi
+            echo "TO_ADD=$TO_ADD" >> $GITHUB_ENV
+            echo "TO_CHANGE=$TO_CHANGE" >> $GITHUB_ENV
+            echo "TO_DESTROY=$TO_DESTROY" >> $GITHUB_ENV
+          
+            exit 1
+          fi
       # How to configure: https://github.com/ravsamhq/notify-slack-action
       # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
       - name: Drift Notification
