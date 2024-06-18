@@ -140,7 +140,7 @@ jobs:
             echo "No drifts in this configuration"
             echo "drift_found=false" >> $GITHUB_OUTPUT
             exit 0
-          else:
+          else
             terraform show -no-color -json plan.tfplan > plan.json
             echo "drift_found=true" >> $GITHUB_OUTPUT
 
