@@ -130,11 +130,13 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform plan -no-color -detailed-exitcode -out=plan.tfplan
+          echo $?
           PLAN_EXIT_CODE=$?
           echo "Plan exit: $PLAN_EXIT_CODE"
-          
+
           if [ $PLAN_EXIT_CODE -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
+            echo "drift_found=false" >> $GITHUB_OUTPUT
             exit 1
           elif [ $PLAN_EXIT_CODE -eq 0 ]; then
             echo "No drifts in this configuration"
