@@ -129,8 +129,10 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
+          set +e
           terraform plan -no-color -detailed-exitcode -out=plan.tfplan
           PLAN_EXIT_CODE=$?
+          set -e
           if [ $PLAN_EXIT_CODE -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
             exit 1
