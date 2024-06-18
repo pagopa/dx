@@ -1,18 +1,13 @@
 name: Drift Detection
 
 on:
-  # remove before PR
-  push:
-    branches:
-      - EC-281-mario
-  #
   workflow_dispatch:
     inputs:
       environment:
         description: Environment where the resources will be deployed.
         type: string
         required: true
-        default: dev
+        default: prod
       base_path:
         description: The base path on which the script will look for Terraform projects
         type: string
@@ -42,13 +37,13 @@ env:
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
   BASE_DIR: ${{ inputs.base_path != '' && inputs.base_path || 'infra/resources/' }}
-  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'dev' }}
+  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'prod' }}
 
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment != '' && inputs.environment || 'dev' }}-ci
+    environment: ${{ inputs.environment != '' && inputs.environment || 'prod' }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true
@@ -78,7 +73,7 @@ jobs:
           else
             # The directory is expected to be in the format
             #  infra/resources/${{ inputs.environment }}
-            # Example: infra/resources/dev
+            # Example: infra/resources/prod
             printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
 
