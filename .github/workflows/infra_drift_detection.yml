@@ -27,7 +27,7 @@ on:
         type: string
         required: false
   schedule:
-    - cron: '00 08 * * *'
+    - cron: '00 08 * * *' # Run at 08:00 every day
 
 
 env:
@@ -50,7 +50,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
