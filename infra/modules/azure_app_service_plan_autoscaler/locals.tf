@@ -4,10 +4,7 @@ locals {
   is_function_app = var.target_service.function_app_name != null
 
   base_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name
-  # base_name = regex("[^-]+-[^-]+-[^-]+-[^-]+-[^-]+", local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name)
-  # number    = regex("[0-9]+$", local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name)
 
-  # autoscale_name      = "${local.base_name}-as-${local.number}"
   autoscale_name      = replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as")
   resource_group_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
   location            = local.is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
