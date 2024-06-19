@@ -1,0 +1,186 @@
+name: Drift Detection
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment where the resources will be deployed.
+        type: string
+        required: true
+        default: prod
+      base_path:
+        description: The base path on which the script will look for Terraform projects
+        type: string
+        required: true
+        default: infra/resources/
+      env_vars:
+        description: List of environment variables to set up, given in env=value format.
+        type: string
+        required: false
+      use_private_agent:
+        description: Use a private agent to run the Terraform plan.
+        type: boolean
+        required: false
+        default: false
+      webhook_url:
+        description: The webhook URL to send the notification to.
+        type: string
+        required: false
+  schedule:
+    - cron: '00 08 * * *' # Run at 08:00 every day
+
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  BASE_DIR: ${{ inputs.base_path != '' && inputs.base_path || 'infra/resources/' }}
+  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'prod' }}
+
+jobs:
+  terraform_driftdetection_job:
+    name: Terraform Drift Detection
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    environment: ${{ inputs.environment != '' && inputs.environment || 'prod' }}-ci
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      # Set the directory where the Terraform files are located
+      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
+      - name: Set directory
+        id: directory
+        env:
+          ENVIRONMENT: ${{ env.AZURE_ENVIRONMENT }}
+          BASE_PATH: ${{ env.BASE_DIR }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$ENVIRONMENT" ]; then
+            echo "Environment must be provided."
+            exit 1
+          else
+            # The directory is expected to be in the format
+            #  infra/resources/${{ inputs.environment }}
+            # Example: infra/resources/prod
+            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Set Environment Variables
+        if: ${{ inputs.env_vars }}
+        env:
+          ENV_VARS: ${{ inputs.env_vars }}
+        run: |
+          set -euo pipefail
+
+          for i in "$ENV_VARS[@]"
+          do
+            printf "%q\n" "$i" >> "$GITHUB_ENV"
+          done
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          set -eu
+          terraform_version=$(cat .terraform-version)
+          printf "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
+
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        name: Setup Terraform
+        with:
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+  
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform init
+          
+      # Run Terraform Plan
+      # The plan output is saved in a file and then processed to remove unnecessary lines
+      # The step never fails but the result is checked in the next step
+      # This is because we want to post the plan output in the PR even if the plan fails
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform plan -no-color -detailed-exitcode -out=plan.tfplan
+
+          if [ $? -eq 1 ]; then
+            echo "::error::Terraform plan exited with an error"
+            echo "drift_found=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Drift Detection
+        id: drift
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform show -no-color -json plan.tfplan > plan.json
+          NO_CHANGES=$(jq '[.resource_changes[] | select(.change.actions | index("create") or index("update") or index("delete"))] | length' plan.json)
+
+          if [ "$NO_CHANGES" -eq 0 ]; then
+            echo "No drifts in this configuration"
+            echo "drift_found=false" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Drift detected:"
+
+            echo "drift_found=true" >> $GITHUB_OUTPUT
+
+            # Count the number of resources to add, change and destroy
+            TO_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
+            TO_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
+            TO_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
+          
+            echo " - Resources to add: $TO_ADD"
+            echo " - Resources to change: $TO_CHANGE"
+            echo " - Resources to destroy: $TO_DESTROY"
+          
+            # Salva le variabili nell'ambiente per l'utilizzo nei passaggi successivi
+            echo "TO_ADD=$TO_ADD" >> $GITHUB_ENV
+            echo "TO_CHANGE=$TO_CHANGE" >> $GITHUB_ENV
+            echo "TO_DESTROY=$TO_DESTROY" >> $GITHUB_ENV
+          
+            exit 1
+          fi
+      # How to configure: https://github.com/ravsamhq/notify-slack-action
+      # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
+      - name: Drift Notification
+        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) && steps.drift.outputs.drift_found == 'true' }}
+        uses: ravsamhq/notify-slack-action@2.3.0
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: "Drift detected! {workflow} action is {status_message}"
+          message_format: |
+            {emoji} *{workflow}* results:
+            :shipit: *Owner*: ${{ github.event.head_commit.author.name }}
+            :diamond_shape_with_a_dot_inside: *Commit URL*: <{commit_url}|{commit_sha}>
+            :envelope: *Commit message*:  ${{ github.event.head_commit.message }}
+            :page_with_curl: *Terraform* plan results:
+            :heavy_plus_sign: Resource to add:  ${{ env.TO_ADD }}
+            :wavy_dash: Resource to change: ${{ env.TO_CHANGE }}
+            :heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}
+          footer: "Linked Repo <{repo_url}|{repo}>"
+        env:
+          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
