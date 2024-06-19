@@ -26,9 +26,5 @@ No resources.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_location_short"></a> [location\_short](#output\_location\_short) | n/a |
-| <a name="output_project"></a> [project](#output\_project) | n/a |
-| <a name="output_resource_name_prefix"></a> [resource\_name\_prefix](#output\_resource\_name\_prefix) | n/a |
+No outputs.
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
