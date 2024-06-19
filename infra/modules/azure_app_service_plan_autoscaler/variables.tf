@@ -8,16 +8,19 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
-variable "app_service_name" {
-  type        = string
-  description = "Set name of the App Service to monitor"
-  default     = null
-}
+variable "target_service" {
+  type = object({
+    app_service_name  = optional(string)
+    function_app_name = optional(string)
+  })
 
-variable "function_app_name" {
-  type        = string
-  description = "Set the name of the Function App to monitor"
-  default     = null
+  validation {
+    condition = (
+      (var.target_service.app_service_name != null && var.target_service.function_app_name == null) ||
+      (var.target_service.app_service_name == null && var.target_service.function_app_name != null)
+    )
+    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value"
+  }
 }
 
 variable "scheduler" {

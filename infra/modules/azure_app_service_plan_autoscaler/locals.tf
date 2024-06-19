@@ -1,7 +1,7 @@
 locals {
 
-  is_app_service  = var.app_service_name != null
-  is_function_app = var.function_app_name != null
+  is_app_service  = var.target_service.app_service_name != null
+  is_function_app = var.target_service.function_app_name != null
 
   base_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name
   # base_name = regex("[^-]+-[^-]+-[^-]+-[^-]+-[^-]+", local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name)
