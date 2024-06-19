@@ -13,6 +13,6 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Prod"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/identity/prod/westeurope"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/identity/prod"
   }
 }
