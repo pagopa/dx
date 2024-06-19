@@ -34,7 +34,6 @@ variable "scheduler" {
       name    = string
       default = number
       minimum = number
-      maximum = number
     }), null)
     low_load = optional(object({
       start = object({
@@ -48,14 +47,47 @@ variable "scheduler" {
       name    = string
       default = number
       minimum = number
-      maximum = number
     }), null)
     normal_load = object({
       default = number
       minimum = number
-      maximum = number
     })
+    maximum = optional(number, 30)
   })
+
+  default = {
+    high_load = {
+      name = "high_load_profile"
+      start = {
+        hour    = 19
+        minutes = 30
+      }
+      end = {
+        hour    = 22
+        minutes = 59
+      }
+      default = 12
+      minimum = 4
+    }
+    low_load = {
+      name = "low_load_profile"
+      start = {
+        hour    = 23
+        minutes = 00
+      }
+      end = {
+        hour    = 05
+        minutes = 00
+      }
+      default = 10
+      minimum = 2
+    }
+    normal_load = {
+      default = 11
+      minimum = 3
+    }
+    maximum = 30
+  }
 
   description = "Set the recurrent autoscaling actions"
 }
