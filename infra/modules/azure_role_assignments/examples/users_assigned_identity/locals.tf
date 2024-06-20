@@ -4,7 +4,6 @@ locals {
     env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
-    app_name        = "app-be"
     instance_number = "01"
   }
 
