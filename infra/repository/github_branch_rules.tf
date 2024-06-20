@@ -4,7 +4,7 @@ resource "github_branch_default" "default_main" {
 }
 
 resource "github_branch_protection" "protection_main" {
-  repository_id = github_repository.this.name
+  repository_id = data.github_repository.this.node_id
   force_push_bypassers            = []
   pattern       = "main"
 
