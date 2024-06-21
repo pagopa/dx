@@ -13,10 +13,10 @@ locals {
   resource_prefix = "${local.project}-${local.environment.domain}-${local.environment.app_name}"
 
   tags = {
-    CreatedBy      = "Terraform"
-    Environment    = "Dev"
-    Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
-    CostCenter     = "TS310 - PAGAMENTI & SERVIZI"
+    CreatedBy   = "Terraform"
+    Environment = "Dev"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
+    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 }
