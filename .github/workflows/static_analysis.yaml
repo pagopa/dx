@@ -2,9 +2,9 @@ name: Terraform Analysis
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "tf-validation"
+  # push:
+  #   branches:
+  #     - "tf-validation"
   pull_request:
     types: [opened, synchronize]
     paths:
@@ -30,7 +30,8 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          # ref: ${{ github.sha }}
 
       # - name: Set Terraform Version
       #   id: set-terraform-version
@@ -48,12 +49,12 @@ jobs:
         run: |
           git config --global --add safe.directory $GITHUB_WORKSPACE
 
-      # - name: Get changed files
-      #   id: file_changes
-      #   run: |
-      #     export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
-      #     echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
-      #     echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
+      - name: Get changed files
+        id: file_changes
+        run: |
+          export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
+          echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
+          echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
 
       - name: Cache pre-commit
         uses: actions/cache@v4
@@ -65,9 +66,7 @@ jobs:
         run: |
           # set -eu
 
-          # TAG=v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
-          # docker pull ghcr.io/antonbabenko/pre-commit-terraform:$TAG
-
           pre-commit run \
-            --color=always
-            # --files ${{ steps.file_changes.outputs.files }}
+            --color=always \
+            --show-diff-on-failure \
+            --files ${{ steps.file_changes.outputs.files }}
