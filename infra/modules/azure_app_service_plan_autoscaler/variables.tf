@@ -14,11 +14,10 @@ variable "target_service" {
     function_app_name = optional(string)
   })
 
-  validation {
-    condition = (
-      (var.target_service.app_service_name != null && var.target_service.function_app_name == null) ||
-      (var.target_service.app_service_name == null && var.target_service.function_app_name != null)
-    )
+validation {
+  condition = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
+}
+
     error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
   }
 }
