@@ -47,7 +47,7 @@ jobs:
         id: file_changes
         run: |
           git config --global --add safe.directory $GITHUB_WORKSPACE
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          # git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
           export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
           echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
