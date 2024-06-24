@@ -16,11 +16,20 @@ jobs:
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-20.04
+    env:
+      TERRAFORM_VERSION: "1.7.5"
+    container:
+      image: ghcr.io/antonbabenko/pre-commit-terraform:v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
+    defaults:
+      run:
+        shell: bash
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
 
       # - name: Set Terraform Version
       #   id: set-terraform-version
@@ -34,11 +43,18 @@ jobs:
       #   with:
       #     terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
-      - name: Run Terraform Git Hooks
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
         run: |
-          set -eu
+          # set -eu
 
-          TAG=v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
-          docker pull ghcr.io/antonbabenko/pre-commit-terraform:$TAG
+          # TAG=v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
+          # docker pull ghcr.io/antonbabenko/pre-commit-terraform:$TAG
 
-          docker run -v $(pwd):/lint -w /lint ghcr.io/antonbabenko/pre-commit-terraform:$TAG run -a
+          pre-commit run \
+            --color=always
