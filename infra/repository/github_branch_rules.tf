@@ -12,7 +12,7 @@ resource "github_branch_protection" "protection_main" {
   #   strict   = false
   #   contexts = []
   # }
-  
+
   require_conversation_resolution = true
   require_signed_commits          = false
 
@@ -21,9 +21,9 @@ resource "github_branch_protection" "protection_main" {
     require_code_owner_reviews      = true
     required_approving_review_count = 1
     #
-    dismissal_restrictions          = []
-    pull_request_bypassers          = []
-    restrict_dismissals             = false
+    dismissal_restrictions = []
+    pull_request_bypassers = []
+    restrict_dismissals    = false
   }
 
   allows_deletions = false

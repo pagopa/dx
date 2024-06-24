@@ -14,10 +14,8 @@ variable "target_service" {
     function_app_name = optional(string)
   })
 
-validation {
-  condition = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-}
-
+  validation {
+    condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
     error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
   }
 }
@@ -91,7 +89,7 @@ variable "scheduler" {
     maximum = 30
   }
 
-  description = "Set the recurrent autoscaling profiles, including start and end time ([hh]:[mm]), the minimum and maximum number of instances and the default value (used when metrics are not available for some technical issue). Each default value can be overridden"
+  description = "Set the recurrent autoscaling profiles, including start and end time ([hh]:[mm]), the minimum and maximum number of instances and the fallback value (used when metrics are not available for some technical issue). Outside of low/high load profile time span, \"normal\" load values are used. Each default value can be overridden."
 }
 
 variable "scale_metrics" {

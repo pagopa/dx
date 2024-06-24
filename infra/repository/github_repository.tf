@@ -13,19 +13,19 @@ resource "github_repository" "this" {
 
   delete_branch_on_merge = false
 
-  has_projects    = true
+  has_projects = true
 
-  has_issues      = true
-  has_downloads   = true
+  has_issues    = true
+  has_downloads = true
 
   vulnerability_alerts = true
 
   pages {
     build_type = "workflow"
     source {
-        branch = "main"
-        path   = "/"
-      }
+      branch = "main"
+      path   = "/"
     }
+  }
 
 }
