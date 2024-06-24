@@ -1,0 +1,44 @@
+name: Terraform Analysis
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "tf-validation"
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - infra/**
+      - .terraform-version
+      - .pre-commit-config.yaml
+
+jobs:
+  tf_analysis:
+    name: Terraform Validation
+    runs-on: ubuntu-20.04
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      # - name: Set Terraform Version
+      #   id: set-terraform-version
+      #   run: |
+      #     set -eu
+      #     terraform_version=$(cat .terraform-version)
+      #     printf "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
+
+      # - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+      #   name: Setup Terraform
+      #   with:
+      #     terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+
+      - name: Run Terraform Git Hooks
+        run: |
+          set -eu
+
+          TAG=v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
+          docker pull ghcr.io/antonbabenko/pre-commit-terraform:$TAG
+
+          docker run -v $(pwd):/lint -w /lint ghcr.io/antonbabenko/pre-commit-terraform:$TAG run -a
