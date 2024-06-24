@@ -48,12 +48,12 @@ jobs:
         run: |
           git config --global --add safe.directory $GITHUB_WORKSPACE
 
-      - name: Get changed files
-        id: file_changes
-        run: |
-          export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
-          echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
-          echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
+      # - name: Get changed files
+      #   id: file_changes
+      #   run: |
+      #     export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
+      #     echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
+      #     echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
 
       - name: Cache pre-commit
         uses: actions/cache@v4
@@ -68,8 +68,6 @@ jobs:
           # TAG=v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
           # docker pull ghcr.io/antonbabenko/pre-commit-terraform:$TAG
 
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-
           pre-commit run \
-            --color=always \
-            --files ${{ steps.file_changes.outputs.files }}
+            --color=always
+            # --files ${{ steps.file_changes.outputs.files }}
