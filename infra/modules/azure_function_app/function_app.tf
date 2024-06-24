@@ -1,5 +1,5 @@
 resource "azurerm_linux_function_app" "this" {
-  name                = "${local.project}-${var.environment.domain}-${var.environment.app_name}-func-${var.environment.instance_number}"
+  name                = local.function_app.name
   location            = var.environment.location
   resource_group_name = var.resource_group_name
 
@@ -43,6 +43,8 @@ resource "azurerm_linux_function_app" "this" {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
     },
+    # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
+    length(local.function_app.name) > 32 ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
@@ -55,6 +57,7 @@ resource "azurerm_linux_function_app" "this" {
       [
         "SLOT_TASK_HUBNAME",
       ],
+      length(local.function_app.name) > 32 ? ["AzureFunctionsWebHost__hostid"] : [],
       var.sticky_app_setting_names,
     )
   }

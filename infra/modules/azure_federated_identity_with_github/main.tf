@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.86.0, <= 3.97.1"
+      version = "~>3.86"
     }
   }
 }
@@ -10,7 +10,7 @@ terraform {
 module "federated_ci_identity" {
   count = var.continuos_integration.enable == true ? 1 : 0
 
-  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v7.75.0"
+  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v8.20.0"
 
   prefix    = var.prefix
   env_short = var.env_short
@@ -31,7 +31,7 @@ module "federated_ci_identity" {
 module "federated_cd_identity" {
   count = var.continuos_delivery.enable == true ? 1 : 0
 
-  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v7.75.0"
+  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v8.20.0"
 
   prefix    = var.prefix
   env_short = var.env_short

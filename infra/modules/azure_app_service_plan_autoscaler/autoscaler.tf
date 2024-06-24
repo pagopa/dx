@@ -14,7 +14,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
       capacity {
         default = var.scheduler.high_load.default
         minimum = var.scheduler.high_load.minimum
-        maximum = var.scheduler.high_load.maximum
+        maximum = var.scheduler.maximum
       }
 
       recurrence {
@@ -190,7 +190,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
       capacity {
         default = var.scheduler.normal_load.default
         minimum = var.scheduler.normal_load.minimum
-        maximum = var.scheduler.normal_load.maximum
+        maximum = var.scheduler.maximum
       }
 
       recurrence {
@@ -366,7 +366,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
       capacity {
         default = var.scheduler.low_load.default
         minimum = var.scheduler.low_load.minimum
-        maximum = var.scheduler.low_load.maximum
+        maximum = var.scheduler.maximum
       }
 
       recurrence {
@@ -542,7 +542,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
       capacity {
         default = var.scheduler.normal_load.default
         minimum = var.scheduler.normal_load.minimum
-        maximum = var.scheduler.normal_load.maximum
+        maximum = var.scheduler.maximum
       }
 
       recurrence {
@@ -718,7 +718,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
       capacity {
         default = var.scheduler.normal_load.default
         minimum = var.scheduler.normal_load.minimum
-        maximum = var.scheduler.normal_load.maximum
+        maximum = var.scheduler.maximum
       }
 
       # Requests - increase

@@ -27,7 +27,7 @@ resource "azurerm_resource_group" "rg_identity" {
 }
 
 module "federated_identities" {
-  source = "../../../modules/azure_federated_identity_with_github"
+  source = "../../modules/azure_federated_identity_with_github"
 
   prefix    = local.prefix
   env_short = local.env_short
