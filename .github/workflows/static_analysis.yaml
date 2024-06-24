@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
 
       # - name: Set Terraform Version
       #   id: set-terraform-version
@@ -43,12 +44,13 @@ jobs:
       #   with:
       #     terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
+      - name: Git config
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+
       - name: Get changed files
         id: file_changes
         run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-          # git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
-
           export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
           echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
           echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
