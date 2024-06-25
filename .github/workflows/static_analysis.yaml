@@ -52,6 +52,8 @@ jobs:
       - name: Get changed files
         id: file_changes
         run: |
+          set -eu
+
           export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
           echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
           echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
@@ -64,7 +66,7 @@ jobs:
 
       - name: Run pre-commit
         run: |
-          # set -eu
+          set -eu
 
           pre-commit run \
             --color=always \
