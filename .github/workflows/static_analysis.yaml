@@ -26,38 +26,27 @@ jobs:
 
     steps:
 
-      - name: Checkout
+      - name: Checkout Commit
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-          # ref: ${{ github.sha }}
-
-      # - name: Set Terraform Version
-      #   id: set-terraform-version
-      #   run: |
-      #     set -eu
-      #     terraform_version=$(cat .terraform-version)
-      #     printf "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
-
-      # - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
-      #   name: Setup Terraform
-      #   with:
-      #     terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+          ref: ${{ github.sha }}
+          # ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Git config
         run: |
           set -eu
 
           git config --global --add safe.directory $GITHUB_WORKSPACE
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          # git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
       - name: Get changed files
         id: file_changes
         run: |
           set -eu
 
-          export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.event.pull_request.head.sha }})
+          export DIFF=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})
           echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
           echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
 
