@@ -47,7 +47,10 @@ jobs:
 
       - name: Git config
         run: |
+          set -eu
+
           git config --global --add safe.directory $GITHUB_WORKSPACE
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
       - name: Get changed files
         id: file_changes
