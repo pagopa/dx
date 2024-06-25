@@ -2,9 +2,6 @@ name: Terraform Analysis
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - "tf-validation"
   pull_request:
     types: [opened, synchronize]
     paths:
@@ -32,14 +29,13 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
-          # ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Git config
         run: |
           set -eu
 
           git config --global --add safe.directory $GITHUB_WORKSPACE
-          # git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
       - name: Get changed files
         id: file_changes
@@ -51,7 +47,7 @@ jobs:
           echo "files=$( echo "$DIFF" | xargs echo )" >> $GITHUB_OUTPUT
 
       - name: Cache pre-commit
-        uses: actions/cache@v4
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
