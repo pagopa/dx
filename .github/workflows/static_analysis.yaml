@@ -1,4 +1,7 @@
-# Perform validation using pre-commit hook on .tf files
+# This pipeline assumes the presence of a .pre-commit-config.yaml file at 
+# the top level of the repository, which contains Terraform validation tasks.
+# For more details, refer to the pre-commit configuration file:
+# https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
 name: Terraform Validation
 
 on:
