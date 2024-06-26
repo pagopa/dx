@@ -1,3 +1,4 @@
+# Perform validation using pre-commit hook on modified .tf files
 name: Terraform Analysis
 
 on:
