@@ -37,14 +37,7 @@ module "roles" {
       resource_group_name = "io-p-example-cms-rg"
       role                = "writer"
       database            = "a"
-      collection          = "x"
-    },
-    {
-      account_name        = "io-p-cosmos-example-cms"
-      resource_group_name = "io-p-example-cms-rg"
-      role                = "writer"
-      database            = "a"
-      collection          = "y"
+      collection          = ["x", "y"]
     },
     {
       account_name        = "io-p-cosmos-example-cms"
