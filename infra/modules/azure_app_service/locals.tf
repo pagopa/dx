@@ -2,6 +2,14 @@ locals {
   location_short = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
   project        = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
 
+  subnet = {
+    enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
+      var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
+      var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
+      var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
+    ) : []
+  }
+
   app_service_plan = {
     enable = var.app_service_plan_id == null
   }

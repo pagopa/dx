@@ -118,3 +118,13 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
   description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
 }
+
+variable "subnet_service_endpoints" {
+  type = object({
+    cosmos  = optional(bool, false)
+    storage = optional(bool, false)
+    web     = optional(bool, false)
+  })
+  description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
+  default     = null
+}
