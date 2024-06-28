@@ -10,11 +10,11 @@ variable "cosmos" {
     resource_group_name = string
     role                = string
     database            = optional(string, "*")
-    collection          = optional(string, "*")
+    collections         = optional(list(string), ["*"])
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.cosmos : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
@@ -33,7 +33,7 @@ variable "redis" {
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.redis : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
@@ -61,7 +61,7 @@ variable "key_vault" {
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.key_vault : contains(["reader", "writer", "owner"], assignment.role.secrets) && contains(["reader", "writer", "owner"], assignment.role.certificates) && contains(["reader", "writer", "owner"], assignment.role.keys)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
@@ -80,7 +80,7 @@ variable "storage_table" {
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.storage_table : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
@@ -100,7 +100,7 @@ variable "storage_blob" {
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.storage_blob : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
@@ -119,7 +119,7 @@ variable "storage_queue" {
   }))
 
   validation {
-    condition     = alltrue([
+    condition = alltrue([
       for assignment in var.storage_queue : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
