@@ -13,6 +13,13 @@ variable "cosmos" {
     collection          = optional(string, "*")
   }))
 
+  validation {
+    condition     = alltrue([
+      for assignment in var.cosmos : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
   default = []
 }
 
@@ -24,6 +31,13 @@ variable "redis" {
     role                = string
     username            = string
   }))
+
+  validation {
+    condition     = alltrue([
+      for assignment in var.redis : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
 
   default = []
 }
@@ -46,6 +60,13 @@ variable "key_vault" {
     }))
   }))
 
+  validation {
+    condition     = alltrue([
+      for assignment in var.key_vault : contains(["reader", "writer", "owner"], assignment.role.secrets) && contains(["reader", "writer", "owner"], assignment.role.certificates) && contains(["reader", "writer", "owner"], assignment.role.keys)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
   default = []
 }
 
@@ -57,6 +78,13 @@ variable "storage_table" {
     table_name           = optional(string, "*")
     role                 = string
   }))
+
+  validation {
+    condition     = alltrue([
+      for assignment in var.storage_table : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
 
   default = []
 }
@@ -71,6 +99,13 @@ variable "storage_blob" {
     role                 = string
   }))
 
+  validation {
+    condition     = alltrue([
+      for assignment in var.storage_blob : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
   default = []
 }
 
@@ -82,6 +117,13 @@ variable "storage_queue" {
     queue_name           = optional(string, "*")
     role                 = string
   }))
+
+  validation {
+    condition     = alltrue([
+      for assignment in var.storage_queue : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
 
   default = []
 }
