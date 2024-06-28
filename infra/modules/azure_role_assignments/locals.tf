@@ -76,10 +76,10 @@ locals {
     containers       = distinct([for blob in var.storage_blob : { storage_account_name = blob.storage_account_name, resource_group_name = blob.resource_group_name, container_name = blob.container_name } if blob.container_name != "*"])
     blob_assignments = { for assignment in var.storage_blob : "${assignment.storage_account_name}|${assignment.container_name}" => assignment }
 
-    tables            = distinct([for table in var.storage_table : { storage_account_name = blob.storage_account_name, resource_group_name = blob.resource_group_name, table_name = table.table_name } if table.table_name != "*"])
+    tables            = distinct([for table in var.storage_table : { storage_account_name = table.storage_account_name, resource_group_name = table.resource_group_name, table_name = table.table_name } if table.table_name != "*"])
     table_assignments = { for assignment in var.storage_table : "${assignment.storage_account_name}|${assignment.table_name}" => assignment }
 
-    queues            = distinct([for queue in var.storage_queue : { storage_account_name = blob.storage_account_name, resource_group_name = blob.resource_group_name, queue_name = blob.queue_name } if queue.queue_name != "*"])
+    queues            = distinct([for queue in var.storage_queue : { storage_account_name = queue.storage_account_name, resource_group_name = queue.resource_group_name, queue_name = queue.queue_name } if queue.queue_name != "*"])
     queue_assignments = { for assignment in var.storage_queue : "${assignment.storage_account_name}|${assignment.queue_name}" => assignment }
 
     role_definition_name = {
