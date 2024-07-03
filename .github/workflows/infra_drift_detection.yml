@@ -18,10 +18,6 @@ on:
         type: boolean
         required: false
         default: false
-      webhook_url:
-        description: The webhook URL to send the notification to.
-        type: string
-        required: false
   schedule:
     - cron: '00 08 * * *' # Run at 08:00 every day
 
@@ -46,11 +42,12 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
+      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
     steps:
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
@@ -147,41 +144,89 @@ jobs:
           
             exit 1
           fi
-      # How to configure: https://github.com/ravsamhq/notify-slack-action
-      # Use ${{ inputs.webhook_url }} instead of secret if you want to change it manually
+
+      - name: Get workflow data
+        id: workflow_data
+        run: |
+          workflow=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          workflow_url=$(echo $workflow | jq -r '.html_url')
+          workflow_name=$(echo $workflow | jq -r '.display_title')
+          repo_url=$(echo $workflow | jq -r '.repository.html_url')
+          repo_name=$(echo $workflow | jq -r '.repository.full_name')
+          commit_sha=$(echo $workflow | jq -r '.head_sha')
+          commit_message=$(echo $workflow | jq -r '.head_commit.message')
+          committer_name=$(echo $workflow | jq -r '.head_commit.committer.name')
+
+          echo "workflow_url=${workflow_url}"  >> $GITHUB_OUTPUT
+          echo "workflow_name=${workflow_name}"  >> $GITHUB_OUTPUT
+          echo "repo_url=${repo_url}"  >> $GITHUB_OUTPUT
+          echo "repo_name=${repo_name}"  >> $GITHUB_OUTPUT
+          echo "commit_sha=${commit_sha}"  >> $GITHUB_OUTPUT
+          echo "commit_url=${repo_url}/commit/${commit_sha}"  >> $GITHUB_OUTPUT
+          echo "commit_message=${commit_message}"  >> $GITHUB_OUTPUT
+          echo "committer_name=${committer_name}"  >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+      
+      # Reference: https://github.com/slackapi/slack-github-action 
       - name: Drift Notification
-        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) && steps.drift.outputs.drift_found == 'true' }}
-        uses: ravsamhq/notify-slack-action@2.3.0
+        if: ${{ always() && env.SLACK_WEBHOOK_URL && steps.drift.outputs.drift_found == 'true' }}
+        id: drift_notify
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e #v1.26.0
         with:
-          status: ${{ job.status }}
-          notify_when: 'failure'
-          notification_title: "Drift detected! {workflow} action is {status_message}"
-          message_format: |
-            {emoji} *{workflow}* results:
-            :shipit: *Owner*: ${{ github.event.head_commit.author.name }}
-            :diamond_shape_with_a_dot_inside: *Commit URL*: <{commit_url}|{commit_sha}>
-            :envelope: *Commit message*:  ${{ github.event.head_commit.message }}
-            :page_with_curl: *Terraform* plan results:
-            :heavy_plus_sign: Resource to add:  ${{ env.TO_ADD }}
-            :wavy_dash: Resource to change: ${{ env.TO_CHANGE }}
-            :heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}
-          footer: "Linked Repo <{repo_url}|{repo}>"
+          payload: |
+            {
+              "text":"${{ job.status }}",
+              "blocks":[
+                {
+                    "type":"section",
+                    "text":{
+                      "type":"mrkdwn",
+                      "text":":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                    }
+                },
+                {
+                    "type":"section",
+                    "text":{
+                      "type":"mrkdwn",
+                      "text":"* ${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
+                    }
+                }
+              ]
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: ${{ env.SLACK_WEBHOOK_TYPE }}
 
       - name: Failure Notification
-        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) }}
-        uses: ravsamhq/notify-slack-action@2.3.0
+        if: ${{ failure() && env.SLACK_WEBHOOK_URL }}
+        id: failure_notify
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e #v1.26.0
         with:
-          status: ${{ job.status }}
-          notify_when: 'failure'
-          notification_title: "Something went wrong! {workflow} action is {status_message}"
-          message_format: |
-            {emoji} *{workflow}* - Check the Workflow:
-              *URL*: {workflow_url}
-              *RUN*: {run_url}
-            *Status message*:
-              {status_message}
-          footer: "Linked Repo <{repo_url}|{repo}>"
+          payload: |
+            {
+              "text":"${{ job.status }}",
+              "blocks":[
+                {
+                    "type":"section",
+                    "text":{
+                      "type":"mrkdwn",
+                      "text":":x: Something went wrong! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                    }
+                },
+                {
+                    "type":"section",
+                    "text":{
+                      "type":"mrkdwn",
+                      "text":"Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
+                    }
+                }
+              ]
+            }
         env:
           SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: ${{ env.SLACK_WEBHOOK_TYPE }}
