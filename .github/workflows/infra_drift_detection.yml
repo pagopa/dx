@@ -13,10 +13,6 @@ on:
         type: string
         required: true
         default: infra/resources/
-      env_vars:
-        description: List of environment variables to set up, given in env=value format.
-        type: string
-        required: false
       use_private_agent:
         description: Use a private agent to run the Terraform plan.
         type: boolean
@@ -78,18 +74,6 @@ jobs:
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
-
-      - name: Set Environment Variables
-        if: ${{ inputs.env_vars }}
-        env:
-          ENV_VARS: ${{ inputs.env_vars }}
-        run: |
-          set -euo pipefail
-
-          for i in "$ENV_VARS[@]"
-          do
-            printf "%q\n" "$i" >> "$GITHUB_ENV"
-          done
 
       - name: Azure Login
         uses: azure/login@v2 # v2.0.0
@@ -181,6 +165,23 @@ jobs:
             :heavy_plus_sign: Resource to add:  ${{ env.TO_ADD }}
             :wavy_dash: Resource to change: ${{ env.TO_CHANGE }}
             :heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}
+          footer: "Linked Repo <{repo_url}|{repo}>"
+        env:
+          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+
+      - name: Failure Notification
+        if: ${{ always() && (env.SLACK_WEBHOOK_URL || inputs.webhook_url) }}
+        uses: ravsamhq/notify-slack-action@2.3.0
+        with:
+          status: ${{ job.status }}
+          notify_when: 'failure'
+          notification_title: "Something went wrong! {workflow} action is {status_message}"
+          message_format: |
+            {emoji} *{workflow}* - Check the Workflow:
+              *URL*: {workflow_url}
+              *RUN*: {run_url}
+            *Status message*:
+              {status_message}
           footer: "Linked Repo <{repo_url}|{repo}>"
         env:
           SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
