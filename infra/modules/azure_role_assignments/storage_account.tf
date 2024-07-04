@@ -25,20 +25,20 @@ data "azurerm_storage_queue" "this" {
 resource "azurerm_role_assignment" "blob" {
   for_each             = local.storage_account.blob_assignments
   role_definition_name = local.storage_account.role_definition_name.blob[lower(each.value.role)]
-  scope                = each.value.container_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"] : data.azurerm_storage_container.this[each.key].resource_manager_id
+  scope                = each.value.container_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"].id : data.azurerm_storage_container.this[each.key].resource_manager_id
   principal_id         = var.principal_id
 }
 
 resource "azurerm_role_assignment" "table" {
   for_each             = local.storage_account.table_assignments
   role_definition_name = local.storage_account.role_definition_name.table[lower(each.value.role)]
-  scope                = each.value.table_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"] : data.azurerm_storage_table.this[each.key].resource_manager_id
+  scope                = each.value.table_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"].id : data.azurerm_storage_table.this[each.key].resource_manager_id
   principal_id         = var.principal_id
 }
 
 resource "azurerm_role_assignment" "queue" {
   for_each             = local.storage_account.queue_assignments
   role_definition_name = local.storage_account.role_definition_name.queue[lower(each.value.role)]
-  scope                = each.value.queue_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"] : data.azurerm_storage_queue.this[each.key].resource_manager_id
+  scope                = each.value.queue_name == "*" ? data.azurerm_storage_account.this["${each.value.resource_group_name}|${each.value.storage_account_name}"].id : data.azurerm_storage_queue.this[each.key].resource_manager_id
   principal_id         = var.principal_id
 }
