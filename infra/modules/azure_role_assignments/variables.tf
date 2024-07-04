@@ -57,7 +57,11 @@ variable "key_vault" {
       secrets      = optional(list(string), [])
       certificates = optional(list(string), [])
       keys         = optional(list(string), [])
-    }))
+      }), {
+      secrets      = []
+      certificates = []
+      keys         = []
+    })
   }))
 
   validation {
