@@ -62,7 +62,7 @@ variable "key_vault" {
 
   validation {
     condition = alltrue([
-      for assignment in var.key_vault : alltrue(contains(["reader", "writer", "owner"], assignment.roles.secrets)) && alltrue(contains(["reader", "writer", "owner"], assignment.roles.certificates)) && alltrue(contains(["reader", "writer", "owner"], assignment.roles.keys))
+      for assignment in var.key_vault : contains(["reader", "writer", "owner", ""], try(assignment.roles.secrets, "")) && contains(["reader", "writer", "owner", ""], try(assignment.roles.certificates, "")) && contains(["reader", "writer", "owner", ""], try(assignment.roles.keys, ""))
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
