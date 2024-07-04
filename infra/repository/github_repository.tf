@@ -20,6 +20,8 @@ resource "github_repository" "this" {
 
   vulnerability_alerts = true
 
+  homepage_url = "https://pagopa.github.io/dx/docs/"
+
   pages {
     build_type = "workflow"
     source {
