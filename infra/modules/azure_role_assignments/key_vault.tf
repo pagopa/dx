@@ -11,7 +11,7 @@ resource "azurerm_key_vault_access_policy" "this" {
     if data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization == false
   }
 
-  key_vault_id = data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"]
+  key_vault_id = data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = var.principal_id
 
