@@ -15,9 +15,9 @@ resource "azurerm_key_vault_access_policy" "this" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = var.principal_id
 
-  secret_permissions      = setunion(lookup(local.key_vault.permissions, each.value.roles.secrets, []), each.value.override_roles.secrets)
-  certificate_permissions = setunion(lookup(local.key_vault.permissions, each.value.roles.certificates, []), each.value.override_roles.certificates)
-  key_permissions         = setunion(lookup(local.key_vault.permissions, each.value.roles.keys, []), each.value.override_roles.keys)
+  secret_permissions      = setunion(lookup(local.key_vault.permissions.secrets, each.value.roles.secrets, []), each.value.override_roles.secrets)
+  certificate_permissions = setunion(lookup(local.key_vault.permissions.certificates, each.value.roles.certificates, []), each.value.override_roles.certificates)
+  key_permissions         = setunion(lookup(local.key_vault.permissions.keys, each.value.roles.keys, []), each.value.override_roles.keys)
 }
 
 resource "azurerm_role_assignment" "secrets" {
