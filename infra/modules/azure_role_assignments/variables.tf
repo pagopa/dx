@@ -20,6 +20,35 @@ variable "cosmos" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition     = length({
+    for assignment in flatten([
+      for entry in var.cosmos : [
+        for collection in entry.collections : {
+          account_name        = entry.account_name
+          resource_group_name = entry.resource_group_name
+          role                = entry.role
+          database            = entry.database
+          collection          = collection
+        }
+      ]
+    ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
+  }) == length(distinct({
+    for assignment in flatten([
+      for entry in var.cosmos : [
+        for collection in entry.collections : {
+          account_name        = entry.account_name
+          resource_group_name = entry.resource_group_name
+          role                = entry.role
+          database            = entry.database
+          collection          = collection
+        }
+      ]
+    ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
+  }))
+    error_message = "Each assignment must be unique."
+  }
+
   default = []
 }
 
@@ -40,7 +69,7 @@ variable "redis" {
   }
 
   validation {
-    condition = length(var.redis) == length(distinct(var.redis))
+    condition     = length(var.redis) == length(distinct(var.redis))
     error_message = "Each assignment must be unique. Found ${length(var.redis) - length(distinct(var.redis))} duplicates."
   }
 
@@ -76,6 +105,11 @@ variable "key_vault" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition     = length(var.key_vault) == length(distinct(var.key_vault))
+    error_message = "Each assignment must be unique. Found ${length(var.key_vault) - length(distinct(var.key_vault))} duplicates."
+  }
+
   default = []
 }
 
@@ -93,6 +127,11 @@ variable "storage_table" {
       for assignment in var.storage_table : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
+  validation {
+    condition     = length(var.storage_table) == length(distinct(var.storage_table))
+    error_message = "Each assignment must be unique. Found ${length(var.storage_table) - length(distinct(var.storage_table))} duplicates."
   }
 
   default = []
@@ -115,6 +154,11 @@ variable "storage_blob" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition     = length(var.storage_blob) == length(distinct(var.storage_blob))
+    error_message = "Each assignment must be unique. Found ${length(var.storage_blob) - length(distinct(var.storage_blob))} duplicates."
+  }
+
   default = []
 }
 
@@ -134,6 +178,11 @@ variable "storage_queue" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition     = length(var.storage_queue) == length(distinct(var.storage_queue))
+    error_message = "Each assignment must be unique. Found ${length(var.storage_queue) - length(distinct(var.storage_queue))} duplicates."
+  }
+
   default = []
 }
 
@@ -151,6 +200,33 @@ variable "event_hub" {
       for assignment in var.event_hub : contains(["reader", "writer", "owner"], assignment.role)
     ])
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
+  validation {
+    condition = length({
+      for assignment in flatten([
+        for entry in var.event_hub : [
+          for event_hub_name in entry.event_hub_names : {
+            namespace_name      = entry.namespace_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            event_hub_name      = event_hub_name
+          }
+        ]
+      ]) : "${assignment.namespace_name}|${assignment.event_hub_name}|${assignment.role}" => assignment
+      }) == length(distinct({
+        for assignment in flatten([
+          for entry in var.event_hub : [
+            for event_hub_name in entry.event_hub_names : {
+              namespace_name      = entry.namespace_name
+              resource_group_name = entry.resource_group_name
+              role                = entry.role
+              event_hub_name      = event_hub_name
+            }
+          ]
+        ]) : "${assignment.namespace_name}|${assignment.event_hub_name}|${assignment.role}" => assignment
+    }))
+    error_message = "Each assignment must be unique."
   }
 
   default = []
