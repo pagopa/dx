@@ -7,7 +7,7 @@ resource "azurerm_linux_web_app_slot" "this" {
 
   https_only                    = true
   public_network_access_enabled = var.enable_public_access
-  virtual_network_subnet_id     = var.azurerm_subnet_id #azurerm_subnet.this.id
+  virtual_network_subnet_id     = var.azurerm_subnet_id
 
   identity {
     type = "SystemAssigned"
@@ -22,7 +22,7 @@ resource "azurerm_linux_web_app_slot" "this" {
     ip_restriction_default_action     = "Deny"
 
     application_stack {
-      node_version = var.stack == "node" ? var.node_version : null
+      node_version = var.stack == "node" ? "${var.node_version}-lts" : null
       java_version = var.stack == "java" ? var.java_version : null
     }
   }

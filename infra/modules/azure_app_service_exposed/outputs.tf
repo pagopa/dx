@@ -1,10 +1,3 @@
-output "subnet" {
-  value = {
-    id   = azurerm_subnet.this.id
-    name = azurerm_subnet.this.name
-  }
-}
-
 output "app_service" {
   value = {
     resource_group_name = azurerm_linux_web_app.this.resource_group_name

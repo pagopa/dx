@@ -1,3 +1,4 @@
+# ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
   description = "Resources tags"
@@ -20,6 +21,8 @@ variable "resource_group_name" {
   type        = string
   description = "Resource group to deploy resources to"
 }
+
+# ------------ APP SERVICE ------------ #
 
 variable "app_service_plan_id" {
   type        = string
@@ -95,50 +98,16 @@ variable "sticky_app_setting_names" {
   default     = []
 }
 
-# Network variables
+# ------------ NETWORKING ------------ #
 
 variable "enable_public_access" {
   type        = bool
-  description = "Enable public access to the App Service"
+  description = "(Optional) Enable public access to the App Service"
   default     = true
 }
 
 variable "azurerm_subnet_id" {
   type        = string
-  description = "Id of the subnet the Function App uses for outbound connectivity"
-  default     = ""
+  description = "(Optional) Id of the subnet the Function App uses for outbound connectivity"
+  default     = null
 }
-
-# variable "subnet_cidr" {
-#   type        = string
-#   description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
-# }
-
-# variable "subnet_pep_id" {
-#   type        = string
-#   description = "Id of the subnet which holds private endpoints"
-# }
-
-# variable "virtual_network" {
-#   type = object({
-#     name                = string
-#     resource_group_name = string
-#   })
-#   description = "Virtual network in which to create the subnet"
-# }
-
-# variable "private_dns_zone_resource_group_name" {
-#   type        = string
-#   default     = null
-#   description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
-# }
-
-# variable "subnet_service_endpoints" {
-#   type = object({
-#     cosmos  = optional(bool, false)
-#     storage = optional(bool, false)
-#     web     = optional(bool, false)
-#   })
-#   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
-#   default     = null
-# }
