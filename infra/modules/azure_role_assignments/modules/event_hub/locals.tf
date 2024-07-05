@@ -1,6 +1,6 @@
 locals {
   namespaces = distinct([for assignment in var.event_hub : { namespace_name = assignment.namespace_name, resource_group_name = assignment.resource_group_name }])
-  event_hubs = distinct([for assignment in var.event_hub : { event_hub_name = assignment.event_hub_name, namespace_name = assignment.namespace_name, resource_group_name = assignment.resource_group_name }])
+  event_hubs = distinct([for assignment in local.assignments : { event_hub_name = assignment.event_hub_name, namespace_name = assignment.namespace_name, resource_group_name = assignment.resource_group_name }])
 
   assignments = {
     for assignment in flatten([
