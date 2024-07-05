@@ -8,6 +8,6 @@ locals {
   caches = distinct([for assignment in var.redis : { cache_name = assignment.cache_name, resource_group_name = assignment.resource_group_name }])
 
   assignments = {
-    for assignment in var.redis : "${assignment.cache_name}|${assignment.resource_group_name}|${assignment.role}" => assignment
+    for assignment in var.redis : "${assignment.cache_name}|${assignment.resource_group_name}|${assignment.role}|${assignment.username}" => assignment
   }
 }
