@@ -6,7 +6,7 @@ resource "azurerm_linux_web_app" "this" {
   service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
 
   https_only                    = true
-  public_network_access_enabled = var.enable_public_access
+  public_network_access_enabled = true
   virtual_network_subnet_id     = var.azurerm_subnet_id
 
   identity {
@@ -54,7 +54,6 @@ resource "azurerm_linux_web_app" "this" {
 
   lifecycle {
     ignore_changes = [
-      app_settings["DOCKER_CUSTOM_IMAGE_NAME"],
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],

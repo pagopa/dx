@@ -100,12 +100,6 @@ variable "sticky_app_setting_names" {
 
 # ------------ NETWORKING ------------ #
 
-variable "enable_public_access" {
-  type        = bool
-  description = "(Optional) Enable public access to the App Service"
-  default     = true
-}
-
 variable "azurerm_subnet_id" {
   type        = string
   description = "(Optional) Id of the subnet the Function App uses for outbound connectivity"
