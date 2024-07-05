@@ -1,6 +1,6 @@
 resource "azurerm_key_vault_access_policy" "this" {
   for_each = {
-    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}" => assignment
+    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.secrets}|${assignment.roles.keys}|${assignment.roles.certificates}" => assignment
     if data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization == false
   }
 
@@ -15,7 +15,7 @@ resource "azurerm_key_vault_access_policy" "this" {
 
 resource "azurerm_role_assignment" "secrets" {
   for_each = {
-    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}" => assignment
+    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.secrets}" => assignment
     if data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization == true &&
     try(assignment.roles.secrets, "") != ""
   }
@@ -26,7 +26,7 @@ resource "azurerm_role_assignment" "secrets" {
 
 resource "azurerm_role_assignment" "keys" {
   for_each = {
-    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}" => assignment
+    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.keys}" => assignment
     if data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization == true &&
     try(assignment.roles.keys, "") != ""
   }
@@ -37,7 +37,7 @@ resource "azurerm_role_assignment" "keys" {
 
 resource "azurerm_role_assignment" "certificates" {
   for_each = {
-    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}" => assignment
+    for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.certificates}" => assignment
     if data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization == true &&
     try(assignment.roles.certificates, "") != ""
   }
