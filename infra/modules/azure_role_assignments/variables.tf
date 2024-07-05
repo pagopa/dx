@@ -21,7 +21,7 @@ variable "cosmos" {
   }
 
   validation {
-    condition     = length({
+    condition     = length([
     for assignment in flatten([
       for entry in var.cosmos : [
         for collection in entry.collections : {
@@ -32,8 +32,8 @@ variable "cosmos" {
           collection          = collection
         }
       ]
-    ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
-  }) == length(distinct({
+    ]) : assignment
+  ]) == length(distinct([
     for assignment in flatten([
       for entry in var.cosmos : [
         for collection in entry.collections : {
@@ -44,8 +44,8 @@ variable "cosmos" {
           collection          = collection
         }
       ]
-    ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
-  }))
+    ]) : assignment
+  ]))
     error_message = "Each assignment must be unique."
   }
 
@@ -203,7 +203,7 @@ variable "event_hub" {
   }
 
   validation {
-    condition = length({
+    condition = length([
       for assignment in flatten([
         for entry in var.event_hub : [
           for event_hub_name in entry.event_hub_names : {
@@ -213,8 +213,8 @@ variable "event_hub" {
             event_hub_name      = event_hub_name
           }
         ]
-      ]) : "${assignment.namespace_name}|${assignment.event_hub_name}|${assignment.role}" => assignment
-      }) == length(distinct({
+      ]) : assignment
+      ]) == length(distinct([
         for assignment in flatten([
           for entry in var.event_hub : [
             for event_hub_name in entry.event_hub_names : {
@@ -224,8 +224,8 @@ variable "event_hub" {
               event_hub_name      = event_hub_name
             }
           ]
-        ]) : "${assignment.namespace_name}|${assignment.event_hub_name}|${assignment.role}" => assignment
-    }))
+        ]) : assignment
+    ]))
     error_message = "Each assignment must be unique."
   }
 
