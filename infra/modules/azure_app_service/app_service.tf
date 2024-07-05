@@ -54,7 +54,6 @@ resource "azurerm_linux_web_app" "this" {
 
   lifecycle {
     ignore_changes = [
-      app_settings["DOCKER_CUSTOM_IMAGE_NAME"],
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],
