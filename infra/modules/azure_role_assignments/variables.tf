@@ -13,13 +13,6 @@ variable "cosmos" {
     collections         = optional(list(string), ["*"])
   }))
 
-  validation {
-    condition = alltrue([
-      for assignment in var.cosmos : contains(["reader", "writer", "owner"], assignment.role)
-    ])
-    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
-  }
-
   default = []
 }
 

@@ -14,6 +14,13 @@ variable "cosmos" {
   }))
 
   validation {
+    condition     = alltrue([
+      for assignment in var.cosmos : contains(["reader", "writer", "owner"], assignment.role)
+    ])
+    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+  }
+
+  validation {
     condition = length([
       for assignment in flatten([
         for entry in var.cosmos : [

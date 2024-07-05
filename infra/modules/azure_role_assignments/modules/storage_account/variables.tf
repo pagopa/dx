@@ -27,7 +27,6 @@ variable "storage_table" {
   default = []
 }
 
-
 variable "storage_blob" {
   description = "A list of storage blob role assignments"
   type = list(object({
