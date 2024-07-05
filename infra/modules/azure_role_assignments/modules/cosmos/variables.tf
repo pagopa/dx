@@ -14,31 +14,31 @@ variable "cosmos" {
   }))
 
   validation {
-    condition     = length([
-    for assignment in flatten([
-      for entry in var.cosmos : [
-        for collection in entry.collections : {
-          account_name        = entry.account_name
-          resource_group_name = entry.resource_group_name
-          role                = entry.role
-          database            = entry.database
-          collection          = collection
-        }
-      ]
-    ]) : assignment
-  ]) == length(distinct([
-    for assignment in flatten([
-      for entry in var.cosmos : [
-        for collection in entry.collections : {
-          account_name        = entry.account_name
-          resource_group_name = entry.resource_group_name
-          role                = entry.role
-          database            = entry.database
-          collection          = collection
-        }
-      ]
-    ]) : assignment
-  ]))
+    condition = length([
+      for assignment in flatten([
+        for entry in var.cosmos : [
+          for collection in entry.collections : {
+            account_name        = entry.account_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            database            = entry.database
+            collection          = collection
+          }
+        ]
+      ]) : assignment
+      ]) == length(distinct([
+        for assignment in flatten([
+          for entry in var.cosmos : [
+            for collection in entry.collections : {
+              account_name        = entry.account_name
+              resource_group_name = entry.resource_group_name
+              role                = entry.role
+              database            = entry.database
+              collection          = collection
+            }
+          ]
+        ]) : assignment
+    ]))
     error_message = "Each assignment must be unique."
   }
 
