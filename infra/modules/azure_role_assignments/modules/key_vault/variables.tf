@@ -32,5 +32,10 @@ variable "key_vault" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition     = length(var.key_vault) == length(distinct(var.key_vault))
+    error_message = "Each assignment must be unique. Found ${length(var.key_vault) - length(distinct(var.key_vault))} duplicates."
+  }
+
   default = []
 }

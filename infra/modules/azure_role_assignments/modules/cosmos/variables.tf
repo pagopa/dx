@@ -14,10 +14,32 @@ variable "cosmos" {
   }))
 
   validation {
-    condition = alltrue([
-      for assignment in var.cosmos : contains(["reader", "writer", "owner"], assignment.role)
-    ])
-    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+    condition     = length([
+    for assignment in flatten([
+      for entry in var.cosmos : [
+        for collection in entry.collections : {
+          account_name        = entry.account_name
+          resource_group_name = entry.resource_group_name
+          role                = entry.role
+          database            = entry.database
+          collection          = collection
+        }
+      ]
+    ]) : assignment
+  ]) == length(distinct([
+    for assignment in flatten([
+      for entry in var.cosmos : [
+        for collection in entry.collections : {
+          account_name        = entry.account_name
+          resource_group_name = entry.resource_group_name
+          role                = entry.role
+          database            = entry.database
+          collection          = collection
+        }
+      ]
+    ]) : assignment
+  ]))
+    error_message = "Each assignment must be unique."
   }
 
   default = []

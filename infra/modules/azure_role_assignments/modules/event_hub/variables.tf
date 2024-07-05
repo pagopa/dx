@@ -19,5 +19,32 @@ variable "event_hub" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition = length([
+      for assignment in flatten([
+        for entry in var.event_hub : [
+          for event_hub_name in entry.event_hub_names : {
+            namespace_name      = entry.namespace_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            event_hub_name      = event_hub_name
+          }
+        ]
+      ]) : assignment
+      ]) == length(distinct([
+        for assignment in flatten([
+          for entry in var.event_hub : [
+            for event_hub_name in entry.event_hub_names : {
+              namespace_name      = entry.namespace_name
+              resource_group_name = entry.resource_group_name
+              role                = entry.role
+              event_hub_name      = event_hub_name
+            }
+          ]
+        ]) : assignment
+    ]))
+    error_message = "Each assignment must be unique."
+  }
+
   default = []
 }
