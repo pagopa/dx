@@ -39,6 +39,11 @@ variable "redis" {
     error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
   }
 
+  validation {
+    condition = length(var.redis) == length(distinct(var.redis))
+    error_message = "Each assignment must be unique. Found ${length(var.redis) - length(distinct(var.redis))} duplicates."
+  }
+
   default = []
 }
 
