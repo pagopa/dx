@@ -1,10 +1,3 @@
-data "azurerm_key_vault" "this" {
-  for_each = { for key_vault in local.key_vault.vaults : "${key_vault.resource_group_name}|${key_vault.name}" => key_vault }
-
-  name                = each.value.name
-  resource_group_name = each.value.resource_group_name
-}
-
 resource "azurerm_key_vault_access_policy" "this" {
   for_each = {
     for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}" => assignment
@@ -15,9 +8,9 @@ resource "azurerm_key_vault_access_policy" "this" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = var.principal_id
 
-  secret_permissions      = setunion(lookup(local.key_vault.permissions.secrets, each.value.roles.secrets, []), each.value.override_roles.secrets)
-  certificate_permissions = setunion(lookup(local.key_vault.permissions.certificates, each.value.roles.certificates, []), each.value.override_roles.certificates)
-  key_permissions         = setunion(lookup(local.key_vault.permissions.keys, each.value.roles.keys, []), each.value.override_roles.keys)
+  secret_permissions      = setunion(lookup(local.permissions.secrets, each.value.roles.secrets, []), each.value.override_roles.secrets)
+  certificate_permissions = setunion(lookup(local.permissions.certificates, each.value.roles.certificates, []), each.value.override_roles.certificates)
+  key_permissions         = setunion(lookup(local.permissions.keys, each.value.roles.keys, []), each.value.override_roles.keys)
 }
 
 resource "azurerm_role_assignment" "secrets" {
@@ -27,7 +20,7 @@ resource "azurerm_role_assignment" "secrets" {
     try(assignment.roles.secrets, "") != ""
   }
   scope                = data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id
-  role_definition_name = local.key_vault.permissions_rbac.secrets[each.value.roles.secrets]
+  role_definition_name = local.permissions_rbac.secrets[each.value.roles.secrets]
   principal_id         = var.principal_id
 }
 
@@ -38,7 +31,7 @@ resource "azurerm_role_assignment" "keys" {
     try(assignment.roles.keys, "") != ""
   }
   scope                = data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id
-  role_definition_name = local.key_vault.permissions_rbac.keys[each.value.roles.keys]
+  role_definition_name = local.permissions_rbac.keys[each.value.roles.keys]
   principal_id         = var.principal_id
 }
 
@@ -49,6 +42,6 @@ resource "azurerm_role_assignment" "certificates" {
     try(assignment.roles.certificates, "") != ""
   }
   scope                = data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id
-  role_definition_name = local.key_vault.permissions_rbac.certificates[each.value.roles.certificates]
+  role_definition_name = local.permissions_rbac.certificates[each.value.roles.certificates]
   principal_id         = var.principal_id
 }
