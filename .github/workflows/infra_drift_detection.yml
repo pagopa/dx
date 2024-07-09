@@ -1,13 +1,13 @@
 name: Drift Detection
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       environment:
         description: Environment where the resources will be deployed.
         type: string
         required: true
-        default: dev
+        default: prod
       base_path:
         description: The base path on which the script will look for Terraform projects
         type: string
@@ -18,8 +18,6 @@ on:
         type: boolean
         required: false
         default: false
-  schedule:
-    - cron: '00 08 * * *' # Run at 08:00 every day
 
 
 env:
@@ -28,14 +26,14 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  BASE_DIR: ${{ inputs.base_path != '' && inputs.base_path || 'infra/resources/' }}
-  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'dev' }}
+  BASE_DIR: ${{ inputs.base_path }}
+  AZURE_ENVIRONMENT: ${{ inputs.environment }}
 
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment != '' && inputs.environment || 'dev' }}-ci
+    environment: ${{ inputs.environment }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true

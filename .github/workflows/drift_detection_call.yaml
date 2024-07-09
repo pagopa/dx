@@ -1,0 +1,14 @@
+name: Drift Detection
+
+on:
+  schedule:
+      - cron: '00 08 * * *' # Run at 08:00 every day
+
+jobs:
+  drift_detection:
+    uses: ./.github/workflows/infra_drift_detection.yml
+    name: Drift Detection
+    secrets: inherit
+    with:
+      environment: 'dev'
+      base_path: 'infra/resources/'
