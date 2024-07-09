@@ -3,7 +3,7 @@ locals {
   prefix    = "dx"
   env_short = "d"
   env       = "dev"
-  location  = "westeurope"
+  location  = "italynorth"
   project   = "${local.prefix}-${local.env_short}"
 
   repo_name = "dx"
