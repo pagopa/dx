@@ -7,7 +7,7 @@ on:
         description: Environment where the resources will be deployed.
         type: string
         required: true
-        default: prod
+        default: dev
       base_path:
         description: The base path on which the script will look for Terraform projects
         type: string
@@ -29,13 +29,13 @@ env:
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
   BASE_DIR: ${{ inputs.base_path != '' && inputs.base_path || 'infra/resources/' }}
-  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'prod' }}
+  AZURE_ENVIRONMENT: ${{ inputs.environment != '' && inputs.environment || 'dev' }}
 
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment != '' && inputs.environment || 'prod' }}-ci
+    environment: ${{ inputs.environment != '' && inputs.environment || 'dev' }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true
