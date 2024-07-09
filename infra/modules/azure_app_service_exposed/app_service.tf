@@ -6,8 +6,8 @@ resource "azurerm_linux_web_app" "this" {
   service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
 
   https_only                    = true
-  public_network_access_enabled = false
-  virtual_network_subnet_id     = azurerm_subnet.this.id
+  public_network_access_enabled = true
+  virtual_network_subnet_id     = var.azurerm_subnet_id
 
   identity {
     type = "SystemAssigned"

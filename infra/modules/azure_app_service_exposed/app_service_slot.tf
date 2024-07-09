@@ -1,13 +1,13 @@
-resource "azurerm_linux_web_app" "this" {
-  name                = "${local.project}-${var.environment.domain}-${var.environment.app_name}-app-${var.environment.instance_number}"
-  location            = var.environment.location
-  resource_group_name = var.resource_group_name
+resource "azurerm_linux_web_app_slot" "this" {
+  count = local.app_service.is_slot_enabled
 
-  service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
+  name = "${local.project}-${var.environment.domain}-${var.environment.app_name}-staging-app-${var.environment.instance_number}"
+
+  app_service_id = azurerm_linux_web_app.this.id
 
   https_only                    = true
-  public_network_access_enabled = false
-  virtual_network_subnet_id     = azurerm_subnet.this.id
+  public_network_access_enabled = true
+  virtual_network_subnet_id     = var.azurerm_subnet_id
 
   identity {
     type = "SystemAssigned"
@@ -36,7 +36,7 @@ resource "azurerm_linux_web_app" "this" {
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
     },
-    var.app_settings,
+    var.slot_app_settings,
     local.application_insights.enable ? {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#applicationinsights_connection_string
       APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
@@ -44,13 +44,6 @@ resource "azurerm_linux_web_app" "this" {
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
     } : {}
   )
-
-  dynamic "sticky_settings" {
-    for_each = length(var.sticky_app_setting_names) == 0 ? [] : [1]
-    content {
-      app_setting_names = var.sticky_app_setting_names
-    }
-  }
 
   lifecycle {
     ignore_changes = [
