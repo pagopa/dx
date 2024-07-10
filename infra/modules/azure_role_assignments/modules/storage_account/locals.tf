@@ -30,8 +30,8 @@ locals {
     }
 
     queue = {
-      reader = "Storage Queue Data Reader",
-      writer = "Storage Queue Data Contributor",
+      reader = "Storage Queue Data Message Processor",
+      writer = "Storage Queue Data Message Sender",
       owner  = "Storage Queue Data Contributor"
     }
   }
