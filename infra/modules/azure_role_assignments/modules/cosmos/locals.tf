@@ -13,6 +13,7 @@ locals {
           role                = entry.role
           database            = entry.database
           collection          = collection
+          scope               = collection == "*" ? (entry.database == "*" ? "/" : "/dbs/${entry.database}") : "/dbs/${entry.database}/colls/${collection}"
         }
       ]
     ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
