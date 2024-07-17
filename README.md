@@ -8,7 +8,7 @@ DevEx repository for shared tools and pipelines.
       - [What it does](#what-it-does)
       - [Example](#example)
       - [Requirements](#requirements)
-    - [infra\_apply.yaml](#infra_applyyaml)
+    - [infra_apply.yaml](#infra_applyyaml)
       - [What it does](#what-it-does-1)
       - [Requirements](#requirements-1)
   - [Terraform Modules](#terraform-modules)

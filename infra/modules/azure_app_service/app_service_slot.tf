@@ -22,7 +22,7 @@ resource "azurerm_linux_web_app_slot" "this" {
     ip_restriction_default_action     = "Deny"
 
     application_stack {
-      node_version = var.stack == "node" ? var.node_version : null
+      node_version = var.stack == "node" ? "${var.node_version}-lts" : null
       java_version = var.stack == "java" ? var.java_version : null
     }
   }
@@ -47,7 +47,6 @@ resource "azurerm_linux_web_app_slot" "this" {
 
   lifecycle {
     ignore_changes = [
-      app_settings["DOCKER_CUSTOM_IMAGE_NAME"],
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],

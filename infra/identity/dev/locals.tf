@@ -1,9 +1,9 @@
 locals {
 
   prefix    = "dx"
-  env_short = "p"
-  env       = "prod"
-  location  = "westeurope"
+  env_short = "d"
+  env       = "dev"
+  location  = "italynorth"
   project   = "${local.prefix}-${local.env_short}"
 
   repo_name = "dx"
@@ -11,8 +11,8 @@ locals {
   tags = {
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
     CreatedBy   = "Terraform"
-    Environment = "Prod"
+    Environment = "Dev"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/identity/prod/westeurope"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/identity/dev"
   }
 }

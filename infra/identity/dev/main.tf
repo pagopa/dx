@@ -2,13 +2,13 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.100.0"
+      version = "<= 3.108.0"
     }
   }
 
   backend "azurerm" {
     resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfproddx"
+    storage_account_name = "tfdevdx"
     container_name       = "terraform-state"
     key                  = "dx.identity.tfstate"
   }
@@ -27,7 +27,7 @@ resource "azurerm_resource_group" "rg_identity" {
 }
 
 module "federated_identities" {
-  source = "../../../modules/azure_federated_identity_with_github"
+  source = "../../modules/azure_federated_identity_with_github"
 
   prefix    = local.prefix
   env_short = local.env_short

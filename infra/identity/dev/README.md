@@ -6,19 +6,19 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.100.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.108.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.97.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.108.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_federated_identities"></a> [federated\_identities](#module\_federated\_identities) | ../../../modules/azure_federated_identity_with_github | n/a |
+| <a name="module_federated_identities"></a> [federated\_identities](#module\_federated\_identities) | ../../modules/azure_federated_identity_with_github | n/a |
 
 ## Resources
 

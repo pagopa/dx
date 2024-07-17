@@ -1,0 +1,76 @@
+# This pipeline assumes the presence of a .pre-commit-config.yaml file at 
+# the top level of the repository, which contains Terraform validation tasks.
+# For more details, refer to the pre-commit configuration file:
+# https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
+name: Terraform Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - infra/**
+      - .terraform-version
+      - .pre-commit-config.yaml
+
+jobs:
+  tf_analysis:
+    name: Terraform Validation
+    runs-on: ubuntu-20.04
+    env:
+      TERRAFORM_VERSION: "1.7.5"
+    container:
+      image: ghcr.io/antonbabenko/pre-commit-terraform:v1.86.0@sha256:a1ffb8fff155934c1937580eeab8b3f68726485cd54025d2f911b0c21a9becba
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      # https://github.com/antonbabenko/pre-commit-terraform#github-actions
+      - name: Git config
+        run: |
+          set -eu
+
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+
+      - name: Get Modified Files
+        id: file_changes
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -eu
+
+          DIFF="$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }})"
+          echo "Diff between ${{ github.base_ref }} and ${{ github.sha }}"
+          echo "files=$(echo \"$DIFF\" | xargs echo)" >> $GITHUB_OUTPUT
+
+      - name: Cache pre-commit
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit on Modified Files
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          set -eu
+
+          pre-commit run \
+            --color=always \
+            --show-diff-on-failure \
+            --files "${{ steps.file_changes.outputs.files }}"
+
+      - name: Run pre-commit
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          set -eu
+
+          pre-commit run \
+            --color=always
