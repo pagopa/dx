@@ -22,10 +22,6 @@ on:
         description: Web App name.
         type: string
         required: true
-      health_check_path:
-        description: The health probe path exposed by the Web App.
-        type: string
-        required: true
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -128,15 +124,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_USE_OIDC: true
-      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-      WEB_APP_NAME: ${{ inputs.web_app_name}}
-      HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
-      USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
 
     steps:
       - name: Download Artifact
@@ -146,42 +133,39 @@ jobs:
 
       - name: Azure Login
         uses: azure/login@v2 # v2.0.0
+        env:
+          ARM_USE_OIDC: true
         with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
-        uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == 'false' }}
-        with:
-          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
-          app-name: ${{ env.WEB_APP_NAME }}
-          package: ${{ env.BUNDLE_NAME }}.zip
+        if: ${{ inputs.use_staging_slot == 'false' }}
+        run: |
+          az webapp deploy \
+           --resource-group ${{ inputs.resource_group_name }} \
+           --name ${{ inputs.web_app_name }} \
+           --src-path  ${{ env.BUNDLE_NAME }}.zip \
+           --type zip \
+           --async false
 
       - name: Deploy to Staging Slot
-        uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
-        with:
-          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
-          app-name: ${{ env.WEB_APP_NAME }}
-          slot-name: staging
-          package: ${{ env.BUNDLE_NAME }}.zip
-
-      - name: Ping Staging Health
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
+        if: ${{ inputs.use_staging_slot == 'true' }}
         run: |
-          curl \
-            --retry 5 \
-            --retry-max-time 120 \
-            --retry-all-errors \
-            -f 'https://${{ env.WEB_APP_NAME }}-staging.azurewebsites.net${{ env.HEALTH_CHECK_PATH }}'
+          az webapp deploy \
+           --resource-group ${{ inputs.resource_group_name }} \
+           --name ${{ inputs.web_app_name }} \
+           --slot staging \
+           --src-path  ${{ env.BUNDLE_NAME }}.zip \
+           --type zip \
+           --async false
 
       - name: Swap Staging and Production Slots
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
+        if: ${{ inputs.use_staging_slot == 'true' }}
         run: |
           az webapp deployment slot swap \
-            -g ${{ env.RESOURCE_GROUP_NAME }} \
-            -n ${{ env.WEB_APP_NAME }} \
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.web_app_name }} \
             --slot staging \
             --target-slot production
