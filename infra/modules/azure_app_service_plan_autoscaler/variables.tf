@@ -3,6 +3,12 @@ variable "tags" {
   description = "Resources tags"
 }
 
+variable "autoscale_name" {
+  type        = string
+  description = "(Optional) Override auto generated name for the autoscaler resource"
+  default     = null
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Resource group to deploy resources to"
