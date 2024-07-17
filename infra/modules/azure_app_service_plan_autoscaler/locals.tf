@@ -22,7 +22,7 @@ locals {
       time_aggregation         = "Average"
       operator                 = "GreaterThan"
       threshold                = try(var.scale_metrics.requests.upper_threshold, null)
-      divide_by_instance_count = false
+      divide_by_instance_count = true
     }
 
     scale_action = {
@@ -44,7 +44,7 @@ locals {
       time_aggregation         = "Average"
       operator                 = "LessThan"
       threshold                = try(var.scale_metrics.requests.lower_threshold, null)
-      divide_by_instance_count = false
+      divide_by_instance_count = true
     }
 
     scale_action = {
