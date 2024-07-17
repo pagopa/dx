@@ -20,13 +20,15 @@ output "function_app" {
       name = try(azurerm_service_plan.this[0].name, null)
     }
     function_app = {
-      id           = azurerm_linux_function_app.this.id
-      name         = azurerm_linux_function_app.this.name
-      principal_id = azurerm_linux_function_app.this.identity[0].principal_id
+      id               = azurerm_linux_function_app.this.id
+      name             = azurerm_linux_function_app.this.name
+      principal_id     = azurerm_linux_function_app.this.identity[0].principal_id
+      default_hostname = azurerm_linux_function_app.this.default_hostname
       slot = {
-        id           = try(azurerm_linux_function_app_slot.this[0].id, null)
-        name         = try(azurerm_linux_function_app_slot.this[0].name, null)
-        principal_id = try(azurerm_linux_function_app_slot.this[0].identity[0].principal_id, null)
+        id               = try(azurerm_linux_function_app_slot.this[0].id, null)
+        name             = try(azurerm_linux_function_app_slot.this[0].name, null)
+        principal_id     = try(azurerm_linux_function_app_slot.this[0].identity[0].principal_id, null)
+        default_hostname = try(azurerm_linux_function_app_slot.this[0].default_hostname, null)
       }
     }
   }
