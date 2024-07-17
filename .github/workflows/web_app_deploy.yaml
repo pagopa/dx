@@ -5,11 +5,6 @@ on:
         description: The name of the workspace to create the artifact for.
         type: string
         required: true
-      target_name:
-        description: "(Optional) The name of the target to create artifact for (default: main)"
-        type: string
-        required: false
-        default: main
       environment:
         description: Environment where the artifact will be deployed.
         type: string
@@ -77,7 +72,7 @@ jobs:
         run: |
           set -e
 
-          ENTRY_POINT=$(jq -r ${{ inputs.target_name == 'main' && '.main' || format('.exports.{0}', inputs.target_name) }} package.json)
+          ENTRY_POINT=$(jq -r '.main' package.json)
 
           if [ -z $ENTRY_POINT ]; then
             echo "::error::invalid target"
