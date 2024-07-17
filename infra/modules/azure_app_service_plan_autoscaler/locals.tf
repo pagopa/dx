@@ -29,7 +29,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.increase_by, null)
-      cooldown  = "PT1M"
+      cooldown  = "PT${var.scale_metrics.requests.increase_cooldown}M"
     }
   }
 
@@ -51,7 +51,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.decrease_by, null)
-      cooldown  = "PT10M"
+      cooldown  = "PT${var.scale_metrics.requests.decrease_cooldown}M"
     }
   }
 
@@ -73,7 +73,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.increase_by
-      cooldown  = "PT1M"
+      cooldown  = "PT${var.scale_metrics.cpu.increase_cooldown}M"
     }
   }
 
@@ -95,7 +95,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.decrease_by
-      cooldown  = "PT20M"
+      cooldown  = "PT${var.scale_metrics.cpu.decrease_cooldown}M"
     }
   }
 
@@ -117,7 +117,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.increase_by
-      cooldown  = "PT1M"
+      cooldown  = "PT${var.scale_metrics.memory.increase_cooldown}M"
     }
   }
 
@@ -139,7 +139,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.decrease_by
-      cooldown  = "PT5M"
+      cooldown  = "PT${var.scale_metrics.memory.decrease_cooldown}M"
     }
   }
 }
