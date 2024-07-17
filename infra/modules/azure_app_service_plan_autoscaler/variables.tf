@@ -109,12 +109,12 @@ variable "scale_metrics" {
       decrease_cooldown = number
     }), null)
     cpu = optional(object({
-      upper_threshold   = optional(number, 80)
-      lower_threshold   = optional(number, 20)
-      increase_by       = optional(number, 1)
-      decrease_by       = optional(number, 1)
-      increase_cooldown = optional(number, 1)
-      decrease_cooldown = optional(number, 1)
+      upper_threshold   = number
+      lower_threshold   = number
+      increase_by       = number
+      decrease_by       = number
+      increase_cooldown = number
+      decrease_cooldown = number
       }), {
       upper_threshold   = 80
       lower_threshold   = 20
