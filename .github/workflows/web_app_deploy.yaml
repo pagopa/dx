@@ -67,11 +67,13 @@ jobs:
       - name: Build the artifact
         id: make-artifact
         env:
+          # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
           YARN_NODE_LINKER: node-modules
           YARN_NM_HOISTING_LIMITS: workspaces
         run: |
           set -e
 
+          # determine the entry point file name from package.json main property
           ENTRY_POINT=$(jq -r '.main' package.json)
 
           if [ -z $ENTRY_POINT ]; then
@@ -136,7 +138,7 @@ jobs:
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
-        if: ${{ inputs.use_staging_slot == 'false' }}
+        if: ${{ inputs.use_staging_slot == false }}
         run: |
           az webapp deploy \
            --resource-group ${{ inputs.resource_group_name }} \
@@ -146,7 +148,7 @@ jobs:
            --async false
 
       - name: Deploy to Staging Slot
-        if: ${{ inputs.use_staging_slot == 'true' }}
+        if: ${{ inputs.use_staging_slot == true }}
         run: |
           az webapp deploy \
            --resource-group ${{ inputs.resource_group_name }} \
@@ -157,7 +159,7 @@ jobs:
            --async false
 
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == 'true' }}
+        if: ${{ inputs.use_staging_slot == true }}
         run: |
           az webapp deployment slot swap \
             -g ${{ inputs.resource_group_name }} \
