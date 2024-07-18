@@ -17,9 +17,9 @@ locals {
       metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.requests_rule_increase
       time_window              = "PT1M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.requests_rule_increase
       operator                 = "GreaterThan"
       threshold                = try(var.scale_metrics.requests.upper_threshold, null)
       divide_by_instance_count = true
@@ -29,7 +29,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.increase_by, null)
-      cooldown  = "PT1M"
+      cooldown  = var.cooldown_scale_action.requests_rule_increase
     }
   }
 
@@ -39,9 +39,9 @@ locals {
       metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.requests_rule_decrease
       time_window              = "PT1M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.requests_rule_decrease
       operator                 = "LessThan"
       threshold                = try(var.scale_metrics.requests.lower_threshold, null)
       divide_by_instance_count = true
@@ -51,7 +51,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.decrease_by, null)
-      cooldown  = "PT10M"
+      cooldown  = var.cooldown_scale_action.requests_rule_decrease
     }
   }
 
@@ -61,9 +61,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.cpu_rule_increase
       time_window              = "PT5M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.cpu_rule_increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.cpu.upper_threshold
       divide_by_instance_count = false
@@ -73,7 +73,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.increase_by
-      cooldown  = "PT1M"
+      cooldown  = var.cooldown_scale_action.cpu_rule_increase
     }
   }
 
@@ -83,9 +83,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.cpu_rule_decrease
       time_window              = "PT5M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.cpu_rule_decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.cpu.lower_threshold
       divide_by_instance_count = false
@@ -95,7 +95,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.decrease_by
-      cooldown  = "PT20M"
+      cooldown  = var.cooldown_scale_action.cpu_rule_decrease
     }
   }
 
@@ -105,9 +105,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.memory_rule_increase
       time_window              = "PT5M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.memory_rule_increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.memory.upper_threshold
       divide_by_instance_count = false
@@ -117,7 +117,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.increase_by
-      cooldown  = "PT1M"
+      cooldown  = var.cooldown_scale_action.memory_rule_increase
     }
   }
 
@@ -127,9 +127,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = "Average"
+      statistic                = var.statistic_metric_trigger.memory_rule_decrease
       time_window              = "PT5M"
-      time_aggregation         = "Average"
+      time_aggregation         = var.time_aggregation_metric_trigger.memory_rule_decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.memory.lower_threshold
       divide_by_instance_count = false
@@ -139,7 +139,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.decrease_by
-      cooldown  = "PT5M"
+      cooldown  = var.cooldown_scale_action.memory_rule_decrease
     }
   }
 }
