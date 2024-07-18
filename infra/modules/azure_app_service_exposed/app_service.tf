@@ -7,7 +7,6 @@ resource "azurerm_linux_web_app" "this" {
 
   https_only                    = true
   public_network_access_enabled = true
-  virtual_network_subnet_id     = var.azurerm_subnet_id
 
   identity {
     type = "SystemAssigned"
@@ -19,7 +18,6 @@ resource "azurerm_linux_web_app" "this" {
     vnet_route_all_enabled            = true
     health_check_path                 = var.health_check_path
     health_check_eviction_time_in_min = 2
-    ip_restriction_default_action     = "Deny"
 
     application_stack {
       node_version = var.stack == "node" ? "${var.node_version}-lts" : null
