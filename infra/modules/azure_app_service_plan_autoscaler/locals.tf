@@ -18,7 +18,7 @@ locals {
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.requests_rule.increase
-      time_window              = var.scale_metrics.time_window.requests_rule.increase
+      time_window              = "PT${var.scale_metrics.time_window.requests_rule.increase}M"
       time_aggregation         = var.scale_metrics.time_aggregation.requests_rule.increase
       operator                 = "GreaterThan"
       threshold                = try(var.scale_metrics.requests.upper_threshold, null)
@@ -29,7 +29,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.increase_by, null)
-      cooldown  = var.scale_metrics.cooldown.requests_rule.increase
+      cooldown  = "PT${var.scale_metrics.cooldown.requests_rule.increase}M"
     }
   }
 
@@ -40,7 +40,7 @@ locals {
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.requests_rule.decrease
-      time_window              = var.scale_metrics.time_window.requests_rule.decrease
+      time_window              = "PT${var.scale_metrics.time_window.requests_rule.decrease}M"
       time_aggregation         = var.scale_metrics.time_aggregation.requests_rule.decrease
       operator                 = "LessThan"
       threshold                = try(var.scale_metrics.requests.lower_threshold, null)
@@ -51,7 +51,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.decrease_by, null)
-      cooldown  = var.scale_metrics.cooldown.requests_rule.decrease
+      cooldown  = "PT${var.scale_metrics.cooldown.requests_rule.decrease}M"
     }
   }
 
@@ -62,7 +62,7 @@ locals {
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.cpu_rule.increase
-      time_window              = var.scale_metrics.time_window.cpu_rule.increase
+      time_window              = "PT${var.scale_metrics.time_window.cpu_rule.increase}M"
       time_aggregation         = var.scale_metrics.time_aggregation.cpu_rule.increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.cpu.upper_threshold
@@ -73,7 +73,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.increase_by
-      cooldown  = var.scale_metrics.cooldown.cpu_rule.increase
+      cooldown  = "PT${var.scale_metrics.cooldown.cpu_rule.increase}M"
     }
   }
 
@@ -84,7 +84,7 @@ locals {
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.cpu_rule.decrease
-      time_window              = var.scale_metrics.time_window.cpu_rule.decrease
+      time_window              = "PT${var.scale_metrics.time_window.cpu_rule.decrease}M"
       time_aggregation         = var.scale_metrics.time_aggregation.cpu_rule.decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.cpu.lower_threshold
@@ -95,7 +95,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.decrease_by
-      cooldown  = var.scale_metrics.cooldown.cpu_rule.decrease
+      cooldown  = "PT${var.scale_metrics.cooldown.cpu_rule.decrease}M"
     }
   }
 
@@ -106,7 +106,7 @@ locals {
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.memory_rule.increase
-      time_window              = var.scale_metrics.time_window.memory_rule.increase
+      time_window              = "PT${var.scale_metrics.time_window.memory_rule.increase}M"
       time_aggregation         = var.scale_metrics.time_aggregation.memory_rule.increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.memory.upper_threshold
@@ -117,7 +117,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.increase_by
-      cooldown  = var.scale_metrics.cooldown.memory_rule.increase
+      cooldown  = "PT${var.scale_metrics.cooldown.memory_rule.increase}M"
     }
   }
 
@@ -128,7 +128,7 @@ locals {
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.statistic.memory_rule.decrease
-      time_window              = var.scale_metrics.time_window.memory_rule.decrease
+      time_window              = "PT${var.scale_metrics.time_window.memory_rule.decrease}M"
       time_aggregation         = var.scale_metrics.time_aggregation.memory_rule.decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.memory.lower_threshold
@@ -139,7 +139,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.decrease_by
-      cooldown  = var.scale_metrics.cooldown.memory_rule.decrease
+      cooldown  = "PT${var.scale_metrics.cooldown.memory_rule.decrease}M"
     }
   }
 }

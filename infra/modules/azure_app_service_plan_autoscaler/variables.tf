@@ -114,16 +114,16 @@ variable "scale_metrics" {
     }), {})
     cooldown = optional(object({
       requests_rule = optional(object({
-        increase = optional(string, "PT1M")
-        decrease = optional(string, "PT10M")
+        increase = optional(number, 1)
+        decrease = optional(number, 10)
       }), {})
       cpu_rule = optional(object({
-        increase = optional(string, "PT1M")
-        decrease = optional(string, "PT20M")
+        increase = optional(number, 1)
+        decrease = optional(number, 20)
       }), {})
       memory_rule = optional(object({
-        increase = optional(string, "PT1M")
-        decrease = optional(string, "PT5M")
+        increase = optional(number, 1)
+        decrease = optional(number, 5)
       }), {})
     }), {})
     statistic = optional(object({
@@ -156,16 +156,16 @@ variable "scale_metrics" {
     }), {})
     time_window = optional(object({
       requests_rule = optional(object({
-        increase = optional(string, "PT1M")
-        decrease = optional(string, "PT1M")
+        increase = optional(number, 1)
+        decrease = optional(number, 1)
       }), {})
       cpu_rule = optional(object({
-        increase = optional(string, "PT5M")
-        decrease = optional(string, "PT5M")
+        increase = optional(number, 5)
+        decrease = optional(number, 5)
       }), {})
       memory_rule = optional(object({
-        increase = optional(string, "PT5M")
-        decrease = optional(string, "PT5M")
+        increase = optional(number, 5)
+        decrease = optional(number, 5)
       }), {})
     }), {})
   })
@@ -188,16 +188,16 @@ variable "scale_metrics" {
     }
     cooldown = {
       requests_rule = {
-        increase = "PT1M"
-        decrease = "PT10M"
+        increase = 1
+        decrease = 10
       }
       cpu_rule = {
-        increase = "PT1M"
-        decrease = "PT20M"
+        increase = 1
+        decrease = 20
       }
       memory_rule = {
-        increase = "PT1M"
-        decrease = "PT5M"
+        increase = 1
+        decrease = 5
       }
     }
     statistic = {
@@ -230,16 +230,16 @@ variable "scale_metrics" {
     }
     time_window = {
       requests_rule = {
-        increase = "PT1M"
-        decrease = "PT1M"
+        increase = 1
+        decrease = 1
       }
       cpu_rule = {
-        increase = "PT5M"
-        decrease = "PT5M"
+        increase = 5
+        decrease = 5
       }
       memory_rule = {
-        increase = "PT5M"
-        decrease = "PT5M"
+        increase = 5
+        decrease = 5
       }
     }
   }
