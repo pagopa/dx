@@ -14,7 +14,9 @@ No providers.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_test"></a> [test](#module\_test) | ../../modules/azure_app_service_plan_autoscaler | n/a |
 
 ## Resources
 
