@@ -14,7 +14,7 @@ This module is used to create an Azure App Service, allowing it to be configured
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 3.111.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.113.0 |
 
 ## Modules
 
