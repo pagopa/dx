@@ -95,78 +95,46 @@ variable "scheduler" {
 variable "scale_metrics" {
   type = object({
     requests = optional(object({
-      upper_threshold = number
-      lower_threshold = number
-      increase_by     = number
-      decrease_by     = number
+      upper_threshold           = number
+      lower_threshold           = number
+      increase_by               = number
+      decrease_by               = number
+      cooldown_increase         = optional(number, 1)
+      cooldown_decrease         = optional(number, 10)
+      statistic_increase        = optional(string, "Average")
+      statistic_decrease        = optional(string, "Average")
+      time_aggregation_increase = optional(string, "Average")
+      time_aggregation_decrease = optional(string, "Average")
+      time_window_increase      = optional(number, 1)
+      time_window_decrease      = optional(number, 1)
     }), null)
     cpu = optional(object({
-      upper_threshold = optional(number, 80)
-      lower_threshold = optional(number, 20)
-      increase_by     = optional(number, 1)
-      decrease_by     = optional(number, 1)
+      upper_threshold           = optional(number, 80)
+      lower_threshold           = optional(number, 20)
+      increase_by               = optional(number, 1)
+      decrease_by               = optional(number, 1)
+      cooldown_increase         = optional(number, 1)
+      cooldown_decrease         = optional(number, 20)
+      statistic_increase        = optional(string, "Average")
+      statistic_decrease        = optional(string, "Average")
+      time_aggregation_increase = optional(string, "Average")
+      time_aggregation_decrease = optional(string, "Average")
+      time_window_increase      = optional(number, 5)
+      time_window_decrease      = optional(number, 5)
     }), {})
     memory = optional(object({
-      upper_threshold = optional(number, 70)
-      lower_threshold = optional(number, 20)
-      increase_by     = optional(number, 1)
-      decrease_by     = optional(number, 1)
-    }), {})
-    cooldown = optional(object({
-      requests_rule = optional(object({
-        increase = optional(number, 1)
-        decrease = optional(number, 10)
-      }), {})
-      cpu_rule = optional(object({
-        increase = optional(number, 1)
-        decrease = optional(number, 20)
-      }), {})
-      memory_rule = optional(object({
-        increase = optional(number, 1)
-        decrease = optional(number, 5)
-      }), {})
-    }), {})
-    statistic = optional(object({
-      requests_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-      cpu_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-      memory_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-    }), {})
-    time_aggregation = optional(object({
-      requests_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-      cpu_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-      memory_rule = optional(object({
-        increase = optional(string, "Average")
-        decrease = optional(string, "Average")
-      }), {})
-    }), {})
-    time_window = optional(object({
-      requests_rule = optional(object({
-        increase = optional(number, 1)
-        decrease = optional(number, 1)
-      }), {})
-      cpu_rule = optional(object({
-        increase = optional(number, 5)
-        decrease = optional(number, 5)
-      }), {})
-      memory_rule = optional(object({
-        increase = optional(number, 5)
-        decrease = optional(number, 5)
-      }), {})
+      upper_threshold           = optional(number, 70)
+      lower_threshold           = optional(number, 20)
+      increase_by               = optional(number, 1)
+      decrease_by               = optional(number, 1)
+      cooldown_increase         = optional(number, 1)
+      cooldown_decrease         = optional(number, 5)
+      statistic_increase        = optional(string, "Average")
+      statistic_decrease        = optional(string, "Average")
+      time_aggregation_increase = optional(string, "Average")
+      time_aggregation_decrease = optional(string, "Average")
+      time_window_increase      = optional(number, 5)
+      time_window_decrease      = optional(number, 5)
     }), {})
   })
 
@@ -175,72 +143,32 @@ variable "scale_metrics" {
   default = {
     requests = null
     cpu = {
-      upper_threshold = 80
-      lower_threshold = 20
-      increase_by     = 1
-      decrease_by     = 1
+      upper_threshold           = 80
+      lower_threshold           = 20
+      increase_by               = 1
+      decrease_by               = 1
+      cooldown_increase         = 1
+      cooldown_decrease         = 20
+      statistic_increase        = "Average"
+      statistic_decrease        = "Average"
+      time_aggregation_increase = "Average"
+      time_aggregation_decrease = "Average"
+      time_window_increase      = 5
+      time_window_decrease      = 5
     }
     memory = {
-      upper_threshold = 70
-      lower_threshold = 20
-      increase_by     = 1
-      decrease_by     = 1
-    }
-    cooldown = {
-      requests_rule = {
-        increase = 1
-        decrease = 10
-      }
-      cpu_rule = {
-        increase = 1
-        decrease = 20
-      }
-      memory_rule = {
-        increase = 1
-        decrease = 5
-      }
-    }
-    statistic = {
-      requests_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-      cpu_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-      memory_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-    }
-    time_aggregation = {
-      requests_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-      cpu_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-      memory_rule = {
-        increase = "Average"
-        decrease = "Average"
-      }
-    }
-    time_window = {
-      requests_rule = {
-        increase = 1
-        decrease = 1
-      }
-      cpu_rule = {
-        increase = 5
-        decrease = 5
-      }
-      memory_rule = {
-        increase = 5
-        decrease = 5
-      }
+      upper_threshold           = 70
+      lower_threshold           = 20
+      increase_by               = 1
+      decrease_by               = 1
+      cooldown_increase         = 1
+      cooldown_decrease         = 5
+      statistic_increase        = "Average"
+      statistic_decrease        = "Average"
+      time_aggregation_increase = "Average"
+      time_aggregation_decrease = "Average"
+      time_window_increase      = 5
+      time_window_decrease      = 5
     }
   }
 
@@ -257,24 +185,24 @@ variable "scale_metrics" {
   validation {
     condition = alltrue([
       # Statistic
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.requests_rule.increase),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.requests_rule.decrease),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.cpu_rule.increase),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.cpu_rule.decrease),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.memory_rule.increase),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.statistic.memory_rule.decrease),
+      can(var.scale_metrics.requests.statistic_increase) ? contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.requests.statistic_increase) : true,
+      can(var.scale_metrics.requests.statistic_decrease) ? contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.requests.statistic_decrease) : true,
+      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.cpu.statistic_increase),
+      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.cpu.statistic_decrease),
+      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_increase),
+      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_decrease),
     ])
     error_message = "Each Statistic metric trigger must be one of the following values: Average, Max, Min, or Sum."
   }
 
   validation {
     condition = alltrue([
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.requests_rule.increase),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.requests_rule.decrease),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.cpu_rule.increase),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.cpu_rule.decrease),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.memory_rule.increase),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.time_aggregation.memory_rule.decrease),
+      can(var.scale_metrics.requests.time_aggregation_increase) ? contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.requests.time_aggregation_increase) : true,
+      can(var.scale_metrics.requests.time_aggregation_decrease) ? contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.requests.time_aggregation_decrease) : true,
+      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.cpu.time_aggregation_increase),
+      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.cpu.time_aggregation_decrease),
+      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_increase),
+      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_decrease),
     ])
     error_message = "Each Time aggregation metric trigger must be one of the following values: Average, Count, Maximum, Minimum, Last or Total."
   }

@@ -17,9 +17,9 @@ locals {
       metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.requests_rule.increase
-      time_window              = "PT${var.scale_metrics.time_window.requests_rule.increase}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.requests_rule.increase
+      statistic                = try(var.scale_metrics.requests.statistic_increase, "Average")
+      time_window              = try("PT${var.scale_metrics.requests.time_window_increase}M", "PT1M")
+      time_aggregation         = try(var.scale_metrics.requests.time_aggregation_increase, "Average")
       operator                 = "GreaterThan"
       threshold                = try(var.scale_metrics.requests.upper_threshold, null)
       divide_by_instance_count = true
@@ -29,7 +29,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.increase_by, null)
-      cooldown  = "PT${var.scale_metrics.cooldown.requests_rule.increase}M"
+      cooldown  = try("PT${var.scale_metrics.requests.cooldown_increase}M", "PT1M")
     }
   }
 
@@ -39,9 +39,9 @@ locals {
       metric_resource_id       = local.app_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.requests_rule.decrease
-      time_window              = "PT${var.scale_metrics.time_window.requests_rule.decrease}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.requests_rule.decrease
+      statistic                = try(var.scale_metrics.requests.statistic_decrease, "Average")
+      time_window              = try("PT${var.scale_metrics.requests.time_window_decrease}M", "PT1M")
+      time_aggregation         = try(var.scale_metrics.requests.time_aggregation_decrease, "Average")
       operator                 = "LessThan"
       threshold                = try(var.scale_metrics.requests.lower_threshold, null)
       divide_by_instance_count = true
@@ -51,7 +51,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = try(var.scale_metrics.requests.decrease_by, null)
-      cooldown  = "PT${var.scale_metrics.cooldown.requests_rule.decrease}M"
+      cooldown  = try("PT${var.scale_metrics.requests.cooldown_decrease}M", "PT10M")
     }
   }
 
@@ -61,9 +61,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.cpu_rule.increase
-      time_window              = "PT${var.scale_metrics.time_window.cpu_rule.increase}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.cpu_rule.increase
+      statistic                = var.scale_metrics.cpu.statistic_increase
+      time_window              = "PT${var.scale_metrics.cpu.time_window_increase}M"
+      time_aggregation         = var.scale_metrics.cpu.time_aggregation_increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.cpu.upper_threshold
       divide_by_instance_count = false
@@ -73,7 +73,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.increase_by
-      cooldown  = "PT${var.scale_metrics.cooldown.cpu_rule.increase}M"
+      cooldown  = "PT${var.scale_metrics.cpu.cooldown_increase}M"
     }
   }
 
@@ -83,9 +83,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.cpu_rule.decrease
-      time_window              = "PT${var.scale_metrics.time_window.cpu_rule.decrease}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.cpu_rule.decrease
+      statistic                = var.scale_metrics.cpu.statistic_decrease
+      time_window              = "PT${var.scale_metrics.cpu.time_window_decrease}M"
+      time_aggregation         = var.scale_metrics.cpu.time_aggregation_decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.cpu.lower_threshold
       divide_by_instance_count = false
@@ -95,7 +95,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.cpu.decrease_by
-      cooldown  = "PT${var.scale_metrics.cooldown.cpu_rule.decrease}M"
+      cooldown  = "PT${var.scale_metrics.cpu.cooldown_decrease}M"
     }
   }
 
@@ -105,9 +105,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.memory_rule.increase
-      time_window              = "PT${var.scale_metrics.time_window.memory_rule.increase}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.memory_rule.increase
+      statistic                = var.scale_metrics.memory.statistic_increase
+      time_window              = "PT${var.scale_metrics.memory.time_window_increase}M"
+      time_aggregation         = var.scale_metrics.memory.time_aggregation_increase
       operator                 = "GreaterThan"
       threshold                = var.scale_metrics.memory.upper_threshold
       divide_by_instance_count = false
@@ -117,7 +117,7 @@ locals {
       direction = "Increase"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.increase_by
-      cooldown  = "PT${var.scale_metrics.cooldown.memory_rule.increase}M"
+      cooldown  = "PT${var.scale_metrics.memory.cooldown_increase}M"
     }
   }
 
@@ -127,9 +127,9 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.statistic.memory_rule.decrease
-      time_window              = "PT${var.scale_metrics.time_window.memory_rule.decrease}M"
-      time_aggregation         = var.scale_metrics.time_aggregation.memory_rule.decrease
+      statistic                = var.scale_metrics.memory.statistic_decrease
+      time_window              = "PT${var.scale_metrics.memory.time_window_decrease}M"
+      time_aggregation         = var.scale_metrics.memory.time_aggregation_decrease
       operator                 = "LessThan"
       threshold                = var.scale_metrics.memory.lower_threshold
       divide_by_instance_count = false
@@ -139,7 +139,7 @@ locals {
       direction = "Decrease"
       type      = "ChangeCount"
       value     = var.scale_metrics.memory.decrease_by
-      cooldown  = "PT${var.scale_metrics.cooldown.memory_rule.decrease}M"
+      cooldown  = "PT${var.scale_metrics.memory.cooldown_decrease}M"
     }
   }
 }
