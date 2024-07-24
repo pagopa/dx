@@ -8,6 +8,12 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
+variable "autoscale_name" {
+  type        = string
+  description = "(Optional) Override auto generated name for the autoscaler resource"
+  default     = null
+}
+
 variable "target_service" {
   type = object({
     app_service_name  = optional(string)
