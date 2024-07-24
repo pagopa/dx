@@ -97,11 +97,3 @@ variable "sticky_app_setting_names" {
   description = "(Optional) A list of application setting names that are not swapped between slots"
   default     = []
 }
-
-# ------------ NETWORKING ------------ #
-
-variable "azurerm_subnet_id" {
-  type        = string
-  description = "(Optional) Id of the subnet the Function App uses for outbound connectivity"
-  default     = null
-}
