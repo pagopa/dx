@@ -24,7 +24,7 @@ variable "environment" {
   }
 
   validation {
-    condition     = var.environment.domain == null ? true : length(var.environment.domain) >= 2
+    condition     = var.environment.domain == null ? true : length(replace(var.environment.domain, "-", "")) >= 2
     error_message = "\"domain\" variable must be null or a value of at least 2 characters"
   }
 
