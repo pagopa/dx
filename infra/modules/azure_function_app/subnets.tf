@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "this" {
-  name                 = "${local.project}-${var.environment.domain}-${var.environment.app_name}-func-snet-${var.environment.instance_number}"
+  name                 = local.subnet.name
   virtual_network_name = data.azurerm_virtual_network.this.name
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   address_prefixes     = [var.subnet_cidr]
