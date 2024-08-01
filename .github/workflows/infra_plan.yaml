@@ -151,20 +151,20 @@ jobs:
             </details>
             `;
             if (botComment) {
-              await github.rest.issues.updateComment({
+              await github.rest.issues.deleteComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: commentBody,
                 comment_id: botComment.id
               })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: commentBody,
-                issue_number: context.issue.number
-              })
             }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody,
+              issue_number: context.issue.number
+            })
+            
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result
