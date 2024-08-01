@@ -33,7 +33,7 @@ jobs:
     environment: ${{ inputs.environment }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
-      cancel-in-progress: true
+      cancel-in-progress: false
     permissions:
       id-token: write
       contents: read
