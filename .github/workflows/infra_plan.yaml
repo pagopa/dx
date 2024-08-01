@@ -138,7 +138,7 @@ jobs:
               issue_number: context.issue.number
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes(`#### 📖 Terraform Plan ('${{ steps.directory.outputs.dir }}')`)
+              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('${{ steps.directory.outputs.dir }}')`)
             })
             const commentBody = `#### 📖 Terraform Plan ('${{ steps.directory.outputs.dir }}') - ${status}
             <details>
