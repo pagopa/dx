@@ -138,7 +138,7 @@ jobs:
               issue_number: context.issue.number
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Plan')
+              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('${{ steps.directory.outputs.dir }}')`)
             })
             const commentBody = `#### 📖 Terraform Plan ('${{ steps.directory.outputs.dir }}') - ${status}
             <details>
@@ -151,20 +151,20 @@ jobs:
             </details>
             `;
             if (botComment) {
-              await github.rest.issues.updateComment({
+              await github.rest.issues.deleteComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: commentBody,
                 comment_id: botComment.id
               })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: commentBody,
-                issue_number: context.issue.number
-              })
             }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody,
+              issue_number: context.issue.number
+            })
+            
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result
