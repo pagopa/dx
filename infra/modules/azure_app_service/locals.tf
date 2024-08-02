@@ -21,7 +21,7 @@ locals {
   }
 
   app_service_slot = {
-    name = "staging-app"
+    name = "staging"
   }
 
   application_insights = {
