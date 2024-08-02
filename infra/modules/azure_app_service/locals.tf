@@ -20,6 +20,10 @@ locals {
     is_slot_enabled        = var.tier == "test" ? 0 : 1
   }
 
+  app_service_slot = {
+    name = "staging-app"
+  }
+
   application_insights = {
     enable = var.application_insights_connection_string != null
   }
