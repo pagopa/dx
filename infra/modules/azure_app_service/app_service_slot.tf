@@ -1,7 +1,7 @@
 resource "azurerm_linux_web_app_slot" "this" {
   count = local.app_service.is_slot_enabled
 
-  name = "${local.project}-${var.environment.domain}-${var.environment.app_name}-staging-app-${var.environment.instance_number}"
+  name = local.app_service_slot.name
 
   app_service_id = azurerm_linux_web_app.this.id
 
