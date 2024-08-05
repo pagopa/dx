@@ -74,7 +74,6 @@ resource "azurerm_linux_function_app" "this" {
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
-      tags["Source"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],
       tags["hidden-link: /app-insights-resource-id"]
