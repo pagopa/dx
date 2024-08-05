@@ -99,6 +99,13 @@ variable "slot_app_settings" {
   type        = map(string)
   description = "Staging slot application settings"
   default     = {}
+
+  validation {
+    condition = length(
+      lookup(var.slot_app_settings, "AzureFunctionsWebHost__hostid", "")
+    ) <= 32
+    error_message = "The value for AzureFunctionsWebHost__hostid must not exceed 32 characters."
+  }
 }
 
 variable "sticky_app_setting_names" {
