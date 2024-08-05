@@ -63,6 +63,8 @@ resource "azurerm_linux_function_app" "this" {
     )
   }
 
+  tags = var.tags
+
   lifecycle {
     ignore_changes = [
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
@@ -72,8 +74,6 @@ resource "azurerm_linux_function_app" "this" {
       # tags["hidden-link: /app-insights-resource-id"]
     ]
   }
-
-  tags = var.tags
 
   depends_on = [
     azurerm_private_endpoint.st_blob,
