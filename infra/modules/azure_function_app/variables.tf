@@ -86,12 +86,34 @@ variable "application_insights_sampling_percentage" {
 variable "app_settings" {
   type        = map(string)
   description = "Application settings"
+
+  validation {
+    condition = (
+      !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? true :
+      (
+        var.app_settings["AzureFunctionsWebHost__hostid"] == null ? true :
+        length(var.app_settings["AzureFunctionsWebHost__hostid"]) <= 32
+      )
+    )
+    error_message = "The value for AzureFunctionsWebHost__hostid must be null or must not exceed 32 characters."
+  }
 }
 
 variable "slot_app_settings" {
   type        = map(string)
   description = "Staging slot application settings"
   default     = {}
+
+  validation {
+    condition = (
+      !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? true :
+      (
+        var.slot_app_settings["AzureFunctionsWebHost__hostid"] == null ? true :
+        length(var.slot_app_settings["AzureFunctionsWebHost__hostid"]) <= 32
+      )
+    )
+    error_message = "The value for AzureFunctionsWebHost__hostid must be null or must not exceed 32 characters."
+  }
 }
 
 variable "sticky_app_setting_names" {

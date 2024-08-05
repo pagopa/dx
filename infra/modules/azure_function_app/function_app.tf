@@ -44,7 +44,7 @@ resource "azurerm_linux_function_app" "this" {
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
     },
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
-    length(local.function_app.name) > 32 ? { AzureFunctionsWebHost__hostid = "production" } : {},
+    length(local.function_app.name) > 32 && !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
@@ -56,8 +56,9 @@ resource "azurerm_linux_function_app" "this" {
     app_setting_names = concat(
       [
         "SLOT_TASK_HUBNAME",
+        "APPINSIGHTS_SAMPLING_PERCENTAGE",
+        "AzureFunctionsWebHost__hostid"
       ],
-      length(local.function_app.name) > 32 ? ["AzureFunctionsWebHost__hostid"] : [],
       var.sticky_app_setting_names,
     )
   }
