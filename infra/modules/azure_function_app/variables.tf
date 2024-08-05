@@ -86,6 +86,13 @@ variable "application_insights_sampling_percentage" {
 variable "app_settings" {
   type        = map(string)
   description = "Application settings"
+
+  validation {
+    condition = length(
+      lookup(var.app_settings, "AzureFunctionsWebHost__hostid", "")
+    ) <= 32
+    error_message = "The value for AzureFunctionsWebHost__hostid must not exceed 32 characters."
+  }
 }
 
 variable "slot_app_settings" {

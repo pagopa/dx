@@ -39,13 +39,15 @@ resource "azurerm_linux_function_app_slot" "this" {
       WEBSITE_RUN_FROM_PACKAGE = 1
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
-      # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "StagingTaskHub",
     },
+    local.application_insights.enable ? {
+      # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
+      APPINSIGHTS_SAMPLING_PERCENTAGE = "100"
+    } : {},
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
-    length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
+    length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
     var.slot_app_settings
   )
 
