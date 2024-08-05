@@ -88,10 +88,14 @@ variable "app_settings" {
   description = "Application settings"
 
   validation {
-    condition = length(
-      lookup(var.app_settings, "AzureFunctionsWebHost__hostid", "")
-    ) <= 32
-    error_message = "The value for AzureFunctionsWebHost__hostid must not exceed 32 characters."
+    condition = (
+      !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? true :
+      (
+        var.app_settings["AzureFunctionsWebHost__hostid"] == null ? true :
+        length(var.app_settings["AzureFunctionsWebHost__hostid"]) <= 32
+      )
+    )
+    error_message = "The value for AzureFunctionsWebHost__hostid must be null or must not exceed 32 characters."
   }
 }
 
@@ -101,10 +105,14 @@ variable "slot_app_settings" {
   default     = {}
 
   validation {
-    condition = length(
-      lookup(var.slot_app_settings, "AzureFunctionsWebHost__hostid", "")
-    ) <= 32
-    error_message = "The value for AzureFunctionsWebHost__hostid must not exceed 32 characters."
+    condition = (
+      !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? true :
+      (
+        var.slot_app_settings["AzureFunctionsWebHost__hostid"] == null ? true :
+        length(var.slot_app_settings["AzureFunctionsWebHost__hostid"]) <= 32
+      )
+    )
+    error_message = "The value for AzureFunctionsWebHost__hostid must be null or must not exceed 32 characters."
   }
 }
 
