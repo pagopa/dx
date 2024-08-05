@@ -102,7 +102,7 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan -no-color -detailed-exitcode -out=plan.tfplan
+          terraform plan -no-color -detailed-exitcode -out=plan.tfplan | grep -v "hidden-link:"
 
           if [ $? -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
