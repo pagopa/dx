@@ -28,7 +28,7 @@ env:
 
 concurrency:
   group: ${{ github.workflow }}-cd
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
 
