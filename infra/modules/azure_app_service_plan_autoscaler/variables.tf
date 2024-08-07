@@ -141,10 +141,10 @@ variable "scale_metrics" {
       time_aggregation_decrease = optional(string, "Average")
       time_window_increase      = optional(number, 5)
       time_window_decrease      = optional(number, 5)
-    }), {})
+    }), null)
   })
 
-  description = "(Optional) Set the metrics to monitor. CPU and Memory are mandatory, Requests is not. Each attribute has a default value that can be overridden"
+  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests is not. Each attribute has a default value that can be overridden"
 
   default = {
     requests = null
@@ -162,30 +162,12 @@ variable "scale_metrics" {
       time_window_increase      = 5
       time_window_decrease      = 5
     }
-    memory = {
-      upper_threshold           = 70
-      lower_threshold           = 20
-      increase_by               = 1
-      decrease_by               = 1
-      cooldown_increase         = 1
-      cooldown_decrease         = 5
-      statistic_increase        = "Average"
-      statistic_decrease        = "Average"
-      time_aggregation_increase = "Average"
-      time_aggregation_decrease = "Average"
-      time_window_increase      = 5
-      time_window_decrease      = 5
-    }
+    memory = null
   }
 
   validation {
     condition     = var.scale_metrics.cpu != null
     error_message = "CPU metrics can't be null"
-  }
-
-  validation {
-    condition     = var.scale_metrics.memory != null
-    error_message = "Memory metrics can't be null"
   }
 
   validation {
