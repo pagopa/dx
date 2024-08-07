@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx",
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "yarn@4.4.0",
   "workspaces": [
     "packages/**",
     "website"
