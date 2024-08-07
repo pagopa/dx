@@ -8,3 +8,4 @@ repos:
         args:
           - --args=-json
           - --args=-no-color
+          - --hook-config=--retry-once-with-cleanup=true
