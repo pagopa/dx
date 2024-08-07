@@ -144,7 +144,7 @@ variable "scale_metrics" {
     }), null)
   })
 
-  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests is not. Each attribute has a default value that can be overridden"
+  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
 
   default = {
     requests = null
