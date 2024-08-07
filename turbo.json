@@ -1,16 +1,26 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts"],
-      "outputs": ["dist/**"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "src/**/*.ts"
+      ],
+      "outputs": [
+        "dist/**"
+      ]
     },
     "typecheck": {
-      "inputs": ["src/**/*.ts"]
+      "inputs": [
+        "src/**/*.ts"
+      ]
     },
     "lint:check": {
-      "inputs": ["src/**/*.ts"]
+      "inputs": [
+        "src/**/*.ts"
+      ]
     },
     "format:check": {}
   }
