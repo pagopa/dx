@@ -1,13 +1,13 @@
 {
   "name": "@pagopa/dx",
-  "packageManager": "yarn@4.1.1",
+  "packageManager": "yarn@4.4.0",
   "workspaces": [
     "packages/**",
     "website"
   ],
   "devDependencies": {
     "prettier": "3.2.5",
-    "turbo": "^1.13.2"
+    "turbo": "^2.0.12"
   },
   "scripts": {
     "build": "turbo run build",
