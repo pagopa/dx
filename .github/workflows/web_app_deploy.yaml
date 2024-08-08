@@ -22,15 +22,10 @@ on:
         type: boolean
         required: false
         default: true
-      health_check_path:
-        description: The health probe path exposed by the Web App.
-        type: string
-        default: ""
-        required: false
-      skip_swap_step:
+      swap_slot_step:
         description: Skip slot swap for selective deployment and testing.
         type: boolean
-        default: false
+        default: true
         required: false
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
@@ -170,17 +165,11 @@ jobs:
            --type zip \
            --async false
 
-      - name: Ping Staging Health
-        if: ${{ inputs.use_staging_slot == 'true' && inputs.health_check_path != ''}}
-        run: |
-          curl \
-            --retry 5 \
-            --retry-max-time 120 \
-            --retry-all-errors \
-            -f 'https://${{ inputs.web_app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
+      # Ping healthcheck endpoint in not needed when the webapp has a custom warmup
+      # configuration https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
 
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true && inputs.skip_swap_step == false }}
+        if: ${{ inputs.use_staging_slot == true && inputs.swap_slot_step == true }}
         run: |
           az webapp deployment slot swap \
             -g ${{ inputs.resource_group_name }} \
