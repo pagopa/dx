@@ -171,7 +171,7 @@ jobs:
            --async false
 
       - name: Ping Staging Health
-        if: ${{ inputs.use_staging_slot == 'true' && input.health_check_path != ''}}
+        if: ${{ inputs.use_staging_slot == 'true' && inputs.health_check_path != ''}}
         run: |
           curl \
             --retry 5 \
