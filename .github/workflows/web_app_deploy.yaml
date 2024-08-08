@@ -180,7 +180,7 @@ jobs:
             -f 'https://${{ inputs.web_app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
 
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true && input.skip_swap_step == false }}
+        if: ${{ inputs.use_staging_slot == true && inputs.skip_swap_step == false }}
         run: |
           az webapp deployment slot swap \
             -g ${{ inputs.resource_group_name }} \
