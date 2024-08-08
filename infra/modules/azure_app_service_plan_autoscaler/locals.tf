@@ -105,19 +105,19 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.memory.statistic_increase
-      time_window              = "PT${var.scale_metrics.memory.time_window_increase}M"
-      time_aggregation         = var.scale_metrics.memory.time_aggregation_increase
+      statistic                = try(var.scale_metrics.memory.statistic_increase, "Average")
+      time_window              = try("PT${var.scale_metrics.memory.time_window_increase}M", "PT1M")
+      time_aggregation         = try(var.scale_metrics.memory.time_aggregation_increase, "Average")
       operator                 = "GreaterThan"
-      threshold                = var.scale_metrics.memory.upper_threshold
+      threshold                = try(var.scale_metrics.memory.upper_threshold, null)
       divide_by_instance_count = false
     }
 
     scale_action = {
       direction = "Increase"
       type      = "ChangeCount"
-      value     = var.scale_metrics.memory.increase_by
-      cooldown  = "PT${var.scale_metrics.memory.cooldown_increase}M"
+      value     = try(var.scale_metrics.memory.increase_by, null)
+      cooldown  = try("PT${var.scale_metrics.memory.cooldown_increase}M", "PT1M")
     }
   }
 
@@ -127,19 +127,19 @@ locals {
       metric_resource_id       = local.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
-      statistic                = var.scale_metrics.memory.statistic_decrease
-      time_window              = "PT${var.scale_metrics.memory.time_window_decrease}M"
-      time_aggregation         = var.scale_metrics.memory.time_aggregation_decrease
+      statistic                = try(var.scale_metrics.memory.statistic_decrease, "Average")
+      time_window              = try("PT${var.scale_metrics.memory.time_window_decrease}M", "PT1M")
+      time_aggregation         = try(var.scale_metrics.memory.time_aggregation_decrease, "Average")
       operator                 = "LessThan"
-      threshold                = var.scale_metrics.memory.lower_threshold
+      threshold                = try(var.scale_metrics.memory.lower_threshold, null)
       divide_by_instance_count = false
     }
 
     scale_action = {
       direction = "Decrease"
       type      = "ChangeCount"
-      value     = var.scale_metrics.memory.decrease_by
-      cooldown  = "PT${var.scale_metrics.memory.cooldown_decrease}M"
+      value     = try(var.scale_metrics.memory.decrease_by, null)
+      cooldown  = try("PT${var.scale_metrics.memory.cooldown_decrease}M", "PT1M")
     }
   }
 }

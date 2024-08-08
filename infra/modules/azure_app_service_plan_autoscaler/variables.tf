@@ -141,10 +141,10 @@ variable "scale_metrics" {
       time_aggregation_decrease = optional(string, "Average")
       time_window_increase      = optional(number, 5)
       time_window_decrease      = optional(number, 5)
-    }), {})
+    }), null)
   })
 
-  description = "(Optional) Set the metrics to monitor. CPU and Memory are mandatory, Requests is not. Each attribute has a default value that can be overridden"
+  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
 
   default = {
     requests = null
@@ -162,30 +162,12 @@ variable "scale_metrics" {
       time_window_increase      = 5
       time_window_decrease      = 5
     }
-    memory = {
-      upper_threshold           = 70
-      lower_threshold           = 20
-      increase_by               = 1
-      decrease_by               = 1
-      cooldown_increase         = 1
-      cooldown_decrease         = 5
-      statistic_increase        = "Average"
-      statistic_decrease        = "Average"
-      time_aggregation_increase = "Average"
-      time_aggregation_decrease = "Average"
-      time_window_increase      = 5
-      time_window_decrease      = 5
-    }
+    memory = null
   }
 
   validation {
     condition     = var.scale_metrics.cpu != null
     error_message = "CPU metrics can't be null"
-  }
-
-  validation {
-    condition     = var.scale_metrics.memory != null
-    error_message = "Memory metrics can't be null"
   }
 
   validation {
@@ -195,8 +177,8 @@ variable "scale_metrics" {
       can(var.scale_metrics.requests.statistic_decrease) ? contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.requests.statistic_decrease) : true,
       contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.cpu.statistic_increase),
       contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.cpu.statistic_decrease),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_increase),
-      contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_decrease),
+      can(var.scale_metrics.memory.statistic_increase) ? contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_increase) : true,
+      can(var.scale_metrics.memory.statistic_decrease) ? contains(["Average", "Max", "Min", "Sum"], var.scale_metrics.memory.statistic_decrease) : true,
     ])
     error_message = "Each Statistic metric trigger must be one of the following values: Average, Max, Min, or Sum."
   }
@@ -207,8 +189,8 @@ variable "scale_metrics" {
       can(var.scale_metrics.requests.time_aggregation_decrease) ? contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.requests.time_aggregation_decrease) : true,
       contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.cpu.time_aggregation_increase),
       contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.cpu.time_aggregation_decrease),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_increase),
-      contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_decrease),
+      can(var.scale_metrics.memory.time_aggregation_increase) ? contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_increase) : true,
+      can(var.scale_metrics.memory.time_aggregation_decrease) ? contains(["Average", "Count", "Maximum", "Minimum", "Last", "Total"], var.scale_metrics.memory.time_aggregation_decrease) : true,
     ])
     error_message = "Each Time aggregation metric trigger must be one of the following values: Average, Count, Maximum, Minimum, Last or Total."
   }
