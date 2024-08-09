@@ -23,7 +23,7 @@ on:
         required: false
         default: true
       swap_slot_step:
-        description: Skip slot swap for selective deployment and testing.
+        description: Swap production and staging slot.
         type: boolean
         default: true
         required: false
