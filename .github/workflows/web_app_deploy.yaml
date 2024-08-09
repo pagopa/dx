@@ -22,6 +22,11 @@ on:
         type: boolean
         required: false
         default: true
+      swap_slot_step:
+        description: Swap production and staging slot.
+        type: boolean
+        default: true
+        required: false
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -160,8 +165,11 @@ jobs:
            --type zip \
            --async false
 
+      # Ping healthcheck endpoint in not needed when the webapp has a custom warmup
+      # configuration https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
+
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true }}
+        if: ${{ inputs.use_staging_slot == true && inputs.swap_slot_step == true }}
         run: |
           az webapp deployment slot swap \
             -g ${{ inputs.resource_group_name }} \
