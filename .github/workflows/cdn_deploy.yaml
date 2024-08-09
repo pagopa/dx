@@ -1,0 +1,152 @@
+on:
+  workflow_call:
+    inputs:
+      workspace_name:
+        description: The name of the workspace to create the artifact for.
+        type: string
+        required: true
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      resource_group_name:
+        description: Web App resource group name.
+        type: string
+        required: true
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+      storage_account_name:
+        description: Storage account name.
+        type: string
+        required: true
+      profile_cdn_name:
+        description: Profile CDN name.
+        type: string
+        required: true
+      endpoint_name:
+        description: CDN endpoint name.
+        type: string
+        required: true
+      blob_container_name:
+        description: Blob container name.
+        type: string
+        required: true
+      custom_env_config_variables:
+        description: Contain variable for env-config.js file generation
+        type: string
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+env:
+  BUNDLE_NAME: bundle
+
+jobs:
+  build:
+    name: Build Artifact
+    runs-on: ubuntu-22.04
+    env:
+      WORKSPACE: ${{ inputs.workspace_name }}
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+
+      - name: Prune
+        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version-file: ".node-version"
+          cache: "yarn"
+          cache-dependency-path: "./out/yarn.lock"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: ./out
+      
+      # This variable have the form "key=value" e.g.
+      # VAR_1=VALUE_1
+      # VAR_2=VALUE_2
+      # VAR_N=VALUE_N
+      - name: Define env-config.js
+        if: inputs.custom_env_config_variables
+        working-directory: ./out
+        run: |
+          # Recreate config file
+          rm -rf ./env-config.js
+          touch ./env-config.js
+
+          # Add assignment
+          echo "window._env_ = {" >> ./env-config.js
+
+          # Loop on input variables and add them to env-config.js
+          INPUT_VARS=$1
+
+          while IFS='=' read -r k v; do
+              # Ignore empty lines
+              if [ -n "$k" ]; then
+                  echo "  $k: \"$v\"," >> ./env-config.js
+              fi
+          done <<< "$INPUT_VARS"
+
+          echo "}" >> ./env-config.js
+
+      - name: Build
+        run: yarn build
+        working-directory: ./out
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: "${{ github.workspace }}/out/dist"
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    name: Deploy
+    if: ${{ !github.event.act }}
+    needs: [build]
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-22-04' }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: "${{ github.workspace }}/${{ env.BUNDLE_NAME }}"
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        env:
+          ARM_USE_OIDC: true
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Sync Storage
+        run: |
+          az storage blob sync \
+          -c ${{ inputs.blob_container_name }} \
+          --account-name ${{ inputs.storage_account_name }} \
+          -s "./${{ env.BUNDLE_NAME }}"
+
+      - name: Purge CDN
+        run: |
+          az cdn endpoint purge \
+          -g ${{ inputs.resource_group_name }} \
+          -n ${{ inputs.endpoint_name }} \
+          --profile-name ${{ inputs.profile_cdn_name }} \
+          --content-paths "/*"
