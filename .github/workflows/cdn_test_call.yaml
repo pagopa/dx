@@ -2,9 +2,9 @@ name: CDN Test
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - DEVEX-165-cdn-action-template
+  # push:
+  #   branches:
+  #     - DEVEX-165-cdn-action-template
 
 jobs:
   drift_detection:

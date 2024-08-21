@@ -104,17 +104,6 @@ jobs:
           done <<< "$INPUT_VARS"
 
           echo "}" >> ./env-config.js
-      
-      - name: TEST
-        run: |
-          echo "BASE PATH"
-          ls -la
-          echo "OUT PATH"
-          ls -la .
-          echo "DIST PATH"
-          ls -la ./dist
-          echo "ENV CONFIG PATH"
-          cat ./env-config.js
 
       - name: Build
         run: yarn build
@@ -127,6 +116,15 @@ jobs:
           path: "./dist"
           if-no-files-found: error
           retention-days: 7
+
+      - name: TEST
+        run: |
+          echo "BASE PATH"
+          ls -la
+          echo "DIST PATH"
+          ls -la ./dist
+          echo "ENV CONFIG PATH"
+          cat ./env-config.js
 
   deploy:
     name: Deploy
