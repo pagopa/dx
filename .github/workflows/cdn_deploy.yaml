@@ -94,7 +94,7 @@ jobs:
           echo "window._env_ = {" >> ./env-config.js
 
           # Loop on input variables and add them to env-config.js
-          INPUT_VARS=$1
+          INPUT_VARS=${{ inputs.custom_env_config_variables }}
 
           while IFS='=' read -r k v; do
               # Ignore empty lines
@@ -125,18 +125,9 @@ jobs:
         uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: ${{ env.BUNDLE_NAME }}
-          path: "./dist"
+          path: "."
           if-no-files-found: error
           retention-days: 7
-
-      - name: TEST
-        run: |
-          echo "BASE PATH"
-          ls -la
-          echo "DIST PATH"
-          ls -la ./dist
-          echo "ENV CONFIG PATH"
-          cat ./env-config.js
 
   deploy:
     name: Deploy
