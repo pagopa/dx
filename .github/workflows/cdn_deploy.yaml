@@ -101,6 +101,17 @@ jobs:
           done <<< "$INPUT_VARS"
 
           echo "}" >> ./env-config.js
+      
+      - name: TEST
+        run: |
+          echo "BASE PATH"
+          ls -la
+          echo "OUT PATH"
+          ls -la ./out
+          echo "DIST PATH"
+          ls -la ./out/dist
+          echo "ENV CONFIG PATH"
+          cat ./out/env-config.js
 
       - name: Build
         run: yarn build
@@ -110,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: ${{ env.BUNDLE_NAME }}
-          path: "${{ github.workspace }}/out/dist"
+          path: "./out/dist"
           if-no-files-found: error
           retention-days: 7
 
@@ -129,7 +140,7 @@ jobs:
         uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         with:
           name: ${{ env.BUNDLE_NAME }}
-          path: "${{ github.workspace }}/${{ env.BUNDLE_NAME }}"
+          path: "./${{ env.BUNDLE_NAME }}"
 
       - name: Azure Login
         uses: azure/login@v2 # v2.0.0
@@ -140,27 +151,34 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Sync Storage
+      - name: TEST
         run: |
-          az storage blob sync \
-          -c ${{ inputs.blob_container_name }} \
-          --account-name ${{ inputs.storage_account_name }} \
-          -s "./${{ env.BUNDLE_NAME }}"
+          echo "BASE PATH"
+          ls -la
+          echo "BUNDLE PATH"
+          ls -la ./bundle
 
-      - name: Purge CDN
-        if: ${{ inputs.content_paths == '' }}
-        run: |
-          az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths "/*"
+      # - name: Sync Storage
+      #   run: |
+      #     az storage blob sync \
+      #     -c ${{ inputs.blob_container_name }} \
+      #     --account-name ${{ inputs.storage_account_name }} \
+      #     -s "./${{ env.BUNDLE_NAME }}"
 
-      - name: Purge CDN Specific Paths
-        if: ${{ inputs.content_paths != '' }}
-        run: |
-          az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths ${{ inputs.content_paths }}
+      # - name: Purge CDN
+      #   if: ${{ inputs.content_paths == '' }}
+      #   run: |
+      #     az cdn endpoint purge \
+      #     -g ${{ inputs.resource_group_name }} \
+      #     -n ${{ inputs.endpoint_name }} \
+      #     --profile-name ${{ inputs.profile_cdn_name }} \
+      #     --content-paths "/*"
+
+      # - name: Purge CDN Specific Paths
+      #   if: ${{ inputs.content_paths != '' }}
+      #   run: |
+      #     az cdn endpoint purge \
+      #     -g ${{ inputs.resource_group_name }} \
+      #     -n ${{ inputs.endpoint_name }} \
+      #     --profile-name ${{ inputs.profile_cdn_name }} \
+      #     --content-paths ${{ inputs.content_paths }}
