@@ -105,9 +105,21 @@ jobs:
 
           echo "}" >> ./env-config.js
 
+      - name: TEST
+        run: |
+          echo "BASE PATH"
+          ls -la
+          echo "ENV CONFIG PATH"
+          cat ./env-config.js
+
       - name: Build
         run: yarn build
         working-directory: .
+
+      - name: TEST 2
+        run: |
+          echo "BASE PATH 2"
+          ls -la
 
       - name: Upload Artifact
         uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
