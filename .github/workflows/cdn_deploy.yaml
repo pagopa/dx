@@ -166,4 +166,4 @@ jobs:
           -g ${{ inputs.resource_group_name }} \
           -n ${{ inputs.endpoint_name }} \
           --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths ${{ inputs.content_paths }}
+          --content-paths $(echo "${{ inputs.content_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
