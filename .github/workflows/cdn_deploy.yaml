@@ -61,22 +61,22 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         name: Checkout
 
-      # - name: Prune
-      #   run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+      - name: Prune
+        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
 
-      - run: corepack enable
-        working-directory: .
+      # - name: Setup yarn
+      #   run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
           node-version-file: ".node-version"
           cache: "yarn"
-          cache-dependency-path: "./yarn.lock"
+          cache-dependency-path: "./out/yarn.lock"
 
       - name: Install dependencies
         run: yarn install --immutable
-        working-directory: .
+        working-directory: ./out
       
       # This variable have the form "key=value" e.g.
       # VAR_1=VALUE_1
@@ -84,7 +84,7 @@ jobs:
       # VAR_N=VALUE_N
       - name: Define env-config.js
         if: ${{ inputs.custom_env_config_variables }}
-        working-directory: .
+        working-directory: ./out
         run: |
           # Recreate config file
           rm -rf ./env-config.js
@@ -105,20 +105,15 @@ jobs:
 
           echo "}" >> ./env-config.js
 
-      - name: TEST
-        run: |
-          echo "ENV CONFIG PATH"
-          cat ./env-config.js
-
       - name: Build
         run: yarn build
-        working-directory: .
+        working-directory: ./out
 
       - name: Upload Artifact
         uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: ${{ env.BUNDLE_NAME }}
-          path: "."
+          path: "./out"
           if-no-files-found: error
           retention-days: 7
 
@@ -148,34 +143,27 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: TEST
+      - name: Sync Storage
         run: |
-          echo "BASE PATH"
-          ls -la
-          echo "BUNDLE PATH"
-          ls -la ./bundle
+          az storage blob sync \
+          -c ${{ inputs.blob_container_name }} \
+          --account-name ${{ inputs.storage_account_name }} \
+          -s "./${{ env.BUNDLE_NAME }}"
 
-      # - name: Sync Storage
-      #   run: |
-      #     az storage blob sync \
-      #     -c ${{ inputs.blob_container_name }} \
-      #     --account-name ${{ inputs.storage_account_name }} \
-      #     -s "./${{ env.BUNDLE_NAME }}"
+      - name: Purge CDN
+        if: ${{ inputs.content_paths == '' }}
+        run: |
+          az cdn endpoint purge \
+          -g ${{ inputs.resource_group_name }} \
+          -n ${{ inputs.endpoint_name }} \
+          --profile-name ${{ inputs.profile_cdn_name }} \
+          --content-paths "/*"
 
-      # - name: Purge CDN
-      #   if: ${{ inputs.content_paths == '' }}
-      #   run: |
-      #     az cdn endpoint purge \
-      #     -g ${{ inputs.resource_group_name }} \
-      #     -n ${{ inputs.endpoint_name }} \
-      #     --profile-name ${{ inputs.profile_cdn_name }} \
-      #     --content-paths "/*"
-
-      # - name: Purge CDN Specific Paths
-      #   if: ${{ inputs.content_paths != '' }}
-      #   run: |
-      #     az cdn endpoint purge \
-      #     -g ${{ inputs.resource_group_name }} \
-      #     -n ${{ inputs.endpoint_name }} \
-      #     --profile-name ${{ inputs.profile_cdn_name }} \
-      #     --content-paths ${{ inputs.content_paths }}
+      - name: Purge CDN Specific Paths
+        if: ${{ inputs.content_paths != '' }}
+        run: |
+          az cdn endpoint purge \
+          -g ${{ inputs.resource_group_name }} \
+          -n ${{ inputs.endpoint_name }} \
+          --profile-name ${{ inputs.profile_cdn_name }} \
+          --content-paths ${{ inputs.content_paths }}
