@@ -14,7 +14,7 @@ on:
         type: string
         required: true
       use_private_agent:
-        description: Use a private agent to deploy the built artifact.
+        description: Use a private agent to deploy the built artifact. (Optional)
         type: boolean
         required: false
         default: true
@@ -35,7 +35,11 @@ on:
         type: string
         required: true
       custom_env_config_variables:
-        description: Contain variable for env-config.js file generation
+        description: Contain variable for env-config.js file generation (Optional)
+        type: string
+        required: false
+      content_paths:
+        description: List of paths to be included in the artifact. E.g. '/path/file1' '/path/file2' (Optional)
         type: string
         required: false
 
@@ -76,7 +80,7 @@ jobs:
       # VAR_2=VALUE_2
       # VAR_N=VALUE_N
       - name: Define env-config.js
-        if: inputs.custom_env_config_variables
+        if: ${{ inputs.custom_env_config_variables }}
         working-directory: ./out
         run: |
           # Recreate config file
@@ -144,9 +148,19 @@ jobs:
           -s "./${{ env.BUNDLE_NAME }}"
 
       - name: Purge CDN
+        if: ${{ inputs.content_paths == '' }}
         run: |
           az cdn endpoint purge \
           -g ${{ inputs.resource_group_name }} \
           -n ${{ inputs.endpoint_name }} \
           --profile-name ${{ inputs.profile_cdn_name }} \
           --content-paths "/*"
+
+      - name: Purge CDN Specific Paths
+        if: ${{ inputs.content_paths != '' }}
+        run: |
+          az cdn endpoint purge \
+          -g ${{ inputs.resource_group_name }} \
+          -n ${{ inputs.endpoint_name }} \
+          --profile-name ${{ inputs.profile_cdn_name }} \
+          --content-paths ${{ inputs.content_paths }}
