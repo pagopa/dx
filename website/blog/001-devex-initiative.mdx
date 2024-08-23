@@ -1,0 +1,202 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# Iniziativa DevEx 0.1-Alpha: trasformiamo l'esperienza di sviluppo in PagoPA
+
+Immagina di poter iniziare a lavorare su un nuovo servizio digitale in pochi
+minuti invece che settimane, di avere meno decisioni da prendere e meno codice
+da interpretare e mantenere, di poter integrare a tempo zero eventuali nuovi
+membri del team: questo è l'obiettivo che ci siamo prefissati con l'iniziativa
+**Developer Experience
+([DevEx](https://pagopa.atlassian.net/wiki/spaces/ENG/pages/861732865/DevEx+Lab+-+Initiative+canvas))**.
+
+Nel cuore dell'area Engineering, un gruppo di Senior, Cloud e Staff Engineers ha
+deciso di affrontare le sfide quotidiane che rallentano il nostro lavoro. Siamo
+qui per abbattere gli ostacoli, semplificare i processi e rendere lo sviluppo
+software più fluido e gratificante per tutti.
+
+<div class="container">
+  <div class="row">
+    <div class="col col--6">
+      <div class="col-demo">![With DX](001-images/image-2.png)</div>
+    </div>
+    <div class="col col--6">
+      <div class="col-demo">![Without DX](001-images/image-3.png)</div>
+    </div>
+  </div>
+</div>
+
+## Perché DevEx
+
+Quanto tempo si perde prima ancora di scrivere una riga di codice? Quante
+decisioni è necessario prendere? E quanto tempo impiega un nuovo engineer prima
+di essere davvero produttivo?
+
+Con DevEx, vogliamo rispondere a queste domande e risolvere i problemi che
+ostacolano il nostro lavoro quotidiano:
+
+- **Ridurre i tempi morti:** Ogni secondo passato a configurare un ambiente o a
+  interpretare un vecchio codice è un secondo perso per l'innovazione.
+- **Abbassare il carico cognitivo:** Meno complessità significa più spazio per
+  creare valore, minor rischio di errori e time-to-market più veloce.
+- **Accelerare l'onboarding:** Ogni nuovo sviluppatore dovrebbe essere messo
+  nelle condizioni di contribuire sin dal primo minuto.
+
+## Cosa Facciamo
+
+Il [team DevEx](https://github.com/orgs/pagopa/teams/engineering-team-devex) non
+si limita a identificare i problemi e suggerire soluzioni: li affronta a viso
+aperto sporcandosi le mani.
+
+- **Pattern comuni e golden paths:** Ti offriamo strade collaudate, così non
+  devi reinventare la ruota ogni volta.
+- **Astrazioni e tool pronti all'uso:** Riduciamo il codice boilerplate, così tu
+  puoi concentrarti sul codice che conta.
+- **Ambienti di sviluppo ottimizzati:** Preconfigurati e pronti all'uso, perché
+  l'infrastruttura non dovrebbe mai essere un ostacolo ma una risorsa.
+- **Documentazione centralizzata:** Non dovrai più cercare una risposta; sarà
+  sempre a portata di mano.
+
+## Come siamo organizzati
+
+Al momento l'iniziativa DevEx è portata avanti da engineer che lavorano in
+modalità asincrona a _best effort_. Non è detto che sarà sempre così, ma per ora
+sembra funzionare!
+
+![Team DevEx](./001-images/image-4.png)
+
+Ogni due settimane, ci riuniamo per effettuare una sessione di review & demo su
+Google Meet. È un momento chiave per fare il punto sui nostri obiettivi
+([OKR](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/962757129/OKR)) e
+per condividere i progressi. Ciascun membro sceglie autonomamente un task dalla
+[Jira DevEx Board](https://pagopa.atlassian.net/jira/software/c/projects/DEVEX/boards/501/backlog)
+e lo porta avanti, collaborando con il resto del team tramite Code Reviews e
+RFCs.
+
+In particolare agli Staff Engineer è richiesto di selezionare in autonomia i
+task prioritari da portare avanti oltre l'ambito della progettualità (dominio)
+su cui sono già impegnati. Questa modalità richiede la **collaborazione da parte
+dei Product Manager** per garantire che le attività siano allineate con gli
+obiettivi strategici aziendali.
+
+L'innovazione non si ferma alla teoria: portiamo le soluzioni direttamente nei
+progetti - supportando proattivamente i team stream-aligned - e promuoviamo così
+l' adozione dei tool DX.
+
+## A che punto siamo
+
+Abbiamo iniziato con un'idea e una
+[sessione di brainstorming](https://www.figma.com/board/7rmB4tXRQlzfStPuJh4vU2/Kick-Off?node-id=0-1&t=UZeTC0BhIFl9678h-0),
+dopodiché siamo passati ai fatti.
+
+Nel periodo che intercorre tra Aprile e Luglio 2024 abbiamo...
+
+- Individuato
+  [tecnologie e pattern condivisi](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/947782090/RFC-DX-001+Scelta+del+primo+stack+tecnologico)
+  su cui focalizzare inizialmente il nostro sforzo inizialmente, al momento:
+  Typescript, Terraform, Azure, e GitHub Actions.
+
+- Impostato alcune nuove pratiche quali
+
+  - la
+    [naming convention](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1032880258/RFC-DX-005+Naming+convention+nuove+risorse+Azure)
+    per le risorse Terraform su Azure
+  - la struttura dei
+    [task npm per i progetti Typescript ](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1012662333/RFC-DX-004+Package+scripts)
+  - la
+    [struttura del codice HCL per i moduli Terraform](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/910492147/RFC-DX-011+Riorganizzazione+configurazioni+Terraform)
+
+- Implementato nuovi moduli Terraform per:
+
+  - [creare un runner per le GitHub Action](https://github.com/pagopa/dx/tree/main/infra/modules/github_selfhosted_runner_on_container_app_jobs)
+  - [impostare l'identità di un repository GitHub su Azure](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github)
+  - [creare facilmente ruoli e permessi per i servizi Azure](https://github.com/pagopa/dx/tree/main/infra/modules/azure_role_assignments)
+  - [creare una Azure Functions App](https://github.com/pagopa/dx/tree/main/infra/modules/azure_function_app)
+  - [creare un App Service su Azure](https://github.com/pagopa/dx/tree/main/infra/modules/azure_app_service)
+  - [impostare l'autoscaling di un App Service o di una Function App](https://github.com/pagopa/dx/tree/main/infra/modules/azure_app_service_plan_autoscaler)
+
+- Creato GitHub Actions per:
+
+  - [eseguire code review su codebase Typescript](https://github.com/pagopa/dx/blob/main/.github/workflows/js_code_review.yaml)
+  - [costruire immagini Docker](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
+  - [dispiegare i servizi Azure tramite Terraform](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)
+  - [effettuare il plan delle modifiche all'infratruttura](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml)
+  - [notificare eventuali drift tra codice IaC e infrastruttura](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml)
+  - [dispiegare in produzione Azure Function o App Service](https://github.com/pagopa/dx/blob/main/.github/workflows/web_app_deploy.yaml)
+  - [effettuare il linting del codice Terraform](https://github.com/pagopa/dx/blob/main/.github/workflows/static_analysis.yaml)
+
+- Impostato le
+  [configurazioni di base per il tooling Typescript](https://github.com/pagopa/dx-typescript):
+  eslint, yarn, turbo, changeset.
+
+- Condiviso i
+  [risultati di un benchmark sui tool per la generazione di client da specifiche OpenAPI](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1100579051/RFC-DX-009+Benchmark+per+generatori+di+codice+Typescript+da+OpenAPI)
+
+- Analizzato lo stato dell'arte per il
+  [monitoraggio distribuito e la correlazione dei log su Azure](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1086619751/Azure+e+tracing+per+applicativi+NodeJS)
+
+Sebbene possa sembrare tanto materiale, siamo consapevoli che senza una
+documentazione adeguata e una comunicazione efficace, il nostro sforzo rischia
+di essere vano. Per questo abbiamo creato un
+[sito web dedicato](https://pagopa.github.io/dx/) che vogliamo iniziare a
+popolare con contenuti e mantenere sempre aggiornato per porsi come riferimento
+per tutti gli engineer dell'area.
+
+E non solo! Stiamo lavorando anche per fornire tool (_scaffolding_) che possano
+automatizzare le attività ripetitive e ridondanti.
+
+:::info
+
+Vogliamo arrivare a un punto in cui la documentazione diventa superflua!
+
+:::
+
+## Esempi attuali di casi d'uso
+
+Pur essendo in stato embrionale, buona parte del tooling prodotto è già stato
+utilizzato con successo in progetti reali. Ecco alcuni esempi!
+
+<Tabs>
+  <TabItem value="after" label="Con DX" default>
+    <img
+      src={require("./001-images/image-1.png").default}
+      alt="drawing"
+      width="300"
+    />
+  </TabItem>
+  <TabItem value="before" label="Senza DX">
+    <img
+      src={require("./001-images/image.png").default}
+      alt="drawing"
+      width="300"
+    />
+  </TabItem>
+</Tabs>
+
+## Mi hai convinto! Come posso partecipare?
+
+Se vuoi adottare il nostro tooling, contribuire al progetto o semplicemente
+scoprire di più, non esitare a contattarci su Slack nel canale
+[#team_devex](https://pagopaspa.slack.com/archives/C06EK19JBMM).
+
+Vogliamo rendere il tuo lavoro più semplice e gratificante, e vogliamo
+supportarti al meglio in queste fasi preliminari dell'iniziativa.
+
+:::info
+
+Il nostro obiettivo ultimo è quello di renderci superflui!
+
+:::
+
+## Guardando avanti
+
+Nel medio termine (entro il 2025) vogliamo raggiungere il massimo punteggio per
+il
+[maturity score](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1181941934/Platform+engineering+maturity+model)
+del nostro tooling, e avere un 100% di adozione da parte dei team
+stream-aligned. Puoi seguire i progressi e le attività del team sul nostro
+[Jira Board](https://pagopa.atlassian.net/jira/software/c/projects/DEVEX/boards/501/backlog).
+
+Oggiamo siamo solo all'inizio. Con DevEx, stiamo ridefinendo il modo in cui
+sviluppiamo, collaboriamo e innoviamo in PagoPA. Sei pronto a unirti a noi in
+questo percorso?

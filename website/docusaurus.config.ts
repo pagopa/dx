@@ -91,6 +91,15 @@ const config: Config = {
             },
           ],
         },
+        {
+          title: "Blog",
+          items: [
+            {
+              label: "Read announcements",
+              to: "/blog/",
+            },
+          ],
+        },
       ],
       // copyright: `Copyright © ${new Date().getFullYear()} PagoPA. Built with Docusaurus.`,
     },
