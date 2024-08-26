@@ -35,9 +35,11 @@ jobs:
         run: |
           # Last base branch commit
           MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
+          echo "main_commit=$MAIN_COMMIT"
 
           # Last commit
           CURRENT_COMMIT=$(git rev-parse HEAD)
+          echo "current_commit=$CURRENT_COMMIT"
 
           # List of modified files
           MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
