@@ -18,7 +18,7 @@ on:
 #     secrets: inherit
 
 env:
-  CONTENT_PATH: ${{ inputs.content_paths == '' && 'false' || 'true' }}
+  CONTENT_PATH: ${{ inputs.content_paths == '' && 'true' || 'false' }}
 
 jobs:
   test:

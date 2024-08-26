@@ -37,7 +37,6 @@ on:
         description: If you want to include only specific file set 'true' else 'false'
         type: string
         required: false
-        default: 'false'
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -45,6 +44,7 @@ concurrency:
 
 env:
   BUNDLE_NAME: bundle
+  CONTENT_PATH: ${{ inputs.content_paths == '' && 'false' || 'true' }}
 
 jobs:
   build:
@@ -151,12 +151,12 @@ jobs:
             -s "./${{ env.BUNDLE_NAME }}"
 
       - name: Found modified files
-        if: ${{ inputs.content_paths == 'true' }}
+        if: ${{ env.CONTENT_PATH == 'true' }}
         uses: ./.github/workflows/github_modified_files.yaml
         id: modified_files
 
       - name: Purge CDN Specific Paths
-        if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.files != '' }}
+        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.files != '' }}
         run: |
           az cdn endpoint purge \
             -g ${{ inputs.resource_group_name }} \
@@ -165,7 +165,7 @@ jobs:
             --content-paths $(echo -e "${{ steps.modified_files.outputs.files }}" | awk '{printf " '\''%s'\''", $0}')
 
       - name: Purge CDN
-        if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.files == '' }}
+        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.files == '' }}
         run: |
           az cdn endpoint purge \
             -g ${{ inputs.resource_group_name }} \
