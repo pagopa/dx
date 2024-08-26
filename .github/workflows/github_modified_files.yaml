@@ -23,12 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         name: Checkout
+        with:
+          fetch-depth: 0 # Recupera tutta la cronologia dei commit per assicurarsi che 'main' sia disponibile
+  
+      - name: Fetch ${{ inputs.base_branch }} branch
+        run: |
+          git fetch origin ${{ inputs.base_branch }}
 
       - name: Get modified files
         id: modified_files
         run: |
-          git fetch origin ${{ inputs.base_branch }}
-
           # Last base branch commit
           MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
 
