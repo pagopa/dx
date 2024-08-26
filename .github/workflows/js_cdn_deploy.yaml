@@ -63,8 +63,8 @@ jobs:
       # - name: Prune
       #   run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
 
-      # - name: Setup yarn
-      #   run: corepack enable
+      - name: Setup yarn
+        run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
