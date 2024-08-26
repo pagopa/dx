@@ -27,6 +27,8 @@ jobs:
       - name: Get modified files
         id: modified_files
         run: |
+          git fetch origin ${{ inputs.base_branch }}
+
           # Last base branch commit
           MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
 
