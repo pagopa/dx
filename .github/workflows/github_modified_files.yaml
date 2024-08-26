@@ -41,15 +41,16 @@ jobs:
           CURRENT_COMMIT=$(git rev-parse HEAD)
           echo "current_commit=$CURRENT_COMMIT"
 
+          # List of modified files
           MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
 
-          echo "Modified files:"
-          echo $MODIFIED_FILES
+          # Print the list of modified files
+          echo "$MODIFIED_FILES"
 
           # Set output
-          echo "files<<$EOF" >> $GITHUB_OUTPUT
-          echo "$MODIFIED_FILES" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          echo 'files<<EOF' >> $GITHUB_OUTPUT
+          echo '$MODIFIED_FILES' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
     outputs:
-      files: ${{ steps.modified_files.outputs.files }}
+      modules: ${{ steps.modified_files.outputs.files }}
