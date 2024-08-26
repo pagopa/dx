@@ -7,7 +7,7 @@ on:
         description: If you want to include only specific file set True else False
         type: boolean
         required: false
-        default: false
+        default: true
   push:
     branches:
       - DEVEX-165-cdn-action-template
