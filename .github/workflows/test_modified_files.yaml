@@ -23,10 +23,12 @@ jobs:
     name: TEST
     runs-on: ubuntu-22.04
     permissions:
-      id-token: write
       contents: read
+      actions: read
 
     steps:
+      - run: echo ${{ inputs.content_paths }}
+      
       - name: Found modified files
         if: ${{ inputs.content_paths }}
         uses: ./.github/workflows/github_modified_files.yaml
