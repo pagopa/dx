@@ -152,20 +152,22 @@ jobs:
 
       - name: Found modified files
         if: ${{ env.CONTENT_PATH == 'true' }}
-        uses: ./.github/workflows/github_modified_files.yaml
+        uses: ./.github/actions/github_modified_files
         id: modified_files
+        with:
+          base_branch: main
 
       - name: Purge CDN Specific Paths
-        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.files != '' }}
+        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.modified_files != '' }}
         run: |
           az cdn endpoint purge \
             -g ${{ inputs.resource_group_name }} \
             -n ${{ inputs.endpoint_name }} \
             --profile-name ${{ inputs.profile_cdn_name }} \
-            --content-paths $(echo -e "${{ steps.modified_files.outputs.files }}" | awk '{printf " '\''%s'\''", $0}')
+            --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
 
       - name: Purge CDN
-        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.files == '' }}
+        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.modified_files == '' }}
         run: |
           az cdn endpoint purge \
             -g ${{ inputs.resource_group_name }} \

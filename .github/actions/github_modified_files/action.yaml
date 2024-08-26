@@ -38,6 +38,6 @@ runs:
         echo "$MODIFIED_FILES"
 
         # Set output
-        echo 'files<<EOF' >> $GITHUB_OUTPUT
-        echo '$MODIFIED_FILES' >> $GITHUB_OUTPUT
-        echo 'EOF' >> $GITHUB_OUTPUT
+        echo "files<<EOF" >> $GITHUB_OUTPUT
+        echo "$MODIFIED_FILES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
