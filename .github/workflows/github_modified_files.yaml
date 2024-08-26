@@ -41,6 +41,8 @@ jobs:
           CURRENT_COMMIT=$(git rev-parse HEAD)
           echo "current_commit=$CURRENT_COMMIT"
 
+          MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
+          
           echo "$MODIFIED_FILES" | while read -r file; do
             if [[ -f "$file" ]]; then
               echo "$file"
