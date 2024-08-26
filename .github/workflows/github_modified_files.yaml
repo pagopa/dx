@@ -42,20 +42,14 @@ jobs:
           echo "current_commit=$CURRENT_COMMIT"
 
           MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
-          
-          echo "$MODIFIED_FILES" | while read -r file; do
-            if [[ -f "$file" ]]; then
-              echo "$file"
-            fi
-          done > modified_files.txt
-
-          MODIFIED_FILES=$(cat modified_files.txt)
 
           echo "Modified files:"
           echo $MODIFIED_FILES
 
           # Set output
-          echo "files=$MODIFIED_FILES" >> $GITHUB_OUTPUT
+          echo "files<<$EOF" >> $GITHUB_OUTPUT
+          echo "$MODIFIED_FILES" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
     outputs:
-      modules: ${{ steps.modified_files.outputs.files }}
+      files: ${{ steps.modified_files.outputs.files }}
