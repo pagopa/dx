@@ -26,9 +26,9 @@ jobs:
         with:
           fetch-depth: 0 # Recupera tutta la cronologia dei commit per assicurarsi che 'main' sia disponibile
   
-      - name: Fetch ${{ inputs.base_branch }} branch
-        run: |
-          git fetch origin ${{ inputs.base_branch }}
+      # - name: Fetch ${{ inputs.base_branch }} branch
+      #   run: |
+      #     git fetch origin ${{ inputs.base_branch }}
 
       - name: Get modified files
         id: modified_files
