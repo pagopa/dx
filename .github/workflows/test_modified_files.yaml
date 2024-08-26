@@ -6,7 +6,7 @@ on:
       content_paths:
         description: If you want to include only specific file set 'true' else 'false'
         type: string
-        required: false
+        required: true
         default: 'true'
   push:
     branches:
@@ -27,7 +27,7 @@ jobs:
       actions: read
 
     steps:
-      - run: echo ${{ inputs.content_paths }}
+      - run: echo '${{ inputs.content_paths }}'
 
       - name: Found modified files
         if: ${{ inputs.content_paths == 'true' }}
