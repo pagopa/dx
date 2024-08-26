@@ -6,8 +6,7 @@ on:
       content_paths:
         description: If you want to include only specific file set 'true' else 'false'
         type: string
-        required: true
-        default: 'true'
+        required: false
   push:
     branches:
       - DEVEX-165-cdn-action-template
@@ -18,6 +17,9 @@ on:
 #     name: DIFF TEST
 #     secrets: inherit
 
+env:
+  CONTENT_PATH: ${{ inputs.content_paths == '' && 'false' || 'true' }}
+
 jobs:
   test:
     name: TEST
@@ -27,19 +29,19 @@ jobs:
       actions: read
 
     steps:
-      - run: echo '${{ inputs.content_paths }}'
+      - run: echo '${{ env.CONTENT_PATH }}'
 
       - name: Found modified files
-        if: ${{ inputs.content_paths == 'true' }}
+        if: ${{ env.CONTENT_PATH == 'true' }}
         uses: ./.github/workflows/github_modified_files.yaml
         id: modified_files
 
       - name: Purge CDN Specific Paths
-        if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.files != '' }}
+        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.files != '' }}
         run: |
           echo -e "${{ steps.modified_files.outputs.files }}" | awk '{printf " '\''%s'\''", $0}'
 
       - name: Purge CDN
-        if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.files == '' }}
+        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.files == '' }}
         run: |
           echo "/*"
