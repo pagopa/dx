@@ -41,11 +41,16 @@ jobs:
           CURRENT_COMMIT=$(git rev-parse HEAD)
           echo "current_commit=$CURRENT_COMMIT"
 
-          # List of modified files
-          MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
+          echo "$MODIFIED_FILES" | while read -r file; do
+            if [[ -f "$file" ]]; then
+              echo "$file"
+            fi
+          done > modified_files.txt
 
-          # Print the list of modified files
-          echo "$MODIFIED_FILES"
+          MODIFIED_FILES=$(cat modified_files.txt)
+          
+          echo "Modified files:"
+          echo "$MODIFIED_FILES
 
           # Set output
           echo "files=$MODIFIED_FILES" >> $GITHUB_OUTPUT
