@@ -48,9 +48,9 @@ jobs:
           done > modified_files.txt
 
           MODIFIED_FILES=$(cat modified_files.txt)
-          
+
           echo "Modified files:"
-          echo "$MODIFIED_FILES
+          echo $MODIFIED_FILES
 
           # Set output
           echo "files=$MODIFIED_FILES" >> $GITHUB_OUTPUT
