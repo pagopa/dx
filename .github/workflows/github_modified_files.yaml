@@ -1,0 +1,46 @@
+on:
+  workflow_call:
+    inputs:
+      base_branch:
+        description: The base branch
+        type: string
+        required: false
+        default: main
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+jobs:
+  get-files-diff:
+    name: Found GitHub files diff
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+
+      - name: Get modified files
+        id: modified_files
+        run: |
+          # Last base branch commit
+          MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
+
+          # Last commit
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+
+          # List of modified files
+          MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
+
+          # Print the list of modified files
+          echo "$MODIFIED_FILES"
+
+          # Set output
+          echo "files=$MODIFIED_FILES" >> $GITHUB_OUTPUT
+
+    outputs:
+      modules: ${{ steps.modified_files.outputs.files }}

@@ -13,11 +13,6 @@ on:
         description: Web App resource group name.
         type: string
         required: true
-      use_private_agent:
-        description: Use a private agent to deploy the built artifact. (Optional)
-        type: boolean
-        required: false
-        default: true
       storage_account_name:
         description: Storage account name.
         type: string
@@ -45,7 +40,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-cd
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   BUNDLE_NAME: bundle
@@ -56,6 +51,9 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -121,7 +119,7 @@ jobs:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-22-04' }}
+    runs-on: ubuntu-22-04
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -139,31 +137,31 @@ jobs:
         env:
           ARM_USE_OIDC: true
         with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Sync Storage
         run: |
           az storage blob sync \
-          -c ${{ inputs.blob_container_name }} \
-          --account-name ${{ inputs.storage_account_name }} \
-          -s "./${{ env.BUNDLE_NAME }}"
+            -c ${{ inputs.blob_container_name }} \
+            --account-name ${{ inputs.storage_account_name }} \
+            -s "./${{ env.BUNDLE_NAME }}"
 
       - name: Purge CDN
         if: ${{ inputs.content_paths == '' }}
         run: |
           az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths "/*"
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.endpoint_name }} \
+            --profile-name ${{ inputs.profile_cdn_name }} \
+            --content-paths "/*"
 
       - name: Purge CDN Specific Paths
         if: ${{ inputs.content_paths != '' }}
         run: |
           az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths $(echo "${{ inputs.content_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.endpoint_name }} \
+            --profile-name ${{ inputs.profile_cdn_name }} \
+            --content-paths $(echo "${{ inputs.content_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")

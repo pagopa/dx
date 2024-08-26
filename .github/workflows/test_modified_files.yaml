@@ -1,0 +1,13 @@
+name: Diff Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - DEVEX-165-cdn-action-template
+
+jobs:
+  drift_detection:
+    uses: ./.github/workflows/github_modified_files.yaml
+    name: DIFF TEST
+    secrets: inherit
