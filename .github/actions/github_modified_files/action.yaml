@@ -14,7 +14,7 @@ outputs:
     value: ${{ steps.modified_files.outputs.files }}
 
 runs:
-  using: "composite"
+  using: composite
   steps:
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -23,6 +23,7 @@ runs:
 
     - name: Get modified files
       id: modified_files
+      shell: bash
       run: |
         # Last base branch commit
         MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
