@@ -21,7 +21,7 @@ on:
 jobs:
   test:
     name: TEST
-    runs-on: ubuntu-22-04
+    runs-on: ubuntu-22.04
     permissions:
       id-token: write
       contents: read
