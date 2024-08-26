@@ -34,9 +34,10 @@ on:
         type: string
         required: false
       content_paths:
-        description: List of paths to be included in the artifact. E.g. '/path/file1' '/path/file2' (Optional)
-        type: string
+        description: If you want to include only specific file set True else False
+        type: boolean
         required: false
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -141,27 +142,36 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
-      - name: Sync Storage
-        run: |
-          az storage blob sync \
-            -c ${{ inputs.blob_container_name }} \
-            --account-name ${{ inputs.storage_account_name }} \
-            -s "./${{ env.BUNDLE_NAME }}"
+      # - name: Sync Storage
+      #   run: |
+      #     az storage blob sync \
+      #       -c ${{ inputs.blob_container_name }} \
+      #       --account-name ${{ inputs.storage_account_name }} \
+      #       -s "./${{ env.BUNDLE_NAME }}"
 
-      - name: Purge CDN
-        if: ${{ inputs.content_paths == '' }}
-        run: |
-          az cdn endpoint purge \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.endpoint_name }} \
-            --profile-name ${{ inputs.profile_cdn_name }} \
-            --content-paths "/*"
+      - name: Found modified files
+        if: ${{ inputs.content_paths }}
+        uses: ./.github/workflows/github_modified_files.yaml
+        id: modified_files
 
       - name: Purge CDN Specific Paths
-        if: ${{ inputs.content_paths != '' }}
+        if: ${{ inputs.content_paths && steps.modified_files.outputs.files != '' }}
         run: |
-          az cdn endpoint purge \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.endpoint_name }} \
-            --profile-name ${{ inputs.profile_cdn_name }} \
-            --content-paths $(echo "${{ inputs.content_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+          echo -e "${{ steps.modified_files.outputs.files }}" | awk '{printf " '\''%s'\''", $0}'
+
+          # az cdn endpoint purge \
+          #   -g ${{ inputs.resource_group_name }} \
+          #   -n ${{ inputs.endpoint_name }} \
+          #   --profile-name ${{ inputs.profile_cdn_name }} \
+          #   --content-paths $(echo -e "${{ steps.modified_files.outputs.files }}" | awk '{printf " '\''%s'\''", $0}')
+
+      - name: Purge CDN
+        if: ${{ !inputs.content_paths || steps.modified_files.outputs.files == '' }}
+        run: |
+          echo "/*"
+
+          # az cdn endpoint purge \
+          #   -g ${{ inputs.resource_group_name }} \
+          #   -n ${{ inputs.endpoint_name }} \
+          #   --profile-name ${{ inputs.profile_cdn_name }} \
+          #   --content-paths "/*"

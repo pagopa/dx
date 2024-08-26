@@ -1,0 +1,27 @@
+name: CDN Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - DEVEX-165-cdn-action-template
+
+jobs:
+  cdn_test:
+    uses: ./.github/workflows/cdn_deploy.yaml
+    name: CDN TEST
+    secrets: inherit
+    with:
+      environment: 'dev'
+      workspace_name: .
+      resource_group_name: 'io-test-rg-01'
+      use_private_agent: false
+      storage_account_name: 'io-test-sa-01'
+      profile_cdn_name: 'io-test-dev-cdn-01'
+      endpoint_name: 'io-test-dev-cdn-01'
+      blob_container_name: 'io-test-dev-cdn-01'
+      custom_env_config_variables: |
+        VAR_1=VALUE_1
+        VAR_2=VALUE_2
+        VAR_N=VALUE_N
+      content_paths: false

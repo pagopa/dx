@@ -24,22 +24,16 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         name: Checkout
         with:
-          fetch-depth: 0 # Recupera tutta la cronologia dei commit per assicurarsi che 'main' sia disponibile
-  
-      # - name: Fetch ${{ inputs.base_branch }} branch
-      #   run: |
-      #     git fetch origin ${{ inputs.base_branch }}
+          fetch-depth: 0 # Recover all the commit history to be sure that main commit is here
 
       - name: Get modified files
         id: modified_files
         run: |
           # Last base branch commit
           MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
-          echo "main_commit=$MAIN_COMMIT"
 
           # Last commit
           CURRENT_COMMIT=$(git rev-parse HEAD)
-          echo "current_commit=$CURRENT_COMMIT"
 
           # List of modified files
           MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
