@@ -8,14 +8,13 @@ on:
 
 jobs:
   cdn_test:
-    uses: ./.github/workflows/cdn_deploy.yaml
+    uses: ./.github/workflows/js_cdn_deploy.yaml
     name: CDN TEST
     secrets: inherit
     with:
       environment: 'dev'
       workspace_name: .
       resource_group_name: 'io-test-rg-01'
-      use_private_agent: false
       storage_account_name: 'io-test-sa-01'
       profile_cdn_name: 'io-test-dev-cdn-01'
       endpoint_name: 'io-test-dev-cdn-01'
