@@ -1,0 +1,765 @@
+---
+title: "DevEx Initiative: Transforming the Development Experience at PagoPA"
+description: Transforming the Development Experience at PagoPA
+slug: devex-initiative-0.1-alpha
+hide_table_of_contents: false
+date: 2024-01-11T10:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# DevEx Initiative: Transforming the Development Experience at PagoPA
+
+Imagine being able to release the first API for a **new** digital service into
+production in minutes instead of weeks, having fewer decisions to make, and less
+code to interpret and maintain, and onboarding new team members with zero
+downtime: this is the goal we set for ourselves with the **Developer Experience
+([DevEx](https://pagopa.atlassian.net/wiki/spaces/ENG/pages/861732865/DevEx+Lab+-+Initiative+canvas))**
+initiative.
+
+At the heart of the Engineering area, a group of Senior, Cloud, and Staff
+Engineers has decided to tackle the daily challenges that slow down our work.
+We're here to break down barriers, simplify processes, and make software
+development smoother and more rewarding for everyone.
+
+<div class="container">
+  <div class="row">
+    <div class="col col--6">
+      <div class="col-demo">![Without DX](001-images/image-3.png)</div>
+    </div>
+    <div class="col col--6">
+      <div class="col-demo">![With DX](001-images/image-2.png)</div>
+    </div>
+  </div>
+</div>
+
+{/* truncate */}
+
+## Why DevEx
+
+How much time is lost before even writing a line of code? How many decisions
+need to be made? And how long does it take for a new engineer to become truly
+productive?
+
+With DevEx, we want to answer these questions and solve the problems that hinder
+our daily work:
+
+- **Reduce downtime:** Every second spent configuring an environment or
+  interpreting old code is a second lost to innovation.
+- **Lower cognitive load**: Less complexity means more room to create value,
+  reducing errors, and speeding up time-to-market
+- **Speed up onboarding:** Every new developer should be able to contribute from
+  day one.
+
+## What We Do
+
+The [DevEx team](https://github.com/orgs/pagopa/teams/engineering-team-devex)
+doesn't just identify problems and suggest solutions: they tackle them head-on,
+getting their hands dirty.
+
+- **Common patterns and golden paths:** We provide tried-and-true paths so you
+  don't have to reinvent the wheel every time.
+- **Ready-to-use abstractions and tools:** We reduce boilerplate code so you can
+  focus on the code that matters.
+- **Optimized development environments:** Pre-configured and ready to use
+  because infrastructure should never be an obstacle but a resource.
+- **Centralized documentation:** You'll no longer have to search for an answer;
+  it will always be at your fingertips.
+
+## How We're Organized
+
+Currently, the DevEx initiative is carried out by engineers working
+asynchronously on a _best-effort_ basis. It may not always be this way, but for
+now, it seems to be working!
+
+![Team DevEx](./001-images/image-4.png)
+
+Every two weeks, we hold a review & demo session on Google Meet. This is a key
+moment to review our goals
+([OKRs](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/962757129/OKR)) and
+share our progress. Each member autonomously selects a task from the
+[Jira DevEx Board](https://pagopa.atlassian.net/jira/software/c/projects/DEVEX/boards/501/backlog)
+and carries it forward, collaborating with the rest of the team through Code
+Reviews and RFCs.
+
+Staff Engineers, in particular, are expected to independently select priority
+tasks beyond the scope of the project (domain) they are already engaged in. This
+approach requires **collaboration from Product Managers** to ensure that
+activities are aligned with strategic business objectives.
+
+Innovation doesn't stop at theory: we bring solutions directly into projects,
+proactively supporting stream-aligned teams, and promoting the adoption of DX
+tools.
+
+## Where We Stand
+
+We started with an idea and a
+[brainstorming session](https://www.figma.com/board/7rmB4tXRQlzfStPuJh4vU2/Kick-Off?node-id=0-1&t=UZeTC0BhIFl9678h-0),
+then we got to work.
+
+Between April and July 2024, we have...
+
+- Identified
+  [shared technologies and patterns](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/947782090/RFC-DX-001+Scelta+del+primo+stack+tecnologico)
+  to focus our initial efforts on, currently: Typescript, Terraform, Azure, and
+  GitHub Actions.
+
+- Established some new practices such as:
+
+  - [naming conventions](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1032880258/RFC-DX-005+Naming+convention+nuove+risorse+Azure)
+    for Azure resources
+  - structure for
+    [npm tasks for Typescript projects](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1012662333/RFC-DX-004+Package+scripts)
+  - [HCL code structure for Terraform modules](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/910492147/RFC-DX-011+Riorganizzazione+configurazioni+Terraform)
+
+- Implemented new Terraform modules for:
+
+  - [creating a GitHub Actions runner](https://github.com/pagopa/dx/tree/main/infra/modules/github_selfhosted_runner_on_container_app_jobs)
+  - [setting up GitHub repository identity on Azure](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github)
+  - [easily creating roles and permissions for Azure services](https://github.com/pagopa/dx/tree/main/infra/modules/azure_role_assignments)
+  - [creating an Azure Functions App](https://github.com/pagopa/dx/tree/main/infra/modules/azure_function_app)
+  - [creating an Azure App Service](https://github.com/pagopa/dx/tree/main/infra/modules/azure_app_service)
+  - [setting up autoscaling for an App Service or Function App](https://github.com/pagopa/dx/tree/main/infra/modules/azure_app_service_plan_autoscaler)
+
+- Developed GitHub Actions for:
+
+  - [conducting code reviews on Typescript codebases](https://github.com/pagopa/dx/blob/main/.github/workflows/js_code_review.yaml)
+  - [building Docker images](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
+  - [deploying Azure services via Terraform](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)
+  - [planning infrastructure changes](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml)
+  - [notifying of drifts between IaC code and infrastructure](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml)
+  - [deploying to production Azure Function or App Service](https://github.com/pagopa/dx/blob/main/.github/workflows/web_app_deploy.yaml)
+  - [linting Terraform code](https://github.com/pagopa/dx/blob/main/.github/workflows/static_analysis.yaml)
+
+- Set up
+  [basic configurations for Typescript tooling](https://github.com/pagopa/dx-typescript):
+  eslint, yarn, turbo, changeset.
+
+- Shared the
+  [results of a benchmark on tools for generating clients from OpenAPI specifications](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1100579051/RFC-DX-009+Benchmark+per+generatori+di+codice+Typescript+da+OpenAPI)
+
+- Analyzed the state of the art for
+  [distributed monitoring and log correlation on Azure](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1086619751/Azure+e+tracing+per+applicativi+NodeJS)
+
+While it may seem like a lot of material, we recognize that without proper
+documentation and effective communication, our efforts might be overlooked.
+That's why We've launched a
+[dedicated website](https://pagopa.github.io/dx/docs/) to be populated with
+content and continuously updated as a reference for all engineers in the
+organization.
+
+And that's not all! We're also working to provide tools (_scaffolding_) that can
+automate repetitive and redundant tasks.
+
+:::info
+
+We want to reach a point where documentation becomes unnecessary!
+
+:::
+
+## Pilot Projects
+
+Although still in its early stages, much of the tooling we’ve developed has
+already been successfully used in several real projects.
+
+Here are some examples!
+
+### Trial System
+
+The team that implemented the Trial System used DevEx tooling to create a
+platform that allows any digital service to segment users and test new features
+on a selected group (feature flags):
+
+https://github.com/pagopa/trial-system
+
+### IO FIMS
+
+IO FIMS is a project that manages Single Sign-On for IO users. The team used
+DevEx tooling to create a new service:
+
+https://github.com/pagopa/io-fims
+
+### IO communication
+
+The team that implemented the messaging service for IO used DevEx tooling to
+create a new Typescript monorepo and manage the deployment of Azure Functions:
+
+https://github.com/pagopa/io-messages
+
+### IO authentication
+
+The team that implemented the user authentication service for IO used DevEx
+tooling to create a new Typescript monorepo and manage the deployment of Azure
+Functions:
+
+https://github.com/pagopa/io-auth-n-identity-domain
+
+### IO entities and services
+
+The team that implemented the backoffice for entities in IO used DevEx tooling
+to manage the deployment of infrastructure and Azure Functions:
+
+https://github.com/search?q=repo%3Apagopa%2Fio-services-cms+pagopa%2Fdx&type=code
+
+## Current Benefits of DevEx
+
+Let's share some brief code snippets to show how DevEx tooling can make
+engineers' work easier and faster.
+
+### Setting Up GitHub Repository Permissions on Azure
+
+<Tabs>
+  <TabItem value="after" label="With DX" default>
+
+```bash
+> cd io-messages/infra/identity
+> find . -type f
+./prod/outputs.tf
+./prod/locals.tf
+./prod/main.tf
+./prod/README.md
+./prod/.terraform.lock.hcl
+> find . -type f | xargs wc -l | tail -n 1 | awk '{print $1}'
+160 # LoC
+```
+
+  </TabItem>
+  <TabItem value="before" label="Without DX">
+```bash
+> cd io-services-cms/.identity
+> find . -type f
+.
+./github_repository.tf
+./99_locals.tf
+./main.tf
+./03_github_environment_ci.tf
+./01_data.tf
+./env/prod/backend.ini
+./env/prod/terraform.tfvars
+./env/prod/backend.tfvars
+./99_variables.tf
+./04_github_identity.tf
+./terraform.sh
+./03_github_environment_infra.tf
+./99_outputs.tf
+./03_github_repo_secrets.tf
+./.terraform.lock.hcl
+./03_github_environment_cd.tf
+./03_github_environment_opex.tf
+> find . -type f | xargs wc -l | tail -n 1 | awk '{print $1}'
+731 # LoC
+```
+  </TabItem>
+</Tabs>
+
+### Setting Up Autoscaling for an App Service or Function App
+
+<Tabs>
+  <TabItem value="after" label="With DX" default>
+
+```hcl
+module "function_app_user_autoscaler" {
+  source = "github.com/pagopa/dx//infra/modules/azure_app_service_plan_autoscaler?ref=main"
+
+  resource_group_name = var.resource_group_name
+
+  target_service = {
+    function_app_name = module.function_app_user.function_app.function_app.name
+  }
+
+  scheduler = {
+    maximum = 30
+    normal_load = {
+      default = 5
+      minimum = 3
+    }
+  }
+
+  scale_metrics = {
+    cpu = {
+      upper_threshold = 50
+      increase_by = 2
+    }
+  }
+}
+```
+
+  </TabItem>
+  <TabItem value="before" label="Without DX">
+
+```hcl
+resource "azurerm_monitor_autoscale_setting" "cms_fn" {
+  name                = "${var.prefix}-${var.env_short}-${var.location_short}-${var.domain}-cms-func-as-01"
+  resource_group_name = module.cms_fn.function_app.resource_group_name
+  location            = var.location
+  target_resource_id  = module.cms_fn.function_app.plan.id
+
+  profile {
+    name = "default"
+
+    capacity {
+      default = local.cms.autoscale_settings.default
+      minimum = local.cms.autoscale_settings.min
+      maximum = local.cms.autoscale_settings.max
+    }
+
+    rule {
+      metric_trigger {
+        metric_name              = "Requests"
+        metric_resource_id       = module.cms_fn.function_app.function_app.id
+        metric_namespace         = "microsoft.web/sites"
+        time_grain               = "PT1M"
+        statistic                = "Average"
+        time_window              = "PT1M"
+        time_aggregation         = "Average"
+        operator                 = "GreaterThan"
+        threshold                = 3000
+        divide_by_instance_count = false
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "2"
+        cooldown  = "PT1M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name              = "CpuPercentage"
+        metric_resource_id       = module.cms_fn.function_app.plan.id
+        metric_namespace         = "microsoft.web/serverfarms"
+        time_grain               = "PT1M"
+        statistic                = "Average"
+        time_window              = "PT5M"
+        time_aggregation         = "Average"
+        operator                 = "GreaterThan"
+        threshold                = 60
+        divide_by_instance_count = false
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "2"
+        cooldown  = "PT5M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "MemoryPercentage"
+        metric_resource_id = module.cms_fn.function_app.plan.id
+        metric_namespace   = "microsoft.web/serverfarms"
+        time_grain         = "PT1M"
+        statistic          = "Average"
+        time_window        = "PT5M"
+        time_aggregation   = "Average"
+        operator           = "GreaterThan"
+        threshold          = 80
+      }
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "2"
+        cooldown  = "PT5M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name              = "Requests"
+        metric_resource_id       = module.cms_fn.function_app.function_app.id
+        metric_namespace         = "microsoft.web/sites"
+        time_grain               = "PT1M"
+        statistic                = "Average"
+        time_window              = "PT7M"
+        time_aggregation         = "Average"
+        operator                 = "LessThan"
+        threshold                = 2000
+        divide_by_instance_count = false
+      }
+
+      scale_action {
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT5M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name              = "CpuPercentage"
+        metric_resource_id       = module.cms_fn.function_app.plan.id
+        metric_namespace         = "microsoft.web/serverfarms"
+        time_grain               = "PT1M"
+        statistic                = "Average"
+        time_window              = "PT7M"
+        time_aggregation         = "Average"
+        operator                 = "LessThan"
+        threshold                30
+        divide_by instance_count = false
+      }
+
+      scale_action {
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT5M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name        = "MemoryPercentage"
+        metric_resource_id = module.cms_fn.function_app.plan.id
+        metric_namespace   = "microsoft.web/serverfarms"
+        time_grain         = "PT1M"
+        statistic          = "Average"
+        time_window        = "PT7M"
+        time_aggregation   = "Average"
+        operator           = "LessThan"
+        threshold          30
+      }
+      scale_action {
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT5M"
+      }
+    }
+  }
+}
+```
+
+  </TabItem>
+</Tabs>
+
+### Deploying an Azure Function App
+
+<Tabs>
+  <TabItem value="after" label="With DX" default>
+
+```yaml
+name: Deploy (op-func)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  op_func_deploy:
+    uses: pagopa/dx/.github/workflows/web_app_deploy.yaml@add-web-app-deploy-workflow
+    name: Deploy
+    secrets: inherit
+    with:
+      workspace_name: op-func
+      environment: app-prod
+      resource_group_name: io-p-weu-fims-rg-01
+      web_app_name: io-p-weu-fims-op-func-01
+      use_staging_slot: false
+      use_private_agent: true
+```
+
+  </TabItem>
+  <TabItem value="before" label="Without DX">
+
+```yaml
+# Azure DevOps pipeline to release a new version and deploy to production.
+
+variables:
+  HEALTHCHECK_PATH: "api/info"
+
+parameters:
+  - name: "RELEASE_SEMVER"
+    displayName: "When packing a release, define the version bump to apply"
+    type: string
+    values:
+      - major
+      - minor
+      - patch
+    default: minor
+  # Map of production apps to deploy to, in the form
+  #   {logicName}:
+  #     appname: {name of the resource}
+  #     rg: {name of the resource group}
+  # Although it's a parameter, it's not intended to be edited at runtime.
+  # It's here because variables only handle scalar values
+  - name: "PRODUCTION_APPS"
+    displayName: ""
+    type: object
+    default:
+      servicesfn1:
+        appname: io-p-services-fn-1
+        rg: io-p-services-rg-1
+      servicesfn2:
+        appname: io-p-services-fn-2
+        rg: io-p-services-rg-2
+
+# Only manual activations are intended
+trigger: none
+pr: none
+
+# This pipeline has been implemented to be run on hosted agent
+
+ pools based both
+# on 'windows' and 'ubuntu' virtual machine images and using the scripts defined
+# in the package.json file. Since we are deploying on Azure functions on Windows
+# runtime, the pipeline is currently configured to use a Windows hosted image for
+# the build and deploy.
+pool:
+  vmImage: "ubuntu-latest"
+
+resources:
+  repositories:
+    - repository: pagopaCommons
+      type: github
+      name: pagopa/azure-pipeline-templates
+      ref: refs/tags/v18
+      endpoint: "io-azure-devops-github-ro"
+
+stages:
+  # Create a release
+  # Activated when ONE OF these are met:
+  # - is on branch master
+  # - is a tag in the form v{version}-RELEASE
+  - stage: Release
+    condition:
+      and( succeeded(), or( eq(variables['Build.SourceBranch'],
+      'refs/heads/master'), and( startsWith(variables['Build.SourceBranch'],
+      'refs/tags'), endsWith(variables['Build.SourceBranch'], '-RELEASE') ) ) )
+    pool:
+      vmImage: "ubuntu-latest"
+    jobs:
+      - job: make_release
+        steps:
+          - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+              - template: templates/node-job-setup/template.yaml@pagopaCommons
+                parameters:
+                  persistCredentials: true
+              - template: templates/node-github-release/template.yaml@pagopaCommons
+                parameters:
+                  semver: "${{ parameters.RELEASE_SEMVER }}"
+                  gitEmail: $(GIT_EMAIL)
+                  gitUsername: $(GIT_USERNAME)
+                  gitHubConnection: $(GITHUB_CONNECTION)
+
+          - ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+              - script: |
+                  echo "We assume this reference to be a valid release: $(Build.SourceBranch). Therefore, there is no need to bundle a new release."
+                displayName: "Skip release bundle"
+
+  # Prepare Artifact
+  - stage: Prepare_artifact
+    dependsOn:
+      - Release
+    jobs:
+      - job: "prepare_artifact"
+        steps:
+          # Build application
+          - template: templates/node-job-setup/template.yaml@pagopaCommons
+            parameters:
+              # On the assumption that this stage is executed only when Release stage is,
+              #  with this parameter we set the reference the deploy script must pull changes from.
+              # The branch/tag name is calculated from the source branch
+              #  ex: Build.SourceBranch=refs/heads/master --> master
+              #  ex: Build.SourceBranch=refs/tags/v1.2.3-RELEASE --> v1.2.3-RELEASE
+              gitReference:
+                ${{ replace(replace(variables['Build.SourceBranch'],
+                'refs/tags/', ''), 'refs/heads/', '') }}
+          - script: |
+              yarn predeploy
+            displayName: "Build"
+
+          # Install functions extensions
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: "build"
+              arguments: "-o bin"
+          # Copy application to
+          - task: CopyFiles@2
+            inputs:
+              SourceFolder: "$(System.DefaultWorkingDirectory)"
+              TargetFolder: "$(System.DefaultWorkingDirectory)/bundle"
+              Contents: |
+                **/*
+                !.git/**/*
+                !**/*.js.map
+                !**/*.ts
+                !.vscode/**/*
+                !.devops/**/*
+                !.prettierrc
+                !.gitignore
+                !README.md
+                !jest.config.js
+                !local.settings.json
+                !test
+                !tsconfig.json
+                !tslint.json
+                !yarn.lock
+                !Dangerfile.js
+                !CODEOWNERS
+                !__*/**/*
+            displayName: "Copy deploy files"
+
+          - publish: $(System.DefaultWorkingDirectory)/bundle
+            artifact: Bundle
+
+  # Deploy on staging slot
+  - ${{ each app in parameters.PRODUCTION_APPS }}:
+      - stage: Deploy_${{ app.Key }}_to_staging
+        dependsOn:
+          - Prepare_artifact
+        jobs:
+          - job: "do_deploy_${{ app.Key }}"
+            steps:
+              - checkout: none
+              - download: current
+                artifact: Bundle
+
+              - task: AzureFunctionApp@1
+                inputs:
+                  azureSubscription: "$(PRODUCTION_AZURE_SUBSCRIPTION)"
+                  resourceGroupName: "${{ app.Value.rg }}"
+                  appType: "functionApp"
+                  appName: "${{ app.Value.appname }}"
+                  package: "$(Pipeline.Workspace)/Bundle"
+                  deploymentMethod: "auto"
+                  deployToSlotOrASE: true
+                  slotName: "staging"
+                displayName: Deploy to staging slot
+
+  # Check that the staging instance is healthy
+  - ${{ each app in parameters.PRODUCTION_APPS }}:
+      - stage: Healthcheck_${{ app.Key }}
+        dependsOn:
+          - Deploy_${{ app.Key }}_to_staging
+        pool:
+          name: $(AGENT_POOL)
+        jobs:
+          - job: "do_healthcheck_${{ app.Key }}"
+            steps:
+              - checkout: none
+              - script: |
+                  # fails if response status is not 2xx
+                  curl -f 'https://${{ app.Value.appname }}-staging.azurewebsites.net/$(HEALTHCHECK_PATH)'
+                displayName: "Healthcheck"
+
+  # Promote the staging instance to production
+  - ${{ each app in parameters.PRODUCTION_APPS }}:
+      - stage: Swap_${{ app.Key }}_to_production
+        dependsOn:
+          - Deploy_${{ app.Key }}_to_staging
+          # Wait for every healthcheck to succeed
+          # This implied that no app is swapped to prod if at least one healthcheck fails
+          - ${{ each appInner in parameters.PRODUCTION_APPS }}:
+              - Healthcheck_${{ appInner.Key }}
+        jobs:
+          - job: "do_deploy_${{ app.Key }}"
+            steps:
+              - checkout: none
+              - task: AzureAppServiceManage@0
+                inputs:
+                  azureSubscription: "$(PRODUCTION_AZURE_SUBSCRIPTION)"
+                  resourceGroupName: "${{ app.Value.rg }}"
+                  webAppName: "${{ app.Value.appname }}"
+                  sourceSlot: staging
+                  swapWithProduction: true
+                displayName: Swap with production slot
+
+  # Publish client SDK to NPM
+  - stage: PublishClientSDKtoNPM
+    dependsOn: Release
+    pool:
+      vmImage: "ubuntu-latest"
+    jobs:
+      - job: publish_SDK
+        steps:
+          # Template for generating and deploying client SDK to NPM
+          - template: templates/client-sdk-publish/template.yaml@pagopaCommons
+            parameters:
+              openapiSpecPath: "openapi/index.yaml"
+```
+
+  </TabItem>
+</Tabs>
+
+### Assigning Permissions to Azure Services
+
+<Tabs>
+  <TabItem value="after" label="With DX" default>
+
+```hcl
+module "rp_func_roles" {
+  source       = "github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main"
+  principal_id = module.relying_party_func.system_identity_principal
+
+  cosmos = [{
+    account_name = data.azurerm_cosmosdb_account.fims.name
+    resource_group_name = data.azurerm_cosmosdb_account.fims.resource_group_name
+    role = "writer"
+  }]
+
+  key_vault = [{
+    name = var.key_vault.name
+    resource_group_name = var.key_vault.resource_group_name
+    roles = { secrets = "reader" }
+  }]
+}
+```
+
+  </TabItem>
+  <TabItem value="before" label="Without DX">
+
+```hcl
+resource "azurerm_key_vault_access_policy" "relying_party_func_key_vault_access_policy" {
+  key_vault_id = var.key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = module.relying_party_func.system_identity_principal
+  secret_permissions = ["Get"]
+  storage_permissions = []
+  certificate_permissions = []
+}
+
+resource "azurerm_cosmosdb_sql_role_assignment" "rp_func_sql_role" {
+  resource_group_name = data.azurerm_cosmosdb_account.fims.resource_group_name
+  account_name = data.azurerm_cosmosdb_account.fims.name
+  role_definition_id = "${data.azurerm_cosmosdb_account.fims.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id = module.relying_party_func.system_identity_principal
+  scope = data.azurerm_cosmosdb_account.fims.id
+}
+```
+
+  </TabItem>
+</Tabs>
+
+## I'm sold! How Can I Get Involved?
+
+If you want to adopt our tooling, contribute to the project, or simply learn
+more, don't hesitate to contact us on Slack in the
+[#team_devex](https://pagopaspa.slack.com/archives/C06EK19JBMM) channel.
+
+We want to make your work simpler and more rewarding, and we want to support you
+as best as we can in these early stages of the initiative.
+
+:::info
+
+Our ultimate goal is to become unnecessary!
+
+:::
+
+## Looking Ahead
+
+In the medium term (by 2025), we aim to achieve the highest score on the
+[maturity score](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/1181941934/Platform+engineering+maturity+model)
+for our tooling and to have 100% adoption by stream-aligned teams. Follow our
+progress and activities on our
+[Jira Board](https://pagopa.atlassian.net/jira/software/c/projects/DEVEX/boards/501/backlog).
+
+Today, we are just at the beginning. With DevEx, we are redefining how we
+develop, collaborate, and innovate at PagoPA. Are you ready to join us on this
+journey?
