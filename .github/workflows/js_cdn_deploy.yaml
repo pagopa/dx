@@ -10,7 +10,7 @@ on:
         type: string
         required: true
       resource_group_name:
-        description: Web App resource group name.
+        description: CDN resource group name.
         type: string
         required: true
       storage_account_name:
