@@ -23,28 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         name: Checkout
-        with:
-          fetch-depth: 0 # Recover all the commit history to be sure that main commit is here
 
-      - name: Get modified files
+      - name: Found modified files
+        uses: ./.github/actions/github_modified_files
         id: modified_files
-        run: |
-          # Last base branch commit
-          MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
-
-          # Last commit
-          CURRENT_COMMIT=$(git rev-parse HEAD)
-
-          # List of modified files
-          MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)
-
-          # Print the list of modified files
-          echo "$MODIFIED_FILES"
-
-          # Set output
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$MODIFIED_FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-    outputs:
-      modules: ${{ steps.modified_files.outputs.files }}
+        with:
+          base_branch: main
