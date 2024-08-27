@@ -18,7 +18,7 @@ on:
         type: string
         required: true
       profile_cdn_name:
-        description: Profile CDN name.
+        description: CDN Profile name.
         type: string
         required: true
       endpoint_name:
