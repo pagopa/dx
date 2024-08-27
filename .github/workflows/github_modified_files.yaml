@@ -7,10 +7,6 @@ on:
         required: false
         default: main
 
-concurrency:
-  group: ${{ github.workflow }}-cd
-  cancel-in-progress: true
-
 jobs:
   get-files-diff:
     name: Found GitHub files diff
@@ -28,4 +24,6 @@ jobs:
         uses: ./.github/actions/github_modified_files
         id: modified_files
         with:
-          base_branch: main
+          base_branch: ${{ env.BASE_BRANCH }}
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
