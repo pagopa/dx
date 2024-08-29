@@ -52,7 +52,6 @@ jobs:
           arm_tenant_id: ${{ env.ARM_TENANT_ID }}
           arm_subscription_id: ${{ env.ARM_SUBSCRIPTION_ID }}
           resource_group_name: 'io-test-rg-01'
-          use_private_agent: false
           storage_account_name: 'io-test-sa-01'
           profile_cdn_name: 'io-test-dev-cdn-01'
           endpoint_name: 'io-test-dev-cdn-01'
