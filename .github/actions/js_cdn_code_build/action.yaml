@@ -26,9 +26,11 @@ runs:
       name: Checkout
 
     # - name: Prune
+    #   shell: bash
     #   run: npx turbo@1.13.3 prune --scope ${{ inputs.workspace_name }}
 
     # - name: Setup yarn
+    #   shell: bash
     #   run: corepack enable
 
     - name: Setup Node.js
@@ -39,6 +41,7 @@ runs:
         cache-dependency-path: "${{ env.BASE_WORKDIR }}/yarn.lock"
 
     - name: Install dependencies
+      shell: bash
       run: yarn install --immutable
       working-directory: ${{ inputs.base_workdir || './out' }}
     
@@ -71,6 +74,7 @@ runs:
         echo "}" >> ./env-config.js
 
     - name: Build
+      shell: bash
       run: yarn build
       working-directory: ${{ inputs.base_workdir || './out' }}
 
