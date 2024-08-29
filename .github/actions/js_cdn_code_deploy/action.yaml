@@ -48,67 +48,65 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+    - name: Download Artifact
+      uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
       with:
-        fetch-depth: 0 # Recover all the commit history to be sure that main commit is here
+        name: ${{ inputs.bundle_name || 'bundle' }}
+        path: "./${{ inputs.bundle_name || 'bundle' }}"
 
-      - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
-        with:
-          name: ${{ inputs.bundle_name || 'bundle' }}
-          path: "./${{ inputs.bundle_name || 'bundle' }}"
+    - name: Azure Login
+      uses: azure/login@v2 # v2.0.0
+      env:
+        ARM_USE_OIDC: true
+      with:
+        client-id: ${{ inputs.arm_client_id }}
+        tenant-id: ${{ inputs.arm_tenant_id }}
+        subscription-id: ${{ inputs.arm_subscription_id }}
 
-      - name: Azure Login
-        uses: azure/login@v2 # v2.0.0
-        env:
-          ARM_USE_OIDC: true
-        with:
-          client-id: ${{ inputs.arm_client_id }}
-          tenant-id: ${{ inputs.arm_tenant_id }}
-          subscription-id: ${{ inputs.arm_subscription_id }}
+    - name: Sync Storage
+      shell: bash
+      run: |
+        az storage blob sync \
+          -c ${{ inputs.blob_container_name }} \
+          --account-name ${{ inputs.storage_account_name }} \
+          -s "./${{ inputs.bundle_name || 'bundle' }}"
 
-      - name: Sync Storage
-        shell: bash
-        run: |
-          az storage blob sync \
-            -c ${{ inputs.blob_container_name }} \
-            --account-name ${{ inputs.storage_account_name }} \
-            -s "./${{ inputs.bundle_name || 'bundle' }}"
+    - name: Found modified files
+      if: ${{ inputs.content_paths == 'true' }}
+      uses: ./.github/actions/github_modified_files
+      id: modified_files
+      with:
+        base_branch: main
 
-      - name: Found modified files
-        if: ${{ inputs.content_paths == 'true' }}
-        uses: ./.github/actions/github_modified_files
-        id: modified_files
-        with:
-          base_branch: main
+    # - name: Purge CDN Specific Paths
+    #   if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
+    #   shell: bash
+    #   run: |
+    #     az cdn endpoint purge \
+    #       -g ${{ inputs.resource_group_name }} \
+    #       -n ${{ inputs.endpoint_name }} \
+    #       --profile-name ${{ inputs.profile_cdn_name }} \
+    #       --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
 
-      # - name: Purge CDN Specific Paths
-      #   if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
-      #   shell: bash
-      #   run: |
-      #     az cdn endpoint purge \
-      #       -g ${{ inputs.resource_group_name }} \
-      #       -n ${{ inputs.endpoint_name }} \
-      #       --profile-name ${{ inputs.profile_cdn_name }} \
-      #       --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
+    # - name: Purge CDN
+    #   if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
+    #   shell: bash
+    #   run: |
+    #     az cdn endpoint purge \
+    #       -g ${{ inputs.resource_group_name }} \
+    #       -n ${{ inputs.endpoint_name }} \
+    #       --profile-name ${{ inputs.profile_cdn_name }} \
+    #       --content-paths "/*"
 
-      # - name: Purge CDN
-      #   if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
-      #   shell: bash
-      #   run: |
-      #     az cdn endpoint purge \
-      #       -g ${{ inputs.resource_group_name }} \
-      #       -n ${{ inputs.endpoint_name }} \
-      #       --profile-name ${{ inputs.profile_cdn_name }} \
-      #       --content-paths "/*"
+    - name: Purge CDN Specific Paths TEST
+      if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      shell: bash
+      run: |
+        echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}'
 
-      - name: Purge CDN Specific Paths TEST
-        if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
-        shell: bash
-        run: |
-          echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}'
-
-      - name: Purge CDN TEST
-        if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
-        shell: bash
-        run: |
-          echo "/*"
+    - name: Purge CDN TEST
+      if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      shell: bash
+      run: |
+        echo "/*"
