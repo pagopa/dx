@@ -64,13 +64,13 @@ runs:
         tenant-id: ${{ inputs.arm_tenant_id }}
         subscription-id: ${{ inputs.arm_subscription_id }}
 
-    - name: Sync Storage
-      shell: bash
-      run: |
-        az storage blob sync \
-          -c ${{ inputs.blob_container_name }} \
-          --account-name ${{ inputs.storage_account_name }} \
-          -s "./${{ inputs.bundle_name || 'bundle' }}"
+    # - name: Sync Storage
+    #   shell: bash
+    #   run: |
+    #     az storage blob sync \
+    #       -c ${{ inputs.blob_container_name }} \
+    #       --account-name ${{ inputs.storage_account_name }} \
+    #       -s "./${{ inputs.bundle_name || 'bundle' }}"
 
     - name: Found modified files
       if: ${{ inputs.content_paths == 'true' }}
