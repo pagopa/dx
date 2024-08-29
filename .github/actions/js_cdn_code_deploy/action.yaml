@@ -50,11 +50,6 @@ inputs:
 runs:
   using: composite
   if: ${{ !github.event.act }}
-  env:
-    BUNDLE_NAME: ${{ inputs.bundle_name == '' && 'bundle' || inputs.bundle_name }}
-    ARM_CLIENT_ID: ${{ inputs.arm_client_id }}
-    ARM_TENANT_ID: ${{ inputs.arm_tenant_id }}
-    ARM_SUBSCRIPTION_ID: ${{ inputs.arm_subscription_id }}
   environment: ${{ inputs.environment }}-cd
   permissions:
     id-token: write
@@ -69,24 +64,24 @@ runs:
       - name: Download Artifact
         uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: "./${{ env.BUNDLE_NAME }}"
+          name: ${{ inputs.bundle_name || 'bundle' }}
+          path: "./${{ inputs.bundle_name || 'bundle' }}"
 
       - name: Azure Login
         uses: azure/login@v2 # v2.0.0
         env:
           ARM_USE_OIDC: true
         with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ inputs.arm_client_id }}
+          tenant-id: ${{ inputs.arm_tenant_id }}
+          subscription-id: ${{ inputs.arm_subscription_id }}
 
       - name: Sync Storage
         run: |
           az storage blob sync \
             -c ${{ inputs.blob_container_name }} \
             --account-name ${{ inputs.storage_account_name }} \
-            -s "./${{ env.BUNDLE_NAME }}"
+            -s "./${{ inputs.bundle_name || 'bundle' }}"
 
       - name: Found modified files
         if: ${{ env.CONTENT_PATH == 'true' }}
