@@ -40,6 +40,9 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
     steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+        
       - uses: ./.github/actions/js_cdn_code_deploy
         name: Deploy Artifact
         with:
