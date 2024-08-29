@@ -77,6 +77,7 @@ runs:
           subscription-id: ${{ inputs.arm_subscription_id }}
 
       - name: Sync Storage
+        shell: bash
         run: |
           az storage blob sync \
             -c ${{ inputs.blob_container_name }} \
@@ -84,14 +85,15 @@ runs:
             -s "./${{ inputs.bundle_name || 'bundle' }}"
 
       - name: Found modified files
-        if: ${{ env.CONTENT_PATH == 'true' }}
+        if: ${{ inputs.content_paths == 'true' }}
         uses: ./.github/actions/github_modified_files
         id: modified_files
         with:
           base_branch: main
 
       # - name: Purge CDN Specific Paths
-      #   if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      #   if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      #   shell: bash
       #   run: |
       #     az cdn endpoint purge \
       #       -g ${{ inputs.resource_group_name }} \
@@ -100,7 +102,8 @@ runs:
       #       --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
 
       # - name: Purge CDN
-      #   if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      #   if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      #   shell: bash
       #   run: |
       #     az cdn endpoint purge \
       #       -g ${{ inputs.resource_group_name }} \
@@ -109,11 +112,13 @@ runs:
       #       --content-paths "/*"
 
       - name: Purge CDN Specific Paths TEST
-        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.modified_files != '' }}
+        if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
+        shell: bash
         run: |
           echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}'
 
       - name: Purge CDN TEST
-        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.modified_files == '' }}
+        if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
+        shell: bash
         run: |
           echo "/*"

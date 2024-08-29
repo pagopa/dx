@@ -49,6 +49,7 @@ runs:
     - name: Define env-config.js
       if: ${{ inputs.custom_env_config_variables != '' }}
       working-directory: ${{ inputs.base_workdir || './out' }}
+      shell: bash
       run: |
         # Recreate config file
         rm -rf ./env-config.js
