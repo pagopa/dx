@@ -25,9 +25,9 @@ runs:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       name: Checkout
 
-    # - name: Prune
-    #   shell: bash
-    #   run: npx turbo@1.13.3 prune --scope ${{ inputs.workspace_name }}
+    - name: Prune
+      shell: bash
+      run: npx turbo@1.13.3 prune --scope ${{ inputs.workspace_name }}
 
     - name: Setup yarn
       shell: bash
