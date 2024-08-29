@@ -1,0 +1,124 @@
+name: NodeJS CDN Code Deploy 
+description: An action Deploy the artifact to the CDN
+
+inputs:
+  inputs:
+    environment:
+      description: Environment where the artifact will be deployed.
+      type: string
+      required: true
+    resource_group_name:
+      description: CDN resource group name.
+      type: string
+      required: true
+    storage_account_name:
+      description: Storage account name.
+      type: string
+      required: true
+    profile_cdn_name:
+      description: CDN Profile name.
+      type: string
+      required: true
+    endpoint_name:
+      description: CDN endpoint name.
+      type: string
+      required: true
+    blob_container_name:
+      description: Blob container name.
+      type: string
+      required: true
+    content_paths:
+      description: If you want to include only specific file set 'true' else 'false'
+      type: string
+      required: false
+    bundle_name:
+      description: Name of the bundle
+      type: string
+      required: false
+    arm_client_id:
+      description: ARM_CLIENT_ID
+      type: string
+      required: true
+    arm_tenant_id:
+      description: ARM_TENANT_ID
+      type: string
+      required: true
+    arm_subscription_id:
+      description: ARM_SUBSCRIPTION_ID
+      type: string
+      required: true
+runs:
+  using: composite
+  if: ${{ !github.event.act }}
+  env:
+    BUNDLE_NAME: ${{ inputs.bundle_name == '' && 'bundle' || inputs.bundle_name }}
+    ARM_CLIENT_ID: ${{ inputs.arm_client_id }}
+    ARM_TENANT_ID: ${{ inputs.arm_tenant_id }}
+    ARM_SUBSCRIPTION_ID: ${{ inputs.arm_subscription_id }}
+  environment: ${{ inputs.environment }}-cd
+  permissions:
+    id-token: write
+    contents: read
+    actions: read
+  steps:
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        fetch-depth: 0 # Recover all the commit history to be sure that main commit is here
+
+      - name: Download Artifact
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: "./${{ env.BUNDLE_NAME }}"
+
+      - name: Azure Login
+        uses: azure/login@v2 # v2.0.0
+        env:
+          ARM_USE_OIDC: true
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Sync Storage
+        run: |
+          az storage blob sync \
+            -c ${{ inputs.blob_container_name }} \
+            --account-name ${{ inputs.storage_account_name }} \
+            -s "./${{ env.BUNDLE_NAME }}"
+
+      - name: Found modified files
+        if: ${{ env.CONTENT_PATH == 'true' }}
+        uses: ./.github/actions/github_modified_files
+        id: modified_files
+        with:
+          base_branch: main
+
+      # - name: Purge CDN Specific Paths
+      #   if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      #   run: |
+      #     az cdn endpoint purge \
+      #       -g ${{ inputs.resource_group_name }} \
+      #       -n ${{ inputs.endpoint_name }} \
+      #       --profile-name ${{ inputs.profile_cdn_name }} \
+      #       --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
+
+      # - name: Purge CDN
+      #   if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      #   run: |
+      #     az cdn endpoint purge \
+      #       -g ${{ inputs.resource_group_name }} \
+      #       -n ${{ inputs.endpoint_name }} \
+      #       --profile-name ${{ inputs.profile_cdn_name }} \
+      #       --content-paths "/*"
+
+      - name: Purge CDN Specific Paths TEST
+        if: ${{ env.CONTENT_PATH == 'true' && steps.modified_files.outputs.modified_files != '' }}
+        run: |
+          echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}'
+
+      - name: Purge CDN TEST
+        if: ${{ env.CONTENT_PATH == 'false' || steps.modified_files.outputs.modified_files == '' }}
+        run: |
+          echo "/*"

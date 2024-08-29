@@ -1,0 +1,56 @@
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - DEVEX-165-cdn-action-template
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+      
+      - uses: ./.github/actions/js_cdn_code_build
+        name: Build Artifact
+        with:
+          base_workdir: '.'
+          custom_env_config_variables: |
+            VAR_1=VALUE_1
+            VAR_2=VALUE_2
+            VAR_N=VALUE_N
+
+  deploy:
+    name: Deploy
+    needs: [build]
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+    steps:
+      - uses: ./.github/actions/js_cdn_code_deploy
+        name: Deploy Artifact
+        with:
+          environment: dev
+          arm_client_id: ${{ env.ARM_CLIENT_ID }}
+          arm_tenant_id: ${{ env.ARM_TENANT_ID }}
+          arm_subscription_id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          resource_group_name: 'io-test-rg-01'
+          use_private_agent: false
+          storage_account_name: 'io-test-sa-01'
+          profile_cdn_name: 'io-test-dev-cdn-01'
+          endpoint_name: 'io-test-dev-cdn-01'
+          blob_container_name: 'io-test-dev-cdn-01'
+          content_paths: 'true'
