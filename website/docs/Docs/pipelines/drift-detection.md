@@ -52,12 +52,12 @@ With this configuration, the workflow runs every day at 8:00 AM and checks if th
 An example Slack notification might look like this:
 
     Drift detected! Drift Detection action has failed
-    :x: Drift Detection results:
-    :frog: Owner: [COMMIT OWNER NAME]
-    :diamond_shape_with_a_dot_inside: Commit URL: 12345XY
-    :envelope: Commit message: [COMMIT MESSAGE]
-    :page_with_curl: Terraform plan results:
-      :heavy_plus_sign: Resource to add: 0
-      :wavy_dash: Resource to change: 1
-      :heavy_minus_sign: Resource to destroy: 0
+    Drift Detection results:
+    Owner: [COMMIT OWNER NAME]
+    Commit URL: 12345XY
+    Commit message: [COMMIT MESSAGE]
+    Terraform plan results:
+      + Resource to add: 0
+      ~ Resource to change: 1
+      - Resource to destroy: 0
     Linked Repo: [REPOSITORY LINK]
