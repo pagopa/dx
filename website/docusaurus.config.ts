@@ -35,6 +35,8 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
+          sidebarCollapsible: false,
+          sidebarCollapsed: false,
           // Remove this to remove the "edit this page" links.
           editUrl: "https://github.com/pagopa/dx/tree/main/website/",
         },
