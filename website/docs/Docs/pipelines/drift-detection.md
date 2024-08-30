@@ -32,7 +32,7 @@ on:
 
 jobs:
   drift_detection:
-    uses: ./.github/workflows/infra_drift_detection.yml
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
     name: Drift Detection
     secrets: inherit
     with:
