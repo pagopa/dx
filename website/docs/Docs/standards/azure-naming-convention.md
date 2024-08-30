@@ -15,7 +15,7 @@ The naming convention to follow is described as follows:
 
 `<prefix>-<region>-[domain]-[appname]-<resource-type>-<instance-number>`
 
-- `prefix`: the currently used prefix, containing the project name and environment (e.g. `io-p`)
+- `prefix`: the currently used prefix, containing the product name and environment (e.g. `io-p`)
 - `region`: the region where the resource was created, in 3 letters (only valid values: `weu`, `neu`, `itn`, `gwc`)
 - `domain`: (Optional) the domain to which the resource refers (e.g. `wallet`, `svc`, `msgs`). Omit for common resources (e.g. Application Gateway)
 - `appname`: (Optional) The application name of the resource (e.g. `session-manager`, `cms`). __Omit only if you are creating a unique resource of its type__ (e.g. APIM, Application Gateway, WAF). __In the vast majority of cases, this field should be used__
