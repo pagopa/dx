@@ -43,7 +43,7 @@ jobs:
 With this configuration, the workflow runs every day at 8:00 AM and checks if the code under `infra/resources/dev` has any drift.
 
 > [!NOTE]
-> - Ensure that the secrets `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, `ARM_CLIENT_ID`, and `GITHUB_TOKEN` are configured in your GitHub repository secrets to ensure secure authentication and notification delivery.
+> - Ensure that the secrets `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID` and `ARM_CLIENT_ID` are configured in your GitHub repository secrets to ensure secure authentication and notification delivery.
 > - Use the secret `SLACK_WEBHOOK_URL` to specify the webhook URL.
 
 > [!TIP]
