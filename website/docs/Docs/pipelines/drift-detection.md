@@ -3,7 +3,7 @@ sidebar_position: 1
 sidebar_label: Drift Detection
 ---
 
-## Drift Detection Workflow
+# Drift Detection Workflow
 
 The current [Drift Detection](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml) workflow is a GitHub Action that detects drift between the Terraform code and the actual state of the resource present in the `*.tfstate` file. Additionally, it checks for discrepancies between the state and the resources actually deployed on Azure.
 
