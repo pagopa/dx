@@ -116,6 +116,6 @@ jobs:
           name: ${{ inputs.artifactName }}
           path: ${{ env.GENERATED_CODE_DIR }}
 
-      # - name: Publish
-      #   run: npm publish --access public --registry ${{ inputs.npmRegistry }}
-      #   working-directory: " ${{ env.GENERATED_CODE_DIR }}"
+      - name: Publish
+        run: npm publish --access public --registry ${{ inputs.npmRegistry }}
+        working-directory: " ${{ env.GENERATED_CODE_DIR }}"
