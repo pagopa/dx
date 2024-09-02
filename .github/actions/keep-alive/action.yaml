@@ -1,0 +1,18 @@
+name: Keep Alive
+description: An action to keep the repository alive.
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        fetch-depth: 0 # Recover all the commit history to be sure that main commit is here
+
+    - name: keep-alive
+      shell: bash
+      run: |
+        git config --local user.email "cron@github.com"
+        git config --local user.name "Keepalive"
+        git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
+        git push
