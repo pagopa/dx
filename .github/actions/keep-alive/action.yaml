@@ -12,5 +12,5 @@ runs:
       run: |
         git config --local user.email "cron@github.com"
         git config --local user.name "Keepalive"
-        git commit --allow-empty -m "Keeping the repository alive" --dry-run || echo "No changes to commit"
-        # git push
+        git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
+        git push

@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *' # Run at 00:00 every day
-  push:
-    branches:
-      - CES-12-keepalive
 
 jobs:
   keep_alive:
@@ -34,5 +31,5 @@ jobs:
           echo "days_since_commit=$DIFFERENCE" >> $GITHUB_ENV
 
       - name: Keep Alive
-        if: steps.commit_date.outputs.days_since_commit == '0'
+        if: steps.commit_date.outputs.days_since_commit == '59'
         uses: ./.github/actions/keep-alive
