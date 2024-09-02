@@ -2,7 +2,7 @@ name: Keep Alive
 
 # This workflow is designed to keep the repository active.
 # GitHub automatically disables all actions with a cron trigger after 60 days of inactivity.
-# This action checks if there has been a commit in the last 59 days. 
+# This action checks if there has been a commit in the last 55 days. 
 # If a commit is found within this timeframe, the workflow does nothing,
 # however, if no commits have been made, it performs an empty push to keep the repository active.
 
@@ -38,6 +38,6 @@ jobs:
           echo "days_since_commit=$DIFFERENCE" >> $GITHUB_ENV
 
       - name: Keep Alive
-        # If 59 days have passed then execute the action which makes an empty push
-        if: steps.commit_date.outputs.days_since_commit >= '59'
+        # If 55 days have passed then execute the action which makes an empty push
+        if: steps.commit_date.outputs.days_since_commit >= '55'
         uses: ./.github/actions/keep-alive
