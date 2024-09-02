@@ -79,11 +79,19 @@ jobs:
             !.git/**/*
             !**/*.js.map
             !**/*.ts
+            !__*/**/*
+            !.github/**/*
+            !infra/**/*
             !.vscode/**/*
             !.devops/**/*
+            !azure-templates/**/*
+            !azure-pipelines.yml
             !.prettierrc
             !.gitignore
+            !.pre-commit-config.yaml
+            !.terraform-version
             !README.md
+            !CODEOWNERS
             !jest.config.js
             !local.settings.json
             !test
@@ -91,23 +99,20 @@ jobs:
             !tslint.json
             !yarn.lock
             !Dangerfile.js
-            !CODEOWNERS
-            !__*/**/*
-            !.github/**/*
-            !infra/**/*
-            !.pre-commit-config.yaml
-            !.terraform-version
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |-
             const fs = require('fs').promises
             const path = require('path')
             const target = path.resolve(process.env.TARGET_FOLDER)
+
             process.chdir(process.env.SOURCE_FOLDER || '.')
+
             if (process.env.CLEAN_TARGET_FOLDER === 'true') await io.rmRF(target)
             const flattenFolders = process.env.FLATTEN_FOLDERS === 'true'
             const options = {force: process.env.OVERWRITE === 'true'}
             const globber = await glob.create(process.env.CONTENTS || '**')
+
             for await (const file of globber.globGenerator()) {
               if ((await fs.lstat(file)).isDirectory()) continue
               const filename = flattenFolders ? path.basename(file) : file.substring(process.cwd().length)
@@ -161,43 +166,50 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
       
-      - name: Deploy
-        if: ${{ inputs.use_staging_slot == false }}
+      # - name: Deploy
+      #   if: ${{ inputs.use_staging_slot == false }}
+      #   run: |
+      #     az webapp deploy \
+      #       --resource-group ${{ inputs.resource_group_name }} \
+      #       --name ${{ inputs.app_name }} \
+      #       --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+      #       --type zip \
+      #       --async false \
+      #       | grep -v "hidden-link:"   
+
+      # - name: Deploy to Staging Slot
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     az webapp deploy \
+      #       --resource-group ${{ inputs.resource_group_name }} \
+      #       --name ${{ inputs.app_name }} \
+      #       --slot staging \
+      #       --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+      #       --type zip \
+      #       --async false \
+      #       | grep -v "hidden-link:"
+
+      # - name: Ping Staging Health
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     curl \
+      #       --retry 5 \
+      #       --retry-max-time 120 \
+      #       --retry-all-errors \
+      #       -f 'https://${{ inputs.app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
+
+      # - name: Swap Staging and Production Slots
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     az webapp deployment slot swap \
+      #       -g ${{ inputs.resource_group_name }} \
+      #       -n ${{ inputs.app_name }} \
+      #       --slot staging \
+      #       --target-slot production
+
+      - name: Deploy TEST
         run: |
-          az webapp deploy \
+          az webapp up \
+            --dryrun \
             --resource-group ${{ inputs.resource_group_name }} \
             --name ${{ inputs.app_name }} \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
-            --type zip \
-            --async false \
-            | grep -v "hidden-link:"   
-
-      - name: Deploy to Staging Slot
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          az webapp deploy \
-            --resource-group ${{ inputs.resource_group_name }} \
-            --name ${{ inputs.app_name }} \
-            --slot staging \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
-            --type zip \
-            --async false \
-            | grep -v "hidden-link:"
-
-      - name: Ping Staging Health
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          curl \
-            --retry 5 \
-            --retry-max-time 120 \
-            --retry-all-errors \
-            -f 'https://${{ inputs.app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
-
-      - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          az webapp deployment slot swap \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.app_name }} \
-            --slot staging \
-            --target-slot production
