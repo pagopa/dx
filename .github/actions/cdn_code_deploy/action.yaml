@@ -1,4 +1,4 @@
-name: NodeJS CDN Code Deploy 
+name: CDN Code Deploy 
 description: An action Deploy the artifact to the CDN
 
 inputs:
