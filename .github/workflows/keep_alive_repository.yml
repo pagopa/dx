@@ -35,4 +35,4 @@ jobs:
 
       - name: Keep Alive
         if: steps.commit_date.outputs.days_since_commit == '0'
-        uses: ./.github/actions/keep-alive/action.yaml
+        uses: ./.github/actions/keep-alive
