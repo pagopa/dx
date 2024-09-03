@@ -2,14 +2,14 @@ on:
   workflow_call:
     inputs:
       base_branch:
-        description: The branch to compare against the current branch. Defaults to "main".
+        description: The base branch
         type: string
         required: false
         default: main
 
 jobs:
   get-files-diff:
-    name: Found GitHub files diff
+    name: Get changed files
     runs-on: ubuntu-22.04
 
     permissions:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         name: Checkout
 
-      - name: Get changed files
+      - name: Return changed files
         uses: ./.github/actions/github_modified_files
         id: modified_files
         with:
