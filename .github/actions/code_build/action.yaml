@@ -1,15 +1,11 @@
-name: NodeJS CDN Code Build 
-description: An action to build the artifact to the CDN
+name: Code Build 
+description: An action to build the artifact
 
 inputs:
   workspace_name:
     description: The name of the workspace to create the artifact for.
     type: string
     required: true
-  custom_env_config_variables:
-    description: Contain variable for env-config.js file generation (Optional)
-    type: string
-    required: false
   bundle_name:
     description: Name of the bundle
     type: string
@@ -45,34 +41,6 @@ runs:
       run: yarn install --immutable
       working-directory: ${{ inputs.base_workdir || './out' }}
     
-    # This variable have the form "key=value" e.g.
-    # VAR_1=VALUE_1
-    # VAR_2=VALUE_2
-    # VAR_N=VALUE_N
-    - name: Define env-config.js
-      if: ${{ inputs.custom_env_config_variables != '' }}
-      working-directory: ${{ inputs.base_workdir || './out' }}
-      shell: bash
-      run: |
-        # Recreate config file
-        rm -rf ./env-config.js
-        touch ./env-config.js
-
-        # Add assignment
-        echo "window._env_ = {" >> ./env-config.js
-
-        # Loop on input variables and add them to env-config.js
-        INPUT_VARS="${{ inputs.custom_env_config_variables }}"
-
-        while IFS='=' read -r k v; do
-            # Ignore empty lines
-            if [ -n "$k" ]; then
-                echo "  $k: \"$v\"," >> ./env-config.js
-            fi
-        done <<< "$INPUT_VARS"
-
-        echo "}" >> ./env-config.js
-
     - name: Build
       shell: bash
       run: yarn build
