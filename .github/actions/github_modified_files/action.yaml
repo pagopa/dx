@@ -3,7 +3,7 @@ description: An action to get the list of modified files between the base branch
 
 inputs:
   base_branch:
-    description: The base branch
+    description: The branch to compare against the current branch. Defaults to "main".
     type: string
     required: false
     default: main

@@ -1,5 +1,8 @@
 name: CDN Code Deploy 
-description: An action Deploy the artifact to the CDN
+description: Action that Deploy an artifact to the CDN
+
+# This action allows you to deploy the passed artifact to the CDN.
+# The artifact have to be a directory that contains all the files you want to sync.
 
 inputs:
   inputs:
@@ -24,7 +27,11 @@ inputs:
       type: string
       required: true
     content_paths:
-      description: If you want to include only specific file set 'true' else 'false'
+      description: If you want to include only specific files set 'true' else 'false'
+      type: string
+      required: false
+    base_branch:
+      description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'content_paths' is 'false').
       type: string
       required: false
     bundle_name:
@@ -77,7 +84,7 @@ runs:
       uses: ./.github/actions/github_modified_files
       id: modified_files
       with:
-        base_branch: main
+        base_branch: ${{ inputs.base_branch || 'main' }}
 
     - name: Purge CDN Specific Paths
       if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
