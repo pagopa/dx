@@ -166,43 +166,50 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
       
-      - name: Deploy
-        if: ${{ inputs.use_staging_slot == false }}
+      # - name: Deploy
+      #   if: ${{ inputs.use_staging_slot == false }}
+      #   run: |
+      #     az webapp deploy \
+      #       --resource-group ${{ inputs.resource_group_name }} \
+      #       --name ${{ inputs.app_name }} \
+      #       --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+      #       --type zip \
+      #       --async false \
+      #       | grep -v "hidden-link:"   
+
+      # - name: Deploy to Staging Slot
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     az webapp deploy \
+      #       --resource-group ${{ inputs.resource_group_name }} \
+      #       --name ${{ inputs.app_name }} \
+      #       --slot staging \
+      #       --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+      #       --type zip \
+      #       --async false \
+      #       | grep -v "hidden-link:"
+
+      # - name: Ping Staging Health
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     curl \
+      #       --retry 5 \
+      #       --retry-max-time 120 \
+      #       --retry-all-errors \
+      #       -f 'https://${{ inputs.app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
+
+      # - name: Swap Staging and Production Slots
+      #   if: ${{ inputs.use_staging_slot == true }}
+      #   run: |
+      #     az webapp deployment slot swap \
+      #       -g ${{ inputs.resource_group_name }} \
+      #       -n ${{ inputs.app_name }} \
+      #       --slot staging \
+      #       --target-slot production
+
+      - name: Deploy TEST
         run: |
-          az webapp deploy \
+          az webapp up \
+            --dryrun \
             --resource-group ${{ inputs.resource_group_name }} \
             --name ${{ inputs.app_name }} \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
-            --type zip \
-            --async false \
-            | grep -v "hidden-link:"   
-
-      - name: Deploy to Staging Slot
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          az webapp deploy \
-            --resource-group ${{ inputs.resource_group_name }} \
-            --name ${{ inputs.app_name }} \
-            --slot staging \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
-            --type zip \
-            --async false \
-            | grep -v "hidden-link:"
-
-      - name: Ping Staging Health
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          curl \
-            --retry 5 \
-            --retry-max-time 120 \
-            --retry-all-errors \
-            -f 'https://${{ inputs.app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
-
-      - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true }}
-        run: |
-          az webapp deployment slot swap \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.app_name }} \
-            --slot staging \
-            --target-slot production
