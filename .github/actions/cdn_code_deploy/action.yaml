@@ -26,12 +26,12 @@ inputs:
       description: Blob container name.
       type: string
       required: true
-    content_paths:
-      description: If you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
+    selective_purge:
+      description: If for the purge you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
       type: string
       required: false
     base_branch:
-      description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'content_paths' is 'false').
+      description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'selective_purge' is 'false').
       type: string
       required: false
     bundle_name:
@@ -80,14 +80,14 @@ runs:
           -s "./${{ inputs.bundle_name || 'bundle' }}"
 
     - name: Get files changed from main branch
-      if: ${{ inputs.content_paths == 'true' }}
+      if: ${{ inputs.selective_purge == 'true' }}
       uses: ./.github/actions/git_modified_files
       id: modified_files
       with:
         base_branch: ${{ inputs.base_branch || 'main' }}
 
     - name: Purge CDN Specific Paths
-      if: ${{ inputs.content_paths == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      if: ${{ inputs.selective_purge == 'true' && steps.modified_files.outputs.modified_files != '' }}
       shell: bash
       run: |
         az cdn endpoint purge \
@@ -97,7 +97,7 @@ runs:
           --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
 
     - name: Purge CDN
-      if: ${{ inputs.content_paths == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      if: ${{ inputs.selective_purge == 'false' || steps.modified_files.outputs.modified_files == '' }}
       shell: bash
       run: |
         az cdn endpoint purge \

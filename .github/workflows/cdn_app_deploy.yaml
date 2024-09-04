@@ -29,12 +29,12 @@ on:
         description: Blob container name.
         type: string
         required: true
-      content_paths:
-        description: If you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
+      selective_purge:
+        description: If for the purge you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
         type: string
         required: false
       base_branch:
-        description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'content_paths' is 'false').
+        description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'selective_purge' is 'false').
         type: string
         required: false
       use_private_agent:
@@ -62,6 +62,8 @@ jobs:
       - uses: ./.github/actions/code_build
         name: Build Artifact
         with:
+          workspace_name: ${{ inputs.workspace_name }}
+          base_workdir: '.'
           zip_artifact: 'false'
           bundle_name: ${{ env.BUNDLE_NAME }}
 
@@ -96,5 +98,5 @@ jobs:
           profile_cdn_name: ${{ inputs.profile_cdn_name }}
           endpoint_name: ${{ inputs.endpoint_name }}
           blob_container_name: ${{ inputs.blob_container_name }}
-          content_paths: ${{ inputs.content_paths }}
+          selective_purge: ${{ inputs.selective_purge }}
           base_branch: ${{ inputs.base_branch }}
