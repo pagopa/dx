@@ -26,12 +26,10 @@ inputs:
       description: Blob container name.
       type: string
       required: true
-    selective_purge:
-      description: If for the purge you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
-      type: string
-      required: false
-    base_branch:
-      description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'selective_purge' is 'false').
+    selective_purge_paths:
+      description: |
+        If for the purge you want to include only new and/or modified files define a list of paths to be included in the artifact.
+        E.g. '/path/file1' '/path/file2'
       type: string
       required: false
     bundle_name:
@@ -79,25 +77,18 @@ runs:
           --account-name ${{ inputs.storage_account_name }} \
           -s "./${{ inputs.bundle_name || 'bundle' }}"
 
-    - name: Get files changed from main branch
-      if: ${{ inputs.selective_purge == 'true' }}
-      uses: ./.github/actions/git_modified_files
-      id: modified_files
-      with:
-        base_branch: ${{ inputs.base_branch || 'main' }}
-
     - name: Purge CDN Specific Paths
-      if: ${{ inputs.selective_purge == 'true' && steps.modified_files.outputs.modified_files != '' }}
+      if: ${{ inputs.selective_purge_paths != '' && steps.modified_files.outputs.modified_files != '' }}
       shell: bash
       run: |
         az cdn endpoint purge \
           -g ${{ inputs.resource_group_name }} \
           -n ${{ inputs.endpoint_name }} \
           --profile-name ${{ inputs.profile_cdn_name }} \
-          --content-paths $(echo -e "${{ steps.modified_files.outputs.modified_files }}" | awk '{printf " '\''%s'\''", $0}')
+          --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
 
     - name: Purge CDN
-      if: ${{ inputs.selective_purge == 'false' || steps.modified_files.outputs.modified_files == '' }}
+      if: ${{ inputs.selective_purge_paths == '' || steps.modified_files.outputs.modified_files == '' }}
       shell: bash
       run: |
         az cdn endpoint purge \

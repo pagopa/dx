@@ -29,12 +29,10 @@ on:
         description: Blob container name.
         type: string
         required: true
-      selective_purge:
-        description: If for the purge you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
-        type: string
-        required: false
-      base_branch:
-        description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'selective_purge' is 'false').
+      selective_purge_paths:
+        description: |
+          If for the purge you want to include only new and/or modified files define a list of paths to be included in the artifact.
+          E.g. '/path/file1' '/path/file2'
         type: string
         required: false
       use_private_agent:
@@ -98,5 +96,4 @@ jobs:
           profile_cdn_name: ${{ inputs.profile_cdn_name }}
           endpoint_name: ${{ inputs.endpoint_name }}
           blob_container_name: ${{ inputs.blob_container_name }}
-          selective_purge: ${{ inputs.selective_purge }}
-          base_branch: ${{ inputs.base_branch }}
+          selective_purge_paths: ${{ inputs.selective_purge_paths }}
