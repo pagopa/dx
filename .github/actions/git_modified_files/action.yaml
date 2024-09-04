@@ -25,11 +25,18 @@ runs:
       id: modified_files
       shell: bash
       run: |
-        # Last base branch commit
-        MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
+        BASE_BRANCH=${{ inputs.base_branch }}
 
         # Last commit
         CURRENT_COMMIT=$(git rev-parse HEAD)
+
+        if [ "$(git rev-parse --abbrev-ref HEAD)" == "$BASE_BRANCH" ]; then
+            # Take second-last commit of base_branch
+            MAIN_COMMIT=$(git rev-parse HEAD~1)
+        else
+            # Last base branch commit
+            MAIN_COMMIT=$(git rev-parse origin/${{ inputs.base_branch }})
+        fi
 
         # List of modified files
         MODIFIED_FILES=$(git diff --name-only $MAIN_COMMIT $CURRENT_COMMIT)

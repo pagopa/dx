@@ -1,0 +1,100 @@
+on:
+  workflow_call:
+    inputs:
+      workspace_name:
+        description: The name of the workspace to create the artifact for.
+        type: string
+        required: true
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      resource_group_name:
+        description: Web App resource group name.
+        type: string
+        required: true
+      storage_account_name:
+        description: Storage account name.
+        type: string
+        required: true
+      profile_cdn_name:
+        description: CDN Profile name.
+        type: string
+        required: true
+      endpoint_name:
+        description: CDN endpoint name.
+        type: string
+        required: true
+      blob_container_name:
+        description: Blob container name.
+        type: string
+        required: true
+      content_paths:
+        description: If you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
+        type: string
+        required: false
+      base_branch:
+        description: The branch to compare against the current branch. Defaults to "main" (Not necessary if 'content_paths' is 'false').
+        type: string
+        required: false
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: false
+
+env:
+  BUNDLE_NAME: bundle
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+      
+      - uses: ./.github/actions/code_build
+        name: Build Artifact
+        with:
+          zip_artifact: 'false'
+          bundle_name: ${{ env.BUNDLE_NAME }}
+
+  deploy:
+    name: Deploy
+    if: ${{ !github.event.act }}
+    environment: ${{ inputs.environment }}
+    needs: [build]
+    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-22.04' }}
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        name: Checkout
+
+      - uses: ./.github/actions/cdn_code_deploy
+        name: Deploy Artifact
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          arm_client_id: ${{ env.ARM_CLIENT_ID }}
+          arm_tenant_id: ${{ env.ARM_TENANT_ID }}
+          arm_subscription_id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          resource_group_name: ${{ inputs.resource_group_name }}
+          storage_account_name: ${{ inputs.storage_account_name }}
+          profile_cdn_name: ${{ inputs.profile_cdn_name }}
+          endpoint_name: ${{ inputs.endpoint_name }}
+          blob_container_name: ${{ inputs.blob_container_name }}
+          content_paths: ${{ inputs.content_paths }}
+          base_branch: ${{ inputs.base_branch }}

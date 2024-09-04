@@ -21,7 +21,7 @@ jobs:
         name: Checkout
 
       - name: Return changed files
-        uses: ./.github/actions/github_modified_files
+        uses: ./.github/actions/git_modified_files
         id: modified_files
         with:
           base_branch: ${{ env.BASE_BRANCH }}

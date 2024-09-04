@@ -2,7 +2,7 @@ name: CDN Code Deploy
 description: Action that Deploy an artifact to the CDN
 
 # This action allows you to deploy the passed artifact to the CDN.
-# The artifact have to be a directory that contains all the files you want to sync.
+# The artifact must be the name of the directory that contains all the files you want to sync.
 
 inputs:
   inputs:
@@ -27,7 +27,7 @@ inputs:
       type: string
       required: true
     content_paths:
-      description: If you want to include only specific files set 'true' else 'false'
+      description: If you want to include only new and/or modified files since the last commit of the base_branch set 'true' else 'false'
       type: string
       required: false
     base_branch:
@@ -35,7 +35,7 @@ inputs:
       type: string
       required: false
     bundle_name:
-      description: Name of the bundle
+      description: Name of the directory containing the files to be synchronized
       type: string
       required: false
     arm_client_id:
@@ -79,9 +79,9 @@ runs:
           --account-name ${{ inputs.storage_account_name }} \
           -s "./${{ inputs.bundle_name || 'bundle' }}"
 
-    - name: Found modified files
+    - name: Get files changed from main branch
       if: ${{ inputs.content_paths == 'true' }}
-      uses: ./.github/actions/github_modified_files
+      uses: ./.github/actions/git_modified_files
       id: modified_files
       with:
         base_branch: ${{ inputs.base_branch || 'main' }}
