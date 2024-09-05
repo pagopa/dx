@@ -138,20 +138,12 @@ jobs:
       #       --profile-name ${{ inputs.profile_cdn_name }} \
       #       --content-paths "/*"
 
-      - name: Test Storage
-        run: |
-          echo "List of files in ."
-          ls -la
-          echo "List of files in ${{ env.BUNDLE_NAME }}"
-          ls -la ${{ env.BUNDLE_NAME }}
-          az storage blob list -c ${{ inputs.blob_container_name }} --account-name ${{ inputs.storage_account_name }}
-
       - name: Test CDN Specific Paths
         if: ${{ inputs.selective_purge_paths != '' }}
         run: |
-          az cdn endpoint list -g ${{ inputs.resource_group_name }} --profile-name ${{ inputs.profile_cdn_name }}
           echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g" 
 
       - name: Test CDN
         if: ${{ inputs.selective_purge_paths == '' }}
-        run: az cdn endpoint list -g ${{ inputs.resource_group_name }} --profile-name ${{ inputs.profile_cdn_name }}
+        run: |
+          echo "/*"
