@@ -32,7 +32,9 @@ on:
       selective_purge_paths:
         description: |
           If for the purge you want to include only new and/or modified files define a list of paths to be included in the artifact.
-          E.g. '/path/file1' '/path/file2'
+          If for the purge you want to incòlude all files, leave it empty.
+          Insert paths separated by spaces:
+          E.g. /path/file1 /path/file2
         type: string
         required: false
       use_private_agent:
@@ -61,14 +63,12 @@ jobs:
         name: Build Code
         with:
           workspace_name: ${{ inputs.workspace_name }}
-          base_workdir: '.'
           enable_turbo: 'false'
       
       - uses: ./.github/actions/artifact_definition
         name: Artifact Definition & Upload
         with:
           workspace_name: ${{ inputs.workspace_name }}
-          base_workdir: '.'
           zip_artifact: 'false'
           bundle_name: ${{ env.BUNDLE_NAME }}
 
@@ -110,40 +110,30 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
-      # - name: Sync Storage
-      #   shell: bash
-      #   run: |
-      #     az storage blob sync \
-      #       -c ${{ inputs.blob_container_name }} \
-      #       --account-name ${{ inputs.storage_account_name }} \
-      #       -s "./${{ env.BUNDLE_NAME }}"
+      - name: Sync Storage
+        shell: bash
+        run: |
+          az storage blob sync \
+            -c ${{ inputs.blob_container_name }} \
+            --account-name ${{ inputs.storage_account_name }} \
+            -s "./${{ env.BUNDLE_NAME }}"
 
-      # - name: Purge CDN Specific Paths
-      #   if: ${{ inputs.selective_purge_paths != '' }}
-      #   shell: bash
-      #   run: |
-      #     az cdn endpoint purge \
-      #       -g ${{ inputs.resource_group_name }} \
-      #       -n ${{ inputs.endpoint_name }} \
-      #       --profile-name ${{ inputs.profile_cdn_name }} \
-      #       --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
-
-      # - name: Purge CDN
-      #   if: ${{ inputs.selective_purge_paths == '' }}
-      #   shell: bash
-      #   run: |
-      #     az cdn endpoint purge \
-      #       -g ${{ inputs.resource_group_name }} \
-      #       -n ${{ inputs.endpoint_name }} \
-      #       --profile-name ${{ inputs.profile_cdn_name }} \
-      #       --content-paths "/*"
-
-      - name: Test CDN Specific Paths
+      - name: Purge CDN Specific Paths
         if: ${{ inputs.selective_purge_paths != '' }}
+        shell: bash
         run: |
-          echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g" 
+          az cdn endpoint purge \
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.endpoint_name }} \
+            --profile-name ${{ inputs.profile_cdn_name }} \
+            --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
 
-      - name: Test CDN
+      - name: Purge CDN
         if: ${{ inputs.selective_purge_paths == '' }}
+        shell: bash
         run: |
-          echo "/*"
+          az cdn endpoint purge \
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.endpoint_name }} \
+            --profile-name ${{ inputs.profile_cdn_name }} \
+            --content-paths "/*"
