@@ -27,14 +27,20 @@ Once done, you are technically ready to log into Azure from a GitHub pipeline:
     subscription-id: <subscription id>
 ```
 
-> [!NOTE]
-> The Managed Identity Client Id is available in the Azure Portal, navigating to the Managed Identity resource:
-> ![Azure Portal showing the client id](image.png)
+:::note
+
+The Managed Identity Client Id is available in the Azure Portal, navigating to the Managed Identity resource:
+![Azure Portal showing the client id](image.png)
+
+:::
 
 Despite the three mentioned values are not secrets, they should not be harcoded in the pipeline but shall be stored as repository or GitHub _environment_ secrets.
 
-> [!IMPORTANT]
+:::important
+
 > Rather than specifying the `azure/login` action, it is likely you need to pass these values as arguments of workflow templates available in this repository.
+
+:::
 
 ## GitHub environments
 
@@ -46,8 +52,11 @@ Then, `subscription id` and `managed identity client id` values can be stored as
 - `subscription id`: if the project has a single environment it could be stored as repository secret; otherwise as environment secret
 - `managed identity client id`: always as environment secret
 
-> [!TIP]
-> This setup is generally defined via Terraform in the `infra/repository` folder.
+:::tip
+
+This setup is generally defined via Terraform in the `infra/repository` folder.
+
+:::
 
 ### Managing multiple GitHub environments
 
@@ -57,14 +66,17 @@ Let's say a repository has two Azure Functions App, including both application c
 Instead, the set of roles required by the Function App deployments is limited to have a write access to the Function App resource control plane. It doesn't need access to other stuff like networking, storages, or neither secrets. However, both Functions Apps require the same roles as the action is identical.\
 Then, the two Function App pipelines could share the same Managed Identity and related GitHub environment, while the Terraform code should use have a dedicated GitHub environment.
 
-> [!TIP]
-> Generally, the following convention is used to name the GitHub environments:
->
-> - `<env>-ci/cd`: dedicated to the Terraform code (i.e. `prod-ci`)
-> - `app-<env>-ci/cd`: dedicated to Azure Functions App/App Service deployments
-> - `opex-<env>-ci/cd`: dedicated to the Opex dashboard deployments
->
-> For any other need, add the desired environment sticking to this pattern.
+:::tip
+
+Generally, the following convention is used to name the GitHub environments:
+
+- `<env>-ci/cd`: dedicated to the Terraform code (i.e. `prod-ci`)
+- `app-<env>-ci/cd`: dedicated to Azure Functions App/App Service deployments
+- `opex-<env>-ci/cd`: dedicated to the Opex dashboard deployments
+
+For any other need, add the desired environment sticking to this pattern.
+
+:::
 
 ## Managing identity roles
 
@@ -81,8 +93,14 @@ Then, the identity definition should be updated with appropriated roles when a n
 
 The general advice is to check the CI pipeline, which could fail for a missing role. In this case, identify the role using the official documentation and create a PR with the new definition.
 
-> [!WARNING]
-> Setting new roles is quite easy and must be done separately for CI and CD identities.
+:::warning
 
-> [!TIP]
-> Granularity is set at subscription and resource group level. Check the module documentation for details.
+Setting new roles is quite easy and must be done separately for CI and CD identities.
+
+:::
+
+:::tip
+
+Granularity is set at subscription and resource group level. Check the module documentation for details.
+
+:::
