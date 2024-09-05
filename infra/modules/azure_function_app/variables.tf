@@ -155,3 +155,11 @@ variable "subnet_service_endpoints" {
   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
   default     = null
 }
+
+variable "alert_config" {
+  type = object({
+    action_group_id    = string
+    webhook_properties = map(string)
+  })
+  description = "Set the Action Group Id to invoke when the Function App alert triggers and related webhook"
+}

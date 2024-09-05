@@ -24,6 +24,7 @@ locals {
     is_slot_enabled        = var.tier == "test" ? 0 : 1
     pep_sites              = "${local.project}${local.domain}${var.environment.app_name}-func-pep-${var.environment.instance_number}"
     pep_sites_staging      = "${local.project}${local.domain}${var.environment.app_name}-staging-func-pep-${var.environment.instance_number}"
+    alert                  = "${local.project}${local.domain}${var.environment.app_name}-func-${var.environment.instance_number}] Health Check Failed"
   }
 
   function_app_slot = {
@@ -40,6 +41,7 @@ locals {
     pep_blob_name    = "${local.project}${local.domain}${var.environment.app_name}-blob-pep-${var.environment.instance_number}"
     pep_file_name    = "${local.project}${local.domain}${var.environment.app_name}-file-pep-${var.environment.instance_number}"
     pep_queue_name   = "${local.project}${local.domain}${var.environment.app_name}-queue-pep-${var.environment.instance_number}"
+    alert            = "[${replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", "")}] Low Availability"
   }
 
   private_dns_zone = {
