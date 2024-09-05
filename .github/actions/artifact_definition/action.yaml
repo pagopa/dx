@@ -35,7 +35,6 @@ runs:
       working-directory: ${{ inputs.base_workdir || './out' }}
 
     - name: Build the artifact
-      if: ${{ inputs.zip_artifact == 'true' }} 
       id: make-artifact
       shell: bash
       run: |
