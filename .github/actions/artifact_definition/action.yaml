@@ -1,8 +1,7 @@
 name: Artifact Definition
 description: Action to generate and upload an artifact
 
-# This action allows you to generate an artifact and upload it to the artifact store.
-# Can be used to generate a ZIP file or a directory depending on the input given.
+# This action allows you to generate an artifact in a ZIP file and upload it.
 
 inputs:
   workspace_name:
@@ -17,22 +16,12 @@ inputs:
     description: The base workdir (Default is ./out)
     type: string
     required: false
-  zip_artifact:
-    description: True if artifact should be zipped (Default is false)
-    type: string
-    required: false
-    default: 'false'
 
 runs:
   using: composite
   steps:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       name: Checkout
-
-    - name: TEST 1
-      shell: bash
-      run: ls -la
-      working-directory: ${{ inputs.base_workdir || './out' }}
 
     - name: Build the artifact
       id: make-artifact
@@ -63,37 +52,6 @@ runs:
           # create a new package.json file, with the updated entry point
           jq --arg sha "+$SHORT_SHA" '{"name": .name, "version": (.version + $sha), "main": "index.js", "type": (if has("type") then .type else "commonjs" end), "dependencies": .dependencies}' package.json > ${{ github.run_id }}/package.json
 
-      working-directory: ${{ env.BASE_WORKDIR }} #/apps/${{ inputs.workspace_name }}
-      env:
-        YARN_NODE_LINKER: node-modules
-        YARN_NM_HOISTING_LIMITS: workspaces
-        BUNDLE_NAME: ${{ inputs.bundle_name || 'bundle' }}
-        BASE_WORKDIR: ${{ inputs.base_workdir || './out' }}
-
-    - name: TEST 2
-      shell: bash
-      run: ls -la
-      working-directory: ${{ inputs.base_workdir || './out' }}
-
-    # Upload the build output as an artifact
-    # The artifact is not a ZIP file but the raw contents of the build directory
-    - name: Upload Artifact ( NO ZIP )
-      if: ${{ inputs.zip_artifact == 'false' }} 
-      uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
-      with:
-        name: ${{ inputs.bundle_name || 'bundle' }}
-        path: "${{ inputs.base_workdir && format('{0}/dist', inputs.base_workdir) || './out' }}"
-        if-no-files-found: error
-        retention-days: 7
-
-    # If the user wants to zip the artifact
-    - name: Create ZIP
-      if: ${{ inputs.zip_artifact == 'true' }} 
-      id: make-zip
-      shell: bash
-      run: |
-          set -e
-
           DEFAULT_FILES='"host.json"'
           FILES=$(jq -r --arg default "$DEFAULT_FILES" 'if has("files") then .files else [$default] end | join(" ")' package.json)
 
@@ -102,17 +60,18 @@ runs:
           zip -ju ${{ env.BUNDLE_NAME }}.zip ${{ github.run_id }}/index.js ${{ github.run_id }}/package.json
 
           echo "artifact-path=$(realpath ${{ env.BUNDLE_NAME }}.zip)" >> "$GITHUB_OUTPUT"
-      working-directory: ${{ env.BASE_WORKDIR }} #/apps/${{ inputs.workspace_name }}
+      working-directory: ${{ env.BASE_WORKDIR }}/apps/${{ inputs.workspace_name }}
       env:
+        YARN_NODE_LINKER: node-modules
+        YARN_NM_HOISTING_LIMITS: workspaces
+        BUNDLE_NAME: ${{ inputs.bundle_name || 'bundle' }}
         BASE_WORKDIR: ${{ inputs.base_workdir || './out' }}
-
+        
     # Upload the build output as an artifact
-    # The artifact is a ZIP file
-    - name: Upload Artifact ( ZIP )
-      if: ${{ inputs.zip_artifact == 'true' }} 
+    - name: Upload Artifact
       uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
       with:
         name: ${{ inputs.bundle_name || 'bundle' }}
-        path: ${{ steps.make-zip.outputs.artifact-path }}
+        path: ${{ steps.make-artifact.outputs.artifact-path }}
         if-no-files-found: error
         retention-days: 7
