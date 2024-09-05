@@ -30,7 +30,7 @@ Once done, you are technically ready to log into Azure from a GitHub pipeline:
 :::note
 
 The Managed Identity Client Id is available in the Azure Portal, navigating to the Managed Identity resource:
-![Azure Portal showing the client id](image.png)
+![Azure Portal showing the client id](image_azmi.png)
 
 :::
 
