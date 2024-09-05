@@ -1,0 +1,98 @@
+name: Artifact Definition
+description: Action to generate and upload an artifact
+
+# This action allows you to generate an artifact and upload it to the artifact store.
+# Can be used to generate a ZIP file or a directory depending on the input given.
+
+inputs:
+  workspace_name:
+    description: The name of the workspace to create the artifact for.
+    type: string
+    required: true
+  bundle_name:
+    description: Name of the bundle
+    type: string
+    required: false
+  base_workdir:
+    description: The base workdir (Default is ./out)
+    type: string
+    required: false
+  zip_artifact:
+    description: True if artifact should be zipped (Default is false)
+    type: string
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      name: Checkout
+
+    # Upload the build output as an artifact
+    # The artifact is not a ZIP file but the raw contents of the build directory
+    - name: Upload Artifact ( NO ZIP )
+      if: ${{ inputs.zip_artifact == 'false' }} 
+      uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+      with:
+        name: ${{ inputs.bundle_name || 'bundle' }}
+        path: "${{ inputs.base_workdir && format('{0}/dist', inputs.base_workdir) || './out' }}"
+        if-no-files-found: error
+        retention-days: 7
+
+    # If the user wants to zip the artifact
+    - name: Build the artifact
+      if: ${{ inputs.zip_artifact == 'true' }} 
+      id: make-artifact
+      shell: bash
+      run: |
+          set -e
+
+          # determine the entry point file name from package.json main property
+          ENTRY_POINT=$(jq -r '.main' package.json)
+
+          if [ -z $ENTRY_POINT ]; then
+            echo "::error::invalid target"
+            exit 1
+          fi
+
+          # generate node_modules folder excluding devDependencies
+          yarn workspaces focus --production
+
+          FORMAT=$(jq -r 'if .type == "module" then "esm" else "cjs" end' package.json)
+          SHORT_SHA=$(git rev-parse --short ${{ github.sha }})
+
+          mkdir ${{ github.run_id }}
+
+          # bundle compiled code, excluding node_modules 
+          curl -fsSL https://esbuild.github.io/dl/v0.21.5 | sh
+          ./esbuild index=$ENTRY_POINT --bundle --format=$FORMAT --platform=node --target=node20 --packages=external --outdir=${{ github.run_id }} --allow-overwrite
+
+          # create a new package.json file, with the updated entry point
+          jq --arg sha "+$SHORT_SHA" '{"name": .name, "version": (.version + $sha), "main": "index.js", "type": (if has("type") then .type else "commonjs" end), "dependencies": .dependencies}' package.json > ${{ github.run_id }}/package.json
+
+          DEFAULT_FILES='"host.json"'
+          FILES=$(jq -r --arg default "$DEFAULT_FILES" 'if has("files") then .files else [$default] end | join(" ")' package.json)
+
+          # create the artifact (zip) with node_modules, index.js and package.json
+          zip -r ${{ env.BUNDLE_NAME }}.zip node_modules $FILES
+          zip -ju ${{ env.BUNDLE_NAME }}.zip ${{ github.run_id }}/index.js ${{ github.run_id }}/package.json
+
+          echo "artifact-path=$(realpath ${{ env.BUNDLE_NAME }}.zip)" >> "$GITHUB_OUTPUT"
+      working-directory: ${{ env.BASE_WORKDIR }}/apps/${{ inputs.workspace_name }}
+      env:
+        YARN_NODE_LINKER: node-modules
+        YARN_NM_HOISTING_LIMITS: workspaces
+        BUNDLE_NAME: ${{ inputs.bundle_name || 'bundle' }}
+        BASE_WORKDIR: ${{ inputs.base_workdir || './out' }}
+
+    # Upload the build output as an artifact
+    # The artifact is a ZIP file
+    - name: Upload Artifact ( ZIP )
+      if: ${{ inputs.zip_artifact == 'true' }} 
+      uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+      with:
+        name: ${{ inputs.bundle_name || 'bundle' }}
+        path: ${{ steps.make-artifact.outputs.artifact-path }}
+        if-no-files-found: error
+        retention-days: 7
