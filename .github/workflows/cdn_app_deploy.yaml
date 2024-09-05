@@ -75,7 +75,7 @@ jobs:
   deploy:
     name: Deploy
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment }}-cd
     needs: [build]
     runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-22.04' }}
     permissions:
