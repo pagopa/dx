@@ -162,4 +162,5 @@ variable "alert_config" {
     webhook_properties = map(string)
   })
   description = "Set the Action Group Id to invoke when the Function App alert triggers and related webhook"
+  default     = null
 }
