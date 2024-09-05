@@ -96,7 +96,7 @@ jobs:
         with:
           name: ${{ env.BUNDLE_NAME }}
 
-      - name: Artifact Unzip
+      - name: Unzip Artifact
         run: |
           mkdir ./${{ env.BUNDLE_NAME }}
           unzip ${{ env.BUNDLE_NAME }}.zip -d ./${{ env.BUNDLE_NAME }}
