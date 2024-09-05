@@ -52,9 +52,12 @@ resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
     skip_metric_validation = false
   }
 
-  action {
-    action_group_id    = var.alert_config.action_group_id
-    webhook_properties = var.alert_config.webhook_properties
+  dynamic "action" {
+    for_each = var.alert_config == null ? [] : ["dummy"]
+    content {
+      action_group_id    = var.alert_config.action_group_id
+      webhook_properties = var.alert_config.webhook_properties
+    }
   }
 
   tags = var.tags
