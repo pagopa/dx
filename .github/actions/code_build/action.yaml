@@ -24,6 +24,11 @@ runs:
     - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       name: Checkout
 
+    - name: TEST 1
+      shell: bash
+      run: ls -la
+      working-directory: ${{ inputs.base_workdir || './out' }}
+
     - name: Prune
       if: ${{ inputs.enable_turbo == 'true' }}
       shell: bash
@@ -48,4 +53,9 @@ runs:
     - name: Build
       shell: bash
       run: yarn build
+      working-directory: ${{ inputs.base_workdir || './out' }}
+
+    - name: TEST 2
+      shell: bash
+      run: ls -la
       working-directory: ${{ inputs.base_workdir || './out' }}
