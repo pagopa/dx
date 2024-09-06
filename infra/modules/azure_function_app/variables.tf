@@ -155,3 +155,9 @@ variable "subnet_service_endpoints" {
   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
   default     = null
 }
+
+variable "action_group_id" {
+  type        = string
+  description = "Set the Action Group Id to invoke when the Function App alert triggers"
+  default     = null
+}
