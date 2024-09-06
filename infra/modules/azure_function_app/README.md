@@ -1,18 +1,12 @@
 # DX - Azure Function App Module
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.100.0 |
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.114.0 |
 
 ## Modules
 
@@ -82,4 +76,4 @@
 | <a name="output_function_app"></a> [function\_app](#output\_function\_app) | n/a |
 | <a name="output_storage_account"></a> [storage\_account](#output\_storage\_account) | n/a |
 | <a name="output_subnet"></a> [subnet](#output\_subnet) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->
