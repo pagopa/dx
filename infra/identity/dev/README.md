@@ -8,6 +8,12 @@
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.108.0 |
 
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.108.0 |
+
 ## Modules
 
 | Name | Source | Version |

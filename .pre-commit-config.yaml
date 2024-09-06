@@ -7,6 +7,19 @@ repos:
         args:
           - --hook-config=--create-file-if-not-exist=true
           - --args=--hide providers
+        exclude: |
+          (?x)^(
+            infra/repository/.*?|
+            infra/identity/.*?|
+            infra/resources/.*?
+          )$
+      - id: terraform_docs
+        args:
+          - --hook-config=--create-file-if-not-exist=true
+        exclude: |
+          (?x)^(
+            infra/modules/.*?
+          )$
       - id: terraform_validate
         args:
           - --args=-json
