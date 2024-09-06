@@ -48,7 +48,7 @@ jobs:
         run: |
           set -eu
 
-          DIFF="$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }})"
+          DIFF="$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- '*.tf')"
           echo "Diff between ${{ github.base_ref }} and ${{ github.head_ref }}"
           echo "files=$(echo \"$DIFF\" | xargs echo)" >> $GITHUB_OUTPUT
 
