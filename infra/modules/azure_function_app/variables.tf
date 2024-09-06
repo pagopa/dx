@@ -156,11 +156,8 @@ variable "subnet_service_endpoints" {
   default     = null
 }
 
-variable "alert_config" {
-  type = object({
-    action_group_id    = string
-    webhook_properties = map(string)
-  })
-  description = "Set the Action Group Id to invoke when the Function App alert triggers and related webhook"
+variable "action_group_id" {
+  type        = string
+  description = "Set the Action Group Id to invoke when the Function App alert triggers"
   default     = null
 }

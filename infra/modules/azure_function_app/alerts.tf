@@ -19,10 +19,9 @@ resource "azurerm_monitor_metric_alert" "function_app_health_check" {
   }
 
   dynamic "action" {
-    for_each = var.alert_config == null ? [] : ["dummy"]
+    for_each = var.action_group_id == null ? [] : ["dummy"]
     content {
-      action_group_id    = var.alert_config.action_group_id
-      webhook_properties = var.alert_config.webhook_properties
+      action_group_id = var.action_group_id
     }
   }
 
@@ -53,10 +52,9 @@ resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
   }
 
   dynamic "action" {
-    for_each = var.alert_config == null ? [] : ["dummy"]
+    for_each = var.action_group_id == null ? [] : ["dummy"]
     content {
-      action_group_id    = var.alert_config.action_group_id
-      webhook_properties = var.alert_config.webhook_properties
+      action_group_id = var.action_group_id
     }
   }
 

@@ -54,7 +54,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alert_config"></a> [alert\_config](#input\_alert\_config) | Set the Action Group Id to invoke when the Function App alert triggers and related webhook | <pre>object({<br>    action_group_id    = string<br>    webhook_properties = map(string)<br>  })</pre> | `null` | no |
+| <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | Set the Action Group Id to invoke when the Function App alert triggers | `string` | `null` | no |
 | <a name="input_app_service_plan_id"></a> [app\_service\_plan\_id](#input\_app\_service\_plan\_id) | (Optional) Set the AppService Id where you want to host the Function App | `string` | `null` | no |
 | <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | Application settings | `map(string)` | n/a | yes |
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | (Optional) Application Insights connection string | `string` | `null` | no |
