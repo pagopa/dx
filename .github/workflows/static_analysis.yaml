@@ -81,17 +81,3 @@ jobs:
           pre-commit run \
             --color=always \
             --all-files
-
-      - name: Check for file modifications
-        if: always() && steps.pre_commit.outcome != 'success'
-        run: |
-          if [[ `git status --porcelain` ]]; then
-            echo "Files were modified by pre-commit hooks."
-            git status
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -am "Pre-commit hook fixes"
-            git push
-          else
-            echo "No modifications."
-          fi
