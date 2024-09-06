@@ -29,7 +29,7 @@ inputs:
     description: |
       Define a list of paths to include only new/modified files in the purge. Leave empty to include all files.
       Paths must be relative to the synchronized directory (sync_dir_name).
-      E.g. if syncing ./bundle, to include ./bundle/path/file1 and ./bundle/path/file2, specify ./file1 ./file2
+      E.g. if syncing ./bundle, to include ./bundle/path/file1 and ./bundle/path/file2, specify ./path/file1 ./path/file2
       NOTE: Insert paths separated by spaces
     type: string
     required: false
