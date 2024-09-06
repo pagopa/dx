@@ -62,11 +62,11 @@ jobs:
           # check python modules installed versions
           python -m pip freeze --local
 
-      - name: Cache pre-commit
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
+      # - name: Cache pre-commit
+      #   uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      #   with:
+      #     path: ~/.cache/pre-commit
+      #     key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit on Modified Files
         if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' }}
