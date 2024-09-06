@@ -73,7 +73,6 @@ jobs:
             --color=always \
             --show-diff-on-failure \
             --files "${{ steps.file_changes.outputs.files }}"
-          # --from-ref ${{ github.base_ref }} --to-ref ${{ github.head_ref }}
 
       - name: Run pre-commit
         if: ${{ github.event_name != 'pull_request' || steps.file_changes.outputs.files == ''}}
