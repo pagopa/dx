@@ -11,6 +11,7 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-22.04
+    environment: dev-cd
     permissions:
       id-token: write
       contents: read
