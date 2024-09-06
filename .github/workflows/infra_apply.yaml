@@ -109,6 +109,8 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
+          set -o pipefail
+
           terraform plan \
             -lock-timeout=3000s \
             -out=tfplan-${{ github.sha }} \
