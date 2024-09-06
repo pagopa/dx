@@ -65,7 +65,7 @@ jobs:
           key: pre-commit-3|${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit on Modified Files
-        if: ${{ github.event_name == 'pull_request' || steps.file_changes.outputs.files != '' }}
+        if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' }}
         run: |
           set -eu
 
