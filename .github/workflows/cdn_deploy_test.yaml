@@ -37,11 +37,11 @@ jobs:
       - uses: ./.github/actions/cdn_code_deploy
         name: Test CDN Deploy
         with:
-          workspace_name: '.'
+          working_directory: '.'
           sync_folder_name: 'website'
           resource_group_name: 'io-test-rg-01'
           storage_account_name: 'io-test-sa-01'
           profile_cdn_name: 'io-test-dev-cdn-01'
           endpoint_name: 'io-test-dev-cdn-01'
           blob_container_name: 'io-test-dev-cdn-01'
-          # selective_purge_paths: "./path/file1 ./path/file2"
+          selective_purge_paths: "./path/file1 ./path/file2"
