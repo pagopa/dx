@@ -1,4 +1,4 @@
-# This pipeline assumes the presence of a .pre-commit-config.yaml file at 
+# This pipeline assumes the presence of a .pre-commit-config.yaml file at
 # the top level of the repository, which contains Terraform validation tasks.
 # For more details, refer to the pre-commit configuration file:
 # https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
@@ -65,7 +65,8 @@ jobs:
           pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            --files "${{ steps.file_changes.outputs.files }}"
+            --from-ref ${{ github.base_ref }} --to-ref ${{ github.sha }}
+            # --files "${{ steps.file_changes.outputs.files }}"
 
       - name: Run pre-commit
         if: ${{ github.event_name != 'pull_request' }}
