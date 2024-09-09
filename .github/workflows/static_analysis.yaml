@@ -25,7 +25,7 @@ jobs:
     env:
       TERRAFORM_VERSION: "1.7.5"
     container:
-      image: ghcr.io/antonbabenko/pre-commit-terraform:v1.94.1
+      image: ghcr.io/antonbabenko/pre-commit-terraform:v1.94.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076
     defaults:
       run:
         shell: bash
