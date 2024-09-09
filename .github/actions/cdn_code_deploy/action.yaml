@@ -27,14 +27,17 @@ inputs:
     required: true
   selective_purge_paths:
     description: |
-      Define a list of paths to include only new/modified files in the purge. Leave empty to include all files.
-      Paths must be relative to the synchronized directory (sync_dir_name).
-      E.g. if syncing ./bundle, to include ./bundle/path/file1 and ./bundle/path/file2, specify ./path/file1 ./path/file2
-      NOTE: Insert paths separated by spaces
+      List of relative paths for files to include in the purge. Leave empty to purge all files.
+      Paths should be relative to the synchronized directory (sync_dir_name).
+      For example, if syncing ./dist, to include ./dist/path/file1 and ./dist/path/file2, specify "./path/file1 ./path/file2."
+      To recursively purge an entire directory, use the pattern "./path/dir/*".
+
+      The format should follow the parameters as described in the official documentation: 
+      https://learn.microsoft.com/en-us/cli/azure/cdn/endpoint?view=azure-cli-latest#az-cdn-endpoint-purge-required-parameters
     type: string
     required: false
   sync_dir_name:
-    description: The artifact that is the name of the directory containing the files to be synchronized (Default is 'bundle')
+    description: The artifact that is the name of the directory containing the files to be synchronized (Default is 'dist')
     type: string
     required: false
   working_directory:
@@ -49,7 +52,7 @@ runs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     ## Sync Storage
-    # will be synced the to the working_directory/sync_dir_name defined (Default will be './bundle')
+    # will be synced the to the working_directory/sync_dir_name defined (Default will be './dist')
     - name: Sync Storage
       shell: bash
       run: |
@@ -59,7 +62,7 @@ runs:
           -s "${{ env.FOLDER_NAME }}"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
-        FOLDER_NAME: ${{ inputs.sync_dir_name || 'bundle' }}
+        FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
         WORKING_DIRECTORY: ${{ inputs.working_directory || '.' }}
 
     ## Purge CDN
