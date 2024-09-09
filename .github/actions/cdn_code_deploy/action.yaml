@@ -37,13 +37,15 @@ inputs:
     type: string
     required: false
   sync_dir_name:
-    description: The asset that is the name of the directory containing the files to be synchronized (Default is 'dist')
+    description: Path to the files directory (Default is 'dist')
     type: string
     required: false
+    default: 'dist'
   working_directory:
     description: The path of the directory containing the folder to be synchronized (Default is '.')
     type: string
     required: false
+    default: '.'
 
 runs:
   using: composite
@@ -57,9 +59,9 @@ runs:
       shell: bash
       run: |
         az storage blob sync \
-          -c ${{ inputs.blob_container_name }} \
+          --container ${{ inputs.blob_container_name }} \
           --account-name ${{ inputs.storage_account_name }} \
-          -s "${{ env.FOLDER_NAME }}"
+          --source "${{ env.FOLDER_NAME }}"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
@@ -72,8 +74,8 @@ runs:
       shell: bash
       run: |
         az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
+          --resource-group ${{ inputs.resource_group_name }} \
+          --endpoint-name ${{ inputs.endpoint_name }} \
           --profile-name ${{ inputs.profile_name }} \
           --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
 
@@ -83,7 +85,7 @@ runs:
       shell: bash
       run: |
         az cdn endpoint purge \
-          -g ${{ inputs.resource_group_name }} \
-          -n ${{ inputs.endpoint_name }} \
+          --resource-group ${{ inputs.resource_group_name }} \
+          --endpoint-name ${{ inputs.endpoint_name }} \
           --profile-name ${{ inputs.profile_name }} \
           --content-paths "/*"
