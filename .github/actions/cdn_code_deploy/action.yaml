@@ -1,8 +1,8 @@
 name: CDN Code Deploy 
-description: Action that Deploy an artifact to the CDN
+description: Action that Deploy an asset to the CDN
 
-# This action allows you to deploy the passed artifact to the CDN.
-# The artifact must be the directory that contains all the files you want to sync.
+# This action allows you to deploy the passed asset to the CDN.
+# The asset must be the directory that contains all the files you want to sync.
 
 inputs:
   storage_account_name:
@@ -37,7 +37,7 @@ inputs:
     type: string
     required: false
   sync_dir_name:
-    description: The artifact that is the name of the directory containing the files to be synchronized (Default is 'dist')
+    description: The asset that is the name of the directory containing the files to be synchronized (Default is 'dist')
     type: string
     required: false
   working_directory:
