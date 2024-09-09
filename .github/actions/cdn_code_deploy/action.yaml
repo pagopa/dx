@@ -1,5 +1,5 @@
 name: CDN Code Deploy 
-description: Action that Deploy an asset to the CDN
+description: Assets deployment to CDN
 
 # This action allows you to deploy the passed asset to the CDN.
 # The asset must be the directory that contains all the files you want to sync.
