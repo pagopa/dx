@@ -22,9 +22,9 @@ Once done, you are technically ready to log into Azure from a GitHub pipeline:
 - name: Azure Login
   uses: azure/login@v2
   with:
-    client-id: <managed identity client id>
-    tenant-id: <tenant id>
-    subscription-id: <subscription id>
+    client-id: ${{ env.ARM_CLIENT_ID }}
+    tenant-id: ${{ env.ARM_TENANT_ID }}
+    subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 ```
 
 :::note
