@@ -8,12 +8,7 @@ repos:
         args:
           - --hook-config=--create-file-if-not-exist=true
           - --args=--hide providers
-        exclude: |
-          (?x)^(
-            infra/repository/.*?|
-            infra/identity/.*?|
-            infra/resources/.*?
-          )$
+        files: ^infra/modules/.*
       - id: terraform_docs
         name: terraform_docs on resources
         args:
