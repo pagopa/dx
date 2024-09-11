@@ -54,7 +54,7 @@ Then, `subscription id` and `managed identity client id` values can be stored as
 
 :::tip
 
-This setup is generally defined via Terraform in the `infra/repository` folder.
+The GitHub environments creation and secret values are defined via Terraform in the `infra/repository` folder.
 
 :::
 
