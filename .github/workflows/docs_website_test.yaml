@@ -19,14 +19,15 @@ jobs:
     name: Test deployment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           fetch-depth: 0
 
       - name: Setup yarn
         run: corepack enable
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
         with:
           node-version-file: ".node-version"
           cache: yarn
@@ -34,10 +35,23 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      - name: Determine turbo cache path
+        id: determine-turbo-version
+        run: |
+          TURBO_VERSION=$(yarn turbo --version)
+          echo "Turbo version: $TURBO_VERSION"
+          if [[ "$TURBO_VERSION" =~ ^1\..* ]]; then
+            TURBO_CACHE_PATH="node_modules/.cache/turbo"
+          else
+            TURBO_CACHE_PATH=".turbo"
+          fi
+          echo "TURBO_CACHE_PATH=$TURBO_CACHE_PATH" >> $GITHUB_ENV
+          echo "Using cache path: $TURBO_CACHE_PATH"
+
       - name: Setup turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
-          path: node_modules/.cache/turbo
+          path: ${{ env.TURBO_CACHE_PATH }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
