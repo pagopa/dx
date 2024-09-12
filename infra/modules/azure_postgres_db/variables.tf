@@ -35,6 +35,12 @@ variable "db_version" {
   description = "(Required) The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
 }
 
+variable "is_replica" {
+  type        = bool
+  description = "If DB is a replica set set true else false"
+  default     = false
+}
+
 #------------#
 # Networking #
 #------------#
@@ -188,15 +194,6 @@ variable "administrator_credentials" {
   })
   description = "Flexible PostgreSql server administrator credentials (Only for tests)"
 }
-
-# variable "key_vault" {
-#   type = object({
-#     name                = string
-#     resource_group_name = string
-#   })
-#   description = "Key Vault in which is stored the postgres admin login and password"
-# }
-
 
 #--------#
 # Backup #

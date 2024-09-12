@@ -44,18 +44,17 @@ resource "azurerm_postgresql_flexible_server" "this" {
   public_network_access_enabled = var.public_network_access_enabled
 
   # Credentials
-  administrator_login    = var.administrator_credentials.name     #data.azurerm_key_vault_secret.pgres_admin_login.value
-  administrator_password = var.administrator_credentials.password #data.azurerm_key_vault_secret.pgres_admin_pwd.value
+  administrator_login    = local.db.credentials.name
+  administrator_password = local.db.credentials.password
 
   # Backup
-  backup_retention_days        = var.backup_retention_days
-  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
-  create_mode                  = var.create_mode
+  backup_retention_days        = local.db.backup_retention_days
+  geo_redundant_backup_enabled = local.db.geo_redundant_backup_enabled
+  create_mode                  = local.db.create_mode
   zone                         = var.zone
 
   storage_mb = var.storage_mb
   sku_name   = local.db.sku_name
-  # storage_tier = var.storage_tier
 
   dynamic "high_availability" {
     for_each = var.high_availability_enabled && var.standby_availability_zone != null ? ["dummy"] : []
@@ -69,7 +68,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
   # Enable Customer managed key encryption
 
   dynamic "customer_managed_key" {
-    for_each = var.customer_managed_key_enabled ? [1] : []
+    for_each = local.db.customer_managed_key_enabled ? [1] : []
     content {
       key_vault_key_id                  = var.customer_managed_key_kv_key_id
       primary_user_assigned_identity_id = var.primary_user_assigned_identity_id
@@ -77,7 +76,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
   }
 
   dynamic "identity" {
-    for_each = var.customer_managed_key_enabled ? [1] : []
+    for_each = local.db.customer_managed_key_enabled ? [1] : []
     content {
       type         = "UserAssigned"
       identity_ids = [var.primary_user_assigned_identity_id]
