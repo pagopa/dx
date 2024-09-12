@@ -35,19 +35,6 @@ variable "db_version" {
   description = "(Required) The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
 }
 
-
-#-----------#
-# Key Vault #
-#-----------#
-variable "key_vault" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  description = "Key Vault in which is stored the postgres admin login and password"
-}
-
-
 #------------#
 # Networking #
 #------------#
@@ -176,22 +163,10 @@ variable "tier" {
   }
 }
 
-# variable "sku_name" {
-#   type        = string
-#   description = "The SKU Name for the PostgreSQL Flexible Server. The name of the SKU, follows the tier + name pattern (e.g. B_Standard_B1ms, GP_Standard_D2s_v3, MO_Standard_E4s_v3)."
-#   default     = "GP_Standard_D4s_v3"
-# }
-
 variable "storage_mb" {
   type        = number
   description = "The max storage allowed for the PostgreSQL Flexible Server. Possible values are 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, and 33554432."
   default     = 32768
-}
-
-variable "storage_tier" {
-  type        = string
-  description = "(Optional) The name of storage performance tier for IOPS of the PostgreSQL Flexible Server. Possible values are P4, P6, P10, P15,P20, P30,P40, P50,P60, P70 or P80. Default value is dependant on the storage_mb value."
-  default     = "null"
 }
 
 variable "customer_managed_key_enabled" {
@@ -206,14 +181,20 @@ variable "customer_managed_key_kv_key_id" {
   default     = null
 }
 
-# variable "administrator_login" {
-#   type        = string
-#   description = "Flexible PostgreSql server administrator_login"
-# }
+variable "administrator_credentials" {
+  type = object({
+    name     = string
+    password = string
+  })
+  description = "Flexible PostgreSql server administrator credentials (Only for tests)"
+}
 
-# variable "administrator_password" {
-#   type        = string
-#   description = "Flexible PostgreSql server administrator_password"
+# variable "key_vault" {
+#   type = object({
+#     name                = string
+#     resource_group_name = string
+#   })
+#   description = "Key Vault in which is stored the postgres admin login and password"
 # }
 
 
@@ -369,8 +350,8 @@ variable "default_metric_alerts" {
 
 variable "alerts_enabled" {
   type        = bool
-  default     = true
-  description = "Should Metrics Alert be enabled?"
+  default     = false
+  description = "Define if alerts should be enabled."
 }
 
 variable "alert_action" {
@@ -384,20 +365,32 @@ variable "alert_action" {
   default = []
 }
 
-variable "diagnostic_settings_enabled" {
-  type        = bool
-  default     = true
-  description = "Is diagnostic settings enabled?"
-}
+variable "diagnostic_settings" {
+  type = object({
+    enabled                                   = bool
+    log_analytics_workspace_id                = string
+    diagnostic_setting_destination_storage_id = string
+  })
+  default = {
+    enabled                                   = false
+    log_analytics_workspace_id                = null
+    diagnostic_setting_destination_storage_id = null
+  }
+  description = <<-EOT
+    Define if diagnostic settings should be enabled.
+    if it is:
+    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and 
+    the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
+  EOT
 
-variable "log_analytics_workspace_id" {
-  type        = string
-  default     = null
-  description = "(Optional) Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent."
-}
-
-variable "diagnostic_setting_destination_storage_id" {
-  type        = string
-  default     = null
-  description = "(Optional) The ID of the Storage Account where logs should be sent. Changing this forces a new resource to be created."
+  validation {
+    condition = (
+      !(var.diagnostic_settings.enabled)
+      || (
+        var.diagnostic_settings.log_analytics_workspace_id != null
+        && var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
+      )
+    )
+    error_message = "log_analytics_workspace_id and diagnostic_setting_destination_storage_id are mandatory if diagnostic is enabled."
+  }
 }

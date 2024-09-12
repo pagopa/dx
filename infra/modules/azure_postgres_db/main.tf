@@ -35,7 +35,7 @@ module "naming_convention" {
 resource "azurerm_postgresql_flexible_server" "this" {
   name                = local.db.name
   resource_group_name = data.azurerm_resource_group.this.name
-  location            = data.azurerm_resource_group.this.location
+  location            = var.environment.location
   version             = var.db_version
 
   # Network
@@ -44,8 +44,8 @@ resource "azurerm_postgresql_flexible_server" "this" {
   public_network_access_enabled = var.public_network_access_enabled
 
   # Credentials
-  administrator_login    = data.azurerm_key_vault_secret.pgres_admin_login.value
-  administrator_password = data.azurerm_key_vault_secret.pgres_admin_pwd.value
+  administrator_login    = var.administrator_credentials.name     #data.azurerm_key_vault_secret.pgres_admin_login.value
+  administrator_password = var.administrator_credentials.password #data.azurerm_key_vault_secret.pgres_admin_pwd.value
 
   # Backup
   backup_retention_days        = var.backup_retention_days
@@ -53,9 +53,9 @@ resource "azurerm_postgresql_flexible_server" "this" {
   create_mode                  = var.create_mode
   zone                         = var.zone
 
-  storage_mb   = var.storage_mb
-  sku_name     = local.db.sku_name
-  storage_tier = var.storage_tier
+  storage_mb = var.storage_mb
+  sku_name   = local.db.sku_name
+  # storage_tier = var.storage_tier
 
   dynamic "high_availability" {
     for_each = var.high_availability_enabled && var.standby_availability_zone != null ? ["dummy"] : []

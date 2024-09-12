@@ -37,11 +37,11 @@ resource "azurerm_monitor_metric_alert" "this" {
 #---------------------#
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
-  count                      = var.diagnostic_settings_enabled ? 1 : 0
+  count                      = var.diagnostic_settings.enabled ? 1 : 0
   name                       = "LogSecurity"
   target_resource_id         = azurerm_postgresql_flexible_server.this.id
-  log_analytics_workspace_id = var.log_analytics_workspace_id
-  storage_account_id         = var.diagnostic_setting_destination_storage_id
+  log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
+  storage_account_id         = var.diagnostic_settings.diagnostic_setting_destination_storage_id
 
   enabled_log {
     category = "PostgreSQLLogs"
