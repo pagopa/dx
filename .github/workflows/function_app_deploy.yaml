@@ -46,6 +46,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
+      TURBO_CACHE_DIR: .turbo-cache
 
     steps:
 
@@ -56,7 +57,7 @@ jobs:
         run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
         with:
           node-version-file: ".node-version"
           cache: "yarn"
@@ -67,9 +68,9 @@ jobs:
         working-directory: ./out
 
       - name: Restore turbo cache
-        uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
-          path: ./out/node_modules/.cache/turbo
+          path: ./out/${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo

@@ -7,6 +7,9 @@ jobs:
   js_code_review:
     runs-on: ubuntu-22.04
 
+    env:
+      TURBO_CACHE_DIR: .turbo-cache
+
     steps:
       - name: Check out code
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
@@ -16,7 +19,7 @@ jobs:
         run: corepack enable
 
       - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
         with:
           node-version-file: ".node-version"
           cache: "yarn"
@@ -25,9 +28,9 @@ jobs:
         run: yarn install --immutable
 
       - name: Setup turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
-          path: node_modules/.cache/turbo
+          path: ${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-

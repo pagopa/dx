@@ -19,6 +19,10 @@ jobs:
   build:
     name: Build Docusaurus
     runs-on: ubuntu-latest
+
+    env:
+      TURBO_CACHE_DIR: .turbo-cache
+
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
@@ -27,15 +31,15 @@ jobs:
       - name: Setup yarn
         run: corepack enable
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
         with:
           node-version-file: ".node-version"
           cache: yarn
 
       - name: Setup turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
         with:
-          path: node_modules/.cache/turbo
+          path: ${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
