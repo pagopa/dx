@@ -4,11 +4,6 @@ output "delegated_subnet_id" {
   description = "Subnet ID in which to create the PostgreSQL Flexible Server"
 }
 
-output "private_dns_zone_id" {
-  value       = azurerm_private_dns_zone.this.id
-  description = "The ID of the private dns zone to create the PostgreSQL Flexible Server"
-}
-
 output "postgres" {
   value = {
     name = azurerm_postgresql_flexible_server.this.name

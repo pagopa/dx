@@ -13,13 +13,13 @@ variable "environment" {
     env_short       = string
     location        = string
     domain          = optional(string)
-    db_name         = string
+    app_name        = string
     instance_number = string
   })
 
   validation {
-    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.db_name}stfn${var.environment.instance_number}") <= 24
-    error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.db_name}st${var.environment.instance_number}\""
+    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-ps-replica-${var.environment.instance_number}") <= 63
+    error_message = "Azure PostgreSQL Flexible Server name must contain between 3 and 63 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-ps-replica-${var.environment.instance_number}\""
   }
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
@@ -32,7 +32,8 @@ variable "resource_group_name" {
 
 variable "db_version" {
   type        = number
-  description = "(Required) The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
+  description = "The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
+  default     = 16
 }
 
 #------------#
@@ -46,10 +47,14 @@ variable "virtual_network" {
   description = "Virtual network in which to create the subnet"
 }
 
+variable "private_dns_zone_id" {
+  type        = string
+  description = "ID of the private DNS zone"
+}
+
 variable "subnet_cidr" {
   type        = string
   description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
-  default     = null
 }
 
 variable "subnet_service_endpoints" {
@@ -60,63 +65,6 @@ variable "subnet_service_endpoints" {
   })
   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
   default     = null
-}
-
-# variable "private_dns_registration" {
-#   type        = bool
-#   default     = false
-#   description = "(Optional) If true, creates a cname record for the newly created postgreSQL db fqdn into the provided private dns zone"
-# }
-
-# variable "private_dns_zone_name" {
-#   type        = string
-#   default     = null
-#   description = "(Optional) if 'private_dns_registration' is true, defines the private dns zone name in which the server fqdn should be registered"
-# }
-
-# variable "private_dns_zone_rg_name" {
-#   type        = string
-#   default     = null
-#   description = "(Optional) if 'private_dns_registration' is true, defines the private dns zone resource group name of the dns zone in which the server fqdn should be registered"
-# }
-
-# variable "private_dns_record_cname" {
-#   type        = string
-#   default     = null
-#   description = "(Optional) if 'private_dns_registration' is true, defines the private dns CNAME used to register this server FQDN"
-# }
-
-# variable "private_dns_cname_record_ttl" {
-#   type        = number
-#   default     = 300
-#   description = "(Optional) if 'private_dns_registration' is true, defines the record TTL"
-# }
-
-#-------------------#
-# High Availability #
-#-------------------#
-
-variable "standby_availability_zone" {
-  type        = number
-  default     = null
-  description = "(Optional) Specifies the Availability Zone in which the standby Flexible Server should be located."
-}
-
-variable "maintenance_window_config" {
-  type = object({
-    day_of_week  = number
-    start_hour   = number
-    start_minute = number
-  })
-
-  default = {
-    day_of_week  = 3
-    start_hour   = 2
-    start_minute = 0
-  }
-
-  description = "(Optional) Allows the configuration of the maintenance window, if not configured default is Wednesday@2.00am"
-
 }
 
 #----------------#
@@ -138,18 +86,6 @@ variable "storage_mb" {
   type        = number
   description = "The max storage allowed for the PostgreSQL Flexible Server. Possible values are 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, and 33554432."
   default     = 32768
-}
-
-variable "customer_managed_key_enabled" {
-  type        = bool
-  description = "enable customer_managed_key"
-  default     = false
-}
-
-variable "customer_managed_key_kv_key_id" {
-  type        = string
-  description = "The ID of the Key Vault Key"
-  default     = null
 }
 
 variable "administrator_credentials" {
@@ -176,12 +112,6 @@ variable "geo_redundant_backup_enabled" {
   default     = false
 }
 
-variable "create_mode" {
-  type        = string
-  description = "(Optional) The creation mode. Can be used to restore or replicate existing servers. Possible values are Default, Replica, GeoRestore, and PointInTimeRestore"
-  default     = "Default"
-}
-
 variable "zone" {
   type        = number
   description = "(Optional) Specifies the Availability Zone in which the PostgreSQL Flexible Server should be located."
@@ -191,12 +121,6 @@ variable "zone" {
 variable "replica_zone" {
   type        = number
   description = "(Optional) Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
-  default     = null
-}
-
-variable "primary_user_assigned_identity_id" {
-  type        = string
-  description = "Manages a User Assigned Identity"
   default     = null
 }
 

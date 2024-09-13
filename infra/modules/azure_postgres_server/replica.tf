@@ -12,7 +12,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 
   # Network
   delegated_subnet_id           = azurerm_subnet.replica[0].id
-  private_dns_zone_id           = azurerm_private_dns_zone_virtual_network_link.replica[0].id
+  private_dns_zone_id           = var.private_dns_zone_id
   public_network_access_enabled = false
 
   # Backup
@@ -22,14 +22,10 @@ resource "azurerm_postgresql_flexible_server" "replica" {
   storage_mb = var.storage_mb
   sku_name   = local.db.sku_name
 
-  dynamic "maintenance_window" {
-    for_each = var.maintenance_window_config != null ? ["dummy"] : []
-
-    content {
-      day_of_week  = var.maintenance_window_config.day_of_week
-      start_hour   = var.maintenance_window_config.start_hour
-      start_minute = var.maintenance_window_config.start_minute
-    }
+  maintenance_window {
+    day_of_week  = 3
+    start_hour   = 2
+    start_minute = 0
   }
 
   tags = var.tags
@@ -54,7 +50,7 @@ resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer_replica" 
 resource "azurerm_subnet" "replica" {
   count = var.tier == "premium" ? 1 : 0
 
-  name                 = "${local.project}-ps-replica-snet-${var.environment.instance_number}"
+  name                 = "${local.db_name_prefix}-ps-replica-snet-${var.environment.instance_number}"
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.this.name
   address_prefixes     = [var.subnet_cidr]
@@ -74,20 +70,6 @@ resource "azurerm_subnet" "replica" {
       ]
     }
   }
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "replica" {
-  count = var.tier == "premium" ? 1 : 0
-
-  name                  = "${local.project}-ps-replica-link"
-  private_dns_zone_name = azurerm_private_dns_zone.this.name
-
-  resource_group_name = data.azurerm_resource_group.vnet_rg.name
-  virtual_network_id  = data.azurerm_virtual_network.this.id
-
-  registration_enabled = false
-
-  tags = var.tags
 }
 
 #-----------------#

@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "this" {
-  name                 = "${local.project}-ps-snet-${var.environment.instance_number}"
+  name                 = "${local.db_name_prefix}-ps-snet-${var.environment.instance_number}"
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.this.name
   address_prefixes     = [var.subnet_cidr]
@@ -20,32 +20,3 @@ resource "azurerm_subnet" "this" {
     }
   }
 }
-
-resource "azurerm_private_dns_zone" "this" {
-  name                = "privatelink.postgres.database.azure.com"
-  resource_group_name = data.azurerm_resource_group.vnet_rg.name
-
-  tags = var.tags
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "this" {
-  name                  = "${local.project}-ps-link"
-  private_dns_zone_name = azurerm_private_dns_zone.this.name
-
-  resource_group_name = data.azurerm_resource_group.vnet_rg.name
-  virtual_network_id  = data.azurerm_virtual_network.this.id
-
-  registration_enabled = false
-
-  tags = var.tags
-}
-
-# resource "azurerm_private_dns_cname_record" "cname_record" {
-#   count = var.private_dns_registration ? 1 : 0
-
-#   name                = var.private_dns_record_cname
-#   zone_name           = var.private_dns_zone_name
-#   resource_group_name = var.private_dns_zone_rg_name
-#   ttl                 = var.private_dns_cname_record_ttl
-#   record              = azurerm_postgresql_flexible_server.this.fqdn
-# }
