@@ -127,7 +127,7 @@ resource "azurerm_monitor_metric_alert" "replica" {
 #---------------------#
 
 resource "azurerm_monitor_diagnostic_setting" "replica" {
-  count                      = var.tier == "premium" ? 1 : 0 && var.diagnostic_settings.enabled ? 1 : 0
+  count                      = var.tier == "premium" && var.diagnostic_settings.enabled ? 1 : 0
   name                       = "LogSecurity"
   target_resource_id         = azurerm_postgresql_flexible_server.replica[0].id
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id

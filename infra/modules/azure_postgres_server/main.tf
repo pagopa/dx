@@ -49,7 +49,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
 
   # Backup
   backup_retention_days        = var.backup_retention_days
-  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
+  geo_redundant_backup_enabled = local.geo_redundant_backup_enabled
   create_mode                  = var.create_mode
   zone                         = var.zone
 
@@ -57,11 +57,11 @@ resource "azurerm_postgresql_flexible_server" "this" {
   sku_name   = local.db.sku_name
 
   dynamic "high_availability" {
-    for_each = local.high_availability_enabled && var.standby_availability_zone != null ? ["dummy"] : []
+    for_each = local.high_availability_enabled ? ["dummy"] : []
 
     content {
       mode                      = "ZoneRedundant"
-      standby_availability_zone = var.standby_availability_zone
+      standby_availability_zone = local.standby_availability_zone
     }
   }
 

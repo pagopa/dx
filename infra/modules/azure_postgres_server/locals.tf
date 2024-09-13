@@ -8,11 +8,13 @@ locals {
   db = {
     name         = "${local.db_name_prefix}-ps-${var.environment.instance_number}"
     replica_name = var.tier == "premium" ? "${local.db_name_prefix}-ps-replica-${var.environment.instance_number}" : null
-    sku_name     = var.tier == "test" ? "B_Standard_B1ms" : var.tier == "standard" ? "GP_Standard_D2s_v3" : "GP_Standard_D2s_v5"
+    sku_name     = var.tier == "test" ? "B_Standard_B1ms" : var.tier == "standard" ? "GP_Standard_D2s_v3" : "GP_Standard_D2ds_v5"
   }
 
   # Backup
-  high_availability_enabled = var.tier == "standard" || var.tier == "premium" ? true : false
+  geo_redundant_backup_enabled = var.tier == "standard" || var.tier == "premium" ? true : false
+  high_availability_enabled    = var.tier == "standard" || var.tier == "premium" ? true : false
+  standby_availability_zone    = var.standby_availability_zone != null ? var.standby_availability_zone : var.zone
 
   # Monitoring
   metric_alerts         = var.custom_metric_alerts != null ? var.custom_metric_alerts : var.default_metric_alerts
