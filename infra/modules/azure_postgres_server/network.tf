@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "this" {
-  name                 = "${local.project}-pgres-flexible-snet-${var.environment.instance_number}"
+  name                 = "${local.project}-ps-snet-${var.environment.instance_number}"
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.this.name
   address_prefixes     = [var.subnet_cidr]
@@ -29,7 +29,7 @@ resource "azurerm_private_dns_zone" "this" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "this" {
-  name                  = "${local.project}-pg-flex-link"
+  name                  = "${local.project}-ps-link"
   private_dns_zone_name = azurerm_private_dns_zone.this.name
 
   resource_group_name = data.azurerm_resource_group.vnet_rg.name
