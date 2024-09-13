@@ -34,13 +34,13 @@ module "naming_convention" {
 
 resource "azurerm_postgresql_flexible_server" "this" {
   name                = local.db.name
-  resource_group_name = data.azurerm_resource_group.this.name
+  resource_group_name = var.resource_group_name
   location            = var.environment.location
   version             = var.db_version
 
   # Network
-  delegated_subnet_id           = azurerm_subnet.this.id
-  private_dns_zone_id           = var.private_dns_zone_id
+  # delegated_subnet_id           = azurerm_subnet.this.id
+  # private_dns_zone_id           = var.private_dns_zone_id
   public_network_access_enabled = false
 
   # Credentials

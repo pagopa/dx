@@ -6,13 +6,13 @@ resource "azurerm_postgresql_flexible_server" "replica" {
   count = var.tier == "premium" ? 1 : 0
 
   name                = local.db.replica_name
-  resource_group_name = data.azurerm_resource_group.this.name
+  resource_group_name = var.resource_group_name
   location            = var.environment.location
   version             = var.db_version
 
   # Network
-  delegated_subnet_id           = azurerm_subnet.replica[0].id
-  private_dns_zone_id           = var.private_dns_zone_id
+  # delegated_subnet_id           = azurerm_subnet.replica[0].id
+  # private_dns_zone_id           = var.private_dns_zone_id
   public_network_access_enabled = false
 
   # Backup
@@ -31,6 +31,15 @@ resource "azurerm_postgresql_flexible_server" "replica" {
   tags = var.tags
 }
 
+resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
+  count = var.tier == "premium" ? 1 : 0
+
+  name              = "${local.db_name_prefix}-ps-endpoint-${var.environment.instance_number}"
+  source_server_id  = azurerm_postgresql_flexible_server.this.id
+  replica_server_id = azurerm_postgresql_flexible_server.replica[0].id
+  type              = "ReadWrite"
+}
+
 #-----------------------------#
 # Configure: Enable PgBouncer #
 #-----------------------------#
@@ -47,30 +56,30 @@ resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer_replica" 
 # Networking #
 #------------#
 
-resource "azurerm_subnet" "replica" {
-  count = var.tier == "premium" ? 1 : 0
+# resource "azurerm_subnet" "replica" {
+#   count = var.tier == "premium" ? 1 : 0
 
-  name                 = "${local.db_name_prefix}-ps-replica-snet-${var.environment.instance_number}"
-  resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
-  virtual_network_name = data.azurerm_virtual_network.this.name
-  address_prefixes     = [var.subnet_cidr]
+#   name                 = "${local.db_name_prefix}-ps-replica-snet-${var.environment.instance_number}"
+#   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
+#   virtual_network_name = data.azurerm_virtual_network.this.name
+#   address_prefixes     = [var.subnet_cidr]
 
-  service_endpoints = var.subnet_service_endpoints != null ? concat(
-    var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
-    var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
-    var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
-  ) : []
+#   service_endpoints = var.subnet_service_endpoints != null ? concat(
+#     var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
+#     var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
+#     var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
+#   ) : []
 
-  delegation {
-    name = "delegation"
-    service_delegation {
-      name = "Microsoft.DBforPostgreSQL/flexibleServers"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-      ]
-    }
-  }
-}
+#   delegation {
+#     name = "delegation"
+#     service_delegation {
+#       name = "Microsoft.DBforPostgreSQL/flexibleServers"
+#       actions = [
+#         "Microsoft.Network/virtualNetworks/subnets/join/action",
+#       ]
+#     }
+#   }
+# }
 
 #-----------------#
 # Monitor Metrics #

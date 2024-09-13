@@ -52,6 +52,17 @@ variable "private_dns_zone_id" {
   description = "ID of the private DNS zone"
 }
 
+variable "private_dns_zone_resource_group_name" {
+  type        = string
+  description = "Resource group of the private DNS zone"
+  default     = null
+}
+
+variable "subnet_pep_id" {
+  type        = string
+  description = "Id of the subnet which holds private endpoints"
+}
+
 variable "subnet_cidr" {
   type        = string
   description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
@@ -104,12 +115,6 @@ variable "backup_retention_days" {
   type        = number
   description = "(Optional) The backup retention days for the PostgreSQL Flexible Server. Possible values are between 7 and 35 days."
   default     = 7
-}
-
-variable "geo_redundant_backup_enabled" {
-  type        = bool
-  description = "(Optional) Is Geo-Redundant backup enabled on the PostgreSQL Flexible Server. Defaults to false"
-  default     = false
 }
 
 variable "zone" {
