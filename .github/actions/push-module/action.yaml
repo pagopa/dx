@@ -1,0 +1,83 @@
+name: "Push module to subrepository"
+description: "Push module to subrepository"
+
+inputs:
+  git_name:
+    description: "Git User Name"
+    required: false
+    default: GitHub Actions
+  git_email:
+    description: "Git User Email"
+    required: false
+    default: actions@github.com
+  repo:
+    description: "Repository URL (only https path supported)"
+    required: true
+  module:
+    description: "Module name"
+    required: true
+  github_pat:
+    description: "GitHub Personal Access Token"
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Extract version from package.json
+      id: get_version
+      shell: bash
+      run: |
+        version=$(jq -r '.version' package.json)
+        echo "VERSION=$version" >> $GITHUB_ENV
+    - name: Setup git for subtree
+      shell: bash
+      run: |
+        # Fix dubious ownership
+        git config --global --add safe.directory /github/workspace
+
+        # Set git email and name
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+
+        # Configure Git for authentication
+        git config --global url."https://api:${{ inputs.github_pat }}@github.com/".insteadOf "https://github.com/"
+        git config --unset http."https://github.com/".extraheader
+    - name: Push Subtree to Module Repo
+      shell: bash
+      env:
+        MODULE_NAME: ${{ inputs.module }}
+        MODULE_VERSION: ${{ steps.get_version.outputs.module_version }}
+        REPO_URL: https://github.com/${{ inputs.repo }}
+      run: |
+        git remote add module-repo "$REPO_URL"
+
+        # Extract the complete history of the module subrepo
+        git subtree split --prefix=infra/modules/${MODULE_NAME} -b ${MODULE_NAME}-branch
+
+        # Check if the main branch exists on the remote
+        git fetch module-repo main --tags
+
+        # Merge the changes without overwriting the history
+        git checkout -b temp-branch module-repo/main
+        git merge --allow-unrelated-histories ${MODULE_NAME}-branch
+        
+        # Define the tag name
+        TAG_NAME=$(jq -r '.version' package.json)
+
+        # Check if the tag exists on the remote
+        if git ls-remote --tags module-repo | grep "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+          echo "Tag $TAG_NAME already exists on the remote."
+        else
+          echo "Tag $TAG_NAME does not exist on the remote. Creating and pushing the tag..."
+          # Create the tag locally
+          git tag "$TAG_NAME"
+          # Push the tag to the remote
+          git push module-repo "$TAG_NAME"
+        fi
+
+        # Push changes and tags
+        git push module-repo temp-branch:main --tags
+
+        # Remove the temporary branch
+        git branch -D ${MODULE_NAME}-branch

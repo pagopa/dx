@@ -1,0 +1,49 @@
+name: Push modules to subrepo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/modules/**"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+      
+jobs:
+  get-modified-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 2 # Ensure we have enough history for the diff
+
+      - name: Get modified modules
+        id: get-modules
+        run: |
+          folders_list=$(git diff --no-commit-id --name-only HEAD~1 infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
+          echo Modules that have changed: $folders_list
+          echo "modules=$folders_list" >> $GITHUB_OUTPUT
+    outputs:
+      modules: ${{ steps.get-modules.outputs.modules }}
+
+  push-modified-modules:
+    runs-on: ubuntu-latest
+    needs: get-modified-modules
+    strategy:
+      matrix:
+        module: ${{ fromJSON(needs.get-modified-modules.outputs.modules) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push module to subrepository
+        id: push-to-subrepository
+        uses: ./.github/actions/push-module
+        with:
+          repo: ${{ github.repository_owner }}/terraform-azurerm-${{ matrix.module }}
+          module: ${{ matrix.module }}
+          github_pat: ${{ secrets.SPLIT_MODULES_GH_TOKEN }}
