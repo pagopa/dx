@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0"
+      version = ">= 3.116.0"
     }
   }
 
@@ -39,8 +39,6 @@ resource "azurerm_postgresql_flexible_server" "this" {
   version             = var.db_version
 
   # Network
-  # delegated_subnet_id           = azurerm_subnet.this.id
-  # private_dns_zone_id           = var.private_dns_zone_id
   public_network_access_enabled = false
 
   # Credentials
@@ -63,8 +61,6 @@ resource "azurerm_postgresql_flexible_server" "this" {
       mode = "ZoneRedundant"
     }
   }
-
-  # Enable Customer managed key encryption
 
   maintenance_window {
     day_of_week  = 3

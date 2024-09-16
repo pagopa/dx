@@ -18,8 +18,8 @@ variable "environment" {
   })
 
   validation {
-    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-ps-replica-${var.environment.instance_number}") <= 63
-    error_message = "Azure PostgreSQL Flexible Server name must contain between 3 and 63 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-ps-replica-${var.environment.instance_number}\""
+    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-psql-replica-${var.environment.instance_number}") <= 63
+    error_message = "Azure PostgreSQL Flexible Server name must contain between 3 and 63 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-psql-replica-${var.environment.instance_number}\""
   }
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
@@ -39,13 +39,6 @@ variable "db_version" {
 #------------#
 # Networking #
 #------------#
-variable "virtual_network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  description = "Virtual network in which to create the subnet"
-}
 
 variable "private_dns_zone_id" {
   type        = string
@@ -61,21 +54,6 @@ variable "private_dns_zone_resource_group_name" {
 variable "subnet_pep_id" {
   type        = string
   description = "Id of the subnet which holds private endpoints"
-}
-
-variable "subnet_cidr" {
-  type        = string
-  description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
-}
-
-variable "subnet_service_endpoints" {
-  type = object({
-    cosmos  = optional(bool, false)
-    storage = optional(bool, false)
-    web     = optional(bool, false)
-  })
-  description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
-  default     = null
 }
 
 #----------------#
@@ -104,6 +82,7 @@ variable "administrator_credentials" {
     name     = string
     password = string
   })
+  sensitive   = true
   description = "Flexible PostgreSql server administrator credentials (Only for tests)"
 }
 

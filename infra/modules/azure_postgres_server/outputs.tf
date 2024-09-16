@@ -1,9 +1,4 @@
 
-# output "delegated_subnet_id" {
-#   value       = azurerm_subnet.this.id
-#   description = "Subnet ID in which to create the PostgreSQL Flexible Server"
-# }
-
 output "private_endpoint" {
 
   value       = azurerm_private_endpoint.postgre_pe.id
@@ -17,13 +12,6 @@ output "postgres" {
   }
   description = "PostgreSQL Flexible Server"
 }
-
-
-# output "delegated_subnet_id_replica" {
-
-#   value       = var.tier == "premium" ? azurerm_subnet.replica[0].id : null
-#   description = "Subnet ID in which to create the PostgreSQL Flexible Server Replica"
-# }
 
 output "private_endpoint_replica" {
 
