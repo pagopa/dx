@@ -1,18 +1,12 @@
 # DX - Azure App Service Module
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.100.0 |
-
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.107.0 |
 
 ## Modules
 
@@ -63,4 +57,4 @@
 |------|-------------|
 | <a name="output_app_service"></a> [app\_service](#output\_app\_service) | n/a |
 | <a name="output_subnet"></a> [subnet](#output\_subnet) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->
