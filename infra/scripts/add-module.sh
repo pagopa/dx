@@ -22,7 +22,9 @@ if [ -z "$MODULE_NAME" ]; then
   usage
 fi
 
-SUBREPO_NAME="terraform-azurerm-$MODULE_NAME"
+PROVIDER="azurerm" # we may support different providers as aws, awscc, etc.
+SUFFIX="dx"
+SUBREPO_NAME="terraform-$PROVIDER-$SUFFIX-$MODULE_NAME"
 MODULE_DIR="modules/$MODULE_NAME"
 
 # Check if the module directory already exists
