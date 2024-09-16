@@ -14,9 +14,7 @@ locals {
   # Backup
   geo_redundant_backup_enabled = var.tier == "standard" || var.tier == "premium" ? true : false
   high_availability_enabled    = var.tier == "standard" || var.tier == "premium" ? true : false
-  private_dns_zone = {
-    resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
-  }
+  auto_grow_enabled            = var.tier == "standard" || var.tier == "premium" ? true : false
 
   # Monitoring
   metric_alerts         = var.custom_metric_alerts != null ? var.custom_metric_alerts : var.default_metric_alerts

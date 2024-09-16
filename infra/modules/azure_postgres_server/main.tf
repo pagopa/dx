@@ -50,6 +50,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
   geo_redundant_backup_enabled = local.geo_redundant_backup_enabled
   create_mode                  = "Default"
   zone                         = var.zone
+  auto_grow_enabled            = local.auto_grow_enabled
 
   storage_mb = var.storage_mb
   sku_name   = local.db.sku_name
