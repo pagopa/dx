@@ -68,6 +68,6 @@
 |------|-------------|
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | PostgreSQL Flexible Server |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | PostgreSQL Flexible Server Replica |
-| <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | Subnet ID in which to create the PostgreSQL Flexible Server Replica |
-| <a name="output_private_endpoint_replica"></a> [private\_endpoint\_replica](#output\_private\_endpoint\_replica) | Subnet ID in which to create the PostgreSQL Flexible Server Replica |
+| <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | Private Endpoint resource ID for the PostgreSQL Flexible Server |
+| <a name="output_private_endpoint_replica"></a> [private\_endpoint\_replica](#output\_private\_endpoint\_replica) | Private Endpoint resource ID for the PostgreSQL Flexible Server Replica |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->

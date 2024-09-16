@@ -2,7 +2,7 @@
 output "private_endpoint" {
 
   value       = azurerm_private_endpoint.postgre_pe.id
-  description = "Subnet ID in which to create the PostgreSQL Flexible Server Replica"
+  description = "Private Endpoint resource ID for the PostgreSQL Flexible Server"
 }
 
 output "postgres" {
@@ -16,7 +16,7 @@ output "postgres" {
 output "private_endpoint_replica" {
 
   value       = var.tier == "premium" ? azurerm_private_endpoint.replica_postgre_pe[0].id : null
-  description = "Subnet ID in which to create the PostgreSQL Flexible Server Replica"
+  description = "Private Endpoint resource ID for the PostgreSQL Flexible Server Replica"
 }
 
 output "postgres_replica" {
