@@ -48,7 +48,6 @@ variable "db_version" {
 variable "private_dns_zone_resource_group_name" {
   type        = string
   description = "Resource group of the private DNS zone"
-  default     = null
 }
 
 variable "subnet_pep_id" {
