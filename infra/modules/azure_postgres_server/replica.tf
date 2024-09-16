@@ -14,8 +14,9 @@ resource "azurerm_postgresql_flexible_server" "replica" {
   public_network_access_enabled = false
 
   # Backup
-  create_mode = "Replica"
-  zone        = var.replica_zone
+  create_mode      = "Replica"
+  source_server_id = azurerm_postgresql_flexible_server.this.id
+  zone             = var.replica_zone
 
   storage_mb = var.storage_mb
   sku_name   = local.db.sku_name
