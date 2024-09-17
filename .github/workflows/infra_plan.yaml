@@ -114,7 +114,7 @@ jobs:
           terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:"  | tee plan_output.txt
 
           OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
-          
+
           printf "%s" "$OUTPUT" > plan_output_multiline.txt
 
           if grep -q "::error::Terraform exited with code" plan_output.txt; then
@@ -158,14 +158,14 @@ jobs:
                 comment_id: botComment.id
               })
             }
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: commentBody,
               issue_number: context.issue.number
             })
-            
+
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result

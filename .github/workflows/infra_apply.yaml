@@ -176,6 +176,8 @@ jobs:
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
         run: |
+          set -o pipefail
+
           terraform apply \
             -lock-timeout=3000s \
             -auto-approve \
