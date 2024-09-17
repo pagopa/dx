@@ -50,6 +50,8 @@ resource "azurerm_mysql_flexible_server" "this" {
   create_mode                  = "Default"
   zone                         = var.zone
 
+  sku_name = local.db.sku_name
+
   dynamic "high_availability" {
     for_each = local.high_availability_enabled ? ["dummy"] : []
 
