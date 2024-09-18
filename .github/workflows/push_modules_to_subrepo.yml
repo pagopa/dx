@@ -26,11 +26,12 @@ jobs:
           folders_list=$(git diff --no-commit-id --name-only HEAD~1 infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules that have changed: $folders_list
           echo "modules=$folders_list" >> $GITHUB_OUTPUT
+      - name: Check if modules list is empty
+        if: ${{ steps.get-modules.outputs.modules == '[]' }}
+        run: echo "No modules changed. Skipping push."
     outputs:
       modules: ${{ steps.get-modules.outputs.modules }}
-- name: Check if modules list is empty
-  if: ${{ steps.get-modules.outputs.modules == '[]' }}
-  run: echo "No modules changed. Skipping push."
+
   push-modified-modules:
     runs-on: ubuntu-latest
     needs: get-modified-modules
