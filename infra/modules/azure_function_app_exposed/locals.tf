@@ -26,6 +26,6 @@ locals {
 
   storage_account = {
     replication_type = var.tier == "test" ? "LRS" : "ZRS"
-    name             = replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", "")
+    name             = lower(replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", ""))
   }
 }

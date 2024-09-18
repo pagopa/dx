@@ -9,7 +9,7 @@ resource "azurerm_storage_account" "this" {
   public_network_access_enabled   = true
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
-  allow_nested_items_to_be_public = true
+  allow_nested_items_to_be_public = false
 
   tags = var.tags
 }

@@ -10,7 +10,7 @@ variable "environment" {
 
   validation {
     condition     = length(var.environment.prefix) == 2
-    error_message = "The variable \"app_name\" must contain 2 characters"
+    error_message = "The variable \"prefix\" must contain 2 characters"
   }
 
   validation {
