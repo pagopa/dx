@@ -11,9 +11,9 @@ on:
 # env:
 #   WORKING_DIR: ./website
 
-# defaults:
-#   run:
-#     working-directory: ./website
+defaults:
+  run:
+    working-directory: ./website
 
 jobs:
   build:
