@@ -24,12 +24,6 @@ runs:
   using: "composite"
 
   steps:
-    - name: Extract version from package.json
-      id: get_version
-      shell: bash
-      run: |
-        version=$(jq -r '.version' package.json)
-        echo "VERSION=$version" >> $GITHUB_ENV
     - name: Setup git for subtree
       shell: bash
       run: |
@@ -47,7 +41,6 @@ runs:
       shell: bash
       env:
         MODULE_NAME: ${{ inputs.module }}
-        MODULE_VERSION: ${{ steps.get_version.outputs.module_version }}
         REPO_URL: https://github.com/${{ inputs.repo }}
       run: |
         git remote add module-repo "$REPO_URL"
