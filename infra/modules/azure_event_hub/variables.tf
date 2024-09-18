@@ -52,14 +52,6 @@ variable "eventhubs" {
 # Networking #
 #------------#
 
-# variable "virtual_network" {
-#   type = object({
-#     name                = string
-#     resource_group_name = string
-#   })
-#   description = "Virtual network in which to create the subnet"
-# }
-
 variable "private_dns_zone_resource_group_name" {
   type        = string
   description = "Resource group of the private DNS zone"
@@ -84,4 +76,14 @@ variable "tier" {
     condition     = contains(["test", "standard", "premium"], var.tier)
     error_message = "Allowed values for \"tier\" are \"test\", \"standard\", or \"premium\"."
   }
+}
+
+#------------#
+# Monitoring #
+#------------#
+
+variable "action_group_id" {
+  type        = string
+  description = "Set the Action Group Id to invoke when the Function App alert triggers"
+  default     = null
 }

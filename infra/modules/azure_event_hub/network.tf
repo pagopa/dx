@@ -6,7 +6,7 @@ resource "azurerm_private_endpoint" "event_hub_pe" {
 
   private_service_connection {
     name                           = "${local.app_name_prefix}-evhns-pep-${var.environment.instance_number}"
-    private_connection_resource_id = module.event_hub.namespace_id
+    private_connection_resource_id = azurerm_eventhub_namespace.this.id
     is_manual_connection           = false
     subresource_names              = ["namespace"]
   }

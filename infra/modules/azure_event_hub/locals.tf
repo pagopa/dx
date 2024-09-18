@@ -9,17 +9,29 @@ locals {
     name     = "${local.app_name_prefix}-evhns-${var.environment.instance_number}"
     sku_name = var.tier == "test" ? "Basic" : var.tier == "standard" ? "Standard" : "Premium"
     # Note: Basic SKU does not support private access
+    alert = "${local.app_name_prefix}-evhns-${var.environment.instance_number}] Health Check Failed"
   }
+
+  # Events configuration
+  consumers = { for hc in flatten([for h in var.eventhubs :
+    [for c in h.consumers : {
+      hub  = h.name
+      name = c
+  }]]) : "${hc.hub}.${hc.name}" => hc }
+
+  keys = { for hk in flatten([for h in var.eventhubs :
+    [for k in h.keys : {
+      hub = h.name
+      key = k
+  }]]) : "${hk.hub}.${hk.key.name}" => hk }
+
+  hubs = { for h in var.eventhubs : h.name => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
 
-  # Backup
-  zone_redundant = var.tier == "standard" || var.tier == "premium" ? true : false
-
   # Autoscaling
-  auto_inflate_enabled = var.tier == "premium" ? true : false
-
-  # Monitoring
-  alerts_enabled = var.tier == "standard" || var.tier == "premium" ? true : false
+  auto_inflate_enabled     = var.tier == "premium" ? true : false
+  maximum_throughput_units = local.auto_inflate_enabled ? 15 : null
+  capacity                 = var.tier == "standard" ? 1 : var.tier == "premium" ? 2 : null
 }
