@@ -16,8 +16,7 @@ resource "azurerm_monitor_metric_alert" "this" {
   dynamic "action" {
     for_each = var.alert_action
     content {
-      action_group_id    = action.value["action_group_id"]
-      webhook_properties = action.value["webhook_properties"]
+      action_group_id = action.value["action_group_id"]
     }
   }
 

@@ -1,4 +1,4 @@
-resource "azurerm_private_endpoint" "postgre_pe" {
+resource "azurerm_private_endpoint" "postgre_pep" {
   name                = "${local.db_name_prefix}-psql-pep-${var.environment.instance_number}"
   location            = var.environment.location
   resource_group_name = var.resource_group_name
@@ -23,7 +23,7 @@ resource "azurerm_private_endpoint" "postgre_pe" {
 # Replica Private Endpoint #
 #--------------------------#
 
-resource "azurerm_private_endpoint" "replica_postgre_pe" {
+resource "azurerm_private_endpoint" "replica_postgre_pep" {
   count = var.tier == "premium" ? 1 : 0
 
   name                = "${local.db_name_prefix}-psql-pep-replica-${var.environment.instance_number}"

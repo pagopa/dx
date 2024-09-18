@@ -39,12 +39,6 @@ variable "db_version" {
 #------------#
 # Networking #
 #------------#
-
-variable "private_dns_zone_id" {
-  type        = string
-  description = "ID of the private DNS zone"
-}
-
 variable "private_dns_zone_resource_group_name" {
   type        = string
   description = "Resource group of the private DNS zone"
@@ -82,7 +76,7 @@ variable "administrator_credentials" {
     password = string
   })
   sensitive   = true
-  description = "Flexible PostgreSql server administrator credentials (Only for tests)"
+  description = "Flexible PostgreSql server administrator credentials"
 }
 
 #--------#
@@ -233,8 +227,7 @@ variable "alert_action" {
   description = "The ID of the Action Group and optional map of custom string properties to include with the post webhook operation."
   type = set(object(
     {
-      action_group_id    = string
-      webhook_properties = map(string)
+      action_group_id = string
     }
   ))
   default = []
