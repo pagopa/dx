@@ -38,7 +38,6 @@ jobs:
           uses: changesets/action@f13b1baaa620fde937751f5d2c3572b9da32af23 # v1.4.5
           with:
               version: yarn run version
-              # publish: npm run tag
               commit: "Update terraform modules CHANGELOG and prepare next release"
               title: "Push next terraform modules releases"
               createGithubReleases: false
