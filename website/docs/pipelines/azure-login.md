@@ -1,22 +1,39 @@
 ---
 sidebar_position: 1
-sidebar_label: Azure Login
+sidebar_label: Azure Login for GitHub Actions
 ---
 
 # Azure Login
 
-There are several ways to log into Azure by a GitHub Action. The our chosen method doesn't require maintenance or secret management as it is a passwordless approach. Once set up, it works.
+There are several ways to log into Azure by a GitHub Action. The DX chosen
+method doesn't require maintenance or secret management as it is a passwordless
+approach. Once set up, it just works.
 
-Only two components are needed to log into Azure:
+Only two components are needed to let GitHub Actions log into Azure:
 
-- An Azure Managed Identity resource
-- A federation between the Azure Managed Identity and GitHub
+1. An Azure Managed Identity resource
+1. A federation between the Azure Managed Identity and the GitHub repository
 
-The folder `infra/identity` contains the Terraform definition, often created by Cloud Engineers using a [Terraform custom module](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github) to create both the Managed Identity and the federation with GitHub. Module also provides a set of default roles in the current subscription, which are likely to be enough for new repositories - more on this later.
+The folder `infra/identity` contains the Terraform definition to create both the
+Managed Identity and the federation with GitHub using a
+[Terraform custom module](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github)
+. The module also provides a set of default roles in the current Azure
+subscription, which are likely to be enough for new repositories (more on this
+later...).
 
-Once the Managed Identity is created, only `client id` value and note it apart.
+Once the Managed Identity is created, get the `client id` value and note it
+apart.
 
-Once done, you are technically ready to log into Azure from a GitHub pipeline:
+:::note
+
+The Managed Identity Client Id is available in the Azure Portal, navigating to
+the Managed Identity resource:
+![Azure Portal showing the client id](image_azmi.png)
+
+:::
+
+Your GitHub repository is now federated with the Managed Identity which GitHub
+Actions will use to log into Azure:
 
 ```yaml
 - name: Azure Login
@@ -27,51 +44,69 @@ Once done, you are technically ready to log into Azure from a GitHub pipeline:
     subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 ```
 
-:::note
-
-The Managed Identity Client Id is available in the Azure Portal, navigating to the Managed Identity resource:
-![Azure Portal showing the client id](image_azmi.png)
-
-:::
-
-Despite the three mentioned values are not secrets, they should not be harcoded in the pipeline but shall be stored as repository or GitHub _environment_ secrets.
+Despite the three mentioned values are not secrets, they should not be harcoded
+in the pipeline but shall be stored as repository or GitHub _environment_
+secrets. This as they are likely to be used in multiple workflows and could be
+changed over time.
 
 :::important
 
-> Rather than specifying the `azure/login` action, it is likely you need to pass these values as arguments of workflow templates available in this repository.
+> Rather than specifying the `azure/login` action directly, you'd likely find
+> yourself more often passing them as workflow arguments to
+> [DX Terraform Modules](https://github.com/pagopa/dx/tree/main/infra/modules).
 
 :::
 
 ## GitHub environments
 
-A GitHub pipeline could use GitHub environments to inherits settings, secrets, variables, permissions and other stuff. As subscription are grouped by project (`PROD-IO`, `PROD-SELFCARE`, etc.) and environment (`DEV-SELFCARE`, `UAT-SELFCARE`, etc.), GitHub environments are used to get the value of a given secret depending on the current scope.
+A GitHub pipeline could use GitHub environments to inherits settings, secrets,
+variables, permissions and other stuff. As Azure subscriptions are grouped by
+project (`PROD-IO`, `PROD-SELFCARE`, etc.) and environment (`DEV-SELFCARE`,
+`UAT-SELFCARE`, etc.), GitHub environments are used to get the value of a given
+secret depending on the current scope which comprises both.
 
-Then, `subscription id` and `managed identity client id` values can be stored as secrets of a specific GitHub environment. In particular:
+Values for `tenant id`, `subscription id` and `managed identity client id` can
+be stored as secrets tied to a specific GitHub environment. In particular:
 
-- `tenant id`: the value is always the same and could be stored as repository secret
-- `subscription id`: if the project has a single environment it could be stored as repository secret; otherwise as environment secret
+- `tenant id`: the value is always the same and could be stored as repository
+  secret
+- `subscription id`: if the project has a single environment it could be stored
+  as repository secret; otherwise use an environment secret
 - `managed identity client id`: always as environment secret
 
 :::tip
 
-The GitHub environments creation and secret values are defined via Terraform in the `infra/repository` folder.
+GitHub environments and secrets may be created via Terraform using the
+[provided DX module](https://github.com/pagopa/dx/tree/main/infra/repository).
 
 :::
 
 ### Managing multiple GitHub environments
 
-A managed identity has a set of roles in a given subscription. Then, each pipeline which would require the same roles could use the same managed identity - including the same GitHub environment.
+A managed identity has a set of roles in a given subscription. Therefore,
+multiple pipelines that require the same roles can use the same managed
+identity, including the same GitHub environment.
 
-Let's say a repository has two Azure Functions App, including both application code and Terraform code. Terraform deployments need high privileges to create and update networking resources, identities, key vaults' secrets and more.\
-Instead, the set of roles required by the Function App deployments is limited to have a write access to the Function App resource control plane. It doesn't need access to other stuff like networking, storages, or neither secrets. However, both Functions Apps require the same roles as the action is identical.\
-Then, the two Function App pipelines could share the same Managed Identity and related GitHub environment, while the Terraform code should use have a dedicated GitHub environment.
+Let's consider a scenario where a repository has two Azure Functions Apps, each
+with its own application code and Terraform code. The Terraform deployments
+require high privileges to create and update networking resources, identities,
+key vault secrets, and more. On the other hand, the roles required for the
+Function App deployments are limited to write access for the Function App
+resource control plane. These deployments do not need access to other resources
+such as networking, storage, or secrets. However, both Function Apps require the
+same roles as the action performed is identical.
+
+In this case, the two Function App pipelines can share the same Managed Identity
+and the related GitHub environment. However, the Terraform code should point to
+a dedicated GitHub environment.
 
 :::tip
 
 Generally, the following convention is used to name the GitHub environments:
 
-- `<env>-ci/cd`: dedicated to the Terraform code (i.e. `prod-ci`)
-- `app-<env>-ci/cd`: dedicated to Azure Functions App/App Service deployments
+- `<env>-ci/cd`: dedicated to IaC (Terraform HCL) code (i.e. `prod-ci`)
+- `app-<env>-ci/cd`: dedicated to applicatives (Azure Functions or App Service)
+  deployments
 - `opex-<env>-ci/cd`: dedicated to the Opex dashboard deployments
 
 For any other need, add the desired environment sticking to this pattern.
@@ -80,27 +115,40 @@ For any other need, add the desired environment sticking to this pattern.
 
 ## Managing identity roles
 
-The mentioned module to create a Managed Identity federated with GitHub, assignes a set of default roles to the Identity. However, the Managed Identity roles cannot be static and is very likely they will be changed over time.\
-This could happens if for example a new resource which requires special roles is added to the configuration. Or the Terraform code reads a secret of a new KeyVault or blobs from a new Storage Account. It is impossible to foresee all possible cases as things changes over time.
+The module mentioned earlier, which creates a Managed Identity federated with
+GitHub, assigns a default set of roles to the Identity. However, it is highly
+likely that these roles will need to be changed over time.
 
-Then, the identity definition should be updated with appropriated roles when a new role is needed. There are hundreds of cases of when this could happen, but the most common ones could be:
+This can happen when, for example, a new resource is added to the configuration
+that requires special roles. Or when the Terraform code needs to read a secret
+from a new KeyVault or access blobs from a new Storage Account. It is impossible
+to anticipate all possible cases, as things change over time.
 
-- altering roles of system-assigned managed identities
-- reading a new entity from the KeyVault (certificate, secrets, keys)
-- adding VNet peerings
-- updating APIM configuration
-- reading from a Storage Account container, queue or table
+Therefore, it is important to update the identity definition with the
+appropriate roles whenever a new role is needed. There are numerous scenarios
+where this could occur, but some common examples include:
 
-The general advice is to check the CI pipeline, which could fail for a missing role. In this case, identify the role using the official documentation and create a PR with the new definition.
+- Modifying roles of system-assigned managed identities
+- Accessing a new entity from the KeyVault (such as certificates, secrets, or
+  keys)
+- Adding VNet peerings
+- Updating APIM configuration
+- Reading from a Storage Account container, queue, or table
+
+The general advice is to check the CI pipeline, as it may fail due to a missing
+role. In such cases, identify the required role using the official documentation
+and create a pull request (PR) with the updated definition.
 
 :::warning
 
-Setting new roles is quite easy and must be done separately for CI and CD identities.
+Setting new roles is quite easy and must be done separately for CI and CD
+identities.
 
 :::
 
 :::tip
 
-Granularity is set at subscription and resource group level. Check the module documentation for details.
+Granularity is set at subscription and resource group level. Check the module
+documentation for details.
 
 :::
