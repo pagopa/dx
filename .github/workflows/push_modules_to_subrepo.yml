@@ -28,7 +28,9 @@ jobs:
           echo "modules=$folders_list" >> $GITHUB_OUTPUT
     outputs:
       modules: ${{ steps.get-modules.outputs.modules }}
-
+- name: Check if modules list is empty
+  if: ${{ steps.get-modules.outputs.modules == '[]' }}
+  run: echo "No modules changed. Skipping push."
   push-modified-modules:
     runs-on: ubuntu-latest
     needs: get-modified-modules
