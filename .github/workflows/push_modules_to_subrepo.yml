@@ -23,7 +23,7 @@ jobs:
       - name: Get modified modules
         id: get-modules
         run: |
-          folders_list=$(git diff --no-commit-id --name-only HEAD~1 infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
+          folders_list=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules that have changed: $folders_list
           echo "modules=$folders_list" >> $GITHUB_OUTPUT
       - name: Check if modules list is empty

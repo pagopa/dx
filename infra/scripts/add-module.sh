@@ -28,7 +28,7 @@ fi
 
 DX_PREFIX="dx"
 SUBREPO_NAME="terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME"
-MODULE_DIR="modules/$MODULE_NAME"
+MODULE_DIR="infra/modules/$MODULE_NAME"
 
 # Check if the module directory already exists
 if [ -d "$MODULE_DIR" ]; then
