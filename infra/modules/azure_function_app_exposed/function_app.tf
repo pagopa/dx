@@ -19,7 +19,6 @@ resource "azurerm_linux_function_app" "this" {
   site_config {
     http2_enabled                          = true
     always_on                              = true
-    vnet_route_all_enabled                 = true
     application_insights_connection_string = local.application_insights.enable ? var.application_insights_connection_string : null
     health_check_path                      = var.health_check_path
     health_check_eviction_time_in_min      = 2
