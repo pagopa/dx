@@ -78,7 +78,7 @@ if [ -n "$ORG_NAME" ]; then
     # Initialize Git in the module directory and push to the new repository
     cd "$MODULE_DIR"
     git init
-    git remote add origin git@github.com:$ORG_NAME/$SUBREPO_NAME.git
+    git remote add origin https://github.com/$ORG_NAME/$SUBREPO_NAME.git
     git add .
     git commit -m "Initial commit for module $MODULE_NAME"
     git branch -M main
