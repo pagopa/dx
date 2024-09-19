@@ -2,15 +2,19 @@
 
 # Function to display usage instructions
 usage() {
-  echo "Usage: ./add-module.sh --name <module-name> [--gh-org <organization>]"
+  echo "Usage: ./add-module.sh --name <module-name> [--gh-org <organization>] [--provider <provider>]"
   exit 1
 }
+
+# Default provider if not provided
+PROVIDER="azurerm" # we may support different providers such as aws, awscc, etc.
 
 # Parse named arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --name) MODULE_NAME="$2"; shift ;;
     --gh-org) ORG_NAME="$2"; shift ;;
+    --provider) PROVIDER="$2"; shift ;;
     *) echo "Unknown parameter passed: $1"; usage ;;
   esac
   shift
@@ -22,9 +26,8 @@ if [ -z "$MODULE_NAME" ]; then
   usage
 fi
 
-PROVIDER="azurerm" # we may support different providers as aws, awscc, etc.
-SUFFIX="dx"
-SUBREPO_NAME="terraform-$PROVIDER-$SUFFIX-$MODULE_NAME"
+DX_PREFIX="dx"
+SUBREPO_NAME="terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME"
 MODULE_DIR="modules/$MODULE_NAME"
 
 # Check if the module directory already exists
@@ -42,7 +45,8 @@ cat <<EOL > "$PACKAGE_JSON"
 {
   "name": "$MODULE_NAME",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "provider": "$PROVIDER"
 }
 EOL
 
@@ -69,7 +73,9 @@ if [ -n "$ORG_NAME" ]; then
   gh repo create "$ORG_NAME/$SUBREPO_NAME" --public --confirm
 
   if [ $? -eq 0 ]; then
-    echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"    # Initialize Git in the module directory and push to the new repository
+    echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"
+    
+    # Initialize Git in the module directory and push to the new repository
     cd "$MODULE_DIR"
     git init
     git remote add origin git@github.com:$ORG_NAME/$SUBREPO_NAME.git

@@ -10,15 +10,14 @@ inputs:
     description: "Git User Email"
     required: false
     default: actions@github.com
-  repo:
-    description: "Repository URL (only https path supported)"
-    required: true
   module:
     description: "Module name"
     required: true
   github_pat:
     description: "GitHub Personal Access Token"
     required: true
+  dx_prefix:
+    description: "Prefix added to DX module names"
 
 runs:
   using: "composite"
@@ -41,8 +40,11 @@ runs:
       shell: bash
       env:
         MODULE_NAME: ${{ inputs.module }}
-        REPO_URL: https://github.com/${{ inputs.repo }}
+        DX_PREFIX: ${{ inputs.dx_prefix }}
       run: |
+        PROVIDER=$(jq -r '.provider // "azurerm"' package.json)
+        REPO_URL=https://github.com/terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME
+
         git remote add module-repo "$REPO_URL"
 
         # Extract the complete history of the module subrepo

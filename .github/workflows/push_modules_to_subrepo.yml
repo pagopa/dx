@@ -47,6 +47,5 @@ jobs:
         id: push-to-subrepository
         uses: ./.github/actions/push-module
         with:
-          repo: ${{ github.repository_owner }}/terraform-azurerm-${{ matrix.module }}
           module: ${{ matrix.module }}
           github_pat: ${{ secrets.SPLIT_MODULES_GH_TOKEN }}
