@@ -42,6 +42,7 @@ runs:
         MODULE_NAME: ${{ inputs.module }}
         DX_PREFIX: ${{ inputs.dx_prefix }}
       run: |
+        set -euo pipefail
         PROVIDER=$(jq -r '.provider // "azurerm"' package.json)
         REPO_URL=https://github.com/terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME
 
