@@ -1,4 +1,4 @@
-resource "azurerm_private_endpoint" "event_hub_pe" {
+resource "azurerm_private_endpoint" "event_hub_pep" {
   name                = "${local.app_name_prefix}-evhns-pep-${var.environment.instance_number}"
   location            = var.environment.location
   resource_group_name = var.resource_group_name
