@@ -51,7 +51,7 @@ resource "azurerm_eventhub_namespace" "this" {
 resource "azurerm_eventhub" "events" {
   for_each = local.hubs
 
-  name                = "${local.app_name_prefix}-${each.key}"
+  name                = each.key
   namespace_name      = azurerm_eventhub_namespace.this.name
   resource_group_name = var.resource_group_name
   partition_count     = each.value.partitions

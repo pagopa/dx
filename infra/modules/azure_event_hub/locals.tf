@@ -14,17 +14,17 @@ locals {
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
     [for c in h.consumers : {
-      hub  = h.name
+      hub  = "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}"
       name = c
   }]]) : "${hc.hub}.${hc.name}" => hc }
 
   keys = { for hk in flatten([for h in var.eventhubs :
     [for k in h.keys : {
-      hub = h.name
+      hub = "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}"
       key = k
   }]]) : "${hk.hub}.${hk.key.name}" => hk }
 
-  hubs = { for h in var.eventhubs : h.name => h }
+  hubs = { for h in var.eventhubs : "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}" => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
