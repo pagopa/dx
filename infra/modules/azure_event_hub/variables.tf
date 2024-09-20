@@ -34,10 +34,10 @@ variable "resource_group_name" {
 variable "eventhubs" {
   description = "A list of event hubs to add to namespace."
   type = list(object({
-    name              = string       # (Required) Specifies the name of the EventHub resource. Changing this forces a new resource to be created.
-    partitions        = number       # (Required) Specifies the current number of shards on the Event Hub.
-    message_retention = number       # (Required) Specifies the number of days to retain the events for this Event Hub.
-    consumers         = list(string) # Manages a Event Hubs Consumer Group as a nested resource within an Event Hub.
+    name                   = string       # (Required) Specifies the name of the EventHub resource. Changing this forces a new resource to be created.
+    partitions             = number       # (Required) Specifies the current number of shards on the Event Hub.
+    message_retention_days = number       # (Required) Specifies the number of days to retain the events for this Event Hub.
+    consumers              = list(string) # Manages a Event Hubs Consumer Group as a nested resource within an Event Hub.
     keys = list(object({
       name   = string # (Required) Specifies the name of the EventHub Authorization Rule resource. Changing this forces a new resource to be created.
       listen = bool   # (Optional) Does this Authorization Rule have permissions to Listen to the Event Hub? Defaults to false.
@@ -86,4 +86,26 @@ variable "action_group_id" {
   type        = string
   description = "Set the Action Group Id to invoke when the Function App alert triggers"
   default     = null
+}
+
+variable "metric_alerts" {
+  description = <<EOD
+Map of name = criteria objects
+EOD
+
+  type = map(object({
+    # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]
+    aggregation = string
+    # https://learn.microsoft.com/en-us/azure/event-hubs/monitor-event-hubs-reference
+    metric_name = string
+    description = string
+    # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]
+    operator  = string
+    threshold = number
+    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H
+    frequency = string
+    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.
+    window_size = string
+  }))
+  default = {}
 }

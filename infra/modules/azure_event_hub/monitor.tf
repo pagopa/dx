@@ -1,28 +1,28 @@
 resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
-  count = var.tier == "test" ? 0 : 1
+  for_each = var.tier != "test" ? var.metric_alerts : {}
 
-  name                = local.eventhub.alert
+  name                = format("%s-%s", azurerm_eventhub_namespace.this.name, upper(each.key))
+  description         = each.value.description
   resource_group_name = var.resource_group_name
   scopes              = [azurerm_eventhub_namespace.this.id]
-  description         = "Event Hub namespace availability is under threshold level. Runbook: -"
-  severity            = 1
-  frequency           = "PT5M"
+  frequency           = each.value.frequency
+  window_size         = each.value.window_size
   auto_mitigate       = false
   enabled             = true
-
-  criteria {
-    metric_namespace = "microsoft.eventhub/namespaces"
-    metric_name      = "HealthCheckStatus"
-    aggregation      = "Average"
-    operator         = "LessThan"
-    threshold        = 50
-  }
 
   dynamic "action" {
     for_each = var.action_group_id == null ? [] : ["dummy"]
     content {
       action_group_id = var.action_group_id
     }
+  }
+
+  criteria {
+    aggregation      = each.value.aggregation
+    metric_namespace = "microsoft.eventhub/namespaces"
+    metric_name      = each.value.metric_name
+    operator         = each.value.operator
+    threshold        = each.value.threshold
   }
 
   tags = var.tags

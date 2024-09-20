@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0"
+      version = ">= 3.111.0, <= 3.116.0"
     }
   }
 
@@ -55,7 +55,7 @@ resource "azurerm_eventhub" "events" {
   namespace_name      = azurerm_eventhub_namespace.this.name
   resource_group_name = var.resource_group_name
   partition_count     = each.value.partitions
-  message_retention   = each.value.message_retention
+  message_retention   = each.value.message_retention_days
 }
 
 resource "azurerm_eventhub_consumer_group" "consumer_group" {
