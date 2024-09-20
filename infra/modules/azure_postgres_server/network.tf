@@ -8,7 +8,7 @@ resource "azurerm_private_endpoint" "postgre_pep" {
     name                           = "${local.db_name_prefix}-psql-pep-${var.environment.instance_number}"
     private_connection_resource_id = azurerm_postgresql_flexible_server.this.id
     is_manual_connection           = false
-    subresource_names              = ["postgre"]
+    subresource_names              = ["postgresqlServer"]
   }
 
   private_dns_zone_group {
@@ -35,7 +35,7 @@ resource "azurerm_private_endpoint" "replica_postgre_pep" {
     name                           = "${local.db_name_prefix}-psql-pep-replica-${var.environment.instance_number}"
     private_connection_resource_id = azurerm_postgresql_flexible_server.replica[0].id
     is_manual_connection           = false
-    subresource_names              = ["postgre-replica"]
+    subresource_names              = ["postgresqlServer"]
   }
 
   private_dns_zone_group {
