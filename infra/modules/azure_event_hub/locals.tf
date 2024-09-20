@@ -7,7 +7,7 @@ locals {
 
   eventhub = {
     name     = "${local.app_name_prefix}-evhns-${var.environment.instance_number}"
-    sku_name = var.tier == "test" ? "Basic" : var.tier == "standard" ? "Standard" : "Premium"
+    sku_name = var.tier == "test" ? "Standard" : var.tier == "standard" ? "Standard" : "Premium"
     # Note: Basic SKU does not support private access
   }
 
