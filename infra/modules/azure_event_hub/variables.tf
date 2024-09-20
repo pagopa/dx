@@ -89,23 +89,14 @@ variable "action_group_id" {
 }
 
 variable "metric_alerts" {
-  description = <<EOD
-Map of name = criteria objects
-EOD
+  description = "Map of name = criteria objects"
 
   type = map(object({
-    # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]
-    aggregation = string
-    # https://learn.microsoft.com/en-us/azure/event-hubs/monitor-event-hubs-reference
-    metric_name = string
+    aggregation = string # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]
+    metric_name = string # https://learn.microsoft.com/en-us/azure/event-hubs/monitor-event-hubs-reference
     description = string
-    # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]
-    operator  = string
-    threshold = number
-    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H
-    frequency = string
-    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.
-    window_size = string
+    operator    = string # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]
+    threshold   = number
   }))
   default = {}
 }
