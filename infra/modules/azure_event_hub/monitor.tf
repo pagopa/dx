@@ -11,10 +11,9 @@ resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
   enabled             = true
 
   dynamic "action" {
-    for_each = var.action_group_id != null ? [var.action_group_id] : []
-
+    for_each = var.action_group_id == null ? [] : ["dummy"]
     content {
-      action_group_id = each.value
+      action_group_id = var.action_group_id
     }
   }
 
