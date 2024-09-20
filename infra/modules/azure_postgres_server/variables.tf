@@ -31,9 +31,9 @@ variable "resource_group_name" {
 }
 
 variable "db_version" {
-  type        = number
+  type        = string
   description = "The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
-  default     = 16
+  default     = "16"
 }
 
 #------------#
@@ -90,13 +90,13 @@ variable "backup_retention_days" {
 }
 
 variable "zone" {
-  type        = number
+  type        = string
   description = "(Optional) Specifies the Availability Zone in which the PostgreSQL Flexible Server should be located."
   default     = null
 }
 
 variable "replica_zone" {
-  type        = number
+  type        = string
   description = "(Optional) Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
   default     = null
 }
@@ -225,7 +225,7 @@ variable "alerts_enabled" {
 
 variable "alert_action" {
   description = "The ID of the Action Group and optional map of custom string properties to include with the post webhook operation."
-  type = set(object(
+  type = list(object(
     {
       action_group_id = string
     }
