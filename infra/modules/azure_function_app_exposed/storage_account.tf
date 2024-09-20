@@ -13,13 +13,3 @@ resource "azurerm_storage_account" "this" {
 
   tags = var.tags
 }
-
-# resource "azurerm_storage_account_network_rules" "st_network_rules" {
-#   storage_account_id = azurerm_storage_account.this.id
-#   default_action     = "Deny"
-#   bypass             = ["Metrics", "Logging", "AzureServices"]
-
-#   depends_on = [
-#     azurerm_linux_function_app.this
-#   ]
-# }
