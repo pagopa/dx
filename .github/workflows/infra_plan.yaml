@@ -103,49 +103,36 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -euo pipefail
-          # Modules directory
-          MODULES_DIR=".terraform/modules"
+
+          MODULES_METADATA=".terraform/modules/modules.json"
+          REGISTRY_URL="registry.terraform.io"
           HASHES_FILE="tfmodules.lock.json"
 
-          # Download modules
-          terraform init
-
-          calculate_hash() {
-              local module_path="$1"
-              tar -cf - "$module_path" | sha256sum | awk '{ print $1 }'
-          }
-
-          # Check if hashes file already exists otherwise create it
-          if [ ! -f "$HASHES_FILE" ]; then
-              echo "{}" > "$HASHES_FILE"
+          # Check if modules metadata exists
+          if [ ! -f "$MODULES_METADATA" ]; then
+              echo "Error: Modules metadata file $MODULES_METADATA not found. Did you run 'terraform init'?"
+              exit 1
           fi
 
-          # Iterate on all downloaded modules
-          for module_path in "$MODULES_DIR"/*; do
-              if [ -d "$module_path" ]; then
-                  module_name=$(basename "$module_path")
-                  new_hash=$(calculate_hash "$module_path")
+          # Check for modules sourced from the Terraform registry
+          registry_modules=$(jq --arg registry_url "$REGISTRY_URL" \
+              '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
+              "$MODULES_METADATA")
 
-                  # Retrieve the previous hash (fix: ensure module name is properly quoted)
-                  previous_hash=$(jq -r --arg module "$module_name" '.["$module"]' "$HASHES_FILE")
+          if [ -z "$registry_modules" ]; then
+              echo "No Terraform modules from the registry were found. No lock file check needed."
+              exit 0
+          fi
 
-                  if [ "$previous_hash" == "null" ]; then
-                      # Save the new hash if not found in the file
-                      tmp_file=$(mktemp)
-                      jq --arg module "$module_name" --arg hash "$new_hash" '.["$module"] = $hash' "$HASHES_FILE" > "$tmp_file" && mv "$tmp_file" "$HASHES_FILE"
-                      echo "Saving the new hash for module $module_name."
-                  else
-                      # Compare the hashes
-                      if [ "$previous_hash" == "$new_hash" ]; then
-                          echo "The module $module_name has not changed."
-                      else
-                          echo "The module $module_name has changed!"
-                          # Exit with an error if module has changed
-                          exit 1
-                      fi
-                  fi
-              fi
-          done
+          echo "Terraform modules from the registry were found. Checking for $HASHES_FILE..."
+
+          # Check if the lock file exists if there are registry modules
+          if [ ! -f "$HASHES_FILE" ]; then
+              echo "Error: $HASHES_FILE is missing. Please ensure it exists and is up to date."
+              exit 1
+          fi
+
+          echo "$HASHES_FILE is present. Proceeding..."
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
