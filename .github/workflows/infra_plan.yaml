@@ -98,7 +98,7 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
       
-      - uses: Terraform init and check modules hashes
+      - name: Terraform init and check modules hashes
         id: check-terraform-modules-hashes
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
