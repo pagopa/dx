@@ -98,8 +98,13 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
       
-      - name: Terraform init and check modules hashes
-        id: check-terraform-modules-hashes
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          terraform init
+
+      - name: Check terraform registry modules hashes
+        id: check-terraform-registry-modules-hashes
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -euo pipefail
