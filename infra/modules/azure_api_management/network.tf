@@ -5,7 +5,7 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
   zone_name           = data.azurerm_private_dns_zone.azure_api_net.name
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   ttl                 = 3600
-  records             = [azurerm_api_management.this.private_ip_addresses]
+  records             = azurerm_api_management.this.private_ip_addresses
 
   tags = var.tags
 }
@@ -15,7 +15,7 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
   zone_name           = data.azurerm_private_dns_zone.management_azure_api_net.name
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   ttl                 = 3600
-  records             = [azurerm_api_management.this.private_ip_addresses]
+  records             = azurerm_api_management.this.private_ip_addresses
 
   tags = var.tags
 }
@@ -25,7 +25,7 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   zone_name           = data.azurerm_private_dns_zone.scm_azure_api_net.name
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   ttl                 = 3600
-  records             = [azurerm_api_management.this.private_ip_addresses]
+  records             = azurerm_api_management.this.private_ip_addresses
 
   tags = var.tags
 }
