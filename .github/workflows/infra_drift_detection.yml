@@ -102,9 +102,10 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
+          set -euo pipefail
           terraform plan -no-color -detailed-exitcode -out=plan.tfplan | grep -v "hidden-link:"
 
-          if [ $? -eq 1 ]; then
+          if [ ${PIPESTATUS[0]} -eq 1 ]; then
             echo "::error::Terraform plan exited with an error"
             echo "drift_found=false" >> $GITHUB_OUTPUT
             exit 1
@@ -114,6 +115,14 @@ jobs:
         id: drift
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
+          set -euo pipefail
+
+          if [ ! -f plan.tfplan ]; then
+            echo "::error::Terraform plan file not found."
+            echo "drift_found=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
           terraform show -no-color -json plan.tfplan > plan.json
           NO_CHANGES=$(jq 'if .resource_changes then [.resource_changes[] | select(.change.actions | index("create") or index("update") or index("delete"))] | length else 0 end' plan.json)
 
@@ -174,13 +183,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "${{ job.status }}",
+              "text": "Drift Detected",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                    "text": ":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* has detected drift."
                   }
                 },
                 {
@@ -200,13 +209,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "${{ job.status }}",
+              "text": "Workflow Failed",
               "blocks": [
                 {
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": ":x: Something went wrong! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                      "text": ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
                     }
                 },
                 {
