@@ -143,33 +143,29 @@ jobs:
             exit 1
           fi
 
-      - name: Get workflow data
+      - name: Get Workflow Data
         id: workflow_data
-        run: |
-          workflow=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/actions/runs/${{ github.run_id }})
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = await github.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+            const data = run.data;
+            return {
+              workflow_url: data.html_url,
+              workflow_name: data.display_title,
+              repo_url: data.repository.html_url,
+              repo_name: data.repository.full_name,
+              commit_sha: data.head_sha,
+              commit_message: data.head_commit.message,
+              commit_url: `${data.repository.html_url}/commit/${data.head_sha}`,
+              committer_name: data.head_commit.committer.name
+            };
+          result-encoding: string
 
-          workflow_url=$(echo $workflow | jq -r '.html_url')
-          workflow_name=$(echo $workflow | jq -r '.display_title')
-          repo_url=$(echo $workflow | jq -r '.repository.html_url')
-          repo_name=$(echo $workflow | jq -r '.repository.full_name')
-          commit_sha=$(echo $workflow | jq -r '.head_sha')
-          commit_message=$(echo $workflow | jq -r '.head_commit.message')
-          committer_name=$(echo $workflow | jq -r '.head_commit.committer.name')
-
-          echo "workflow_url=${workflow_url}"  >> $GITHUB_OUTPUT
-          echo "workflow_name=${workflow_name}"  >> $GITHUB_OUTPUT
-          echo "repo_url=${repo_url}"  >> $GITHUB_OUTPUT
-          echo "repo_name=${repo_name}"  >> $GITHUB_OUTPUT
-          echo "commit_sha=${commit_sha}"  >> $GITHUB_OUTPUT
-          echo "commit_url=${repo_url}/commit/${commit_sha}"  >> $GITHUB_OUTPUT
-          echo "commit_message=${commit_message}"  >> $GITHUB_OUTPUT
-          echo "committer_name=${committer_name}"  >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
-      
       # Reference: https://github.com/slackapi/slack-github-action 
       - name: Drift Notification
         if: ${{ always() && env.SLACK_WEBHOOK_URL && steps.drift.outputs.drift_found == 'true' }}
@@ -178,27 +174,24 @@ jobs:
         with:
           payload: |
             {
-              "text":"${{ job.status }}",
-              "blocks":[
+              "text": "${{ job.status }}",
+              "blocks": [
                 {
-                    "type":"section",
-                    "text":{
-                      "type":"mrkdwn",
-                      "text":":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
-                    }
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                  }
                 },
                 {
-                    "type":"section",
-                    "text":{
-                      "type":"mrkdwn",
-                      "text":"* ${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
-                    }
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>"
+                  }
                 }
               ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: ${{ env.SLACK_WEBHOOK_TYPE }}
+            }        
 
       - name: Failure Notification
         if: ${{ failure() && env.SLACK_WEBHOOK_URL }}
@@ -207,24 +200,21 @@ jobs:
         with:
           payload: |
             {
-              "text":"${{ job.status }}",
-              "blocks":[
+              "text": "${{ job.status }}",
+              "blocks": [
                 {
-                    "type":"section",
-                    "text":{
-                      "type":"mrkdwn",
-                      "text":":x: Something went wrong! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": ":x: Something went wrong! *${{ steps.workflow_data.outputs.workflow_name }}* action is ${{ job.status }}"
                     }
                 },
                 {
-                    "type":"section",
-                    "text":{
-                      "type":"mrkdwn",
-                      "text":"Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
                     }
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: ${{ env.SLACK_WEBHOOK_TYPE }}
