@@ -61,6 +61,7 @@ variable "products" {
 
 variable "apis" {
   type = list(object({
+    name                             = string
     api_version                      = optional(string, null) # The Version number of this API, if this API is versioned
     oauth2_authorization_server_name = optional(string, null)
     revision                         = optional(string, 1)
@@ -86,6 +87,8 @@ variable "apis" {
       }
     )), [])
   }))
+  description = "values for API Management API"
+  default     = []
 }
 
 variable "autoscale" {

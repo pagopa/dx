@@ -42,3 +42,8 @@ output "logger_id" {
 output "product_ids" {
   value = [for p in azurerm_api_management_product.apim_product : p.id]
 }
+
+# APIs
+output "api_ids" {
+  value = [for a in azurerm_api_management_api.this : a.id]
+}
