@@ -112,15 +112,25 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:"  | tee plan_output.txt
+          EXIT_CODE=${PIPESTATUS[0]}
 
-          OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
+          OUTPUT=$(grep -Ev "hidden-link:|Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
 
           printf "%s" "$OUTPUT" > plan_output_multiline.txt
 
-          if grep -q "::error::Terraform exited with code" plan_output.txt; then
-            echo "failed"
+          # exit 1 if the plan failed
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "Terraform plan failed with exit code $EXIT_CODE"
             exit 1
           fi
+
+      # Upload full Terraform plan output as artifact
+      - name: Upload Terraform Plan Artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan-${{ steps.directory.outputs.dir }}
+          path: ${{ steps.directory.outputs.dir }}/plan_output_multiline.txt
 
       # Post the plan output in the PR
       # The plan output is posted in a comment in the PR
@@ -133,6 +143,10 @@ jobs:
             const fs = require('fs');
             const output = fs.readFileSync('${{ steps.directory.outputs.dir }}/plan_output_multiline.txt', 'utf8');
             const status = '${{ steps.plan.outcome }}'
+
+            // Construct the artifacts URL
+            const artifactsUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}/artifacts`;
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -150,6 +164,9 @@ jobs:
             \`\`\`
 
             </details>
+
+            **[Full Terraform plan output](<${artifactsUrl}>)**
+
             `;
             if (botComment) {
               await github.rest.issues.deleteComment({
