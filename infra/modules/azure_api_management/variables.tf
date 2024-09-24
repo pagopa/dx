@@ -56,7 +56,36 @@ variable "products" {
     xml_policy   = optional(string)
   }))
   default     = []
-  description = "List of products to create"
+  description = "(Optional) List of products to create"
+}
+
+variable "apis" {
+  type = list(object({
+    api_version                      = optional(string, null) # The Version number of this API, if this API is versioned
+    oauth2_authorization_server_name = optional(string, null)
+    revision                         = optional(string, 1)
+    revision_description             = optional(string, null)
+    display_name                     = string
+    description                      = optional(string, null)
+    api_type                         = optional(string, "http") # (Optional) Type of API. Possible values are graphql, http, soap, and websocket. Defaults to http
+    path                             = string
+    protocols                        = list(string)
+    service_url                      = string
+    subscription_required            = optional(bool, false)            # Should this API require a subscription key?
+    version_set_id                   = optional(string, null)           # The ID of the Version Set which this API is associated with
+    content_format                   = optional(string, "swagger-json") # The format of the content from which the API Definition should be imported
+    content_value                    = string                           # The Content from which the API Definition should be imported
+    subscription_key_names = optional(object({                          # Override the default name of the header and query string containing the subscription key header
+      header = string
+      query  = string
+    }), null)
+    xml_content = optional(string, null)
+    api_operation_policies = optional(list(object({ # List of api policy for given operation
+      operation_id = string
+      xml_content  = string
+      }
+    )), [])
+  }))
 }
 
 variable "autoscale" {

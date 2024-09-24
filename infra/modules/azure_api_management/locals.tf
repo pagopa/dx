@@ -22,4 +22,28 @@ locals {
     ]
   ]) : []
   products_xml = length(var.products) > 0 ? { for p in var.products : p.id => p.xml_policy if p.xml_policy != null } : {}
+
+  # APIs
+  apis_config = length(var.apis) > 0 ? {
+    for a in var.apis :
+    a.api_version != null ? "${local.apim_name_prefix}-${a.name}-${var.environment.instance_number}-${a.api_version}" : "${local.apim_name_prefix}-${a.name}-${var.environment.instance_number}" => a
+  } : {}
+  apis_xml = length(var.apis) > 0 ? { for k, v in local.apis_config : k => v.xml_policy if v.xml_policy != null } : {}
+  apis_products = length(var.apis) > 0 ? flatten([
+    for k, v in local.apis_config : [
+      for p in var.products : {
+        api_name   = k
+        product_id = p
+      }
+    ]
+  ]) : []
+  apis_operation_policies = length(var.apis) > 0 ? flatten([
+    for k, v in local.apis_config : [
+      for a in v.api_operation_policies : {
+        api_name     = k
+        operation_id = v.api_version != null ? "${a.operation_id}${v.api_version}" : a.operation_id
+        xml_content  = a.xml_content
+      }
+    ]
+  ]) : []
 }
