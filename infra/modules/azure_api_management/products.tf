@@ -25,11 +25,11 @@ resource "azurerm_api_management_product_policy" "this" {
 }
 
 resource "azurerm_api_management_product_group" "this" {
-  for_each = local.products_groups
+  count = length(local.products_groups)
 
-  product_id          = each.value.product_id
+  product_id          = local.products_groups[count.index].product_id
   api_management_name = azurerm_api_management.this.name
-  group_name          = each.value.group_name
+  group_name          = local.products_groups[count.index].group_name
 
   resource_group_name = var.resource_group_name
 
