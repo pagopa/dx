@@ -47,6 +47,18 @@ variable "zones" {
   description = "List of availability zones (supported only for Premium SKU)"
 }
 
+variable "products" {
+  type = list(object({
+    id           = string
+    display_name = string
+    description  = string
+    groups       = optional(list(string))
+    xml_policy   = optional(string)
+  }))
+  default     = []
+  description = "List of products to create"
+}
+
 variable "autoscale" {
   type = object(
     {

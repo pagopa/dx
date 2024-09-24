@@ -10,4 +10,9 @@ locals {
     autoscale_name = var.tier == "premium" ? "${local.apim_name_prefix}-apim-autoscale-${var.environment.instance_number}" : null
     sku_name       = var.tier == "test" ? "Developer_1" : var.tier == "standard" ? "Standard_1" : "Premium_1"
   }
+
+  # Products
+  products_config = length(var.products) > 0 ? { for p in var.products : p.id => p } : {}
+  products_groups = length(var.products) > 0 ? { for p in var.products : p.id => p.groups } : {}
+  products_xml    = length(var.products) > 0 ? { for p in var.products : p.id => p.xml_policy } : {}
 }
