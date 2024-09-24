@@ -28,7 +28,7 @@ locals {
     for a in var.apis :
     a.api_version != null ? "${local.apim_name_prefix}-${a.name}-${var.environment.instance_number}-${a.api_version}" : "${local.apim_name_prefix}-${a.name}-${var.environment.instance_number}" => a
   } : {}
-  apis_xml = length(var.apis) > 0 ? { for k, v in local.apis_config : k => v.xml_policy if v.xml_policy != null } : {}
+  apis_xml = length(var.apis) > 0 ? { for k, v in local.apis_config : k => v.xml_content if v.xml_content != null } : {}
   apis_products = length(var.apis) > 0 ? flatten([
     for k, v in local.apis_config : [
       for p in var.products : {
