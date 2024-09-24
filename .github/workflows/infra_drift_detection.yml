@@ -191,7 +191,7 @@ jobs:
 
       # Reference: https://github.com/slackapi/slack-github-action 
       - name: Drift Notification
-        if: ${{ success() && steps.drift.outputs.drift_found == 'true' }}
+        if: ${{ always() && steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e #v1.26.0
         with:
