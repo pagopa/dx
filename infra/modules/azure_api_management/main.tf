@@ -105,7 +105,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = var.tier == "Premium" && var.autoscale != null && var.autoscale.enabled ? 1 : 0
+  count               = var.tier == "premium" && var.autoscale != null && var.autoscale.enabled ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location
