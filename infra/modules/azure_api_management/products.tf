@@ -12,7 +12,7 @@ resource "azurerm_api_management_product" "apim_product" {
 }
 
 resource "azurerm_api_management_product_policy" "this" {
-  for_each = local.products_xml != {} ? local.products_xml : {}
+  for_each = local.products_xml
 
   product_id          = each.key
   api_management_name = azurerm_api_management.this.name
@@ -25,11 +25,11 @@ resource "azurerm_api_management_product_policy" "this" {
 }
 
 resource "azurerm_api_management_product_group" "this" {
-  for_each = local.products_groups != {} ? local.products_groups : {}
+  for_each = local.products_groups
 
-  product_id          = each.key
+  product_id          = each.value.product_id
   api_management_name = azurerm_api_management.this.name
-  group_name          = each.key
+  group_name          = each.value.group_name
 
   resource_group_name = var.resource_group_name
 

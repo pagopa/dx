@@ -13,6 +13,13 @@ locals {
 
   # Products
   products_config = length(var.products) > 0 ? { for p in var.products : p.id => p } : {}
-  products_groups = length(var.products) > 0 ? { for p in var.products : p.id => p.groups } : {}
-  products_xml    = length(var.products) > 0 ? { for p in var.products : p.id => p.xml_policy } : {}
+  products_groups = length(var.products) > 0 ? flatten([
+    for product in var.products : [
+      for group in(product.groups != null ? product.groups : []) : {
+        group_name = group
+        product_id = product.id
+      }
+    ]
+  ]) : []
+  products_xml = length(var.products) > 0 ? { for p in var.products : p.id => p.xml_policy if p.xml_policy != null } : {}
 }
