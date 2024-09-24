@@ -56,7 +56,10 @@ resource "azurerm_api_management_product_api" "this" {
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
 
-  depends_on = [azurerm_api_management_api.this]
+  depends_on = [
+    azurerm_api_management_api.this,
+    azurerm_api_management_product.apim_product
+  ]
 }
 
 resource "azurerm_api_management_api_operation_policy" "api_operation_policy" {
