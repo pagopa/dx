@@ -33,7 +33,7 @@ locals {
     for k, v in local.apis_config : [
       for p in var.products : {
         api_name   = k
-        product_id = p
+        product_id = p.id
       }
     ]
   ]) : []
