@@ -19,7 +19,6 @@ on:
         required: false
         default: false
 
-
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -77,11 +76,11 @@ jobs:
             printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
         name: Checkout
 
       - name: Azure Login
-        uses: azure/login@v2 # v2.0.0
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v2
         with:
           client-id: ${{ env.ARM_CLIENT_ID }}
           tenant-id: ${{ env.ARM_TENANT_ID }}
@@ -99,16 +98,16 @@ jobs:
           fi
           echo "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
 
-      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # pin@v3.0.0
         name: Setup Terraform
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
-  
+
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init
-          
+
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
       # The step never fails but the result is checked in the next step
@@ -154,11 +153,11 @@ jobs:
             TO_ADD=$(jq '[.resource_changes[] | select(.change.actions | index("create"))] | length' plan.json)
             TO_CHANGE=$(jq '[.resource_changes[] | select(.change.actions | index("update"))] | length' plan.json)
             TO_DESTROY=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' plan.json)
-          
+
             echo " - Resources to add: $TO_ADD"
             echo " - Resources to change: $TO_CHANGE"
             echo " - Resources to destroy: $TO_DESTROY"
-          
+
             # Save the variables in the environment for use in the next steps
             echo "TO_ADD=$TO_ADD" >> $GITHUB_ENV
             echo "TO_CHANGE=$TO_CHANGE" >> $GITHUB_ENV
@@ -168,7 +167,7 @@ jobs:
 
       - name: Get Workflow Data in order to send notifications
         id: workflow_data
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # pin@v7
         with:
           script: |
             const run = await github.actions.getWorkflowRun({
@@ -193,7 +192,7 @@ jobs:
       - name: Drift Notification
         if: ${{ always() && steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e #v1.26.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
         with:
           payload: |
             {
@@ -219,7 +218,7 @@ jobs:
       - name: Failure Notification
         if: ${{ failure() }}
         id: failure_notify
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e #v1.26.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
         with:
           payload: |
             {
