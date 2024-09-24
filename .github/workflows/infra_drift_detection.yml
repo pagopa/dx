@@ -166,6 +166,7 @@ jobs:
         continue-on-error: true
 
       - name: Get Workflow Data in order to send notifications
+        if: ${{ steps.drift.outputs.drift_found == 'true' || failure() }}
         id: workflow_data
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # pin@v7
         with:
@@ -190,7 +191,7 @@ jobs:
 
       # Reference: https://github.com/slackapi/slack-github-action 
       - name: Drift Notification
-        if: ${{ always() && steps.drift.outputs.drift_found == 'true' }}
+        if: ${{ steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
         with:
