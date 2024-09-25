@@ -38,5 +38,5 @@ jobs:
           version: yarn run version
           publish: yarn run release
         env:
-          GITHUB_TOKEN: ${{ secrets.CHANGESET_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

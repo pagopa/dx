@@ -48,4 +48,4 @@ jobs:
         uses: ./.github/actions/push-module
         with:
           module: ${{ matrix.module }}
-          github_pat: ${{ secrets.SPLIT_MODULES_GH_TOKEN }}
+          github_pat: ${{ secrets.BOT_GH_TOKEN }}
