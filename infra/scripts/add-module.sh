@@ -30,28 +30,14 @@ DX_PREFIX="dx"
 SUBREPO_NAME="terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME"
 MODULE_DIR="infra/modules/$MODULE_NAME"
 
-# Check if the module directory already exists
-if [ -d "$MODULE_DIR" ]; then
-  echo "Error: Module '$MODULE_NAME' already exists in the 'modules' folder."
+# Check if the module directory exists
+if [ ! -d "$MODULE_DIR" ]; then
+  echo "Error: Module directory '$MODULE_DIR' does not exist."
   exit 1
 fi
 
-# Create the module directory
-mkdir -p "$MODULE_DIR"
-
-# Create package.json file in the module directory
-PACKAGE_JSON="$MODULE_DIR/package.json"
-cat <<EOL > "$PACKAGE_JSON"
-{
-  "name": "$MODULE_NAME",
-  "version": "0.0.1",
-  "private": true,
-  "provider": "$PROVIDER"
-}
-EOL
-
 # Provide feedback
-echo "Module '$MODULE_NAME' has been created in the 'modules'."
+echo "Module directory '$MODULE_DIR' exists. Proceeding with repository initialization."
 
 # If --gh-org was passed, ask for confirmation to create the GitHub repository
 if [ -n "$ORG_NAME" ]; then
@@ -74,11 +60,22 @@ if [ -n "$ORG_NAME" ]; then
 
   if [ $? -eq 0 ]; then
     echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"
+    echo "Please, ask the DevEx members to edit the dx-pagopa-bot PAT adding the new repository"
     
     # Initialize Git in the module directory and push to the new repository
     cd "$MODULE_DIR"
     git init
     git remote add origin https://github.com/$ORG_NAME/$SUBREPO_NAME.git
+    # Create .gitignore to exclude .terraform and other unnecessary files
+    cat <<EOL > ".gitignore"
+    .terraform/
+    .terraform.lock.hcl
+    *.tfstate
+    *.tfstate.backup
+    EOL
+
+    # Add files to Git, but ignore .terraform directory
+    git add .gitignore
     git add .
     git commit -m "Initial commit for module $MODULE_NAME"
     git branch -M main
