@@ -46,12 +46,13 @@ variable "health_check_path" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 'premium', 'standard', 'test'. Note, \"test\" does not support deployment slots."
-  default     = "premium"
+  description = "Resource tiers depending on workload. Allowed values are 'xs', 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
+
+  default = "l"
 
   validation {
-    condition     = contains(["premium", "standard", "test"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"premium\", \"standard\", or \"test\". Note, \"test\" does not support deployment slots."
+    condition     = contains(["xs", "s", "m", "l", "xl", "premium", "standard", "test"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"xs\", \"s\", \"m\", \"l\", \"xl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
   }
 }
 
