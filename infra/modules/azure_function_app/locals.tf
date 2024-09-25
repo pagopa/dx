@@ -4,11 +4,6 @@ locals {
   domain          = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
   app_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
 
-  # For backwards compatibility
-  # If no legacy value is passed, use the original value
-  # TO DO: Remove this in the next major release and replace all local.tier with var.tier
-  tier = var.tier == "test" ? "s" : var.tier == "standard" ? "m" : var.tier == "premium" ? "l" : var.tier
-
   subnet = {
     enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
       var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
@@ -25,13 +20,13 @@ locals {
 
   function_app = {
     name                   = "${local.app_name_prefix}-func-${var.environment.instance_number}"
-    sku_name               = local.tier == "s" ? "B1" : local.tier == "m" ? "P0v3" : local.tier == "l" ? "P1v3" : local.tier == "xl" ? "P2mv3" : "B1"
+    sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
     pep_sites              = "${local.app_name_prefix}-func-pep-${var.environment.instance_number}"
     pep_sites_staging      = "${local.app_name_prefix}-staging-func-pep-${var.environment.instance_number}"
     alert                  = "${local.app_name_prefix}-func-${var.environment.instance_number}] Health Check Failed"
-    worker_process_count   = local.tier == "s" ? "2" : local.tier == "m" ? "4" : local.tier == "l" ? "8" : local.tier == "xl" ? "8" : "2"
+    worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
   function_app_slot = {
