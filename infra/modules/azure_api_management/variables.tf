@@ -76,6 +76,7 @@ variable "apis" {
     version_set_id                   = optional(string, null)           # The ID of the Version Set which this API is associated with
     content_format                   = optional(string, "swagger-json") # The format of the content from which the API Definition should be imported
     content_value                    = string                           # The Content from which the API Definition should be imported
+    product_ids                      = optional(list(string), [])       # List of products this API should be associated with (Optional) if not specified, all products will be associated
     subscription_key_names = optional(object({                          # Override the default name of the header and query string containing the subscription key header
       header = string
       query  = string
