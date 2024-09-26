@@ -42,6 +42,8 @@ resource "azurerm_linux_function_app" "this" {
       WEBSITE_DNS_SERVER = "168.63.129.16"
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
+      # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
+      FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
     },
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length(local.function_app.name) > 32 && !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},

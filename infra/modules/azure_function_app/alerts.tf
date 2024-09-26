@@ -1,5 +1,5 @@
 resource "azurerm_monitor_metric_alert" "function_app_health_check" {
-  count = var.tier == "test" ? 0 : 1
+  count = local.tier == "s" ? 0 : 1
 
   name                = local.function_app.alert
   resource_group_name = var.resource_group_name
@@ -29,7 +29,7 @@ resource "azurerm_monitor_metric_alert" "function_app_health_check" {
 }
 
 resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
-  count = var.tier == "test" ? 0 : 1
+  count = local.tier == "s" ? 0 : 1
 
   name                = local.storage_account.alert
   resource_group_name = var.resource_group_name
