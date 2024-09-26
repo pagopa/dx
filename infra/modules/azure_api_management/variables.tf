@@ -47,56 +47,6 @@ variable "zones" {
   description = "List of availability zones (supported only for Premium SKU)"
 }
 
-variable "products" {
-  type = list(object({
-    id           = string
-    display_name = string
-    description  = string
-    groups       = optional(list(string))
-    xml_policy   = optional(string)
-  }))
-  default     = []
-  description = "(Optional) List of products to create"
-
-  validation {
-    condition     = length(var.products) == length(distinct([for p in var.products : p.id]))
-    error_message = "Product IDs must be unique."
-  }
-}
-
-variable "apis" {
-  type = list(object({
-    name                             = string
-    api_version                      = optional(string, null) # The Version number of this API, if this API is versioned
-    oauth2_authorization_server_name = optional(string, null)
-    revision                         = optional(string, "1")
-    revision_description             = optional(string, null)
-    display_name                     = string
-    description                      = optional(string, null)
-    api_type                         = optional(string, "http") # (Optional) Type of API. Possible values are graphql, http, soap, and websocket. Defaults to http
-    path                             = string
-    protocols                        = list(string)
-    service_url                      = string
-    subscription_required            = optional(bool, false)            # Should this API require a subscription key?
-    version_set_id                   = optional(string, null)           # The ID of the Version Set which this API is associated with
-    content_format                   = optional(string, "swagger-json") # The format of the content from which the API Definition should be imported
-    content_value                    = string                           # The Content from which the API Definition should be imported
-    product_ids                      = optional(list(string), [])       # List of products this API should be associated with (Optional) if not specified, all products will be associated
-    subscription_key_names = optional(object({                          # Override the default name of the header and query string containing the subscription key header
-      header = string
-      query  = string
-    }), null)
-    xml_content = optional(string, null)
-    api_operation_policies = optional(list(object({ # List of api policy for given operation
-      operation_id = string
-      xml_content  = string
-      }
-    )), [])
-  }))
-  description = "values for API Management API"
-  default     = []
-}
-
 variable "autoscale" {
   type = object(
     {
