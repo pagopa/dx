@@ -19,7 +19,7 @@ locals {
 
   # SKU name mapping
   sku_name_mapping = {
-    "xs" = "B1"
+    "xs" = "F1"
     "s"  = "B1"
     "m"  = "P0v3"
     "l"  = "P1v3"
@@ -28,7 +28,7 @@ locals {
 
   # Worker process count based on tier
   worker_process_count_mapping = {
-    "xs" = 2
+    "xs" = 1
     "s"  = 2
     "m"  = 4
     "l"  = 8
