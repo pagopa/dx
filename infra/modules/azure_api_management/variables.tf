@@ -401,7 +401,7 @@ EOD
 }
 
 variable "action" {
-  description = "The ID of the Action Group and optional map of custom string properties to include with the post webhook operation."
+  description = "The ID of the Action Group of custom string properties to include with the post webhook operation."
   type = set(object(
     {
       action_group_id = string
