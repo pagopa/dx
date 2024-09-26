@@ -29,9 +29,9 @@ locals {
   # Worker process count based on tier
   worker_process_count_mapping = {
     "xs" = 1
-    "s"  = 2
-    "m"  = 4
-    "l"  = 8
-    "xl" = 8
+    "s"  = 1
+    "m"  = 1
+    "l"  = 2
+    "xl" = 4
   }
 }
