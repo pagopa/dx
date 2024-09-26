@@ -6,7 +6,7 @@ resource "azurerm_api_management_logger" "this" {
   resource_group_name = var.resource_group_name
 
   dynamic "application_insights" {
-    for_each = var.management_logger_applicaiton_insight_enabled ? [1] : []
+    for_each = var.management_logger_application_insight_enabled ? [1] : []
     content {
       instrumentation_key = var.application_insights.instrumentation_key
     }
@@ -30,42 +30,34 @@ resource "azurerm_api_management_diagnostic" "this" {
 
 
   dynamic "backend_request" {
-    for_each = var.diagnostic_backend_request
+    for_each = var.diagnostic_backend_request != null ? ["dummy"] : []
     content {
-      # body_bytes - (optional) is a type of number
-      body_bytes = backend_request.value["body_bytes"]
-      # headers_to_log - (optional) is a type of set of string
-      headers_to_log = backend_request.value["headers_to_log"]
+      body_bytes     = var.diagnostic_backend_request.body_bytes
+      headers_to_log = var.diagnostic_backend_request.headers_to_log
     }
   }
 
   dynamic "backend_response" {
-    for_each = var.diagnostic_backend_response
+    for_each = var.diagnostic_backend_response != null ? ["dummy"] : []
     content {
-      # body_bytes - (optional) is a type of number
-      body_bytes = backend_response.value["body_bytes"]
-      # headers_to_log - (optional) is a type of set of string
-      headers_to_log = backend_response.value["headers_to_log"]
+      body_bytes     = var.diagnostic_backend_response.body_bytes
+      headers_to_log = var.diagnostic_backend_response.headers_to_log
     }
   }
 
   dynamic "frontend_request" {
-    for_each = var.diagnostic_frontend_request
+    for_each = var.diagnostic_frontend_request != null ? ["dummy"] : []
     content {
-      # body_bytes - (optional) is a type of number
-      body_bytes = frontend_request.value["body_bytes"]
-      # headers_to_log - (optional) is a type of set of string
-      headers_to_log = frontend_request.value["headers_to_log"]
+      body_bytes     = var.diagnostic_frontend_request.body_bytes
+      headers_to_log = var.diagnostic_frontend_request.headers_to_log
     }
   }
 
   dynamic "frontend_response" {
-    for_each = var.diagnostic_frontend_response
+    for_each = var.diagnostic_frontend_response != null ? ["dummy"] : []
     content {
-      # body_bytes - (optional) is a type of number
-      body_bytes = frontend_response.value["body_bytes"]
-      # headers_to_log - (optional) is a type of set of string
-      headers_to_log = frontend_response.value["headers_to_log"]
+      body_bytes     = var.diagnostic_frontend_response.body_bytes
+      headers_to_log = var.diagnostic_frontend_response.headers_to_log
     }
   }
 }

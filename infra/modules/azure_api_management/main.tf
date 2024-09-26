@@ -82,12 +82,6 @@ resource "azurerm_api_management" "this" {
   }
 
   tags = var.tags
-
-  lifecycle {
-    ignore_changes = [
-      sku_name,
-    ]
-  }
 }
 
 #--------#
@@ -194,5 +188,5 @@ resource "azurerm_management_lock" "this" {
   name       = "${azurerm_api_management.this.name}-lock"
   scope      = azurerm_api_management.this.id
   lock_level = "CanNotDelete"
-  notes      = "This items can't be deleted in this subscription!"
+  notes      = "This item can't be deleted in this subscription!"
 }

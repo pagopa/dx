@@ -49,10 +49,12 @@ resource "azurerm_api_management_api_policy" "this" {
 }
 
 resource "azurerm_api_management_product_api" "this" {
-  count = length(local.apis_products)
+  for_each = {
+    for p in local.apis_products : "${p.product_id}-${p.api_name}" => p
+  }
 
-  product_id          = local.apis_products[count.index].product_id
-  api_name            = local.apis_products[count.index].api_name
+  product_id          = each.value.product_id
+  api_name            = each.value.api_name
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
 
@@ -63,14 +65,16 @@ resource "azurerm_api_management_product_api" "this" {
 }
 
 resource "azurerm_api_management_api_operation_policy" "api_operation_policy" {
-  count = length(local.apis_operation_policies)
+  for_each = {
+    for op in local.apis_operation_policies : "${op.api_name}-${op.operation_id}" => op
+  }
 
-  api_name            = local.apis_operation_policies[count.index].api_name
+  api_name            = each.value.api_name
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
-  operation_id        = local.apis_operation_policies[count.index].operation_id
+  operation_id        = each.value.operation_id
 
-  xml_content = local.apis_operation_policies[count.index].xml_content
+  xml_content = each.value.xml_content
 
   depends_on = [azurerm_api_management_api.this]
 }

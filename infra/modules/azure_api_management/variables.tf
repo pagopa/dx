@@ -57,6 +57,11 @@ variable "products" {
   }))
   default     = []
   description = "(Optional) List of products to create"
+
+  validation {
+    condition     = length(var.products) == length(distinct([for p in var.products : p.id]))
+    error_message = "Product IDs must be unique."
+  }
 }
 
 variable "apis" {
@@ -64,7 +69,7 @@ variable "apis" {
     name                             = string
     api_version                      = optional(string, null) # The Version number of this API, if this API is versioned
     oauth2_authorization_server_name = optional(string, null)
-    revision                         = optional(string, 1)
+    revision                         = optional(string, "1")
     revision_description             = optional(string, null)
     display_name                     = string
     description                      = optional(string, null)
@@ -226,7 +231,7 @@ variable "certificate_names" {
 variable "lock_enable" {
   type        = bool
   default     = false
-  description = "Apply lock to block accedentaly deletions."
+  description = "Apply lock to block accidental deletions."
 }
 
 
@@ -250,6 +255,10 @@ variable "diagnostic_sampling_percentage" {
   type        = number
   default     = 5.0
   description = "Sampling (%). For high traffic APIs, please read the documentation to understand performance implications and log sampling. Valid values are between 0.0 and 100.0."
+  validation {
+    condition     = var.diagnostic_sampling_percentage >= 0.0 && var.diagnostic_sampling_percentage <= 100.0
+    error_message = "The diagnostic_sampling_percentage must be between 0.0 and 100.0."
+  }
 }
 
 variable "diagnostic_always_log_errors" {
@@ -268,56 +277,64 @@ variable "diagnostic_http_correlation_protocol" {
   type        = string
   default     = "W3C"
   description = "The HTTP Correlation Protocol to use. Possible values are None, Legacy or W3C."
+  validation {
+    condition     = contains(["None", "Legacy", "W3C"], var.diagnostic_http_correlation_protocol)
+    error_message = "The diagnostic_http_correlation_protocol must be one of: None, Legacy, W3C."
+  }
 }
 
 variable "diagnostic_verbosity" {
   type        = string
   default     = "error"
   description = "Logging verbosity. Possible values are verbose, information or error."
+  validation {
+    condition     = contains(["verbose", "information", "error"], var.diagnostic_verbosity)
+    error_message = "The diagnostic_verbosity must be one of: verbose, information, error."
+  }
 }
 
 variable "diagnostic_backend_request" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log, min items: 0, max items: 1"
-  type = set(object(
+  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
+  type = object(
     {
-      body_bytes     = number
-      headers_to_log = set(string)
+      body_bytes     = number      # body_bytes - (optional) is a type of number
+      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
     }
-  ))
-  default = []
+  )
+  default = null
 }
 
 variable "diagnostic_backend_response" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log, min items: 0, max items: 1"
-  type = set(object(
+  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
+  type = object(
     {
-      body_bytes     = number
-      headers_to_log = set(string)
+      body_bytes     = number      # body_bytes - (optional) is a type of number
+      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
     }
-  ))
-  default = []
+  )
+  default = null
 }
 
 variable "diagnostic_frontend_request" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log, min items: 0, max items: 1"
-  type = set(object(
+  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
+  type = object(
     {
-      body_bytes     = number
-      headers_to_log = set(string)
+      body_bytes     = number      # body_bytes - (optional) is a type of number
+      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
     }
-  ))
-  default = []
+  )
+  default = null
 }
 
 variable "diagnostic_frontend_response" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log, min items: 0, max items: 1"
-  type = set(object(
+  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
+  type = object(
     {
-      body_bytes     = number
-      headers_to_log = set(string)
+      body_bytes     = number      # body_bytes - (optional) is a type of number
+      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
     }
-  ))
-  default = []
+  )
+  default = null
 }
 
 
@@ -412,7 +429,7 @@ variable "sec_storage_id" {
 }
 
 
-variable "management_logger_applicaiton_insight_enabled" {
+variable "management_logger_application_insight_enabled" {
   type        = bool
   description = "(Optional) if false, disables management logger application insight block"
   default     = true
