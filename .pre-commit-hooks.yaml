@@ -3,6 +3,4 @@
   description: Create the file that contains terraform registry modules hashes
   entry: infra/scripts/lock-modules.sh
   language: script
-  require_serial: true
   files: \.(tf(vars)?|hcl)$
-  exclude: \.terraform/.*$
