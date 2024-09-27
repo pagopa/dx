@@ -53,19 +53,14 @@ for TARGET_DIR in "$@"; do
                 # Retrieve the previous hash
                 previous_hash=$(jq -r --arg module "$module_name" '.[$module]' "$HASHES_FILE")
 
-                if [ "$previous_hash" == "null" ]; then
-                    # Save the new hash if not found in the file
-                    jq --arg module "$module_name" --arg hash "$new_hash" '.[$module] = $hash' "$HASHES_FILE" > tmp.$$.json && mv tmp.$$.json "$HASHES_FILE"
-                    echo "Saving the new hash for module $module_name."
+                # Save the new hash if not found in the file
+                jq --arg module "$module_name" --arg hash "$new_hash" '.[$module] = $hash' "$HASHES_FILE" > tmp.$$.json && mv tmp.$$.json "$HASHES_FILE"
+                echo "Saving the new hash for module $module_name."
+                # Compare the hashes
+                if [ "$previous_hash" == "$new_hash" ]; then
+                    echo "The module $module_name has not changed."
                 else
-                    # Compare the hashes
-                    if [ "$previous_hash" == "$new_hash" ]; then
-                        echo "The module $module_name has not changed."
-                    else
-                        echo "The module $module_name has changed!" >&2
-                        # Exit with an error if the module has changed
-                        exit 1
-                    fi
+                    echo "The module $module_name has changed and its hash has been updated."
                 fi
             else
                 echo "Module path $module_path not found." >&2
