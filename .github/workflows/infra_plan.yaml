@@ -158,7 +158,7 @@ jobs:
                   # Retrieve the previous hash
                   previous_hash=$(jq -r --arg module "$module_name" '.[$module]' "$HASHES_FILE")
 
-                  if [ "$previous_hash" == "null" ]; then
+if [ "$previous_hash" = "null" ] || [ -z "$previous_hash" ]; then
                       # The hash for the current module is not found
                       echo "Error: the hash for module $module_name is missing in $HASHES_FILE. Please ensure it exists and is up to date."
                       exit 1
