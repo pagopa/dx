@@ -15,9 +15,11 @@ calculate_hash() {
 # If no arguments are passed, set a default value (e.g., current directory)
 if [ "$#" -eq 0 ]; then
     echo "No directories specified. Exiting."
-    $TARGET_DIR = $PWD
+    TARGET_DIR="$PWD"
 fi
-$BASE_DIR = $PWD
+
+BASE_DIR="$PWD"
+
 # Iterate over all provided directories
 for TARGET_DIR in "$@"; do
     # Add your logic here to handle each directory
