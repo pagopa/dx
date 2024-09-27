@@ -7,8 +7,26 @@ HASHES_FILE="tfmodules.lock.json"
 MODULES_METADATA=".terraform/modules/modules.json"
 REGISTRY_URL="registry.terraform.io"
 
+# Optional: Add a flag to skip terraform init if needed
+SKIP_INIT=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-init)
+            SKIP_INIT=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
 # Ensure Terraform is initialized and modules are downloaded
-terraform init
+if ! $SKIP_INIT; then
+    terraform init >&2
+fi
 
 calculate_hash() {
     local module_path="$1"
@@ -22,7 +40,7 @@ fi
 
 # Check if modules metadata exists
 if [ ! -f "$MODULES_METADATA" ]; then
-    echo "Modules metadata file not found. Ensure that 'terraform init' has been run."
+    echo "Modules metadata file not found. Ensure that 'terraform init' has been run." >&2
     exit 1
 fi
 
@@ -49,12 +67,12 @@ jq -r --arg registry_url "$REGISTRY_URL" \
             if [ "$previous_hash" == "$new_hash" ]; then
                 echo "The module $module_name has not changed."
             else
-                echo "The module $module_name has changed!"
+                echo "The module $module_name has changed!" >&2
                 # Exit with an error if the module has changed
                 exit 1
             fi
         fi
     else
-        echo "Module path $module_path not found."
+        echo "Module path $module_path not found." >&2
     fi
 done
