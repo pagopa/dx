@@ -3,4 +3,3 @@
   description: Create the file that contains terraform registry modules hashes
   entry: infra/scripts/lock-modules.sh
   language: script
-  files: \.(tf(vars)?|hcl)$
