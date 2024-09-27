@@ -203,7 +203,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: Drift detected! *${{ steps.workflow_data.outputs.workflow_name }}* has detected drift."
+                    "text": ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
                   }
                 },
                 {
