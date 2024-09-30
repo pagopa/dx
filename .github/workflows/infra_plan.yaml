@@ -130,7 +130,7 @@ jobs:
         id: artifact-upload-step
         uses: actions/upload-artifact@v3
         with:
-          name: terraform-plan-${{ steps.directory.outputs.dir }}
+          name: terraform-plan-${{ steps.directory.outputs.dir }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.directory.outputs.dir }}/plan_output_multiline.txt
 
       # Post the plan output in the PR
