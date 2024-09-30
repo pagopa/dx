@@ -146,7 +146,7 @@ jobs:
             const status = '${{ steps.plan.outcome }}'
 
             // Construct the artifacts URL
-            const artifactsUrl = `${{ steps.artifact-upload-step.outputs.artifact-url }}`;
+            const artifactsUrl = `${{ steps['artifact-upload-step'].outputs['artifact-url'] }}`;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
