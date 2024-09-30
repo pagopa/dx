@@ -97,6 +97,7 @@ EOL
     git branch -M main
     git push -u origin main
     rm -rf .git
+    rm .gitignore
   else
     echo "Error: Failed to create GitHub repository."
     exit 1
