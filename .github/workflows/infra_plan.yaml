@@ -128,7 +128,7 @@ jobs:
       - name: Upload Terraform Plan Artifact
         if: always() && github.event_name == 'pull_request'
         id: artifact-upload-step
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-plan-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ steps.directory.outputs.dir }}/plan_output_multiline.txt
