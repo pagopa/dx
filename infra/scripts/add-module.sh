@@ -83,12 +83,12 @@ if [ -n "$ORG_NAME" ]; then
     git init
     git remote add origin https://github.com/$ORG_NAME/$SUBREPO_NAME.git
     # Create .gitignore to exclude .terraform and other unnecessary files
-    cat <<EOL > ".gitignore"
+    cat <<EOL > .gitignore
     .terraform/
     .terraform.lock.hcl
     *.tfstate
     *.tfstate.backup
-    EOL
+EOL
 
     # Add files to Git, but ignore .terraform directory
     git add .gitignore
