@@ -30,11 +30,27 @@ DX_PREFIX="dx"
 SUBREPO_NAME="terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME"
 MODULE_DIR="infra/modules/$MODULE_NAME"
 
-# Check if the module directory exists
-if [ ! -d "$MODULE_DIR" ]; then
-  echo "Error: Module directory '$MODULE_DIR' does not exist."
-  exit 1
+# Check if the module directory already exists
+if [ -d "$MODULE_DIR" ]; then
+  echo "Module '$MODULE_NAME' already exists in the 'modules' folder. Skipping folder creation."
+else
+  # Create the module directory
+  mkdir -p "$MODULE_DIR"
 fi
+
+# Create package.json file in the module directory
+PACKAGE_JSON="$MODULE_DIR/package.json"
+cat <<EOL > "$PACKAGE_JSON"
+{
+  "name": "$MODULE_NAME",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "$PROVIDER"
+}
+EOL
+
+# Provide feedback
+echo "Module '$MODULE_NAME' has been created in the 'modules'."
 
 # Provide feedback
 echo "Module directory '$MODULE_DIR' exists. Proceeding with repository initialization."
