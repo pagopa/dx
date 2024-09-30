@@ -1,5 +1,5 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.enabled && var.tier != "test" ? 1 : 0
+  count = var.application_insights.enabled && var.tier != "s" ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
@@ -15,7 +15,7 @@ resource "azurerm_api_management_logger" "this" {
 }
 
 resource "azurerm_api_management_diagnostic" "this" {
-  count = var.application_insights.enabled && var.tier != "test" ? 1 : 0
+  count = var.application_insights.enabled && var.tier != "s" ? 1 : 0
 
   identifier               = "applicationinsights"
   resource_group_name      = var.resource_group_name
@@ -63,7 +63,7 @@ resource "azurerm_api_management_diagnostic" "this" {
 }
 
 resource "azurerm_monitor_metric_alert" "this" {
-  for_each = var.tier != "test" ? var.metric_alerts : {}
+  for_each = var.tier != "s" ? var.metric_alerts : {}
 
   name                = "${azurerm_api_management.this.name}-${upper(each.key)}"
   description         = each.value.description
@@ -73,7 +73,7 @@ resource "azurerm_monitor_metric_alert" "this" {
   window_size         = each.value.window_size
   severity            = each.value.severity
   auto_mitigate       = each.value.auto_mitigate
-  enabled             = var.alerts_enabled
+  enabled             = true
 
   dynamic "action" {
     for_each = var.action
@@ -131,10 +131,10 @@ resource "azurerm_monitor_metric_alert" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "apim" {
-  count                          = var.sec_log_analytics_workspace_id != null && var.tier != "test" ? 1 : 0
+  count                          = var.log_analytics_workspace_id != null && var.tier != "s" ? 1 : 0
   name                           = "LogSecurity"
   target_resource_id             = azurerm_api_management.this.id
-  log_analytics_workspace_id     = var.sec_log_analytics_workspace_id
+  log_analytics_workspace_id     = var.log_analytics_workspace_id
   storage_account_id             = var.sec_storage_id
   log_analytics_destination_type = "AzureDiagnostics"
 

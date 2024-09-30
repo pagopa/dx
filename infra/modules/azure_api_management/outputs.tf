@@ -31,7 +31,7 @@ output "principal_id" {
 }
 
 output "diagnostic_id" {
-  value = var.application_insights.enabled && var.tier != "test" ? azurerm_api_management_diagnostic.this[0].id : null
+  value = var.application_insights.enabled && var.tier != "s" ? azurerm_api_management_diagnostic.this[0].id : null
 }
 
 output "logger_id" {

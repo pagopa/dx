@@ -18,7 +18,7 @@ variable "environment" {
   })
 
   validation {
-    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-apim-${var.environment.instance_number}") <= 63
+    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-apim-${var.environment.instance_number}") <= 50
     error_message = "Azure API Management name must contain between 1 and 50 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-apim-${var.environment.instance_number}\""
   }
 
@@ -33,18 +33,12 @@ variable "resource_group_name" {
 variable "tier" {
   type        = string
   description = "Resource tiers depending on demanding workload. Allowed values are 'test', 'standard', 'premium'."
-  default     = "test"
+  default     = "s"
 
   validation {
-    condition     = contains(["test", "standard", "premium"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"test\", \"standard\", or \"premium\"."
+    condition     = contains(["s", "m", "l"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
   }
-}
-
-variable "zones" {
-  type        = list(string)
-  default     = []
-  description = "List of availability zones (supported only for Premium SKU)"
 }
 
 variable "autoscale" {
@@ -360,13 +354,7 @@ variable "action" {
   default = []
 }
 
-variable "alerts_enabled" {
-  type        = bool
-  default     = true
-  description = "Should Metrics Alert be enabled?"
-}
-
-variable "sec_log_analytics_workspace_id" {
+variable "log_analytics_workspace_id" {
   type        = string
   default     = null
   description = "Log analytics workspace security (it should be in a different subscription)."

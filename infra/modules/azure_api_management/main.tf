@@ -40,7 +40,7 @@ resource "azurerm_api_management" "this" {
   publisher_email               = var.publisher_email
   notification_sender_email     = var.notification_sender_email
   sku_name                      = local.apim.sku_name
-  zones                         = var.tier == "premium" ? var.zones : null
+  zones                         = var.tier == "l" ? ["1", "2", "3"] : null
   public_network_access_enabled = false
 
   # Managed identity type: System
@@ -99,7 +99,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = var.tier == "premium" && var.autoscale != null && var.autoscale.enabled ? 1 : 0
+  count               = var.tier == "l" && var.autoscale != null && var.autoscale.enabled ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location

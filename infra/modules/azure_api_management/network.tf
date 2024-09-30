@@ -1,4 +1,4 @@
-# Define the A Records for APIMv2
+# Define the A Records for APIM
 
 resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
   name                = azurerm_api_management.this.name
@@ -28,30 +28,6 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   records             = azurerm_api_management.this.private_ip_addresses
 
   tags = var.tags
-}
-
-# Link A Records into the VNet
-
-resource "azurerm_private_dns_zone_virtual_network_link" "azure_api_link" {
-  name                  = format("%s-az-link", local.apim.name)
-  resource_group_name   = data.azurerm_virtual_network.this.resource_group_name
-  private_dns_zone_name = data.azurerm_private_dns_zone.azure_api_net.name
-  virtual_network_id    = data.azurerm_virtual_network.this.id
-}
-
-
-resource "azurerm_private_dns_zone_virtual_network_link" "management_api_link" {
-  name                  = format("%s-mngt-link", local.apim.name)
-  resource_group_name   = data.azurerm_virtual_network.this.resource_group_name
-  private_dns_zone_name = data.azurerm_private_dns_zone.management_azure_api_net.name
-  virtual_network_id    = data.azurerm_virtual_network.this.id
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "scm_apim_link" {
-  name                  = format("%s-scm-link", local.apim.name)
-  resource_group_name   = data.azurerm_virtual_network.this.resource_group_name
-  private_dns_zone_name = data.azurerm_private_dns_zone.scm_azure_api_net.name
-  virtual_network_id    = data.azurerm_virtual_network.this.id
 }
 
 # Define security group
