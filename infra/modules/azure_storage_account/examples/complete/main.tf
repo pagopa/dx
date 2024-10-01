@@ -29,12 +29,12 @@ resource "azurerm_user_assigned_identity" "example" {
 
 module "azure_storage_account" {
   source = "../../"
-  
-  environment = local.environment
-  tier = "l"
+
+  environment         = local.environment
+  tier                = "l"
   resource_group_name = azurerm_resource_group.example.name
 
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
   private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
 
   customer_managed_key = {

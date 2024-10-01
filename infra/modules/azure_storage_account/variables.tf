@@ -118,14 +118,14 @@ variable "blob_features" {
 variable "network_rules" {
   type = object({
     default_action             = string       # Specifies the default action of allow or deny when no other rules match. Valid options are Deny or Allow
-    bypass                     = list(string)  # Specifies whether traffic is bypassed for Logging/Metrics/AzureServices. Valid options are any combination of Logging, Metrics, AzureServices, or None
+    bypass                     = list(string) # Specifies whether traffic is bypassed for Logging/Metrics/AzureServices. Valid options are any combination of Logging, Metrics, AzureServices, or None
     ip_rules                   = list(string) # List of public IP or IP ranges in CIDR Format. Only IPV4 addresses are allowed
     virtual_network_subnet_ids = list(string) # A list of resource ids for subnets.
   })
   default = {
-    default_action = "Deny"
-    bypass = []
-    ip_rules = []
+    default_action             = "Deny"
+    bypass                     = []
+    ip_rules                   = []
     virtual_network_subnet_ids = []
   }
 

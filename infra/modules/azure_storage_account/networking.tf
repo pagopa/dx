@@ -1,7 +1,7 @@
 resource "azurerm_storage_account_network_rules" "network_rules" {
   storage_account_id         = azurerm_storage_account.this.id
   default_action             = var.network_rules.default_action
-  bypass = toset(concat(var.network_rules.bypass, ["Metrics", "Logging", "AzureServices"]))
+  bypass                     = toset(concat(var.network_rules.bypass, ["Metrics", "Logging", "AzureServices"]))
   ip_rules                   = var.network_rules.ip_rules
   virtual_network_subnet_ids = var.network_rules.virtual_network_subnet_ids
 }

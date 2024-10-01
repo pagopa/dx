@@ -10,7 +10,6 @@ locals {
 
   location_short  = local.environment.location == "italynorth" ? "itn" : local.environment.location == "westeurope" ? "weu" : local.environment.location == "germanywestcentral" ? "gwc" : "neu"
   project         = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
-  resource_prefix = "${local.project}-${local.environment.domain}-${local.environment.app_name}"
 
   tags = {
     CreatedBy   = "Terraform"
