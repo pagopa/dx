@@ -32,7 +32,7 @@ variable "resource_group_name" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 'test', 'standard', 'premium'."
+  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
   default     = "s"
 
   validation {
