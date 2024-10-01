@@ -3,7 +3,8 @@
   "packageManager": "yarn@4.4.0",
   "workspaces": [
     "packages/**",
-    "website"
+    "website",
+    "infra/modules/*"
   ],
   "devDependencies": {
     "prettier": "3.2.5",
