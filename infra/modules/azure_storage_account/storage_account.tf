@@ -1,48 +1,41 @@
 #tfsec:ignore:azure-storage-queue-services-logging-enabled
 resource "azurerm_storage_account" "this" {
-  name                             = replace("${local.app_name_prefix}-st-${var.environment.instance_number}", "-", "")
-  resource_group_name              = var.resource_group_name
-  location                         = var.location
-  account_kind                     = "StorageV2"
-  account_tier                     = var.account_tier
-  account_replication_type         = var.account_replication_type
-  access_tier                      = var.access_tier
-  public_network_access_enabled    = var.force_public_network_access_enabled
+  name                          = replace("${local.app_name_prefix}-st-${var.environment.instance_number}", "-", "")
+  resource_group_name           = var.resource_group_name
+  location                      = var.environment.location
+  account_kind                  = "StorageV2"
+  account_tier                  = local.tier_features.account_tier
+  account_replication_type      = local.tier_features.replication_type
+  access_tier                   = var.access_tier
+  public_network_access_enabled = var.force_public_network_access_enabled
 
   blob_properties {
-    versioning_enabled            = var.blob_properties.versioning
-    change_feed_enabled           = var.change_feed
-    change_feed_retention_in_days = var.change_feed_retention_in_days
-    last_access_time_enabled      = var.last_access_time
+    versioning_enabled            = var.blob_features.versioning
+    change_feed_enabled           = var.blob_features.change_feed.enabled
+    change_feed_retention_in_days = var.blob_features.change_feed.retention_in_days
+    last_access_time_enabled      = var.blob_features.last_access_time
 
     dynamic "delete_retention_policy" {
-      for_each = (var.delete_retention_days == 0 ? [] : [1])
+      for_each = (var.blob_features.delete_retention_days > 0 ? [] : [1])
       content {
-          days = var.delete_retention_days
-      }
-    }
-
-    dynamic "container_delete_retention_policy" {
-      for_each = (var.container_delete_retention_days == 0 ? [] : [1])
-      content {
-          days = var.container_delete_retention_days
+        days = var.blob_features.delete_retention_days
       }
     }
 
     dynamic "restore_policy" {
-      for_each = (var.blob_storage_policy.blob_restore_policy_days == 0 ? [] : [1])
+      for_each = (var.blob_features.restore_policy_days == 0 ? [] : [1])
       content {
-          days = var.blob_storage_policy.blob_restore_policy_days
+        days = var.blob_features.restore_policy_days
       }
     }
   }
 
   dynamic "static_website" {
-    for_each = var.index_document != null && var.error_404_document != null ? ["dummy"] : []
+    for_each = var.static_website.enabled ? ["dummy"] : []
 
     content {
-      index_document     = var.index_document
-      error_404_document = var.error_404_document
+      index_document     = var.static_website.index_document
+      error_404_document = var.static_website.error_404_document
     }
   }
 
@@ -56,15 +49,15 @@ resource "azurerm_storage_account" "this" {
   }
 
   identity {
-      type = var.customer_managed_key.enabled ? "SystemAssigned, UserAssigned" : "SystemAssigned"
-      identity_ids = var.customer_managed_key.enabled ? [var.customer_managed_key.user_assigned_identity_id] : null
+    type         = var.customer_managed_key.enabled ? "SystemAssigned, UserAssigned" : "SystemAssigned"
+    identity_ids = var.customer_managed_key.enabled ? [var.customer_managed_key.user_assigned_identity_id] : null
   }
 
   dynamic "customer_managed_key" {
     for_each = (var.customer_managed_key.enabled && var.customer_managed_key.type == "hsm" ? [1] : [])
     content {
       user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
-      managed_hsm_key_id = var.customer_managed_key.managed_hsm_key_id
+      managed_hsm_key_id        = var.customer_managed_key.managed_hsm_key_id
     }
   }
 
@@ -72,17 +65,17 @@ resource "azurerm_storage_account" "this" {
     for_each = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv" ? [1] : [])
     content {
       user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
-      key_vault_key_id = var.customer_managed_key.key_vault_key_id
+      key_vault_key_id          = var.customer_managed_key.key_vault_key_id
     }
   }
 
   dynamic "immutability_policy" {
-    for_each = var.blob_storage_policy.enable_immutability_policy ? [1] : []
+    for_each = var.blob_features.immutability_policy.enabled ? [1] : []
 
     content {
-      allow_protected_append_writes = var.immutability_policy_props.allow_protected_append_writes
+      allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
       state                         = "Unlocked"
-      period_since_creation_in_days = var.immutability_policy_props.period_since_creation_in_days
+      period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
 
@@ -98,6 +91,6 @@ resource "azurerm_storage_account" "this" {
 }
 
 resource "azurerm_security_center_storage_defender" "this" {
-  count = var.advanced_threat_protection == true ? 1 : 0
+  count              = local.tier_features.advanced_threat_protection ? 1 : 0
   storage_account_id = azurerm_storage_account.this.id
 }

@@ -3,7 +3,8 @@
 # -----------------------------------------------
 
 resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
-  name                = "[${replace("${var.environment.domain != null ? "${var.environment.domain} | " : ""}${azurerm_storage_account.name}", "-", "")}] Low Availability"
+  count               = local.tier_features.advanced_threat_protection ? 1 : 0
+  name                = "[${replace("${var.environment.domain != null ? "${var.environment.domain} | " : ""}${azurerm_storage_account.this.name}", "-", "")}] Low Availability"
   resource_group_name = var.resource_group_name
   scopes              = [azurerm_storage_account.this.id]
   description         = "The average availability is less than 99.8%. Runbook: not needed."
