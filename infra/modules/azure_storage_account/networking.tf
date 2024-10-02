@@ -17,7 +17,7 @@ resource "azurerm_private_endpoint" "this" {
     name                           = local.peps[each.key].name
     private_connection_resource_id = azurerm_storage_account.this.id
     is_manual_connection           = false
-    subresource_names              = ["blob"]
+    subresource_names              = [each.key]
   }
 
   private_dns_zone_group {

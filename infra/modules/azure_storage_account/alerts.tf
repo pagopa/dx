@@ -25,7 +25,7 @@ resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
   }
 
   dynamic "action" {
-    for_each = var.action_group_id == null ? [] : ["dummy"]
+    for_each = var.action_group_id == null ? [] : [1]
     content {
       action_group_id = var.action_group_id
     }

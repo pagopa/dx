@@ -16,14 +16,14 @@ resource "azurerm_storage_account" "this" {
     last_access_time_enabled      = var.blob_features.last_access_time
 
     dynamic "delete_retention_policy" {
-      for_each = (var.blob_features.delete_retention_days > 0 ? [] : [1])
+      for_each = (var.blob_features.delete_retention_days > 0 ? [1] : [])
       content {
         days = var.blob_features.delete_retention_days
       }
     }
 
     dynamic "restore_policy" {
-      for_each = (var.blob_features.restore_policy_days == 0 ? [] : [1])
+      for_each = (var.blob_features.restore_policy_days > 0 ? [1] : [])
       content {
         days = var.blob_features.restore_policy_days
       }
@@ -31,7 +31,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   dynamic "static_website" {
-    for_each = var.static_website.enabled ? ["dummy"] : []
+    for_each = var.static_website.enabled ? [1] : []
 
     content {
       index_document     = var.static_website.index_document
@@ -40,7 +40,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   dynamic "custom_domain" {
-    for_each = var.custom_domain.name != null ? ["dummy"] : []
+    for_each = var.custom_domain.name != null ? [1] : []
 
     content {
       name          = var.custom_domain.name
@@ -77,14 +77,6 @@ resource "azurerm_storage_account" "this" {
       state                         = "Unlocked"
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
-  }
-
-  # the use of storage_account_customer_managed_key resource will cause a bug on the plan: this paramenter will always see as changed.
-  # the state property is ignored because is overridden from a null_resource.
-  lifecycle {
-    ignore_changes = [
-      immutability_policy.0.state
-    ]
   }
 
   tags = var.tags

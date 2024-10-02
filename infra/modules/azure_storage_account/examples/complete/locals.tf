@@ -14,7 +14,7 @@ locals {
     "germanywestcentral" = "gwc"
   }
   location_short = lookup(local.location_map, local.environment.location, "itn")
-  project         = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
+  project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
 
   tags = {
     CreatedBy   = "Terraform"
