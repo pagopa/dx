@@ -177,17 +177,15 @@ jobs:
               run_id: context.runId
             });
             const data = run.data;
-            return {
-              workflow_url: data.html_url,
-              workflow_name: data.display_title,
-              repo_url: data.repository.html_url,
-              repo_name: data.repository.full_name,
-              commit_sha: data.head_sha,
-              commit_message: data.head_commit.message,
-              commit_url: `${data.repository.html_url}/commit/${data.head_sha}`,
-              committer_name: data.head_commit.committer.name
-            };
-          result-encoding: json
+            // Set output for each value
+            core.setOutput("workflow_url", data.html_url);
+            core.setOutput("workflow_name", data.display_title);
+            core.setOutput("repo_url", data.repository.html_url);
+            core.setOutput("repo_name", data.repository.full_name);
+            core.setOutput("commit_sha", data.head_sha);
+            core.setOutput("commit_message", data.head_commit.message);
+            core.setOutput("commit_url", `${data.repository.html_url}/commit/${data.head_sha}`);
+            core.setOutput("committer_name", data.head_commit.committer.name);
 
       # Reference: https://github.com/slackapi/slack-github-action 
       - name: Drift Notification
