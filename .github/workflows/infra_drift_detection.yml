@@ -239,3 +239,10 @@ jobs:
                 }
               ]
             }
+
+      # Exit with an error if drift is detected, to ensure
+      # the failure is reflected in the README badge
+      - name: Exit with error
+        if: ${{ failure() || steps.drift.outputs.drift_found == 'true' }}
+        run: exit 1
+
