@@ -1,5 +1,5 @@
 resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
-  for_each = var.tier != "test" ? var.metric_alerts : {}
+  for_each = var.tier != "s" ? var.metric_alerts : {}
 
   name                = format("%s-%s", azurerm_eventhub_namespace.this.name, upper(each.key))
   description         = each.value.description

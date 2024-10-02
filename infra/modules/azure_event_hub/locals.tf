@@ -6,8 +6,16 @@ locals {
   app_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
 
   eventhub = {
-    name     = "${local.app_name_prefix}-evhns-${var.environment.instance_number}"
-    sku_name = var.tier == "test" ? "Standard" : var.tier == "standard" ? "Standard" : "Premium"
+    name = "${local.app_name_prefix}-evhns-${var.environment.instance_number}"
+    sku_name = lookup(
+      {
+        "s" = "Standard",
+        "m" = "Standard",
+        "l" = "Premium"
+      },
+      var.tier,
+      "Premium" # Default
+    )
     # Note: Basic SKU does not support private access
   }
 
@@ -30,7 +38,7 @@ locals {
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
 
   # Autoscaling
-  auto_inflate_enabled     = var.tier == "premium" ? true : false
+  auto_inflate_enabled     = var.tier == "l" ? true : false
   maximum_throughput_units = local.auto_inflate_enabled ? 15 : null
-  capacity                 = var.tier == "standard" ? 1 : var.tier == "premium" ? 2 : null
+  capacity                 = var.tier == "m" ? 1 : var.tier == "l" ? 2 : null
 }
