@@ -1,5 +1,10 @@
 locals {
-  location_short  = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
+  location_map = {
+    "italynorth"         = "itn"
+    "westeurope"         = "weu"
+    "germanywestcentral" = "gwc"
+  }
+  location_short = lookup(local.location_map, local.environment.location, "itn")
   project         = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
   domain          = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
   app_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
