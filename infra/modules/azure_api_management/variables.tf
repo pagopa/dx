@@ -344,14 +344,10 @@ EOD
   }))
 }
 
-variable "action" {
+variable "action_group_id" {
   description = "The ID of the Action Group of custom string properties to include with the post webhook operation."
-  type = set(object(
-    {
-      action_group_id = string
-    }
-  ))
-  default = []
+  type        = string
+  default     = null
 }
 
 variable "log_analytics_workspace_id" {

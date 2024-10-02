@@ -76,9 +76,9 @@ resource "azurerm_monitor_metric_alert" "this" {
   enabled             = true
 
   dynamic "action" {
-    for_each = var.action
+    for_each = var.action_group_id != null ? ["dummy"] : []
     content {
-      action_group_id = action.value["action_group_id"]
+      action_group_id = var.action_group_id
     }
   }
 
