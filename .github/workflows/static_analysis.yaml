@@ -34,7 +34,7 @@ jobs:
     env:
       TERRAFORM_VERSION: ${{ inputs.terraform_version }}
     container:
-      image: ghcr.io/antonbabenko/pre-commit-terraform:v${{ inputs.pre_commit_tf_version }}.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076
+      image: ghcr.io/antonbabenko/pre-commit-terraform:v${{ inputs.pre_commit_tf_version }}@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076
     defaults:
       run:
         shell: bash
