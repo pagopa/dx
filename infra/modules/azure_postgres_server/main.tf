@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.116.0"
+      version = "~> 3.116.0"
     }
   }
 
@@ -82,5 +82,5 @@ resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer" {
 
   name      = "pgbouncer.enabled"
   server_id = azurerm_postgresql_flexible_server.this.id
-  value     = "True"
+  value     = "true"
 }

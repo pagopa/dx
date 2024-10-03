@@ -14,12 +14,12 @@ output "postgres" {
 }
 
 output "private_endpoint_replica" {
-  value       = var.tier == "premium" ? azurerm_private_endpoint.replica_postgre_pep[0].id : null
+  value       = var.tier == "l" ? azurerm_private_endpoint.replica_postgre_pep[0].id : null
   description = "Private Endpoint resource ID for the PostgreSQL Flexible Server Replica"
 }
 
 output "postgres_replica" {
-  value = var.tier == "premium" ? {
+  value = var.tier == "l" ? {
     name = azurerm_postgresql_flexible_server.replica[0].name
     id   = azurerm_postgresql_flexible_server.replica[0].id
   } : {}

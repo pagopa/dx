@@ -41,6 +41,8 @@ resource "azurerm_linux_function_app_slot" "this" {
       WEBSITE_DNS_SERVER = "168.63.129.16"
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
       SLOT_TASK_HUBNAME = "StagingTaskHub",
+      # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
+      FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
     },
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling

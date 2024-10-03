@@ -11,9 +11,10 @@ locals {
 
   function_app = {
     name                   = "${local.app_name_prefix}-func-${var.environment.instance_number}"
-    sku_name               = var.tier == "test" ? "B1" : var.tier == "standard" ? "P0v3" : "P1v3"
-    zone_balancing_enabled = var.tier != "test"
-    is_slot_enabled        = var.tier == "test" ? 0 : 1
+    sku_name               = local.sku_name_mapping[local.tier]
+    zone_balancing_enabled = local.tier != "s"
+    is_slot_enabled        = local.tier == "s" ? 0 : 1
+    worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
   function_app_slot = {
@@ -25,7 +26,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = var.tier == "test" ? "LRS" : "ZRS"
+    replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = lower(replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", ""))
   }
 }

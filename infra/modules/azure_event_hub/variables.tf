@@ -69,12 +69,12 @@ variable "subnet_pep_id" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 'test', 'standard', 'premium'."
-  default     = "test"
+  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
+  default     = "s"
 
   validation {
-    condition     = contains(["test", "standard", "premium"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"test\", \"standard\", or \"premium\"."
+    condition     = contains(["s", "m", "l"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
   }
 }
 
