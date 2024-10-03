@@ -20,7 +20,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
+    Source      = "https://github.com/pagopa/dx/modules/azure_api_management/examples"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 }

@@ -195,91 +195,6 @@ variable "application_insights" {
   description = "Application Insights integration The instrumentation key used to push data"
 }
 
-variable "diagnostic_sampling_percentage" {
-  type        = number
-  default     = 5.0
-  description = "Sampling (%). For high traffic APIs, please read the documentation to understand performance implications and log sampling. Valid values are between 0.0 and 100.0."
-  validation {
-    condition     = var.diagnostic_sampling_percentage >= 0.0 && var.diagnostic_sampling_percentage <= 100.0
-    error_message = "The diagnostic_sampling_percentage must be between 0.0 and 100.0."
-  }
-}
-
-variable "diagnostic_always_log_errors" {
-  type        = bool
-  default     = true
-  description = "Always log errors. Send telemetry if there is an erroneous condition, regardless of sampling settings."
-}
-
-variable "diagnostic_log_client_ip" {
-  type        = bool
-  default     = true
-  description = "Log client IP address."
-}
-
-variable "diagnostic_http_correlation_protocol" {
-  type        = string
-  default     = "W3C"
-  description = "The HTTP Correlation Protocol to use. Possible values are None, Legacy or W3C."
-  validation {
-    condition     = contains(["None", "Legacy", "W3C"], var.diagnostic_http_correlation_protocol)
-    error_message = "The diagnostic_http_correlation_protocol must be one of: None, Legacy, W3C."
-  }
-}
-
-variable "diagnostic_verbosity" {
-  type        = string
-  default     = "error"
-  description = "Logging verbosity. Possible values are verbose, information or error."
-  validation {
-    condition     = contains(["verbose", "information", "error"], var.diagnostic_verbosity)
-    error_message = "The diagnostic_verbosity must be one of: verbose, information, error."
-  }
-}
-
-variable "diagnostic_backend_request" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
-  type = object(
-    {
-      body_bytes     = number      # body_bytes - (optional) is a type of number
-      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
-    }
-  )
-  default = null
-}
-
-variable "diagnostic_backend_response" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
-  type = object(
-    {
-      body_bytes     = number      # body_bytes - (optional) is a type of number
-      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
-    }
-  )
-  default = null
-}
-
-variable "diagnostic_frontend_request" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
-  type = object(
-    {
-      body_bytes     = number      # body_bytes - (optional) is a type of number
-      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
-    }
-  )
-  default = null
-}
-
-variable "diagnostic_frontend_response" {
-  description = "Number of payload bytes to log (up to 8192) and a list of headers to log"
-  type = object(
-    {
-      body_bytes     = number      # body_bytes - (optional) is a type of number
-      headers_to_log = set(string) # headers_to_log - (optional) is a type of set of string
-    }
-  )
-  default = null
-}
 
 
 variable "metric_alerts" {
@@ -350,17 +265,6 @@ variable "action_group_id" {
   default     = null
 }
 
-variable "log_analytics_workspace_id" {
-  type        = string
-  default     = null
-  description = "Log analytics workspace security (it should be in a different subscription)."
-}
-
-variable "sec_storage_id" {
-  type        = string
-  default     = null
-  description = "Storage Account security (it should be in a different subscription)."
-}
 
 
 variable "management_logger_application_insight_enabled" {

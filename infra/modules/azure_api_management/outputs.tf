@@ -30,10 +30,6 @@ output "principal_id" {
   value = azurerm_api_management.this.identity[0].principal_id
 }
 
-output "diagnostic_id" {
-  value = var.application_insights.enabled && var.tier != "s" ? azurerm_api_management_diagnostic.this[0].id : null
-}
-
 output "logger_id" {
   value = var.application_insights.enabled ? azurerm_api_management_logger.this[0].id : null
 }
