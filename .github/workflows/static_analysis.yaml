@@ -2,17 +2,26 @@
 # the top level of the repository, which contains Terraform validation tasks.
 # For more details, refer to the pre-commit configuration file:
 # https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
-name: Terraform Validation
+name: Static Analysis - TF Validation
 
 on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize]
-    paths:
-      - infra/**
-      - .terraform-version
-      - .pre-commit-config.yaml
-      - .trivyignore
+  workflow_call:
+    inputs:
+      terraform_version:
+        description: Terraform version to use
+        type: string
+        required: false
+        default: "1.7.5"
+      pre_commit_tf_version:
+        description: Pre-commit Terraform version to use
+        type: string
+        required: false
+        default: "1.94.1"
+      enable_modified_files_detection:
+        description: If true the pipeline will run pre-commit on modified files only
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}
@@ -23,9 +32,9 @@ jobs:
     name: Terraform Validation
     runs-on: ubuntu-20.04
     env:
-      TERRAFORM_VERSION: "1.7.5"
+      TERRAFORM_VERSION: ${{ inputs.terraform_version }}
     container:
-      image: ghcr.io/antonbabenko/pre-commit-terraform:v1.94.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076
+      image: ghcr.io/antonbabenko/pre-commit-terraform:v${{ inputs.pre_commit_tf_version }}.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076
     defaults:
       run:
         shell: bash
@@ -48,7 +57,7 @@ jobs:
 
       - name: Get Modified Files
         id: file_changes
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
         run: |
           set -eu
 
@@ -63,7 +72,7 @@ jobs:
           python -m pip freeze --local
 
       - name: Run pre-commit on Modified Files
-        if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' }}
+        if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' && inputs.enable_modified_files_detection }}
         run: |
           set -eu
 
@@ -73,7 +82,7 @@ jobs:
             --files "${{ steps.file_changes.outputs.files }}"
 
       - name: Run pre-commit
-        if: ${{ github.event_name != 'pull_request' || steps.file_changes.outputs.files == ''}}
+        if: ${{ github.event_name != 'pull_request' || steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
         id: pre_commit
         run: |
           set -eu

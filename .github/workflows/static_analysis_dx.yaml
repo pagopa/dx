@@ -1,0 +1,21 @@
+name: Terraform Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - infra/**
+      - .terraform-version
+      - .pre-commit-config.yaml
+      - .trivyignore
+
+jobs:
+  tf_analysis:
+    uses: ./.github/workflows/static_analysis.yaml
+    name: Terraform Validation
+    secrets: inherit
+    with:
+      terraform_version: 1.7.5
+      pre_commit_tf_version: 1.94.1
+      enable_modified_files_detection: true
