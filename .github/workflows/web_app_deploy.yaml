@@ -32,11 +32,11 @@ on:
         type: boolean
         required: false
         default: true
-      skip_artifact_creation:
-        description: Skip Artifact creation when is already created by another step
+      use_create_artifact:
+        description: Use the job to create a new artifact
         type: boolean
         required: false
-        default: false
+        default: true
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
-    if: ${{ !inputs.skip_artifact_creation }}
+    if: ${{ inputs.use_create_artifact }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
