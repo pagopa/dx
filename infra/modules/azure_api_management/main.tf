@@ -5,14 +5,6 @@ terraform {
       version = ">= 3.111.0"
     }
   }
-
-  required_version = "~> 1.7.5"
-}
-
-provider "azurerm" {
-  features {}
-
-  storage_use_azuread = true
 }
 
 module "naming_convention" {
