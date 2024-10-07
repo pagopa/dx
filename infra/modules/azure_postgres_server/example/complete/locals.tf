@@ -20,7 +20,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_postgres_server/examples"
+    Source      = "https://github.com/pagopa/dx/modules/azure_postgres_server/examples/complete"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 }

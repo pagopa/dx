@@ -20,7 +20,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_event_hub/examples"
+    Source      = "https://github.com/pagopa/dx/modules/azure_event_hub/examples/complete"
     CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
   }
 }
