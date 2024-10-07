@@ -28,6 +28,29 @@ variable "subnet_pep_id" {
   description = "Id of the subnet which holds private endpoints"
 }
 
+variable "primary_geo_location" {
+  type = object({
+    location          = optional(string, null)
+    zone_redundant    = optional(bool, true)
+  })
+  description = "Primary geo location for Cosmos DB account. Set location if you want to deploy the cosmos account in a different region than the default."
+  
+  default = {
+    location          = null
+    zone_redundant    = true
+  }
+}
+
+variable "secondary_geo_locations" {
+  type = list(object({
+    location          = optional(string, null)
+    failover_priority = optional(number, null)
+    zone_redundant    = optional(bool, true)
+  }))
+  description = "(Optional) Secondary geo locations for Cosmos DB account. If failover priority is not set, the items order is used."
+  default     = []
+}
+
 variable "customer_managed_key" {
   type = object({
     enabled                   = optional(bool, false)
@@ -36,4 +59,73 @@ variable "customer_managed_key" {
   })
   description = "(Optional) Customer managed key to use for encryption"
   default     = { enabled = false }
+
+  validation {
+    condition     =  (
+      (!var.customer_managed_key.enabled) || 
+      (var.customer_managed_key.enabled && var.customer_managed_key.user_assigned_identity_id != null && var.customer_managed_key.key_vault_key_id != null)
+    )
+    error_message = "Either 'user_assigned_identity_id' or 'key_vault_key_id' must be provided when 'enabled' is set to true."
+  }
+}
+
+variable "force_public_network_access_enabled" {
+  type        = bool
+  description = "(Optional) Whether the Storage Account permits public network access or not. Defaults to false."
+  default     = false
+}
+
+variable "automatic_failover_enabled" {
+  type        = bool
+  description = "(Optional) Whether Automatic Failover is enabled for Cosmos DB account or not."
+  default     = false
+}
+
+variable "consistency_policy" {
+  description = "Defines the consistency policy for CosmosDB. Defaults to 'Session' if not specified."
+  type = object({
+    consistency_level         = string
+    max_interval_in_seconds   = optional(number)
+    max_staleness_prefix      = optional(number)
+  })
+
+  validation {
+    condition = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], lookup(var.consistency_policy, "consistency_level", "Session"))
+    error_message = "The 'consistency_level' must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong', or 'ConsistentPrefix'."
+  }
+
+  validation {
+    condition = (
+      var.consistency_policy.consistency_level != "BoundedStaleness" ||
+      (var.consistency_policy.max_interval_in_seconds != null && var.consistency_policy.max_interval_in_seconds >= 5 && var.consistency_policy.max_interval_in_seconds <= 86400)
+    )
+    error_message = "The 'max_interval_in_seconds' must be between 5 and 86400 when 'consistency_level' is 'BoundedStaleness'."
+  }
+
+  validation {
+    condition = (
+      var.consistency_policy.consistency_level != "BoundedStaleness" ||
+      (var.consistency_policy.max_staleness_prefix != null && var.consistency_policy.max_staleness_prefix >= 10 && var.consistency_policy.max_staleness_prefix <= 2147483647)
+    )
+    error_message = "The 'max_staleness_prefix' must be between 10 and 2147483647 when 'consistency_level' is 'BoundedStaleness'."
+  }
+}
+
+variable "alerts" {
+  type = object({
+    enabled = optional(bool, true)
+    action_group_id = optional(string, null)
+    thresholds = {
+      provisioned_throughput_exceeded = optional(number, null)
+    }
+  })
+  description = "(Optional) Alerts configuration for Cosmos DB account."
+  default = { enabled = true }
+
+  validation {
+    condition = var.alerts.enabled && (
+      alltrue([for threshold in var.alerts.thresholds : threshold != null])
+    )
+    error_message = "When alerts are enabled, all thresholds must be set."
+  }
 }

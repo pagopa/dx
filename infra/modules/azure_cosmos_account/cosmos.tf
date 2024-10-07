@@ -5,7 +5,7 @@ resource "azurerm_cosmosdb_account" "this" {
   offer_type                = "Standard"
   kind                      = "GlobalDocumentDB"
   automatic_failover_enabled = var.automatic_failover_enabled
-  key_vault_key_id          = var.key_vault_key_id
+  key_vault_key_id          = var.customer_managed_key.enabled ? var.customer_managed_key.key_vault_key_id : null
   public_network_access_enabled = var.force_public_network_access_enabled
 
   geo_location {
@@ -25,35 +25,16 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   consistency_policy {
-    consistency_level       = var.consistency_policy.consistency_level
-    max_interval_in_seconds = var.consistency_policy.max_interval_in_seconds
-    max_staleness_prefix    = var.consistency_policy.max_staleness_prefix
+    consistency_level    = var.consistency_policy.consistency_level
+
+    # Only apply these fields if the consistency_level is "BoundedStaleness"
+    max_interval_in_seconds = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds : null
+    max_staleness_prefix = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
   }
 
-  dynamic "capabilities" {
-    for_each = var.capabilities
-
-    content {
-      name = capabilities.value
-    }
-  }
-
-  dynamic "backup" {
-    for_each = var.backup_continuous_enabled ? [1] : []
-    content {
-      type = "Continuous"
-    }
-  }
-
-  dynamic "backup" {
-    for_each = var.backup_periodic_enabled != null ? [1] : []
-
-    content {
-      type                = "Periodic"
-      interval_in_minutes = var.backup_periodic_enabled.interval_in_minutes
-      retention_in_hours  = var.backup_periodic_enabled.retention_in_hours
-      storage_redundancy  = var.backup_periodic_enabled.storage_redundancy
-    }
+  # As suggested by technology https://pagopa.atlassian.net/wiki/spaces/DEVOPS/pages/500039691/Cosmos+DB#backup-policy
+  backup {
+    type = "Continuous"
   }
 
   identity {
@@ -62,26 +43,4 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   tags = var.tags
-}
-
-#
-# Private endpoints
-#
-resource "azurerm_private_endpoint" "sql" {
-  name                = "${local.app_name_prefix}-cosno-pep-${var.environment.instance_number}"
-  location            = var.environment.location
-  resource_group_name = var.resource_group_name
-  subnet_id           = var.subnet_pep_id
-
-  private_service_connection {
-    name                           = "${local.app_name_prefix}-cosno-pep-${var.environment.instance_number}"
-    private_connection_resource_id = azurerm_cosmosdb_account.this.id
-    is_manual_connection           = false
-    subresource_names              = ["Sql"]
-  }
-
-   private_dns_zone_group {
-      name                 = "private-dns-zone-group"
-      private_dns_zone_ids = [data.azurerm_private_dns_zone.cosmos.id]
-  }
 }

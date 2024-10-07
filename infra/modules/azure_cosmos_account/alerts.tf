@@ -3,9 +3,9 @@
 # -----------------------------------------------
 
 resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceeded" {
-  count = var.enable_provisioned_throughput_exceeded_alert ? 1 : 0
+  count = var.alerts.enabled ? 1 : 0
 
-  name                = "[${var.domain != null ? "${var.domain} | " : ""}${azurerm_cosmosdb_account.this.name}] Provisioned Throughput Exceeded"
+  name                = "[${azurerm_cosmosdb_account.this.name}] Provisioned Throughput Exceeded"
   resource_group_name = var.resource_group_name
   scopes              = [azurerm_cosmosdb_account.this.id]
   description         = "A collection throughput (RU/s) exceed provisioned throughput, and it's raising 429 errors. Please, consider to increase RU. Runbook: not needed."
@@ -29,7 +29,7 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
     dimension {
       name     = "Region"
       operator = "Include"
-      values   = [var.main_geo_location_location]
+      values   = [var.primary_geo_location.location]
     }
     dimension {
       name     = "StatusCode"
@@ -45,10 +45,9 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
   }
 
   dynamic "action" {
-    for_each = var.action
+    for_each = var.action_group_id == null ? [] : [1]
     content {
-      action_group_id    = action.value["action_group_id"]
-      webhook_properties = action.value["webhook_properties"]
+      action_group_id = var.action_group_id
     }
   }
 
