@@ -4327,6 +4327,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"azure_api_management@workspace:infra/modules/azure_api_management":
+  version: 0.0.0-use.local
+  resolution: "azure_api_management@workspace:infra/modules/azure_api_management"
+  languageName: unknown
+  linkType: soft
+
 "azure_app_service@workspace:infra/modules/azure_app_service":
   version: 0.0.0-use.local
   resolution: "azure_app_service@workspace:infra/modules/azure_app_service"
@@ -4345,6 +4351,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_event_hub@workspace:infra/modules/azure_event_hub":
+  version: 0.0.0-use.local
+  resolution: "azure_event_hub@workspace:infra/modules/azure_event_hub"
+  languageName: unknown
+  linkType: soft
+
 "azure_federated_identity_with_github@workspace:infra/modules/azure_federated_identity_with_github":
   version: 0.0.0-use.local
   resolution: "azure_federated_identity_with_github@workspace:infra/modules/azure_federated_identity_with_github"
@@ -4357,15 +4369,33 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed":
+  version: 0.0.0-use.local
+  resolution: "azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed"
+  languageName: unknown
+  linkType: soft
+
 "azure_naming_convention@workspace:infra/modules/azure_naming_convention":
   version: 0.0.0-use.local
   resolution: "azure_naming_convention@workspace:infra/modules/azure_naming_convention"
   languageName: unknown
   linkType: soft
 
+"azure_postgres_server@workspace:infra/modules/azure_postgres_server":
+  version: 0.0.0-use.local
+  resolution: "azure_postgres_server@workspace:infra/modules/azure_postgres_server"
+  languageName: unknown
+  linkType: soft
+
 "azure_role_assignments@workspace:infra/modules/azure_role_assignments":
   version: 0.0.0-use.local
   resolution: "azure_role_assignments@workspace:infra/modules/azure_role_assignments"
+  languageName: unknown
+  linkType: soft
+
+"azure_storage_account@workspace:infra/modules/azure_storage_account":
+  version: 0.0.0-use.local
+  resolution: "azure_storage_account@workspace:infra/modules/azure_storage_account"
   languageName: unknown
   linkType: soft
 
