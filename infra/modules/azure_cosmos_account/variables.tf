@@ -23,7 +23,17 @@ variable "resource_group_name" {
 }
 
 # ------------ COSMOS ------------ #
-variable "kind" {
-    type = string
-    description = "The kind of CosmosDB account"
+variable "subnet_pep_id" {
+  type        = string
+  description = "Id of the subnet which holds private endpoints"
+}
+
+variable "customer_managed_key" {
+  type = object({
+    enabled                   = optional(bool, false)
+    user_assigned_identity_id = optional(string, null)
+    key_vault_key_id          = optional(string, null)
+  })
+  description = "(Optional) Customer managed key to use for encryption"
+  default     = { enabled = false }
 }
