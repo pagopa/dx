@@ -27,7 +27,7 @@ if [ -z "$MODULE_NAME" ]; then
 fi
 
 DX_PREFIX="dx"
-SUBREPO_NAME="terraform-$PROVIDER-$DX_PREFIX-$MODULE_NAME"
+SUBREPO_NAME="terraform-$PROVIDER-${DX_PREFIX}_${MODULE_NAME}"
 MODULE_DIR="infra/modules/$MODULE_NAME"
 
 # Check if the module directory already exists
