@@ -9,17 +9,17 @@ resource "azurerm_cosmosdb_account" "this" {
   public_network_access_enabled = var.force_public_network_access_enabled
 
   geo_location {
-    location          = var.main_geo_location_location
+    location          = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
     failover_priority = 0
-    zone_redundant    = var.main_geo_location_zone_redundant
+    zone_redundant    = var.primary_geo_location.zone_redundant
   }
 
   dynamic "geo_location" {
-    for_each = var.additional_geo_locations
+    for_each = var.secondary_geo_locations
 
     content {
       location          = geo_location.value.location
-      failover_priority = geo_location.value.failover_priority
+      failover_priority = geo_location.value.failover_priority == null ? index(var.secondary_geo_locations, geo_location) : geo_location.value.failover_priority
       zone_redundant    = geo_location.value.zone_redundant
     }
   }
@@ -39,14 +39,14 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   dynamic "backup" {
-    for_each = var.backup_continuous_enabled ? ["dummy"] : []
+    for_each = var.backup_continuous_enabled ? [1] : []
     content {
       type = "Continuous"
     }
   }
 
   dynamic "backup" {
-    for_each = var.backup_periodic_enabled != null ? ["dummy"] : []
+    for_each = var.backup_periodic_enabled != null ? [1] : []
 
     content {
       type                = "Periodic"
