@@ -7,12 +7,6 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {}
-
-  storage_use_azuread = true
-}
-
 module "naming_convention" {
   source = "../azure_naming_convention"
 

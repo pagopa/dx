@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
 module "naming_convention" {
   source = "../azure_naming_convention"
 
