@@ -59,7 +59,7 @@ runs:
 
         # Merge the changes without overwriting the history
         git checkout -b temp-branch module-repo/main
-        git merge --allow-unrelated-histories ${MODULE_NAME}-branch
+        git merge --allow-unrelated-histories -s ours --no-edit ${MODULE_NAME}-branch
         
         # Define the tag name
         TAG_NAME=$(jq -r '.version' package.json)
@@ -76,7 +76,7 @@ runs:
         fi
 
         # Push changes and tags
-        git push module-repo temp-branch:main --tags
+        git push module-repo temp-branch:main
 
         # Remove the temporary branch
         git branch -D ${MODULE_NAME}-branch
