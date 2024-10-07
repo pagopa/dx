@@ -3,3 +3,10 @@
   description: Create the file that contains terraform registry modules hashes
   entry: infra/scripts/lock-modules.sh
   language: script
+
+- id: terraform_providers_lock_staged
+  name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
+  entry: infra/scripts/terraform_lock_precommit.sh
+  language: script
+  pass_filenames: false
+  verbose: true
