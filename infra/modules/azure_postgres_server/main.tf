@@ -5,8 +5,6 @@ terraform {
       version = "~> 3.116.0"
     }
   }
-
-  required_version = "~> 1.7.5"
 }
 
 module "naming_convention" {
