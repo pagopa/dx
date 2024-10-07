@@ -76,7 +76,7 @@ runs:
         fi
 
         # Push changes and tags
-        git push module-repo temp-branch:main --tags
+        git push module-repo temp-branch:main
 
         # Remove the temporary branch
         git branch -D ${MODULE_NAME}-branch
