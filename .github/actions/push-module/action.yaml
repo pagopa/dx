@@ -37,6 +37,7 @@ runs:
         # Configure Git for authentication
         git config --global url."https://api:${{ inputs.github_pat }}@github.com/".insteadOf "https://github.com/"
         git config --unset http."https://github.com/".extraheader
+
     - name: Push Subtree to Module Repo
       shell: bash
       env:
