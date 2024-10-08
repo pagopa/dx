@@ -1,5 +1,5 @@
 resource "azurerm_linux_web_app" "this" {
-  name                = "${local.project}-${var.environment.domain}-${var.environment.app_name}-app-${var.environment.instance_number}"
+  name                = local.app_service.name
   location            = var.environment.location
   resource_group_name = var.resource_group_name
 

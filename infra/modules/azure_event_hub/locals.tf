@@ -1,12 +1,6 @@
 locals {
-  # General
-  location_short  = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
-  project         = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
-  domain          = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
-  app_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
-
   eventhub = {
-    name = "${local.app_name_prefix}-evhns-${var.environment.instance_number}"
+    name = "${module.naming_convention.prefix}-evhns-${module.naming_convention.suffix}"
     sku_name = lookup(
       {
         "s" = "Standard",
@@ -22,17 +16,17 @@ locals {
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
     [for c in h.consumers : {
-      hub  = "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}"
+      hub  = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
       name = c
   }]]) : "${hc.hub}.${hc.name}" => hc }
 
   keys = { for hk in flatten([for h in var.eventhubs :
     [for k in h.keys : {
-      hub = "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}"
+      hub = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
       key = k
   }]]) : "${hk.hub}.${hk.key.name}" => hk }
 
-  hubs = { for h in var.eventhubs : "${local.app_name_prefix}-${h.name}-${var.environment.instance_number}" => h }
+  hubs = { for h in var.eventhubs : "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}" => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
