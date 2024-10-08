@@ -14,8 +14,8 @@ resource "azurerm_private_endpoint" "sql" {
     subresource_names              = ["Sql"]
   }
 
-   private_dns_zone_group {
-      name                 = "private-dns-zone-group"
-      private_dns_zone_ids = [data.azurerm_private_dns_zone.cosmos.id]
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.cosmos.id]
   }
 }

@@ -36,14 +36,14 @@ variable "private_dns_zone_resource_group_name" {
 
 variable "primary_geo_location" {
   type = object({
-    location          = optional(string, null)
-    zone_redundant    = optional(bool, true)
+    location       = optional(string, null)
+    zone_redundant = optional(bool, true)
   })
   description = "Primary geo location for Cosmos DB account. Set location if you want to deploy the cosmos account in a different region than the default."
-  
+
   default = {
-    location          = null
-    zone_redundant    = true
+    location       = null
+    zone_redundant = true
   }
 }
 
@@ -67,8 +67,8 @@ variable "customer_managed_key" {
   default     = { enabled = false }
 
   validation {
-    condition     =  (
-      (!var.customer_managed_key.enabled) || 
+    condition = (
+      (!var.customer_managed_key.enabled) ||
       (var.customer_managed_key.enabled && var.customer_managed_key.user_assigned_identity_id != null && var.customer_managed_key.key_vault_key_id != null)
     )
     error_message = "Either 'user_assigned_identity_id' or 'key_vault_key_id' must be provided when 'enabled' is set to true."
@@ -90,13 +90,13 @@ variable "automatic_failover_enabled" {
 variable "consistency_policy" {
   description = "Defines the consistency policy for CosmosDB. Defaults to 'Session' if not specified."
   type = object({
-    consistency_level         = string
-    max_interval_in_seconds   = optional(number)
-    max_staleness_prefix      = optional(number)
+    consistency_level       = string
+    max_interval_in_seconds = optional(number)
+    max_staleness_prefix    = optional(number)
   })
 
   validation {
-    condition = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], lookup(var.consistency_policy, "consistency_level", "Session"))
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], lookup(var.consistency_policy, "consistency_level", "Session"))
     error_message = "The 'consistency_level' must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong', or 'ConsistentPrefix'."
   }
 
@@ -119,14 +119,14 @@ variable "consistency_policy" {
 
 variable "alerts" {
   type = object({
-    enabled = optional(bool, true)
+    enabled         = optional(bool, true)
     action_group_id = optional(string, null)
     thresholds = optional(object({
       provisioned_throughput_exceeded = optional(number, null)
     }), {})
   })
   description = "(Optional) Alerts configuration for Cosmos DB account."
-  default = { enabled = true }
+  default     = { enabled = true }
 
   validation {
     condition = var.alerts.enabled && (
