@@ -22,7 +22,7 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
     metric_name            = "TotalRequestUnits"
     aggregation            = "Total"
     operator               = "GreaterThan"
-    threshold              = var.provisioned_throughput_exceeded_threshold
+    threshold              = var.alerts.thresholds.provisioned_throughput_exceeded
     skip_metric_validation = false
 
 
@@ -45,9 +45,9 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
   }
 
   dynamic "action" {
-    for_each = var.action_group_id == null ? [] : [1]
+    for_each = var.alerts.action_group_id == null ? [] : [1]
     content {
-      action_group_id = var.action_group_id
+      action_group_id = var.alerts.action_group_id
     }
   }
 

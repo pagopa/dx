@@ -28,6 +28,12 @@ variable "subnet_pep_id" {
   description = "Id of the subnet which holds private endpoints"
 }
 
+variable "private_dns_zone_resource_group_name" {
+  type        = string
+  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
+  default     = null
+}
+
 variable "primary_geo_location" {
   type = object({
     location          = optional(string, null)
@@ -115,9 +121,9 @@ variable "alerts" {
   type = object({
     enabled = optional(bool, true)
     action_group_id = optional(string, null)
-    thresholds = {
+    thresholds = optional(object({
       provisioned_throughput_exceeded = optional(number, null)
-    }
+    }), {})
   })
   description = "(Optional) Alerts configuration for Cosmos DB account."
   default = { enabled = true }
