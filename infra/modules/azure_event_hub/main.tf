@@ -37,7 +37,8 @@ resource "azurerm_eventhub_namespace" "this" {
   dynamic "network_rulesets" {
     for_each = var.allowed_sources
     content {
-      default_action = "Allow"
+      default_action                = "Allow"
+      public_network_access_enabled = false
       dynamic "virtual_network_rule" {
         for_each = network_rulesets.value.subnet_ids
         content {
