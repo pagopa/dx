@@ -113,7 +113,7 @@ variable "consistency_policy" {
 
 variable "alerts" {
   type = object({
-    enabled         = optional(bool, true)
+    enabled         = bool
     action_group_id = optional(string, null)
     thresholds = optional(object({
       provisioned_throughput_exceeded = optional(number, null)
