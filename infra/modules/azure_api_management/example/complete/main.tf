@@ -1,3 +1,16 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environment = {
+    prefix          = local.environment.prefix
+    env_short       = local.environment.env_short
+    location        = local.environment.location
+    domain          = local.environment.domain
+    app_name        = local.environment.app_name
+    instance_number = local.environment.instance_number
+  }
+}
+
 data "azurerm_monitor_action_group" "example" {
   name                = replace("${local.environment.prefix}-${local.environment.env_short}-error", "-", "")
   resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"

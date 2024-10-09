@@ -1,3 +1,16 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environment = {
+    prefix          = local.environment.prefix
+    env_short       = local.environment.env_short
+    location        = local.environment.location
+    domain          = local.environment.domain
+    app_name        = local.environment.app_name
+    instance_number = local.environment.instance_number
+  }
+}
+
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "example" {
@@ -11,6 +24,7 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${local.project}-common-rg-01"
 }
 
+# tflint-ignore: terraform_required_providers
 resource "random_password" "password" {
   length  = 16
   special = true

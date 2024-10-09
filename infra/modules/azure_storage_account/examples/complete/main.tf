@@ -1,3 +1,16 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environment = {
+    prefix          = local.environment.prefix
+    env_short       = local.environment.env_short
+    location        = local.environment.location
+    domain          = local.environment.domain
+    app_name        = local.environment.app_name
+    instance_number = local.environment.instance_number
+  }
+}
+
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"

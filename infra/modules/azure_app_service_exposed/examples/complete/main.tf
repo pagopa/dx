@@ -1,3 +1,16 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environment = {
+    prefix          = local.environment.prefix
+    env_short       = local.environment.env_short
+    location        = local.environment.location
+    domain          = local.environment.domain
+    app_name        = local.environment.app_name
+    instance_number = local.environment.instance_number
+  }
+}
+
 resource "azurerm_resource_group" "example" {
   name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
   location = local.environment.location
