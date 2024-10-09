@@ -25,11 +25,11 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   consistency_policy {
-    consistency_level = var.consistency_policy.consistency_level
+    consistency_level = local.final_consistency_policy.consistency_level
 
     # Only apply these fields if the consistency_level is "BoundedStaleness"
-    max_interval_in_seconds = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds : null
-    max_staleness_prefix    = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
+    max_interval_in_seconds = local.final_consistency_policy.consistency_level == "BoundedStaleness" ? local.final_consistency_policy.max_interval_in_seconds : null
+    max_staleness_prefix    = local.final_consistency_policy.consistency_level == "BoundedStaleness" ? local.final_consistency_policy.max_staleness_prefix : null
   }
 
   # As suggested by technology https://pagopa.atlassian.net/wiki/spaces/DEVOPS/pages/500039691/Cosmos+DB#backup-policy

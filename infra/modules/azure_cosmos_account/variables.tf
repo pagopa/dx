@@ -82,32 +82,38 @@ variable "force_public_network_access_enabled" {
 }
 
 variable "consistency_policy" {
-  description = "Defines the consistency policy for CosmosDB. This setting is highly dependant on the way the application uses the database. Please refer to the documentation to make the right choice https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels."
+  description = "Defines the consistency policy for CosmosDB. Use 'consistency_preset' for predefined configurations, or set it to 'custom' for manual configuration. Presets include: 'default' (Session consistency), 'high_consistency' (Strong), 'high_performance' (Eventual), and 'balanced_staleness' (BoundedStaleness). For custom configuration, specify 'consistency_level' and, if using BoundedStaleness, 'max_interval_in_seconds' and 'max_staleness_prefix'. Refer to https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels for more details."
   type = object({
-    consistency_level       = string
-    max_interval_in_seconds = optional(number)
-    max_staleness_prefix    = optional(number)
+    consistency_preset      = optional(string)
+    consistency_level       = optional(string, "Preset")
+    max_interval_in_seconds = optional(number, 0)
+    max_staleness_prefix    = optional(number, 0)
   })
 
   validation {
-    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
-    error_message = "The 'consistency_level' must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong', or 'ConsistentPrefix'."
+    condition     = contains(["default", "high_consistency", "high_performance", "balanced_staleness", "custom"], var.consistency_policy.consistency_preset)
+    error_message = "Valid values for consistency_preset are: default, high_consistency, high_performance, balanced_staleness, custom."
+  }
+
+  validation {
+    condition     = var.consistency_policy.consistency_preset != "custom" || contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
+    error_message = "When consistency_preset is 'custom', consistency_level must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong', or 'ConsistentPrefix'."
   }
 
   validation {
     condition = (
-      var.consistency_policy.consistency_level != "BoundedStaleness" ||
+        var.consistency_policy.consistency_level != "BoundedStaleness" ||
       (var.consistency_policy.max_interval_in_seconds != null && var.consistency_policy.max_interval_in_seconds >= 5 && var.consistency_policy.max_interval_in_seconds <= 86400)
-    )
-    error_message = "The 'max_interval_in_seconds' must be between 5 and 86400 when 'consistency_level' is 'BoundedStaleness'."
+      )
+    error_message = "When consistency_level is 'BoundedStaleness', max_interval_in_seconds must be between 5 and 86400."
   }
 
   validation {
     condition = (
-      var.consistency_policy.consistency_level != "BoundedStaleness" ||
+        var.consistency_policy.consistency_level != "BoundedStaleness" ||
       (var.consistency_policy.max_staleness_prefix != null && var.consistency_policy.max_staleness_prefix >= 10 && var.consistency_policy.max_staleness_prefix <= 2147483647)
     )
-    error_message = "The 'max_staleness_prefix' must be between 10 and 2147483647 when 'consistency_level' is 'BoundedStaleness'."
+    error_message = "When consistency_level is 'BoundedStaleness', max_staleness_prefix must be between 10 and 2147483647."
   }
 }
 
