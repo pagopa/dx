@@ -40,7 +40,7 @@ module "cosmos_db" {
   force_public_network_access_enabled = false
 
   consistency_policy = {
-    consistency_preset      = "custom"
+    consistency_preset      = "Custom"
     consistency_level       = "BoundedStaleness"
     max_interval_in_seconds = 300
     max_staleness_prefix    = 100000

@@ -7,7 +7,7 @@ module "cosmos_db" {
   subnet_pep_id = data.azurerm_subnet.pep.id
 
   consistency_policy = {
-    consistency_preset       = "high_consistency"
+    consistency_preset = "HighConsistency"
   }
 
   alerts = {
