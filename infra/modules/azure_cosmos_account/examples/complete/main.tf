@@ -14,7 +14,6 @@ module "cosmos_db" {
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
-  tags                = local.tags
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
   private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
@@ -53,4 +52,6 @@ module "cosmos_db" {
       provisioned_throughput_exceeded = 900
     }
   }
+
+  tags = local.tags
 }

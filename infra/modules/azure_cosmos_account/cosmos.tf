@@ -9,7 +9,7 @@ resource "azurerm_cosmosdb_account" "this" {
   public_network_access_enabled = var.force_public_network_access_enabled
 
   geo_location {
-    location          = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
+    location          = local.primary_location
     failover_priority = 0
     zone_redundant    = var.primary_geo_location.zone_redundant
   }
@@ -42,11 +42,11 @@ resource "azurerm_cosmosdb_account" "this" {
 
     content {
       type         = "UserAssigned"
-      identity_ids = [ var.customer_managed_key.user_assigned_identity_id ]
+      identity_ids = [var.customer_managed_key.user_assigned_identity_id]
     }
   }
 
-  default_identity_type = var.customer_managed_key.enabled ? "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmos.id}" : "FirstPartyIdentity"
+  default_identity_type = var.customer_managed_key.enabled ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity_id}" : "FirstPartyIdentity"
 
   tags = var.tags
 }

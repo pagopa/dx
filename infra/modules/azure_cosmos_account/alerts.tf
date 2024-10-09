@@ -29,7 +29,7 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
     dimension {
       name     = "Region"
       operator = "Include"
-      values   = [var.primary_geo_location.location]
+      values   = [local.primary_location]
     }
     dimension {
       name     = "StatusCode"
