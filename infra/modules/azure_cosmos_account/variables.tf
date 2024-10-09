@@ -53,7 +53,7 @@ variable "secondary_geo_locations" {
     failover_priority = optional(number, null)
     zone_redundant    = optional(bool, true)
   }))
-  description = "(Optional) Secondary geo locations for Cosmos DB account. If failover priority is not set, the items order is used."
+  description = "(Optional) Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used."
   default     = []
 }
 
@@ -81,14 +81,8 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
-variable "automatic_failover_enabled" {
-  type        = bool
-  description = "(Optional) Whether Automatic Failover is enabled for Cosmos DB account or not."
-  default     = false
-}
-
 variable "consistency_policy" {
-  description = "Defines the consistency policy for CosmosDB. Defaults to 'Session' if not specified."
+  description = "Defines the consistency policy for CosmosDB. This setting is highly dependant on the way the application uses the database. Please refer to the documentation to make the right choice https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels."
   type = object({
     consistency_level       = string
     max_interval_in_seconds = optional(number)
@@ -96,7 +90,7 @@ variable "consistency_policy" {
   })
 
   validation {
-    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], lookup(var.consistency_policy, "consistency_level", "Session"))
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
     error_message = "The 'consistency_level' must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong', or 'ConsistentPrefix'."
   }
 

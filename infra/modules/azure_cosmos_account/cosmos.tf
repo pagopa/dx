@@ -2,9 +2,9 @@ resource "azurerm_cosmosdb_account" "this" {
   name                          = "${local.app_name_prefix}-cosno-${var.environment.instance_number}"
   location                      = var.environment.location
   resource_group_name           = var.resource_group_name
-  offer_type                    = "Standard"
+  offer_type                    = "Standard" # It is a required field that can only be set to Standard
   kind                          = "GlobalDocumentDB"
-  automatic_failover_enabled    = var.automatic_failover_enabled
+  automatic_failover_enabled    = true
   key_vault_key_id              = var.customer_managed_key.enabled ? var.customer_managed_key.key_vault_key_id : null
   public_network_access_enabled = var.force_public_network_access_enabled
 
@@ -37,9 +37,13 @@ resource "azurerm_cosmosdb_account" "this" {
     type = "Continuous"
   }
 
-  identity {
-    type         = var.customer_managed_key.enabled ? "SystemAssigned, UserAssigned" : "SystemAssigned"
-    identity_ids = var.customer_managed_key.enabled ? [var.customer_managed_key.user_assigned_identity_id] : null
+  dynamic "identity" {
+    for_each = var.customer_managed_key.enabled ? [1] : []
+
+    content {
+      type         = "UserAssigned"
+      identity_ids = [ var.customer_managed_key.user_assigned_identity_id ]
+    }
   }
 
   tags = var.tags

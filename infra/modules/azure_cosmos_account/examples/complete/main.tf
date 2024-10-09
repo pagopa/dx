@@ -39,7 +39,6 @@ module "cosmos_db" {
   }
 
   force_public_network_access_enabled = false
-  automatic_failover_enabled          = true
 
   consistency_policy = {
     consistency_level       = "BoundedStaleness"
