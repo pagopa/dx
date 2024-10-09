@@ -1,7 +1,7 @@
 locals {
   apim = {
     name           = "${module.naming_convention.prefix}-apim-${module.naming_convention.suffix}"
-    autoscale_name = var.tier == "l" ? "${module.naming_convention.prefix}-apim-autoscale-${module.naming_convention.suffix}" : null
+    autoscale_name = var.tier == "l" ? "${module.naming_convention.prefix}-apim-as-${module.naming_convention.suffix}" : null
     sku_name = lookup(
       {
         "s" = "Developer_1",
