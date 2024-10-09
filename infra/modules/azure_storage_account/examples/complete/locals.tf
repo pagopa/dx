@@ -8,13 +8,7 @@ locals {
     instance_number = "01"
   }
 
-  location_map = {
-    "italynorth"         = "itn"
-    "westeurope"         = "weu"
-    "germanywestcentral" = "gwc"
-  }
-  location_short = lookup(local.location_map, local.environment.location, "itn")
-  project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
+  project = module.naming_convention.project
 
   tags = {
     CreatedBy   = "Terraform"

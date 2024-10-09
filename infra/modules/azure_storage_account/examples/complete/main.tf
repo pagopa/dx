@@ -1,3 +1,9 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environment = local.environment
+}
+
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"

@@ -1,31 +1,26 @@
 locals {
-  location_short  = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
-  project         = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
-  domain          = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
-  app_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
-
   subnet = {
     enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
       var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
       var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
       var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
     ) : []
-    name = "${local.app_name_prefix}-func-snet-${var.environment.instance_number}"
+    name = "${module.naming_convention.prefix}-func-snet-${module.naming_convention.suffix}"
   }
 
   app_service_plan = {
     enable = var.app_service_plan_id == null
-    name   = "${local.app_name_prefix}-asp-${var.environment.instance_number}"
+    name   = "${module.naming_convention.prefix}-asp-${module.naming_convention.suffix}"
   }
 
   function_app = {
-    name                   = "${local.app_name_prefix}-func-${var.environment.instance_number}"
+    name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
-    pep_sites              = "${local.app_name_prefix}-func-pep-${var.environment.instance_number}"
-    pep_sites_staging      = "${local.app_name_prefix}-staging-func-pep-${var.environment.instance_number}"
-    alert                  = "${local.app_name_prefix}-func-${var.environment.instance_number}] Health Check Failed"
+    pep_sites              = "${module.naming_convention.prefix}-func-pep-${module.naming_convention.suffix}"
+    pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
+    alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
     worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
@@ -39,11 +34,11 @@ locals {
 
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
-    name             = replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", "")
-    pep_blob_name    = "${local.app_name_prefix}-blob-pep-${var.environment.instance_number}"
-    pep_file_name    = "${local.app_name_prefix}-file-pep-${var.environment.instance_number}"
-    pep_queue_name   = "${local.app_name_prefix}-queue-pep-${var.environment.instance_number}"
-    alert            = "[${replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", "")}] Low Availability"
+    name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
+    pep_blob_name    = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
+    pep_file_name    = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
+    pep_queue_name   = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
+    alert            = "[${replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", "")}] Low Availability"
   }
 
   private_dns_zone = {

@@ -22,5 +22,10 @@ No resources.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_domain"></a> [domain](#output\_domain) | n/a |
+| <a name="output_prefix"></a> [prefix](#output\_prefix) | n/a |
+| <a name="output_project"></a> [project](#output\_project) | n/a |
+| <a name="output_suffix"></a> [suffix](#output\_suffix) | n/a |
 <!-- END_TF_DOCS -->

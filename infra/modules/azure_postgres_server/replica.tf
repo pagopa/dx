@@ -33,7 +33,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
   count = var.tier == "l" ? 1 : 0
 
-  name              = "${local.db_name_prefix}-psql-endpoint-${var.environment.instance_number}"
+  name              = "${module.naming_convention.prefix}-psql-ep-${module.naming_convention.suffix}"
   source_server_id  = azurerm_postgresql_flexible_server.this.id
   replica_server_id = azurerm_postgresql_flexible_server.replica[0].id
   type              = "ReadWrite"

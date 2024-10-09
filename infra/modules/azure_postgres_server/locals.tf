@@ -1,13 +1,7 @@
 locals {
-  # General
-  location_short = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
-  project        = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
-  domain         = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
-  db_name_prefix = "${local.project}${local.domain}${var.environment.app_name}"
-
   db = {
-    name         = "${local.db_name_prefix}-psql-${var.environment.instance_number}"
-    replica_name = var.tier == "l" ? "${local.db_name_prefix}-psql-replica-${var.environment.instance_number}" : null
+    name         = "${module.naming_convention.prefix}-psql-${module.naming_convention.suffix}"
+    replica_name = var.tier == "l" ? "${module.naming_convention.prefix}-psql-replica-${module.naming_convention.suffix}" : null
     sku_name = lookup(
       {
         "s" = "B_Standard_B1ms",
