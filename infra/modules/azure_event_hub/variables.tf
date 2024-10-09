@@ -63,6 +63,15 @@ variable "subnet_pep_id" {
   description = "Id of the subnet which holds private endpoints"
 }
 
+variable "allowed_sources" {
+  type = list(object({
+    subnet_ids = list(string)
+    ips        = list(string)
+  }))
+  default     = []
+  description = "List of allowed sources (subnets and ip masks)"
+}
+
 #----------------#
 # Administration #
 #----------------#

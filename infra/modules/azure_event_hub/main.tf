@@ -34,6 +34,28 @@ resource "azurerm_eventhub_namespace" "this" {
   maximum_throughput_units      = local.maximum_throughput_units
   public_network_access_enabled = false
 
+  dynamic "network_rulesets" {
+    for_each = var.allowed_sources
+    content {
+      default_action = "Allow"
+      dynamic "virtual_network_rule" {
+        for_each = network_rulesets.value.subnet_ids
+        content {
+          subnet_id                                       = virtual_network_rule.value
+          ignore_missing_virtual_network_service_endpoint = false
+        }
+      }
+      dynamic "ip_rule" {
+        for_each = { for ip in network_rulesets.value["ips"] : ip => ip }
+        content {
+          ip_mask = ip_rule.value
+          action  = "Allow"
+        }
+      }
+      trusted_service_access_enabled = false
+    }
+  }
+
   tags = var.tags
 }
 
