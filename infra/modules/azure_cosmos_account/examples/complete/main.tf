@@ -46,6 +46,8 @@ module "cosmos_db" {
     max_staleness_prefix    = 100000
   }
 
+  point_in_time_restore_retention_days = 30
+
   alerts = {
     enabled         = true
     action_group_id = data.azurerm_monitor_action_group.example.id
