@@ -46,5 +46,7 @@ resource "azurerm_cosmosdb_account" "this" {
     }
   }
 
+  default_identity_type = var.customer_managed_key.enabled ? "UserAssignedIdentity=${azurerm_user_assigned_identity.cosmos.id}" : "FirstPartyIdentity"
+
   tags = var.tags
 }
