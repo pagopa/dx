@@ -38,7 +38,6 @@ resource "azurerm_eventhub_namespace" "this" {
     for_each = length(var.allowed_sources.subnet_ids) > 0 || length(var.allowed_sources.ips) > 0 ? [1] : []
     content {
       default_action                 = "Allow"
-      public_network_access_enabled  = false
       trusted_service_access_enabled = false
 
       dynamic "virtual_network_rule" {
