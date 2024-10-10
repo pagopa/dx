@@ -32,12 +32,12 @@ resource "azurerm_eventhub_namespace" "this" {
   capacity                      = local.capacity
   auto_inflate_enabled          = local.auto_inflate_enabled
   maximum_throughput_units      = local.maximum_throughput_units
-  public_network_access_enabled = false
+  public_network_access_enabled = length(var.allowed_sources.subnet_ids) > 0 || length(var.allowed_sources.ips) > 0 ? true : false
 
   dynamic "network_rulesets" {
     for_each = length(var.allowed_sources.subnet_ids) > 0 || length(var.allowed_sources.ips) > 0 ? [1] : []
     content {
-      default_action                 = "Allow"
+      default_action                 = "Deny"
       trusted_service_access_enabled = false
 
       dynamic "virtual_network_rule" {
