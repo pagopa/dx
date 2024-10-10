@@ -38,12 +38,10 @@ module "azure_event_hub" {
 
   action_group_id = data.azurerm_monitor_action_group.example.id
 
-  allowed_sources = [
-    {
-      subnet_ids = [azurerm_subnet.example.id]
-      ips        = []
-    }
-  ]
+  allowed_sources = {
+    subnet_ids = [azurerm_subnet.example.id]
+    ips        = []
+  }
 
   eventhubs = [{
     name                   = "event-hub-test"
