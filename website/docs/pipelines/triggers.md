@@ -75,8 +75,8 @@ on:
     types:
       - ...
     paths:
-      - "src/core/prod/**"
-      - "src/core/_modules/**"
+      - "infra/resources/prod/**"
+      - "infra/resources/_modules/**"
       - ".github/workflows/core_code_review.yaml"
       - ".github/workflows/core_deploy.yaml"
 ```
@@ -135,8 +135,8 @@ on:
     types:
       - ...
     paths:
-      - "src/core/prod/**"
-      - "src/core/_modules/**"
+      - "infra/resources/prod/**"
+      - "infra/resources/_modules/**"
       - ".github/workflows/core_deploy.yaml"
 ```
 
