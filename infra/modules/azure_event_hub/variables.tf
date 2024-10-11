@@ -65,13 +65,10 @@ variable "subnet_pep_id" {
 
 variable "allowed_sources" {
   type = object({
-    subnet_ids = list(string)
-    ips        = list(string)
+    subnet_ids = optional(list(string), [])
+    ips        = optional(list(string), [])
   })
-  default = {
-    subnet_ids = []
-    ips        = []
-  }
+  default     = {}
   description = "Lists of allowed sources (subnets and ip masks)"
 }
 
