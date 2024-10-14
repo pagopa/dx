@@ -51,8 +51,8 @@ variable "tier" {
   default = "l"
 
   validation {
-    condition     = contains(["xs", "s", "m", "l", "xl", "premium", "standard", "test"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"xs\", \"s\", \"m\", \"l\", \"xl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
+    condition     = contains(["xs", "s", "m", "l", "xl", "xxl", "premium", "standard", "test"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"xs\", \"s\", \"m\", \"l\", \"xl\", \"xxl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
   }
 }
 
