@@ -135,14 +135,3 @@ variable "alerts" {
     error_message = "When alerts are enabled, all thresholds must be set."
   }
 }
-
-variable "point_in_time_restore_retention_days" {
-  type        = number
-  description = "(Optional) The number of days to retain point-in-time restore data. Must be 7 or 30."
-  default     = 30
-
-  validation {
-    condition     = var.point_in_time_restore_retention_days == 7 || var.point_in_time_restore_retention_days == 30
-    error_message = "Point-in-time restore retention days must be exactly 7 or 30."
-  }
-}

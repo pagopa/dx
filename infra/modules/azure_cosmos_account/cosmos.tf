@@ -35,7 +35,7 @@ resource "azurerm_cosmosdb_account" "this" {
   # As suggested by technology https://pagopa.atlassian.net/wiki/spaces/DEVOPS/pages/500039691/Cosmos+DB#backup-policy
   backup {
     type = "Continuous"
-    tier = "Continuous${var.point_in_time_restore_retention_days}Days"
+    tier = "Continuous30Days"
   }
 
   dynamic "identity" {
