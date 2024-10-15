@@ -3,13 +3,13 @@ locals {
   is_app_service  = var.target_service.app_service_name != null
   is_function_app = var.target_service.function_app_name != null
 
-  base_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name
+  base_name = local.is_app_service ? var.target_service.app_service_name : var.target_service.function_app_name
 
   autoscale_name      = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
-  resource_group_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
-  location            = local.is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
-  app_service_id      = local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
-  app_service_plan_id = local.is_app_service ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
+  resource_group_name = var.resource_group_name
+  location            = local.is_app_service ? coalesce(var.target_service.location, data.azurerm_linux_web_app.this[0].location) : coalesce(var.target_service.location, data.azurerm_linux_function_app.this[0].location)
+  app_service_id      = local.is_app_service ? coalesce(var.target_service.app_service_id, data.azurerm_linux_web_app.this[0].id) : coalesce(var.target_service.function_app_id, data.azurerm_linux_function_app.this[0].id)
+  app_service_plan_id = local.is_app_service ? coalesce(var.target_service.app_service_plan_id, data.azurerm_linux_web_app.this[0].service_plan_id) : coalesce(var.target_service.app_service_plan_id, data.azurerm_linux_function_app.this[0].service_plan_id)
 
   requests_rule_increase = {
     metric_trigger = {

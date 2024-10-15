@@ -16,13 +16,54 @@ variable "autoscale_name" {
 
 variable "target_service" {
   type = object({
-    app_service_name  = optional(string)
-    function_app_name = optional(string)
+    app_service_id       = optional(string)
+    app_service_name     = optional(string)
+    function_app_id      = optional(string)
+    function_app_name    = optional(string)
+    app_service_plan_id  = optional(string)
+    location = optional(string)
   })
+
+  description = <<EOT
+  Configuration for the target service (App Service or Function App) to which the autoscaler will be applied.
+  
+  For existing services:
+  - Provide either 'app_service_name' or 'function_app_name'.
+  
+  For new services being created concurrently:
+  - Provide 'app_service_id' or 'function_app_id' (depending on the service type).
+  - 'app_service_plan_id' and 'location' must also be provided.
+
+  Note: Only one service type (App Service or Function App) should be specified.
+  EOT
 
   validation {
     condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
+    error_message = "Exactly one of 'app_service_name' or 'function_app_name' must be provided for existing services."
+  }
+
+  validation {
+    condition     = (var.target_service.app_service_id != null) != (var.target_service.function_app_id != null)
+    error_message = "Exactly one of 'app_service_id' or 'function_app_id' must be provided for new services."
+  }
+
+  validation {
+    condition = (
+      (var.target_service.app_service_id != null || var.target_service.function_app_id != null) && 
+      var.target_service.app_service_plan_id != null && 
+      var.target_service.location != null
+    ) || (
+      var.target_service.app_service_name != null || var.target_service.function_app_name != null
+    )
+    error_message = "For new services, 'app_service_plan_id' and 'location' must be provided along with either 'app_service_id' or 'function_app_id'."
+  }
+
+  validation {
+    condition = (
+      (var.target_service.app_service_name != null || var.target_service.function_app_name != null) != 
+      (var.target_service.app_service_id != null || var.target_service.function_app_id != null)
+    )
+    error_message = "Provide either name for existing services or ID for new services, but not both."
   }
 }
 
