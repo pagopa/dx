@@ -6,7 +6,8 @@ variable "principal_id" {
 variable "cosmos" {
   description = "A list of CosmosDB role assignments"
   type = list(object({
-    account_name        = string
+    account_name        = optional(string)
+    account_id          = optional(string)
     resource_group_name = string
     role                = string
     database            = optional(string, "*")
@@ -93,9 +94,11 @@ variable "storage_queue" {
 variable "event_hub" {
   description = "A list of event hub role assignments"
   type = list(object({
-    namespace_name      = string
-    resource_group_name = string
+    namespace_name      = optional(string)
+    namespace_id        = optional(string)
+    event_hub_ids       = optional(list(string), ["*"])
     event_hub_names     = optional(list(string), ["*"])
+    resource_group_name = string
     role                = string
   }))
 

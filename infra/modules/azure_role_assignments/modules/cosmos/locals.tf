@@ -8,7 +8,8 @@ locals {
     for assignment in flatten([
       for entry in var.cosmos : [
         for collection in entry.collections : {
-          account_name        = entry.account_name
+          account_name        = coalesce(entry.account_name, reverse(split("/", entry.account_id))[0])
+          account_id          = coalesce(entry.account_id, data.azurerm_cosmosdb_account.cosmos["${entry.resource_group_name}|${coalesce(entry.account_name, reverse(split("/", entry.account_id))[0])}"].id)
           resource_group_name = entry.resource_group_name
           role                = entry.role
           database            = entry.database
