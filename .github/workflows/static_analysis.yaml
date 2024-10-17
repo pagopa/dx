@@ -104,6 +104,7 @@ jobs:
           set -eu
 
           for folder in ${{ steps.file_changes.outputs.files }}; do
+            echo "Running pre-commit on $folder"
             pre-commit run \
               --color=always \
               --show-diff-on-failure \
@@ -118,4 +119,5 @@ jobs:
 
           pre-commit run \
             --color=always \
+            --show-diff-on-failure \
             --all-files
