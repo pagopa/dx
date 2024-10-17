@@ -103,10 +103,12 @@ jobs:
         run: |
           set -eu
 
-          pre-commit run \
-            --color=always \
-            --show-diff-on-failure \
-            --files "${{ steps.file_changes.outputs.files }}"
+          for folder in ${{ steps.file_changes.outputs.files }}; do
+            pre-commit run \
+              --color=always \
+              --show-diff-on-failure \
+              --files "$folder"
+          done
 
       - name: Run pre-commit
         if: ${{ steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
