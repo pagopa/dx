@@ -61,7 +61,7 @@ jobs:
 
       - name: Get Modified Files
         id: file_changes
-        if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
+        if: ${{ inputs.enable_modified_files_detection }}
         run: |
           set -eu
 
@@ -76,7 +76,7 @@ jobs:
           python -m pip freeze --local
 
       - name: Run pre-commit on Modified Files
-        if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' && inputs.enable_modified_files_detection }}
+        if: ${{ steps.file_changes.outputs.files != '' && inputs.enable_modified_files_detection }}
         run: |
           set -eu
 
@@ -86,7 +86,7 @@ jobs:
             --files "${{ steps.file_changes.outputs.files }}"
 
       - name: Run pre-commit
-        if: ${{ github.event_name != 'pull_request' || steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
+        if: ${{ steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
         id: pre_commit
         run: |
           set -eu
