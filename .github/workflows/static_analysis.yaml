@@ -67,8 +67,30 @@ jobs:
 
           DIFF="$(git diff --name-only origin/main origin/test-static-analysis-fail -- '*.tf')"
           echo "Diff between main and test-static-analysis-fail"
-          echo $DIFF
-          echo "files=$(echo \"$DIFF\" | xargs echo)" >> $GITHUB_OUTPUT
+
+          # Convert the string into an array
+          file_paths_array=($DIFF)
+
+          # Use associative array to store unique folders
+          declare -A folders
+
+          # Extract unique directories and store them
+          for path in "${file_paths_array[@]}"; do
+            folder=$(dirname "$path")
+            folders["$folder"]=1
+          done
+
+          # Build the result string with wildcard
+          result=""
+          for folder in "${!folders[@]}"; do
+            result+="$folder/* "
+          done
+
+          # Trim trailing space and print the result
+          echo "${result::-1}"
+          FINAL="${result::-1}"
+
+          echo "files=$(echo \"$FINAL\" | xargs echo)" >> $GITHUB_OUTPUT
 
       - name: Fix Alpine Container Image
         run: |
