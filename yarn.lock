@@ -4327,6 +4327,78 @@ __metadata:
   languageName: node
   linkType: hard
 
+"azure_api_management@workspace:infra/modules/azure_api_management":
+  version: 0.0.0-use.local
+  resolution: "azure_api_management@workspace:infra/modules/azure_api_management"
+  languageName: unknown
+  linkType: soft
+
+"azure_app_service@workspace:infra/modules/azure_app_service":
+  version: 0.0.0-use.local
+  resolution: "azure_app_service@workspace:infra/modules/azure_app_service"
+  languageName: unknown
+  linkType: soft
+
+"azure_app_service_exposed@workspace:infra/modules/azure_app_service_exposed":
+  version: 0.0.0-use.local
+  resolution: "azure_app_service_exposed@workspace:infra/modules/azure_app_service_exposed"
+  languageName: unknown
+  linkType: soft
+
+"azure_app_service_plan_autoscaler@workspace:infra/modules/azure_app_service_plan_autoscaler":
+  version: 0.0.0-use.local
+  resolution: "azure_app_service_plan_autoscaler@workspace:infra/modules/azure_app_service_plan_autoscaler"
+  languageName: unknown
+  linkType: soft
+
+"azure_event_hub@workspace:infra/modules/azure_event_hub":
+  version: 0.0.0-use.local
+  resolution: "azure_event_hub@workspace:infra/modules/azure_event_hub"
+  languageName: unknown
+  linkType: soft
+
+"azure_federated_identity_with_github@workspace:infra/modules/azure_federated_identity_with_github":
+  version: 0.0.0-use.local
+  resolution: "azure_federated_identity_with_github@workspace:infra/modules/azure_federated_identity_with_github"
+  languageName: unknown
+  linkType: soft
+
+"azure_function_app@workspace:infra/modules/azure_function_app":
+  version: 0.0.0-use.local
+  resolution: "azure_function_app@workspace:infra/modules/azure_function_app"
+  languageName: unknown
+  linkType: soft
+
+"azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed":
+  version: 0.0.0-use.local
+  resolution: "azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed"
+  languageName: unknown
+  linkType: soft
+
+"azure_naming_convention@workspace:infra/modules/azure_naming_convention":
+  version: 0.0.0-use.local
+  resolution: "azure_naming_convention@workspace:infra/modules/azure_naming_convention"
+  languageName: unknown
+  linkType: soft
+
+"azure_postgres_server@workspace:infra/modules/azure_postgres_server":
+  version: 0.0.0-use.local
+  resolution: "azure_postgres_server@workspace:infra/modules/azure_postgres_server"
+  languageName: unknown
+  linkType: soft
+
+"azure_role_assignments@workspace:infra/modules/azure_role_assignments":
+  version: 0.0.0-use.local
+  resolution: "azure_role_assignments@workspace:infra/modules/azure_role_assignments"
+  languageName: unknown
+  linkType: soft
+
+"azure_storage_account@workspace:infra/modules/azure_storage_account":
+  version: 0.0.0-use.local
+  resolution: "azure_storage_account@workspace:infra/modules/azure_storage_account"
+  languageName: unknown
+  linkType: soft
+
 "babel-loader@npm:^9.1.3":
   version: 9.1.3
   resolution: "babel-loader@npm:9.1.3"
@@ -7150,6 +7222,12 @@ __metadata:
   checksum: 10c0/116f99732925f939cbfd6f2e57db1aa7e111a460db0d103e3b3f2fce6909d44311663d4542350706cad806345b9892358cc3b153674f88eeae77f43380b3bfca
   languageName: node
   linkType: hard
+
+"github_selfhosted_runner_on_container_app_jobs@workspace:infra/modules/github_selfhosted_runner_on_container_app_jobs":
+  version: 0.0.0-use.local
+  resolution: "github_selfhosted_runner_on_container_app_jobs@workspace:infra/modules/github_selfhosted_runner_on_container_app_jobs"
+  languageName: unknown
+  linkType: soft
 
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.2":
   version: 5.1.2

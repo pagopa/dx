@@ -13,11 +13,6 @@ data "azurerm_private_dns_zone" "storage_account_file" {
   resource_group_name = local.private_dns_zone.resource_group_name
 }
 
-data "azurerm_private_dns_zone" "storage_account_table" {
-  name                = "privatelink.table.core.windows.net"
-  resource_group_name = local.private_dns_zone.resource_group_name
-}
-
 data "azurerm_private_dns_zone" "storage_account_queue" {
   name                = "privatelink.queue.core.windows.net"
   resource_group_name = local.private_dns_zone.resource_group_name

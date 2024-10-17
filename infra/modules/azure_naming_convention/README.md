@@ -1,14 +1,10 @@
 # DX - Common Variables Validation
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 No requirements.
-
-## Providers
-
-No providers.
 
 ## Modules
 
@@ -26,5 +22,10 @@ No resources.
 
 ## Outputs
 
-No outputs.
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+| Name | Description |
+|------|-------------|
+| <a name="output_domain"></a> [domain](#output\_domain) | n/a |
+| <a name="output_prefix"></a> [prefix](#output\_prefix) | n/a |
+| <a name="output_project"></a> [project](#output\_project) | n/a |
+| <a name="output_suffix"></a> [suffix](#output\_suffix) | n/a |
+<!-- END_TF_DOCS -->

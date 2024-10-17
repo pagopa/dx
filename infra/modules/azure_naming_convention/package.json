@@ -1,0 +1,6 @@
+{
+  "name": "azure_naming_convention",
+  "version": "0.0.2",
+  "private": true,
+  "provider": "azurerm"
+}

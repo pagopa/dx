@@ -1,29 +1,27 @@
 locals {
-  location_short = var.environment.location == "italynorth" ? "itn" : var.environment.location == "westeurope" ? "weu" : var.environment.location == "germanywestcentral" ? "gwc" : "neu"
-  project        = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
-  domain         = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
-
   subnet = {
     enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
       var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
       var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
       var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
     ) : []
-    name = "${local.project}${local.domain}${var.environment.app_name}-func-snet-${var.environment.instance_number}"
+    name = "${module.naming_convention.prefix}-func-snet-${module.naming_convention.suffix}"
   }
 
   app_service_plan = {
     enable = var.app_service_plan_id == null
-    name   = "${local.project}${local.domain}${var.environment.app_name}-asp-${var.environment.instance_number}"
+    name   = "${module.naming_convention.prefix}-asp-${module.naming_convention.suffix}"
   }
 
   function_app = {
-    name                   = "${local.project}${local.domain}${var.environment.app_name}-func-${var.environment.instance_number}"
-    sku_name               = var.tier == "test" ? "B1" : var.tier == "standard" ? "P0v3" : "P1v3"
-    zone_balancing_enabled = var.tier != "test"
-    is_slot_enabled        = var.tier == "test" ? 0 : 1
-    pep_sites              = "${local.project}${local.domain}${var.environment.app_name}-func-pep-${var.environment.instance_number}"
-    pep_sites_staging      = "${local.project}${local.domain}${var.environment.app_name}-staging-func-pep-${var.environment.instance_number}"
+    name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
+    sku_name               = local.sku_name_mapping[local.tier]
+    zone_balancing_enabled = local.tier != "s"
+    is_slot_enabled        = local.tier == "s" ? 0 : 1
+    pep_sites              = "${module.naming_convention.prefix}-func-pep-${module.naming_convention.suffix}"
+    pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
+    alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
+    worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
   function_app_slot = {
@@ -35,11 +33,12 @@ locals {
   }
 
   storage_account = {
-    replication_type = var.tier == "test" ? "LRS" : "ZRS"
-    name             = replace("${local.project}${replace(local.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}", "-", "")
-    pep_blob_name    = "${local.project}${local.domain}${var.environment.app_name}-blob-pep-${var.environment.instance_number}"
-    pep_file_name    = "${local.project}${local.domain}${var.environment.app_name}-file-pep-${var.environment.instance_number}"
-    pep_queue_name   = "${local.project}${local.domain}${var.environment.app_name}-queue-pep-${var.environment.instance_number}"
+    replication_type = local.tier == "s" ? "LRS" : "ZRS"
+    name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
+    pep_blob_name    = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
+    pep_file_name    = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
+    pep_queue_name   = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
+    alert            = "[${replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", "")}] Low Availability"
   }
 
   private_dns_zone = {
