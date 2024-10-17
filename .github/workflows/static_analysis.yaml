@@ -87,8 +87,9 @@ jobs:
           done
 
           # Trim trailing space and print the result
-          echo "${result::-1}"
+          # echo "${result::-1}"
           FINAL="${result::-1}"
+          echo $FINAL
 
           echo "files=$(echo \"$FINAL\" | xargs echo)" >> $GITHUB_OUTPUT
 
@@ -102,7 +103,8 @@ jobs:
         if: ${{ steps.file_changes.outputs.files != '' && inputs.enable_modified_files_detection }}
         run: |
           set -eu
-
+          echo ${{ steps.file_changes.outputs.files }}
+          
           for folder in ${{ steps.file_changes.outputs.files }}; do
             echo "Running pre-commit on $folder"
             pre-commit run \
