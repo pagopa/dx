@@ -83,15 +83,13 @@ jobs:
           # Build the result string with wildcard
           result=""
           for folder in "${!folders[@]}"; do
-            result+="$folder/* "
+            result+="$folder "
           done
 
           # Trim trailing space and print the result
-          # echo "${result::-1}"
-          # FINAL="${result::-1}"
-          # echo $FINAL
+          FINAL="${result::-1}"
 
-          echo "files=$(echo \"${result::-1}\" | xargs echo)" >> $GITHUB_OUTPUT
+          echo "files=$(echo \"$FINAL\" | xargs echo)" >> $GITHUB_OUTPUT
 
       - name: Fix Alpine Container Image
         run: |
@@ -110,7 +108,7 @@ jobs:
             pre-commit run \
               --color=always \
               --show-diff-on-failure \
-              --files "$folder"
+              --files "$folder/*"
           done
 
       - name: Run pre-commit
