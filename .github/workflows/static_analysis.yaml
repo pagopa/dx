@@ -87,11 +87,11 @@ jobs:
           done
 
           # Trim trailing space and print the result
-          echo "${result::-1}"
-          FINAL="${result::-1}"
-          echo $FINAL
+          # echo "${result::-1}"
+          # FINAL="${result::-1}"
+          # echo $FINAL
 
-          echo "files=$(echo \"$FINAL\" | xargs echo)" >> $GITHUB_OUTPUT
+          echo "files=$(echo \"${result::-1}\" | xargs echo)" >> $GITHUB_OUTPUT
 
       - name: Fix Alpine Container Image
         run: |
