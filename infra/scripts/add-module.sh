@@ -78,6 +78,9 @@ if [ -n "$ORG_NAME" ]; then
     echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"
     echo "Please, ask the DevEx members to edit the dx-pagopa-bot PAT adding the new repository"
     
+    # Add dx-pagopa-bot as a collaborator with write permissions
+    gh api -X PUT /repos/$ORG_NAME/$SUBREPO_NAME/collaborators/dx-pagopa-bot -f permission=push
+
     # Initialize Git in the module directory and push to the new repository
     cd "$MODULE_DIR"
     git init
