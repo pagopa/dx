@@ -108,8 +108,14 @@ jobs:
             pre-commit run \
               --color=always \
               --show-diff-on-failure \
-              --files "$folder/*"
+              --files "./$folder/*"
           done
+
+          pre-commit run \
+            --color=always \
+            --show-diff-on-failure \
+            --from-ref origin/test-static-analysis-fail \
+            --to-ref origin/main
 
       - name: Run pre-commit
         if: ${{ steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
