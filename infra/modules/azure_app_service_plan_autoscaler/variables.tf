@@ -54,6 +54,13 @@ variable "scheduler" {
       default = number
       minimum = number
     }), null)
+    spot_load = optional(object({
+      start_date = string
+      end_date   = string
+      name       = string
+      default    = number
+      minimum    = number
+    }), null)
     normal_load = object({
       default = number
       minimum = number

@@ -909,5 +909,180 @@ resource "azurerm_monitor_autoscale_setting" "this" {
     }
   }
 
+  # Fixed Time profile
+  dynamic "profile" {
+    for_each = var.scheduler.spot_load != null ? [1] : []
+
+    content {
+      name = var.scheduler.spot_load.name
+
+      capacity {
+        default = var.scheduler.spot_load.default
+        minimum = var.scheduler.spot_load.minimum
+        maximum = var.scheduler.maximum
+      }
+
+      fixed_date {
+        timezone = "W. Europe Standard Time"
+        start    = var.scheduler.spot_load.start_date
+        end      = var.scheduler.spot_load.end_date
+      }
+
+      # Requests - increase
+      dynamic "rule" {
+        for_each = var.scale_metrics.requests == null ? [] : [1]
+
+        content {
+          metric_trigger {
+            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
+            statistic                = local.requests_rule_increase.metric_trigger.statistic
+            time_window              = local.requests_rule_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rule_increase.metric_trigger.operator
+            threshold                = local.requests_rule_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+          }
+
+          scale_action {
+            cooldown  = local.requests_rule_increase.scale_action.cooldown
+            direction = local.requests_rule_increase.scale_action.direction
+            type      = local.requests_rule_increase.scale_action.type
+            value     = local.requests_rule_increase.scale_action.value
+          }
+        }
+      }
+
+      # Requests - decrease
+      dynamic "rule" {
+        for_each = var.scale_metrics.requests == null ? [] : [1]
+
+        content {
+          metric_trigger {
+            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rule_decrease.metric_trigger.statistic
+            time_window              = local.requests_rule_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rule_decrease.metric_trigger.operator
+            threshold                = local.requests_rule_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+          }
+
+          scale_action {
+            cooldown  = local.requests_rule_decrease.scale_action.cooldown
+            direction = local.requests_rule_decrease.scale_action.direction
+            type      = local.requests_rule_decrease.scale_action.type
+            value     = local.requests_rule_decrease.scale_action.value
+          }
+        }
+      }
+
+      # CPU - increase
+      rule {
+        metric_trigger {
+          metric_name              = local.cpu_rule_increase.metric_trigger.metric_name
+          metric_resource_id       = local.cpu_rule_increase.metric_trigger.metric_resource_id
+          metric_namespace         = local.cpu_rule_increase.metric_trigger.metric_namespace
+          time_grain               = local.cpu_rule_increase.metric_trigger.time_grain
+          statistic                = local.cpu_rule_increase.metric_trigger.statistic
+          time_window              = local.cpu_rule_increase.metric_trigger.time_window
+          time_aggregation         = local.cpu_rule_increase.metric_trigger.time_aggregation
+          operator                 = local.cpu_rule_increase.metric_trigger.operator
+          threshold                = local.cpu_rule_increase.metric_trigger.threshold
+          divide_by_instance_count = local.cpu_rule_increase.metric_trigger.divide_by_instance_count
+        }
+
+        scale_action {
+          cooldown  = local.cpu_rule_increase.scale_action.cooldown
+          direction = local.cpu_rule_increase.scale_action.direction
+          type      = local.cpu_rule_increase.scale_action.type
+          value     = local.cpu_rule_increase.scale_action.value
+        }
+      }
+
+      # CPU - decrease
+      rule {
+        metric_trigger {
+          metric_name              = local.cpu_rule_decrease.metric_trigger.metric_name
+          metric_resource_id       = local.cpu_rule_decrease.metric_trigger.metric_resource_id
+          metric_namespace         = local.cpu_rule_decrease.metric_trigger.metric_namespace
+          time_grain               = local.cpu_rule_decrease.metric_trigger.time_grain
+          statistic                = local.cpu_rule_decrease.metric_trigger.statistic
+          time_window              = local.cpu_rule_decrease.metric_trigger.time_window
+          time_aggregation         = local.cpu_rule_decrease.metric_trigger.time_aggregation
+          operator                 = local.cpu_rule_decrease.metric_trigger.operator
+          threshold                = local.cpu_rule_decrease.metric_trigger.threshold
+          divide_by_instance_count = local.cpu_rule_decrease.metric_trigger.divide_by_instance_count
+        }
+
+        scale_action {
+          cooldown  = local.cpu_rule_decrease.scale_action.cooldown
+          direction = local.cpu_rule_decrease.scale_action.direction
+          type      = local.cpu_rule_decrease.scale_action.type
+          value     = local.cpu_rule_decrease.scale_action.value
+        }
+      }
+
+      # Memory - increase
+      dynamic "rule" {
+        for_each = var.scale_metrics.memory == null ? [] : [1]
+
+        content {
+          metric_trigger {
+            metric_name              = local.memory_rule_increase.metric_trigger.metric_name
+            metric_resource_id       = local.memory_rule_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.memory_rule_increase.metric_trigger.metric_namespace
+            time_grain               = local.memory_rule_increase.metric_trigger.time_grain
+            statistic                = local.memory_rule_increase.metric_trigger.statistic
+            time_window              = local.memory_rule_increase.metric_trigger.time_window
+            time_aggregation         = local.memory_rule_increase.metric_trigger.time_aggregation
+            operator                 = local.memory_rule_increase.metric_trigger.operator
+            threshold                = local.memory_rule_increase.metric_trigger.threshold
+            divide_by_instance_count = local.memory_rule_increase.metric_trigger.divide_by_instance_count
+          }
+
+          scale_action {
+            cooldown  = local.memory_rule_increase.scale_action.cooldown
+            direction = local.memory_rule_increase.scale_action.direction
+            type      = local.memory_rule_increase.scale_action.type
+            value     = local.memory_rule_increase.scale_action.value
+          }
+        }
+      }
+
+      # Memory - decrease
+      dynamic "rule" {
+        for_each = var.scale_metrics.memory == null ? [] : [1]
+
+        content {
+          metric_trigger {
+            metric_name              = local.memory_rule_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.memory_rule_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.memory_rule_decrease.metric_trigger.metric_namespace
+            time_grain               = local.memory_rule_decrease.metric_trigger.time_grain
+            statistic                = local.memory_rule_decrease.metric_trigger.statistic
+            time_window              = local.memory_rule_decrease.metric_trigger.time_window
+            time_aggregation         = local.memory_rule_decrease.metric_trigger.time_aggregation
+            operator                 = local.memory_rule_decrease.metric_trigger.operator
+            threshold                = local.memory_rule_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.memory_rule_decrease.metric_trigger.divide_by_instance_count
+          }
+
+          scale_action {
+            cooldown  = local.memory_rule_decrease.scale_action.cooldown
+            direction = local.memory_rule_decrease.scale_action.direction
+            type      = local.memory_rule_decrease.scale_action.type
+            value     = local.memory_rule_decrease.scale_action.value
+          }
+        }
+      }
+    }
+  }
+
   tags = var.tags
 }
