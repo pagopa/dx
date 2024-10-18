@@ -58,16 +58,6 @@ jobs:
           git config --global --add safe.directory $GITHUB_WORKSPACE
           git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
 
-      - name: Get Modified Files
-        id: file_changes
-        if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
-        run: |
-          set -eu
-
-          DIFF="$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- '*.tf')"
-          echo "Diff between ${{ github.base_ref }} and ${{ github.head_ref }}"
-          echo "files=$(echo \"$DIFF\" | xargs echo)" >> $GITHUB_OUTPUT
-
       - name: Fix Alpine Container Image
         run: |
           apk --no-cache add tar
@@ -75,20 +65,27 @@ jobs:
           python -m pip freeze --local
 
       - name: Run pre-commit on Modified Files
-        if: ${{ github.event_name == 'pull_request' && steps.file_changes.outputs.files != '' && inputs.enable_modified_files_detection }}
+        if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
         run: |
           set -eu
+
+          echo "Start pre-commit only on modified files"
+          echo "- FROM  Base ref: ${{ github.event.pull_request.base.ref }}"
+          echo "- TO    Head ref: ${{ github.event.pull_request.head.ref }}"
 
           pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            --files "${{ steps.file_changes.outputs.files }}"
+            --from-ref ${{ github.event.pull_request.base.ref }} \
+            --to-ref ${{ github.event.pull_request.head.ref }}
 
       - name: Run pre-commit
-        if: ${{ github.event_name != 'pull_request' || steps.file_changes.outputs.files == '' || !inputs.enable_modified_files_detection }}
+        if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
         id: pre_commit
         run: |
           set -eu
+
+          echo "Start pre-commit on all files"
 
           pre-commit run \
             --color=always \
