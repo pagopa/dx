@@ -12,8 +12,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_federated_cd_identity"></a> [federated\_cd\_identity](#module\_federated\_cd\_identity) | github.com/pagopa/terraform-azurerm-v3//github_federated_identity | v8.20.0 |
-| <a name="module_federated_ci_identity"></a> [federated\_ci\_identity](#module\_federated\_ci\_identity) | github.com/pagopa/terraform-azurerm-v3//github_federated_identity | v8.20.0 |
+| <a name="module_federated_cd_identity"></a> [federated\_cd\_identity](#module\_federated\_cd\_identity) | github.com/pagopa/terraform-azurerm-v3//github_federated_identity | identity-location |
+| <a name="module_federated_ci_identity"></a> [federated\_ci\_identity](#module\_federated\_ci\_identity) | github.com/pagopa/terraform-azurerm-v3//github_federated_identity | identity-location |
 
 ## Resources
 
@@ -30,6 +30,7 @@
 | <a name="input_domain"></a> [domain](#input\_domain) | (Optional) Domain of the project | `string` | `""` | no |
 | <a name="input_env"></a> [env](#input\_env) | Environment name | `string` | n/a | yes |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
+| <a name="input_location"></a> [location](#input\_location) | Azure region for the Managed Identity | `string` | n/a | yes |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Project prefix | `string` | n/a | yes |
 | <a name="input_repositories"></a> [repositories](#input\_repositories) | List of repositories to federate | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
