@@ -70,14 +70,14 @@ jobs:
           set -eu
 
           echo "Start pre-commit only on modified files"
-          echo "- Base ref: ${{ github.event.pull_request.base.ref }}"
-          echo "- Head ref: ${{ github.event.pull_request.head.ref }}"
+          echo "- FROM  Base ref: ${{ github.event.pull_request.base.ref }}"
+          echo "- TO    Head ref: ${{ github.event.pull_request.head.ref }}"
 
           pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            --from-ref ${{ github.event.pull_request.head.ref }} \
-            --to-ref ${{ github.event.pull_request.base.ref }}
+            --from-ref ${{ github.event.pull_request.base.ref }} \
+            --to-ref ${{ github.event.pull_request.head.ref }}
 
       - name: Run pre-commit
         if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
