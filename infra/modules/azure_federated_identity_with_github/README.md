@@ -17,9 +17,7 @@
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [azurerm_resource_group.rg_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
+No resources.
 
 ## Inputs
 
