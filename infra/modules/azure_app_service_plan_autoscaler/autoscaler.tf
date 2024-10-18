@@ -911,7 +911,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
   # Fixed Time profile
   dynamic "profile" {
-    for_each = var.scheduler.spot_load != null ? [1] : []
+    for_each = var.scheduler.spot_load == null ? [] : [1]
 
     content {
       name = var.scheduler.spot_load.name
