@@ -10,7 +10,7 @@ terraform {
 module "federated_ci_identity" {
   count = var.continuos_integration.enable == true ? 1 : 0
 
-  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=identity-location"
+  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v8.51.0"
 
   prefix    = var.prefix
   env_short = var.env_short
@@ -32,7 +32,7 @@ module "federated_ci_identity" {
 module "federated_cd_identity" {
   count = var.continuos_delivery.enable == true ? 1 : 0
 
-  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=identity-location"
+  source = "github.com/pagopa/terraform-azurerm-v3//github_federated_identity?ref=v8.51.0"
 
   prefix    = var.prefix
   env_short = var.env_short
