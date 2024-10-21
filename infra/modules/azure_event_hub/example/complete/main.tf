@@ -20,6 +20,13 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${local.project}-common-rg-01"
 }
 
+resource "azurerm_subnet" "example" {
+  name                 = "example-subnet"
+  virtual_network_name = "${local.project}-common-vnet-01"
+  resource_group_name  = "${local.project}-common-rg-01"
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
 module "azure_event_hub" {
   source = "../../"
 
@@ -30,6 +37,11 @@ module "azure_event_hub" {
   subnet_pep_id = data.azurerm_subnet.pep.id
 
   action_group_id = data.azurerm_monitor_action_group.example.id
+
+  allowed_sources = {
+    subnet_ids = [azurerm_subnet.example.id]
+    ips        = []
+  }
 
   eventhubs = [{
     name                   = "event-hub-test"

@@ -4351,6 +4351,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_cosmos_account@workspace:infra/modules/azure_cosmos_account":
+  version: 0.0.0-use.local
+  resolution: "azure_cosmos_account@workspace:infra/modules/azure_cosmos_account"
+  languageName: unknown
+  linkType: soft
+
 "azure_event_hub@workspace:infra/modules/azure_event_hub":
   version: 0.0.0-use.local
   resolution: "azure_event_hub@workspace:infra/modules/azure_event_hub"

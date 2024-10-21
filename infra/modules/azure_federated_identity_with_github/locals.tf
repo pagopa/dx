@@ -1,6 +1,4 @@
 locals {
-  project = "${var.prefix}-${var.env_short}"
-
   ci_github_federations = tolist(flatten([
     for repo in var.repositories : {
       repository = repo

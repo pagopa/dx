@@ -275,7 +275,10 @@ if (process.env["AI_SDK_CONNECTION_STRING"]) {
     instrumentations: [new UndiciInstrumentation()],
   });
 
-  ai.setup(process.env["AI_SDK_CONNECTION_STRING"]).start();
+  ai.setup(process.env["AI_SDK_CONNECTION_STRING"])
+  // needed to avoid data loss on restarts
+  .enableUseDiskRetryCaching()
+  .start();
 }
 export default ai;
 ```
