@@ -25,7 +25,7 @@ module "cosmos_db" {
 
   secondary_geo_locations = [
     {
-      location          = "italynorth"
+      location          = "westeurope"
       failover_priority = 1
       zone_redundant    = true
     }
