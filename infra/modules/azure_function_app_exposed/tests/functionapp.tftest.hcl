@@ -41,7 +41,7 @@ run "function_app_is_correct_plan" {
       Owner       = "IO"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
       Test        = "true"
-      TestName    = "Create app service for test"
+      TestName    = "Create Function app for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
@@ -101,7 +101,7 @@ run "function_app_is_correct_apply" {
       Owner       = "IO"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
       Test        = "true"
-      TestName    = "Create app service for test"
+      TestName    = "Create Function app for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name

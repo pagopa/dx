@@ -41,7 +41,7 @@ run "postgres_is_correct_plan" {
       Owner       = "IO"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
       Test        = "true"
-      TestName    = "Create app service for test"
+      TestName    = "Create PostgreSQL for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
