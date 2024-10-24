@@ -18,14 +18,15 @@ No modules.
 | Name | Type |
 |------|------|
 | [null_resource.get_role_assignments](https://registry.terraform.io/providers/hashicorp/null/3.2.3/docs/resources/resource) | resource |
-| [null_resource.rm_role_assignments](https://registry.terraform.io/providers/hashicorp/null/3.2.3/docs/resources/resource) | resource |
-| [local_file.role_assignments_json](https://registry.terraform.io/providers/hashicorp/local/2.5.2/docs/data-sources/file) | data source |
+| [local_file.role_assignments](https://registry.terraform.io/providers/hashicorp/local/2.5.2/docs/data-sources/file) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | n/a | `string` | n/a | yes |
+| <a name="input_resource"></a> [resource](#input\_resource) | n/a | `string` | n/a | yes |
+| <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `"rbac"` | no |
 
 ## Outputs
 
