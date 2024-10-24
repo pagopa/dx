@@ -29,5 +29,10 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_access_policy"></a> [access\_policy](#output\_access\_policy) | n/a |
+| <a name="output_certificates_role_assignment"></a> [certificates\_role\_assignment](#output\_certificates\_role\_assignment) | n/a |
+| <a name="output_keys_role_assignment"></a> [keys\_role\_assignment](#output\_keys\_role\_assignment) | n/a |
+| <a name="output_secrets_role_assignment"></a> [secrets\_role\_assignment](#output\_secrets\_role\_assignment) | n/a |
 <!-- END_TF_DOCS -->
