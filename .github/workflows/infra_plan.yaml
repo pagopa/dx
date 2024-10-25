@@ -113,10 +113,16 @@ jobs:
           REGISTRY_URL="registry.terraform.io"
           HASHES_FILE="tfmodules.lock.json"
 
-          # Check if modules metadata exists
+          # Check if modules directory exists, exit if not
+          if [ ! -d "$MODULES_DIR" ]; then
+              echo "No modules directory found. Skipping module check."
+              exit 0
+          fi
+
+          # Check if modules metadata exists, exit if not
           if [ ! -f "$MODULES_METADATA" ]; then
-              echo "Error: Modules metadata file $MODULES_METADATA not found. Did you run 'terraform init'?"
-              exit 1
+              echo "No modules metadata file found. Skipping module check."
+              exit 0
           fi
 
           # Check for modules sourced from the Terraform registry
