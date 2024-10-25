@@ -24,3 +24,22 @@ variable "entraid_groups" {
 
   description = "Azure Entra Id groups to give role to"
 }
+
+variable "terraform_storage_account" {
+  type = object({
+    resource_group_name = string
+    name                = string
+  })
+
+  description = "Name and resource group name of the Storage Account hosting the Terraform state file"
+}
+
+variable "subscription_id" {
+  type        = string
+  description = "The subscription ID where resources are created"
+}
+
+variable "repository_name" {
+  type        = string
+  description = "Name of this repository"
+}
