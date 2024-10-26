@@ -268,17 +268,21 @@ if (process.env["AI_SDK_CONNECTION_STRING"]) {
   process.env.OTEL_SERVICE_NAME =
     process.env.WEBSITE_SITE_NAME ?? "local-app-service";
 
-  // instrument native node fetch
-  registerInstrumentations({
-    tracerProvider: trace.getTracerProvider(),
-    meterProvider: metrics.getMeterProvider(),
-    instrumentations: [new UndiciInstrumentation()],
-  });
-
   ai.setup(process.env["AI_SDK_CONNECTION_STRING"])
   // needed to avoid data loss on restarts
   .enableUseDiskRetryCaching()
   .start();
+
+  // instrument native node fetch
+  // this must be called after starting the AI SDK
+  // in order to instantiate the OTEL tracer provider
+  registerInstrumentations({
+    tracerProvider: trace.getTracerProvider(),
+    meterProvider: metrics.getMeterProvider(),
+    // you may want to add Azure Functions support for traces as well
+    // see https://github.com/Azure/azure-functions-nodejs-opentelemetry
+    instrumentations: [new UndiciInstrumentation()],
+  });
 }
 export default ai;
 ```
