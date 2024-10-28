@@ -38,8 +38,3 @@ variable "subscription_id" {
   type        = string
   description = "The subscription ID where resources are created"
 }
-
-variable "repository_name" {
-  type        = string
-  description = "Name of this repository"
-}
