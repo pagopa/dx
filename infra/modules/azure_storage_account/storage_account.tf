@@ -72,7 +72,7 @@ resource "azurerm_security_center_storage_defender" "this" {
 }
 
 resource "azurerm_storage_account_customer_managed_key" "kv" {
-  for_each                  = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv" ? [var.customer_managed_key.type] : [])
+  for_each                  = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv" ? {type = var.customer_managed_key.type} : {})
   storage_account_id        = azurerm_storage_account.this.id
   key_vault_id              = var.customer_managed_key.key_vault_key_id
   key_name                  = var.customer_managed_key.key_name
@@ -80,7 +80,7 @@ resource "azurerm_storage_account_customer_managed_key" "kv" {
 }
 
 resource "azurerm_storage_account_customer_managed_key" "hsm" {
-  for_each                  = (var.customer_managed_key.enabled && var.customer_managed_key.type == "hsm" ? [var.customer_managed_key.type] : [])
+  for_each                  = (var.customer_managed_key.enabled && var.customer_managed_key.type == "hsm" ? {type = var.customer_managed_key.type} : {})
   storage_account_id        = azurerm_storage_account.this.id
   managed_hsm_key_id        = var.customer_managed_key.managed_hsm_key_id
   key_name                  = var.customer_managed_key.key_name
