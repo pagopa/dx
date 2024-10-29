@@ -1,8 +1,9 @@
 terraform {
+  # managed HSM key is supported since 3.102 azurerm version
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.30"
+      version = "~> 3.102"
     }
   }
 }
