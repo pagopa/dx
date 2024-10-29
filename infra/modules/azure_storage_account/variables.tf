@@ -153,12 +153,9 @@ variable "static_website" {
   description = "(Optional) Static website configuration"
 
   default = {
+    enabled            = false
     index_document     = null
     error_404_document = null
-  }
-  validation {
-    condition     = var.static_website.enabled && alltrue([var.static_website.index_document != null, var.static_website.error_404_document != null])
-    error_message = "If static website is enabled, both index_document or error_404_document must be provided."
   }
 }
 
