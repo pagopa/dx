@@ -45,7 +45,6 @@ variable "customer_managed_key" {
     key_name                  = optional(string)
     user_assigned_identity_id = optional(string, null)
     key_vault_key_id          = optional(string, null)
-    managed_hsm_key_id        = optional(string, null)
   })
   description = "(Optional) Customer managed key to use for encryption"
   default     = { enabled = false, key_name = null }
