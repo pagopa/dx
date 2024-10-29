@@ -12,7 +12,7 @@ resource "azurerm_storage_account" "this" {
   blob_properties {
     versioning_enabled            = var.blob_features.versioning
     change_feed_enabled           = var.blob_features.change_feed.enabled
-    change_feed_retention_in_days = var.blob_features.change_feed.retention_in_days
+    change_feed_retention_in_days = var.blob_features.change_feed.enabled && var.blob_features.change_feed.retention_in_days > 0 ? var.blob_features.change_feed.retention_in_days : null
     last_access_time_enabled      = var.blob_features.last_access_time
 
     dynamic "delete_retention_policy" {
