@@ -42,12 +42,13 @@ variable "customer_managed_key" {
   type = object({
     enabled                   = optional(bool, false)
     type                      = optional(string, null)
+    key_name                  = optional(string)
     user_assigned_identity_id = optional(string, null)
     key_vault_key_id          = optional(string, null)
     managed_hsm_key_id        = optional(string, null)
   })
   description = "(Optional) Customer managed key to use for encryption"
-  default     = { enabled = false }
+  default     = { enabled = false, key_name = null }
 }
 
 variable "force_public_network_access_enabled" {
