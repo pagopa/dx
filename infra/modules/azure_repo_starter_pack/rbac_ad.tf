@@ -12,6 +12,18 @@ resource "azurerm_role_assignment" "admins_group_tf_rg" {
   principal_id         = data.azuread_group.admins.object_id
 }
 
+resource "azurerm_role_assignment" "admins_group_rg_kv_data" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Key Vault Data Access Administrator"
+  principal_id         = data.azuread_group.admins.object_id
+}
+
+resource "azurerm_role_assignment" "admins_group_rg_kv_admin" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = data.azuread_group.admins.object_id
+}
+
 resource "azurerm_role_assignment" "devs_group_rg" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Contributor"
@@ -21,6 +33,18 @@ resource "azurerm_role_assignment" "devs_group_rg" {
 resource "azurerm_role_assignment" "devs_group_tf_rg" {
   scope                = local.tf_storage_account.id
   role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azuread_group.devs.object_id
+}
+
+resource "azurerm_role_assignment" "devs_group_tf_rg_kv_secr" {
+  scope                = local.tf_storage_account.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azuread_group.devs.object_id
+}
+
+resource "azurerm_role_assignment" "devs_group_tf_rg_kv_cert" {
+  scope                = local.tf_storage_account.id
+  role_definition_name = "Key Vault Certificates Officer"
   principal_id         = data.azuread_group.devs.object_id
 }
 
