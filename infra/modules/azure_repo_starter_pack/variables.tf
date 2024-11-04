@@ -40,6 +40,6 @@ variable "subscription_id" {
 }
 
 variable "repository_name" {
-  type = string
+  type        = string
   description = "Name of this repository"
 }
