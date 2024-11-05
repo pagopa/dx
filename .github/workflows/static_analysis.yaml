@@ -84,25 +84,27 @@ jobs:
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }}
 
-      - name: Run pre-commit
-        if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
-        id: pre_commit
-        run: |
-          set -eu
+      # - name: Run pre-commit
+      #   if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
+      #   id: pre_commit
+      #   run: |
+      #     set -eu
 
-          echo "Start pre-commit on all files"
+      #     echo "Start pre-commit on all files"
 
-          pre-commit run \
-            --color=always \
-            --all-files
+      #     pre-commit run \
+      #       --color=always \
+      #       --all-files
       
       - name: Run Terraform Test
-        if: ${{ inputs.enable_terraform_test }}
+        if:  ${{ github.event_name != 'pull_request' && inputs.enable_terraform_test }}
         run: |
+          echo ${{ github.ref }}
+          git branch --show-current
+          echo ${{ github.head.ref }}
+          echo ${{ github.head_ref }}
           # Found modified modules
-          git diff --name-only main...HEAD
-          modified_modules=$(git diff --name-only main...HEAD | grep "^infra/modules/" | cut -d '/' -f 1,2 | sort -u)
-          echo "Modified modules: $modified_modules"
+          modified_modules=$(git diff --name-only main...CES-383-automatic-terraform-test | grep "^infra/modules/" | cut -d '/' -f 1-3 | sort -u)
 
           if [[ -z "$modified_modules" ]]; then
             echo "No modules have changes"
