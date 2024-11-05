@@ -12,7 +12,7 @@ resource "azurerm_federated_identity_credential" "github_app_cd" {
   audience            = local.ids.audience
   issuer              = local.ids.issuer
   parent_id           = azurerm_user_assigned_identity.app_cd.id
-  subject             = "repo:pagopa/${var.repository_name}:environment:${format(local.ids.app_environment_name, "cd")}"
+  subject             = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.app_environment_name, "cd")}"
 }
 
 resource "azurerm_role_assignment" "app_cd_subscription_reader" {

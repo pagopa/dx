@@ -39,7 +39,12 @@ variable "subscription_id" {
   description = "The subscription ID where resources are created"
 }
 
-variable "repository_name" {
-  type        = string
-  description = "Name of this repository"
+variable "repository" {
+  type = object({
+    name        = string
+    description = string
+    topics      = list(string)
+  })
+
+  description = "Information about this repository"
 }

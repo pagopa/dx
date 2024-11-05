@@ -16,7 +16,7 @@ locals {
     issuer   = "https://token.actions.githubusercontent.com"
     audience = ["api://AzureADTokenExchange"]
 
-    federated_identity_name = "${var.repository_name}-environment-%s-${module.naming_convention.env_name}-%s"
+    federated_identity_name = "${var.repository.name}-environment-%s-${module.naming_convention.env_name}-%s"
 
     location = var.environment.location
   }

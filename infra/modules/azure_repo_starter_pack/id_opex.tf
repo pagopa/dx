@@ -20,7 +20,7 @@ resource "azurerm_federated_identity_credential" "github_opex_ci" {
   audience            = local.ids.audience
   issuer              = local.ids.issuer
   parent_id           = azurerm_user_assigned_identity.opex_ci.id
-  subject             = "repo:pagopa/${var.repository_name}:environment:${format(local.ids.opex_environment_name, "ci")}"
+  subject             = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.opex_environment_name, "ci")}"
 }
 
 resource "azurerm_federated_identity_credential" "github_opex_cd" {
@@ -29,7 +29,7 @@ resource "azurerm_federated_identity_credential" "github_opex_cd" {
   audience            = local.ids.audience
   issuer              = local.ids.issuer
   parent_id           = azurerm_user_assigned_identity.opex_cd.id
-  subject             = "repo:pagopa/${var.repository_name}:environment:${format(local.ids.opex_environment_name, "cd")}"
+  subject             = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.opex_environment_name, "cd")}"
 }
 
 resource "azurerm_role_assignment" "opex_ci_subscription_reader" {
