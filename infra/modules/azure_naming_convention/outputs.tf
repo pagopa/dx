@@ -15,5 +15,5 @@ output "domain" {
 }
 
 output "env_name" {
-  value = lookup(local.environment_map, var.environment.env_short)
+  value = lookup(local.environment_map, var.environment.env_short, "p")
 }
