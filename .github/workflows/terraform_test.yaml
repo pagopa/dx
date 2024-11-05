@@ -1,6 +1,9 @@
 name: Terraform Test
 
 on:
+  push:
+    branches:
+      - CES-383-automatic-terraform-test
   workflow_dispatch:
     inputs:
       module_to_test:
