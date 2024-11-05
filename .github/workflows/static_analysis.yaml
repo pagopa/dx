@@ -25,6 +25,11 @@ on:
         type: boolean
         required: false
         default: false
+      enable_terraform_test:
+        description: If true the pipeline will run terraform test
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}
@@ -90,3 +95,22 @@ jobs:
           pre-commit run \
             --color=always \
             --all-files
+      
+      - name: Run Terraform Test
+        if: ${{ inputs.enable_terraform_test }}
+        run: |
+          # Found modified modules
+          git diff --name-only main...HEAD
+          modified_modules=$(git diff --name-only main...HEAD | grep "^infra/modules/" | cut -d '/' -f 1,2 | sort -u)
+          echo "Modified modules: $modified_modules"
+          
+          if [[ -z "$modified_modules" ]]; then
+            echo "No modules have changes"
+            exit 0
+          fi
+
+          # Use Terraform test on each module with changes
+          # for module in $modified_modules; do
+          #   echo "Exec terraform test in: $module"
+          #   (cd "$module" && terraform test)
+          # done

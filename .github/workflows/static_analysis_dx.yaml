@@ -19,3 +19,4 @@ jobs:
       terraform_version: "1.7.5"
       pre_commit_tf_tag: "v1.94.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076"
       enable_modified_files_detection: true
+      enable_terraform_test: true
