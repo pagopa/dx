@@ -101,7 +101,7 @@ jobs:
         run: |
           head_ref=${{ github.ref }}
           head_branch=${head_ref#refs/heads/}
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+          git fetch origin
 
           # Found modified modules
           modified_modules=$(git diff --name-only main...$head_branch | grep "^infra/modules/" | cut -d '/' -f 1-3 | sort -u)
