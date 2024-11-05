@@ -1,4 +1,4 @@
-resource "github_branch_default" "default_main" {
+resource "github_branch_default" "main" {
   repository = github_repository.this.name
   branch     = "main"
 }
