@@ -57,7 +57,7 @@ resource "azurerm_role_assignment" "externals_group_rg" {
 }
 
 resource "azurerm_role_assignment" "externals_group_tf_rg" {
-  count = var.entraid_groups.externals == null ? 0 : 1
+  count = var.entraid_groups.externals_object_id == null ? 0 : 1
 
   scope                = local.tf_storage_account.id
   role_definition_name = "Storage Blob Data Reader"
