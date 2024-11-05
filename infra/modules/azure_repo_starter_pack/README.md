@@ -62,6 +62,9 @@
 | [azurerm_user_assigned_identity.infra_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.opex_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.opex_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
+| [github_branch_default.default_main](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/branch_default) | resource |
+| [github_branch_protection.protection_main](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/branch_protection) | resource |
+| [github_repository.this](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/repository) | resource |
 
 ## Inputs
 
@@ -69,7 +72,7 @@
 |------|-------------|------|---------|:--------:|
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | Azure Entra Id groups to give role to | <pre>object({<br>    admins_object_id    = string<br>    devs_object_id      = string<br>    externals_object_id = optional(string, null)<br>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br>    prefix          = string<br>    env_short       = string<br>    location        = string<br>    domain          = string<br>    instance_number = string<br>  })</pre> | n/a | yes |
-| <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of this repository | `string` | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Information about this repository | <pre>object({<br>    name        = string<br>    description = string<br>    topics      = list(string)<br>  })</pre> | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The subscription ID where resources are created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_terraform_storage_account"></a> [terraform\_storage\_account](#input\_terraform\_storage\_account) | Name and resource group name of the Storage Account hosting the Terraform state file | <pre>object({<br>    resource_group_name = string<br>    name                = string<br>  })</pre> | n/a | yes |
