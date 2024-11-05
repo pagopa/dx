@@ -17,9 +17,9 @@ variable "environment" {
 
 variable "entraid_groups" {
   type = object({
-    admins    = string
-    devs      = string
-    externals = optional(string)
+    admins_object_id    = string
+    devs_object_id      = string
+    externals_object_id = optional(string, null)
   })
 
   description = "Azure Entra Id groups to give role to"
