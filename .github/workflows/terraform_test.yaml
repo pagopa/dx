@@ -42,6 +42,9 @@ jobs:
     name: Terraform Test
     environment: dev-ci
     runs-on: ubuntu-20.04
+    permissions:
+      id-token: write
+      contents: read
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -78,11 +81,6 @@ jobs:
         name: Setup Terraform
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
-
-      - name: Terraform Init
-        working-directory: ${{ steps.directory.outputs.dir }}
-        run: |
-          terraform init
 
       - name: Run Terraform Test
         run: |
