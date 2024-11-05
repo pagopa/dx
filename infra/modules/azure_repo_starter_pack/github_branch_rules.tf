@@ -1,8 +1,3 @@
-import {
-  id = var.repository.name
-  to = github_branch_default.default_main
-}
-
 resource "github_branch_default" "default_main" {
   repository = github_repository.this.name
   branch     = "main"

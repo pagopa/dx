@@ -1,8 +1,3 @@
-import {
-  id = var.repository.name
-  to = github_repository.this
-}
-
 resource "github_repository" "this" {
   name        = var.repository.name
   description = var.repository.description
