@@ -4,6 +4,26 @@ locals {
     location = var.environment.location
   }
 
+  container_apps = {
+    job_name    = "${module.naming_convention.prefix}-${var.repository.name}-caj-${module.naming_convention.suffix}"
+    secret_name = "personal-access-token"
+    envs = [
+      {
+        name  = "REPO_URL"
+        value = "https://github.com/${var.repository.owner}/${var.repository.name}"
+      },
+      {
+        name  = "REGISTRATION_TOKEN_API_URL"
+        value = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
+      },
+      length(var.github_private_runner.labels) > 0 ?
+      {
+        name  = "LABELS"
+        value = join(",", var.github_private_runner.labels)
+      } : {}
+    ]
+  }
+
   ids = {
     infra_name = "${module.naming_convention.prefix}-infra-github-%s-id-${module.naming_convention.suffix}"
     app_name   = "${module.naming_convention.prefix}-app-github-%s-id-${module.naming_convention.suffix}"
@@ -26,6 +46,8 @@ locals {
   }
 
   parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
+
+  parsed_key_vault_secret_id = provider::azurerm::parse_resource_id(var.github_private_runner.key_vault_secret_id)
 
   repo_secrets = {
     "ARM_TENANT_ID"       = var.tenant_id

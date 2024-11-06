@@ -46,6 +46,7 @@ variable "tenant_id" {
 
 variable "repository" {
   type = object({
+    owner           = optional(string, "pagopa")
     name            = string
     description     = string
     topics          = list(string)
@@ -53,4 +54,18 @@ variable "repository" {
   })
 
   description = "Information about this repository"
+}
+
+variable "github_private_runner" {
+  type = object({
+    container_app_environment_id     = string
+    container_app_environment_region = string
+    polling_interval_in_seconds      = optional(number, 30)
+    min_instances                    = optional(number, 0)
+    max_instances                    = optional(number, 30)
+    labels                           = optional(list(string), [])
+    key_vault_secret_id              = string
+    cpu                              = optional(number, 0.5)
+    memory                           = optional(string, "1Gi")
+  })
 }
