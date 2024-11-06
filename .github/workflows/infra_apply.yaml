@@ -40,7 +40,7 @@ jobs:
   tf_plan:
     name: 'Terraform Plan'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.override_github_environment != '' && inputs.environment || inputs.override_github_environment}}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
       contents: read
@@ -208,7 +208,7 @@ jobs:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
     needs: [tf_plan]
-    environment: ${{ inputs.override_github_environment != '' && inputs.environment || inputs.override_github_environment}}-cd
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
       contents: read
