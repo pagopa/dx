@@ -59,7 +59,7 @@ variable "repository" {
 variable "github_private_runner" {
   type = object({
     container_app_environment_id     = string
-    container_app_environment_region = string
+    container_app_environment_location = string
     polling_interval_in_seconds      = optional(number, 30)
     min_instances                    = optional(number, 0)
     max_instances                    = optional(number, 30)
