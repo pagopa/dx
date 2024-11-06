@@ -39,11 +39,17 @@ variable "subscription_id" {
   description = "The subscription ID where resources are created"
 }
 
+variable "tenant_id" {
+  type        = string
+  description = "The tenant ID where resources are created"
+}
+
 variable "repository" {
   type = object({
-    name        = string
-    description = string
-    topics      = list(string)
+    name            = string
+    description     = string
+    topics          = list(string)
+    reviewers_teams = list(string)
   })
 
   description = "Information about this repository"
