@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      override_github_environment:
+        description: Set a value if GitHub Environment name is different than the TF environment folder
+        type: string
+        required: false
+        default: ''
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -30,7 +35,7 @@ jobs:
   tf_plan:
     name: 'Terraform Plan'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment }}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment }}-ci || ${{ inputs.override_github_environment}}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: false
@@ -97,7 +102,7 @@ jobs:
         name: Setup Terraform
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
-      
+
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
@@ -154,9 +159,9 @@ jobs:
           jq -r --arg registry_url "$REGISTRY_URL" \
               '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
               "$MODULES_METADATA" | while read -r module_key; do
-              
+
               module_path="$MODULES_DIR/$module_key"
-              
+
               if [ -d "$module_path" ]; then
                   module_name=$(basename "$module_path")
                   new_hash=$(calculate_hash "$module_path")
@@ -182,7 +187,7 @@ jobs:
                   echo "Module path $module_path not found."
               fi
           done
-          
+
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
