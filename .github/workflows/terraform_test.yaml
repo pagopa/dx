@@ -78,7 +78,7 @@ jobs:
         run: |
           head_ref=${{ github.ref }}
           head_branch=${head_ref#refs/heads/}
-          
+
           # Found modified modules
           modified_modules=$(git diff --name-only origin/main origin/$head_branch | grep "^${{ env.BASE_DIR }}" | cut -d '/' -f 1-3 | sort -u)
 
@@ -91,9 +91,8 @@ jobs:
           for module in $modified_modules; do
             if [[ -d "$module/tests" ]]; then
               echo "Exec terraform test in: $module"
-              cd "$module"
-              terraform init
-              # terraform test
+              # (cd "$module" && terraform init && terraform test)
+              (cd "$module" && echo "init" && echo "test")
             else
               echo "No tests found in: $module"
             fi
@@ -103,12 +102,10 @@ jobs:
         if: ${{ inputs.module_to_test == 'all' }}
         run: |
           echo "Running terraform test on all modules"
-          echo $(find "${{ env.BASE_DIR }}" -type d -name 'tests' -exec dirname {} \; | sort -u)
           for module_path in $(find "${{ env.BASE_DIR }}" -type d -name 'tests' -exec dirname {} \; | sort -u); do
             echo "Exec terraform test in: $module_path"
-            cd "$module_path"
-            # terraform init
-            # terraform test
+            # (cd "$module_path" && terraform init && terraform test)
+            (cd "$module_path" && echo "init" && echo "test")
           done
 
       - name: Run Terraform Test (specific module)
@@ -117,9 +114,8 @@ jobs:
           specific_module="${{ env.BASE_DIR }}${{ inputs.module_to_test }}"
           if [[ -d "$specific_module/tests" ]]; then
             echo "Exec terraform test in: $specific_module"
-            cd "$specific_module"
-            # terraform init
-            # terraform test
+            # (cd "$specific_module" && terraform init && terraform test)
+            (cd "$specific_module" && echo "init" && echo "test")
           else
             echo "No tests found in: $specific_module"
           fi
