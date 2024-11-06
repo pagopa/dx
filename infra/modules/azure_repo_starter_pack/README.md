@@ -7,6 +7,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~>4.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | ~>6.0 |
 
 ## Modules
 
@@ -62,9 +63,9 @@
 | [azurerm_user_assigned_identity.infra_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.opex_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.opex_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
-| [github_branch_default.default_main](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/branch_default) | resource |
-| [github_branch_protection.protection_main](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/branch_protection) | resource |
-| [github_repository.this](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/repository) | resource |
+| [github_branch_default.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_default) | resource |
+| [github_branch_protection.protection_main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection) | resource |
+| [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository) | resource |
 
 ## Inputs
 
