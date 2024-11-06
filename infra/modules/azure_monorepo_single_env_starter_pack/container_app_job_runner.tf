@@ -41,8 +41,7 @@ resource "azurerm_container_app_job" "github_runner" {
   }
 
   secret {
-    # no versioning
-    key_vault_secret_id = var.github_private_runner.key_vault_secret_id
+    key_vault_secret_id = "${data.azurerm_key_vault.runner.vault_uri}secrets/${var.github_private_runner.key_vault_secret_name}" # no versioning
 
     identity = "System"
     name     = local.container_apps.secret_name
@@ -73,12 +72,12 @@ resource "azurerm_container_app_job" "github_runner" {
   tags = var.tags
 }
 
-# resource "azurerm_key_vault_access_policy" "keyvault_containerapp" {
-#   key_vault_id = local.parsed_key_vault_secret_id["parent_resources"]["key"]
-#   tenant_id    = azurerm_container_app_job.container_app_job.identity[0].tenant_id
-#   object_id    = azurerm_container_app_job.container_app_job.identity[0].principal_id
+resource "azurerm_key_vault_access_policy" "keyvault_containerapp" {
+  key_vault_id = data.azurerm_key_vault.runner.id
+  tenant_id    = azurerm_container_app_job.github_runner.identity[0].tenant_id
+  object_id    = azurerm_container_app_job.github_runner.identity[0].principal_id
 
-#   secret_permissions = [
-#     "Get",
-#   ]
-# }
+  secret_permissions = [
+    "Get",
+  ]
+}
