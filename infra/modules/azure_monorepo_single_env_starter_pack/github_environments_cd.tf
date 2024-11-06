@@ -54,19 +54,19 @@ resource "github_repository_environment" "opex_prod_cd" {
 
 resource "github_repository_environment_deployment_policy" "infra_prod_cd" {
   repository     = github_repository.this.name
-  environment    = github_repository_environment.infra_prod_cd
+  environment    = github_repository_environment.infra_prod_cd.environment
   branch_pattern = github_branch_default.main.branch
 }
 
 resource "github_repository_environment_deployment_policy" "app_prod_cd" {
   repository     = github_repository.this.name
-  environment    = github_repository_environment.app_prod_cd
+  environment    = github_repository_environment.app_prod_cd.environment
   branch_pattern = github_branch_default.main.branch
 }
 
 resource "github_repository_environment_deployment_policy" "opex_prod_cd" {
   repository     = github_repository.this.name
-  environment    = github_repository_environment.opex_prod_cd
+  environment    = github_repository_environment.opex_prod_cd.environment
   branch_pattern = github_branch_default.main.branch
 }
 

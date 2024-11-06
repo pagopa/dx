@@ -55,11 +55,21 @@ resource "azurerm_container_app_job" "github_runner" {
       name   = "github-runner"
 
       dynamic "env" {
-        for_each = local.container_apps.envs
+        for_each = var.github_private_runner.labels
         content {
-          name  = env.value["name"]
-          value = env.value["value"]
+          name  = "LABELS"
+          value = join(",", var.github_private_runner.labels)
         }
+      }
+
+      env {
+        name  = "REPO_URL"
+        value = "https://github.com/${var.repository.owner}/${var.repository.name}"
+      }
+
+      env {
+        name  = "REGISTRATION_TOKEN_API_URL"
+        value = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
       }
 
       env {
