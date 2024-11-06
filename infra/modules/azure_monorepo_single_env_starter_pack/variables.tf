@@ -58,14 +58,18 @@ variable "repository" {
 
 variable "github_private_runner" {
   type = object({
-    container_app_environment_id     = string
+    container_app_environment_id       = string
     container_app_environment_location = string
-    polling_interval_in_seconds      = optional(number, 30)
-    min_instances                    = optional(number, 0)
-    max_instances                    = optional(number, 30)
-    labels                           = optional(list(string), [])
-    key_vault_secret_id              = string
-    cpu                              = optional(number, 0.5)
-    memory                           = optional(string, "1Gi")
+    polling_interval_in_seconds        = optional(number, 30)
+    min_instances                      = optional(number, 0)
+    max_instances                      = optional(number, 30)
+    labels                             = optional(list(string), [])
+    key_vault = object({
+      name                  = string
+      resource_group_name   = string
+      key_vault_secret_name = optional(string, "github-runner-pat")
+    })
+    cpu    = optional(number, 0.5)
+    memory = optional(string, "1Gi")
   })
 }
