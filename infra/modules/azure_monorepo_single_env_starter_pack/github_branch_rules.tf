@@ -3,7 +3,7 @@ resource "github_branch_default" "main" {
   branch     = "main"
 }
 
-resource "github_branch_protection" "protection_main" {
+resource "github_branch_protection" "main" {
   repository_id = github_repository.this.name
   pattern       = "main"
 
