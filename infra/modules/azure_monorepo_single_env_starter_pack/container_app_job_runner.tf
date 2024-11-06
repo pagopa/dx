@@ -2,7 +2,7 @@
 resource "azurerm_container_app_job" "github_runner" {
   container_app_environment_id = var.github_private_runner.container_app_environment_id
   name                         = local.container_apps.job_name
-  location                     = var.github_private_runner.container_app_environment_region
+  location                     = var.github_private_runner.container_app_environment_location
   resource_group_name          = azurerm_resource_group.main.name
 
   identity {
