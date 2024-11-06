@@ -5,7 +5,7 @@ locals {
   }
 
   container_apps = {
-    job_name    = "${module.naming_convention.prefix}-${var.repository.name}-caj-${module.naming_convention.suffix}"
+    job_name    = "${module.naming_convention.prefix}-caj-${module.naming_convention.suffix}"
     secret_name = "personal-access-token"
   }
 
