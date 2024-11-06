@@ -65,9 +65,9 @@ variable "github_private_runner" {
     max_instances                      = optional(number, 30)
     labels                             = optional(list(string), [])
     key_vault = object({
-      name                  = string
-      resource_group_name   = string
-      key_vault_secret_name = optional(string, "github-runner-pat")
+      name                = string
+      resource_group_name = string
+      secret_name         = optional(string, "github-runner-pat")
     })
     cpu    = optional(number, 0.5)
     memory = optional(string, "1Gi")

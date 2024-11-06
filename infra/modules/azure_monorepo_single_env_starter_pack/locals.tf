@@ -47,8 +47,6 @@ locals {
 
   parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
 
-  parsed_key_vault_secret_id = provider::azurerm::parse_resource_id(var.github_private_runner.key_vault_secret_id)
-
   repo_secrets = {
     "ARM_TENANT_ID"       = var.tenant_id
     "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
