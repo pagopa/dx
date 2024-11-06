@@ -27,7 +27,7 @@ resource "azurerm_container_app_job" "github_runner" {
         metadata = merge({
           owner                     = var.repository.owner
           runnerScope               = "repo"
-          repos                     = "${var.repository.name}"
+          repos                     = var.repository.name
           targetWorkflowQueueLength = "1"
           github-runner             = "https://api.github.com"
         }, length(var.github_private_runner.labels) > 0 ? { labels = join(",", var.github_private_runner.labels) } : {})
