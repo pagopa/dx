@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      override_github_environment:
+          description: Set a value if GitHub Environment name is different than the TF environment folder
+          type: string
+          required: false
+          default: ''
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -35,7 +40,7 @@ jobs:
   tf_plan:
     name: 'Terraform Plan'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
-    environment: ${{ inputs.environment }}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment }}-ci || ${{ inputs.override_github_environment}}-ci
     permissions:
       id-token: write
       contents: read
@@ -105,7 +110,7 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init
-      
+
       - name: Check terraform registry modules hashes
         id: check-terraform-registry-modules-hashes
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -151,9 +156,9 @@ jobs:
           jq -r --arg registry_url "$REGISTRY_URL" \
               '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
               "$MODULES_METADATA" | while read -r module_key; do
-              
+
               module_path="$MODULES_DIR/$module_key"
-              
+
               if [ -d "$module_path" ]; then
                   module_name=$(basename "$module_path")
                   new_hash=$(calculate_hash "$module_path")
@@ -203,7 +208,7 @@ jobs:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
     needs: [tf_plan]
-    environment: ${{ inputs.environment }}-cd
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment }}-cd || ${{ inputs.override_github_environment}}-cd
     permissions:
       id-token: write
       contents: read
