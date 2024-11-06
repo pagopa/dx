@@ -1,6 +1,7 @@
 resource "github_repository" "this" {
   name        = var.repository.name
   description = var.repository.description
+  topics      = var.repository.topics
 
   visibility = "public"
 
@@ -19,9 +20,22 @@ resource "github_repository" "this" {
   has_issues      = false
   has_downloads   = false
 
-  topics = var.repository.topics
-
   vulnerability_alerts = true
 
-  archive_on_destroy = true
+  archive_on_destroy  = true
+  allow_update_branch = true
+
+  security_and_analysis {
+    secret_scanning {
+      status = "enabled"
+    }
+
+    secret_scanning_push_protection {
+      status = "enabled"
+    }
+
+    advanced_security {
+      status = "enabled"
+    }
+  }
 }
