@@ -11,7 +11,7 @@ resource "github_repository_environment" "infra_prod_cd" {
     teams = matchkeys(
       data.github_organization_teams.all.teams[*].id,
       data.github_organization_teams.all.teams[*].slug,
-      local.cd.reviewers_teams
+      local.infra_cd.reviewers_teams
     )
   }
 }
