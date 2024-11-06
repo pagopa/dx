@@ -1,4 +1,4 @@
-# DX - Azure Repository Starter Pack
+# DX - Azure MonoRepository Single Environment Starter Pack
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
