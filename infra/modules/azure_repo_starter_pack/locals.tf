@@ -24,4 +24,44 @@ locals {
   tf_storage_account = {
     id = provider::azurerm::normalise_resource_id("${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
+
+  parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
+
+  repo_secrets = {
+    "ARM_TENANT_ID"       = var.tenant_id
+    "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+  }
+
+  infra_ci = {
+    secrets = {
+      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.infra_ci.client_id
+    }
+  }
+
+  opex_ci = {
+    secrets = {
+      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.opex_ci.client_id
+    }
+  }
+
+  infra_cd = {
+    secrets = {
+      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.infra_cd.client_id
+    }
+    reviewers_teams = var.repository.reviewers_teams
+  }
+
+  app_cd = {
+    secrets = {
+      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.app_cd.client_id
+    }
+    reviewers_teams = var.repository.reviewers_teams
+  }
+
+  opex_cd = {
+    secrets = {
+      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.opex_cd.client_id
+    }
+    reviewers_teams = var.repository.reviewers_teams
+  }
 }
