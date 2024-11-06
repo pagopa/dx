@@ -91,8 +91,7 @@ jobs:
           for module in $modified_modules; do
             if [[ -d "$module/tests" ]]; then
               echo "Exec terraform test in: $module"
-              # (cd "$module" && terraform init && terraform test)
-              (cd "$module" && echo "init" && echo "test")
+              (cd "$module" && terraform init && terraform test)
             else
               echo "No tests found in: $module"
             fi
@@ -104,8 +103,7 @@ jobs:
           echo "Running terraform test on all modules"
           for module_path in $(find "${{ env.BASE_DIR }}" -type d -name 'tests' -exec dirname {} \; | sort -u); do
             echo "Exec terraform test in: $module_path"
-            # (cd "$module_path" && terraform init && terraform test)
-            (cd "$module_path" && echo "init" && echo "test")
+            (cd "$module_path" && terraform init && terraform test)
           done
 
       - name: Run Terraform Test (specific module)
@@ -114,8 +112,7 @@ jobs:
           specific_module="${{ env.BASE_DIR }}${{ inputs.module_to_test }}"
           if [[ -d "$specific_module/tests" ]]; then
             echo "Exec terraform test in: $specific_module"
-            # (cd "$specific_module" && terraform init && terraform test)
-            (cd "$specific_module" && echo "init" && echo "test")
+            (cd "$specific_module" && terraform init && terraform test)
           else
             echo "No tests found in: $specific_module"
           fi
