@@ -87,15 +87,15 @@ resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
 }
 
 resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
-  scope              = var.pep_vnet_id
-  role_definition_id = "Network Contributor"
-  principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
+  scope                = var.pep_vnet_id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
 }
 
 resource "azurerm_role_assignment" "infra_cd_apim_service_contributor" {
-  scope              = var.apim_id
-  role_definition_id = "API Management Service Contributor"
-  principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
+  scope                = var.apim_id
+  role_definition_name = "API Management Service Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
 }
 
 resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
