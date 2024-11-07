@@ -13,15 +13,15 @@ resource "azurerm_role_assignment" "admins_group_st_tf" {
 }
 
 resource "azurerm_role_assignment" "admins_vnet_network_contributor" {
-  scope              = var.pep_vnet_id
-  role_definition_id = "Network Contributor"
-  principal_id       = var.entraid_groups.admins_object_id
+  scope                = var.pep_vnet_id
+  role_definition_name = "Network Contributor"
+  principal_id         = var.entraid_groups.admins_object_id
 }
 
 resource "azurerm_role_assignment" "admins_apim_service_contributor" {
-  scope              = var.apim_id
-  role_definition_id = "API Management Service Contributor"
-  principal_id       = var.entraid_groups.admins_object_id
+  scope                = var.apim_id
+  role_definition_name = "API Management Service Contributor"
+  principal_id         = var.entraid_groups.admins_object_id
 }
 
 resource "azurerm_role_assignment" "admins_group_rg_kv_data" {
@@ -49,9 +49,9 @@ resource "azurerm_role_assignment" "devs_group_tf_st" {
 }
 
 resource "azurerm_role_assignment" "devs_apim_service_contributor" {
-  scope              = var.apim_id
-  role_definition_id = "API Management Service Contributor"
-  principal_id       = var.entraid_groups.devs_object_id
+  scope                = var.apim_id
+  role_definition_name = "API Management Service Contributor"
+  principal_id         = var.entraid_groups.devs_object_id
 }
 
 resource "azurerm_role_assignment" "devs_group_tf_rg_kv_secr" {
