@@ -177,13 +177,15 @@ jobs:
               run_id: context.runId
             });
             const data = run.data;
+            // Converting commit message to single line
+            const commitMessageSingleLine = data.head_commit.message.replace(/\n/g, ' ');
             // Set output for each value
             core.setOutput("workflow_url", data.html_url);
             core.setOutput("workflow_name", data.display_title);
             core.setOutput("repo_url", data.repository.html_url);
             core.setOutput("repo_name", data.repository.full_name);
             core.setOutput("commit_sha", data.head_sha);
-            core.setOutput("commit_message", data.head_commit.message);
+            core.setOutput("commit_message", commitMessageSingleLine);
             core.setOutput("commit_url", `${data.repository.html_url}/commit/${data.head_sha}`);
             core.setOutput("committer_name", data.head_commit.committer.name);
 
