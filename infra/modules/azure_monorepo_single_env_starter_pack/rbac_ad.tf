@@ -12,6 +12,18 @@ resource "azurerm_role_assignment" "admins_group_st_tf" {
   principal_id         = var.entraid_groups.admins_object_id
 }
 
+resource "azurerm_role_assignment" "admins_vnet_network_contributor" {
+  scope              = var.pep_vnet_id
+  role_definition_id = "Network Contributor"
+  principal_id       = var.entraid_groups.admins_object_id
+}
+
+resource "azurerm_role_assignment" "admins_apim_service_contributor" {
+  scope              = var.apim_id
+  role_definition_id = "API Management Service Contributor"
+  principal_id       = var.entraid_groups.admins_object_id
+}
+
 resource "azurerm_role_assignment" "admins_group_rg_kv_data" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Key Vault Data Access Administrator"
@@ -34,6 +46,12 @@ resource "azurerm_role_assignment" "devs_group_tf_st" {
   scope                = local.tf_storage_account.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = var.entraid_groups.devs_object_id
+}
+
+resource "azurerm_role_assignment" "devs_apim_service_contributor" {
+  scope              = var.apim_id
+  role_definition_id = "API Management Service Contributor"
+  principal_id       = var.entraid_groups.devs_object_id
 }
 
 resource "azurerm_role_assignment" "devs_group_tf_rg_kv_secr" {
