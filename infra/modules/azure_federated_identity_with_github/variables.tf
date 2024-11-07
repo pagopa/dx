@@ -21,6 +21,7 @@ variable "prefix" {
 variable "location" {
   type        = string
   description = "Azure region for the Managed Identity"
+  default     = "italynorth"
 }
 
 variable "domain" {
