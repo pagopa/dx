@@ -38,4 +38,18 @@ locals {
       dns_zone = "privatelink.table.core.windows.net"
     }
   }
+
+  cmk_flags = {
+    kv = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv")
+  }
+
+  cmk_info = {
+    kv = local.cmk_flags.kv ? {
+      key_vault_name = split("/", var.customer_managed_key.key_vault_id)[8]
+      resource_group_name = split("/", var.customer_managed_key.key_vault_id)[4]
+      subscription = split("/", var.customer_managed_key.key_vault_id)[1]
+      same_subscription = split("/", var.customer_managed_key.key_vault_id)[1] == data.azurerm_subscription.current.subscription_id
+      principal_id = coalesce(var.customer_managed_key.user_assigned_identity_id, azurerm_storage_account.this.identity[0].principal_id)
+    } : {}
+  }
 }
