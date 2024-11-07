@@ -34,6 +34,16 @@ variable "terraform_storage_account" {
   description = "Name and resource group name of the Storage Account hosting the Terraform state file"
 }
 
+variable "pep_vnet_id" {
+  type        = string
+  description = "ID of the VNet holding Private Endpoint-dedicated subnet"
+}
+
+variable "apim_id" {
+  type        = string
+  description = "ID of the APIM instance"
+}
+
 variable "subscription_id" {
   type        = string
   description = "The subscription ID where resources are created"

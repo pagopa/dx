@@ -86,6 +86,18 @@ resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
 }
 
+resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
+  scope              = var.pep_vnet_id
+  role_definition_id = "Network Contributor"
+  principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
+}
+
+resource "azurerm_role_assignment" "infra_cd_apim_service_contributor" {
+  scope              = var.apim_id
+  role_definition_id = "API Management Service Contributor"
+  principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
+}
+
 resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
   scope                = local.tf_storage_account.id
   role_definition_name = "Storage Blob Data Contributor"
