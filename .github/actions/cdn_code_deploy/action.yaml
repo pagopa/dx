@@ -46,6 +46,11 @@ inputs:
     type: string
     required: false
     default: '.'
+  dest_directory:
+    description: The path of the directory where the files will be synchronized in the storage account container (Default is './')
+    type: string
+    required: false
+    default: '.'
 
 runs:
   using: composite
@@ -59,13 +64,15 @@ runs:
       shell: bash
       run: |
         az storage blob sync \
-          --container ${{ inputs.blob_container_name }} \
+          --container '${{ inputs.blob_container_name }}' \
           --account-name ${{ inputs.storage_account_name }} \
-          --source "${{ env.FOLDER_NAME }}"
+          --source "${{ env.FOLDER_NAME }}" \
+          --destination "${{ env.DEST_DIRECTORY }}"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
         WORKING_DIRECTORY: ${{ inputs.working_directory || '.' }}
+        DEST_DIRECTORY: ${{ inputs.dest_directory || './' }}
 
     ## Purge CDN
     # If you don't want to purge all files to speed up the step, define selective_purge_paths
