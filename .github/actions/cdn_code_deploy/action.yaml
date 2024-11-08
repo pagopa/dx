@@ -58,16 +58,51 @@ runs:
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
+    # ## Sync Storage
+    # # will be synced the to the working_directory/sync_dir_name defined (Default will be './dist')
+    # - name: Sync Storage
+    #   shell: bash
+    #   run: |
+    #     az storage blob sync \
+    #       --container '${{ inputs.blob_container_name }}' \
+    #       --account-name ${{ inputs.storage_account_name }} \
+    #       --source "${{ env.FOLDER_NAME }}" \
+    #       --destination "${{ env.DEST_DIRECTORY }}"
+    #   working-directory: ${{ env.WORKING_DIRECTORY }}
+    #   env:
+    #     FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
+    #     WORKING_DIRECTORY: ${{ inputs.working_directory || '.' }}
+    #     DEST_DIRECTORY: ${{ inputs.destination_dir || './' }}
+
+    # ## Purge CDN
+    # # If you don't want to purge all files to speed up the step, define selective_purge_paths
+    # - name: Purge CDN for selected files
+    #   if: ${{ inputs.selective_purge_paths != '' }}
+    #   shell: bash
+    #   run: |
+    #     az cdn endpoint purge \
+    #       --resource-group ${{ inputs.resource_group_name }} \
+    #       --endpoint-name ${{ inputs.endpoint_name }} \
+    #       --profile-name ${{ inputs.profile_name }} \
+    #       --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+
+    # # If selective_purge_paths is not defined, purge all files '/*'
+    # - name: Purge CDN
+    #   if: ${{ inputs.selective_purge_paths == '' }}
+    #   shell: bash
+    #   run: |
+    #     az cdn endpoint purge \
+    #       --resource-group ${{ inputs.resource_group_name }} \
+    #       --endpoint-name ${{ inputs.endpoint_name }} \
+    #       --profile-name ${{ inputs.profile_name }} \
+    #       --content-paths "/*"
+
     ## Sync Storage
     # will be synced the to the working_directory/sync_dir_name defined (Default will be './dist')
     - name: Sync Storage
       shell: bash
       run: |
-        az storage blob sync \
-          --container '${{ inputs.blob_container_name }}' \
-          --account-name ${{ inputs.storage_account_name }} \
-          --source "${{ env.FOLDER_NAME }}" \
-          --destination "${{ env.DEST_DIRECTORY }}"
+        echo "az storage blob sync --container '${{ inputs.blob_container_name }}' --account-name ${{ inputs.storage_account_name }} --source ${{ env.FOLDER_NAME }} --destination ${{ env.DEST_DIRECTORY }}"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
@@ -80,19 +115,11 @@ runs:
       if: ${{ inputs.selective_purge_paths != '' }}
       shell: bash
       run: |
-        az cdn endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
-          --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+        echo 'az cdn endpoint purge --resource-group ${{ inputs.resource_group_name }} --endpoint-name ${{ inputs.endpoint_name }} --profile-name ${{ inputs.profile_name }} --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")'
 
     # If selective_purge_paths is not defined, purge all files '/*'
     - name: Purge CDN
       if: ${{ inputs.selective_purge_paths == '' }}
       shell: bash
       run: |
-        az cdn endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
-          --content-paths "/*"
+        echo 'az cdn endpoint purge --resource-group ${{ inputs.resource_group_name }} --endpoint-name ${{ inputs.endpoint_name }} --profile-name ${{ inputs.profile_name }} --content-paths "/*"'
