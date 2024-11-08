@@ -46,7 +46,7 @@ inputs:
     type: string
     required: false
     default: '.'
-  dest_directory:
+  destination_dir:
     description: The path of the directory where the files will be synchronized in the storage account container (Default is './')
     type: string
     required: false
@@ -72,7 +72,7 @@ runs:
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
         WORKING_DIRECTORY: ${{ inputs.working_directory || '.' }}
-        DEST_DIRECTORY: ${{ inputs.dest_directory || './' }}
+        DEST_DIRECTORY: ${{ inputs.destination_dir || './' }}
 
     ## Purge CDN
     # If you don't want to purge all files to speed up the step, define selective_purge_paths
