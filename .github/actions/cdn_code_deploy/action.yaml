@@ -115,7 +115,8 @@ runs:
       if: ${{ inputs.selective_purge_paths != '' }}
       shell: bash
       run: |
-        echo 'az cdn endpoint purge --resource-group ${{ inputs.resource_group_name }} --endpoint-name ${{ inputs.endpoint_name }} --profile-name ${{ inputs.profile_name }} --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")'
+        echo 'az cdn endpoint purge --resource-group ${{ inputs.resource_group_name }} --endpoint-name ${{ inputs.endpoint_name }} --profile-name ${{ inputs.profile_name }}'
+        $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
 
     # If selective_purge_paths is not defined, purge all files '/*'
     - name: Purge CDN
