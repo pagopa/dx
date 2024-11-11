@@ -25,7 +25,7 @@ resource "azurerm_key_vault_access_policy" "keys" {
 resource "azurerm_role_assignment" "keys" {
   for_each = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
   scope                = azurerm_key_vault_key.key.resource_versionless_id
-  role_definition_name = local.permissions_rbac.keys[each.value.roles.keys]
+  role_definition_name = "Key Vault Certificate User"
   principal_id         = local.cmk_info.principal_id
 }
 
