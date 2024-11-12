@@ -42,12 +42,12 @@ variable "customer_managed_key" {
   type = object({
     enabled                   = optional(bool, false)
     type                      = optional(string, null)
-    key_name                  = optional(string)
+    key_name                  = optional(string, null)
     user_assigned_identity_id = optional(string, null)
     key_vault_id              = optional(string, null)
   })
-  description = "(Optional) Customer managed key to use for encryption. Currently type can only be set to 'kv'."
-  default     = { enabled = false, key_name = null }
+  description = "(Optional) Customer managed key to use for encryption. Currently type can only be set to 'kv'. If the key is in the same account, and key_name is not set, the key and relevant permissions will be automatically created."
+  default     = { enabled = false }
 }
 
 variable "force_public_network_access_enabled" {
