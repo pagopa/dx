@@ -9,7 +9,7 @@ locals {
 
     l = {
       alerts                     = true
-      advanced_threat_protection = true
+      advanced_threat_protection = var.environment.location != "italynorth"
       account_tier               = "Standard"
       replication_type           = "ZRS"
     }
