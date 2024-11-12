@@ -33,6 +33,6 @@ resource "azurerm_storage_account_customer_managed_key" "kv" {
   for_each                  = (local.cmk_flags.kv ? toset(["kv"]) : toset([]))
   storage_account_id        = azurerm_storage_account.this.id
   key_vault_id              = var.customer_managed_key.key_vault_id
-  key_name                  = coalesce(var.customer_managed_key.key_name, azurerm_key_vault_key.key[0].name)
+  key_name                  = coalesce(var.customer_managed_key.key_name, azurerm_key_vault_key.key["kv"].name)
   user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
 }
