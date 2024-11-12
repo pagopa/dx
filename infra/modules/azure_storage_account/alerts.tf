@@ -3,7 +3,7 @@
 # -----------------------------------------------
 
 resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
-  count               = local.tier_features.advanced_threat_protection ? 1 : 0
+  count               = local.tier_features.alerts ? 1 : 0
   name                = "[${azurerm_storage_account.this.name}] Low Availability"
   resource_group_name = var.resource_group_name
   scopes              = [azurerm_storage_account.this.id]
