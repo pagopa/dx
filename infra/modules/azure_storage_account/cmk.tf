@@ -16,7 +16,7 @@ resource "azurerm_key_vault_access_policy" "keys" {
   for_each     = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
   key_vault_id = var.customer_managed_key.key_vault_id
   tenant_id    = data.azurerm_subscription.current.tenant_id
-  object_id    = local.cmk_info.principal_id
+  object_id    = local.cmk_info.kv.principal_id
 
   key_permissions    = ["Get", "Create", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"]
   secret_permissions = ["Get"]
@@ -26,13 +26,13 @@ resource "azurerm_role_assignment" "keys" {
   for_each             = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
   scope                = var.customer_managed_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = local.cmk_info.principal_id
+  principal_id         = local.cmk_info.kv.principal_id
 }
 
 resource "azurerm_storage_account_customer_managed_key" "kv" {
   for_each                  = (local.cmk_flags.kv ? toset(["kv"]) : toset([]))
   storage_account_id        = azurerm_storage_account.this.id
   key_vault_id              = var.customer_managed_key.key_vault_id
-  key_name                  = coalesce(var.customer_managed_key.key_name, azurerm_key_vault_key.key.name)
+  key_name                  = coalesce(var.customer_managed_key.key_name, azurerm_key_vault_key.key[0].name)
   user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
 }
