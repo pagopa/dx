@@ -1,6 +1,6 @@
 # tfsec:ignore:azure-keyvault-ensure-key-expiry
 resource "azurerm_key_vault_key" "key" {
-  for_each = (local.cmk_flags.kv && var.customer_managed_key.key_name == null ? toset(["kv"]) : toset([]))
+  for_each     = (local.cmk_flags.kv && var.customer_managed_key.key_name == null ? toset(["kv"]) : toset([]))
   name         = "${replace("${module.naming_convention.prefix}-st-${module.naming_convention.suffix}", "-", "")}-cmk-kv"
   key_vault_id = var.customer_managed_key.key_vault_id
   key_type     = "RSA"
@@ -13,7 +13,7 @@ resource "azurerm_key_vault_key" "key" {
 }
 
 resource "azurerm_key_vault_access_policy" "keys" {
-  for_each = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
+  for_each     = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
   key_vault_id = var.customer_managed_key.key_vault_id
   tenant_id    = data.azurerm_subscription.current.tenant_id
   object_id    = local.cmk_info.principal_id
@@ -23,7 +23,7 @@ resource "azurerm_key_vault_access_policy" "keys" {
 }
 
 resource "azurerm_role_assignment" "keys" {
-  for_each = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
+  for_each             = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
   scope                = var.customer_managed_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = local.cmk_info.principal_id
