@@ -13,3 +13,8 @@ output "resource_group_name" {
 output "principal_id" {
   value = azurerm_storage_account.this.identity[0].principal_id
 }
+
+output "primary_connection_string" {
+  value     = azurerm_storage_account.this.primary_connection_string
+  sensitive = true
+}
