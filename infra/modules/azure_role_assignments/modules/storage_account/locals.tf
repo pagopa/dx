@@ -14,7 +14,7 @@ locals {
   table_assignments = { for assignment in var.storage_table : "${assignment.storage_account_name}|${assignment.table_name}|${assignment.role}" => assignment }
 
   queues            = distinct([for queue in var.storage_queue : { storage_account_name = queue.storage_account_name, resource_group_name = queue.resource_group_name, queue_name = queue.queue_name } if queue.queue_name != "*"])
-  queue_assignments = { for assignment in var.storage_queue : "${assignment.storage_account_name}|${assignment.queue_name}|${assignment.role}" => assignment }
+  queue_assignments = merge([for key, item in var.storage_queue : { for role_name in local.role_definition_name.queue[lower(item.role)] : "${item.storage_account_name}|${item.queue_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name }) }]...)
 
   role_definition_name = {
     blob = {
@@ -30,9 +30,9 @@ locals {
     }
 
     queue = {
-      reader = "Storage Queue Data Message Processor",
-      writer = "Storage Queue Data Message Sender",
-      owner  = "Storage Queue Data Contributor"
+      reader = ["Storage Queue Data Message Processor", "Storage Queue Data Reader"],
+      writer = ["Storage Queue Data Message Sender"],
+      owner  = ["Storage Queue Data Contributor"]
     }
   }
 }
