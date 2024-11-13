@@ -12,7 +12,9 @@ locals {
     "italynorth"         = "itn"
     "westeurope"         = "weu"
     "germanywestcentral" = "gwc"
+    "spaincentral"       = "spc"
   }
+
   location_short = lookup(local.location_map, local.environment.location, "itn")
   project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
 
