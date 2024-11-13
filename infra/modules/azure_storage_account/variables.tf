@@ -78,15 +78,15 @@ variable "blob_features" {
     delete_retention_days = optional(number, 0)
     last_access_time      = optional(bool, false)
     versioning            = optional(bool, false)
-    change_feed = object({
+    change_feed = optional(object({
       enabled           = optional(bool, false)
       retention_in_days = optional(number, 0)
-    })
-    immutability_policy = object({
+    }), { enabled = false })
+    immutability_policy = optional(object({
       enabled                       = optional(bool, false)
       allow_protected_append_writes = optional(bool, false)
       period_since_creation_in_days = optional(number, 730)
-    })
+    }), { enabled = false })
   })
   description = "(Optional) Blob features configuration"
   default = {
