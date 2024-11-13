@@ -15,7 +15,7 @@ locals {
     "spaincentral"       = "spc"
   }
 
-  location_short  = lookup(local.location_map, var.environment.location, "neu")
+  location_short  = lookup(local.location_map, local.environment.location, "neu")
   project         = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
   resource_prefix = "${local.project}-${local.environment.domain}-${local.environment.app_name}"
 
