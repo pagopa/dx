@@ -19,8 +19,8 @@ variable "environment" {
   }
 
   validation {
-    condition     = contains(["italynorth", "westeurope", "germanywestcentral", "northeurope"], var.environment.location)
-    error_message = "Allowed values for \"location\" are \"italynorth\" \"westeurope\", \"germanywestcentral\", \"northeurope\"."
+    condition     = contains(["italynorth", "westeurope", "germanywestcentral", "spaincentral", "northeurope"], var.environment.location)
+    error_message = "Allowed values for \"location\" are \"italynorth\" \"westeurope\", \"germanywestcentral\", \"spaincentral\", \"northeurope\"."
   }
 
   validation {
