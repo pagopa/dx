@@ -9,11 +9,14 @@ locals {
     secret_name = "personal-access-token"
   }
 
+  # %s is replaced by `ci` or `cd`
   ids = {
+    #e.g. io-p-itn-ipatente-app-github-cd-id-01
     infra_name = "${module.naming_convention.prefix}-infra-github-%s-id-${module.naming_convention.suffix}"
     app_name   = "${module.naming_convention.prefix}-app-github-%s-id-${module.naming_convention.suffix}"
     opex_name  = "${module.naming_convention.prefix}-opex-github-%s-id-${module.naming_convention.suffix}"
 
+    # e.g. infra-prod-cd
     infra_environment_name = "infra-${module.naming_convention.env_name}-%s"
     app_environment_name   = "app-${module.naming_convention.env_name}-%s"
     opex_environment_name  = "opex-${module.naming_convention.env_name}-%s"

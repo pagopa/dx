@@ -13,13 +13,20 @@ resource "github_branch_protection" "main" {
   }
 
   require_conversation_resolution = true
-  require_signed_commits          = false
+  enforce_admins                  = true
+  require_signed_commits          = true
+  allows_force_pushes             = false
+  allows_deletions                = false
 
   required_pull_request_reviews {
     dismiss_stale_reviews           = false
     require_code_owner_reviews      = true
     required_approving_review_count = 1
+    dismissal_restrictions          = ["admins"]
+    restrict_dismissals             = true
   }
 
-  allows_deletions = false
+  lifecycle {
+    prevent_destroy = true
+  }
 }

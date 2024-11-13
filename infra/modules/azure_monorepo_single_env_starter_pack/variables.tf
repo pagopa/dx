@@ -1,5 +1,5 @@
 variable "tags" {
-  type        = map(any)
+  type        = map(string)
   description = "Resources tags"
 }
 
