@@ -2,11 +2,6 @@ repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.94.1
     hooks:
-      - id: terraform_tflint
-        args:
-          - --args=--disable-rule terraform_required_version
-          - --args=--disable-rule terraform_required_providers
-          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
       - id: terraform_fmt
       - id: terraform_docs
         name: terraform_docs on modules
@@ -21,7 +16,12 @@ repos:
         exclude: |
           (?x)^(
             infra/modules/.*?
-          )$
+            )$
+      - id: terraform_tflint
+        args:
+          - --args=--disable-rule terraform_required_version
+          - --args=--disable-rule terraform_required_providers
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
       - id: terraform_validate
         args:
           - --args=-json
