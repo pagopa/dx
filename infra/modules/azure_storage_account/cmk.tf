@@ -12,6 +12,7 @@ resource "azurerm_key_vault_key" "key" {
   ]
 }
 
+# tflint-ignore: azurerm_key_vault_key_invalid_curve
 resource "azurerm_key_vault_access_policy" "keys" {
   for_each     = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
   key_vault_id = var.customer_managed_key.key_vault_id

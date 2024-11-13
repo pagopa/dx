@@ -45,10 +45,11 @@ locals {
 
   cmk_info = {
     kv = local.cmk_flags.kv ? {
+      # tflint-ignore: azurerm_key_vault_key_invalid_curve
       key_vault_name      = split("/", var.customer_managed_key.key_vault_id)[8]
       resource_group_name = split("/", var.customer_managed_key.key_vault_id)[4]
       subscription        = split("/", var.customer_managed_key.key_vault_id)[2]
-      same_subscription   = split("/", var.customer_managed_key.key_vault_id)[2] == data.azurerm_subscription.current.subscription_id
+      same_subscription   = (split("/", var.customer_managed_key.key_vault_id)[2] == data.azurerm_subscription.current.subscription_id)
       principal_id        = coalesce(var.customer_managed_key.user_assigned_identity_id, azurerm_storage_account.this.identity[0].principal_id)
     } : {}
   }
