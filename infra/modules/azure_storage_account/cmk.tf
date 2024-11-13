@@ -12,9 +12,8 @@ resource "azurerm_key_vault_key" "key" {
   ]
 }
 
-# tflint-ignore: azurerm_key_vault_key_invalid_curve
 resource "azurerm_key_vault_access_policy" "keys" {
-  for_each     = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
+  for_each     = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == false ? toset(["kv"]) : toset([]))
   key_vault_id = var.customer_managed_key.key_vault_id
   tenant_id    = data.azurerm_subscription.current.tenant_id
   object_id    = local.cmk_info.kv.principal_id
@@ -24,7 +23,7 @@ resource "azurerm_key_vault_access_policy" "keys" {
 }
 
 resource "azurerm_role_assignment" "keys" {
-  for_each             = (local.cmk_flags.kv && local.cmk_info.kv.same_subscription && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
+  for_each             = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && data.azurerm_key_vault.this["kv"].enable_rbac_authorization == true ? toset(["kv"]) : toset([]))
   scope                = var.customer_managed_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = local.cmk_info.kv.principal_id
