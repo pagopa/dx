@@ -5,16 +5,16 @@ resource "azurerm_cosmosdb_account" "psn_01" {
   offer_type          = "Standard"
 
   # TODO
-  default_identity_type = join("=", ["UserAssignedIdentity", azurerm_user_assigned_identity.cosno_01.id])
-  key_vault_key_id      = azurerm_key_vault_key.cosmos_key_01.versionless_id
+  # default_identity_type = join("=", ["UserAssignedIdentity", azurerm_user_assigned_identity.cosno_01.id])
+  # key_vault_key_id      = azurerm_key_vault_key.cosmos_key_01.versionless_id
 
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.cosno_01.id]
-  }
+  # identity {
+  #   type         = "UserAssigned"
+  #   identity_ids = [azurerm_user_assigned_identity.cosno_01.id]
+  # }
 
   consistency_policy {
-    consistency_level       = "Strong"
+    consistency_level = "Strong"
   }
 
   geo_location {
@@ -32,7 +32,8 @@ resource "azurerm_cosmosdb_account" "psn_01" {
 
   tags = local.tags
 
-  depends_on = [
-    azurerm_role_assignment.cosnos_kv_crypto
-  ]
+  # TODO
+  # depends_on = [
+  #   azurerm_role_assignment.cosnos_kv_crypto
+  # ]
 }
