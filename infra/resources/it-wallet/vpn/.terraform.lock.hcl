@@ -6,6 +6,9 @@ provider "registry.terraform.io/hashicorp/azuread" {
   constraints = "<= 3.2.0"
   hashes = [
     "h1:HNrx7UJEDY5Kbx/r1LRQDWnziqvB6x3IU+pEA8Vq7dw=",
+    "h1:k0kPplqH7FWmnYeCXXrFIeCshgF1tC4LLhfk66bos3w=",
+    "h1:sYCyzbPpSYu2XDah8XqBUITQAfB0x4j4Twh6lw2C4CA=",
+    "h1:yQqvUtgtrYKGpIygdM8P6N+pvMWJJWIsVdPow29VE20=",
     "zh:16e724b80a9004c7978c30f69a73c98ff63eb8a03937dd44c2a8f0ea0438b7a3",
     "zh:1c3e89cf19118fc07d7b04257251fc9897e722c16e0a0df7b07fcd261f8c12e7",
     "zh:2bbbf13713ca4767267b889471c9fc14a56a8fdf5d1013da3ca78667e3caec64",

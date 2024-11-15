@@ -5,13 +5,13 @@ resource "azurerm_cosmosdb_account" "psn_01" {
   offer_type          = "Standard"
 
   # TODO
-  # default_identity_type = join("=", ["UserAssignedIdentity", azurerm_user_assigned_identity.cosno_01.id])
-  # key_vault_key_id      = azurerm_key_vault_key.cosmos_key_01.versionless_id
+  default_identity_type = "UserAssignedIdentity=${azurerm_user_assigned_identity.cosno_01.id}&FederatedClientId=${data.azuread_application.psn_hsm_01.client_id}"
+  managed_hsm_key_id    = "https://pagopat-managedhsm.managedhsm.azure.net/keys/mdb001prod" # azurerm_key_vault_key.cosmos_key_01.versionless_id
 
-  # identity {
-  #   type         = "UserAssigned"
-  #   identity_ids = [azurerm_user_assigned_identity.cosno_01.id]
-  # }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.cosno_01.id]
+  }
 
   consistency_policy {
     consistency_level = "Strong"
@@ -20,10 +20,10 @@ resource "azurerm_cosmosdb_account" "psn_01" {
   geo_location {
     location          = azurerm_resource_group.ps_01.location
     failover_priority = 0
-    zone_redundant    = true
+    zone_redundant    = false
   }
 
-  public_network_access_enabled     = true # evaluate
+  public_network_access_enabled     = false # evaluate
   is_virtual_network_filter_enabled = false
 
   backup {
