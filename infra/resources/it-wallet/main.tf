@@ -6,12 +6,12 @@ terraform {
     }
   }
 
-  # backend "azurerm" {
-  # resource_group_name  = "terraform-state-rg"
-  # storage_account_name = "tfdevdx"
-  # container_name       = "terraform-state"
-  # key                  = "dx.resources.dev.tfstate"
-  # }
+  backend "azurerm" {
+    resource_group_name  = "ps-d-itn-tf-rg-01"
+    storage_account_name = "psditntfst01"
+    container_name       = "terraform-state"
+    key                  = "dx.resources.itwallet.tfstate"
+  }
 }
 
 provider "azurerm" {
