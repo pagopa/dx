@@ -37,12 +37,12 @@ variable "pep_subnet_cidr" {
   description = "CIDR block for the private endpoint subnet"
 }
 
-# variable "vpn_cidr_subnet" {
-#   type        = string
-#   description = "VPN network address space."
-# }
+variable "vpn_cidr_subnet" {
+  type        = string
+  description = "VPN network address space."
+}
 
-# variable "dnsforwarder_cidr_subnet" {
-#   type        = string
-#   description = "DNS forwarder network address space."
-# }
+variable "dnsforwarder_cidr_subnet" {
+  type        = string
+  description = "DNS forwarder network address space."
+}

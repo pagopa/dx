@@ -1,5 +1,10 @@
 ## VPN
 
+resource "azuread_application" "vpn_app" {
+  display_name = "${var.project}-app-vpn"
+  owners       = [data.azuread_client_config.current.object_id]
+}
+
 resource "azurerm_subnet" "vpn_snet" {
   name                 = "GatewaySubnet"
   resource_group_name  = var.resource_group_name
@@ -22,7 +27,7 @@ module "vpn" {
     {
       address_space         = ["172.16.2.0/24"],
       vpn_client_protocols  = ["OpenVPN"],
-      aad_audience          = data.azuread_application.vpn_app.object_id
+      aad_audience          = azuread_application.vpn_app.object_id
       aad_issuer            = "https://sts.windows.net/${local.tenant_id}/"
       aad_tenant            = "https://login.microsoftonline.com/${local.tenant_id}"
       radius_server_address = null

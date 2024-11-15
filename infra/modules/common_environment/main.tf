@@ -68,22 +68,22 @@ module "network" {
   tags = var.tags
 }
 
-# module "vpn" {
-#   source = "./_modules/vpn"
+module "vpn" {
+  source = "./_modules/vpn"
 
-#   project = local.project
-#   location       = var.environment.location
-#   resource_group_name = azurerm_resource_group.common.name
-#   vpn_cidr_subnet = var.vpn_cidr_subnet
-#   dnsforwarder_cidr_subnet = var.dnsforwarder_cidr_subnet
+  project                  = local.project
+  location                 = var.environment.location
+  resource_group_name      = azurerm_resource_group.common.name
+  vpn_cidr_subnet          = var.vpn_cidr_subnet
+  dnsforwarder_cidr_subnet = var.dnsforwarder_cidr_subnet
 
-#   virtual_network = {
-#     id   = module.network.vnet.id
-#     name = module.network.vnet.name
-#   }
+  virtual_network = {
+    id   = module.network.vnet.id
+    name = module.network.vnet.name
+  }
 
-#   tags = var.tags
-# }
+  tags = var.tags
+}
 
 #-----------#
 # KEY VAULT #
