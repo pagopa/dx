@@ -1,23 +1,3 @@
-
-# resource "azurerm_private_dns_zone" "internal_io_pagopa_it" {
-#   name                = join(".", ["internal", var.dns_zones.io, var.external_domain])
-#   resource_group_name = var.resource_groups.internal
-
-#   tags = var.tags
-# }
-
-# api-app.internal.io.pagopa.it
-# api-app.internal.dev.io.pagopa.it
-# resource "azurerm_private_dns_a_record" "api_app_internal_io" {
-#   name                = "api-app"
-#   zone_name           = azurerm_private_dns_zone.internal_io_pagopa_it.name
-#   resource_group_name = var.resource_groups.internal
-#   ttl                 = var.dns_default_ttl_sec
-#   records             = [var.apim_v2_private_ip]
-
-#   tags = var.tags
-# }
-
 resource "azurerm_private_dns_zone" "privatelink_redis_cache" {
   name                = "privatelink.redis.cache.windows.net"
   resource_group_name = var.resource_group_name

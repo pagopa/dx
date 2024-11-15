@@ -37,12 +37,16 @@ variable "pep_subnet_cidr" {
   description = "CIDR block for the private endpoint subnet"
 }
 
-variable "vpn_cidr_subnet" {
-  type        = string
-  description = "VPN network address space."
-}
+variable "vpn" {
+  type = object({
+    cidr_subnet              = optional(string, "")
+    dnsforwarder_cidr_subnet = optional(string, "")
+  })
+  description = "VPN configuration. Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together or not at all."
+  default     = {}
 
-variable "dnsforwarder_cidr_subnet" {
-  type        = string
-  description = "DNS forwarder network address space."
+  validation {
+    condition     = (var.vpn.cidr_subnet == "" && var.vpn.dnsforwarder_cidr_subnet == "") || (var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "")
+    error_message = "You must specify both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' together, or leave both empty."
+  }
 }

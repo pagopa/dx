@@ -30,23 +30,15 @@ resource "azurerm_resource_group" "common" {
   tags = var.tags
 }
 
-resource "azurerm_resource_group" "dashboards" {
-  name     = "${local.project}-common-dashboards-rg-01"
+resource "azurerm_resource_group" "network" {
+  name     = "${local.project}-network-rg-01"
   location = var.environment.location
 
   tags = var.tags
 }
 
-# NOTE: Do not create any resource inside this resource group
-resource "azurerm_resource_group" "role_assignment" {
-  name     = "default-roleassignment-rg"
-  location = var.environment.location
-
-  tags = var.tags
-}
-
-resource "azurerm_resource_group" "github_managed_identity" {
-  name     = "${local.project}-github-id-rg-01"
+resource "azurerm_resource_group" "test" {
+  name     = "${local.project}-test-rg-01"
   location = var.environment.location
 
   tags = var.tags
@@ -61,7 +53,7 @@ module "network" {
 
   project             = local.project
   location            = var.environment.location
-  resource_group_name = azurerm_resource_group.common.name
+  resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
   pep_snet_cidr       = var.pep_subnet_cidr
 
@@ -69,13 +61,15 @@ module "network" {
 }
 
 module "vpn" {
+  count = local.vpn_enable ? 1 : 0
+
   source = "./_modules/vpn"
 
   project                  = local.project
   location                 = var.environment.location
-  resource_group_name      = azurerm_resource_group.common.name
-  vpn_cidr_subnet          = var.vpn_cidr_subnet
-  dnsforwarder_cidr_subnet = var.dnsforwarder_cidr_subnet
+  resource_group_name      = azurerm_resource_group.network.name
+  vpn_cidr_subnet          = var.vpn.cidr_subnet
+  dnsforwarder_cidr_subnet = var.vpn.dnsforwarder_cidr_subnet
 
   virtual_network = {
     id   = module.network.vnet.id
@@ -93,9 +87,18 @@ module "vpn" {
 module "key_vault" {
   source = "./_modules/key_vault"
 
-  project             = local.project
+  project = local.project
+  prefix  = local.prefix
+  suffix  = local.suffix
+
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
+
+  subnet_pep_id = module.network.pep_snet.id
+  private_dns_zone = {
+    id                  = module.dns.private_dns_zones.vault.id
+    resource_group_name = azurerm_resource_group.network.name
+  }
 
   tags = var.tags
 }
@@ -107,9 +110,7 @@ module "key_vault" {
 module "dns" {
   source = "./_modules/dns"
 
-  # project             = local.project
-  # location            = var.environment.location
-  resource_group_name = azurerm_resource_group.common.name
+  resource_group_name = azurerm_resource_group.network.name
 
   virtual_network = {
     id   = module.network.vnet.id

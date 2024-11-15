@@ -1,13 +1,3 @@
-# resource "azurerm_private_dns_zone_virtual_network_link" "internal_io_pagopa_it_private_vnet" {
-#   name                  = var.virtual_network.name
-#   resource_group_name   = var.resource_groups.internal
-#   private_dns_zone_name = azurerm_private_dns_zone.internal_io_pagopa_it.name
-#   virtual_network_id    = var.virtual_network.id
-#   registration_enabled  = false
-
-#   tags = var.tags
-# }
-
 resource "azurerm_private_dns_zone_virtual_network_link" "redis_private_vnet" {
   name                  = var.virtual_network.name
   resource_group_name   = var.resource_group_name
