@@ -18,7 +18,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_federated_identities"></a> [federated\_identities](#module\_federated\_identities) | ../../modules/azure_federated_identity_with_github | n/a |
+| <a name="module_federated_identities"></a> [federated\_identities](#module\_federated\_identities) | ../../modules/azure-federated-identity-with-github | n/a |
 
 ## Resources
 

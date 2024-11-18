@@ -47,7 +47,7 @@ runs:
       run: |
         set -euo pipefail
         PROVIDER=$(jq -r '.provider // "azurerm"' infra/modules/${MODULE_NAME}/package.json)
-        REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}_${MODULE_NAME}
+        REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}-${MODULE_NAME}
 
         git remote add module-repo "$REPO_URL"
 
