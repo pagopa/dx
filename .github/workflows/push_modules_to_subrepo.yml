@@ -52,7 +52,7 @@ jobs:
     needs: [get-modified-modules, get-all-modules]
     strategy:
       matrix:
-        module: ${{ fromJSON(needs.get-modified-modules.outputs.modules || needs.get-all-modules.outputs.modules) }}
+        module: ${{ fromJSON(needs.get-all-modules.outputs.modules || needs.get-modified-modules.outputs.modules) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
