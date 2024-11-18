@@ -11,8 +11,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_app_service_exposed"></a> [azure\_app\_service\_exposed](#module\_azure\_app\_service\_exposed) | ../../ | n/a |
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
+| <a name="module_azure-app-service-exposed"></a> [azure-app-service-exposed](#module\_azure-app-service-exposed) | ../../ | n/a |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure-naming-convention | n/a |
 
 ## Resources
 

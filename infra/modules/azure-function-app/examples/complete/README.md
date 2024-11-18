@@ -11,8 +11,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | ../../ | n/a |
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
+| <a name="module_azure-function-app"></a> [azure-function-app](#module\_azure-function-app) | ../../ | n/a |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure-naming-convention | n/a |
 
 ## Resources
 

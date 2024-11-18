@@ -11,8 +11,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_app_service"></a> [azure\_app\_service](#module\_azure\_app\_service) | ../../ | n/a |
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
+| <a name="module_azure-app-service"></a> [azure-app-service](#module\_azure-app-service) | ../../ | n/a |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure-naming-convention | n/a |
 
 ## Resources
 

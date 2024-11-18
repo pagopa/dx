@@ -9,7 +9,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_function"></a> [function](#module\_function) | ../../../azure_function_app | n/a |
+| <a name="module_function"></a> [function](#module\_function) | ../../../azure-function-app | n/a |
 | <a name="module_roles"></a> [roles](#module\_roles) | ../../ | n/a |
 
 ## Resources

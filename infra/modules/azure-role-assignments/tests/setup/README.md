@@ -11,7 +11,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure-naming-convention | n/a |
 
 ## Resources
 
@@ -26,7 +26,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br>    prefix          = string<br>    env_short       = string<br>    location        = string<br>    domain          = optional(string)<br>    app_name        = string<br>    instance_number = string<br>  })</pre> | n/a | yes |
 
 ## Outputs
 
