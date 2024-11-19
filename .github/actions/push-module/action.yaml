@@ -79,6 +79,3 @@ runs:
 
         # Push changes and tags
         git push module-repo ${MODULE_NAME}-branch:main
-
-        # Remove the temporary branch
-        git branch -D ${MODULE_NAME}-branch
