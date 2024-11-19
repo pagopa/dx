@@ -1,5 +1,5 @@
 {
-  "name": "common_environment",
+  "name": "azure_core_infra",
   "version": "0.0.0",
   "private": true,
   "provider": "azurerm"

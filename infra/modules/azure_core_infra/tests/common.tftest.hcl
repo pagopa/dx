@@ -11,7 +11,7 @@ run "setup_tests" {
   variables {}
 }
 
-run "common_is_correct_plan" {
+run "core_is_correct_plan" {
   command = plan
 
   variables {
@@ -29,7 +29,7 @@ run "common_is_correct_plan" {
       CreatedBy   = "Terraform"
       Environment = "Prod"
       Owner       = "IO"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/common_environment/tests"
+      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
       Test        = "true"
       TestName    = "Create DEV environment for test"
     }

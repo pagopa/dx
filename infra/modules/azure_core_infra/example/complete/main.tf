@@ -1,4 +1,4 @@
-module "common_resources" {
+module "core" {
   source = "../../"
 
   test_enable = true # set to false if you want to create all resources

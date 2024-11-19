@@ -1,7 +1,7 @@
 # Common Environment module
 The module provisions all the resources required for the initial configuration of a subscription, which can be utilized for testing or other purposes.
 
-The module, named `common_resources`, includes the following:
+The module, named `azure_core_infra`, includes the following:
 
 - A virtual network (`VNet`) with subnets for private endpoints.
 - A VPN, if specified.
@@ -12,8 +12,8 @@ The module, named `common_resources`, includes the following:
 ## Examples
 
 ```hcl
-module "common_resources" {
-  source = "github.com/pagopa/dx//infra/modules/common_resources?ref=main"
+module "core" {
+  source = "github.com/pagopa/dx//infra/modules/azure_core_infra?ref=main"
 
   test_enable = true # set to false if you want to create all resources
 

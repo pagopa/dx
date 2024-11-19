@@ -11,7 +11,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_common_resources"></a> [common\_resources](#module\_common\_resources) | ../../ | n/a |
+| <a name="module_core"></a> [core](#module\_core) | ../../ | n/a |
 
 ## Resources
 
