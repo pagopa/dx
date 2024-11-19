@@ -18,3 +18,10 @@ provider "azurerm" {
   features {
   }
 }
+
+resource "azurerm_resource_group" "dx" {
+  name     = "${local.prefix}-${local.env_short}-${local.location_short}-rg-01"
+  location = local.location
+
+  tags = local.tags
+}

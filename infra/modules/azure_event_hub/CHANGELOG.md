@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.3
+
+### Patch Changes
+
+- afcf1f2: Added tests for each modules
+
 ## 0.0.2
 
 ### Patch Changes

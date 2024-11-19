@@ -4,6 +4,7 @@ locals {
     "italynorth"         = "itn",
     "westeurope"         = "weu",
     "germanywestcentral" = "gwc"
+    "spaincentral"       = "spc"
   }
 
   location_short = lookup(local.location_map, var.environment.location, "neu")
