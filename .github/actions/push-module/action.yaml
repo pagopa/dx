@@ -61,8 +61,7 @@ runs:
         # Merge the changes, favoring the monorepository changes
         git checkout -b temp-branch module-repo/main || git checkout --orphan temp-branch
         git reset --hard module-repo/main || true
-        git merge -s ours ${MODULE_NAME}-branch --no-commit --allow-unrelated-histories
-        git read-tree --prefix=/ -u ${MODULE_NAME}-branch
+        git merge -s ours ${MODULE_NAME}-branch --allow-unrelated-histories -m "Merged changes from monorepository for ${MODULE_NAME}"
         git commit -m "Merged changes from monorepository for ${MODULE_NAME}"
 
         # Define the tag name
