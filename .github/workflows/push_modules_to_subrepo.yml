@@ -50,6 +50,7 @@ jobs:
   push-modified-modules:
     runs-on: ubuntu-latest
     needs: [get-modified-modules, get-all-modules]
+    if: always()
     strategy:
       matrix:
         module: ${{ fromJSON(needs.get-all-modules.outputs.modules || needs.get-modified-modules.outputs.modules) }}
