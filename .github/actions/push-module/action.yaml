@@ -62,7 +62,6 @@ runs:
         git checkout -b temp-branch module-repo/main || git checkout --orphan temp-branch
         git reset --hard module-repo/main || true
         git merge -s ours ${MODULE_NAME}-branch --allow-unrelated-histories -m "Merged changes from monorepository for ${MODULE_NAME}"
-        git commit -m "Merged changes from monorepository for ${MODULE_NAME}"
 
         # Define the tag name
         TAG_NAME=$(jq -r '.version' package.json)
