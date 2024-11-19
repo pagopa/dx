@@ -33,7 +33,7 @@ run "common_is_correct_plan" {
       Test        = "true"
       TestName    = "Create DEV environment for test"
     }
-
+    
     virtual_network_cidr = "10.50.0.0/16"
     pep_subnet_cidr      = "10.50.2.0/23"
 
@@ -50,7 +50,7 @@ run "common_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.network.nat_gateways[0].name] == ["io-p-itn-common-vnet-01", "io-p-itn-pep-snet-01", "io-p-itn-ng-01"]
+    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["io-p-itn-common-vnet-01", "io-p-itn-pep-snet-01", "io-p-itn-ng-01"]
     error_message = "The VNET names configuration must be correct"
   }
 
@@ -60,7 +60,12 @@ run "common_is_correct_plan" {
   }
 
   assert {
-    condition     = module.dns.private_dns_zones.mysql.name == "privatelink.mysql.database.azure.com"
+    condition     = module.dns.private_dns_zones.vault.name == "privatelink.vaultcore.azure.net"
     error_message = "The Private DNS Zones configuration must be correct"
+  }
+
+  assert {
+    condition     = lookup(local.tags, "TestResource", "NotTestEnv") == "NotTestEnv"
+    error_message = "This Environment is not a Test Environment"
   }
 }

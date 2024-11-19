@@ -3,7 +3,7 @@ resource "azurerm_key_vault" "common" {
   name                = "${var.project}-common-kv-01"
   location            = var.location
   resource_group_name = var.resource_group_name
-  tenant_id           = local.tenant_id
+  tenant_id           = var.tenant_id
   sku_name            = "standard"
 
   enabled_for_disk_encryption = true

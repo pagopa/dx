@@ -41,3 +41,8 @@ variable "private_dns_zone" {
   })
   description = "Private dns zone id and resource group name"
 }
+
+variable "tenant_id" {
+  type        = string
+  description = "Tenant ID"
+}

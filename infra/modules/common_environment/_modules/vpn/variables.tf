@@ -35,3 +35,13 @@ variable "virtual_network" {
   })
   description = "Virtual network where to attach private dns zones"
 }
+
+variable "tenant_id" {
+  type        = string
+  description = "Tenant ID"
+}
+
+variable "object_id" {
+  type        = string
+  description = "Object ID"
+}

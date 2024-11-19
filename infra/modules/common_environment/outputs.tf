@@ -19,8 +19,12 @@ output "common_pep_snet" {
 }
 
 output "common_nat_gateways" {
-  value = [for ng in range(length(module.network.nat_gateways)) : {
-    id   = module.network.nat_gateways[ng].id
-    name = module.network.nat_gateways[ng].name
-  }]
+  value = flatten([
+    for ng in module.nat_gateway : [
+      for nat_gateway in ng.nat_gateways : {
+        id   = nat_gateway.id
+        name = nat_gateway.name
+      }
+    ]
+  ])
 }

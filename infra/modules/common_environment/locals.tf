@@ -3,14 +3,15 @@ locals {
   prefix  = module.naming_convention.prefix
   suffix  = module.naming_convention.suffix
 
+  tags = !var.test_enable ? var.tags : merge(var.tags, {
+    TestResource = "Created in ${timestamp()}"
+  })
+
   vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enable
 
   private_dns_zones = {
     "redis"                    = "privatelink.redis.cache.windows.net"
     "psql"                     = "privatelink.postgres.database.azure.com"
-    "mysql"                    = "privatelink.mysql.database.azure.com"
-    "azurecr_io"               = "privatelink.azurecr.io"
-    "mongo"                    = "privatelink.mongo.cosmos.azure.com"
     "servicebus"               = "privatelink.servicebus.windows.net"
     "documents"                = "privatelink.documents.azure.com"
     "blob"                     = "privatelink.blob.core.windows.net"
