@@ -2,6 +2,14 @@ output "common_resource_group_name" {
   value = azurerm_resource_group.common.name
 }
 
+output "network_resource_group_name" {
+  value = azurerm_resource_group.network.name
+}
+
+output "test_resource_group_name" {
+  value = var.test_enable ? azurerm_resource_group.test[0].name : null
+}
+
 # Networking
 
 output "common_vnet" {
