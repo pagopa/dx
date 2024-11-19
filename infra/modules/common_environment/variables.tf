@@ -25,6 +25,12 @@ variable "environment" {
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
+variable "test_enable" {
+  type        = bool
+  description = "Flag to enable testing resources"
+  default     = false
+}
+
 # Networking variables
 
 variable "virtual_network_cidr" {

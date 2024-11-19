@@ -38,6 +38,8 @@ resource "azurerm_resource_group" "network" {
 }
 
 resource "azurerm_resource_group" "test" {
+  count = var.test_enable ? 1 : 0
+
   name     = "${local.project}-test-rg-01"
   location = var.environment.location
 

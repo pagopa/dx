@@ -1,4 +1,35 @@
-# common_environment
+# Common Environment module
+The module provisions all the resources required for the initial configuration of a subscription, which can be utilized for testing or other purposes.
+
+The module, named `common_resources`, includes the following:
+
+- A virtual network (VNet) with subnets for private endpoints.
+- A VPN, if specified.
+- Resource groups for the VNet, common resources, and testing.
+- A common Key Vault with a private endpoint.
+- Private DNS zones for all resource types.
+
+## Examples
+
+```hcl
+module "common_resources" {
+  source = "github.com/pagopa/dx//infra/modules/common_resources?ref=main"
+
+  test_enable = true # set to false if you want to create all resources
+
+  environment = local.environment
+
+  virtual_network_cidr = "10.50.0.0/16"
+  pep_subnet_cidr      = "10.50.2.0/23"
+
+  vpn = {
+    cidr_subnet              = "10.50.133.0/24"
+    dnsforwarder_cidr_subnet = "10.50.252.8/29"
+  }
+
+  tags = local.tags
+}
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -32,6 +63,7 @@
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br>    prefix          = string<br>    env_short       = string<br>    location        = string<br>    domain          = optional(string)<br>    app_name        = string<br>    instance_number = string<br>  })</pre> | n/a | yes |
 | <a name="input_pep_subnet_cidr"></a> [pep\_subnet\_cidr](#input\_pep\_subnet\_cidr) | CIDR block for the private endpoint subnet | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
+| <a name="input_test_enable"></a> [test\_enable](#input\_test\_enable) | Flag to enable testing resources | `bool` | `false` | no |
 | <a name="input_virtual_network_cidr"></a> [virtual\_network\_cidr](#input\_virtual\_network\_cidr) | CIDR block for the virtual network | `string` | n/a | yes |
 | <a name="input_vpn"></a> [vpn](#input\_vpn) | VPN configuration. Both 'cidr\_subnet' and 'dnsforwarder\_cidr\_subnet' must be specified together or not at all. | <pre>object({<br>    cidr_subnet              = optional(string, "")<br>    dnsforwarder_cidr_subnet = optional(string, "")<br>  })</pre> | `{}` | no |
 

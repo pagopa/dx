@@ -1,5 +1,8 @@
 module "common_resources" {
-  source      = "../../"
+  source = "../../"
+
+  test_enable = true # set to false if you want to create all resources
+
   environment = local.environment
 
   virtual_network_cidr = "10.50.0.0/16"

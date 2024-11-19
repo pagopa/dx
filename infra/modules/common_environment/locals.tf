@@ -3,5 +3,5 @@ locals {
   prefix  = module.naming_convention.prefix
   suffix  = module.naming_convention.suffix
 
-  vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != ""
+  vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enable
 }
