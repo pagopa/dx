@@ -44,6 +44,11 @@ variable "apim_id" {
   description = "ID of the APIM instance"
 }
 
+variable "resource_group_dns_zone_id" {
+  type        = string
+  description = "Id of the resource group holding public DNS zone"
+}
+
 variable "subscription_id" {
   type        = string
   description = "The subscription ID where resources are created"
