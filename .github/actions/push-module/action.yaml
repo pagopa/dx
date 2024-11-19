@@ -41,11 +41,12 @@ runs:
     - name: Push Subtree to Module Repo
       shell: bash
       env:
-        MODULE_NAME: ${{ inputs.module }}
-        DX_PREFIX: ${{ inputs.dx_prefix }}
-        REPO_OWNER: ${{ github.repository_owner }}
+      MODULE_NAME: ${{ inputs.module }}
+      DX_PREFIX: ${{ inputs.dx_prefix }}
+      REPO_OWNER: ${{ github.repository_owner }}
       run: |
         set -euo pipefail
+
         PROVIDER=$(jq -r '.provider // "azurerm"' infra/modules/${MODULE_NAME}/package.json)
         REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}-${MODULE_NAME}
 
@@ -57,9 +58,12 @@ runs:
         # Check if the main branch exists on the remote
         git fetch module-repo main --tags
 
-        # Merge the changes without overwriting the history
-        git checkout -b temp-branch module-repo/main
-        git merge --allow-unrelated-histories ${MODULE_NAME}-branch
+        # Merge the changes, favoring the monorepository changes
+        git checkout -b temp-branch module-repo/main || git checkout --orphan temp-branch
+        git reset --hard module-repo/main || true
+        git merge -s ours ${MODULE_NAME}-branch --no-commit
+        git read-tree --prefix=/ -u ${MODULE_NAME}-branch
+        git commit -m "Merged changes from monorepository for ${MODULE_NAME}"
 
         # Define the tag name
         TAG_NAME=$(jq -r '.version' package.json)
