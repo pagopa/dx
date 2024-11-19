@@ -41,9 +41,9 @@ runs:
     - name: Push Subtree to Module Repo
       shell: bash
       env:
-      MODULE_NAME: ${{ inputs.module }}
-      DX_PREFIX: ${{ inputs.dx_prefix }}
-      REPO_OWNER: ${{ github.repository_owner }}
+        MODULE_NAME: ${{ inputs.module }}
+        DX_PREFIX: ${{ inputs.dx_prefix }}
+        REPO_OWNER: ${{ github.repository_owner }}
       run: |
         set -euo pipefail
 
