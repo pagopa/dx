@@ -46,13 +46,3 @@ variable "ng_ippres_number" {
   description = "Number of Public IP Prefix assigned to the nat gateway"
   default     = 3
 }
-
-# variable "vpn_cidr_subnet" {
-#   type        = string
-#   description = "VPN network address space."
-# }
-
-# variable "dnsforwarder_cidr_subnet" {
-#   type        = string
-#   description = "DNS forwarder network address space."
-# }
