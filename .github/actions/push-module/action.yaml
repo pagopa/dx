@@ -46,8 +46,9 @@ runs:
         REPO_OWNER: ${{ github.repository_owner }}
       run: |
         set -euo pipefail
+        REGISTRY_MODULE_NAME=${MODULE_NAME//_/\-}
         PROVIDER=$(jq -r '.provider // "azurerm"' infra/modules/${MODULE_NAME}/package.json)
-        REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}_${MODULE_NAME}
+        REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}-${REGISTRY_MODULE_NAME}
 
         git remote add module-repo "$REPO_URL"
 
@@ -58,8 +59,8 @@ runs:
         git fetch module-repo main --tags
 
         # Merge the changes without overwriting the history
-        git checkout -b temp-branch module-repo/main
-        git merge --allow-unrelated-histories -s ours --no-edit ${MODULE_NAME}-branch
+        git checkout -b ${MODULE_NAME}-branch module-repo/main
+        git merge --allow-unrelated-histories -s ours --no-edit temp-branch
         
         # Define the tag name
         TAG_NAME=$(jq -r '.version' package.json)
@@ -76,7 +77,7 @@ runs:
         fi
 
         # Push changes and tags
-        git push module-repo temp-branch:main
+        git push module-repo ${MODULE_NAME}-branch:main
 
         # Remove the temporary branch
         git branch -D ${MODULE_NAME}-branch
