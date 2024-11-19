@@ -3,7 +3,7 @@ The module provisions all the resources required for the initial configuration o
 
 The module, named `common_resources`, includes the following:
 
-- A virtual network (VNet) with subnets for private endpoints.
+- A virtual network (`VNet`) with subnets for private endpoints.
 - A VPN, if specified.
 - Resource groups for the VNet, common resources, and testing.
 - A common Key Vault with a private endpoint.
