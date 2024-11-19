@@ -59,7 +59,8 @@ runs:
         git fetch module-repo main --tags
 
         # Merge the changes without overwriting the history
-        git checkout -b ${MODULE_NAME}-branch module-repo/main
+        git branch temp-branch module-repo/main
+        git checkout ${MODULE_NAME}-branch
         git merge --allow-unrelated-histories -s ours --no-edit temp-branch
         
         # Define the tag name
