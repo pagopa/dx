@@ -1,0 +1,6 @@
+{
+  "name": "common_environment",
+  "version": "0.0.0",
+  "private": true,
+  "provider": "azurerm"
+}
