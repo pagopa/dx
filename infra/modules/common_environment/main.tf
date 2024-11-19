@@ -113,7 +113,7 @@ module "dns" {
   source = "./_modules/dns"
 
   resource_group_name = azurerm_resource_group.network.name
-
+  private_dns_zones   = local.private_dns_zones
   virtual_network = {
     id   = module.network.vnet.id
     name = module.network.vnet.name
