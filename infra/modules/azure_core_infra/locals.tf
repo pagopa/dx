@@ -4,7 +4,7 @@ locals {
   suffix  = module.naming_convention.suffix
 
   tags = !var.test_enable ? var.tags : merge(var.tags, {
-    TestResource = "Created in ${timestamp()}"
+    TestResource = "DeleteIn30Days"
   })
 
   vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enable
