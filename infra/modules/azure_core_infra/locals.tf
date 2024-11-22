@@ -11,7 +11,7 @@ locals {
     ResourceType = "DEV"
   })
 
-  vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enable
+  vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enabled
 
   private_dns_zones = {
     "redis"                    = "privatelink.redis.cache.windows.net"

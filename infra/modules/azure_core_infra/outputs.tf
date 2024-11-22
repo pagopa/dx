@@ -7,7 +7,7 @@ output "network_resource_group_name" {
 }
 
 output "test_resource_group_name" {
-  value = var.test_enable ? azurerm_resource_group.test[0].name : null
+  value = var.test_enabled ? azurerm_resource_group.test[0].name : null
 }
 
 # Networking

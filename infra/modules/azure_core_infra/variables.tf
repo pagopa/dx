@@ -20,7 +20,7 @@ variable "environment" {
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
-variable "test_enable" {
+variable "test_enabled" {
   type        = bool
   description = "Flag to enable testing resources"
   default     = false
@@ -31,11 +31,13 @@ variable "test_enable" {
 variable "virtual_network_cidr" {
   type        = string
   description = "CIDR block for the virtual network"
+  default     = "10.0.0.0/16"
 }
 
 variable "pep_subnet_cidr" {
   type        = string
   description = "CIDR block for the private endpoint subnet"
+  default     = "10.0.2.0/23"
 }
 
 variable "vpn" {
