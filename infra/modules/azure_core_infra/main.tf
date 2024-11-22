@@ -27,14 +27,14 @@ resource "azurerm_resource_group" "common" {
   name     = "${local.project}-common-rg-01"
   location = var.environment.location
 
-  tags = local.tags
+  tags = local.tags_core
 }
 
 resource "azurerm_resource_group" "network" {
   name     = "${local.project}-network-rg-01"
   location = var.environment.location
 
-  tags = local.tags
+  tags = local.tags_core
 }
 
 resource "azurerm_resource_group" "test" {
@@ -43,7 +43,7 @@ resource "azurerm_resource_group" "test" {
   name     = "${local.project}-test-rg-01"
   location = var.environment.location
 
-  tags = local.tags
+  tags = local.tags_dev
 }
 
 #------------#
@@ -59,7 +59,7 @@ module "network" {
   vnet_cidr           = var.virtual_network_cidr
   pep_snet_cidr       = var.pep_subnet_cidr
 
-  tags = local.tags
+  tags = local.tags_core
 }
 
 module "nat_gateway" {
@@ -70,7 +70,7 @@ module "nat_gateway" {
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
 
-  tags = local.tags
+  tags = local.tags_core
 
   depends_on = [module.network]
 }
@@ -95,7 +95,7 @@ module "vpn" {
     name = module.network.vnet.name
   }
 
-  tags = local.tags
+  tags = local.tags_core
 }
 
 #-----------#
@@ -120,7 +120,7 @@ module "key_vault" {
     resource_group_name = azurerm_resource_group.network.name
   }
 
-  tags = local.tags
+  tags = local.tags_core
 }
 
 #-----------#
@@ -137,5 +137,5 @@ module "dns" {
     name = module.network.vnet.name
   }
 
-  tags = local.tags
+  tags = local.tags_core
 }
