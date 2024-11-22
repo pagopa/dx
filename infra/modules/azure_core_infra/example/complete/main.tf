@@ -1,7 +1,7 @@
 module "core" {
   source = "../../"
 
-  test_enable = true # set to false if you want to create all resources
+  test_enabled = true # set to false if you want to create all resources
 
   environment = local.environment
 
