@@ -45,3 +45,9 @@ variable "container_app_job_name" {
   default     = ""
   description = "(Optional) Override Container App Job name auto generated"
 }
+
+variable "use_labels" {
+  type        = bool
+  default     = false
+  description = "When the project is deployed over multiple subscriptions, labels allow to run github runners on the correct container app environment."
+}
