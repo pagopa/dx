@@ -30,6 +30,6 @@ module "container_app_job_selfhosted_runner" {
     repo = var.repo_name
   }
 
-  runner_labels = var.use_labels ? [var.env] : []
+  runner_labels = var.use_labels ? [local.env[env_short]] : []
   tags          = var.tags
 }
