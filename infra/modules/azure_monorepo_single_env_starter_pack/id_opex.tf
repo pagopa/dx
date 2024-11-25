@@ -75,8 +75,16 @@ resource "azurerm_role_assignment" "opex_cd_tf_rg_blob_data_access" {
 }
 
 resource "azurerm_role_assignment" "opex_cd_rg_opex_contributor" {
-  scope                = azurerm_resource_group.main.id
+  scope                = var.opex_resource_group_id
   role_definition_name = "PagoPA Opex Dashboards Contributor"
   principal_id         = azurerm_user_assigned_identity.opex_cd.principal_id
-  description          = "Allow ${var.repository.name} Opex CD identity to apply changes to Opex dashboards at monorepository resource group scope"
+  description          = "Allow ${var.repository.name} Opex CD identity to apply changes to Opex dashboards at shared resource group scope"
+}
+
+
+resource "azurerm_role_assignment" "opex_cd_rg_monitoring_contributor" {
+  scope                = var.opex_resource_group_id
+  role_definition_name = "Monitoring Contributor"
+  principal_id         = azurerm_user_assigned_identity.opex_cd.principal_id
+  description          = "Allow ${var.repository.name} Opex CD identity to query logs for Opex dashboards at shared resource group scope"
 }
