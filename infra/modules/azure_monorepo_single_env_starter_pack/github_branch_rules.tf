@@ -23,7 +23,7 @@ resource "github_branch_protection" "main" {
     require_code_owner_reviews      = true
     required_approving_review_count = 1
     # dismissal_restrictions          = ["admins"]
-    restrict_dismissals             = true
+    restrict_dismissals = true
   }
 
   lifecycle {

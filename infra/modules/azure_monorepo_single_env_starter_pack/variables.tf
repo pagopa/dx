@@ -44,9 +44,14 @@ variable "apim_id" {
   description = "ID of the APIM instance"
 }
 
-variable "resource_group_dns_zone_id" {
+variable "dns_zone_resource_group_id" {
   type        = string
   description = "Id of the resource group holding public DNS zone"
+}
+
+variable "opex_resource_group_id" {
+  type        = string
+  description = "Id of the resource group containing Opex dashboards"
 }
 
 variable "subscription_id" {

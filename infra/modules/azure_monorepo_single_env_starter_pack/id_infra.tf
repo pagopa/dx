@@ -82,7 +82,7 @@ resource "azurerm_role_assignment" "infra_ci_rg_kv_cert" {
 }
 
 resource "azurerm_role_assignment" "infra_ci_rg_ext_pagopa_dns_reader" {
-  scope                = var.resource_group_dns_zone_id
+  scope                = var.dns_zone_resource_group_id
   role_definition_name = "PagoPA DNS Zone Reader"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
   description          = "Allow ${var.repository.name} Infra CI identity to read DNS Zone records at resource group level"
@@ -145,7 +145,7 @@ resource "azurerm_role_assignment" "infra_cd_rg_kv_cert" {
 }
 
 resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
-  scope                = var.resource_group_dns_zone_id
+  scope                = var.dns_zone_resource_group_id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage DNS Zones at resource group level"
