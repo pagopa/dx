@@ -87,9 +87,3 @@ variable "continuos_delivery" {
 
   description = "Continuos Delivery identity properties, such as repositories to federated with and RBAC roles"
 }
-
-variable "override_gh_environment" {
-  type        = string
-  default     = null
-  description = "Override the GitHub environment name"
-}
