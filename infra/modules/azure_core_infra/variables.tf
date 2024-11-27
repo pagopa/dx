@@ -53,3 +53,9 @@ variable "vpn" {
     error_message = "You must specify both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' together, or leave both empty."
   }
 }
+
+variable "nat_enabled" {
+  type        = bool
+  description = "Flag to enable nat gateway creation"
+  default     = false
+}

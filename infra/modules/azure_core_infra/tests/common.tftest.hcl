@@ -27,8 +27,8 @@ run "core_is_correct_plan" {
     tags = {
       CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
       Test        = "true"
       TestName    = "Create DEV environment for test"
@@ -36,6 +36,8 @@ run "core_is_correct_plan" {
     
     virtual_network_cidr = "10.50.0.0/16"
     pep_subnet_cidr      = "10.50.2.0/23"
+
+    nat_enabled = true
 
     vpn = {
       cidr_subnet              = "10.50.133.0/24"
@@ -45,8 +47,13 @@ run "core_is_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = local.vpn_enable == true
+    condition     = local.vpn_enabled == true
     error_message = "VPN have to be enabled becouse cidr_subnet and dnsforwarder_cidr_subnet are set"
+  }
+
+  assert {
+    condition     = local.nat_enabled == true
+    error_message = "NAT Gateway have to be enabled becouse nat_enabled is set and test_enabled not"
   }
 
   assert {
@@ -65,7 +72,7 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = lookup(local.tags, "TestResource", "NotTestEnv") == "NotTestEnv"
+    condition     = try(azurerm_resource_group.test[0], "NotTestEnv") == "NotTestEnv"
     error_message = "This Environment is not a Test Environment"
   }
 }

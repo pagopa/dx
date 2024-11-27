@@ -3,15 +3,9 @@ locals {
   prefix  = module.naming_convention.prefix
   suffix  = module.naming_convention.suffix
 
-  tags_core = merge(var.tags, {
-    ResourceType = "CORE"
-  })
+  vpn_enabled = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enabled
 
-  tags_dev = merge(var.tags, {
-    ResourceType = "DEV"
-  })
-
-  vpn_enable = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "" && !var.test_enabled
+  nat_enabled = var.nat_enabled && !var.test_enabled
 
   private_dns_zones = {
     "redis"                    = "privatelink.redis.cache.windows.net"
