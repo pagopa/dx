@@ -23,6 +23,11 @@ on:
         type: string
         required: false
         default: ''
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -34,10 +39,10 @@ env:
 jobs:
   tf_plan:
     name: 'Terraform Plan'
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-20.04' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
-      group: ${{ github.workflow }}-ci
+      group: ${{ github.workflow }}-${{ inputs.environment }}-ci
       cancel-in-progress: false
     permissions:
       id-token: write
@@ -152,7 +157,7 @@ jobs:
 
           calculate_hash() {
               local module_path="$1"
-              tar -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+              tar --exclude=.* -cvf - "$module_path" | sha256sum | awk '{ print $1 }'
           }
 
           # Iterate over modules listed in the metadata that were sourced from the Terraform registry
