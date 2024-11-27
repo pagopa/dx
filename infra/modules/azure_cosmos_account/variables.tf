@@ -129,8 +129,8 @@ variable "alerts" {
   default     = { enabled = true }
 
   validation {
-    condition = var.alerts.enabled && (
-      alltrue([for threshold in var.alerts.thresholds : threshold != null])
+    condition = (var.alerts.enabled && (
+      alltrue([for threshold in var.alerts.thresholds : threshold != null])) || !var.alerts.enabled
     )
     error_message = "When alerts are enabled, all thresholds must be set."
   }
