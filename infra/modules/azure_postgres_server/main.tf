@@ -65,7 +65,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
 
   lifecycle {
     # https://registry.terraform.io/providers/hashicorp/azurerm/4.5.0/docs/resources/postgresql_flexible_server#zone-1
-    ignore_changes = [ zone, high_availability[0].standby_availability_zone ]
+    ignore_changes = [zone, high_availability[0].standby_availability_zone]
   }
 }
 
