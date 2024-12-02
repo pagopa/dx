@@ -15,9 +15,9 @@ The module, named `azure_core_infra`, includes the following:
 module "core" {
   source = "github.com/pagopa/dx//infra/modules/azure_core_infra?ref=main"
 
-  test_enable = true # set to false if you want to create all resources
+  test_enabled = true # set to false if you want to create all resources
 
-  environment = local.environment
+  environment  = local.environment
 
   virtual_network_cidr = "10.50.0.0/16"
   pep_subnet_cidr      = "10.50.2.0/23"
