@@ -8,7 +8,7 @@ terraform {
 }
 
 module "container_app_job_selfhosted_runner" {
-  source = "github.com/pagopa/terraform-azurerm-v3//container_app_job_gh_runner?ref=v8.20.0"
+  source = "github.com/pagopa/terraform-azurerm-v3//container_app_job_gh_runner?ref=v8.59.0"
 
   location  = data.azurerm_container_app_environment.runner.location
   prefix    = var.prefix
@@ -30,5 +30,6 @@ module "container_app_job_selfhosted_runner" {
     repo = var.repo_name
   }
 
-  tags = var.tags
+  runner_labels = var.use_labels ? [local.env[var.env_short]] : []
+  tags          = var.tags
 }

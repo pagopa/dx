@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_container_app_job_selfhosted_runner"></a> [container\_app\_job\_selfhosted\_runner](#module\_container\_app\_job\_selfhosted\_runner) | github.com/pagopa/terraform-azurerm-v3//container_app_job_gh_runner | v8.20.0 |
+| <a name="module_container_app_job_selfhosted_runner"></a> [container\_app\_job\_selfhosted\_runner](#module\_container\_app\_job\_selfhosted\_runner) | github.com/pagopa/terraform-azurerm-v3//container_app_job_gh_runner | v8.59.0 |
 
 ## Resources
 
@@ -33,6 +33,7 @@
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | Project prefix | `string` | n/a | yes |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | This repository name | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
+| <a name="input_use_labels"></a> [use\_labels](#input\_use\_labels) | When the project is deployed over multiple subscriptions, labels allow to run github runners on the correct container app environment. | `bool` | `false` | no |
 
 ## Outputs
 

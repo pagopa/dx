@@ -9,7 +9,7 @@ REGISTRY_URL="registry.terraform.io"
 
 calculate_hash() {
     local module_path="$1"
-    tar -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+    tar --exclude=.* -cvf - "$module_path" | sha256sum | awk '{ print $1 }'
 }
 
 # If no arguments are passed, set a default value (e.g., current directory)
