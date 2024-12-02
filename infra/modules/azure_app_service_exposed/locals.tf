@@ -6,8 +6,8 @@ locals {
   app_service = {
     name                   = "${module.naming_convention.prefix}-app-${module.naming_convention.suffix}"
     sku_name               = local.sku_name_mapping[local.tier]
-    zone_balancing_enabled = local.tier != "s"
-    is_slot_enabled        = local.tier == "s" ? 0 : 1
+    zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
+    is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
   }
 
   application_insights = {
