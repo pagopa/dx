@@ -22,7 +22,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = local.tier == "s" ? "LRS" : "ZRS"
+    replication_type = local.tier == "s" || local.tier == "xs" ? "LRS" : "ZRS"
     name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
   }
 }
