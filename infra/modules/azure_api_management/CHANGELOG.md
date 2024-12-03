@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 0.0.4
+
+### Patch Changes
+
+- e10ab11: Added enable_public_network_access variable for APIM module
+
 ## 0.0.3
 
 ### Patch Changes
