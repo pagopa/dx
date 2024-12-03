@@ -20,7 +20,7 @@ locals {
 
   # SKU name mapping
   sku_name_mapping = {
-    "xs"  = "F1"
+    "xs"  = "Y1"
     "s"   = "B1"
     "m"   = "P0v3"
     "l"   = "P1v3"
