@@ -33,7 +33,7 @@ resource "azurerm_api_management" "this" {
   notification_sender_email     = var.notification_sender_email
   sku_name                      = local.apim.sku_name
   zones                         = var.tier == "l" ? ["1", "2", "3"] : null
-  public_network_access_enabled = false
+  public_network_access_enabled = var.enable_public_network_access
 
   # Managed identity type: System
   identity {
