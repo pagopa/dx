@@ -18,7 +18,7 @@ resource "azurerm_linux_function_app_slot" "this" {
 
   site_config {
     http2_enabled                          = true
-    always_on                              = local.function_app.always_on
+    always_on                              = true
     vnet_route_all_enabled                 = true
     application_insights_connection_string = var.application_insights_connection_string
     health_check_path                      = var.health_check_path

@@ -22,7 +22,6 @@ locals {
     pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
     alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
     worker_process_count   = local.worker_process_count_mapping[local.tier]
-    always_on              = local.tier == "xs" ? false : true
   }
 
   function_app_slot = {
