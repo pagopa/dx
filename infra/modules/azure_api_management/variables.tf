@@ -99,6 +99,12 @@ variable "virtual_network_type_internal" {
   default     = true
 }
 
+variable "enable_public_network_access" {
+  type        = bool
+  description = "Enable public network access"
+  default     = false
+}
+
 #---------------------------#
 # Policies & Configurations #
 #---------------------------#
