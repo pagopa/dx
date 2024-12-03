@@ -17,7 +17,7 @@ resource "azurerm_linux_function_app_slot" "this" {
 
   site_config {
     http2_enabled                          = true
-    always_on                              = true
+    always_on                              = local.function_app.always_on
     application_insights_connection_string = local.application_insights.enable ? var.application_insights_connection_string : null
     health_check_path                      = var.health_check_path
     health_check_eviction_time_in_min      = 2

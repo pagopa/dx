@@ -10,6 +10,7 @@ locals {
     zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
     is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
     worker_process_count   = local.worker_process_count_mapping[local.tier]
+    always_on              = local.tier == "xs" ? false : true
   }
 
   function_app_slot = {
