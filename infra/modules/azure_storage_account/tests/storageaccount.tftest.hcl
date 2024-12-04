@@ -76,6 +76,8 @@ run "storage_account_is_correct_plan" {
 
     access_tier = "Hot"
 
+    queue_enabled = true
+
     subservices_enabled = {
       blob  = true
       file  = true
@@ -127,5 +129,10 @@ run "storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_account.this.access_tier == "Hot"
     error_message = "The Storage Account must have the access tier set to Hot"
+  }
+
+  assert {
+    condition     = length(azurerm_storage_queue.this) > 0
+    error_message = "Storage Account Queue will be created"
   }
 }

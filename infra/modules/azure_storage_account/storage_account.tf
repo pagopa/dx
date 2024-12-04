@@ -78,3 +78,10 @@ resource "azurerm_storage_account_customer_managed_key" "kv" {
   key_name                  = var.customer_managed_key.key_name
   user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
 }
+
+resource "azurerm_storage_queue" "this" {
+  count = var.queue_enabled ? 1 : 0
+
+  name                 = replace("${module.naming_convention.prefix}-stq-${module.naming_convention.suffix}", "-", "")
+  storage_account_name = azurerm_storage_account.this.name
+}

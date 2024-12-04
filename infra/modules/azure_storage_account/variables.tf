@@ -170,3 +170,9 @@ variable "custom_domain" {
     use_subdomain = false
   }
 }
+
+variable "queue_enabled" {
+  type        = bool
+  description = "(Optional) Queue enabled for the Storage Account. Defaults to false."
+  default     = false
+}
