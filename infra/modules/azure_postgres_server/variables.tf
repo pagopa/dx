@@ -101,6 +101,30 @@ variable "replica_zone" {
   default     = null
 }
 
+variable "replica_enabled" {
+  type        = bool
+  description = "(Optional) Enables replica for PostgreSQL Flexible Server."
+  default     = false
+}
+
+variable "geo_redundant_backup_enabled" {
+  type        = bool
+  description = "(Optional) Enables geo redundancy for PostgreSQL Flexible Server backups."
+  default     = false
+}
+
+variable "high_availability_enabled" {
+  type        = bool
+  description = "(Optional) Enables high availability flag for PostgreSQL Flexible Server."
+  default     = false
+}
+
+variable "auto_grow_enabled" {
+  type        = bool
+  description = "(Optional) Enabled auto grow for PostgreSQL Flexible Server backups."
+  default     = false
+}
+
 #-------------------#
 # DB Configurations #
 #-------------------#

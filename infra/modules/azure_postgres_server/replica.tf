@@ -3,7 +3,7 @@
 #------------------------------------#
 
 resource "azurerm_postgresql_flexible_server" "replica" {
-  count = var.tier == "l" ? 1 : 0
+  count = local.replica_enabled ? 1 : 0
 
   name                = local.db.replica_name
   resource_group_name = var.resource_group_name
@@ -31,7 +31,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 }
 
 resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
-  count = var.tier == "l" ? 1 : 0
+  count = local.replica_enabled ? 1 : 0
 
   name              = "${module.naming_convention.prefix}-psql-ep-${module.naming_convention.suffix}"
   source_server_id  = azurerm_postgresql_flexible_server.this.id
@@ -44,7 +44,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
 #-----------------------------#
 
 resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer_replica" {
-  count = var.tier == "l" && var.pgbouncer_enabled ? 1 : 0
+  count = local.replica_enabled && var.pgbouncer_enabled ? 1 : 0
 
   name      = "pgbouncer.enabled"
   server_id = azurerm_postgresql_flexible_server.replica[0].id
@@ -88,7 +88,7 @@ resource "azurerm_monitor_metric_alert" "replica" {
 #---------------------#
 
 resource "azurerm_monitor_diagnostic_setting" "replica" {
-  count                      = var.tier == "l" && var.diagnostic_settings.enabled ? 1 : 0
+  count                      = local.replica_enabled && var.diagnostic_settings.enabled ? 1 : 0
   name                       = "LogSecurity"
   target_resource_id         = azurerm_postgresql_flexible_server.replica[0].id
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
