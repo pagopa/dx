@@ -171,8 +171,8 @@ variable "custom_domain" {
   }
 }
 
-variable "queue_enabled" {
-  type        = bool
-  description = "(Optional) Queue enabled for the Storage Account. Defaults to false."
-  default     = false
+variable "queue_names" {
+  type        = list(string)
+  description = "(Optional) If set, will create the queues with the names provided in the list"
+  default     = []
 }

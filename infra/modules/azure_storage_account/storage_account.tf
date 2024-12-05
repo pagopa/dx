@@ -80,8 +80,8 @@ resource "azurerm_storage_account_customer_managed_key" "kv" {
 }
 
 resource "azurerm_storage_queue" "this" {
-  count = var.queue_enabled ? 1 : 0
+  count = length(var.queue_names)
 
-  name                 = replace("${module.naming_convention.prefix}-stq-${module.naming_convention.suffix}", "-", "")
+  name                 = var.queue_names[count.index]
   storage_account_name = azurerm_storage_account.this.name
 }

@@ -75,9 +75,7 @@ run "storage_account_is_correct_plan" {
     force_public_network_access_enabled = false
 
     access_tier = "Hot"
-
-    queue_enabled = true
-
+    
     subservices_enabled = {
       blob  = true
       file  = true

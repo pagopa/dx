@@ -43,6 +43,11 @@ module "azure_storage_account" {
   subnet_pep_id                        = data.azurerm_subnet.pep.id
   private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
 
+  queue_names = [
+    "queue1",
+    "queue2"
+  ]
+
   customer_managed_key = {
     enabled                   = true
     type                      = "kv"
