@@ -43,5 +43,10 @@ module "core" {
 
   test_enabled = true
 
+  vpn = {
+    cidr_subnet              = "10.50.133.0/24"
+    dnsforwarder_cidr_subnet = "10.50.252.8/29"
+  }
+
   tags = local.tags
 }
