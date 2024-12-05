@@ -14,12 +14,12 @@ locals {
   }
 
   # Replica
-  replica_enabled = var.replica_enabled ? true : false
+  replica_enabled = var.replica_enabled
 
   # Backup
-  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled ? true : false
-  high_availability_enabled    = var.high_availability_enabled ? true : false
-  auto_grow_enabled            = var.auto_grow_enabled ? true : false
+  geo_redundant_backup_enabled = var.geo_redundant_backup_enabled
+  high_availability_enabled    = var.high_availability_enabled
+  auto_grow_enabled            = var.auto_grow_enabled
 
   # Monitoring
   metric_alerts         = var.custom_metric_alerts != null ? var.custom_metric_alerts : var.default_metric_alerts
