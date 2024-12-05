@@ -19,56 +19,56 @@ locals {
   # Ref.: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
   resource_abbreviations = {
     # Compute
-    "Virtual Machine"           = "vm"
-    "Virtual Machine Scale Set" = "vmss"
-    "Availability Set"          = "as"
-    "Dedicated Host"            = "dh"
+    "virtual_machine" = "vm"
 
     # Storage
-    "Storage Account" = "st"
-    "Blob Storage"    = "blob"
-    "Queue Storage"   = "queue"
-    "Table Storage"   = "table"
-    "File Storage"    = "file"
+    "storage_account"        = "st"
+    "blob_storage"           = "blob"
+    "queue_storage"          = "queue"
+    "table_storage"          = "table"
+    "file_storage"           = "file"
+    function_storage_account = "stfn"
 
     # Networking
-    "Virtual Network"        = "vnet"
-    "Network Security Group" = "nsg"
-    "Application Gateway"    = "agw"
-    "Load Balancer"          = "lb"
-    "Public IP Address"      = "pip"
-    "DNS Zone"               = "dns"
+    "dns_zone"               = "dns"
+    "api_management"         = "apim"
+    "virtual_network"        = "vnet"
+    "network_security_group" = "nsg"
+    "app_gateway"            = "agw"
+
+    # Private Endpoints
+    "cosmos_private_endpoint"          = "cosno-pep"
+    "postgre_private_endpoint"         = "psql-pep"
+    "postgre_replica_private_endpoint" = "psql-pep-replica"
+    "app_private_endpoint"             = "app-pep"
+    "app_slot_private_endpoint"        = "staging-app-pep"
+    "function_private_endpoint"        = "func-pep"
+    "function_slot_private_endpoint"   = "staging-func-pep"
+    "blob_private_endpoint"            = "blob-pep"
+    "queue_private_endpoint"           = "queue-pep"
+    "file_private_endpoint"            = "file-pep"
+
+    # Subnets
+    "app_subnet"  = "app-snet"
+    "apim_subnet" = "apim-snet"
 
     # Databases
-    "SQL Database"         = "sql"
-    "Cosmos DB"            = "cosmo"
-    "MySQL Database"       = "mysql"
-    "PostgreSQL Database"  = "pg"
-    "MariaDB Database"     = "mdb"
-    "SQL Managed Instance" = "mi"
+    "cosmos_db"  = "cosno"
+    "postgresql" = "psql"
 
     # Integration
-    "Event Hub Namespace"   = "evhns"
-    "Service Bus Namespace" = "sbns"
-    "Logic App"             = "logic"
-    "Function App"          = "func"
-    "App Service"           = "app"
+    "eventhub"         = "evhns"
+    "function_app"     = "func"
+    "app_service"      = "app"
+    "app_service_plan" = "asp"
 
     # Security
-    "Key Vault"        = "kv"
-    "Managed Identity" = "mi"
+    "key_vault" = "kv"
 
     # Monitoring
-    "Application Insights"    = "ai"
-    "Log Analytics Workspace" = "law"
+    "application_insights" = "ai"
 
     # Miscellaneous
-    "Resource Group"   = "rg"
-    "Subscription"     = "sub"
-    "Management Group" = "mg"
-    "Policy"           = "policy"
-    "Blueprint"        = "bp"
+    "resource_group" = "rg"
   }
-
-  abbreviation = lookup(local.resource_abbreviations, var.resource_type, "unknown")
 }

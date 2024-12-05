@@ -14,6 +14,13 @@ output "domain" {
   value = local.domain
 }
 
-output "name" {
-  value = local.abbreviation != "unknown" ? "${local.app_prefix}-${local.abbreviation}-${local.app_suffix}" : null
+output "names" {
+  value = tomap({
+    for resource_type, abbreviation in local.resource_abbreviations :
+    resource_type => (
+      strcontains(resource_type, "storage_account") ?
+      replace("${local.app_prefix}${abbreviation}${local.app_suffix}", "-", "") :
+      "${local.app_prefix}-${abbreviation}-${local.app_suffix}"
+    )
+  })
 }
