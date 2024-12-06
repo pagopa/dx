@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.4
+
+### Patch Changes
+
+- 1865d33: Added primary_web_host output
+
 ## 0.0.3
 
 ### Patch Changes

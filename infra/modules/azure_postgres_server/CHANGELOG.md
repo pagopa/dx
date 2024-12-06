@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 0.0.4
+
+### Patch Changes
+
+- df97631: Ignore changes on zone to avoid relocating the database after first apply
+
 ## 0.0.3
 
 ### Patch Changes
