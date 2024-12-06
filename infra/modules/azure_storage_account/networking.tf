@@ -1,5 +1,5 @@
 resource "azurerm_storage_account_network_rules" "network_rules" {
-  count = anytrue(length(var.network_rules.bypass) > 0, length(var.network_rules.ip_rules) > 0, length(var.network_rules.virtual_network_subnet_ids) > 0) ? 1 : 0
+  count = anytrue([length(var.network_rules.bypass) > 0, length(var.network_rules.ip_rules) > 0, length(var.network_rules.virtual_network_subnet_ids) > 0]) ? 1 : 0
   storage_account_id         = azurerm_storage_account.this.id
   default_action             = var.network_rules.default_action
   bypass                     = toset(concat(var.network_rules.bypass, ["Metrics", "Logging", "AzureServices"]))
