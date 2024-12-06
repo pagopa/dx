@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.5
+
+### Patch Changes
+
+- f44fec3: Fixed bug not allowing to create public storage accounts
+
 ## 0.0.4
 
 ### Patch Changes
