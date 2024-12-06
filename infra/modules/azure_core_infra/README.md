@@ -1,5 +1,5 @@
 # Core Infrastructure module
-The module provisions all the resources required for the initial configuration of a subscription, which can be utilized for testing or other purposes.
+The module provisions all the resources required for the initial configuration of a subscription.
 
 The module, named `azure_core_infra`, includes the following:
 
