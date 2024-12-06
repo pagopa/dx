@@ -5,6 +5,11 @@ resource "azuread_application" "vpn_app" {
   owners       = [var.object_id]
 }
 
+## TO DO: Create Service Principal and remove the azuread_application above
+# data "azuread_application" "vpn_app" {
+#   display_name = "${var.prefix}-${var.env_short}-app-vpn"
+# }
+
 resource "azurerm_subnet" "vpn_snet" {
   name                 = "GatewaySubnet"
   resource_group_name  = var.resource_group_name
@@ -27,7 +32,7 @@ module "vpn" {
     {
       address_space         = ["172.16.2.0/24"],
       vpn_client_protocols  = ["OpenVPN"],
-      aad_audience          = azuread_application.vpn_app.object_id
+      aad_audience          = azuread_application.vpn_app.object_id # data.azuread_application.vpn_app.application_id
       aad_issuer            = "https://sts.windows.net/${var.tenant_id}/"
       aad_tenant            = "https://login.microsoftonline.com/${var.tenant_id}"
       radius_server_address = null
