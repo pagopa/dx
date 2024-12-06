@@ -1,0 +1,6 @@
+{
+  "name": "azure_repo_starter_pack",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "azurerm"
+}
