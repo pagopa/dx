@@ -16,7 +16,9 @@
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_core"></a> [core](#module\_core) | ../../modules/azure_core_infra | n/a |
 
 ## Resources
 
