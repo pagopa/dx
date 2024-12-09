@@ -7,7 +7,6 @@ locals {
     "test"     = "s"
     "standard" = "m"
     "premium"  = "l"
-    "xs"       = "xs"
     "s"        = "s"
     "m"        = "m"
     "l"        = "l"
@@ -19,7 +18,6 @@ locals {
 
   # SKU name mapping
   sku_name_mapping = {
-    "xs" = "F1"
     "s"  = "B1"
     "m"  = "P0v3"
     "l"  = "P1v3"
