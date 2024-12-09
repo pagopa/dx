@@ -46,13 +46,13 @@ variable "health_check_path" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on workload. Allowed values are 'xs', 's', 'm', 'l', 'xl', 'xxl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
+  description = "Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl', 'xxl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
 
   default = "l"
 
   validation {
-    condition     = contains(["xs", "s", "m", "l", "xl", "xxl", "premium", "standard", "test"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"xs\", \"s\", \"m\", \"l\", \"xl\", \"xxl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
+    condition     = contains(["s", "m", "l", "xl", "xxl", "premium", "standard", "test"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", \"xl\", \"xxl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
   }
 }
 
