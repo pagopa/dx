@@ -24,7 +24,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | A list of key vault role assignments | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    roles = object({<br/>      secrets      = optional(string, "")<br/>      certificates = optional(string, "")<br/>      keys         = optional(string, "")<br/>    })<br/><br/>    override_roles = optional(object({<br/>      secrets      = optional(list(string), [])<br/>      certificates = optional(list(string), [])<br/>      keys         = optional(list(string), [])<br/>      }), {<br/>      secrets      = []<br/>      certificates = []<br/>      keys         = []<br/>    })<br/>  }))</pre> | `[]` | no |
+| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | A list of key vault role assignments | <pre>list(object({<br>    name                = string<br>    resource_group_name = string<br>    roles = object({<br>      secrets      = optional(string, "")<br>      certificates = optional(string, "")<br>      keys         = optional(string, "")<br>    })<br><br>    override_roles = optional(object({<br>      secrets      = optional(list(string), [])<br>      certificates = optional(list(string), [])<br>      keys         = optional(list(string), [])<br>      }), {<br>      secrets      = []<br>      certificates = []<br>      keys         = []<br>    })<br>  }))</pre> | `[]` | no |
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The ID of the principal to which assign roles. It can be a managed identity. | `string` | n/a | yes |
 
 ## Outputs
