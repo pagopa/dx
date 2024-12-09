@@ -7,13 +7,22 @@ locals {
     "spaincentral"       = "spc"
   }
 
-  location_short = lookup(local.location_map, var.environment.location, "neu")
-  project        = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
-  domain         = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
-
-  app_prefix = "${local.project}${local.domain}${var.environment.app_name}"
-  app_suffix = var.environment.instance_number
-
+  configurations = {
+    for env in var.environments : join("", [
+      "${env.prefix}-${env.env_short}-${lookup(local.location_map, env.location, "neu")}",
+      env.domain == null ? "-" : "-${env.domain}-",
+      env.app_name
+      ]) => {
+      prefix          = env.prefix
+      env_short       = env.env_short
+      location        = env.location
+      domain          = env.domain
+      app_name        = env.app_name
+      instance_number = env.instance_number
+      project         = "${env.prefix}-${env.env_short}-${lookup(local.location_map, env.location, "neu")}"
+      app_suffix      = [for i in range(env.instance_number) : format("%02d", i + 1)]
+    }
+  }
 
   # Map resource types to their abbreviations
   # Ref.: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations

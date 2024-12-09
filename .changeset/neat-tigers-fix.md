@@ -1,5 +1,5 @@
 ---
-"azure_naming_convention": patch
+"azure_naming_convention": major
 ---
 
-Added names output for all resources
+Added support for multiple environments and new names generation output
