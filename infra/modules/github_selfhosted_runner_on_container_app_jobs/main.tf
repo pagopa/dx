@@ -2,13 +2,13 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>3.86"
+      version = ">= 3.110, < 5.0"
     }
   }
 }
 
 module "container_app_job_selfhosted_runner" {
-  source = "github.com/pagopa/terraform-azurerm-v3//container_app_job_gh_runner?ref=v8.59.0"
+  source = "github.com/pagopa/terraform-azurerm-v4//container_app_job_gh_runner?ref=api_mdoules"
 
   location  = data.azurerm_container_app_environment.runner.location
   prefix    = var.prefix
