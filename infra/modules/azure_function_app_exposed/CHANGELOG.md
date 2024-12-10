@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.0.5
+
+### Patch Changes
+
+- 15ecfc1: Removed xs tier because is unsupported
+
 ## 0.0.4
 
 ### Patch Changes
