@@ -85,7 +85,6 @@ module "vpn" {
   resource_group_name = azurerm_resource_group.network.name
 
   tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azuread_client_config.current.object_id
 
   vpn_cidr_subnet          = var.vpn.cidr_subnet
   dnsforwarder_cidr_subnet = var.vpn.dnsforwarder_cidr_subnet

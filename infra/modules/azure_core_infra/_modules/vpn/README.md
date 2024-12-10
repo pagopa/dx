@@ -16,9 +16,9 @@ No requirements.
 
 | Name | Type |
 |------|------|
-| [azuread_application.vpn_app](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
 | [azurerm_subnet.dns_forwarder_snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_subnet.vpn_snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azuread_application.vpn_app](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/application) | data source |
 
 ## Inputs
 
@@ -26,7 +26,6 @@ No requirements.
 |------|-------------|------|---------|:--------:|
 | <a name="input_dnsforwarder_cidr_subnet"></a> [dnsforwarder\_cidr\_subnet](#input\_dnsforwarder\_cidr\_subnet) | DNS forwarder network address space. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
-| <a name="input_object_id"></a> [object\_id](#input\_object\_id) | Object ID | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | IO prefix, short environment and short location | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
