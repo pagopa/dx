@@ -14,9 +14,10 @@ locals {
   }
 
   # Backup
-  geo_redundant_backup_enabled = var.tier == "m" || var.tier == "l" ? true : false
-  high_availability_enabled    = var.tier == "m" || var.tier == "l" ? true : false
-  auto_grow_enabled            = var.tier == "m" || var.tier == "l" ? true : false
+  # Geo redundant backup is not available in Italy North
+  geo_redundant_backup_enabled = (var.tier == "m" || var.tier == "l") && lower(var.environment.location) != "italynorth"
+  high_availability_enabled    = var.tier == "m" || var.tier == "l"
+  auto_grow_enabled            = var.tier == "m" || var.tier == "l"
 
   # Monitoring
   metric_alerts         = var.custom_metric_alerts != null ? var.custom_metric_alerts : var.default_metric_alerts
