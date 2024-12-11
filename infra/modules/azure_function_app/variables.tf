@@ -162,3 +162,10 @@ variable "action_group_id" {
   description = "Set the Action Group Id to invoke when the Function App alert triggers"
   default     = null
 }
+
+variable "application_insights_key" {
+  type        = string
+  description = "(Optional) Application Insights key"
+  sensitive   = true
+  default     = null
+}
