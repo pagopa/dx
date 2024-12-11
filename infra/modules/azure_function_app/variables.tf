@@ -165,6 +165,7 @@ variable "action_group_id" {
 
 variable "application_insights_key" {
   type        = string
-  description = "Application Insights key"
+  description = "(Optional) Application Insights key"
+  sensitive   = true
   default     = null
 }
