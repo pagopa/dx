@@ -16,7 +16,7 @@ module "naming_convention" {
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = null
-    app_name        = var.environment.domain # app_name is mandatory for any resource except resource groups
+    app_name        = var.repository.name
     instance_number = var.environment.instance_number
   }
 }
