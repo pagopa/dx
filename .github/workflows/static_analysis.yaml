@@ -14,7 +14,7 @@ on:
         default: "1.7.5"
       pre_commit_tf_tag:
         description: |
-          Pre-commit Terraform TAG to use, 
+          Pre-commit Terraform TAG to use,
           is release tag + package digest (Ref. Digest https://github.com/antonbabenko/pre-commit-terraform/pkgs/container/pre-commit-terraform)
           Example: vX.Y.Z@sha256:000...N
         type: string
@@ -33,7 +33,7 @@ concurrency:
 jobs:
   tf_analysis:
     name: Terraform Validation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       TERRAFORM_VERSION: ${{ inputs.terraform_version }}
     container:

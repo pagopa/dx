@@ -6,7 +6,7 @@ on:
       module_to_test:
         description: |
           The module to test
-          Example: 
+          Example:
             all --> Test all modules
             diff --> Test only the modules that have changes
             azure_api_management --> Test azure_api_management module
@@ -41,7 +41,7 @@ jobs:
   tf_test:
     name: Terraform Test
     environment: dev-ci
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
