@@ -23,6 +23,8 @@ resource "azurerm_container_app_job" "github_runner" {
       rules {
         name             = "github-runner-rule"
         custom_rule_type = "github-runner"
+
+        # https://keda.sh/docs/2.16/scalers/github-runner/
         metadata = merge({
           owner                     = var.repository.owner
           runnerScope               = "repo"
