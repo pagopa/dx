@@ -29,8 +29,8 @@ run "policy_role_assignment_is_correct_apply" {
 
     key_vault = [
       {
-        name                = "io-p-kv-common"
-        resource_group_name = "io-p-rg-common"
+        name                = "dx-d-itn-common-kv-01"
+        resource_group_name = "dx-d-itn-common-rg-01"
         roles = {
           secrets = "reader"
         }
@@ -40,12 +40,12 @@ run "policy_role_assignment_is_correct_apply" {
 
   # Checks some assertions
   assert {
-    condition     = module.key_vault.access_policy["io-p-rg-common|io-p-kv-common|reader||"].secret_permissions != []
+    condition     = module.key_vault.access_policy["dx-d-itn-common-rg-01|dx-d-itn-kv-common-01|reader||"].secret_permissions != []
     error_message = "The policy assigned must be a list with Get and List"
   }
 
   assert {
-    condition     = module.key_vault.access_policy["io-p-rg-common|io-p-kv-common|reader||"].object_id == run.setup_tests.principal_id
+    condition     = module.key_vault.access_policy["dx-d-itn-common-rg-01|dx-d-itn-kv-common|reader||"].object_id == run.setup_tests.principal_id
     error_message = "The policy assignment must be assigned to the correct managed identity"
   }
 }
@@ -75,8 +75,8 @@ run "rbac_role_assignment_is_correct_apply" {
 
     key_vault = [
       {
-        name                = "io-p-itn-wallet-kv-01"
-        resource_group_name = "io-p-itn-wallet-rg-01"
+        name                = "dx-d-itn-wallet-kv-01"
+        resource_group_name = "dx-d-itn-wallet-rg-01"
         roles = {
           secrets = "reader"
         }
@@ -86,12 +86,12 @@ run "rbac_role_assignment_is_correct_apply" {
 
   # Checks some assertions
   assert {
-    condition     = module.key_vault.secrets_role_assignment["io-p-itn-wallet-rg-01|io-p-itn-wallet-kv-01|reader"].role_definition_name == "Key Vault Secrets User"
+    condition     = module.key_vault.secrets_role_assignment["dx-d-itn-common-rg-01|dx-d-itn-common-kv-01|reader"].role_definition_name == "Key Vault Secrets User"
     error_message = "The role assigned must be Key Vault Secrets User"
   }
 
   assert {
-    condition     = module.key_vault.secrets_role_assignment["io-p-itn-wallet-rg-01|io-p-itn-wallet-kv-01|reader"].principal_id == run.setup_tests.principal_id
+    condition     = module.key_vault.secrets_role_assignment["dx-d-itn-common-rg-01|dx-d-itn-common-kv-01|reader"].principal_id == run.setup_tests.principal_id
     error_message = "The role assignment must be assigned to the correct managed identity"
   }
 }

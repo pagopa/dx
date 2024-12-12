@@ -54,7 +54,7 @@ run "function_app_is_correct_plan" {
 
     subnet_pep_id = run.setup_tests.pep_id
     subnet_cidr   = "10.20.50.0/24"
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     app_settings      = {}
     slot_app_settings = {}
@@ -128,7 +128,7 @@ run "function_app_is_correct_apply" {
 
     subnet_pep_id = run.setup_tests.pep_id
     subnet_cidr   = "10.20.50.0/24"
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     app_settings      = {}
     slot_app_settings = {}

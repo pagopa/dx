@@ -9,7 +9,7 @@ run "setup_tests" {
   }
 
   variables {
-    project = "io-p-itn"
+    project = "dx-d-itn"
   }
 }
 
@@ -36,7 +36,7 @@ run "eventhub_is_correct_plan" {
       TestName    = "Create EventHUB for test"
     }
 
-    resource_group_name = "io-p-evt-rg"
+    resource_group_name = "dx-d-evt-rg"
     tier                = "s"
 
     subnet_pep_id = run.setup_tests.pep_id
@@ -102,7 +102,7 @@ run "eventhub_is_correct_apply" {
       TestName    = "Create EventHUB for test"
     }
 
-    resource_group_name = "io-p-evt-rg"
+    resource_group_name = "dx-d-evt-rg"
     tier                = "s"
 
     subnet_pep_id = run.setup_tests.pep_id

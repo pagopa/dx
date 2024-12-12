@@ -30,7 +30,7 @@ resource "null_resource" "get_role_assignments" {
             echo "true" > ${path.module}/result.txt
           fi
         elif [[ "${var.type}" == "policy" ]]; then
-          access_policy=$(az keyvault show --name io-p-kv-common --query "properties.accessPolicies" | grep ${var.principal_id})
+          access_policy=$(az keyvault show --name dx-d-kv-common-01 --query "properties.accessPolicies" | grep ${var.principal_id})
           if [[ -z "$access_policy" ]]; then
             echo "false" > ${path.module}/result.txt
           else

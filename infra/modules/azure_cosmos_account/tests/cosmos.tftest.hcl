@@ -46,7 +46,7 @@ run "cosmos_is_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
 
     subnet_pep_id                        = run.setup_tests.pep_id
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     primary_geo_location = {
       location       = "italynorth"

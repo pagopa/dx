@@ -24,7 +24,7 @@ run "name_is_correct" {
 
   # Check that name generated is correct
   assert {
-    condition     = "${output.prefix}-none-${output.suffix}" == "io-p-itn-modules-test-${run.setup_tests.resource_name}-01"
+    condition     = "${output.prefix}-none-${output.suffix}" == "dx-d-itn-modules-test-${run.setup_tests.resource_name}-01"
     error_message = "Invalid name"
   }
 }

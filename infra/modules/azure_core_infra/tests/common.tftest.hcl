@@ -57,7 +57,7 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["io-p-itn-common-vnet-01", "io-p-itn-pep-snet-01", "io-p-itn-ng-01"]
+    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["dx-d-itn-common-vnet-01", "dx-d-itn-pep-snet-01", "dx-d-itn-ng-01"]
     error_message = "The VNET names configuration must be correct"
   }
 
