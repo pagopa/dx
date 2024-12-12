@@ -5,7 +5,7 @@ data "azurerm_resource_group" "weu_common" {
 
 data "azurerm_virtual_network" "itn_common" {
   name                = "${local.project}-common-vnet-01"
-  resource_group_name = "${local.project}-common-rg-01"
+  resource_group_name = "${local.project}-network-rg-01"
 }
 
 data "azurerm_subnet" "private_endpoints_subnet" {
