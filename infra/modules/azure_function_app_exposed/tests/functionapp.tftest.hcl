@@ -8,11 +8,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -26,8 +26,8 @@ run "function_app_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -35,10 +35,10 @@ run "function_app_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
       Test        = "true"
       TestName    = "Create Function app for test"
@@ -86,8 +86,8 @@ run "function_app_is_correct_apply" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -95,10 +95,10 @@ run "function_app_is_correct_apply" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
       Test        = "true"
       TestName    = "Create Function app for test"

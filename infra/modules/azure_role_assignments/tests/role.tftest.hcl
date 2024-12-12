@@ -8,11 +8,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -54,7 +54,7 @@ run "policy_exec_role_test" {
   module {
     source = "./tests/exec"
   }
-  
+
   variables {
     principal_id = run.setup_tests.principal_id
     resource = "key_vault"
@@ -100,7 +100,7 @@ run "rbac_exec_role_test" {
   module {
     source = "./tests/exec"
   }
-  
+
   variables {
     principal_id = run.setup_tests.principal_id
     resource = "key_vault"

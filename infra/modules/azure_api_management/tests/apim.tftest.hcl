@@ -34,10 +34,10 @@ run "apim_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
       Test        = "true"
       TestName    = "Create APIM for test"

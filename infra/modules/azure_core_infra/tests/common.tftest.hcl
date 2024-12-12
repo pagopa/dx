@@ -7,7 +7,7 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {}
 }
 
@@ -16,8 +16,8 @@ run "core_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,7 +25,7 @@ run "core_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
       Environment = "Dev"
       Owner       = "DevEx"
@@ -33,7 +33,7 @@ run "core_is_correct_plan" {
       Test        = "true"
       TestName    = "Create DEV environment for test"
     }
-    
+
     virtual_network_cidr = "10.50.0.0/16"
     pep_subnet_cidr      = "10.50.2.0/23"
 

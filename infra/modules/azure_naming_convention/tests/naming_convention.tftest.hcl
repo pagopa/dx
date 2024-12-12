@@ -2,7 +2,7 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     resource_name = "none"
   }
@@ -13,8 +13,8 @@ run "name_is_correct" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"

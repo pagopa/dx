@@ -12,11 +12,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -30,8 +30,8 @@ run "storage_account_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -39,10 +39,10 @@ run "storage_account_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
       Test        = "true"
       TestName    = "Create Storage Account for test"
@@ -50,7 +50,7 @@ run "storage_account_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
-  
+
     customer_managed_key = {
       enabled                   = false
     }

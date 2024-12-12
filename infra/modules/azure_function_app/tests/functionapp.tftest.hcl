@@ -8,11 +8,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -26,8 +26,8 @@ run "function_app_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -35,10 +35,10 @@ run "function_app_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
       Test        = "true"
       TestName    = "Create Function app for test"
@@ -51,7 +51,7 @@ run "function_app_is_correct_plan" {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
-  
+
     subnet_pep_id = run.setup_tests.pep_id
     subnet_cidr   = "10.20.50.0/24"
     private_dns_zone_resource_group_name = "io-p-rg-common"
@@ -100,8 +100,8 @@ run "function_app_is_correct_apply" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -109,10 +109,10 @@ run "function_app_is_correct_apply" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
       Test        = "true"
       TestName    = "Create Function app for test"
@@ -125,7 +125,7 @@ run "function_app_is_correct_apply" {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
-  
+
     subnet_pep_id = run.setup_tests.pep_id
     subnet_cidr   = "10.20.50.0/24"
     private_dns_zone_resource_group_name = "io-p-rg-common"

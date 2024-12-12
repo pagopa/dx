@@ -24,13 +24,13 @@ module "naming_convention" {
 
 data "azurerm_virtual_network" "vnet" {
   name                = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name = "${module.naming_convention.project}-common-rg-01"
+  resource_group_name = "${module.naming_convention.project}-network-rg-01"
 }
 
 data "azurerm_subnet" "pep" {
   name                 = "${module.naming_convention.project}-pep-snet-01"
   virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-common-rg-01"
+  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
 
 # RESOURCES
