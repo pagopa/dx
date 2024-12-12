@@ -33,7 +33,7 @@ module "azure_app_service" {
     resource_group_name = "${local.project}-common-rg-01"
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.0.1.0/24"
+  subnet_cidr   = "10.50.250.0/24"
 
   app_settings      = {}
   slot_app_settings = {}

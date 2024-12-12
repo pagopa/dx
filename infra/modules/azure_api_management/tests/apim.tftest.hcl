@@ -7,11 +7,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,8 +25,8 @@ run "apim_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -53,7 +53,7 @@ run "apim_is_correct_plan" {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
-  
+
     subnet_id = run.setup_tests.subnet_id
     virtual_network_type_internal = true
 
