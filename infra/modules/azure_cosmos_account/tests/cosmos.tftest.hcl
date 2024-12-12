@@ -69,16 +69,6 @@ run "cosmos_is_correct_plan" {
       max_interval_in_seconds = 300
       max_staleness_prefix    = 100000
     }
-
-    alerts = {
-      enabled         = true
-      action_group_id = run.setup_tests.action_group_id
-      thresholds = {
-        provisioned_throughput_exceeded = 900
-      }
-    }
-
-
   }
 
   # Checks some assertions

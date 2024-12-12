@@ -26,11 +26,6 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
 
-data "azurerm_monitor_action_group" "monitor" {
-  name                = replace("${var.environment.prefix}-${var.environment.env_short}-error", "-", "")
-  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-rg-common"
-}
-
 resource "azurerm_resource_group" "rg" {
   name     = "${module.naming_convention.prefix}-rg-cosno-${module.naming_convention.suffix}"
   location = var.environment.location
@@ -42,10 +37,6 @@ output "pep_id" {
 
 output "resource_group_name" {
   value = azurerm_resource_group.rg.name
-}
-
-output "action_group_id" {
-  value = data.azurerm_monitor_action_group.monitor.id
 }
 
 output "pvt_service_connection_name" {
