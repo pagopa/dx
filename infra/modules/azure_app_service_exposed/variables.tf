@@ -98,3 +98,9 @@ variable "sticky_app_setting_names" {
   description = "(Optional) A list of application setting names that are not swapped between slots"
   default     = []
 }
+
+variable "pm2_startup_file_name" {
+  type        = string
+  default     = null
+  description = "(Optional) Use this variable to enable PM2. The specified file is used as PM2 process entry point"
+}
