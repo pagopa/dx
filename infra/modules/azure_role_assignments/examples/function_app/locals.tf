@@ -24,6 +24,6 @@ locals {
     Environment = "Dev"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
-    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+    CostCenter  = "TS700 - ENGINEERING"
   }
 }
