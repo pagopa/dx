@@ -5,7 +5,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.110, < 5.0 |
 | <a name="requirement_local"></a> [local](#requirement\_local) | 2.5.2 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | 3.2.3 |
 
