@@ -21,6 +21,7 @@ resource "null_resource" "get_role_assignments" {
       rm -f ${path.module}/result.txt
 
       # KEY VAULT CHECK
+      sleep 10000
       if [[ "${var.resource}" == "key_vault" ]]; then
         if [[ "${var.type}" == "rbac" ]]; then
           role_assignments=$(az role assignment list --assignee ${var.principal_id})

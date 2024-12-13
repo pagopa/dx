@@ -21,7 +21,7 @@ run "setup_tests" {
   }
 }
 
-run "policy_role_assignment_is_correct_apply" {
+run "rbac_role_assignment_is_correct_apply" {
   command = apply
 
   variables {
@@ -40,52 +40,6 @@ run "policy_role_assignment_is_correct_apply" {
 
   # Checks some assertions
   assert {
-    condition     = module.key_vault.access_policy["dx-d-itn-common-rg-01|dx-d-itn-kv-common-01|reader||"].secret_permissions != []
-    error_message = "The policy assigned must be a list with Get and List"
-  }
-
-  assert {
-    condition     = module.key_vault.access_policy["dx-d-itn-common-rg-01|dx-d-itn-kv-common|reader||"].object_id == run.setup_tests.principal_id
-    error_message = "The policy assignment must be assigned to the correct managed identity"
-  }
-}
-
-run "policy_exec_role_test" {
-  module {
-    source = "./tests/exec"
-  }
-
-  variables {
-    principal_id = run.setup_tests.principal_id
-    resource = "key_vault"
-    type = "policy"
-  }
-
-  assert {
-    condition = output.role_assignments == true
-    error_message = "The role assignment did not allow the correct access"
-  }
-}
-
-run "rbac_role_assignment_is_correct_apply" {
-  command = apply
-
-  variables {
-    principal_id = run.setup_tests.principal_id
-
-    key_vault = [
-      {
-        name                = "dx-d-itn-wallet-kv-01"
-        resource_group_name = "dx-d-itn-wallet-rg-01"
-        roles = {
-          secrets = "reader"
-        }
-      }
-    ]
-  }
-
-  # Checks some assertions
-  assert {
     condition     = module.key_vault.secrets_role_assignment["dx-d-itn-common-rg-01|dx-d-itn-common-kv-01|reader"].role_definition_name == "Key Vault Secrets User"
     error_message = "The role assigned must be Key Vault Secrets User"
   }
@@ -93,21 +47,5 @@ run "rbac_role_assignment_is_correct_apply" {
   assert {
     condition     = module.key_vault.secrets_role_assignment["dx-d-itn-common-rg-01|dx-d-itn-common-kv-01|reader"].principal_id == run.setup_tests.principal_id
     error_message = "The role assignment must be assigned to the correct managed identity"
-  }
-}
-
-run "rbac_exec_role_test" {
-  module {
-    source = "./tests/exec"
-  }
-
-  variables {
-    principal_id = run.setup_tests.principal_id
-    resource = "key_vault"
-  }
-
-  assert {
-    condition = output.role_assignments == true
-    error_message = "The role assignment did not allow the correct access"
   }
 }

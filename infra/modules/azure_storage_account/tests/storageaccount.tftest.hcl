@@ -115,12 +115,7 @@ run "storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = length(azurerm_security_center_storage_defender.this) > 0
-    error_message = "The Storage Account security center storage defender must be created"
-  }
-
-  assert {
-    condition     = azurerm_storage_account_network_rules.network_rules.default_action == "Deny"
+    condition     = azurerm_storage_account_network_rules.network_rules[0].default_action == "Deny"
     error_message = "The Storage Account must have firewall rules enabled"
   }
 

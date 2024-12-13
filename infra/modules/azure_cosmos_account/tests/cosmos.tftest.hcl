@@ -69,6 +69,10 @@ run "cosmos_is_correct_plan" {
       max_interval_in_seconds = 300
       max_staleness_prefix    = 100000
     }
+
+    alerts = {
+      enabled = false
+    }
   }
 
   # Checks some assertions
@@ -103,7 +107,7 @@ run "cosmos_is_correct_plan" {
   }
 
   assert {
-    condition     =  azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "The Subresource name must be Sql"
   }
 }

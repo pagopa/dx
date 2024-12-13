@@ -24,7 +24,7 @@ resource "azurerm_subnet" "snet" {
   name                 = "${module.naming_convention.prefix}-snet-sa-${module.naming_convention.suffix}"
   virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
   resource_group_name  = "${module.naming_convention.project}-network-rg-01"
-  address_prefixes     = ["10.20.50.0/24"]
+  address_prefixes     = ["10.50.200.0/24"]
 }
 
 resource "azurerm_user_assigned_identity" "user" {
