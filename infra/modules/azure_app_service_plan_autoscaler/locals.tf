@@ -3,19 +3,19 @@ locals {
   app_service_details = [
     for service in var.target_services :
     {
-      is_app_service      = service.app_service_name != null
-      is_function_app     = service.function_app_name != null
-      base_name           = service.app_service_name != null ? service.app_service_name : service.function_app_name
-      app_service_id      = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
+      is_app_service  = service.app_service_name != null
+      is_function_app = service.function_app_name != null
+      base_name       = service.app_service_name != null ? service.app_service_name : service.function_app_name
+      app_service_id  = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
     }
   ]
 
   autoscale_name = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
 
   // Take the resouce group and the location from the first declared AppService or FunctionApp
-  resource_group_name = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
-  location            = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
-  app_service_plan_id = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
+  resource_group_name  = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
+  location             = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
+  app_service_plan_ids = [for service in var.target_services : service.app_service_name != null ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id]
 
   requests_rules_increase = flatten([
     for details in local.app_service_details :
@@ -70,7 +70,7 @@ locals {
   cpu_rule_increase = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_ids[0]
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.cpu.statistic_increase
@@ -92,7 +92,7 @@ locals {
   cpu_rule_decrease = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_ids[0]
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.cpu.statistic_decrease
@@ -114,7 +114,7 @@ locals {
   memory_rule_increase = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_ids[0]
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.memory.statistic_increase, "Average")
@@ -136,7 +136,7 @@ locals {
   memory_rule_decrease = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = local.app_service_plan_ids[0]
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.memory.statistic_decrease, "Average")

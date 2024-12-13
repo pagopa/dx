@@ -28,6 +28,11 @@ variable "target_services" {
     error_message = "Each element in \"target_services\" must have exactly one of \"app_service_name\" or \"function_app_name\" set, but not both or neither."
   }
 
+  validation {
+    condition     = length(distinct(local.app_service_plan_ids)) <= 1
+    error_message = "All target services must be associated with the same App Service Plan."
+  }
+
   description = "A list of target services where each element represents an App Service or a Function App."
 }
 
