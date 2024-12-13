@@ -85,12 +85,14 @@ resource "azurerm_container_app_job" "container_app_job" {
   tags = var.tags
 }
 
-resource "azurerm_key_vault_access_policy" "keyvault_containerapp" {
-  key_vault_id = data.azurerm_key_vault.kv_common.id
-  tenant_id    = azurerm_container_app_job.container_app_job.identity[0].tenant_id
-  object_id    = azurerm_container_app_job.container_app_job.identity[0].principal_id
+resource "azurerm_role_assignment" "keys" {
+  scope                = data.azurerm_key_vault.kv_common.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_container_app_job.container_app_job.identity[0].principal_id
+}
 
-  secret_permissions = [
-    "Get",
-  ]
+resource "azurerm_role_assignment" "certificates" {
+  scope                = data.azurerm_key_vault.kv_common.id
+  role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_container_app_job.container_app_job.identity[0].principal_id
 }

@@ -40,6 +40,7 @@ module "core" {
 
   virtual_network_cidr = "10.50.0.0/16"
   pep_subnet_cidr      = "10.50.2.0/23"
+
   gh_runner = {
     repo_name = "dx"
     snet_cidr = "10.50.242.0/23"
