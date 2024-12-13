@@ -21,15 +21,15 @@ module "naming_convention" {
 }
 
 data "azurerm_virtual_network" "vnet" {
-  name                = "io-p-vnet-common"
-  resource_group_name = "io-p-rg-common"
+  name                = "dx-d-itn-common-vnet-01"
+  resource_group_name = "dx-d-itn-network-rg-01"
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "${module.naming_convention.project}-apim-snet-test"
-  virtual_network_name = "io-p-vnet-common"
-  resource_group_name  = "io-p-rg-common"
-  address_prefixes     = ["10.0.50.0/24"]
+  name                 = "${module.naming_convention.project}-apim-snet-test-${module.naming_convention.suffix}"
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
+  address_prefixes     = ["10.50.250.0/24"]
 }
 
 resource "azurerm_resource_group" "rg" {

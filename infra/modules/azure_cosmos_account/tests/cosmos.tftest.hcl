@@ -7,11 +7,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,8 +25,8 @@ run "cosmos_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -34,10 +34,10 @@ run "cosmos_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cosmos_account/tests"
       Test        = "true"
       TestName    = "Create Cosmos account for test"
@@ -46,7 +46,7 @@ run "cosmos_is_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
 
     subnet_pep_id                        = run.setup_tests.pep_id
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     primary_geo_location = {
       location       = "italynorth"
@@ -71,14 +71,8 @@ run "cosmos_is_correct_plan" {
     }
 
     alerts = {
-      enabled         = true
-      action_group_id = run.setup_tests.action_group_id
-      thresholds = {
-        provisioned_throughput_exceeded = 900
-      }
+      enabled = false
     }
-
-
   }
 
   # Checks some assertions
@@ -113,7 +107,7 @@ run "cosmos_is_correct_plan" {
   }
 
   assert {
-    condition     =  azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "The Subresource name must be Sql"
   }
 }

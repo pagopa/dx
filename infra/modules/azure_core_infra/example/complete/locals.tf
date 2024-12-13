@@ -1,7 +1,7 @@
 locals {
   environment = {
-    prefix          = "io"
-    env_short       = "p"
+    prefix          = "dx"
+    env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -13,6 +13,6 @@ locals {
     Environment = "Dev"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/modules/azure_core_infra/examples/complete"
-    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+    CostCenter  = "TS700 - ENGINEERING"
   }
 }

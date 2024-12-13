@@ -1,10 +1,10 @@
 terraform {
 
   backend "azurerm" {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfdevdx"
+    resource_group_name  = "dx-d-itn-common-rg-01"
+    storage_account_name = "dxditntfexamplesst01"
     container_name       = "terraform-state"
-    key                  = "dx.example.dev.tfstate" # Change with your state file name
+    key                  = "dx.core_infra.example.complete.tfstate"
   }
 
   required_providers {

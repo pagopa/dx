@@ -1,10 +1,10 @@
 terraform {
 
   backend "azurerm" {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "iopitntfst001"
+    resource_group_name  = "dx-d-itn-network-rg-01"
+    storage_account_name = "dxditntfexamplesst01"
     container_name       = "terraform-state"
-    key                  = "dx.modules.prod.tfstate" # Don't use this
+    key                  = "dx.cosmos.example.minimum.tfstate"
   }
 
   required_providers {

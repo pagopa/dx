@@ -7,7 +7,7 @@ module "naming_convention" {
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  resource_group_name  = "${local.project}-network-rg-01"
 }
 
 data "azurerm_monitor_action_group" "example" {
@@ -23,8 +23,8 @@ resource "azurerm_resource_group" "example" {
 resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
-  address_prefixes     = ["10.0.1.0/24"]
+  resource_group_name  = "${local.project}-network-rg-01"
+  address_prefixes     = ["10.50.246.0/24"]
 }
 
 resource "azurerm_user_assigned_identity" "example" {

@@ -6,7 +6,7 @@ on:
       module_to_test:
         description: |
           The module to test
-          Example: 
+          Example:
             all --> Test all modules
             diff --> Test only the modules that have changes
             azure_api_management --> Test azure_api_management module
@@ -19,6 +19,7 @@ on:
           - azure_api_management
           - azure_app_service
           - azure_app_service_exposed
+          - azure_core_infra
           - azure_cosmos_account
           - azure_event_hub
           - azure_function_app
