@@ -106,7 +106,8 @@ run "eventhub_is_correct_apply" {
     resource_group_name = "dx-d-evt-rg"
     tier                = "s"
 
-    subnet_pep_id = run.setup_tests.pep_id
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     eventhubs = [{
       name                   = "event-hub-test"
