@@ -1,13 +1,19 @@
 data "azurerm_linux_web_app" "this" {
-  count = local.is_app_service ? 1 : 0
+  for_each = {
+    for idx, service in var.target_services :
+    idx => service if service.app_service_name != null
+  }
 
   resource_group_name = var.resource_group_name
-  name                = var.target_service.app_service_name
+  name                = each.value.app_service_name
 }
 
 data "azurerm_linux_function_app" "this" {
-  count = local.is_function_app ? 1 : 0
+  for_each = {
+    for idx, service in var.target_services :
+    idx => service if service.function_app_name != null
+  }
 
   resource_group_name = var.resource_group_name
-  name                = var.target_service.function_app_name
+  name                = each.value.function_app_name
 }

@@ -14,16 +14,21 @@ variable "autoscale_name" {
   default     = null
 }
 
-variable "target_service" {
-  type = object({
+variable "target_services" {
+  type = list(object({
     app_service_name  = optional(string)
     function_app_name = optional(string)
-  })
+  }))
 
   validation {
-    condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
+    condition = alltrue([
+      for service in var.target_services :
+      (service.app_service_name != null) != (service.function_app_name != null)
+    ])
+    error_message = "Each element in \"target_services\" must have exactly one of \"app_service_name\" or \"function_app_name\" set, but not both or neither."
   }
+
+  description = "A list of target services where each element represents an App Service or a Function App."
 }
 
 variable "scheduler" {
