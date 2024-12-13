@@ -11,7 +11,7 @@ module "function" {
   health_check_path   = "/api/v1/info"
   node_version        = 18
 
-  subnet_cidr                          = "10.20.6.0/24"
+  subnet_cidr                          = "10.50.246.0/24"
   subnet_pep_id                        = data.azurerm_subnet.private_endpoints_subnet.id
   private_dns_zone_resource_group_name = data.azurerm_resource_group.weu_common.name
   virtual_network = {
@@ -33,15 +33,15 @@ module "roles" {
 
   cosmos = [
     {
-      account_name        = "io-p-cosmos-example-cms"
-      resource_group_name = "io-p-example-cms-rg"
+      account_name        = "dx-d-cosmos-example-cms"
+      resource_group_name = "dx-d-example-cms-rg"
       role                = "writer"
       database            = "a"
       collections         = ["x", "y"]
     },
     {
-      account_name        = "io-p-cosmos-example-cms"
-      resource_group_name = "io-p-example-cms-rg"
+      account_name        = "dx-d-cosmos-example-cms"
+      resource_group_name = "dx-d-example-cms-rg"
       role                = "reader"
       database            = "b"
     }
@@ -49,8 +49,8 @@ module "roles" {
 
   redis = [
     {
-      cache_name          = "io-p-itn-example-redis-01"
-      resource_group_name = "io-p-itn-example-rg-01"
+      cache_name          = "dx-d-itn-example-redis-01"
+      resource_group_name = "dx-d-itn-example-rg-01"
       role                = "reader"
       username            = "pippo"
     }
@@ -58,8 +58,8 @@ module "roles" {
 
   key_vault = [
     {
-      name                = "io-p-example-kv"
-      resource_group_name = "io-p-example-rg"
+      name                = "dx-d-example-kv"
+      resource_group_name = "dx-d-example-rg"
       roles = {
         secrets = "reader"
       }

@@ -38,7 +38,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
 
@@ -89,7 +89,7 @@ jobs:
 
           mkdir ${{ github.run_id }}
 
-          # bundle compiled code, excluding node_modules 
+          # bundle compiled code, excluding node_modules
           curl -fsSL https://esbuild.github.io/dl/v0.21.5 | sh
           ./esbuild index=$ENTRY_POINT --bundle --format=$FORMAT --platform=node --target=node20 --packages=external --outdir=${{ github.run_id }} --allow-overwrite
 
@@ -118,7 +118,7 @@ jobs:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-22.04' }}
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write

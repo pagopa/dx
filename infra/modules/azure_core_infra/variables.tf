@@ -42,7 +42,6 @@ variable "pep_subnet_cidr" {
 
 variable "vpn" {
   type = object({
-    enabled                  = optional(bool, false)
     cidr_subnet              = optional(string, "")
     dnsforwarder_cidr_subnet = optional(string, "")
   })
@@ -60,6 +59,7 @@ variable "nat_enabled" {
   description = "Flag to enable nat gateway creation"
   default     = false
 }
+
 
 variable "gh_runner" {
   type = object({

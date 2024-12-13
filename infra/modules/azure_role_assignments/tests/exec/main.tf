@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.116.0"
+      version = ">= 3.110, < 5.0"
     }
     null = {
       source  = "hashicorp/null"
@@ -21,6 +21,7 @@ resource "null_resource" "get_role_assignments" {
       rm -f ${path.module}/result.txt
 
       # KEY VAULT CHECK
+      sleep 10000
       if [[ "${var.resource}" == "key_vault" ]]; then
         if [[ "${var.type}" == "rbac" ]]; then
           role_assignments=$(az role assignment list --assignee ${var.principal_id})
@@ -30,7 +31,7 @@ resource "null_resource" "get_role_assignments" {
             echo "true" > ${path.module}/result.txt
           fi
         elif [[ "${var.type}" == "policy" ]]; then
-          access_policy=$(az keyvault show --name io-p-kv-common --query "properties.accessPolicies" | grep ${var.principal_id})
+          access_policy=$(az keyvault show --name dx-d-kv-common-01 --query "properties.accessPolicies" | grep ${var.principal_id})
           if [[ -z "$access_policy" ]]; then
             echo "false" > ${path.module}/result.txt
           else

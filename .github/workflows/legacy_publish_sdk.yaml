@@ -1,6 +1,6 @@
 name: Publish SDK - Legacy
 
-# This workflow is used by functions that do not use the monorepo 
+# This workflow is used by functions that do not use the monorepo
 # and still use a legacy architecture that will be deprecated in the future.
 
 on:
@@ -50,28 +50,28 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       WORKSPACE: ${{ github.workspace }}
 
     steps:
       - name: Check-out code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-  
+
 
       - name: Generate client and definitions
         run: |-
           set -euo pipefail
           PACKAGE=${{ inputs.generatorPackageName }}
-    
+
           # If the application use a specific version of the generator package, use it; otherwise, just use latest version from the registry
           # Warning: yarn only is supported
           CODEGEN_VERSION=$(yarn list --depth=0 | grep $PACKAGE |  grep -Eo "([0-9]+\.)+[0-9]+" || echo '*')
-    
+
           # Execute the generator fetching the specific package from the registry
           npx -p $PACKAGE@$CODEGEN_VERSION gen-api-sdk --api-spec ${{ inputs.openapiSpecPath }} \
             --out-dir ${{ env.GENERATED_CODE_DIR }} ${{ env.CODE_GEN_PACKAGE_NAME_PARAM }} --request-types --response-decoders --client
-        
+
         working-directory: "${{ inputs.apiProjectDir }}"
 
       - name: Setup Node.js
@@ -100,7 +100,7 @@ jobs:
   deploy:
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-22.04' }}
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write

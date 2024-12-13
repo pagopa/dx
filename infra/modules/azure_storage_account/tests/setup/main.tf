@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.116.0"
+      version = ">= 3.110, < 5.0"
     }
   }
 }
@@ -23,8 +23,8 @@ module "naming_convention" {
 resource "azurerm_subnet" "snet" {
   name                 = "${module.naming_convention.prefix}-snet-sa-${module.naming_convention.suffix}"
   virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-common-rg-01"
-  address_prefixes     = ["10.20.50.0/24"]
+  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
+  address_prefixes     = ["10.50.200.0/24"]
 }
 
 resource "azurerm_user_assigned_identity" "user" {
@@ -37,7 +37,7 @@ resource "azurerm_user_assigned_identity" "user" {
 data "azurerm_subnet" "pep" {
   name                 = "${module.naming_convention.project}-pep-snet-01"
   virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-common-rg-01"
+  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
 
 resource "azurerm_resource_group" "rg" {

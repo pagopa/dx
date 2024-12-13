@@ -43,7 +43,7 @@ jobs:
 
   build:
     name: Build Artifact
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
       TURBO_CACHE_DIR: .turbo-cache
@@ -101,7 +101,7 @@ jobs:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write

@@ -17,8 +17,8 @@ resource "azurerm_resource_group" "example" {
 resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
-  address_prefixes     = ["10.0.1.0/24"]
+  resource_group_name  = "${local.project}-network-rg-01"
+  address_prefixes     = ["10.50.250.0/24"]
 }
 
 module "azure_apim" {
@@ -34,7 +34,7 @@ module "azure_apim" {
 
   virtual_network = {
     name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-common-rg-01"
+    resource_group_name = "${local.project}-network-rg-01"
   }
   subnet_id                     = azurerm_subnet.example.id
   virtual_network_type_internal = true

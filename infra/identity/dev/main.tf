@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.108.0"
+      version = "<= 3.117.0"
     }
   }
 
@@ -34,6 +34,23 @@ module "federated_identities" {
   env       = local.env
 
   repositories = [local.repo_name]
+
+  continuos_integration = {
+    enable = true
+    roles = {
+      subscription = [
+        "Contributor", # for tf tests
+        "Reader and Data Access",
+        "PagoPA IaC Reader",
+        "DocumentDB Account Contributor"
+      ]
+      resource_groups = {
+        terraform-state-rg = [
+          "Storage Blob Data Contributor"
+        ]
+      }
+    }
+  }
 
   tags = local.tags
 
