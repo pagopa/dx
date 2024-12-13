@@ -7,7 +7,6 @@ locals {
       is_function_app     = service.function_app_name != null
       base_name           = service.app_service_name != null ? service.app_service_name : service.function_app_name
       app_service_id      = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
-      app_service_plan_id = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
     }
   ]
 
@@ -16,6 +15,7 @@ locals {
   // Take the resouce group and the location from the first declared AppService or FunctionApp
   resource_group_name = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
   location            = local.app_service_details[0].is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
+  app_service_plan_id = service.app_service_name != null ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
 
   requests_rules_increase = flatten([
     for details in local.app_service_details :
