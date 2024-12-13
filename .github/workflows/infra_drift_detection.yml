@@ -31,7 +31,7 @@ env:
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
@@ -189,7 +189,7 @@ jobs:
             core.setOutput("commit_url", `${data.repository.html_url}/commit/${data.head_sha}`);
             core.setOutput("committer_name", data.head_commit.committer.name);
 
-      # Reference: https://github.com/slackapi/slack-github-action 
+      # Reference: https://github.com/slackapi/slack-github-action
       - name: Drift Notification
         if: ${{ steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify

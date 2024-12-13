@@ -39,7 +39,7 @@ env:
 jobs:
   tf_plan:
     name: 'Terraform Plan'
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-20.04' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
       group: ${{ github.workflow }}-${{ inputs.environment }}-ci
