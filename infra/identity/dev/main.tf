@@ -41,3 +41,33 @@ module "federated_identities" {
     azurerm_resource_group.rg_identity
   ]
 }
+
+module "roles_ci" {
+  source       = "../../modules/azure_role_assignments"
+  principal_id = module.federated_identities.federated_ci_identity.id
+
+  key_vault = [
+    {
+      name                = "dx-d-itn-common-kv-01"
+      resource_group_name = "dx-d-itn-common-rg-01"
+      roles = {
+        secrets = "reader"
+      }
+    }
+  ]
+}
+
+module "roles_cd" {
+  source       = "../../modules/azure_role_assignments"
+  principal_id = module.federated_identities.federated_cd_identity.id
+
+  key_vault = [
+    {
+      name                = "dx-d-itn-common-kv-01"
+      resource_group_name = "dx-d-itn-common-rg-01"
+      roles = {
+        secrets = "reader"
+      }
+    }
+  ]
+}
