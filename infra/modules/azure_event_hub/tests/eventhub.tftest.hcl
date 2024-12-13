@@ -39,11 +39,12 @@ run "eventhub_is_correct_plan" {
     resource_group_name = "dx-d-evt-rg"
     tier                = "s"
 
-    subnet_pep_id = run.setup_tests.pep_id
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     eventhubs = [{
-      name              = "event-hub-test"
-      partitions        = 1
+      name                   = "event-hub-test"
+      partitions             = 1
       message_retention_days = 1
       consumers = [
         "bpd-payment-instrument",
@@ -74,7 +75,7 @@ run "eventhub_is_correct_plan" {
   }
 
   assert {
-    condition     = [ for k, v in azurerm_eventhub.events : v.partition_count ][0] == 1
+    condition     = [for k, v in azurerm_eventhub.events : v.partition_count][0] == 1
     error_message = "Number of partitions are incorrect, have to be 1"
   }
 }
@@ -108,8 +109,8 @@ run "eventhub_is_correct_apply" {
     subnet_pep_id = run.setup_tests.pep_id
 
     eventhubs = [{
-      name              = "event-hub-test"
-      partitions        = 1
+      name                   = "event-hub-test"
+      partitions             = 1
       message_retention_days = 1
       consumers = [
         "bpd-payment-instrument",
@@ -140,17 +141,17 @@ run "eventhub_is_correct_apply" {
   }
 
   assert {
-    condition     = [ for k, v in azurerm_eventhub.events : v.partition_count ][0] == 1
+    condition     = [for k, v in azurerm_eventhub.events : v.partition_count][0] == 1
     error_message = "Number of partitions are incorrect, have to be 1"
   }
 
   assert {
-    condition = azurerm_eventhub_namespace.this.id != null
+    condition     = azurerm_eventhub_namespace.this.id != null
     error_message = "Event Hub namespace ID is empty!"
   }
 
   assert {
-    condition = [ for k, v in azurerm_eventhub.events : v.status ][0] == "Active"
+    condition     = [for k, v in azurerm_eventhub.events : v.status][0] == "Active"
     error_message = "Event Hub is not active!"
   }
 }

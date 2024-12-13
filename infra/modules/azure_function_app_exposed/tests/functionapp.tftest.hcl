@@ -66,7 +66,7 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version ==  "20"
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "20"
     error_message = "The App Service must use Node version 20"
   }
 
@@ -126,7 +126,7 @@ run "function_app_is_correct_apply" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version ==  "20"
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "20"
     error_message = "The App Service must use Node version 20"
   }
 

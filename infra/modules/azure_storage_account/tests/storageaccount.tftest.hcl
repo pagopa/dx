@@ -52,10 +52,10 @@ run "storage_account_is_correct_plan" {
     tier                = "l"
 
     customer_managed_key = {
-      enabled                   = false
+      enabled = false
     }
 
-    subnet_pep_id =  run.setup_tests.pep_id
+    subnet_pep_id = run.setup_tests.pep_id
 
     blob_features = {
       immutability_policy = {

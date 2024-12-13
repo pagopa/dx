@@ -70,7 +70,7 @@ run "app_service_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version ==  "20-lts"
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "20-lts"
     error_message = "The App Service must use Node version 20 LTS"
   }
 

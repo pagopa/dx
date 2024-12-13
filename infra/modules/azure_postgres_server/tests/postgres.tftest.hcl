@@ -47,7 +47,7 @@ run "postgres_is_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
 
-    subnet_pep_id = run.setup_tests.pep_id
+    subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     administrator_credentials = {

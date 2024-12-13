@@ -54,7 +54,7 @@ run "apim_is_correct_plan" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
+    subnet_id                     = run.setup_tests.subnet_id
     virtual_network_type_internal = true
 
   }

@@ -52,8 +52,8 @@ run "function_app_is_correct_plan" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_pep_id = run.setup_tests.pep_id
-    subnet_cidr   = "10.50.80.0/24"
+    subnet_pep_id                        = run.setup_tests.pep_id
+    subnet_cidr                          = "10.50.80.0/24"
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     app_settings      = {}
@@ -75,7 +75,7 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version ==  "20"
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "20"
     error_message = "The App Service must use Node version 20"
   }
 
