@@ -67,7 +67,7 @@ module "core" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_gh_runner"></a> [gh\_runner](#input\_gh\_runner) | GitHub runner configuration | <pre>object({<br/>    repo_name       = string<br/>    snet_cidr       = optional(string, "10.0.242.0/23")<br/>    pat_secret_name = optional(string, "github-runner-pat")<br/>  })</pre> | n/a | yes |
+| <a name="input_gh_runner"></a> [gh\_runner](#input\_gh\_runner) | GitHub runner configuration | <pre>object({<br/>    # repo_name       = string<br/>    snet_cidr = optional(string, "10.0.242.0/23")<br/>    # pat_secret_name = optional(string, "github-runner-pat")<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | Flag to enable nat gateway creation | `bool` | `false` | no |
 | <a name="input_pep_subnet_cidr"></a> [pep\_subnet\_cidr](#input\_pep\_subnet\_cidr) | CIDR block for the private endpoint subnet | `string` | `"10.0.2.0/23"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
@@ -79,10 +79,12 @@ module "core" {
 
 | Name | Description |
 |------|-------------|
+| <a name="output_common_key_vault"></a> [common\_key\_vault](#output\_common\_key\_vault) | n/a |
 | <a name="output_common_nat_gateways"></a> [common\_nat\_gateways](#output\_common\_nat\_gateways) | n/a |
 | <a name="output_common_pep_snet"></a> [common\_pep\_snet](#output\_common\_pep\_snet) | n/a |
 | <a name="output_common_resource_group_name"></a> [common\_resource\_group\_name](#output\_common\_resource\_group\_name) | n/a |
 | <a name="output_common_vnet"></a> [common\_vnet](#output\_common\_vnet) | n/a |
+| <a name="output_github_runner"></a> [github\_runner](#output\_github\_runner) | n/a |
 | <a name="output_network_resource_group_name"></a> [network\_resource\_group\_name](#output\_network\_resource\_group\_name) | n/a |
 | <a name="output_test_resource_group_name"></a> [test\_resource\_group\_name](#output\_test\_resource\_group\_name) | n/a |
 <!-- END_TF_DOCS -->

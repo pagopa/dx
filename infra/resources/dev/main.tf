@@ -42,7 +42,7 @@ module "core" {
   pep_subnet_cidr      = "10.50.2.0/23"
 
   gh_runner = {
-    repo_name = "dx"
+    # repo_name = "dx"
     snet_cidr = "10.50.242.0/23"
   }
 
@@ -53,6 +53,36 @@ module "core" {
   }
 
   test_enabled = true
+
+  tags = local.tags
+}
+
+module "container_app_job_selfhosted_runner" {
+  source = "../../modules/github_selfhosted_runner_on_container_app_jobs"
+
+  environment = {
+    prefix          = local.prefix
+    env_short       = local.env_short
+    location        = local.location
+    instance_number = "01"
+  }
+
+  resource_group_name = module.core.github_runner.resource_group_name
+
+  repository = {
+    name = "dx"
+  }
+
+  container_app_environment = {
+    id       = module.core.github_runner.environment_id
+    location = local.location
+  }
+
+  key_vault = {
+    name                = module.core.common_key_vault.name
+    resource_group_name = module.core.common_key_vault.resource_group_name
+    use_rbac            = true
+  }
 
   tags = local.tags
 }

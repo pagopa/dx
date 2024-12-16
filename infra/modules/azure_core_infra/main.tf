@@ -186,14 +186,6 @@ module "github_runner" {
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location
-
-  key_vault = {
-    id                  = module.key_vault.id
-    name                = module.key_vault.name
-    secret_name         = var.gh_runner.pat_secret_name
-    resource_group_name = azurerm_resource_group.common.name
-  }
-
   virtual_network = {
     id                  = module.network.vnet.id
     name                = module.network.vnet.name
@@ -202,11 +194,6 @@ module "github_runner" {
   subnet_cidr = var.gh_runner.snet_cidr
 
   log_analytics_workspace_id = module.common_log_analytics.id
-
-  job = {
-    name = "github-runner"
-    repo = var.gh_runner.repo_name
-  }
 
   tags = var.tags
 }

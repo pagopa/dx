@@ -18,6 +18,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_container_app_job_selfhosted_runner"></a> [container\_app\_job\_selfhosted\_runner](#module\_container\_app\_job\_selfhosted\_runner) | ../../modules/github_selfhosted_runner_on_container_app_jobs | n/a |
 | <a name="module_core"></a> [core](#module\_core) | ../../modules/azure_core_infra | n/a |
 
 ## Resources
