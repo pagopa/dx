@@ -1,5 +1,5 @@
 resource "azurerm_container_app_environment" "cae" {
-  name                = "${var.project}-github-runner-cae"
+  name                = "${var.prefix}-cae-${var.suffix}"
   location            = var.location
   resource_group_name = var.resource_group_name
 
@@ -14,7 +14,7 @@ resource "azurerm_container_app_environment" "cae" {
 
 resource "azurerm_management_lock" "lock_cae" {
   lock_level = "CanNotDelete"
-  name       = "${var.project}-github-runner-cae"
+  name       = "${var.prefix}-cae-${var.suffix}"
   notes      = "This Container App Environment cannot be deleted"
   scope      = azurerm_container_app_environment.cae.id
 }

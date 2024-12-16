@@ -31,7 +31,7 @@ No modules.
 | <a name="input_labels"></a> [labels](#input\_labels) | n/a | `list(string)` | `[]` | no |
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | n/a | `string` | n/a | yes |
-| <a name="input_project"></a> [project](#input\_project) | n/a | `string` | n/a | yes |
+| <a name="input_prefix"></a> [prefix](#input\_prefix) | n/a | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_subnet_cidr"></a> [subnet\_cidr](#input\_subnet\_cidr) | n/a | `string` | `"10.0.242.0/23"` | no |
 | <a name="input_suffix"></a> [suffix](#input\_suffix) | Suffix for resource names | `string` | `"01"` | no |

@@ -20,6 +20,18 @@ module "naming_convention" {
   }
 }
 
+module "naming_convention_gh_runner" {
+  source = "../azure_naming_convention"
+
+  environment = {
+    prefix          = var.environment.prefix
+    env_short       = var.environment.env_short
+    location        = var.environment.location
+    app_name        = "github-runner"
+    instance_number = var.environment.instance_number
+  }
+}
+
 #------------------------#
 # COMMON RESOURCE GROUPS #
 #------------------------#
@@ -169,8 +181,8 @@ module "common_log_analytics" {
 module "github_runner" {
   source = "./_modules/github_runner"
 
-  project = local.project
-  suffix  = local.suffix
+  prefix = module.naming_convention_gh_runner.prefix
+  suffix = module.naming_convention_gh_runner.suffix
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location

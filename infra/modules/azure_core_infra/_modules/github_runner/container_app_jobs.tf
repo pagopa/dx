@@ -1,6 +1,6 @@
 resource "azurerm_container_app_job" "container_app_job" {
   container_app_environment_id = azurerm_container_app_environment.cae.id
-  name                         = "${var.project}-${var.job.name}-ca-job"
+  name                         = "${var.prefix}-caj-${var.suffix}"
   location                     = var.location
   resource_group_name          = var.resource_group_name
 
@@ -19,7 +19,7 @@ resource "azurerm_container_app_job" "container_app_job" {
       min_executions              = 0
       polling_interval_in_seconds = 30
       rules {
-        custom_rule_type = "github-runner"
+        custom_rule_type = var.job.name
         metadata = merge({
           owner                     = var.job.repo_owner
           runnerScope               = "repo"
@@ -28,7 +28,7 @@ resource "azurerm_container_app_job" "container_app_job" {
           github-runner             = "https://api.github.com"
         }, length(var.labels) > 0 ? { labels = join(",", var.labels) } : {})
 
-        name = "${var.project}-${var.job.name}-github-runner-rule"
+        name = "${var.prefix}-rule"
 
         authentication {
           secret_name       = "personal-access-token"

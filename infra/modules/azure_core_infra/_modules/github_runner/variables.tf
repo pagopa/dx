@@ -1,4 +1,4 @@
-variable "project" {
+variable "prefix" {
   type = string
 }
 
