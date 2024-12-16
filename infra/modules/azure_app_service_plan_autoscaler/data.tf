@@ -1,19 +1,13 @@
 data "azurerm_linux_web_app" "this" {
-  for_each = {
-    for idx, service in var.target_services :
-    idx => service if service.app_service_name != null
-  }
+  for_each = toset(var.target_services.app_service_name != null ? var.target_services.app_service_name : [])
 
   resource_group_name = var.resource_group_name
-  name                = each.value.app_service_name
+  name                = each.value
 }
 
 data "azurerm_linux_function_app" "this" {
-  for_each = {
-    for idx, service in var.target_services :
-    idx => service if service.function_app_name != null
-  }
+  for_each = toset(var.target_services.function_app_name != null ? var.target_services.function_app_name : [])
 
   resource_group_name = var.resource_group_name
-  name                = each.value.function_app_name
+  name                = each.value
 }

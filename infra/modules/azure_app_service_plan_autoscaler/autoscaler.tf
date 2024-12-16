@@ -2,7 +2,7 @@ resource "azurerm_monitor_autoscale_setting" "this" {
   name                = local.autoscale_name
   resource_group_name = local.resource_group_name
   location            = local.location
-  target_resource_id  = local.app_service_plan_ids[0]
+  target_resource_id  = local.app_service_details[0].app_service_plan_id
 
   # start high load
   dynamic "profile" {
