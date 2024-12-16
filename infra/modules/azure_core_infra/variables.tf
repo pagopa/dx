@@ -61,11 +61,8 @@ variable "nat_enabled" {
 }
 
 
-variable "gh_runner" {
-  type = object({
-    # repo_name       = string
-    snet_cidr = optional(string, "10.0.242.0/23")
-    # pat_secret_name = optional(string, "github-runner-pat")
-  })
-  description = "GitHub runner configuration"
+variable "gh_runner_snet" {
+  type        = string
+  default     = "10.0.242.0/23"
+  description = "GitHub runner subnet cidr"
 }

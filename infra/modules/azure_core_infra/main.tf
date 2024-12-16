@@ -191,7 +191,7 @@ module "github_runner" {
     name                = module.network.vnet.name
     resource_group_name = azurerm_resource_group.network.name
   }
-  subnet_cidr = var.gh_runner.snet_cidr
+  subnet_cidr = var.gh_runner_snet
 
   log_analytics_workspace_id = module.common_log_analytics.id
 
