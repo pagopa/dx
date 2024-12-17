@@ -62,20 +62,21 @@ locals {
     "apim_subnet" = "apim-snet"
 
     # Databases
-    "cosmos_db"  = "cosno"
-    "postgresql" = "psql"
+    "cosmos_db"       = "cosmos"
+    "cosmos_db_nosql" = "cosno"
+    "postgresql"      = "psql"
 
     # Integration
-    "eventhub"         = "evhns"
-    "function_app"     = "func"
-    "app_service"      = "app"
-    "app_service_plan" = "asp"
+    "eventhub_namespace" = "evhns"
+    "function_app"       = "func"
+    "app_service"        = "app"
+    "app_service_plan"   = "asp"
 
     # Security
     "key_vault" = "kv"
 
     # Monitoring
-    "application_insights" = "ai"
+    "application_insights" = "appi"
 
     # Miscellaneous
     "resource_group" = "rg"

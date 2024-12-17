@@ -42,7 +42,7 @@ run "name_is_correct" {
   }
 
   assert {
-    condition     = output.names.dx-d-itn-test2.cosmos_db["02"] == "dx-d-itn-test2-cosno-02"
+    condition     = output.names.dx-d-itn-test2.cosmos_db_nosql["02"] == "dx-d-itn-test2-cosno-02"
     error_message = "Cosmos DB name is not correct"
   }
 }
