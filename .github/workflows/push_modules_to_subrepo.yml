@@ -52,6 +52,7 @@ jobs:
     needs: [get-modified-modules, get-all-modules]
     if: always()
     strategy:
+      fail-fast: false
       matrix:
         module: ${{ fromJSON(needs.get-all-modules.outputs.modules || needs.get-modified-modules.outputs.modules) }}
     steps:
