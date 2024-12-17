@@ -7,8 +7,8 @@ locals {
   function_app = {
     name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
     sku_name               = local.sku_name_mapping[local.tier]
-    zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
-    is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
+    zone_balancing_enabled = local.tier != "s"
+    is_slot_enabled        = local.tier == "s" ? 0 : 1
     worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
@@ -21,7 +21,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = local.tier == "s" || local.tier == "xs" ? "LRS" : "ZRS"
+    replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
   }
 }

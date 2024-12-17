@@ -20,8 +20,10 @@ resource "azurerm_linux_web_app_slot" "this" {
     health_check_eviction_time_in_min = 2
 
     application_stack {
-      node_version = var.stack == "node" ? "${var.node_version}-lts" : null
-      java_version = var.stack == "java" ? var.java_version : null
+      node_version        = var.stack == "node" ? "${var.node_version}-lts" : null
+      java_version        = var.stack == "java" ? var.java_version : null
+      java_server         = var.stack == "java" ? "JAVA" : null
+      java_server_version = var.stack == "java" ? "${var.java_version}-java${var.java_version}" : null
     }
   }
 

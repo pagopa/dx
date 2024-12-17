@@ -16,8 +16,8 @@ locals {
   function_app = {
     name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
     sku_name               = local.sku_name_mapping[local.tier]
-    zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
-    is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
+    zone_balancing_enabled = local.tier != "s"
+    is_slot_enabled        = local.tier == "s" ? 0 : 1
     pep_sites              = "${module.naming_convention.prefix}-func-pep-${module.naming_convention.suffix}"
     pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
     alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
@@ -33,7 +33,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = local.tier == "s" || local.tier == "xs" ? "LRS" : "ZRS"
+    replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
     pep_blob_name    = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
     pep_file_name    = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"

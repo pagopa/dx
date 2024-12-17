@@ -4351,6 +4351,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_core_infra@workspace:infra/modules/azure_core_infra":
+  version: 0.0.0-use.local
+  resolution: "azure_core_infra@workspace:infra/modules/azure_core_infra"
+  languageName: unknown
+  linkType: soft
+
 "azure_cosmos_account@workspace:infra/modules/azure_cosmos_account":
   version: 0.0.0-use.local
   resolution: "azure_cosmos_account@workspace:infra/modules/azure_cosmos_account"

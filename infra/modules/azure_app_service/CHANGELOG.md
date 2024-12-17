@@ -1,5 +1,12 @@
 # azure_app_service
 
+## 0.0.4
+
+### Patch Changes
+
+- 8579691: Fixed xs configuration for App Service, minor for Function App
+- 0457561: Fixed cosmos Alert variable, removed old provider configuration and added xs case into functions and app service modules
+
 ## 0.0.3
 
 ### Patch Changes

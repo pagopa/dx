@@ -2,10 +2,9 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     resource_name = "none"
-    resource_type = "Storage Account"
   }
 }
 
@@ -35,7 +34,7 @@ run "name_is_correct" {
   }
 
   assert {
-    condition     = output.names.cosmos_db == "dx-d-itn-modules-test-cosno-01"
+    condition     = output.names.cosmos_db_nosql == "dx-d-itn-modules-test-cosno-01"
     error_message = "Cosmos DB name is not correct"
   }
 }

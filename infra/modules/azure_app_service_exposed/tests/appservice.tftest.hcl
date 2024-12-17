@@ -7,11 +7,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,8 +25,8 @@ run "app_service_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -34,10 +34,10 @@ run "app_service_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service_exposed/tests"
       Test        = "true"
       TestName    = "Create app service for test"
@@ -70,7 +70,7 @@ run "app_service_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version ==  "20-lts"
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "20-lts"
     error_message = "The App Service must use Node version 20 LTS"
   }
 
