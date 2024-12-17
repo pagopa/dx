@@ -14,16 +14,27 @@ variable "autoscale_name" {
   default     = null
 }
 
-variable "target_service" {
+variable "target_services" {
   type = object({
-    app_service_name  = optional(string)
-    function_app_name = optional(string)
+    app_service_name  = optional(list(string))
+    function_app_name = optional(list(string))
   })
 
   validation {
-    condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
+    condition = (
+      (var.target_services.app_service_name != null && length(var.target_services.app_service_name) > 0) !=
+      (var.target_services.function_app_name != null && length(var.target_services.function_app_name) > 0)
+    )
+    error_message = "You must provide either a list of \"app_service_name\" or a list of \"function_app_name\", but not both or neither."
   }
+
+  description = "An object containing two optional lists: one for App Service names and one for Function App names."
+}
+
+locals {
+  # App Service Plan Validation
+  # tflint-ignore: terraform_unused_declarations
+  app_service_plan_ids_validation = length(distinct([for service in local.app_service_details : service.app_service_plan_id])) <= 1 ? true : tobool(throw("All target services must be associated with the same App Service Plan."))
 }
 
 variable "scheduler" {
