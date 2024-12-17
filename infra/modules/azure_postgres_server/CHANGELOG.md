@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 0.0.5
+
+### Patch Changes
+
+- 393c2d0: Geo redundant backup not available in italy north
+
 ## 0.0.4
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # azure_app_service
 
+## 0.0.5
+
+### Patch Changes
+
+- ced44ee: Set required java_server and java_server_version parameters for java stack applications
+- 15ecfc1: Removed xs tier because is unsupported
+
 ## 0.0.4
 
 ### Patch Changes

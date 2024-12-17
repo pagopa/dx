@@ -1,5 +1,12 @@
 # azure_function_app
 
+## 0.0.5
+
+### Patch Changes
+
+- 15ecfc1: Removed xs tier because is unsupported
+- 757fd7b: Added var for application insight key
+
 ## 0.0.4
 
 ### Patch Changes
