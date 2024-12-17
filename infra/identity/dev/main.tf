@@ -65,8 +65,8 @@ module "roles_ci" {
 
   key_vault = [
     {
-      name                = "dx-d-itn-common-kv-01"
-      resource_group_name = "dx-d-itn-common-rg-01"
+      name                = "${local.project}-${local.location_short}-common-kv-01"
+      resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
       roles = {
         secrets = "reader"
       }
@@ -80,8 +80,8 @@ module "roles_cd" {
 
   key_vault = [
     {
-      name                = "dx-d-itn-common-kv-01"
-      resource_group_name = "dx-d-itn-common-rg-01"
+      name                = "${local.project}-${local.location_short}-common-kv-01"
+      resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
       roles = {
         secrets = "reader"
       }

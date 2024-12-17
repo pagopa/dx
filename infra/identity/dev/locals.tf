@@ -1,10 +1,11 @@
 locals {
 
-  prefix    = "dx"
-  env_short = "d"
-  env       = "dev"
-  location  = "italynorth"
-  project   = "${local.prefix}-${local.env_short}"
+  prefix         = "dx"
+  env_short      = "d"
+  env            = "dev"
+  location       = "italynorth"
+  location_short = "itn"
+  project        = "${local.prefix}-${local.env_short}"
 
   repo_name = "dx"
 
