@@ -129,3 +129,9 @@ variable "subnet_service_endpoints" {
   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
   default     = null
 }
+
+variable "pm2_startup_file_name" {
+  type        = string
+  default     = null
+  description = "(Optional) Use this variable to enable PM2. The specified file is used as PM2 process entry point"
+}
