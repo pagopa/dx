@@ -15,15 +15,17 @@ resource "azurerm_linux_web_app" "this" {
 
   site_config {
     http2_enabled                     = true
-    always_on                         = local.app_service.always_on
+    always_on                         = true
     vnet_route_all_enabled            = true
     health_check_path                 = var.health_check_path
     health_check_eviction_time_in_min = 2
     ip_restriction_default_action     = "Deny"
 
     application_stack {
-      node_version = var.stack == "node" ? "${var.node_version}-lts" : null
-      java_version = var.stack == "java" ? var.java_version : null
+      node_version        = var.stack == "node" ? "${var.node_version}-lts" : null
+      java_version        = var.stack == "java" ? var.java_version : null
+      java_server         = var.stack == "java" ? "JAVA" : null
+      java_server_version = var.stack == "java" ? "${var.java_version}-java${var.java_version}" : null
     }
   }
 

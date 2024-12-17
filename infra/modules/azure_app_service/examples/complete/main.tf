@@ -7,7 +7,7 @@ module "naming_convention" {
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  resource_group_name  = "${local.project}-network-rg-01"
 }
 
 resource "azurerm_resource_group" "example" {
@@ -30,10 +30,10 @@ module "azure_app_service" {
 
   virtual_network = {
     name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-common-rg-01"
+    resource_group_name = "${local.project}-network-rg-01"
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.0.1.0/24"
+  subnet_cidr   = "10.50.250.0/24"
 
   app_settings      = {}
   slot_app_settings = {}

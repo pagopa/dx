@@ -9,7 +9,7 @@ locals {
   repo_name = "dx"
 
   tags = {
-    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+    CostCenter  = "TS700 - ENGINEERING"
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "DevEx"

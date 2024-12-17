@@ -2,7 +2,7 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     resource_name = "none"
   }
@@ -13,20 +13,20 @@ run "name_is_correct" {
 
   variables {
     environments = [{
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = 1
-    },
-    {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      app_name        = "test2"
-      instance_number = 3
-    }
+        prefix          = "dx"
+        env_short       = "d"
+        location        = "italynorth"
+        domain          = "modules"
+        app_name        = "test"
+        instance_number = 1
+      },
+      {
+        prefix          = "dx"
+        env_short       = "d"
+        location        = "italynorth"
+        app_name        = "test2"
+        instance_number = 3
+      }
     ]
   }
 

@@ -39,7 +39,7 @@ jobs:
 
   release:
     name: Build and Push to Registry
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       packages: write
 
