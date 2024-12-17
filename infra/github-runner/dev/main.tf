@@ -26,7 +26,7 @@ module "container_app_job_selfhosted_runner" {
     prefix          = local.prefix
     env_short       = local.env_short
     location        = local.location
-    instance_number = "01"
+    instance_number = local.suffix
   }
 
   resource_group_name = data.azurerm_resource_group.gh_runner.name

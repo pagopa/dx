@@ -1,5 +1,6 @@
 locals {
   prefix         = "dx"
+  suffix         = "01"
   env_short      = "d"
   location       = "italynorth"
   location_short = "itn"
