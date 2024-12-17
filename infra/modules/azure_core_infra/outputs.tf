@@ -10,6 +10,14 @@ output "test_resource_group_name" {
   value = var.test_enabled ? azurerm_resource_group.test[0].name : null
 }
 
+output "github_runner" {
+  value = {
+    environment_id      = module.github_runner.cae_id
+    resource_group_name = azurerm_resource_group.gh_runner.name
+    subnet_id           = module.github_runner.subnet_id
+  }
+}
+
 # Networking
 
 output "common_vnet" {
@@ -35,4 +43,14 @@ output "common_nat_gateways" {
       }
     ]
   ])
+}
+
+# Key Vault
+
+output "common_key_vault" {
+  value = {
+    name                = module.key_vault.name
+    id                  = module.key_vault.id
+    resource_group_name = azurerm_resource_group.common.name
+  }
 }

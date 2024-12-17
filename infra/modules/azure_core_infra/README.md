@@ -42,9 +42,12 @@ module "core" {
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
 | <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
 | <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../azure_naming_convention | n/a |
+| <a name="module_naming_convention_gh_runner"></a> [naming\_convention\_gh\_runner](#module\_naming\_convention\_gh\_runner) | ../azure_naming_convention | n/a |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./_modules/nat_gateway | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./_modules/networking | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ./_modules/vpn | n/a |
@@ -54,6 +57,7 @@ module "core" {
 | Name | Type |
 |------|------|
 | [azurerm_resource_group.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_resource_group.gh_runner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_resource_group.test](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
@@ -63,6 +67,7 @@ module "core" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_gh_runner_snet"></a> [gh\_runner\_snet](#input\_gh\_runner\_snet) | GitHub runner subnet cidr | `string` | `"10.0.242.0/23"` | no |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | Flag to enable nat gateway creation | `bool` | `false` | no |
 | <a name="input_pep_subnet_cidr"></a> [pep\_subnet\_cidr](#input\_pep\_subnet\_cidr) | CIDR block for the private endpoint subnet | `string` | `"10.0.2.0/23"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
@@ -74,10 +79,12 @@ module "core" {
 
 | Name | Description |
 |------|-------------|
+| <a name="output_common_key_vault"></a> [common\_key\_vault](#output\_common\_key\_vault) | n/a |
 | <a name="output_common_nat_gateways"></a> [common\_nat\_gateways](#output\_common\_nat\_gateways) | n/a |
 | <a name="output_common_pep_snet"></a> [common\_pep\_snet](#output\_common\_pep\_snet) | n/a |
 | <a name="output_common_resource_group_name"></a> [common\_resource\_group\_name](#output\_common\_resource\_group\_name) | n/a |
 | <a name="output_common_vnet"></a> [common\_vnet](#output\_common\_vnet) | n/a |
+| <a name="output_github_runner"></a> [github\_runner](#output\_github\_runner) | n/a |
 | <a name="output_network_resource_group_name"></a> [network\_resource\_group\_name](#output\_network\_resource\_group\_name) | n/a |
 | <a name="output_test_resource_group_name"></a> [test\_resource\_group\_name](#output\_test\_resource\_group\_name) | n/a |
 <!-- END_TF_DOCS -->

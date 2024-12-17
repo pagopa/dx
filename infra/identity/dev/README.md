@@ -19,6 +19,8 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_federated_identities"></a> [federated\_identities](#module\_federated\_identities) | ../../modules/azure_federated_identity_with_github | n/a |
+| <a name="module_roles_cd"></a> [roles\_cd](#module\_roles\_cd) | ../../modules/azure_role_assignments | n/a |
+| <a name="module_roles_ci"></a> [roles\_ci](#module\_roles\_ci) | ../../modules/azure_role_assignments | n/a |
 
 ## Resources
 
