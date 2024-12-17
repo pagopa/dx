@@ -27,4 +27,14 @@ run "name_is_correct" {
     condition     = "${output.prefix}-none-${output.suffix}" == "dx-d-itn-modules-test-${run.setup_tests.resource_name}-01"
     error_message = "Invalid name"
   }
+
+  assert {
+    condition     = output.names.function_storage_account == "dxditnmodulesteststfn01"
+    error_message = "Storage account name is not correct"
+  }
+
+  assert {
+    condition     = output.names.cosmos_db_nosql == "dx-d-itn-modules-test-cosno-01"
+    error_message = "Cosmos DB name is not correct"
+  }
 }
