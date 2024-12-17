@@ -2,4 +2,4 @@
 "azure_naming_convention": patch
 ---
 
-Added new name creation method with resource type input and name output
+Updated name generation which includes resource type input and add those names in output
