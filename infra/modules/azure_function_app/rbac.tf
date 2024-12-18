@@ -41,3 +41,19 @@ resource "azurerm_role_assignment" "staging_function_storage_queue_data_contribu
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_linux_function_app_slot.this[0].identity[0].principal_id
 }
+
+resource "azurerm_role_assignment" "function_storage_table_data_contributor" {
+  count = local.function_app.has_durable
+
+  scope                = azurerm_storage_account.this.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_linux_function_app.this.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "staging_function_storage_table_data_contributor" {
+  count = local.function_app.is_slot_enabled == 1 && local.function_app.has_durable == 1 ? 1 : 0
+
+  scope                = azurerm_storage_account.this.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_linux_function_app_slot.this[0].identity[0].principal_id
+}

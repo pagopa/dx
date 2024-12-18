@@ -181,3 +181,9 @@ variable "application_insights_key" {
   sensitive   = true
   default     = null
 }
+
+variable "contains_durable_functions" {
+  type        = bool
+  description = "(Optional) Enable if the Function App hosts Durable Functions"
+  default     = false
+}
