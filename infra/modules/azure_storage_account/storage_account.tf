@@ -70,11 +70,3 @@ resource "azurerm_security_center_storage_defender" "this" {
   count              = local.tier_features.advanced_threat_protection ? 1 : 0
   storage_account_id = azurerm_storage_account.this.id
 }
-
-resource "azurerm_storage_account_customer_managed_key" "kv" {
-  for_each                  = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv" ? { type = var.customer_managed_key.type } : {})
-  storage_account_id        = azurerm_storage_account.this.id
-  key_vault_id              = var.customer_managed_key.key_vault_key_id
-  key_name                  = var.customer_managed_key.key_name
-  user_assigned_identity_id = var.customer_managed_key.user_assigned_identity_id
-}
