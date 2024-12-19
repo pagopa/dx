@@ -5,6 +5,6 @@ variable "environment" {
     location        = string
     domain          = optional(string)
     app_name        = string
-    instance_number = string
+    instance_number = number
   })
 }

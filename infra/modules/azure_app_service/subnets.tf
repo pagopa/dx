@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "this" {
-  name                 = "${module.naming_convention.prefix}-app-snet-${module.naming_convention.suffix}"
+  name                 = module.naming_convention.name.app_subnet["1"]
   virtual_network_name = data.azurerm_virtual_network.this.name
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   address_prefixes     = [var.subnet_cidr]
