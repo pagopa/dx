@@ -5,10 +5,8 @@ locals {
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
-    instance_number = "01"
+    instance_number = 1
   }
-
-  project = module.naming_convention.project
 
   tags = {
     CreatedBy   = "Terraform"

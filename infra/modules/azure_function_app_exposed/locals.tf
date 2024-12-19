@@ -1,11 +1,11 @@
 locals {
   app_service_plan = {
     enable = var.app_service_plan_id == null
-    name   = "${module.naming_convention.prefix}-asp-${module.naming_convention.suffix}"
+    name   = module.naming_convention.name.app_service_plan["1"]
   }
 
   function_app = {
-    name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
+    name                   = module.naming_convention.name.function_app["1"]
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
@@ -22,6 +22,6 @@ locals {
 
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
-    name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
+    name             = module.naming_convention.name.function_storage_account["1"]
   }
 }

@@ -58,8 +58,9 @@ locals {
     "file_private_endpoint"            = "file-pep"
 
     # Subnets
-    "app_subnet"  = "app-snet"
-    "apim_subnet" = "apim-snet"
+    "app_subnet"      = "app-snet"
+    "apim_subnet"     = "apim-snet"
+    "function_subnet" = "func-snet"
 
     # Databases
     "cosmos_db"       = "cosmos"

@@ -24,7 +24,7 @@ output "names" {
         for i, suffix in env.app_suffix :
         tostring(i + 1) => (
           strcontains(resource_type, "storage_account") ?
-          replace("${env_name}${abbreviation}${suffix}", "-", "") :
+          lower(replace("${env_name}${abbreviation}${suffix}", "-", "")) :
           "${env_name}-${abbreviation}-${suffix}"
         )
       }
