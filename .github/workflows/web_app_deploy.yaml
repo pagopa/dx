@@ -47,7 +47,7 @@ jobs:
         name: Checkout
 
       - name: Prune
-        run: npx turbo prune --scope ${{ env.WORKSPACE }}
+        run: npx turbo@2 prune --scope ${{ env.WORKSPACE }}
 
       - name: Enable Corepack
         run: corepack enable
