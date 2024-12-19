@@ -26,7 +26,6 @@ for TARGET_DIR in "$@"; do
     if [ -d "$TARGET_DIR" ]; then
         echo "Processing Terraform modules in $TARGET_DIR"
         cd $TARGET_DIR
-        terraform init >&2
 
         # Check if hashes file already exists; otherwise, create it
         if [ ! -f "$HASHES_FILE" ]; then
@@ -35,8 +34,8 @@ for TARGET_DIR in "$@"; do
 
         # Check if modules metadata exists
         if [ ! -f "$MODULES_METADATA" ]; then
-            echo "Modules metadata file not found. Ensure that 'terraform init' has been run." >&2
-            exit 1
+            echo "Modules metadata file not found. I am going to execute a 'terraform init'." >&2
+            terraform init >&2
         fi
 
         # Iterate over modules listed in the metadata that were sourced from the Terraform registry
