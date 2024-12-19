@@ -4,7 +4,8 @@
   "workspaces": [
     "packages/**",
     "website",
-    "infra/modules/*"
+    "infra/modules/*",
+    "infra/scripts"
   ],
   "devDependencies": {
     "prettier": "3.2.5",
