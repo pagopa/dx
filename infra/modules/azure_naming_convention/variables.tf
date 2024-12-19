@@ -33,6 +33,16 @@ variable "environments" {
     error_message = "The variable \"instance_number\" only accepts values in the range [1-99]."
   }
 
+  validation {
+    condition     = alltrue([for env in var.environments : env.domain == null ? true : length(replace(env.domain, "-", "")) >= 2])
+    error_message = "\"domain\" value must be null or a value of at least 2 characters"
+  }
+
+  validation {
+    condition     = alltrue([for env in var.environments : length(env.app_name) > 1])
+    error_message = "The variable \"app_name\" must contain at least 2 characters"
+  }
+
   description = "List of values which are used to generate resource names and location short names for each environment. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 
 }
