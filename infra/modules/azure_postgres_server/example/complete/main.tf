@@ -1,20 +1,20 @@
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = local.environment
+  environments = [local.environment]
 }
 
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = module.naming_convention.name.resource_group["1"]
   location = local.environment.location
 }
 
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  resource_group_name  = "${local.project}-network-rg-01"
 }
 
 # tflint-ignore: terraform_required_providers
@@ -71,7 +71,7 @@ module "azure_postgres" {
 
   environment                          = local.environment
   resource_group_name                  = azurerm_resource_group.example.name
-  private_dns_zone_resource_group_name = azurerm_resource_group.example.name
+  private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
 
   tier = "l"
 

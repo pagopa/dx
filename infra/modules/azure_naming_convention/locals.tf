@@ -67,9 +67,10 @@ locals {
     "function_subnet" = "func-snet"
 
     # Databases
-    "cosmos_db"       = "cosmos"
-    "cosmos_db_nosql" = "cosno"
-    "postgresql"      = "psql"
+    "cosmos_db"         = "cosmos"
+    "cosmos_db_nosql"   = "cosno"
+    "postgresql"        = "psql"
+    "postgresq_replica" = "psql-replica"
 
     # Integration
     "eventhub_namespace" = "evhns"
