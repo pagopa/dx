@@ -11,12 +11,12 @@ terraform {
 module "naming_convention" {
   source = "../azure_naming_convention"
 
-  environment = {
+  environments = [{
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = null
     app_name        = var.repository.name
     instance_number = var.environment.instance_number
-  }
+  }]
 }

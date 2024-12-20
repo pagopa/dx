@@ -28,7 +28,8 @@ locals {
   # Ref.: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
   resource_abbreviations = {
     # Compute
-    "virtual_machine" = "vm"
+    "virtual_machine"   = "vm"
+    "container_app_job" = "caj"
 
     # Storage
     "storage_account"          = "st"
