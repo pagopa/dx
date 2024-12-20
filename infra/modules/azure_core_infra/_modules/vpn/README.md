@@ -26,7 +26,7 @@ No requirements.
 |------|-------------|------|---------|:--------:|
 | <a name="input_dnsforwarder_cidr_subnet"></a> [dnsforwarder\_cidr\_subnet](#input\_dnsforwarder\_cidr\_subnet) | DNS forwarder network address space. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
-| <a name="input_project"></a> [project](#input\_project) | IO prefix, short environment and short location | `string` | n/a | yes |
+| <a name="input_project"></a> [project](#input\_project) | env prefix, short environment and short location | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | Tenant ID | `string` | n/a | yes |

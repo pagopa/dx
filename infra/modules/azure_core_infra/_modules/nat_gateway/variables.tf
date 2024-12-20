@@ -1,6 +1,6 @@
 variable "project" {
   type        = string
-  description = "IO prefix, short environment and short location"
+  description = "env prefix, short environment and short location"
 }
 
 variable "resource_group_name" {
