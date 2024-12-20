@@ -6,7 +6,6 @@
   files: '\.tf$'
   pass_filenames: false
   require_serial: true
-  types: [file]
   exclude: |
     ^.*/(?:\.terraform|modules|examples|tests)/.*$
 - id: terraform_providers_lock_staged
