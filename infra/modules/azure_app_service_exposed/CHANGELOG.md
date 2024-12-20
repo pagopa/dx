@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.5
+
+### Patch Changes
+
+- ced44ee: Set required java_server and java_server_version parameters for java stack applications
+
 ## 0.0.4
 
 ### Patch Changes

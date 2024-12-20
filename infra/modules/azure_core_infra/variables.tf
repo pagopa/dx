@@ -59,3 +59,10 @@ variable "nat_enabled" {
   description = "Flag to enable nat gateway creation"
   default     = false
 }
+
+
+variable "gh_runner_snet" {
+  type        = string
+  default     = "10.0.242.0/23"
+  description = "GitHub runner subnet cidr"
+}
