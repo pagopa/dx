@@ -9,8 +9,6 @@ repos:
         files: '\.tf$'
         pass_filenames: false
         require_serial: true
-        exclude: |
-          ^.*/(?:\.terraform|modules|examples|tests)/.*$
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:
