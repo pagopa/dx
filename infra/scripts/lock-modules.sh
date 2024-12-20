@@ -133,7 +133,7 @@ function needs_terraform_get() {
 function ensure_terraform_get() {
     if needs_terraform_get; then
         warn "Running terraform get in $(pwd)"
-        if ! terraform get >/dev/null; then
+        if ! terraform get -update >/dev/null; then
             error "terraform get failed"
             return 1
         fi
