@@ -20,7 +20,7 @@ run "setup_tests" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "01"
+      instance_number = 1
     }
   }
 }
@@ -35,7 +35,7 @@ run "storage_account_is_correct_plan" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "01"
+      instance_number = 1
     }
 
     tags = {

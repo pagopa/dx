@@ -1,6 +1,6 @@
 #tfsec:ignore:azure-storage-queue-services-logging-enabled
 resource "azurerm_storage_account" "this" {
-  name                          = replace("${module.naming_convention.prefix}-st-${module.naming_convention.suffix}", "-", "")
+  name                          = module.naming_convention.name.storage_account["1"]
   resource_group_name           = var.resource_group_name
   location                      = var.environment.location
   account_kind                  = "StorageV2"

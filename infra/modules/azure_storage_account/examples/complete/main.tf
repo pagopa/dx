@@ -1,7 +1,7 @@
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = local.environment
+  environments = [local.environment]
 }
 
 data "azurerm_subnet" "pep" {
@@ -10,13 +10,8 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${local.project}-network-rg-01"
 }
 
-data "azurerm_monitor_action_group" "example" {
-  name                = replace("${local.environment.prefix}-${local.environment.env_short}-error", "-", "")
-  resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
-}
-
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = module.naming_convention.name.resource_group["1"]
   location = local.environment.location
 }
 
@@ -41,10 +36,11 @@ module "azure_storage_account" {
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
+  private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
 
   customer_managed_key = {
-    enabled                   = true
+    enabled                   = false
+    key_name                  = "example-key"
     type                      = "kv"
     user_assigned_identity_id = azurerm_user_assigned_identity.example.id
     key_vault_key_id          = "your-key-vault-key-id"
@@ -83,8 +79,6 @@ module "azure_storage_account" {
     ip_rules                   = ["203.0.113.0/24"]
     virtual_network_subnet_ids = [azurerm_subnet.example.id]
   }
-
-  action_group_id = data.azurerm_monitor_action_group.example.id
 
   static_website = {
     enabled            = true

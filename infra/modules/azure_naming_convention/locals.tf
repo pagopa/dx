@@ -58,6 +58,7 @@ locals {
     "blob_private_endpoint"            = "blob-pep"
     "queue_private_endpoint"           = "queue-pep"
     "file_private_endpoint"            = "file-pep"
+    "table_private_endpoint"           = "table-pep"
     "eventhub_private_endpoint"        = "evhns-pep"
 
     # Subnets
