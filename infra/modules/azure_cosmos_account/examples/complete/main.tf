@@ -1,5 +1,11 @@
+module "naming_convention" {
+  source = "../../../azure_naming_convention"
+
+  environments = [local.environment]
+}
+
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = module.naming_convention.name.resource_group["1"]
   location = local.environment.location
 }
 
@@ -16,7 +22,7 @@ module "cosmos_db" {
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
+  private_dns_zone_resource_group_name = "${module.naming_convention.project}-network-rg-01"
 
   primary_geo_location = {
     location       = local.environment.location

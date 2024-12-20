@@ -10,14 +10,14 @@ terraform {
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = {
+  environments = [{
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = var.environment.domain
     app_name        = var.environment.app_name
     instance_number = var.environment.instance_number
-  }
+  }]
 }
 
 data "azurerm_subnet" "pep" {
@@ -27,7 +27,7 @@ data "azurerm_subnet" "pep" {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-cosno-${module.naming_convention.suffix}"
+  name     = "${module.naming_convention.prefix}-rg-cosno-${module.naming_convention.suffix["1"]}"
   location = var.environment.location
 }
 
@@ -40,5 +40,5 @@ output "resource_group_name" {
 }
 
 output "pvt_service_connection_name" {
-  value = "${module.naming_convention.prefix}-cosno-pep-${module.naming_convention.suffix}"
+  value = "${module.naming_convention.prefix}-cosno-pep-${module.naming_convention.suffix["1"]}"
 }

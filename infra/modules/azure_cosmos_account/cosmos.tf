@@ -1,5 +1,5 @@
 resource "azurerm_cosmosdb_account" "this" {
-  name                          = "${module.naming_convention.prefix}-cosno-${module.naming_convention.suffix}"
+  name                          = module.naming_convention.name.cosmos_db_nosql["1"]
   location                      = var.environment.location
   resource_group_name           = var.resource_group_name
   offer_type                    = "Standard" # It is a required field that can only be set to Standard
