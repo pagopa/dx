@@ -95,15 +95,15 @@ function get_modules_from_metadata() {
     fi
 }
 
-# Check if 'terraform init' needs to be run
+# Check if 'terraform get' needs to be run
 # Returns 0 (true) if init is needed, 1 (false) if not
-function needs_terraform_init() {
+function needs_terraform_get() {
     local current_modules
     local metadata_modules
     
     # Always need init if modules.json doesn't exist
     if [[ ! -f "$MODULES_METADATA" ]]; then
-        debug "No modules.json found, terraform init needed"
+        debug "No modules.json found, terraform get needed"
         return 0
     fi
 
@@ -130,11 +130,11 @@ function needs_terraform_init() {
 }
 
 # Ensure Terraform modules are initialized
-function ensure_terraform_init() {
-    if needs_terraform_init; then
-        warn "Running terraform init in $(pwd)"
-        if ! terraform init -backend=false -input=false  >/dev/null; then
-            error "Terraform init failed"
+function ensure_terraform_get() {
+    if needs_terraform_get; then
+        warn "Running terraform get in $(pwd)"
+        if ! terraform get >/dev/null; then
+            error "terraform get failed"
             return 1
         fi
     fi
@@ -221,7 +221,7 @@ function process_directory() {
     # Change to target directory for processing
     cd "$target_dir"
     
-    ensure_terraform_init || return 1
+    ensure_terraform_get || return 1
 
     # Check if lock file exists but no registry modules are present
     if [[ -f "$HASHES_FILE" ]] && ! has_registry_modules; then
