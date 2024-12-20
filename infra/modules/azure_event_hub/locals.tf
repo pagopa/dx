@@ -1,6 +1,6 @@
 locals {
   eventhub = {
-    name = "${module.naming_convention.prefix}-evhns-${module.naming_convention.suffix}"
+    name = module.naming_convention.name.eventhub_namespace["1"]
     sku_name = lookup(
       {
         "s" = "Standard",
@@ -16,17 +16,17 @@ locals {
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
     [for c in h.consumers : {
-      hub  = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
+      hub  = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix["1"]}"
       name = c
   }]]) : "${hc.hub}.${hc.name}" => hc }
 
   keys = { for hk in flatten([for h in var.eventhubs :
     [for k in h.keys : {
-      hub = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
+      hub = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix["1"]}"
       key = k
   }]]) : "${hk.hub}.${hk.key.name}" => hk }
 
-  hubs = { for h in var.eventhubs : "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}" => h }
+  hubs = { for h in var.eventhubs : "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix["1"]}" => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name

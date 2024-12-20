@@ -31,12 +31,12 @@ locals {
     "virtual_machine" = "vm"
 
     # Storage
-    "storage_account"        = "st"
-    "blob_storage"           = "blob"
-    "queue_storage"          = "queue"
-    "table_storage"          = "table"
-    "file_storage"           = "file"
-    function_storage_account = "stfn"
+    "storage_account"          = "st"
+    "blob_storage"             = "blob"
+    "queue_storage"            = "queue"
+    "table_storage"            = "table"
+    "file_storage"             = "file"
+    "function_storage_account" = "stfn"
 
     # Networking
     "dns_zone"                    = "dns"
@@ -58,6 +58,7 @@ locals {
     "blob_private_endpoint"            = "blob-pep"
     "queue_private_endpoint"           = "queue-pep"
     "file_private_endpoint"            = "file-pep"
+    "eventhub_private_endpoint"        = "evhns-pep"
 
     # Subnets
     "app_subnet"      = "app-snet"

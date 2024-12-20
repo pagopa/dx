@@ -14,12 +14,12 @@ variable "environment" {
     location        = string
     domain          = optional(string)
     app_name        = string
-    instance_number = string
+    instance_number = number
   })
 
   validation {
-    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-evhns-${var.environment.instance_number}") <= 256
-    error_message = "Azure Event HUB name must contain between 1 and 256 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-evhns-${var.environment.instance_number}\""
+    condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}-evhns-00") <= 256
+    error_message = "Azure Event HUB name must contain between 1 and 256 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}-evhns-00\""
   }
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
