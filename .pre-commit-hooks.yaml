@@ -1,9 +1,14 @@
 - id: lock_modules
   name: Lock Terraform Registry modules
-  description: Create the file that contains terraform registry modules hashes
+  description: 'Locks Terraform module versions and maintains hashes'
   entry: infra/scripts/lock-modules.sh
   language: script
-
+  files: '\.tf$'
+  pass_filenames: false
+  require_serial: true
+  types: [file]
+  exclude: |
+    ^.*/(?:\.terraform|modules|examples|tests)/.*$
 - id: terraform_providers_lock_staged
   name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
   entry: infra/scripts/terraform_lock_precommit.sh
