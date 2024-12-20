@@ -16,7 +16,7 @@ run "setup_tests" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "01"
+      instance_number = 1
     }
   }
 }
@@ -31,7 +31,7 @@ run "function_app_is_correct_plan" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "01"
+      instance_number = 1
     }
 
     tags = {
@@ -91,7 +91,7 @@ run "function_app_is_correct_apply" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "01"
+      instance_number = 1
     }
 
     tags = {

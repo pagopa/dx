@@ -1,7 +1,7 @@
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = local.environment
+  environments = [local.environment]
 }
 
 data "azurerm_subnet" "pep" {
@@ -11,7 +11,7 @@ data "azurerm_subnet" "pep" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = module.naming_convention.name.resource_group["1"]
   location = local.environment.location
 }
 

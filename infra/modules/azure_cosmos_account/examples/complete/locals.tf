@@ -5,18 +5,10 @@ locals {
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
-    instance_number = "01"
+    instance_number = 1
   }
 
-  location_map = {
-    "italynorth"         = "itn"
-    "westeurope"         = "weu"
-    "germanywestcentral" = "gwc"
-    "spaincentral"       = "spc"
-  }
-
-  location_short = lookup(local.location_map, local.environment.location, "itn")
-  project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
+  project = module.naming_convention.project
 
   tags = {
     CreatedBy   = "Terraform"

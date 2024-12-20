@@ -32,7 +32,7 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
 
 # Define security group
 resource "azurerm_network_security_group" "nsg_apim" {
-  name                = "${module.naming_convention.prefix}-apim-nsg-${module.naming_convention.suffix}"
+  name                = module.naming_convention.name.apim_network_security_group["1"]
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   location            = var.environment.location
 

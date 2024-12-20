@@ -11,11 +11,7 @@ module "cosmos_db" {
   }
 
   alerts = {
-    enabled         = true
-    action_group_id = data.azurerm_monitor_action_group.example.id
-    thresholds = {
-      provisioned_throughput_exceeded = 900
-    }
+    enabled = false
   }
 
   tags = local.tags

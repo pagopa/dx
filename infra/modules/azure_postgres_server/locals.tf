@@ -1,7 +1,7 @@
 locals {
   db = {
-    name         = "${module.naming_convention.prefix}-psql-${module.naming_convention.suffix}"
-    replica_name = var.tier == "l" ? "${module.naming_convention.prefix}-psql-replica-${module.naming_convention.suffix}" : null
+    name         = module.naming_convention.name.postgresql["1"]
+    replica_name = var.tier == "l" ? module.naming_convention.name.postgresq_replica["1"] : null
     sku_name = lookup(
       {
         "s" = "B_Standard_B1ms",

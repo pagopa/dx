@@ -19,22 +19,22 @@ locals {
 
   peps = {
     blob = {
-      name     = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
+      name     = module.naming_convention.name.blob_private_endpoint["1"]
       dns_zone = "privatelink.blob.core.windows.net"
     }
 
     file = {
-      name     = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
+      name     = module.naming_convention.name.file_private_endpoint["1"]
       dns_zone = "privatelink.file.core.windows.net"
     }
 
     queue = {
-      name     = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
+      name     = module.naming_convention.name.queue_private_endpoint["1"]
       dns_zone = "privatelink.queue.core.windows.net"
     }
 
     table = {
-      name     = "${module.naming_convention.prefix}-table-pep-${module.naming_convention.suffix}"
+      name     = module.naming_convention.name.table_private_endpoint["1"]
       dns_zone = "privatelink.table.core.windows.net"
     }
   }

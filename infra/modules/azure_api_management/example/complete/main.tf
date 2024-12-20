@@ -1,7 +1,7 @@
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = local.environment
+  environments = [local.environment]
 }
 
 data "azurerm_monitor_action_group" "example" {

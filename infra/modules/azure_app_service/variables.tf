@@ -10,7 +10,7 @@ variable "environment" {
     location        = string
     domain          = optional(string)
     app_name        = string
-    instance_number = string
+    instance_number = number
   })
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
