@@ -40,9 +40,8 @@ locals {
     "function_storage_account" = "stfn"
 
     # Networking
-    "dns_zone"                    = "dns"
     "api_management"              = "apim"
-    "api_management_autoscale"    = "apim"
+    "api_management_autoscale"    = "apim-as"
     "virtual_network"             = "vnet"
     "network_security_group"      = "nsg"
     "apim_network_security_group" = "apim-nsg"
