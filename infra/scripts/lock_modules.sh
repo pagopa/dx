@@ -46,7 +46,7 @@ function info() {
 # Excludes files in .terraform/, examples/, tests/, and modules/ directories
 function get_terraform_files() {
     local -r path="$1"
-    
+
     find "$path" \
         -type f \
         -name '*.tf' \
@@ -60,12 +60,25 @@ function get_terraform_files() {
 # This helps process each Terraform configuration only once
 function get_terraform_dirs() {
     local -r path="${1:-.}"    # Use current directory if no path provided
+    local -r hook_id=$2
+    local -r root_config_dir=$1  # Base directory for pre-commit config
     local -a dirs=()           # Array to store unique directories
     local dir
+
+    # Get exclude regex pattern from .pre-commit-hooks.yaml
+    local -r hook_config_block=$(sed -n "/^- id: $hook_id$/,/^$/p" "$root_config_dir/.pre-commit-hooks.yaml")
+    local -r excluded_dirs=$(awk '$1 == "exclude:" {print $2; exit}' <<< "$hook_config_block")
 
     # Process each Terraform file and extract its directory
     while IFS= read -r file; do
         dir=$(dirname "$file")
+
+        # Skip directories matching the exclusion regex
+        if [[ -n "$excluded_dirs" ]] && echo "$dir" | grep -Eq "$excluded_dirs"; then
+            debug "Skipping excluded directory: $dir"
+            continue
+        fi
+
         # Add directory to array if not already present
         if [[ ! " ${dirs[*]} " =~ " ${dir} " ]]; then
             dirs+=("$dir")
@@ -269,6 +282,8 @@ function main() {
     local -r base_dir="$PWD"          # Store current working directory
     local exit_code=0                 # Track overall script success
     local -a dirs_to_process=()       # Array to store directories to process
+    HOOK_ID=${0##*/}
+    readonly HOOK_ID=${HOOK_ID%%.*}
 
     # Verify all required commands are available
     for cmd in jq terraform tar sha256sum; do
@@ -286,7 +301,7 @@ function main() {
         if [[ -n "$dir" ]]; then
             dirs_to_process+=("$dir")
         fi
-    done < <(get_terraform_dirs "$base_dir")
+    done < <(get_terraform_dirs "$base_dir" "$HOOK_ID")
 
     # Exit early if no directories found
     if [[ ${#dirs_to_process[@]} -eq 0 ]]; then
