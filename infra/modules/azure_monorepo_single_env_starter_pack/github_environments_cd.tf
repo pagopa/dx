@@ -3,8 +3,8 @@ resource "github_repository_environment" "infra_prod_cd" {
   repository  = github_repository.this.name
 
   deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
+    protected_branches     = false
+    custom_branch_policies = true
   }
 
   reviewers {
@@ -21,8 +21,8 @@ resource "github_repository_environment" "app_prod_cd" {
   repository  = github_repository.this.name
 
   deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
+    protected_branches     = false
+    custom_branch_policies = true
   }
 
   reviewers {
@@ -39,8 +39,8 @@ resource "github_repository_environment" "opex_prod_cd" {
   repository  = github_repository.this.name
 
   deployment_branch_policy {
-    protected_branches     = true
-    custom_branch_policies = false
+    protected_branches     = false
+    custom_branch_policies = true
   }
 
   reviewers {
