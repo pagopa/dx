@@ -6,8 +6,8 @@ This module generates output values that follow the naming conventions used in D
 - `env_short`: A short identifier for the environment (e.g., “d”, "p", "u").
 - `location`: The Azure region or location (e.g. italynorth, westeurope, ...).
 - `domain`: (Optional) The domain name to include in the naming convention.
-- `app_name`: The application name or identifier.
-- `instance_number`: The instance number that can be between 1 and 99.
+- `app_name`: The unique name or identifier for the resource (e.g., function, storage, app). This is used to distinguish resources within the same environment or module.
+- `instance_number`: A numeric suffix (between 1 and 99) used to differentiate multiple instances of the same resource.
 
 ## Outputs
 
