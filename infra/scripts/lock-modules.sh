@@ -42,40 +42,6 @@ function info() {
     fi
 }
 
-# Find all Terraform files (.tf) in the given path
-# Excludes files in .terraform/, examples/, tests/, and modules/ directories
-function get_terraform_files() {
-    local -r path="$1"
-    
-    find "$path" \
-        -type f \
-        -name '*.tf' \
-        -not -path "**/.terraform/*" \
-        -not -path "**/examples/*" \
-        -not -path "**/tests/*" \
-        -not -path "**/modules/*"
-}
-
-# Get unique directories containing Terraform files
-# This helps process each Terraform configuration only once
-function get_terraform_dirs() {
-    local -r path="${1:-.}"    # Use current directory if no path provided
-    local -a dirs=()           # Array to store unique directories
-    local dir
-
-    # Process each Terraform file and extract its directory
-    while IFS= read -r file; do
-        dir=$(dirname "$file")
-        # Add directory to array if not already present
-        if [[ ! " ${dirs[*]} " =~ " ${dir} " ]]; then
-            dirs+=("$dir")
-        fi
-    done < <(get_terraform_files "$path")
-
-    # Print unique directories, handling empty array case
-    printf '%s\n' "${dirs[@]+"${dirs[@]}"}"
-}
-
 # Extract module sources from Terraform files in current directory
 function get_modules_from_tf_files() {
     # Step 1: Find lines containing 'source =' in all .tf files
@@ -268,7 +234,11 @@ function process_directory() {
 function main() {
     local -r base_dir="$PWD"          # Store current working directory
     local exit_code=0                 # Track overall script success
-    local -a dirs_to_process=()       # Array to store directories to process
+    local -a dirs_to_process=("$@")   # Array to store directories to process
+
+    dirs_to_process=($(for file in "${dirs_to_process[@]}"; do
+                    dirname "$file"
+                done | sort -u))
 
     # Verify all required commands are available
     for cmd in jq terraform tar sha256sum; do
@@ -282,11 +252,11 @@ function main() {
     
     # Build array of directories to process
     # Using while read instead of mapfile for better compatibility
-    while IFS= read -r dir; do
-        if [[ -n "$dir" ]]; then
-            dirs_to_process+=("$dir")
-        fi
-    done < <(get_terraform_dirs "$base_dir")
+    # while IFS= read -r dir; do
+    #     if [[ -n "$dir" ]]; then
+    #         dirs_to_process+=("$dir")
+    #     fi
+    # done < <(get_terraform_dirs "$base_dir")
 
     # Exit early if no directories found
     if [[ ${#dirs_to_process[@]} -eq 0 ]]; then
