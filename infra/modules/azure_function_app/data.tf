@@ -18,6 +18,13 @@ data "azurerm_private_dns_zone" "storage_account_queue" {
   resource_group_name = local.private_dns_zone.resource_group_name
 }
 
+data "azurerm_private_dns_zone" "storage_account_table" {
+  count = local.function_app.has_durable
+
+  name                = "privatelink.table.core.windows.net"
+  resource_group_name = local.private_dns_zone.resource_group_name
+}
+
 data "azurerm_private_dns_zone" "function_app" {
   name                = "privatelink.azurewebsites.net"
   resource_group_name = local.private_dns_zone.resource_group_name
