@@ -167,6 +167,9 @@ jobs:
               local module_path="$1"
               tar --exclude="$module_path/.*" -cf - "$module_path" | sha256sum | awk '{ print $1 }'
           }
+          
+          missing_modules=()
+          changed_modules=()
 
           # Iterate over modules listed in the metadata that were sourced from the Terraform registry
           jq -r --arg registry_url "$REGISTRY_URL" \
@@ -183,23 +186,39 @@ jobs:
                   previous_hash=$(jq -r --arg module "$module_name" '.[$module]' "$HASHES_FILE")
 
                   if [ "$previous_hash" = "null" ] || [ -z "$previous_hash" ]; then
-                      # The hash for the current module is not found
-                      echo "Error: the hash for module $module_name is missing in $HASHES_FILE. Please ensure it exists and is up to date."
-                      exit 1
+                      # Add to missing modules array
+                      missing_modules+=("$module_name")
                   else
                       # Compare the hashes
                       if [ "$previous_hash" == "$new_hash" ]; then
                           echo "The module $module_name has not changed."
                       else
-                          echo "The module $module_name has changed!"
-                          # Exit with an error if the module has changed
-                          exit 1
+                          changed_modules+=("$module_name")
                       fi
                   fi
               else
                   echo "Module path $module_path not found."
               fi
-          done
+          done < <(jq -r --arg registry_url "$REGISTRY_URL" \
+              '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
+              "$MODULES_METADATA")
+
+          # Check if we found any issues and report them
+          if [ ${#missing_modules[@]} -gt 0 ] || [ ${#changed_modules[@]} -gt 0 ]; then
+              echo -e "\nSummary of issues found:"
+              
+              if [ ${#missing_modules[@]} -gt 0 ]; then
+                  echo -e "\nModules missing from lock file:"
+                  printf '%s\n' "${missing_modules[@]}"
+              fi
+              
+              if [ ${#changed_modules[@]} -gt 0 ]; then
+                  echo -e "\nModules with changed hashes:"
+                  printf '%s\n' "${changed_modules[@]}"
+              fi
+              
+              exit 1
+          fi
 
 
       # Run Terraform Plan
