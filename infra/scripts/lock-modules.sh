@@ -99,7 +99,8 @@ function needs_terraform_get() {
 function ensure_terraform_get() {
     if needs_terraform_get; then
         warn "Running terraform get in $(pwd)"
-        if ! terraform get >/dev/null; then
+        rm -rf "$MODULES_DIR" 2>/dev/null || true
+        if ! terraform get -update >/dev/null; then
             error "terraform get failed"
             return 1
         fi
@@ -111,7 +112,7 @@ function ensure_terraform_get() {
 function calculate_hash() {
     local -r module_path="$1"
     # Create tar archive excluding hidden files, then calculate SHA256 hash
-    tar --exclude="$module_path/.*" -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+    tar --exclude='$module_path/.*' -cf - "$module_path" | sha256sum | awk '{ print $1 }'
 }
 
 # Initialize or create the hashes file if it doesn't exist
@@ -188,10 +189,11 @@ function process_directory() {
     
     ensure_terraform_get || return 1
 
+    rm -f "$HASHES_FILE"
+
     # Check if lock file exists but no registry modules are present
     if [[ -f "$HASHES_FILE" ]] && ! has_registry_modules; then
         info "No registry modules found but lock file exists, removing it"
-        rm -f "$HASHES_FILE"
         cd "$base_dir"
         return 0
     fi
