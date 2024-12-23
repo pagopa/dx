@@ -74,9 +74,9 @@ variable "repository" {
     infra_cd_policy_branches = optional(set(string), ["main"])
     opex_cd_policy_branches  = optional(set(string), ["main"])
     app_cd_policy_branches   = optional(set(string), ["main"])
-    infra_cd_policy_tags     = optional(set(string))
-    opex_cd_policy_tags      = optional(set(string))
-    app_cd_policy_tags       = optional(set(string))
+    infra_cd_policy_tags     = optional(set(string), [])
+    opex_cd_policy_tags      = optional(set(string), [])
+    app_cd_policy_tags       = optional(set(string), [])
   })
 
   description = "Information about this repository"
