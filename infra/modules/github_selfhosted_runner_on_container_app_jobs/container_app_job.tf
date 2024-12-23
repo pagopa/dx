@@ -31,7 +31,7 @@ resource "azurerm_container_app_job" "github_runner" {
           repos                     = var.repository.name
           targetWorkflowQueueLength = "1"
           github-runner             = "https://api.github.com"
-        }, var.container_app_environment.use_labels ? { labels = coalesce(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]) } : {})
+        }, var.container_app_environment.use_labels ? { labels = coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]) } : {})
 
         authentication {
           secret_name       = var.key_vault.secret_name
@@ -59,7 +59,7 @@ resource "azurerm_container_app_job" "github_runner" {
         for_each = var.container_app_environment.use_labels ? [1] : []
         content {
           name  = "LABELS"
-          value = coalesce(var.container_app_environment.override_labels, [local.env[var.environment.env_short]])
+          value = coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]])
         }
       }
 
