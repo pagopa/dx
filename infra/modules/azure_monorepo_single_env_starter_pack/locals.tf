@@ -30,10 +30,10 @@ locals {
   }
 
   tf_storage_account = {
-    id = provider::azurerm::normalise_resource_id("subscriptions/${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
+    id = provider::azurerm::normalise_resource_id("${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
 
-  parsed_subscription_id = provider::azurerm::parse_resource_id("subscriptions/${var.subscription_id}")
+  parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
 
   repo_secrets = {
     "ARM_TENANT_ID"       = var.tenant_id
