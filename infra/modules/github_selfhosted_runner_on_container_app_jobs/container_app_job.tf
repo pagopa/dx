@@ -59,7 +59,7 @@ resource "azurerm_container_app_job" "github_runner" {
         for_each = var.container_app_environment.use_labels ? [1] : []
         content {
           name  = "LABELS"
-          value = [local.env[var.environment.env_short]]
+          value = coalesce(var.container_app_environment.override_labels, [local.env[var.environment.env_short]])
         }
       }
 
