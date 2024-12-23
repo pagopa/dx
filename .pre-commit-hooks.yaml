@@ -4,10 +4,8 @@
   entry: infra/scripts/lock-modules.sh
   language: script
   files: '\.tf$'
-  pass_filenames: false
+  pass_filenames: true
   require_serial: true
-  exclude: |
-    ^.*/(?:\.terraform|modules|examples|tests)/.*$
 - id: terraform_providers_lock_staged
   name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
   entry: infra/scripts/terraform_lock_precommit.sh
