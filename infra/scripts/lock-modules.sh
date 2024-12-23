@@ -111,7 +111,7 @@ function ensure_terraform_get() {
 function calculate_hash() {
     local -r module_path="$1"
     # Create tar archive excluding hidden files, then calculate SHA256 hash
-    tar --exclude=.* -cvf - "$module_path" | sha256sum | awk '{ print $1 }'
+    tar --exclude="$module_path/.*" -cf - "$module_path" | sha256sum | awk '{ print $1 }'
 }
 
 # Initialize or create the hashes file if it doesn't exist
@@ -135,7 +135,6 @@ function process_module() {
 
     # Get previous hash from hashes file
     previous_hash=$(jq -r --arg module "$module_name" '.[$module] // "none"' "${HASHES_FILE:-/dev/null}")
-
     # Update hash in hashes file
     jq --arg module "$module_name" --arg hash "$new_hash" '.[$module] = $hash' \
         "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
@@ -212,6 +211,7 @@ function process_directory() {
                 local module_path="$MODULES_DIR/$module_key"
                 # Process module if directory exists
                 if [[ -d "$module_path" ]]; then
+                    info "Processing module: $module_path with version $(jq -r '.version' ${module_path}/package.json)"
                     if ! process_module "$module_path"; then
                         changes_found=1
                     fi
