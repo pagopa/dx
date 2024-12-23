@@ -32,6 +32,10 @@ module "naming_convention_gh_runner" {
   }
 }
 
+module "custom_roles" {
+  source = "./_modules/custom_roles"
+}
+
 #------------------------#
 # COMMON RESOURCE GROUPS #
 #------------------------#
