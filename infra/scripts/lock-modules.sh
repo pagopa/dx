@@ -122,7 +122,6 @@ function init_hashes_file() {
     if [[ ! -f "$hashes_file" ]]; then
         info "Creating new hashes file"
         echo "{}" > "$hashes_file"     # Create empty JSON object
-        git add "$hashes_file" 2>/dev/null || true  # Track file in git
     fi
 }
 
@@ -144,11 +143,9 @@ function process_module() {
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
         info "Module $module_name: Initial hash created"
-        git add "$HASHES_FILE" 2>/dev/null || true
         return 1
     elif [[ "$previous_hash" != "$new_hash" ]]; then
         info "Module $module_name: Changes detected, updating hash"
-        git add "$HASHES_FILE" 2>/dev/null || true
         return 1
     else
         debug "Module $module_name: No changes detected"
