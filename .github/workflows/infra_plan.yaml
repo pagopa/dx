@@ -165,7 +165,7 @@ jobs:
 
           calculate_hash() {
               local module_path="$1"
-              tar --exclude="$module_path/.*" -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+              find "$module_path" -type f -not -path "$module_path/.*" | sort | xargs sha256sum | awk '{print $1}' | sha256sum | awk '{print $1}'
           }
 
           # Iterate over modules listed in the metadata that were sourced from the Terraform registry

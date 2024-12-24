@@ -112,7 +112,8 @@ function ensure_terraform_get() {
 function calculate_hash() {
     local -r module_path="$1"
     # Create tar archive excluding hidden files, then calculate SHA256 hash
-    tar --exclude='$module_path/.*' -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+    # tar --exclude='$module_path/.*' -cf - "$module_path" | sha256sum | awk '{ print $1 }'
+    find "$module_path" -type f -not -path "$module_path/.*" | sort | xargs sha256sum | awk '{print $1}' | sha256sum | awk '{print $1}'
 }
 
 # Initialize or create the hashes file if it doesn't exist
