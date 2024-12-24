@@ -135,10 +135,12 @@ function process_module() {
     init_hashes_file "$HASHES_FILE"
 
     # Get previous hash from hashes file
-    previous_hash=$(jq -r --arg module "$module_name" '.[$module] // "none"' "${HASHES_FILE:-/dev/null}")
+    previous_hash=$(jq -r --arg module "$module_name" '.[$module]' "${HASHES_FILE:-/dev/null}")
+
     # Update hash in hashes file
     jq --arg module "$module_name" --arg hash "$new_hash" '.[$module] = $hash' \
-        "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+    "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+
     
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
