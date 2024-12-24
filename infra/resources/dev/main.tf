@@ -52,3 +52,29 @@ module "core" {
 
   tags = local.tags
 }
+
+module "dx-azure-naming-convention" {
+  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  version = "0.0.3"
+
+  environment = {
+    prefix          = "a"
+    env_short       = "a"
+    location        = "a"
+    app_name        = "a"
+    instance_number = "a"
+  }
+}
+
+module "dx-azure-naming-conventionz" {
+  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  version = "0.0.1"
+
+  environment = {
+    prefix          = "a"
+    env_short       = "a"
+    location        = "a"
+    app_name        = "a"
+    instance_number = "a"
+  }
+}
