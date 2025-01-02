@@ -133,7 +133,8 @@ function process_module() {
     local previous_hash
     
     init_hashes_file "$HASHES_FILE"
-    info $(jq --version)
+    jq_version=$(jq --version 2>&1)
+    info "jq version: $jq_version"
 
     # Get previous hash from hashes file
     previous_hash=$(jq -r --arg module "$module_name" '.[$module] // "none"' "${HASHES_FILE:-/dev/null}")
