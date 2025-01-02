@@ -87,6 +87,6 @@ jobs:
 
           echo "Start pre-commit on all files"
 
-          pre-commit run \
+          PRE_COMMIT_VERBOSE=1 pre-commit run \
             --color=always \
             --all-files
