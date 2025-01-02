@@ -73,7 +73,7 @@ jobs:
           echo "- FROM  Base ref: origin/${{ github.event.pull_request.base.ref }}"
           echo "- TO    Head ref: origin/${{ github.event.pull_request.head.ref }}"
 
-          PRE_COMMIT_VERBOSE=1 pre-commit run \
+          pre-commit run \
             --color=always \
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
