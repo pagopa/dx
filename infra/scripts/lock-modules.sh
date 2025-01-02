@@ -152,13 +152,6 @@ function process_directory() {
     # Initialize hashes file if it doesn't exist
     init_hashes_file "$HASHES_FILE"
 
-    # Check if lock file exists but no registry modules are present
-    if ! has_registry_modules; then
-        info "No registry modules found but lock file exists, removing it"
-        cd "$base_dir"
-        return 0
-    fi
-
     # Only proceed if registry modules are found
     if ! has_registry_modules; then
         info "No registry modules found in $target_dir, skipping"
@@ -184,6 +177,7 @@ function process_directory() {
                 if ! grep -q "^${existing_key}$" "$temp_keys_file"; then
                     info "Removing old module key: $existing_key"
                     jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+                    changes_found=1
                 fi
             done
         fi
@@ -232,14 +226,6 @@ function main() {
     done
 
     info "Detecting Terraform directories..."
-    
-    # Build array of directories to process
-    # Using while read instead of mapfile for better compatibility
-    # while IFS= read -r dir; do
-    #     if [[ -n "$dir" ]]; then
-    #         dirs_to_process+=("$dir")
-    #     fi
-    # done < <(get_terraform_dirs "$base_dir")
 
     # Exit early if no directories found
     if [[ ${#dirs_to_process[@]} -eq 0 ]]; then
