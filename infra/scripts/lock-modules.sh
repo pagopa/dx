@@ -133,13 +133,11 @@ function process_module() {
     local previous_hash
     
     init_hashes_file "$HASHES_FILE"
-    jq_version=$(jq --version 2>&1)
-    info "jq version: $jq_version"
 
     # Get previous hash from hashes file
-    previous_hash=$(jq -r --arg module "$module_name" '.[$module] // "none"' "${HASHES_FILE:-/dev/null}")
+    previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name] // "none"' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
-    jq --arg module "$module_name" --arg hash "$new_hash" '.[$module] = $hash' \
+    jq --arg module_name "$module_name" --arg new_hash "$new_hash" '.[$module_name] = $new_hash' \
         "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
     
     # Handle hash changes
