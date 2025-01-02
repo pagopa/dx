@@ -44,10 +44,9 @@ module "azure_storage_account" {
   private_dns_zone_resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
 
   customer_managed_key = {
-    enabled                   = true
-    type                      = "kv"
-    user_assigned_identity_id = azurerm_user_assigned_identity.example.id
-    key_vault_key_id          = "your-key-vault-key-id"
+    enabled      = true
+    type         = "kv"
+    key_vault_id = "your-kv-id"
   }
 
   blob_features = {
