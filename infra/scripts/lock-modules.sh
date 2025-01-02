@@ -61,49 +61,13 @@ function get_modules_from_metadata() {
     fi
 }
 
-# Check if 'terraform get' needs to be run
-# Returns 0 (true) if init is needed, 1 (false) if not
-function needs_terraform_get() {
-    local current_modules
-    local metadata_modules
-    
-    # Always need init if modules.json doesn't exist
-    if [[ ! -f "$MODULES_METADATA" ]]; then
-        debug "No modules.json found, terraform get needed"
-        return 0
-    fi
-
-    # Get current module sources from .tf files
-    current_modules=$(get_modules_from_tf_files)
-    if [[ -z "$current_modules" ]]; then
-        debug "No modules found in .tf files"
-        return 1
-    fi
-
-    # Get cached module sources from modules.json
-    metadata_modules=$(get_modules_from_metadata)
-    
-    # Compare current and cached modules
-    if [[ "$current_modules" != "$metadata_modules" ]]; then
-        debug "Module changes detected"
-        debug "Current modules: $current_modules"
-        debug "Cached modules: $metadata_modules"
-        return 0
-    fi
-
-    debug "No module changes detected"
-    return 1
-}
-
 # Ensure Terraform modules are initialized
 function ensure_terraform_get() {
-    if needs_terraform_get; then
-        warn "Running terraform get in $(pwd)"
-        rm -rf "$MODULES_DIR" 2>/dev/null || true
-        if ! terraform get -update >/dev/null; then
-            error "terraform get failed"
-            return 1
-        fi
+    warn "Running terraform get in $(pwd)"
+    rm -rf "$MODULES_DIR" 2>/dev/null || true
+    if ! terraform get -update >/dev/null; then
+        error "terraform get failed"
+        return 1
     fi
     return 0
 }
@@ -132,8 +96,6 @@ function process_module() {
     local -r new_hash=$(calculate_hash "$module_path")
     local previous_hash
     
-    init_hashes_file "$HASHES_FILE"
-
     # Get previous hash from hashes file
     previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name] // "none"' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
@@ -187,10 +149,11 @@ function process_directory() {
     
     ensure_terraform_get || return 1
 
-    rm -f "$HASHES_FILE"
+    # Initialize hashes file if it doesn't exist
+    init_hashes_file "$HASHES_FILE"
 
     # Check if lock file exists but no registry modules are present
-    if [[ -f "$HASHES_FILE" ]] && ! has_registry_modules; then
+    if ! has_registry_modules; then
         info "No registry modules found but lock file exists, removing it"
         cd "$base_dir"
         return 0
@@ -203,9 +166,29 @@ function process_directory() {
         return 0
     fi
 
+    init_hashes_file "$HASHES_FILE"
+    
+    # Create a temporary file to store current module keys
+    local temp_keys_file=$(mktemp)
+    
     # Process modules if metadata file exists
     if [[ -f "$MODULES_METADATA" ]]; then
-        # Read each module key from the metadata file
+        # Read each module key from the metadata file and store in temp file
+        jq -r --arg registry_url "$REGISTRY_URL" \
+            '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
+            "$MODULES_METADATA" > "$temp_keys_file" 2>/dev/null
+        
+        # Remove any keys from lock file that aren't in current modules
+        if [[ -f "$HASHES_FILE" ]]; then
+            jq -r 'keys[]' "$HASHES_FILE" | while read -r existing_key; do
+                if ! grep -q "^${existing_key}$" "$temp_keys_file"; then
+                    info "Removing old module key: $existing_key"
+                    jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+                fi
+            done
+        fi
+        
+        # Process current modules
         while IFS= read -r module_key; do
             if [[ -n "$module_key" ]]; then
                 local module_path="$MODULES_DIR/$module_key"
