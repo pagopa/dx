@@ -5,22 +5,22 @@ locals {
       var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
       var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
     ) : []
-    name = "${module.naming_convention.prefix}-func-snet-${module.naming_convention.suffix}"
+    name = module.naming_convention.name.function_subnet["1"]
   }
 
   app_service_plan = {
     enable = var.app_service_plan_id == null
-    name   = "${module.naming_convention.prefix}-asp-${module.naming_convention.suffix}"
+    name   = module.naming_convention.name.app_service_plan["1"]
   }
 
   function_app = {
-    name                   = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}"
+    name                   = module.naming_convention.name.function_app["1"]
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
-    pep_sites              = "${module.naming_convention.prefix}-func-pep-${module.naming_convention.suffix}"
-    pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
-    alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
+    pep_sites              = module.naming_convention.name.function_private_endpoint["1"]
+    pep_sites_staging      = module.naming_convention.name.function_slot_private_endpoint["1"]
+    alert                  = "[${module.naming_convention.name.function_app["1"]}] Health Check Failed"
     worker_process_count   = local.worker_process_count_mapping[local.tier]
   }
 
@@ -34,11 +34,11 @@ locals {
 
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
-    name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
-    pep_blob_name    = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
-    pep_file_name    = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
-    pep_queue_name   = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
-    alert            = "[${replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", "")}] Low Availability"
+    name             = module.naming_convention.name.function_storage_account["1"]
+    pep_blob_name    = module.naming_convention.name.blob_private_endpoint["1"]
+    pep_file_name    = module.naming_convention.name.file_private_endpoint["1"]
+    pep_queue_name   = module.naming_convention.name.queue_private_endpoint["1"]
+    alert            = "[${module.naming_convention.name.function_storage_account["1"]}] Low Availability"
   }
 
   private_dns_zone = {

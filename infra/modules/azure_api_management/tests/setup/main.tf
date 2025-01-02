@@ -10,14 +10,14 @@ terraform {
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
-  environment = {
+  environments = [{
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = var.environment.domain
     app_name        = var.environment.app_name
     instance_number = var.environment.instance_number
-  }
+  }]
 }
 
 data "azurerm_virtual_network" "vnet" {
@@ -26,14 +26,14 @@ data "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "${module.naming_convention.project}-apim-snet-test-${module.naming_convention.suffix}"
+  name                 = "${module.naming_convention.project}-apim-snet-test-${module.naming_convention.suffix["1"]}"
   virtual_network_name = data.azurerm_virtual_network.vnet.name
   resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
   address_prefixes     = ["10.50.250.0/24"]
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-apim-${module.naming_convention.suffix}"
+  name     = "${module.naming_convention.prefix}-rg-apim-${module.naming_convention.suffix["1"]}"
   location = var.environment.location
 }
 
