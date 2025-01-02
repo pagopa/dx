@@ -16,6 +16,10 @@ locals {
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
+    command_line = {
+      node = null
+      java = "java -jar /home/site/wwwroot/app.jar --server.port=80"
+    }
   }
 
   app_service_slot = {
