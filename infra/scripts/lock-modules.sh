@@ -151,15 +151,6 @@ function process_directory() {
 
     # Initialize hashes file if it doesn't exist
     init_hashes_file "$HASHES_FILE"
-
-    # Only proceed if registry modules are found
-    if ! has_registry_modules; then
-        info "No registry modules found in $target_dir, skipping"
-        cd "$base_dir"
-        return 0
-    fi
-
-    init_hashes_file "$HASHES_FILE"
     
     # Create a temporary file to store current module keys
     local temp_keys_file=$(mktemp)
@@ -180,6 +171,13 @@ function process_directory() {
                     changes_found=1
                 fi
             done
+        fi
+
+        # Only proceed if registry modules are found
+        if ! has_registry_modules; then
+            info "No registry modules found in $target_dir, skipping"
+            cd "$base_dir"
+            return 0
         fi
         
         # Process current modules
