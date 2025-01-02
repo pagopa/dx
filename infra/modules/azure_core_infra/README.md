@@ -43,6 +43,7 @@ module "core" {
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
+| <a name="module_custom_roles"></a> [custom\_roles](#module\_custom\_roles) | ./_modules/custom_roles | n/a |
 | <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
