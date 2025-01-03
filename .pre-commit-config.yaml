@@ -1,4 +1,15 @@
 repos:
+  - repo: local
+    hooks:
+      - id: lock_modules
+        name: Lock Terraform Registry modules
+        description: 'Locks Terraform module versions and maintains hashes'
+        entry: infra/scripts/lock-modules.sh
+        language: script
+        files: '\.tf$'
+        exclude: ^.*\/modules\/.*
+        pass_filenames: true
+        require_serial: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:
