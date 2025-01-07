@@ -9,6 +9,8 @@ locals {
     secret_name = "personal-access-token"
   }
 
+  has_apim = var.apim_id != null ? 1 : 0
+
   # %s is replaced by `ci` or `cd`
   ids = {
     #e.g. io-p-itn-ipatente-app-github-cd-id-01

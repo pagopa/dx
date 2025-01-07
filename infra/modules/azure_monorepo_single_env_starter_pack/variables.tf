@@ -41,7 +41,8 @@ variable "pep_vnet_id" {
 
 variable "apim_id" {
   type        = string
-  description = "ID of the APIM instance"
+  description = "(Optional) ID of the APIM instance"
+  default     = null
 }
 
 variable "dns_zone_resource_group_id" {

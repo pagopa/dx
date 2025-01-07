@@ -110,6 +110,8 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
 }
 
 resource "azurerm_role_assignment" "infra_cd_apim_service_contributor" {
+  count = local.has_apim
+
   scope                = var.apim_id
   role_definition_name = "API Management Service Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id

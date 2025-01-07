@@ -100,7 +100,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_apim_id"></a> [apim\_id](#input\_apim\_id) | ID of the APIM instance | `string` | n/a | yes |
+| <a name="input_apim_id"></a> [apim\_id](#input\_apim\_id) | (Optional) ID of the APIM instance | `string` | `null` | no |
 | <a name="input_dns_zone_resource_group_id"></a> [dns\_zone\_resource\_group\_id](#input\_dns\_zone\_resource\_group\_id) | Id of the resource group holding public DNS zone | `string` | n/a | yes |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | Azure Entra Id groups to give role to | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
@@ -117,5 +117,7 @@
 
 | Name | Description |
 |------|-------------|
+| <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | n/a |
+| <a name="output_repository"></a> [repository](#output\_repository) | n/a |
 | <a name="output_resource_group"></a> [resource\_group](#output\_resource\_group) | n/a |
 <!-- END_TF_DOCS -->

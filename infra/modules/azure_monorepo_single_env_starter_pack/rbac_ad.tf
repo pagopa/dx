@@ -22,6 +22,8 @@ resource "azurerm_role_assignment" "admins_vnet_network_contributor" {
 }
 
 resource "azurerm_role_assignment" "admins_apim_service_contributor" {
+  count = local.has_apim
+
   scope                = var.apim_id
   role_definition_name = "API Management Service Contributor"
   principal_id         = var.entraid_groups.admins_object_id
@@ -57,6 +59,8 @@ resource "azurerm_role_assignment" "devs_group_tf_st" {
 }
 
 resource "azurerm_role_assignment" "devs_apim_service_contributor" {
+  count = local.has_apim
+
   scope                = var.apim_id
   role_definition_name = "API Management Service Contributor"
   principal_id         = var.entraid_groups.devs_object_id
