@@ -9,10 +9,6 @@ locals {
     zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
     is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
     always_on              = local.tier == "xs" ? false : true
-    command_line = {
-      node = null
-      java = "java -jar /home/site/wwwroot/app.jar --server.port=80"
-    }
   }
 
   application_insights = {
