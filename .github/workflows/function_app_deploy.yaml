@@ -31,6 +31,16 @@ on:
         type: boolean
         required: false
         default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -101,7 +111,10 @@ jobs:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
+    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
+    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
+    # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write

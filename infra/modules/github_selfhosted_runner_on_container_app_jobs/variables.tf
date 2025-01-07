@@ -35,6 +35,7 @@ variable "container_app_environment" {
     min_instances               = optional(number, 0)
     max_instances               = optional(number, 30)
     use_labels                  = optional(bool, false)
+    override_labels             = optional(list(string), [])
     cpu                         = optional(number, 0.5)
     memory                      = optional(string, "1Gi")
   })
