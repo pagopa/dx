@@ -16,10 +16,16 @@ output "app_service" {
       id           = azurerm_linux_web_app.this.id
       name         = azurerm_linux_web_app.this.name
       principal_id = azurerm_linux_web_app.this.identity[0].principal_id
+      pep          = {
+        record_sets = azurerm_private_endpoint.app_service_sites.private_dns_zone_configs.record_sets
+      }
       slot = {
         id           = try(azurerm_linux_web_app_slot.this[0].id, null)
         name         = try(azurerm_linux_web_app_slot.this[0].name, null)
         principal_id = try(azurerm_linux_web_app_slot.this[0].identity[0].principal_id, null)
+        pep = {
+          record_sets  = try(azurerm_private_endpoint.staging_app_service_sites[0].private_dns_zone_configs.record_sets, null)
+        }
       }
     }
   }
