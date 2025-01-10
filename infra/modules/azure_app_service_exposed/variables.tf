@@ -104,3 +104,9 @@ variable "pm2_startup_file_name" {
   default     = null
   description = "(Optional) Use this variable to enable PM2. The specified file is used as PM2 process entry point"
 }
+
+variable "startup_command" {
+  type        = string
+  default     = ""
+  description = "(Optional) The PM2 file used as PM2 process entry point"
+}

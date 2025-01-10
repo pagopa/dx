@@ -9,7 +9,10 @@ locals {
     zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
     is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
     always_on              = local.tier == "xs" ? false : true
-    command_line           = var.pm2_startup_file_name == null ? null : "pm2 start ${var.pm2_startup_file_name} -i max --no-daemon"
+    startup_command = (var.stack == "node"
+      ? (var.startup_command == "" ? "pm2 start index.js -i max --no-daemon" : var.startup_command)
+      : (var.stack == "java" && var.startup_command == "" ? null : var.startup_command)
+    )
   }
 
   application_insights = {
