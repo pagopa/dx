@@ -76,7 +76,7 @@ variable "java_version" {
 variable "startup_command" {
   type        = string
   default     = ""
-  description = "(Optional) The PM2 file used as PM2 process entry point"
+  description = "(Optional) Override AppService startup command. If using node, the default value uses PM2"
 }
 
 variable "application_insights_sampling_percentage" {

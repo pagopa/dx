@@ -39,7 +39,7 @@ This module is used to create an Azure App Service, allowing it to be configured
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group to deploy resources to | `string` | n/a | yes |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | Staging slot application settings | `map(string)` | `{}` | no |
 | <a name="input_stack"></a> [stack](#input\_stack) | n/a | `string` | `"node"` | no |
-| <a name="input_startup_command"></a> [startup\_command](#input\_startup\_command) | (Optional) The PM2 file used as PM2 process entry point | `string` | `""` | no |
+| <a name="input_startup_command"></a> [startup\_command](#input\_startup\_command) | (Optional) Override AppService startup command. If using node, the default value uses PM2 | `string` | `""` | no |
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | (Optional) A list of application setting names that are not swapped between slots | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on workload. Allowed values are 'xs', 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility. | `string` | `"l"` | no |
