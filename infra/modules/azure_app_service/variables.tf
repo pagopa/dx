@@ -73,6 +73,12 @@ variable "java_version" {
   description = "Java version to use"
 }
 
+variable "startup_command" {
+  type        = string
+  default     = ""
+  description = "(Optional) The PM2 file used as PM2 process entry point"
+}
+
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
@@ -128,10 +134,4 @@ variable "subnet_service_endpoints" {
   })
   description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
   default     = null
-}
-
-variable "startup_command" {
-  type        = string
-  default     = ""
-  description = "(Optional) The PM2 file used as PM2 process entry point"
 }

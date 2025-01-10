@@ -76,6 +76,12 @@ variable "java_version" {
   description = "Java version to use"
 }
 
+variable "startup_command" {
+  type        = string
+  default     = ""
+  description = "(Optional) The PM2 file used as PM2 process entry point"
+}
+
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
@@ -97,16 +103,4 @@ variable "sticky_app_setting_names" {
   type        = list(string)
   description = "(Optional) A list of application setting names that are not swapped between slots"
   default     = []
-}
-
-variable "pm2_startup_file_name" {
-  type        = string
-  default     = null
-  description = "(Optional) Use this variable to enable PM2. The specified file is used as PM2 process entry point"
-}
-
-variable "startup_command" {
-  type        = string
-  default     = ""
-  description = "(Optional) The PM2 file used as PM2 process entry point"
 }
