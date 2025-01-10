@@ -21,7 +21,7 @@ resource "azurerm_linux_web_app_slot" "this" {
     health_check_eviction_time_in_min = 2
     ip_restriction_default_action     = "Deny"
 
-    app_command_line = local.app_service.command_line
+    app_command_line = local.app_service.startup_command
 
     application_stack {
       node_version        = var.stack == "node" ? "${var.node_version}-lts" : null

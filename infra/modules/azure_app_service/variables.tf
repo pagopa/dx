@@ -130,8 +130,8 @@ variable "subnet_service_endpoints" {
   default     = null
 }
 
-variable "pm2_startup_file_name" {
+variable "startup_command" {
   type        = string
-  default     = null
-  description = "(Optional) Use this variable to enable PM2. The specified file is used as PM2 process entry point"
+  default     = ""
+  description = "(Optional) The PM2 file used as PM2 process entry point"
 }
