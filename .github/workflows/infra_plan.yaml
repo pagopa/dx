@@ -122,7 +122,7 @@ jobs:
           terraform init
 
       - name: Check terraform registry modules hashes
-        uses: ./.github/workflows/static_analysis.yaml
+        uses: pagopa/dx/.github/workflows/static_analysis.yaml@fix-pre-commit-lock
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
           pre_commit_tf_tag: "v1.96.2@sha256:01f870b7689b5a09c1a370914fcddcac42c4b6478c9d369e1d2590dd0a66ffd0"
