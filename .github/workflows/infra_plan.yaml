@@ -62,7 +62,7 @@ jobs:
     outputs:
       modules: ${{ steps.get-terraform-version.outputs.terraform_version }}
 
-  tf_modules_check:
+  tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@fix-pre-commit-lock
     name: Check terraform registry modules hashes
     secrets: inherit
@@ -74,6 +74,7 @@ jobs:
 
   tf_plan:
     name: 'Terraform Plan'
+    needs: ["get-terraform-version", "tf-modules-check"]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
