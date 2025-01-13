@@ -65,6 +65,7 @@ jobs:
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@fix-pre-commit-lock
     name: Check terraform registry modules hashes
+    needs: ["get-terraform-version"]
     secrets: inherit
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
