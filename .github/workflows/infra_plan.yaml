@@ -44,6 +44,7 @@ env:
 jobs:
   get-terraform-version:
     runs-on: ubuntu-latest
+    name: Get terraform version
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
