@@ -47,6 +47,7 @@ module "core" {
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
 | <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa/dx-azure-naming-convention/azurerm | ~> 0 |
+| <a name="module_naming_convention_gh_runner"></a> [naming\_convention\_gh\_runner](#module\_naming\_convention\_gh\_runner) | ../azure_naming_convention | n/a |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./_modules/nat_gateway | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ./_modules/networking | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ./_modules/vpn | n/a |
