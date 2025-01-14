@@ -179,6 +179,69 @@ run "validate_github_branch_protection" {
   }
 }
 
+run "validate_github_default_branch_override" {
+    command = plan
+
+  plan_options {
+    target = [
+      github_branch_protection.main,
+    ]
+  }
+
+  variables {
+    environment = {
+      prefix          = run.setup_tests.environment.prefix
+      env_short       = run.setup_tests.environment.env_short
+      location        = run.setup_tests.environment.location
+      domain          = run.setup_tests.environment.domain
+      app_name        = run.setup_tests.environment.app_name
+      instance_number = run.setup_tests.environment.instance_number
+    }
+
+    subscription_id = run.setup_tests.subscription_id
+    tenant_id       = run.setup_tests.tenant_id
+
+    entraid_groups = {
+      admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
+      devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
+      externals_object_id = run.setup_tests.entraid_groups.externals_object_id
+    }
+
+    terraform_storage_account = {
+      name                = run.setup_tests.terraform_storage_account.name
+      resource_group_name = run.setup_tests.terraform_storage_account.resource_group_name
+    }
+
+    repository = {
+      name               = run.setup_tests.repository.name
+      description        = run.setup_tests.repository.description
+      topics             = run.setup_tests.repository.topics
+      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      default_branch_name = "master"
+    }
+
+    github_private_runner = {
+      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
+      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      key_vault = {
+        name                = run.setup_tests.github_private_runner.key_vault.name
+        resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
+      }
+    }
+
+    pep_vnet_id                = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+
+    tags = run.setup_tests.tags
+  }
+
+  assert {
+    condition     = github_branch_protection.main.pattern == "master"
+    error_message = "The repository branch protection on master is not set"
+  }
+}
+
 run "validate_github_id_app" {
   command = plan
 
@@ -282,7 +345,11 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
       azurerm_role_assignment.infra_ci_rg_kv_secr,
       azurerm_role_assignment.infra_ci_rg_kv_cert,
+      azurerm_role_assignment.infra_ci_rg_kv_crypto,
+      azurerm_role_assignment.infra_ci_rg_st_blob_reader,
+      azurerm_role_assignment.infra_ci_rg_st_queue_reader,
       azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader,
+      azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_reader,
       azurerm_role_assignment.infra_cd_rg_contributor,
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
@@ -291,7 +358,11 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_rg_rbac_admin,
       azurerm_role_assignment.infra_cd_rg_kv_secr,
       azurerm_role_assignment.infra_cd_rg_kv_cert,
+      azurerm_role_assignment.infra_cd_rg_kv_crypto,
+      azurerm_role_assignment.infra_cd_rg_st_blob_contributor,
+      azurerm_role_assignment.infra_ci_rg_st_queue_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
+      azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
   }
 
@@ -399,8 +470,28 @@ run "validate_github_id_infra" {
   }
 
   assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_kv_crypto != null
+    error_message = "The Infra CI managed identity can't read Key Vault keys at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_st_blob_reader != null
+    error_message = "The Infra CI managed identity can't read Storage Account blobs at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_st_queue_reader != null
+    error_message = "The Infra CI managed identity can't read Storage Account queues at resource group scope"
+  }
+
+  assert {
     condition     = azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader != null
     error_message = "The Infra CI managed identity can't read external DNS configuration at resource group scope"
+  }
+
+  assert {
+    condition     = length(azurerm_key_vault_access_policy.infra_ci_kv_common) == 0
+    error_message = "The Infra CI managed identity is not allowed to read from common Key Vault"
   }
 
   assert {
@@ -440,12 +531,32 @@ run "validate_github_id_infra" {
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_rg_kv_cert != null
-    error_message = "The Infra CD managed identity can't read Key Vault certificates at resource group scope"
+    error_message = "The Infra CD managed identity can't write Key Vault certificates at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_kv_crypto != null
+    error_message = "The Infra CD managed identity can't write Key Vault keys at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_st_blob_contributor != null
+    error_message = "The Infra CD managed identity can't write Storage Account blobs at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_st_queue_contributor != null
+    error_message = "The Infra CD managed identity can't write Storage Account queues at resource group scope"
   }
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
     error_message = "The Infra CD managed identity can't apply changes to external network configurations at resource group scope"
+  }
+
+  assert {
+    condition     = length(azurerm_key_vault_access_policy.infra_cd_kv_common) == 0
+    error_message = "The Infra CD managed identity is not allowed to write to common Key Vaults"
   }
 }
 

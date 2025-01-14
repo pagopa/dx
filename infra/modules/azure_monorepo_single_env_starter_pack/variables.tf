@@ -55,6 +55,12 @@ variable "opex_resource_group_id" {
   description = "Id of the resource group containing Opex dashboards"
 }
 
+variable "keyvault_common_ids" {
+  type        = list(string)
+  default     = []
+  description = "Id of the KeyVault containing common secrets"
+}
+
 variable "subscription_id" {
   type        = string
   description = "The subscription ID where resources are created"
@@ -72,6 +78,7 @@ variable "repository" {
     description              = string
     topics                   = list(string)
     reviewers_teams          = list(string)
+    default_branch_name      = optional(string, "main")
     infra_cd_policy_branches = optional(set(string), ["main"])
     opex_cd_policy_branches  = optional(set(string), ["main"])
     app_cd_policy_branches   = optional(set(string), ["main"])

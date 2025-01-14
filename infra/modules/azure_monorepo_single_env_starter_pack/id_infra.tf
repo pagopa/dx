@@ -81,11 +81,42 @@ resource "azurerm_role_assignment" "infra_ci_rg_kv_cert" {
   description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's certificates at monorepository resource group scope"
 }
 
+resource "azurerm_role_assignment" "infra_ci_rg_kv_crypto" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Key Vault Crypto User"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's keys at monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_ci_rg_st_blob_reader" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account blobs monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_ci_rg_st_queue_reader" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Queue Data Reader"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account queues monorepository resource group scope"
+}
+
 resource "azurerm_role_assignment" "infra_ci_rg_ext_pagopa_dns_reader" {
   scope                = var.dns_zone_resource_group_id
   role_definition_name = "PagoPA DNS Zone Reader"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
   description          = "Allow ${var.repository.name} Infra CI identity to read DNS Zone records at resource group level"
+}
+
+resource "azurerm_key_vault_access_policy" "infra_ci_kv_common" {
+  for_each = toset(var.keyvault_common_ids)
+
+  key_vault_id = each.key
+  tenant_id    = var.tenant_id
+  object_id    = azurerm_user_assigned_identity.infra_ci.principal_id
+
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_role_assignment" "infra_cd_subscription_reader" {
@@ -136,14 +167,35 @@ resource "azurerm_role_assignment" "infra_cd_rg_kv_secr" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to changes to KeyVault's secrets at monorepository resource group scope"
+  description          = "Allow ${var.repository.name} Infra CD identity to changes to KeyVault's secrets at monorepository resource group scope"
 }
 
 resource "azurerm_role_assignment" "infra_cd_rg_kv_cert" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Key Vault Certificates Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to change KeyVault's certificates at monorepository resource group scope"
+  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's certificates at monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_cd_rg_kv_crypto" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Key Vault Crypto Officer"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's keys at monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_cd_rg_st_blob_contributor" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account blobs monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_ci_rg_st_queue_contributor" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Queue Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues monorepository resource group scope"
 }
 
 resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
@@ -151,4 +203,14 @@ resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage DNS Zones at resource group level"
+}
+
+resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
+  for_each = toset(var.keyvault_common_ids)
+
+  key_vault_id = each.key
+  tenant_id    = var.tenant_id
+  object_id    = azurerm_user_assigned_identity.infra_cd.principal_id
+
+  secret_permissions = ["Get", "List", "Set"]
 }
