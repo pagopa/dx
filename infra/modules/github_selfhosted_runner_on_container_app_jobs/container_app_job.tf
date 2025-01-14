@@ -8,7 +8,7 @@ resource "azurerm_container_app_job" "github_runner" {
     type = "SystemAssigned"
   }
 
-  replica_timeout_in_seconds = 1800
+  replica_timeout_in_seconds = var.container_app_environment.replica_timeout_in_seconds
   replica_retry_limit        = 1
 
   event_trigger_config {
