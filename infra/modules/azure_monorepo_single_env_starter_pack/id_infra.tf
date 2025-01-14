@@ -6,6 +6,11 @@ resource "azurerm_user_assigned_identity" "infra_ci" {
   tags = var.tags
 }
 
+resource "azuread_directory_role_assignment" "directory_readers" {
+  role_id             = "88d8e3e3-8f55-4a1e-953a-9b9898b8876b" # Directory Readers role ID
+  principal_object_id = azurerm_user_assigned_identity.infra_ci.principal_id
+}
+
 resource "azurerm_user_assigned_identity" "infra_cd" {
   resource_group_name = azurerm_resource_group.main.name
   location            = local.ids.location
