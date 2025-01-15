@@ -1,5 +1,12 @@
 # azure_app_service
 
+## 0.0.6
+
+### Patch Changes
+
+- 5c46e66: Set app command line for java applications
+- 3b9baf7: Adding to outputs the recordsets pointing to app services' private endpoint
+
 ## 0.0.5
 
 ### Patch Changes

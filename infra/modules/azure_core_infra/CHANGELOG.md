@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 0.0.2
+
+### Patch Changes
+
+- a39432e: Added GitHub Runner and Log Analytics configuration
+
 ## 0.0.1
 
 ### Patch Changes

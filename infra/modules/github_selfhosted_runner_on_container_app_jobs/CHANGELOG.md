@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.1
+
+### Patch Changes
+
+- 8582e8c: Allow override of gh runner labels to support multi env multi subscription cases
+
 ## 0.0.2
 
 ### Patch Changes
