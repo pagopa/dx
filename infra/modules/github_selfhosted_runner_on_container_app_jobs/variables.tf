@@ -31,6 +31,7 @@ variable "container_app_environment" {
   type = object({
     id                          = string
     location                    = string
+    replica_timeout_in_seconds  = optional(number, 1800)
     polling_interval_in_seconds = optional(number, 30)
     min_instances               = optional(number, 0)
     max_instances               = optional(number, 30)
