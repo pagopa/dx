@@ -341,6 +341,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_subscription_reader,
       azurerm_role_assignment.infra_ci_subscription_data_access,
       azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader,
+      azurerm_role_assignment.infra_ci_rg_cosmos_contributor,
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
       azurerm_role_assignment.infra_ci_rg_kv_secr,
       azurerm_role_assignment.infra_ci_rg_kv_cert,
@@ -442,6 +443,11 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_ci_subscription_data_access != null
     error_message = "The Infra CI managed identity can't read resources' keys and data at subscription scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_cosmos_contributor != null
+    error_message = "The Infra CI managed identity can't read Cosmos DB keys at resource group scope"
   }
 
   assert {

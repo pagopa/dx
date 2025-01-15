@@ -20,6 +20,13 @@ resource "azurerm_role_assignment" "infra_ci_subscription_pagopa_iac_reader" {
   description          = "Allow ${var.repository.name} Infra CI identity to read resources configuration at subscription scope"
 }
 
+resource "azurerm_role_assignment" "infra_ci_rg_cosmos_contributor" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "DocumentDB Account Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read Cosmos DB configuration at resource group scope"
+}
+
 # Storage Account - Terraform state file
 resource "azurerm_role_assignment" "infra_ci_tf_st_blob_contributor" {
   scope                = local.tf_storage_account.id
