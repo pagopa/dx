@@ -356,6 +356,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_apim_service_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
       azurerm_role_assignment.infra_cd_rg_rbac_admin,
+      azurerm_role_assignment.infra_cd_rg_user_access_admin,
       azurerm_role_assignment.infra_cd_rg_kv_secr,
       azurerm_role_assignment.infra_cd_rg_kv_cert,
       azurerm_role_assignment.infra_cd_rg_kv_crypto,
@@ -525,6 +526,11 @@ run "validate_github_id_infra" {
   }
 
   assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_user_access_admin != null
+    error_message = "The Infra CD managed identity can't apply changes to locks at resource group scope"
+  }
+
+  assert {
     condition     = azurerm_role_assignment.infra_cd_rg_kv_secr != null
     error_message = "The Infra CD managed identity can't read Key Vault secrets at resource group scope"
   }
@@ -551,7 +557,7 @@ run "validate_github_id_infra" {
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to external network configurations at resource group scope"
+    error_message = "The Infra CD managed identity can't apply changes to DNS zone configurations at resource group scope"
   }
 
   assert {
@@ -567,13 +573,10 @@ run "validate_rbac_entraid" {
     target = [
       azurerm_role_assignment.admins_group_rg,
       azurerm_role_assignment.admins_group_st_tf,
-      azurerm_role_assignment.admins_vnet_network_contributor,
-      azurerm_role_assignment.admins_apim_service_contributor,
       azurerm_role_assignment.admins_group_rg_kv_data,
       azurerm_role_assignment.admins_group_rg_kv_admin,
       azurerm_role_assignment.devs_group_rg,
       azurerm_role_assignment.devs_group_tf_st,
-      azurerm_role_assignment.devs_apim_service_contributor,
       azurerm_role_assignment.devs_group_tf_rg_kv_secr,
       azurerm_role_assignment.devs_group_tf_rg_kv_cert,
       azurerm_role_assignment.externals_group_rg,
@@ -640,16 +643,6 @@ run "validate_rbac_entraid" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_vnet_network_contributor != null
-    error_message = "The Admins group should have Network Contributor role"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.admins_apim_service_contributor != null
-    error_message = "The Admins group should have API Management Service Contributor role"
-  }
-
-  assert {
     condition     = azurerm_role_assignment.devs_group_rg != null
     error_message = "The Developers group should have role assignments at resource group scope"
   }
@@ -659,10 +652,6 @@ run "validate_rbac_entraid" {
     error_message = "The Developers group should have role assignments for Terraform state storage"
   }
 
-  assert {
-    condition     = azurerm_role_assignment.devs_apim_service_contributor != null
-    error_message = "The Developers group should have API Management Service Contributor role"
-  }
 
   assert {
     condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr != null
