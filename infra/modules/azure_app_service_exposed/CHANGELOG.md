@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.6
+
+### Patch Changes
+
+- 5c46e66: Set app command line for java applications
+
 ## 0.0.5
 
 ### Patch Changes
