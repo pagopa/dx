@@ -16,7 +16,7 @@ module "naming_convention" {
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = null
-    app_name        = var.repository.name
+    app_name        = length(var.repository.name) > 16 ? substr(var.repository.name, 0, 16) : var.repository.name
     instance_number = var.environment.instance_number
   }
 }
