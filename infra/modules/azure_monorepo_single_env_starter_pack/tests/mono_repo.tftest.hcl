@@ -341,7 +341,6 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_subscription_reader,
       azurerm_role_assignment.infra_ci_subscription_data_access,
       azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader,
-      azurerm_role_assignment.infra_ci_subscription_cosmos_contributor,
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
       azurerm_role_assignment.infra_ci_rg_kv_secr,
       azurerm_role_assignment.infra_ci_rg_kv_cert,
@@ -448,11 +447,6 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader != null
     error_message = "The Infra CI managed identity can't read resources configuration at subscription scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_subscription_cosmos_contributor != null
-    error_message = "The Infra CI managed identity can't read Cosmos DB configuration at subscription scope"
   }
 
   assert {
@@ -578,7 +572,6 @@ run "validate_rbac_entraid" {
       azurerm_role_assignment.devs_group_rg,
       azurerm_role_assignment.devs_group_tf_st,
       azurerm_role_assignment.devs_group_tf_rg_kv_secr,
-      azurerm_role_assignment.devs_group_tf_rg_kv_cert,
       azurerm_role_assignment.externals_group_rg,
       azurerm_role_assignment.externals_group_tf_rg,
     ]
@@ -656,11 +649,6 @@ run "validate_rbac_entraid" {
   assert {
     condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr != null
     error_message = "The Developers group should have Key Vault Secrets role"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.devs_group_tf_rg_kv_cert != null
-    error_message = "The Developers group should have Key Vault Certificates role"
   }
 
   assert {

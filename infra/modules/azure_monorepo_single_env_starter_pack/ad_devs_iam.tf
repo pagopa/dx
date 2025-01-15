@@ -16,15 +16,8 @@ resource "azurerm_role_assignment" "devs_group_tf_st" {
 
 # Key Vault
 resource "azurerm_role_assignment" "devs_group_tf_rg_kv_secr" {
-  scope                = local.tf_storage_account.id
+  scope                = azurerm_resource_group.main.id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = var.entraid_groups.devs_object_id
   description          = "Allow ${var.repository.name} AD Dev group to changes to KeyVault's secrets at monorepository resource group scope"
-}
-
-resource "azurerm_role_assignment" "devs_group_tf_rg_kv_cert" {
-  scope                = local.tf_storage_account.id
-  role_definition_name = "Key Vault Certificates Officer"
-  principal_id         = var.entraid_groups.devs_object_id
-  description          = "Allow ${var.repository.name} AD Dev group to change KeyVault's certificates at monorepository resource group scope"
 }
