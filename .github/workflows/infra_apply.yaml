@@ -80,6 +80,7 @@ jobs:
 
   tf_plan:
     name: 'Terraform Plan'
+    needs: ["get-terraform-version", "tf-modules-check"]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
@@ -141,7 +142,7 @@ jobs:
       - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
         name: Setup Terraform
         with:
-          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -151,7 +152,7 @@ jobs:
       - name: Check terraform registry modules hashes
         uses: ./.github/workflows/static_analysis.yaml
         with:
-          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
           pre_commit_tf_tag: "v1.96.2@sha256:01f870b7689b5a09c1a370914fcddcac42c4b6478c9d369e1d2590dd0a66ffd0"
           enable_modified_files_detection: true
           check_to_run: lock_modules
@@ -178,7 +179,7 @@ jobs:
   tf_apply:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [tf_plan]
+    needs: ["get-terraform-version", "tf-modules-check", "tf_plan"]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
