@@ -46,41 +46,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  get-terraform-version:
-    runs-on: ubuntu-latest
-    name: Get terraform version
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Determine Terraform version
-        id: get-terraform-version
-        run: |
-          if [ -f ".terraform-version" ]; then
-            TERRAFORM_VERSION=$(cat .terraform-version)
-            echo "Terraform version found in .terraform-version file: $TERRAFORM_VERSION"
-          else
-            TERRAFORM_VERSION="1.10.4"
-            echo "No .terraform-version file found. Defaulting to $TERRAFORM_VERSION"
-          fi
-          echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
-    outputs:
-      modules: ${{ steps.get-terraform-version.outputs.terraform_version }}
-
-  tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@fix-pre-commit-lock
-    name: Check terraform registry modules hashes
-    needs: ["get-terraform-version"]
-    secrets: inherit
-    with:
-      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      pre_commit_tf_tag: "v1.96.2@sha256:01f870b7689b5a09c1a370914fcddcac42c4b6478c9d369e1d2590dd0a66ffd0"
-      enable_modified_files_detection: true
-      check_to_run: lock_modules
 
   tf_plan:
     name: 'Terraform Plan'
-    needs: ["get-terraform-version", "tf-modules-check"]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
@@ -93,7 +61,7 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
-      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
     steps:
 
@@ -139,10 +107,17 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
+      - name: Set Terraform Version
+        id: set-terraform-version
+        run: |
+          set -eu
+          terraform_version=$(cat .terraform-version)
+          echo "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
+
       - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
         name: Setup Terraform
         with:
-          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -150,12 +125,78 @@ jobs:
           terraform init
 
       - name: Check terraform registry modules hashes
-        uses: ./.github/workflows/static_analysis.yaml
-        with:
-          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-          pre_commit_tf_tag: "v1.96.2@sha256:01f870b7689b5a09c1a370914fcddcac42c4b6478c9d369e1d2590dd0a66ffd0"
-          enable_modified_files_detection: true
-          check_to_run: lock_modules
+        id: check-terraform-registry-modules-hashes
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          set -euo pipefail
+          MODULES_DIR=".terraform/modules"
+          MODULES_METADATA=".terraform/modules/modules.json"
+          REGISTRY_URL="registry.terraform.io"
+          HASHES_FILE="tfmodules.lock.json"
+
+          # Check if modules metadata exists
+          if [ ! -f "$MODULES_METADATA" ]; then
+              echo "Error: Modules metadata file $MODULES_METADATA not found. Did you run 'terraform init'?"
+              exit 1
+          fi
+
+          # Check for modules sourced from the Terraform registry
+          registry_modules=$(jq --arg registry_url "$REGISTRY_URL" \
+              '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
+              "$MODULES_METADATA")
+
+          if [ -z "$registry_modules" ]; then
+              echo "No Terraform modules from the registry were found. No lock file check needed."
+              exit 0
+          fi
+
+          echo "Terraform modules from the registry were found. Checking for $HASHES_FILE..."
+
+          # Check if the lock file exists if there are registry modules
+          if [ ! -f "$HASHES_FILE" ]; then
+              echo "Error: $HASHES_FILE is missing. Please ensure it exists and is up to date."
+              exit 1
+          fi
+
+          echo "$HASHES_FILE is present. Proceeding..."
+
+          calculate_hash() {
+              local module_path="$1"
+              tar --exclude=.* -cvf - "$module_path" | sha256sum | awk '{ print $1 }'
+          }
+
+          # Iterate over modules listed in the metadata that were sourced from the Terraform registry
+          jq -r --arg registry_url "$REGISTRY_URL" \
+              '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
+              "$MODULES_METADATA" | while read -r module_key; do
+
+              module_path="$MODULES_DIR/$module_key"
+
+              if [ -d "$module_path" ]; then
+                  module_name=$(basename "$module_path")
+                  new_hash=$(calculate_hash "$module_path")
+
+                  # Retrieve the previous hash
+                  previous_hash=$(jq -r --arg module "$module_name" '.[$module]' "$HASHES_FILE")
+
+                  if [ "$previous_hash" = "null" ] || [ -z "$previous_hash" ]; then
+                      # The hash for the current module is not found
+                      echo "Error: the hash for module $module_name is missing in $HASHES_FILE. Please ensure it exists and is up to date."
+                      exit 1
+                  else
+                      # Compare the hashes
+                      if [ "$previous_hash" == "$new_hash" ]; then
+                          echo "The module $module_name has not changed."
+                      else
+                          echo "The module $module_name has changed!"
+                          # Exit with an error if the module has changed
+                          exit 1
+                      fi
+                  fi
+              else
+                  echo "Module path $module_path not found."
+              fi
+          done
 
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -179,7 +220,7 @@ jobs:
   tf_apply:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: ["get-terraform-version", "tf-modules-check", "tf_plan"]
+    needs: [tf_plan]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
