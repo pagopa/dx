@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.2
+
+### Patch Changes
+
+- 1d56ff3: Relative module referencing substituted with terraform registry referencing
+
 ## 1.0.1
 
 ### Patch Changes

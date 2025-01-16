@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 0.0.3
+
+### Patch Changes
+
+- 1d56ff3: Relative module referencing substituted with terraform registry referencing
+
 ## 0.0.2
 
 ### Patch Changes

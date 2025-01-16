@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.7
+
+### Patch Changes
+
+- 1d56ff3: Relative module referencing substituted with terraform registry referencing
+
 ## 0.0.6
 
 ### Patch Changes

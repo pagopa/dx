@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.4
+
+### Patch Changes
+
+- 1d56ff3: Relative module referencing substituted with terraform registry referencing
+
 ## 0.0.3
 
 ### Patch Changes
