@@ -1,6 +1,6 @@
 {
   "name": "github_selfhosted_runner_on_container_app_jobs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "provider": "azurerm"
 }
