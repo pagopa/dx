@@ -11301,6 +11301,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pre_commit_scripts@workspace:infra/scripts":
+  version: 0.0.0-use.local
+  resolution: "pre_commit_scripts@workspace:infra/scripts"
+  languageName: unknown
+  linkType: soft
+
 "preferred-pm@npm:^3.0.0":
   version: 3.1.3
   resolution: "preferred-pm@npm:3.1.3"
