@@ -1,4 +1,5 @@
 {
   "name": "pre_commit_scripts",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "private": true
 }
