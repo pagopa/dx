@@ -21,8 +21,8 @@ run "setup_tests" {
   }
 }
 
-run "rbac_role_assignment_is_correct_apply" {
-  command = apply
+run "rbac_role_assignment_is_correct" {
+  command = plan
 
   variables {
     principal_id = run.setup_tests.principal_id
@@ -36,6 +36,24 @@ run "rbac_role_assignment_is_correct_apply" {
         }
       }
     ]
+
+    apim = [
+      {
+        name                = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+      },
+      {
+        name                = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "writer"
+      },
+      {
+        name                = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "reader"
+      }
+    ]
   }
 
   # Checks some assertions
@@ -47,5 +65,20 @@ run "rbac_role_assignment_is_correct_apply" {
   assert {
     condition     = module.key_vault.secrets_role_assignment["dx-d-itn-common-rg-01|dx-d-itn-common-kv-01|reader"].principal_id == run.setup_tests.principal_id
     error_message = "The role assignment must be assigned to the correct managed identity"
+  }
+
+  assert {
+    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|owner"].role_definition_name == "API Management Service Contributor"
+    error_message = "The role assigned must be API Management Service Contributor"
+  }
+
+  assert {
+    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|writer"].role_definition_name == "API Management Service Editor"
+    error_message = "The role assigned must be API Management Service Editor"
+  }
+
+  assert {
+    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|reader"].role_definition_name == "API Management Service Reader"
+    error_message = "The role assigned must be API Management Service Reader"
   }
 }
