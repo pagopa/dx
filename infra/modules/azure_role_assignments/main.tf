@@ -34,3 +34,10 @@ module "storage_account" {
   storage_queue = var.storage_queue
   storage_table = var.storage_table
 }
+
+module "apim" {
+  source = "./modules/apim"
+
+  principal_id = var.principal_id
+  apim         = var.apim
+}
