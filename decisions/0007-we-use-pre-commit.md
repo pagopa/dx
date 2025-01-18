@@ -1,4 +1,4 @@
-# 6. We start with typescript and azure
+# 6. We use pre-commit for managing git hooks
 
 Date: 2025-01-18
 
