@@ -1,4 +1,4 @@
-# 6. We use pre-commit for managing git hooks
+# 7. We use pre-commit for managing git hooks
 
 Date: 2025-01-18
 
