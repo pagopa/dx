@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.0
+
+### Minor Changes
+
+- 7c0cb16: Add variable to use an existing subnet instead of creating a new one
+
 ## 0.0.7
 
 ### Patch Changes

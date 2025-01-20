@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.1.0
+
+### Minor Changes
+
+- 7c0cb16: Add variable to use an existing subnet instead of creating a new one
+
 ## 0.0.6
 
 ### Patch Changes
