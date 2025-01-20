@@ -18,6 +18,7 @@ locals {
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
+    is_subnet_enabled      = var.subnet_id == null
     pep_sites              = "${module.naming_convention.prefix}-func-pep-${module.naming_convention.suffix}"
     pep_sites_staging      = "${module.naming_convention.prefix}-staging-func-pep-${module.naming_convention.suffix}"
     alert                  = "${module.naming_convention.prefix}-func-${module.naming_convention.suffix}] Health Check Failed"
