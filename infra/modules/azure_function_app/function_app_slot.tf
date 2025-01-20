@@ -10,7 +10,7 @@ resource "azurerm_linux_function_app_slot" "this" {
 
   https_only                    = true
   public_network_access_enabled = false
-  virtual_network_subnet_id     = local.function_app.is_subnet_enabled ? azurerm_subnet.this[0].id : var.subnet_id
+  virtual_network_subnet_id     = local.function_app.has_existing_subnet ? azurerm_subnet.this[0].id : var.subnet_id
 
   identity {
     type = "SystemAssigned"
