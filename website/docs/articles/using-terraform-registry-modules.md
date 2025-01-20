@@ -71,6 +71,7 @@ files: src/(prod|dev)
 
 4. After generating the lock files, commit them to your repository. These files are essential for pipeline operation.
 
+
 ## Pipeline Integration
 
 The DX pipelines now include verification steps that check module lock files before executing any plan or apply operations. Here's what you need to know:
@@ -79,6 +80,61 @@ The DX pipelines now include verification steps that check module lock files bef
 - Lock files must be up to date with your module versions
 - Pipelines will fail if lock files are missing or inconsistent
 - Lock files must be regenerated when updating module versions
+
+## Migrating to Registry Modules
+
+When transitioning from GitHub-sourced modules to Terraform Registry modules, you'll need to update your module source declarations.
+
+### Source Declaration Changes
+
+Here's a before and after example:
+
+**Before (GitHub source):**
+```hcl
+module "naming_convention" {
+  source = "github.com/pagopa/dx//infra/modules/azure_naming_convention/?ref=main"
+
+  environment = {
+    prefix          = var.environment.prefix
+    env_short       = var.environment.env_short
+    location        = var.environment.location
+    domain          = var.environment.domain
+    app_name        = var.environment.app_name
+    instance_number = var.environment.instance_number
+  }
+}
+```
+
+**After (Registry source):**
+```hcl
+module "naming_convention" {
+  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  version = "~> 0"
+
+  environment = {
+    prefix          = var.environment.prefix
+    env_short       = var.environment.env_short
+    location        = var.environment.location
+    domain          = var.environment.domain
+    app_name        = var.environment.app_name
+    instance_number = var.environment.instance_number
+  }
+}
+```
+
+Let's break down the key changes:
+
+1. **Source Format**
+   - Old: `github.com/pagopa/dx//infra/modules/azure_naming_convention/?ref=main`
+   - New: `pagopa/dx-azure-naming-convention/azurerm`
+   
+   The Registry format follows the pattern: `<NAMESPACE>/<NAME>/<PROVIDER>`
+
+2. **Version Specification**
+   - Old: Using git ref (`?ref=main`)
+   - New: Using semantic versioning (`version = "~> 0"`)
+   
+   The `~>` operator allows updates within the same major version, providing stability while allowing minor updates.
 
 ## Troubleshooting Common Issues
 
