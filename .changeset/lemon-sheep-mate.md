@@ -2,4 +2,4 @@
 "azure_app_service": minor
 ---
 
-Add support to external subnets
+Add variable to use an existing subnet instead of creating a new one
