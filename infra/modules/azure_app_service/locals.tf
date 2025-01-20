@@ -14,6 +14,7 @@ locals {
   app_service = {
     name                   = "${module.naming_convention.prefix}-app-${module.naming_convention.suffix}"
     sku_name               = local.sku_name_mapping[local.tier]
+    has_existing_subnet    = var.subnet_id != null
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
   }

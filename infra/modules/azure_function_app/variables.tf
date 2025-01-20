@@ -32,6 +32,12 @@ variable "app_service_plan_id" {
   description = "(Optional) Set the AppService Id where you want to host the Function App"
 }
 
+variable "subnet_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Set the subnet id where you want to host the Function App"
+}
+
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
