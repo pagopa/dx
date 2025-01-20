@@ -6,9 +6,13 @@ sidebar_label: Using Terraform Registry Modules
 
 The Terraform Registry serves as a central repository for discovering, sharing, and managing infrastructure modules. PagoPA maintains its own collection of modules in our dedicated namespace at [registry.terraform.io/namespaces/pagopa](https://registry.terraform.io/namespaces/pagopa), making it easier for teams to share and reuse infrastructure components.
 
+:::note
+This documentation is relevant for all individual contributors making use of DevEx terraform modules.
+:::
+
 ## Why Use the Registry?
 
-We've enhanced our DX pipelines (plan and apply) to support direct module references from the Terraform Registry. This approach offers several significant advantages over traditional GitHub source references:
+We've enhanced our DX pipelines (plan and apply) to support direct module references from the Terraform Registry. This approach offers several significant advantages over traditional GitHub source references.
 
 ### Semantic Versioning Benefits
 
@@ -91,42 +95,43 @@ Here's a before and after example:
 
 **Before (GitHub source):**
 ```hcl
-module "naming_convention" {
-  source = "github.com/pagopa/dx//infra/modules/azure_naming_convention/?ref=main"
+module "roles" {
+  source       = "github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main"
+  principal_id = var.data_factory_principal_id
 
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
-  }
+  cosmos = [
+    {
+      account_name        = var.cosmos_accounts.source.name
+      resource_group_name = var.cosmos_accounts.source.resource_group_name
+      role                = "reader"
+    }
+  ]
 }
 ```
 
 **After (Registry source):**
 ```hcl
-module "naming_convention" {
-  source  = "pagopa/dx-azure-naming-convention/azurerm"
+module "roles" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
   version = "~> 0"
 
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
-  }
+  principal_id = var.data_factory_principal_id
+
+  cosmos = [
+    {
+      account_name        = var.cosmos_accounts.source.name
+      resource_group_name = var.cosmos_accounts.source.resource_group_name
+      role                = "reader"
+    }
+  ]
 }
 ```
 
 Let's break down the key changes:
 
 1. **Source Format**
-   - Old: `github.com/pagopa/dx//infra/modules/azure_naming_convention/?ref=main`
-   - New: `pagopa/dx-azure-naming-convention/azurerm`
+   - Old: `github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main`
+   - New: `pagopa/dx-azure-role-assignments/azurerm`
    
    The Registry format follows the pattern: `<NAMESPACE>/<NAME>/<PROVIDER>`
 
