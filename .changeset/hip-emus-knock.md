@@ -2,4 +2,4 @@
 "docs": patch
 ---
 
-Document how to publishing terraform modules to the registry
+Document how to publish terraform modules to the registry
