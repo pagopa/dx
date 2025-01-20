@@ -77,7 +77,7 @@ if [ -n "$ORG_NAME" ]; then
 
   if [ $? -eq 0 ]; then
     echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"
-    echo "Please, ask the DevEx members to edit the dx-pagopa-bot PAT adding the new repository"
+    echo "Please, ask the DevEx members to add the new repository to the dx-pagopa-bot PAT and on eng-github-authorization repo"
     
     # Add dx-pagopa-bot as a collaborator with write permissions
     gh api -X PUT /repos/$ORG_NAME/$SUBREPO_NAME/collaborators/dx-pagopa-bot -f permission=admin
