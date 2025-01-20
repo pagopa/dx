@@ -5,7 +5,13 @@ sidebar_label: Publishing Terraform modules to the Registry
 
 # Publishing Terraform modules to the Registry
 
-This guide walks through the process of creating, developing, and publishing Terraform modules to the Terraform Registry.
+This guide walks through the process of creating, developing, and publishing Terraform modules from the [DX monorepo](https://github.com/pagopa/dx) to the Terraform Registry.
+
+:::note
+
+This documentation is intended for contributors working on DevEx Terraform modules.
+
+:::
 
 The Terraform Registry serves as a central repository where organizations can publish and share their Terraform modules with the community. It provides a standardized way to discover, distribute, and version infrastructure as code components. Our organization maintains a collection of modules in the PagoPA namespace, which you can find [here](https://registry.terraform.io/namespaces/pagopa).
 
@@ -27,7 +33,7 @@ The script accepts the following parameters:
 
 Parameters explained:
 - `--name`: Required. The name of your module (e.g., `azure_api_management`)
-- `--gh-org`: Optional. The GitHub organization where the module's sub-repository will be created
+- `--gh-org`: Optional. The GitHub organization where the module's sub-repository will be created. Defaults to `pagopa`.
 - `--provider`: Optional. Defaults to `azurerm`. Specifies the cloud provider (e.g., `aws`, `azurerm`)
 
 ### What the Initialization Script Does
@@ -41,21 +47,13 @@ The script performs several important steps:
 5. Initializes the repository with the module's base code
 
 After successful initialization, you'll need to:
-1. Contact DevEx team members to add the new repository to:
+1. Contact DevEx team members in the #team_devex_help channel, to add the new repository to:
    - The dx-pagopa-bot PAT
    - Track it in the eng-github-authorization
 
 ## Module Development and Versioning
 
-We use [Changeset](https://github.com/changesets/changesets) for version management and changelog generation. This helps maintain a clear history of changes and ensures proper semantic versioning.
-
-### Understanding Semantic Versioning
-
-Semantic Versioning (SemVer) uses three numbers (MAJOR.MINOR.PATCH) to indicate the nature of changes:
-
-- MAJOR: Breaking changes that require updates to existing implementations
-- MINOR: New features that maintain backward compatibility
-- PATCH: Bug fixes and minor improvements that don't add features or break existing ones
+We use [Changeset](https://github.com/changesets/changesets) for version management and changelog generation. This helps maintain a clear history of changes and ensures proper [semantic versioning](https://semver.org/).
 
 ### Managing Changes with Changeset
 
@@ -96,7 +94,7 @@ The Terraform Registry has specific requirements about repository structure - ea
    - Repository name format: `terraform-<PROVIDER>-dx-<NAME>`
    - Example: `terraform-azurerm-dx-azure-api-management`
 
-This process is handled by the `Push modules to subrepo` GitHub Action, which:
+This process is handled by the [`Push modules to subrepo`](https://github.com/pagopa/dx/blob/main/.github/workflows/push_modules_to_subrepo.yml) GitHub Action, which:
 - Identifies modified modules in the monorepo
 - Updates their respective sub-repositories with the latest code
 - Ensures version tags are properly synchronized
