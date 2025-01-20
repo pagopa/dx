@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "this" {
-  count = local.function_app.has_existing_subnet ? 1 : 0
+  count = local.function_app.has_existing_subnet ? 0 : 1
 
   name                 = local.subnet.name
   virtual_network_name = data.azurerm_virtual_network.this.name
