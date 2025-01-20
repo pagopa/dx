@@ -1,7 +1,7 @@
 output "subnet" {
   value = {
-    id   = azurerm_subnet.this.id
-    name = azurerm_subnet.this.name
+    id   = try(azurerm_subnet.this[0].id, var.subnet_id)
+    name = try(azurerm_subnet.this[0].name, null)
   }
 }
 
@@ -9,7 +9,7 @@ output "app_service" {
   value = {
     resource_group_name = azurerm_linux_web_app.this.resource_group_name
     plan = {
-      id   = try(azurerm_service_plan.this[0].id, null)
+      id   = try(azurerm_service_plan.this[0].id, var.app_service_plan_id)
       name = try(azurerm_service_plan.this[0].name, null)
     }
     app_service = {
