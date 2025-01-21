@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.5
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.0.4
 
 ### Patch Changes
