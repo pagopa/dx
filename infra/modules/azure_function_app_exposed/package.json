@@ -3,5 +3,5 @@
   "version": "0.0.6",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an externally accessible Azure Function App with necessary configurations"
+  "description": "Creates an Azure Function App configured for external access"
 }

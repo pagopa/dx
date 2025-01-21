@@ -3,5 +3,5 @@
   "version": "0.0.7",
   "private": true,
   "provider": "azurerm",
-  "description": "Deploys an Azure App Service configured for external access"
+  "description": "Creates an Azure App Service configured for external access"
 }

@@ -3,5 +3,5 @@
   "version": "0.0.6",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions Azure Storage Account with networking, monitoring, and security configurations"
+  "description": "Provisions an Azure Storage Account with networking, monitoring, and security configurations"
 }
