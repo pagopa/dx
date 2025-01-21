@@ -6,7 +6,7 @@ usage() {
   exit 1
 }
 
-# Default provider if not 
+# Default provider and GH organization if not provided
 ORG_NAME="pagopa"
 PROVIDER="azurerm"
 
@@ -25,6 +25,12 @@ done
 # Check if the module name was provided
 if [ -z "$MODULE_NAME" ]; then
   echo "Error: No module name provided."
+  usage
+fi
+
+# Check if the description was provided
+if [ -z "$DESCRIPTION" ]; then
+  echo "Error: No description provided."
   usage
 fi
 
