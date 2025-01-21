@@ -34,15 +34,7 @@ run "function_app_is_correct_plan" {
       instance_number = "01"
     }
 
-    tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
-      Test        = "true"
-      TestName    = "Create Function app for test"
-    }
+    tags = {}
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"
@@ -93,6 +85,11 @@ run "function_app_is_correct_plan" {
     condition     = azurerm_private_endpoint.st_blob.subnet_id == run.setup_tests.pep_id
     error_message = "The Private Endpoint must be in the correct subnet"
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this) == 1
+    error_message = "Subnet should be created"
+  }
 }
 
 run "function_app_custom_subnet" {
@@ -119,7 +116,6 @@ run "function_app_custom_subnet" {
     }
 
     subnet_pep_id                        = run.setup_tests.pep_id
-    subnet_cidr                          = "10.50.80.0/24"
     subnet_id                            = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
@@ -127,7 +123,6 @@ run "function_app_custom_subnet" {
     slot_app_settings = {}
 
     health_check_path = "/health"
-
   }
 
   assert {
