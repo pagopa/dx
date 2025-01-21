@@ -43,6 +43,13 @@ variable "application_insights_connection_string" {
   sensitive   = true
   default     = null
   description = "(Optional) Application Insights connection string"
+
+  validation {
+    # condition = var.application_insights_connection_string != null && var.application_insights_key == null
+    # condition     = var.application_insights_connection_string != null || (var.application_insights_key != null && var.application_insights_connection_string == null)
+    condition     = (var.application_insights_connection_string != null) != (var.application_insights_key != null)
+    error_message = "Please provide Application Insights connection string if you are not using instrumentation key. Using a connection string is preferrable. Do not use both."
+  }
 }
 
 variable "health_check_path" {
@@ -177,7 +184,12 @@ variable "action_group_id" {
 
 variable "application_insights_key" {
   type        = string
-  description = "(Optional) Application Insights key"
+  description = "(Optional) Application Insights instrumentation key. Do not use if you are using a connection string, which is instead preferrable"
   sensitive   = true
   default     = null
+
+  # validation {
+  #   condition     = var.application_insights_key == null || (var.application_insights_key != null && var.application_insights_connection_string == null)
+  #   error_message = "Please provide Application Insights connection string if you are not using instrumentation key. Using a connection string is preferrable. Do not use both."
+  # }
 }
