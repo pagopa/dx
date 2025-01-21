@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 0.0.7
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.0.6
 
 ### Patch Changes

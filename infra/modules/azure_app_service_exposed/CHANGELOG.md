@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.8
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.0.7
 
 ### Patch Changes

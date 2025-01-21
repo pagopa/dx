@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.1.1
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.1.0
 
 ### Minor Changes

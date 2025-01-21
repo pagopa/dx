@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 0.0.4
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.0.3
 
 ### Patch Changes
