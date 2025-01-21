@@ -108,7 +108,7 @@ variable "subnet_cidr" {
   description = "(Optional) CIDR block to use for the subnet the AppService uses for outbound connectivity. Mandatory if subnet_id is not set"
 
   validation {
-    condition = (var.subnet_id != null) != (var.subnet_cidr != null)
+    condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
     error_message = "Please specify the subnet_cidr or the subnet_id, not both"
   }
 }
