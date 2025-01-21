@@ -4,10 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      # - main
-      - CES-670-creare-una-pipeline-di-ci-per-avviare-gli-unit-test-terraform
-    # paths:
-    #   - "infra/modules/**"
+      - main
+    paths:
+      - "infra/modules/**"
 
 concurrency:
   group: ${{ github.workflow }}
