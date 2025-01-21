@@ -2,5 +2,6 @@
   "name": "azure_role_assignments",
   "version": "0.1.0",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Manages Azure RBAC role assignments for resources and security principals"
 }

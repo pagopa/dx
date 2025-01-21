@@ -2,5 +2,6 @@
   "name": "azure_event_hub",
   "version": "0.0.4",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Creates an Azure Event Hub with monitoring and network configuration"
 }

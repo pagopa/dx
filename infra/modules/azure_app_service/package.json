@@ -2,5 +2,6 @@
   "name": "azure_app_service",
   "version": "0.1.0",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Creates an Azure App Service with networking and deployment slot support"
 }
