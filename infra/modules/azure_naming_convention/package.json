@@ -2,5 +2,6 @@
   "name": "azure_naming_convention",
   "version": "0.0.3",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns"
 }
