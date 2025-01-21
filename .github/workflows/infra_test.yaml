@@ -96,12 +96,12 @@ jobs:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
-        working-directory: ${{ matrix.module }}
+        working-directory: infra/modules/${{ matrix.module }}
         run: |
           terraform init
 
       - name: Terraform Test
-        working-directory: ${{ matrix.module }}
+        working-directory: infra/modules/${{ matrix.module }}
         run: |
           set -euo pipefail
 
