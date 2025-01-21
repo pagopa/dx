@@ -32,7 +32,7 @@ jobs:
       - name: Get modified modules
         id: get-modules
         run: |
-          folders_list=$(git diff --name-only main ${{ github.sha }} infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
+          folders_list=$(git diff --name-only origin/main ${{ github.sha }} infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules that have changed: $folders_list
           echo "modules=$folders_list" >> $GITHUB_OUTPUT
 
