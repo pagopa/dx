@@ -25,7 +25,7 @@ Our Terraform modules are organized in the `infra/modules` directory, with each 
 
 To create a new module, we provide an automated initialization script called `add-module.sh` located in the `infra/scripts` directory. This script handles all the necessary setup steps and ensures consistency across module creation.
 
-The script accepts the following parameters:
+The script must be executed in the root of the dx repository and accepts the following parameters:
 
 ```bash
 ./add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
@@ -44,7 +44,7 @@ The script performs several important steps:
 1. Validates if the module directory already exists to prevent accidental overwrites
 2. Creates the module directory structure under `infra-modules/<provider_name>/`
 3. Generates a `package.json` file for version management
-4. Creates a dedicated sub-repository with Terraform Registry compliant naming and description
+4. Creates or updates (if already exists) a dedicated sub-repository with Terraform Registry compliant naming and description
 5. Initializes the repository with the module's base code
 
 After successful initialization, you'll need to:
