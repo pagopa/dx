@@ -82,6 +82,11 @@ run "app_service_is_correct_plan" {
     condition     = azurerm_linux_web_app.this.site_config[0].always_on == true
     error_message = "The App Service should have Always On enabled"
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this) == 1
+    error_message = "Subnet should be created"
+  }
 }
 
 run "app_service_custom_subnet" {
@@ -109,7 +114,6 @@ run "app_service_custom_subnet" {
 
     subnet_pep_id                        = run.setup_tests.pep_id
     subnet_id                            = run.setup_tests.pep_id
-    subnet_cidr                          = "10.20.50.0/24"
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     app_settings      = {}
