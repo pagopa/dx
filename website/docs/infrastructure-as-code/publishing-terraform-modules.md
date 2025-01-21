@@ -28,7 +28,7 @@ To create a new module, we provide an automated initialization script called `ad
 The script must be executed in the root of the dx repository and accepts the following parameters:
 
 ```bash
-./add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
+./infra/scripts/add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
 ```
 
 Parameters explained:
