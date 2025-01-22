@@ -45,7 +45,7 @@ variable "application_insights_connection_string" {
   description = "(Optional) Application Insights connection string"
 
   validation {
-    condition     = ((var.application_insights_connection_string != null) != (var.application_insights_key != null)) || (var.application_insights_connection_string == null && var.application_insights_key == null)
+    condition     = var.application_insights_connection_string == null || var.application_insights_key == null
     error_message = "Please provide either Application Insights connection string or instrumentation key, or neither. Using a connection string is preferable as instrumentation key will be deprecated on March 31, 2025. Do not use both."
   }
 }
