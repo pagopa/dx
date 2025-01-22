@@ -21,7 +21,7 @@ resource "azurerm_linux_function_app" "this" {
     http2_enabled                          = true
     always_on                              = true
     vnet_route_all_enabled                 = true
-    application_insights_connection_string = local.application_insights.enable ? var.application_insights_connection_string : null
+    application_insights_connection_string = var.application_insights_connection_string
     health_check_path                      = var.health_check_path
     health_check_eviction_time_in_min      = 2
     ip_restriction_default_action          = "Deny"
