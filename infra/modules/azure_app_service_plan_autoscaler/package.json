@@ -1,6 +1,7 @@
 {
   "name": "azure_app_service_plan_autoscaler",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Configures autoscaling rules for Azure App Service Plans"
 }

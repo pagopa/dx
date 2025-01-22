@@ -73,12 +73,12 @@ run "rbac_role_assignment_is_correct" {
   }
 
   assert {
-    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|writer"].role_definition_name == "API Management Service Editor"
-    error_message = "The role assigned must be API Management Service Editor"
+    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|writer"].role_definition_name == "API Management Service Operator Role"
+    error_message = "The role assigned must be API Management Service Operator Role"
   }
 
   assert {
-    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|reader"].role_definition_name == "API Management Service Reader"
-    error_message = "The role assigned must be API Management Service Reader"
+    condition     = module.apim.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-playground-pg-apim-01|reader"].role_definition_name == "API Management Service Reader Role"
+    error_message = "The role assigned must be API Management Service Reader Role"
   }
 }

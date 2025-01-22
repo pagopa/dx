@@ -7,7 +7,7 @@ resource "azurerm_linux_web_app" "this" {
 
   https_only                    = true
   public_network_access_enabled = false
-  virtual_network_subnet_id     = azurerm_subnet.this.id
+  virtual_network_subnet_id     = local.app_service.has_existing_subnet ? var.subnet_id : azurerm_subnet.this[0].id
 
   identity {
     type = "SystemAssigned"

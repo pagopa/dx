@@ -1,6 +1,7 @@
 {
   "name": "azure_function_app_exposed",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Creates an Azure Function App configured for external access"
 }

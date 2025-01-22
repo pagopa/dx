@@ -1,5 +1,11 @@
 # azure_federated_identity_with_github
 
+## 0.0.3
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 0.0.2
 
 ### Patch Changes

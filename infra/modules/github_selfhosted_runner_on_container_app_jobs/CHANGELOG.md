@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.3
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
 ## 1.0.2
 
 ### Patch Changes

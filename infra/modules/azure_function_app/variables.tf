@@ -32,6 +32,12 @@ variable "app_service_plan_id" {
   description = "(Optional) Set the AppService Id where you want to host the Function App"
 }
 
+variable "subnet_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Set the subnet id where you want to host the Function App"
+}
+
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
@@ -125,7 +131,13 @@ variable "sticky_app_setting_names" {
 
 variable "subnet_cidr" {
   type        = string
-  description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
+  default     = null
+  description = "(Optional) CIDR block to use for the subnet the Function App uses for outbound connectivity. Mandatory if subnet_id is not set"
+
+  validation {
+    condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
+    error_message = "Please specify the subnet_cidr or the subnet_id, not both"
+  }
 }
 
 variable "subnet_pep_id" {

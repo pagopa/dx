@@ -82,4 +82,48 @@ run "app_service_is_correct_plan" {
     condition     = azurerm_linux_web_app.this.site_config[0].always_on == true
     error_message = "The App Service should have Always On enabled"
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this) == 1
+    error_message = "Subnet should be created"
+  }
+}
+
+run "app_service_custom_subnet" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {}
+
+    resource_group_name = run.setup_tests.resource_group_name
+    tier                = "m"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    subnet_id                            = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    app_settings      = {}
+    slot_app_settings = {}
+
+    health_check_path = "/health"
+  }
+
+  assert {
+    condition     = azurerm_subnet.this == []
+    error_message = "Subnet should not be created"
+  }
 }

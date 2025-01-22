@@ -1,5 +1,23 @@
 # azure_function_app
 
+## 0.1.2
+
+### Patch Changes
+
+- 3152f40: Variable subnet_cidr is no longer required when a value for subnet_id is provided
+
+## 0.1.1
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
+## 0.1.0
+
+### Minor Changes
+
+- 7c0cb16: Add variable to use an existing subnet instead of creating a new one
+
 ## 0.0.6
 
 ### Patch Changes
