@@ -1,5 +1,9 @@
 on:
   workflow_call:
+    outputs:
+      modules:
+        value: ${{ jobs.get-all-modules.outputs.modules }}
+        description: "List of all modules in the format [\"name1\", \"name2\"]"
 
 jobs:
   get-all-modules:
