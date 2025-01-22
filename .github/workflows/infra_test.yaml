@@ -21,40 +21,14 @@ env:
 
 jobs:
   get-modified-modules:
+    uses: ./.github/workflows/get_modified_modules.yaml
+    name: Get Modified Modules
     if: ${{ github.event_name != 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get modified modules
-        id: get-modules
-        run: |
-          folders_list=$(git diff --name-only origin/main ${{ github.sha }} infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
-          echo Modules that have changed: $folders_list
-          echo "modules=$folders_list" >> $GITHUB_OUTPUT
-
-    outputs:
-      modules: ${{ steps.get-modules.outputs.modules }}
 
   get-all-modules:
+    uses: ./.github/workflows/get_all_modules.yaml
+    name: Get All Modules
     if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Get all modules
-        id: get-all-modules
-        run: |
-          folders_list=$(find infra/modules -mindepth 1 -maxdepth 1 -type d | sed 's#infra/modules/##' | jq -R -c . | jq -s -c .)
-          echo "All modules: $folders_list"
-          echo "modules=$folders_list" >> $GITHUB_OUTPUT
-    outputs:
-      modules: ${{ steps.get-all-modules.outputs.modules }}
 
   terraform-test:
     runs-on: ubuntu-latest
@@ -73,7 +47,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Azure Login
         uses: azure/login@v2 # v2.0.0
@@ -97,11 +71,13 @@ jobs:
       - name: Terraform Init
         working-directory: infra/modules/${{ matrix.module }}
         run: |
+          set -euo
+
           terraform init
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}
         run: |
-          set -euo pipefail
+          set -euo
 
           terraform test
