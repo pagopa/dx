@@ -81,6 +81,5 @@ resource "azurerm_linux_function_app" "this" {
     azurerm_private_endpoint.st_blob,
     azurerm_private_endpoint.st_file,
     azurerm_private_endpoint.st_queue,
-    azurerm_private_endpoint.st_table,
   ]
 }
