@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 0.1.2
+
+### Patch Changes
+
+- 075f30a: Fixed roles for API Management
+
 ## 0.1.1
 
 ### Patch Changes

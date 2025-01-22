@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.2
+
+### Patch Changes
+
+- 3152f40: Variable subnet_cidr is no longer required when a value for subnet_id is provided
+
 ## 0.1.1
 
 ### Patch Changes
