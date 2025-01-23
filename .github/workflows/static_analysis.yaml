@@ -136,19 +136,6 @@ jobs:
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
             ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
 
-      - name: Run pre-commit on specific folders
-        if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
-        id: pre_commit_specific_folders
-        run: |
-          set -eu
-
-          echo "Start pre-commit on all files"
-
-          find -f ${{ inputs.folder }}/* | xargs pre-commit run \
-            --color=always \
-            ${{ inputs.check_to_run }} \
-            --files
-
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
