@@ -21,7 +21,6 @@ resource "azurerm_linux_function_app_slot" "this" {
     application_insights_connection_string = var.application_insights_connection_string
     health_check_path                      = var.health_check_path
     health_check_eviction_time_in_min      = 2
-    application_insights_key               = var.application_insights_key
 
     application_stack {
       node_version = var.stack == "node" ? var.node_version : null

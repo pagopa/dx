@@ -17,7 +17,7 @@ locals {
   }
 
   application_insights = {
-    enable = var.application_insights_connection_string != null || var.application_insights_key != null
+    enable = var.application_insights_connection_string != null
   }
 
   storage_account = {
