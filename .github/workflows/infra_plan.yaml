@@ -64,7 +64,7 @@ jobs:
       modules: ${{ steps.get-terraform-version.outputs.terraform_version }}
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@check-modules-lock-in-cicd
     name: Check terraform registry modules hashes
     needs: ["get-terraform-version"]
     secrets: inherit
