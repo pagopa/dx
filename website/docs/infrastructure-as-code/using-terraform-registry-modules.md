@@ -75,7 +75,11 @@ files: src/(prod|dev)
 
 4. After generating the lock files, commit them to your repository. These files are essential for pipeline operation.
 
+:::note
 
+The second option enables automatic execution of pre-commit checks on every push. If this disrupts your workflow, you can disable it by following [these instructions](#disabling-automatic-pre-commits) and opt for the first option instead.
+
+:::
 ## Pipeline Integration
 
 The DX pipelines now include verification steps that check module lock files before executing any plan or apply operations. Here's what you need to know:
@@ -143,6 +147,16 @@ Let's break down the key changes:
 
 ## Troubleshooting Common Issues
 
+### Missing sha256sum dependency
+
+If you encounter the following error while running the pre-commit hook:
+
+`ERROR: Required command not found: sha256sum`
+
+It means your system is missing the sha256sum dependency. You can resolve this by installing it using:
+
+`brew install coreutils`
+
 ### Pipeline Failures
 
 If your pipeline fails with a module lock error:
@@ -150,6 +164,16 @@ If your pipeline fails with a module lock error:
 2. Run `pre-commit run -a` to generate missing lock files
 3. Commit and push the new lock files
 4. Retry the pipeline
+
+### Disabling automatic Pre-Commits
+
+If you need to temporarily disable pre-commit hooks, you can do so by running:
+
+`pre-commit uninstall`
+
+This will remove the installed pre-commit hooks from your repository. You can reinstall them later using:
+
+`pre-commit install`
 
 ### Lock File Generation Issues
 
