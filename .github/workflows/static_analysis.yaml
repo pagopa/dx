@@ -1,7 +1,3 @@
-# This pipeline assumes the presence of a .pre-commit-config.yaml file at
-# the top level of the repository, which contains Terraform validation tasks.
-# For more details, refer to the pre-commit configuration file:
-# https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
 name: Static Analysis - TF Validation
 
 on:
@@ -11,7 +7,6 @@ on:
         description: Terraform version to use
         type: string
         required: false
-        default: "1.7.5"
       pre_commit_tf_tag:
         description: |
           Pre-commit Terraform TAG to use,
@@ -35,11 +30,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  get-terraform-version:
+    uses: ./.github/workflows/get_terraform_version.yaml
+    name: Get terraform version from .terraform-version file
+
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-latest
+    needs: [ get-terraform-version ]
     env:
-      TERRAFORM_VERSION: ${{ inputs.terraform_version }}
+      TERRAFORM_VERSION: ${{ inputs.terraform_version || needs.get-terraform-version.outputs.terraform_version }}
     container:
       image: ghcr.io/antonbabenko/pre-commit-terraform:${{ inputs.pre_commit_tf_tag }}
     defaults:
@@ -47,14 +47,12 @@ jobs:
         shell: bash
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
-      # https://github.com/antonbabenko/pre-commit-terraform#github-actions
       - name: Git config
         run: |
           set -eu
@@ -65,7 +63,6 @@ jobs:
       - name: Fix Alpine Container Image
         run: |
           apk --no-cache add tar
-          # check python modules installed versions
           python -m pip freeze --local
 
       - name: Run pre-commit on Modified Files
