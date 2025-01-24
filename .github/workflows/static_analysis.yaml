@@ -24,6 +24,10 @@ on:
         description: If set, it runs only the specified pre-commit hook check. Otherwise, all checks are run.
         type: string
         required: false
+      verbose:
+        description: If enabled, it prints the verbose logging of pre-commit checks
+        type: boolean
+        required: false
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}
@@ -78,6 +82,8 @@ jobs:
 
       - name: Run pre-commit on Modified Files
         if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
+        env:
+          PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu
 
@@ -95,6 +101,8 @@ jobs:
       - name: Run pre-commit
         if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
         id: pre_commit
+        env:
+          PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu
 
