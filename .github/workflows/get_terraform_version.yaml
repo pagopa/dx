@@ -3,7 +3,7 @@ on:
     outputs:
       terraform_version:
         value: ${{ jobs.get-terraform-version.outputs.terraform_version }}
-        description: "List of all modules in the format [\"name1\", \"name2\"]"
+        description: "The terraform version retrieved from the .terraform-version file. If missing, it returns a default recommended version."
 jobs:
   get-terraform-version:
     runs-on: ubuntu-latest
