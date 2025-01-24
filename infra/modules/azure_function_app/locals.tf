@@ -37,7 +37,7 @@ locals {
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
-    durable_name     = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfnd${module.naming_convention.suffix}", "-", ""))
+    durable_name     = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfd${module.naming_convention.suffix}", "-", ""))
     pep_blob_name    = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
     pep_file_name    = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
     pep_queue_name   = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
