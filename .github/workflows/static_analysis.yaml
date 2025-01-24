@@ -45,7 +45,7 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: ./.github/actions/get-terraform-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@get-terraform-version-in-static-analysis
         with:
           default_version: "1.10.4"
 
