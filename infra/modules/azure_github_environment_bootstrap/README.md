@@ -1,4 +1,4 @@
-# DX - Azure MonoRepository Single Environment Starter Pack
+# DX - Azure GitHub Environment Bootstrap
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->

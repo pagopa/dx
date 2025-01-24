@@ -1,1 +1,0 @@
-# azure_monorepo_single_env_starter_pack
