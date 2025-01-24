@@ -36,6 +36,9 @@ jobs:
     outputs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+
       - name: Get terraform version from .terraform-version file
         id: get-version
         uses: ./.github/actions/get-terraform-version
