@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       terraform_version:
-        description: Terraform version to use
+        description: Terraform version to use. If not set it is automatically retrieved from .terraform-version file.
         type: string
         required: false
       pre_commit_tf_tag:
