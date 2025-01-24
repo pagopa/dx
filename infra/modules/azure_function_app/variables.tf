@@ -19,7 +19,7 @@ variable "environment" {
   }
 
   validation {
-    condition     = var.has_durable_functions == false || length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}stfnd${var.environment.instance_number}") <= 24
+    condition     = var.has_durable_functions == false || length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}stfd${var.environment.instance_number}") <= 24
     error_message = "Storage Account name for Durable Functions must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}stfnd${var.environment.instance_number}\""
   }
 
