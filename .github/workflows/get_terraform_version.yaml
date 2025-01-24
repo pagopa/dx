@@ -1,0 +1,31 @@
+on:
+  workflow_call:
+    outputs:
+      terraform_version:
+        value: ${{ jobs.get-terraform-version.outputs.terraform_version }}
+        description: "The terraform version retrieved from the .terraform-version file. If missing, it returns a default recommended version."
+jobs:
+  get-terraform-version:
+    runs-on: ubuntu-latest
+    name: Get terraform version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Determine Terraform version
+        id: get-terraform-version
+        run: |
+          if [ -f ".terraform-version" ]; then
+              TERRAFORM_VERSION=$(cat .terraform-version)
+              if ! [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "Error: Invalid Terraform version format: $TERRAFORM_VERSION"
+                exit 1
+              fi
+              echo "Terraform version found in .terraform-version file: $TERRAFORM_VERSION"
+          else
+              TERRAFORM_VERSION="1.10.4"
+              echo "No .terraform-version file found. Defaulting to $TERRAFORM_VERSION"
+          fi
+          echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
+    outputs:
+      terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}

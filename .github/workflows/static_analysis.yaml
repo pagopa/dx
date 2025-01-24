@@ -1,17 +1,12 @@
-# This pipeline assumes the presence of a .pre-commit-config.yaml file at
-# the top level of the repository, which contains Terraform validation tasks.
-# For more details, refer to the pre-commit configuration file:
-# https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml.
 name: Static Analysis - TF Validation
 
 on:
   workflow_call:
     inputs:
       terraform_version:
-        description: Terraform version to use
+        description: Terraform version to use. If not set, it is automatically retrieved from .terraform-version file.
         type: string
         required: false
-        default: "1.7.5"
       pre_commit_tf_tag:
         description: |
           Pre-commit Terraform TAG to use,
@@ -21,7 +16,7 @@ on:
         required: false
         default: "v1.94.1@sha256:638e8892cb2647240c175064254c2fda80214597275c81a360a878dc80323076"
       enable_modified_files_detection:
-        description: If true the pipeline will run pre-commit on modified files only
+        description: If true, the pipeline will run pre-commit on modified files only.
         type: boolean
         required: false
         default: false
@@ -29,17 +24,37 @@ on:
         description: If set, it runs only the specified pre-commit hook check. Otherwise, all checks are run.
         type: string
         required: false
+      verbose:
+        description: If enabled, it prints the verbose logging of pre-commit checks
+        type: boolean
+        required: false
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
+  get-terraform-version:
+    name: Get Terraform Version
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        with:
+          default_version: "1.10.4"
+
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-latest
+    needs: [ get-terraform-version ]
     env:
-      TERRAFORM_VERSION: ${{ inputs.terraform_version }}
+      TERRAFORM_VERSION: ${{ inputs.terraform_version || needs.get-terraform-version.outputs.terraform_version }}
     container:
       image: ghcr.io/antonbabenko/pre-commit-terraform:${{ inputs.pre_commit_tf_tag }}
     defaults:
@@ -47,14 +62,12 @@ jobs:
         shell: bash
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
-      # https://github.com/antonbabenko/pre-commit-terraform#github-actions
       - name: Git config
         run: |
           set -eu
@@ -65,11 +78,12 @@ jobs:
       - name: Fix Alpine Container Image
         run: |
           apk --no-cache add tar
-          # check python modules installed versions
           python -m pip freeze --local
 
       - name: Run pre-commit on Modified Files
         if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
+        env:
+          PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu
 
@@ -87,6 +101,8 @@ jobs:
       - name: Run pre-commit
         if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
         id: pre_commit
+        env:
+          PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu
 
