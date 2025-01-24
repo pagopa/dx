@@ -1,0 +1,27 @@
+on:
+  workflow_call:
+    outputs:
+      terraform_version:
+        value: ${{ jobs.get-terraform-version.outputs.terraform_version }}
+        description: "List of all modules in the format [\"name1\", \"name2\"]"
+jobs:
+  get-terraform-version:
+    runs-on: ubuntu-latest
+    name: Get terraform version
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Determine Terraform version
+        id: get-terraform-version
+        run: |
+          if [ -f ".terraform-version" ]; then
+              TERRAFORM_VERSION=$(cat .terraform-version)
+              echo "Terraform version found in .terraform-version file: $TERRAFORM_VERSION"
+          else
+              TERRAFORM_VERSION="1.10.4"
+              echo "No .terraform-version file found. Defaulting to $TERRAFORM_VERSION"
+          fi
+          echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
+    outputs:
+      terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}
