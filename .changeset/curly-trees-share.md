@@ -1,5 +1,5 @@
 ---
-"azure_repo_starter_pack": patch
+"azure_github_environment_bootstrap": patch
 ---
 
 First relase
