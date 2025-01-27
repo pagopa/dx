@@ -4387,6 +4387,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_github_environment_bootstrap@workspace:infra/modules/azure_github_environment_bootstrap":
+  version: 0.0.0-use.local
+  resolution: "azure_github_environment_bootstrap@workspace:infra/modules/azure_github_environment_bootstrap"
+  languageName: unknown
+  linkType: soft
+
 "azure_naming_convention@workspace:infra/modules/azure_naming_convention":
   version: 0.0.0-use.local
   resolution: "azure_naming_convention@workspace:infra/modules/azure_naming_convention"
@@ -4396,12 +4402,6 @@ __metadata:
 "azure_postgres_server@workspace:infra/modules/azure_postgres_server":
   version: 0.0.0-use.local
   resolution: "azure_postgres_server@workspace:infra/modules/azure_postgres_server"
-  languageName: unknown
-  linkType: soft
-
-"azure_repo_starter_pack@workspace:infra/modules/azure_github_environment_bootstrap":
-  version: 0.0.0-use.local
-  resolution: "azure_repo_starter_pack@workspace:infra/modules/azure_github_environment_bootstrap"
   languageName: unknown
   linkType: soft
 
