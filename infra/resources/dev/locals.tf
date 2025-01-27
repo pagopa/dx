@@ -5,7 +5,7 @@ locals {
   location_short = "itn"
 
   tags = {
-    CostCenter     = "TS700 - ENGINEERING"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
