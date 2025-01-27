@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.1.3
+
+### Patch Changes
+
+- 42de6f4: Fix an issue where the app setting ´APPINSIGHTS_SAMPLING_PERCENTAGE´ was not set when using ´var.application_insights_key´ instead of ´var.application_insights_connection_string´
+
 ## 0.1.2
 
 ### Patch Changes
