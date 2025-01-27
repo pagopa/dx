@@ -82,3 +82,11 @@ resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer" {
   server_id = azurerm_postgresql_flexible_server.this.id
   value     = "true"
 }
+
+resource "azurerm_management_lock" "public-ip" {
+  count      = var.needs_lock ? 1 : 0
+  name       = azurerm_postgresql_flexible_server.this.name
+  scope      = azurerm_postgresql_flexible_server.this.id
+  lock_level = "CanNotDelete"
+  notes      = "Locked via Terraform"
+}
