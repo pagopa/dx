@@ -19,39 +19,6 @@ We'll cover the entire lifecycle from initialization to publication, including o
 
 Our Terraform modules are organized in the `infra/modules` directory, with each module containing its own code, tests, and examples.
 
-## Creating a New Module
-
-### Initialize the module
-
-To create a new module, we provide an automated initialization script called `add-module.sh` located in the `infra/scripts` directory. This script handles all the necessary setup steps and ensures consistency across module creation.
-
-The script must be executed in the root of the dx repository and accepts the following parameters:
-
-```bash
-./infra/scripts/add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
-```
-
-Parameters explained:
-- `--name`: Required. The name of your module (e.g., `azure_api_management`)
-- `--description`: Required. A brief description of the module's objective (e.g., `Deploys an Azure API Management service with monitoring and network configuration`)
-- `--gh-org`: Optional. The GitHub organization where the module's sub-repository will be created. Defaults to `pagopa`.
-- `--provider`: Optional. Defaults to `azurerm`. Specifies the cloud provider (e.g., `aws`, `azurerm`)
-
-### What the Initialization Script Does
-
-The script performs several important steps:
-
-1. Validates if the module directory already exists to prevent accidental overwrites
-2. Creates the module directory structure under `infra-modules/<provider_name>/`
-3. Generates a `package.json` file for version management
-4. Creates or updates (if already exists) a dedicated sub-repository with Terraform Registry compliant naming and description
-5. Initializes the repository with the module's base code
-
-After successful initialization, you'll need to:
-1. Contact DevEx team members in the #team_devex_help channel, to add the new repository to:
-   - The dx-pagopa-bot PAT
-   - Track it in the eng-github-authorization
-
 ## Module Development and Versioning
 
 We use [Changeset](https://github.com/changesets/changesets) for version management and changelog generation. This helps maintain a clear history of changes and ensures proper [semantic versioning](https://semver.org/).
@@ -86,7 +53,7 @@ When you're ready to publish your changes:
    - Code publication to the module sub-repository
    - Tag creation
 
-#### Sub-repository Management
+### A brief introduction
 
 The Terraform Registry has specific requirements about repository structure - each module must live in its own repository with a standardized naming convention. To accommodate this while maintaining the benefits of a monorepo development workflow, we've implemented an automated system that:
 
@@ -122,6 +89,60 @@ This approach gives us the best of both worlds:
 - Compliance with Terraform Registry requirements
 - Automated version management and changelog generation
 - Clean, separate version histories for each module
+
+
+## How to publish a module
+
+### Initialize the module
+
+To create a new module, we provide an automated initialization script called `add-module.sh` located in the `infra/scripts` directory. This script handles all the necessary setup steps and ensures consistency across module creation.
+
+The script must be executed in the root of the dx repository and accepts the following parameters:
+
+```bash
+./infra/scripts/add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
+```
+
+Parameters explained:
+- `--name`: Required. The name of your module (e.g., `azure_api_management`)
+- `--description`: Required. A brief description of the module's objective (e.g., `Deploys an Azure API Management service with monitoring and network configuration`)
+- `--gh-org`: Optional. The GitHub organization where the module's sub-repository will be created. Defaults to `pagopa`.
+- `--provider`: Optional. Defaults to `azurerm`. Specifies the cloud provider (e.g., `aws`, `azurerm`)
+
+### What the Initialization Script Does
+
+The script performs several important steps:
+
+1. Validates if the module directory already exists to prevent accidental overwrites
+2. Creates the module directory structure under `infra-modules/<provider_name>/`
+3. Generates a `package.json` file for version management
+4. Creates or updates (if already exists) a dedicated sub-repository with Terraform Registry compliant naming and description
+5. Initializes the repository with the module's base code
+
+After successful initialization, you'll need to:
+1. Contact DevEx team members in the #team_devex_help channel, to add the new repository to:
+   - The dx-pagopa-bot PAT
+   - Track it in the eng-github-authorization
+2. Create a changeset to produce the first release
+
+### Adding the Module to the Terraform Registry
+
+After completing all previous steps and ensuring that the module has been pushed to its sub-repository:
+
+1. **Ensure the Tag Exists**  
+   Before proceeding, merge the changeset Pull Request titled **"Version packages"** into the main branch of the sub-repository.  
+   - This step is essential because the Terraform Registry requires at least one version tag (`X.Y.Z`) for the module to be listed and published.
+
+2. **Access the Terraform Registry**  
+   Use the `dx-pagopa-bot` to log in to [registry.terraform.io](https://registry.terraform.io).
+
+3. **Add the Repository**  
+   - Click **Publish** => **Module**.
+   - Select the **GitHub repository** corresponding to the module (e.g., `terraform-azurerm-dx-azure-api-management`).
+   - Confirm the repository settings.
+
+4. **Verify Publication**  
+   Once added, the module will be scanned by the Terraform Registry. Ensure that the module appears in the PagoPA namespace with the correct version and documentation.
 
 ## Best Practices and Tips
 
