@@ -4399,6 +4399,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_repo_starter_pack@workspace:infra/modules/azure_github_environment_bootstrap":
+  version: 0.0.0-use.local
+  resolution: "azure_repo_starter_pack@workspace:infra/modules/azure_github_environment_bootstrap"
+  languageName: unknown
+  linkType: soft
+
 "azure_role_assignments@workspace:infra/modules/azure_role_assignments":
   version: 0.0.0-use.local
   resolution: "azure_role_assignments@workspace:infra/modules/azure_role_assignments"
