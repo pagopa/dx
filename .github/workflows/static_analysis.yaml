@@ -24,6 +24,10 @@ on:
         description: If set, it runs only the specified pre-commit hook check. Otherwise, all checks are run.
         type: string
         required: false
+      folder:
+        description: If set, it runs the pre-commit on a single folder. Otherwise, it is run on all files.
+        type: string
+        required: false
       verbose:
         description: If enabled, it prints the verbose logging of pre-commit checks
         type: boolean
@@ -79,9 +83,25 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
+        
+      - name: Run pre-commit on specific folders
+        if: ${{ inputs.folder != '' }}
+        id: pre_commit_specific_folders
+        env: 
+          PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+        run: |
+          set -eu
+
+          echo "Start pre-commit on specific folder ${{ inputs.folder }}"
+
+          find "${{ inputs.folder }}" -type f | xargs pre-commit run \
+            --color=always \
+            ${{ inputs.check_to_run }} \
+            --files
 
       - name: Run pre-commit on Modified Files
-        if: ${{ github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
+        if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
+        id: pre_commit_modified_files
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
@@ -99,7 +119,7 @@ jobs:
             ${{ inputs.check_to_run }}
 
       - name: Run pre-commit
-        if: ${{ github.event_name != 'pull_request' || !inputs.enable_modified_files_detection }}
+        if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
