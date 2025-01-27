@@ -84,7 +84,7 @@ resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer" {
 }
 
 resource "azurerm_management_lock" "this" {
-  count      = var.needs_lock ? 1 : 0
+  count      = var.enable_lock ? 1 : 0
   name       = azurerm_postgresql_flexible_server.this.name
   scope      = azurerm_postgresql_flexible_server.this.id
   lock_level = "CanNotDelete"

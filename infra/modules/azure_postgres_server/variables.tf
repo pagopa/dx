@@ -263,7 +263,7 @@ variable "diagnostic_settings" {
   }
 }
 
-variable "needs_lock" {
+variable "enable_lock" {
   type        = bool
   default     = true
   description = "Define if lock should be enabled."
