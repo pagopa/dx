@@ -59,7 +59,8 @@ if [ ! -f "$PACKAGE_JSON" ]; then
   "description": "$DESCRIPTION"
 }
 EOL
-  echo "package.json created in '$MODULE_DIR'."
+  echo "package.json created in '$MODULE_DIR'. Running yarn install to update the lock."
+  yarn install
 else
   echo "package.json already exists in '$MODULE_DIR'. Skipping file creation."
 fi
@@ -115,6 +116,8 @@ EOL
     git push -u origin main
     rm .gitignore
     echo "Module '$MODULE_NAME' pushed to GitHub repository."
+    echo "Please, ask the DevEx members to add the new repository to the dx-pagopa-bot PAT and on eng-github-authorization repo"
+    echo "The creation of a changeset is required to produce the first release. Please run yarn changeset from the root of the repo."
   else
     echo "Module '$MODULE_NAME' already has a Git repository. Skipping initialization."
   fi
