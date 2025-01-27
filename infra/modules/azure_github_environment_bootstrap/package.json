@@ -1,6 +1,7 @@
 {
   "name": "azure_repo_starter_pack",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
-  "provider": "azurerm"
+  "provider": "azurerm",
+  "description": "Sets up monorepo's settings and required Azure permissions and roles"
 }
