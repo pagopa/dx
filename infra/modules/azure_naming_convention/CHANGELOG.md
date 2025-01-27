@@ -1,5 +1,11 @@
 # azure_naming_convention
 
+## 0.0.5
+
+### Patch Changes
+
+- 845a530: Add ´env_name´ as output containing the short environment name
+
 ## 0.0.4
 
 ### Patch Changes
