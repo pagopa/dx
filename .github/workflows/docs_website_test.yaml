@@ -16,10 +16,10 @@ on:
 
 jobs:
   test-deploy:
-    name: Test deployment
-    runs-on: ubuntu-latest
     # Don't run in Changeset PRs
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'changeset-release/main' }}
+    name: Test deployment
+    runs-on: ubuntu-latest
     env:
       TURBO_CACHE_DIR: .turbo-cache
 
