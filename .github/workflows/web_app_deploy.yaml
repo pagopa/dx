@@ -101,7 +101,6 @@ jobs:
 
           DEFAULT_FILES="host.json"
           FILES=$(jq -r --arg default "$DEFAULT_FILES" '(.files // [$default]) | join(" ")' package.json)
-          echo $FILES
 
           # create the artifact (zip) with node_modules, index.js and package.json
           zip -r $BUNDLE_NAME.zip node_modules $FILES
