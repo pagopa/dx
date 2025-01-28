@@ -99,8 +99,8 @@ jobs:
           # create a new package.json file, with the updated entry point
           jq --arg sha "+$SHORT_SHA" '{"name": .name, "version": (.version + $sha), "main": "index.js", "type": (if has("type") then .type else "commonjs" end), "dependencies": .dependencies}' package.json > ${{ github.run_id }}/package.json
 
-          DEFAULT_FILES='"host.json"'
-          FILES=$(jq -r --arg default "$DEFAULT_FILES" 'if has("files") then .files else [$default] end | join(" ")' package.json)
+          DEFAULT_FILES="host.json"
+          FILES=$(jq -r --arg default "$DEFAULT_FILES" '(.files // [$default]) | join(" ")' package.json)
 
           # create the artifact (zip) with node_modules, index.js and package.json
           zip -r $BUNDLE_NAME.zip node_modules $FILES
