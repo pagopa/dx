@@ -10,6 +10,8 @@ on:
 
 jobs:
   js_code_review:
+    # Don't run in Changeset PRs
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'changeset-release/main' }}
     uses: ./.github/workflows/js_code_review.yaml
     name: Code Review
     secrets: inherit

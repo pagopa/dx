@@ -12,6 +12,8 @@ on:
 
 jobs:
   tf_analysis:
+    # Don't run in Changeset PRs
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'changeset-release/main' }}
     uses: ./.github/workflows/static_analysis.yaml
     name: Terraform Validation
     secrets: inherit
