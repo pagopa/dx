@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - CES-386-devcontainer
     paths:
       - ".github/workflows/devcontainer_publish.yaml"
       - ".devcontainer/features/**"
@@ -22,5 +23,7 @@ jobs:
         uses: devcontainers/action@v1
         with:
           publish-features: "true"
-          base-path-to-features: ./devcontainer/features
-          features-namespace: devcontainer-features
+          base-path-to-features: .devcontainer/features
+          features-namespace: pagopa/devcontainer-features
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

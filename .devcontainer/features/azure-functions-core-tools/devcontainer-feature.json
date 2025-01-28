@@ -1,0 +1,20 @@
+{
+  "id": "azure-functions-core-tools",
+  "version": "1.0.0",
+  "name": "Azure Functions Core Tools",
+  "description": "Installs the Azure Functions Core Tools",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/devcontainer-features/azure-functions-core-tools",
+  "keywords": ["Azure", "Azure Functions"],
+  "dependsOn": {
+    "ghcr.io/devcontainers/features/dotnet:2": "8.0"
+  },
+  "options": {
+    "version": {
+      "type": "string",
+      "description": "The version of Azure Functions Core Tools to install",
+      "proposals": ["latest"],
+      "default": "latest"
+    }
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
