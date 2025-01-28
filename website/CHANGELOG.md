@@ -1,5 +1,11 @@
 # docs
 
+## 0.0.3
+
+### Patch Changes
+
+- 8fd8da4: Publishing terraform registry modules documentation refactored to enhance readability
+
 ## 0.0.2
 
 ### Patch Changes
