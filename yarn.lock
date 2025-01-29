@@ -4381,12 +4381,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"azure_function_app_durable@workspace:infra/modules/azure_function_app_durable":
-  version: 0.0.0-use.local
-  resolution: "azure_function_app_durable@workspace:infra/modules/azure_function_app_durable"
-  languageName: unknown
-  linkType: soft
-
 "azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed":
   version: 0.0.0-use.local
   resolution: "azure_function_app_exposed@workspace:infra/modules/azure_function_app_exposed"
