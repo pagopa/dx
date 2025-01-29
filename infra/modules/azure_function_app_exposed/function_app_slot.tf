@@ -47,6 +47,10 @@ resource "azurerm_linux_function_app_slot" "this" {
     } : {},
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
+    local.function_app.has_durable == 1 ? {
+      #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
+      DfStorageConnectionName__accountname = azurerm_storage_account.durable_function[0].name,
+    } : {},
     var.slot_app_settings
   )
 

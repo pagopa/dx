@@ -12,6 +12,13 @@ output "storage_account" {
   }
 }
 
+output "storage_account_durable" {
+  value = {
+    id   = try(azurerm_storage_account.durable_function[0].id, null)
+    name = try(azurerm_storage_account.durable_function[0].name, null)
+  }
+}
+
 output "function_app" {
   value = {
     resource_group_name = azurerm_linux_function_app.this.resource_group_name

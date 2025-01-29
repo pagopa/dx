@@ -10,6 +10,7 @@ locals {
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
     worker_process_count   = local.worker_process_count_mapping[local.tier]
+    has_durable            = var.has_durable_functions ? 1 : 0
   }
 
   function_app_slot = {
@@ -23,5 +24,6 @@ locals {
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfn${module.naming_convention.suffix}", "-", ""))
+    durable_name     = lower(replace("${module.naming_convention.project}${replace(module.naming_convention.domain, "-", "")}${var.environment.app_name}stfd${module.naming_convention.suffix}", "-", ""))
   }
 }
