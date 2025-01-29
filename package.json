@@ -8,6 +8,7 @@
     "infra/scripts"
   ],
   "devDependencies": {
+    "@devcontainers/cli": "^0.73.0",
     "prettier": "3.2.5",
     "turbo": "^2.0.12"
   },
@@ -15,7 +16,8 @@
     "build": "turbo run build",
     "code-review": "turbo run typecheck format:check lint:check",
     "version": "yarn changeset version && yarn --mode update-lockfile",
-    "release": "yarn build && changeset publish"
+    "release": "yarn build && changeset publish",
+    "generate:devcontainer-features-docs": "devcontainer features generate-docs -n pagopa/devcontainer-features -p .devcontainer/features"
   },
   "dependencies": {
     "@changesets/cli": "^2.27.1"
