@@ -8,6 +8,9 @@ The module, named `azure_core_infra`, includes the following:
 - Resource groups for the VNet, common resources, and testing.
 - A common Key Vault with a private endpoint.
 - Private DNS zones for all resource types.
+- (Optional) An API Management
+- (Optional) A Cosmos DB
+- (Optional) A Storage Account
 
 ## Examples
 

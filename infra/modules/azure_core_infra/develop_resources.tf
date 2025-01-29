@@ -13,7 +13,7 @@ module "common_apim" {
 
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
-  tier                = var.apim.tier == "l" && var.test_enabled ? "s" : var.apim.tier
+  tier                = var.apim.tier == "l" && var.test_enabled ? "m" : var.apim.tier
 
   publisher_email = var.apim.publisher.email
   publisher_name  = var.apim.publisher.name
@@ -76,7 +76,7 @@ module "common_storage" {
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
 
-  tier                = var.storage.tier
+  tier                = var.storage.tier == "l" && var.test_enabled ? "s" : var.storage.tier
   subservices_enabled = var.storage.subservices
 
   virtual_network = {

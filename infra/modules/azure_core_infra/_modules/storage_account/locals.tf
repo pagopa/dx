@@ -1,14 +1,12 @@
 locals {
   tiers = {
     s = {
-      alerts                     = false
       advanced_threat_protection = false
       account_tier               = "Standard"
       replication_type           = "LRS"
     }
 
     l = {
-      alerts                     = true
       advanced_threat_protection = var.location != "italynorth"
       account_tier               = "Standard"
       replication_type           = "ZRS"

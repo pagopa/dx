@@ -91,7 +91,7 @@ variable "apim" {
   }
 
   validation {
-    condition     = var.apim.tier == "s" || var.apim.tier == "m" || var.apim.tier == "pl"
+    condition     = var.apim.tier == "s" || var.apim.tier == "m" || var.apim.tier == "l"
     error_message = "API Management SKU Tier must be 's', 'm' or 'l'"
   }
 }
