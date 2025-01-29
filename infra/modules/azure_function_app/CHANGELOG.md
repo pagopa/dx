@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.2.0
+
+### Minor Changes
+
+- 34c0c5c: Add support to Durable Functions
+
 ## 0.1.3
 
 ### Patch Changes

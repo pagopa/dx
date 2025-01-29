@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.1.0
+
+### Minor Changes
+
+- 34c0c5c: Add support to Durable Functions
+
 ## 0.0.7
 
 ### Patch Changes
