@@ -43,6 +43,27 @@ run "core_is_correct_plan" {
       cidr_subnet              = "10.50.133.0/24"
       dnsforwarder_cidr_subnet = "10.50.252.8/29"
     }
+
+    apim = {
+      enable = true
+      tier   = "s"
+      cidr   = "10.50.253.0/23"
+      publischer = {
+        email = "terraform-test@pagopa.it"
+        name  = "Terraform Test"
+      }
+    }
+  
+    cosmos = {
+      enable = true
+      public = false
+    }
+
+    storage = {
+      enable = true
+      tier   = "s"
+      subservices =["blob", "queue", "table", "file"]
+    }
   }
 
   # Checks some assertions
@@ -74,5 +95,20 @@ run "core_is_correct_plan" {
   assert {
     condition     = try(azurerm_resource_group.test[0], "NotTestEnv") == "NotTestEnv"
     error_message = "This Environment is not a Test Environment"
+  }
+
+  assert {
+    condition     = module.common_apim[0].name == "dx-d-itn-modules-test-apim-01"
+    error_message = "The APIM tier configuration must be correct"
+  }
+
+  assert {
+    condition     = module.common_cosmos[0].name == "dx-d-itn-modules-test-cosno-01"
+    error_message = "The Cosmos DB configuration must be correct"
+  }
+
+  assert {
+    condition     = module.common_storage[0].name == "dxditnmodulestestst01"
+    error_message = "The Storage Account configuration must be correct"
   }
 }

@@ -42,7 +42,10 @@ module "core" {
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_common_apim"></a> [common\_apim](#module\_common\_apim) | ./_modules/apim | n/a |
+| <a name="module_common_cosmos"></a> [common\_cosmos](#module\_common\_cosmos) | ./_modules/cosmos | n/a |
 | <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
+| <a name="module_common_storage"></a> [common\_storage](#module\_common\_storage) | ./_modules/storage_account | n/a |
 | <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
@@ -66,10 +69,13 @@ module "core" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_apim"></a> [apim](#input\_apim) | API Management configuration | <pre>object({<br/>    enable = optional(bool, false)<br/>    tier   = optional(string, "s")<br/>    publisher = optional(object({<br/>      email = string<br/>      name  = string<br/>      }), {<br/>      email = "common-dx@pagopa.it"<br/>      name  = "Common DX"<br/>    })<br/>    cidr = optional(string, "10.0.253.0/23")<br/>  })</pre> | <pre>{<br/>  "enable": false<br/>}</pre> | no |
+| <a name="input_cosmos"></a> [cosmos](#input\_cosmos) | Cosmos DB configuration | <pre>object({<br/>    enable = optional(bool, false)<br/>    public = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "enable": false<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_gh_runner_snet"></a> [gh\_runner\_snet](#input\_gh\_runner\_snet) | GitHub runner subnet cidr | `string` | `"10.0.242.0/23"` | no |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | Flag to enable nat gateway creation | `bool` | `false` | no |
 | <a name="input_pep_subnet_cidr"></a> [pep\_subnet\_cidr](#input\_pep\_subnet\_cidr) | CIDR block for the private endpoint subnet | `string` | `"10.0.2.0/23"` | no |
+| <a name="input_storage"></a> [storage](#input\_storage) | Storage configuration | <pre>object({<br/>    enable      = optional(bool, false)<br/>    tier        = optional(string, "s")<br/>    subservices = optional(list(string), ["blob"])<br/>  })</pre> | <pre>{<br/>  "enable": false<br/>}</pre> | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_test_enabled"></a> [test\_enabled](#input\_test\_enabled) | Flag to enable testing resources | `bool` | `false` | no |
 | <a name="input_virtual_network_cidr"></a> [virtual\_network\_cidr](#input\_virtual\_network\_cidr) | CIDR block for the virtual network | `string` | `"10.0.0.0/16"` | no |
@@ -79,10 +85,13 @@ module "core" {
 
 | Name | Description |
 |------|-------------|
+| <a name="output_common_apim"></a> [common\_apim](#output\_common\_apim) | n/a |
+| <a name="output_common_cosmos"></a> [common\_cosmos](#output\_common\_cosmos) | n/a |
 | <a name="output_common_key_vault"></a> [common\_key\_vault](#output\_common\_key\_vault) | n/a |
 | <a name="output_common_nat_gateways"></a> [common\_nat\_gateways](#output\_common\_nat\_gateways) | n/a |
 | <a name="output_common_pep_snet"></a> [common\_pep\_snet](#output\_common\_pep\_snet) | n/a |
 | <a name="output_common_resource_group_name"></a> [common\_resource\_group\_name](#output\_common\_resource\_group\_name) | n/a |
+| <a name="output_common_storage"></a> [common\_storage](#output\_common\_storage) | n/a |
 | <a name="output_common_vnet"></a> [common\_vnet](#output\_common\_vnet) | n/a |
 | <a name="output_github_runner"></a> [github\_runner](#output\_github\_runner) | n/a |
 | <a name="output_network_resource_group_name"></a> [network\_resource\_group\_name](#output\_network\_resource\_group\_name) | n/a |

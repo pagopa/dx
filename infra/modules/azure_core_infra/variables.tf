@@ -66,3 +66,61 @@ variable "gh_runner_snet" {
   default     = "10.0.242.0/23"
   description = "GitHub runner subnet cidr"
 }
+
+# Develop resources
+# APIM
+
+variable "apim" {
+  type = object({
+    enable = optional(bool, false)
+    tier   = optional(string, "s")
+    publisher = optional(object({
+      email = string
+      name  = string
+      }), {
+      email = "common-dx@pagopa.it"
+      name  = "Common DX"
+    })
+    cidr = optional(string, "10.0.253.0/23")
+  })
+
+  description = "API Management configuration"
+
+  default = {
+    enable = false
+  }
+
+  validation {
+    condition     = var.apim.tier == "s" || var.apim.tier == "m" || var.apim.tier == "pl"
+    error_message = "API Management SKU Tier must be 's', 'm' or 'l'"
+  }
+}
+
+# Cosmos DB
+variable "cosmos" {
+  type = object({
+    enable = optional(bool, false)
+    public = optional(bool, false)
+  })
+
+  description = "Cosmos DB configuration"
+
+  default = {
+    enable = false
+  }
+}
+
+# Storage
+variable "storage" {
+  type = object({
+    enable      = optional(bool, false)
+    tier        = optional(string, "s")
+    subservices = optional(list(string), ["blob"])
+  })
+
+  description = "Storage configuration"
+
+  default = {
+    enable = false
+  }
+}
