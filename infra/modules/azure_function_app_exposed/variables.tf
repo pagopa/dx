@@ -18,6 +18,11 @@ variable "environment" {
     error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}\""
   }
 
+  validation {
+    condition     = var.has_durable_functions == false || length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}stfd${var.environment.instance_number}") <= 24
+    error_message = "Storage Account name for Durable Functions must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}stfnd${var.environment.instance_number}\""
+  }
+
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
@@ -121,4 +126,10 @@ variable "sticky_app_setting_names" {
   type        = list(string)
   description = "(Optional) A list of application setting names that are not swapped between slots"
   default     = []
+}
+
+variable "has_durable_functions" {
+  type        = bool
+  description = "(Optional) Enable if the Function App hosts Durable Functions"
+  default     = false
 }

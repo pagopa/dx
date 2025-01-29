@@ -48,7 +48,11 @@ resource "azurerm_linux_function_app" "this" {
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
-    } : {}
+    } : {},
+    local.function_app.has_durable == 1 ? {
+      #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
+      DfStorageConnectionName__accountname = azurerm_storage_account.durable_function[0].name,
+    } : {},
   )
 
   sticky_settings {
