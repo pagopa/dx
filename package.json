@@ -16,8 +16,7 @@
     "build": "turbo run build",
     "code-review": "turbo run typecheck format:check lint:check",
     "version": "yarn changeset version && yarn --mode update-lockfile",
-    "release": "yarn build && changeset publish",
-    "generate:devcontainer-features-docs": "devcontainer features generate-docs -n pagopa/devcontainer-features -p .devcontainer/features"
+    "release": "yarn build && changeset publish"
   },
   "dependencies": {
     "@changesets/cli": "^2.27.1"
