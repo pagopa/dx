@@ -46,8 +46,14 @@ resource "azurerm_linux_function_app_slot" "this" {
       FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
     },
     local.application_insights.enable ? {
+      # SDK AI Sampling (for dependencies)
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = "100"
+      APPINSIGHTS_SAMPLING_PERCENTAGE = "100",
+
+      # Runtime AI Sampling (for requests, traces, metrics, etc..)
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = "100",
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = "100",
+      AzureFunctionsJobHost__logging__logLevel__default                                                = "Debug"
     } : {},
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},

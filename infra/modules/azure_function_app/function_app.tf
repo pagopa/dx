@@ -50,8 +50,16 @@ resource "azurerm_linux_function_app" "this" {
     length(local.function_app.name) > 32 && !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
     local.application_insights.enable ? {
+      # SDK AI Sampling (for dependencies)
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
+      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage,
+
+      # Runtime AI Sampling (for requests, traces, metrics, etc..)
+      # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.application_insights_sampling_percentage,
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage,
+      AzureFunctionsJobHost__logging__logLevel__default                                                = "Information"
+      AzureFunctionsJobHost__logging__logLevel__Function                                               = "Warning"
     } : {},
     local.function_app.has_durable == 1 ? {
       #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
@@ -64,7 +72,11 @@ resource "azurerm_linux_function_app" "this" {
       [
         "SLOT_TASK_HUBNAME",
         "APPINSIGHTS_SAMPLING_PERCENTAGE",
-        "AzureFunctionsWebHost__hostid"
+        "AzureFunctionsWebHost__hostid",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage",
+        "AzureFunctionsJobHost__logging__logLevel__default",
+        "AzureFunctionsJobHost__logging__logLevel__Function"
       ],
       var.sticky_app_setting_names,
     )
