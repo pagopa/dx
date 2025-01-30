@@ -1,0 +1,11 @@
+{
+  "name": "@pagopa/__DEVCONTAINER_HOME__",
+  "packageManager": "yarn@4.6.0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
