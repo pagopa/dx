@@ -56,6 +56,7 @@ resource "azurerm_linux_function_app" "this" {
 
       # Azure Function Host (runtime) AI Sampling (for requests, traces, metrics, etc..)
       # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = var.application_insights_sampling_percentage,
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.application_insights_sampling_percentage,
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage,
       AzureFunctionsJobHost__logging__logLevel__default                                                = "Information"
@@ -73,6 +74,7 @@ resource "azurerm_linux_function_app" "this" {
         "SLOT_TASK_HUBNAME",
         "APPINSIGHTS_SAMPLING_PERCENTAGE",
         "AzureFunctionsWebHost__hostid",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage",
         "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage",
         "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage",
         "AzureFunctionsJobHost__logging__logLevel__default",
