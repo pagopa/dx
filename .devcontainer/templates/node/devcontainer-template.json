@@ -1,0 +1,25 @@
+{
+  "id": "node",
+  "version": "1.0.0-rc.2",
+  "name": "Node.js",
+  "description": "A template for Node.js projects",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/templates/node",
+  "options": {
+    "projectName": {
+      "type": "string",
+      "description": "The name of the project"
+    },
+    "nodeVersion": {
+      "type": "string",
+      "description": "The version of Node.js to use",
+      "enum": ["20", "22"],
+      "default": "20"
+    },
+    "terraformVersion": {
+      "type": "string",
+      "description": "The version of Terraform to use",
+      "default": "latest"
+    }
+  },
+  "platforms": ["Node.js", "JavaScript", "Terraform", "pre-commit", "PlantUML"]
+}
