@@ -54,7 +54,7 @@ resource "azurerm_linux_function_app" "this" {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage,
 
-      # Runtime AI Sampling (for requests, traces, metrics, etc..)
+      # Azure Function Host (runtime) AI Sampling (for requests, traces, metrics, etc..)
       # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.application_insights_sampling_percentage,
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage,
