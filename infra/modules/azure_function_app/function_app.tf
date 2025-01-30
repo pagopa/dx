@@ -65,6 +65,7 @@ resource "azurerm_linux_function_app" "this" {
     app_setting_names = concat(
       [
         "SLOT_TASK_HUBNAME",
+        "AzureFunctionsJobHost__extensions__durableTask__hubName",
         "APPINSIGHTS_SAMPLING_PERCENTAGE",
         "AzureFunctionsWebHost__hostid"
       ],
