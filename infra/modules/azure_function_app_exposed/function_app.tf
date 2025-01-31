@@ -51,7 +51,9 @@ resource "azurerm_linux_function_app" "this" {
     } : {},
     local.function_app.has_durable == 1 ? {
       #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
-      DfStorageConnectionName__accountname = azurerm_storage_account.durable_function[0].name,
+      DfStorageConnectionName__accountname                                                  = azurerm_storage_account.durable_function[0].name,
+      AzureFunctionsJobHost__extensions__durableTask__hubName                               = "ProductionTaskHub",
+      AzureFunctionsJobHost__extensions__durableTask__storageProvider__connectionStringName = "DfStorageConnectionName"
     } : {},
   )
 
@@ -59,6 +61,7 @@ resource "azurerm_linux_function_app" "this" {
     app_setting_names = concat(
       [
         "SLOT_TASK_HUBNAME",
+        "AzureFunctionsJobHost__extensions__durableTask__hubName",
         "APPINSIGHTS_SAMPLING_PERCENTAGE",
         "AzureFunctionsWebHost__hostid"
       ],
