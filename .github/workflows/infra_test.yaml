@@ -2,7 +2,8 @@ name: Test Terraform modules plan
 
 on:
   workflow_dispatch:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches:
       - main
     paths:
