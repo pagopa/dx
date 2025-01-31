@@ -1,0 +1,25 @@
+{
+  "id": "plantuml",
+  "version": "1.0.0",
+  "name": "PlantUML",
+  "description": "Installs PlantUML",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/plantuml",
+  "options": {
+    "version": {
+      "type": "string",
+      "description": "The version of PlantUML to install",
+      "proposals": ["latest"],
+      "default": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["jebbs.plantuml"],
+      "settings": {
+        "plantuml.render": "Local",
+        "plantuml.jar": "/opt/plantuml/plantuml.jar"
+      }
+    }
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
