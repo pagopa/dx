@@ -351,6 +351,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_reader,
+      azurerm_role_assignment.infra_cd_subscription_rbac_admin,
       azurerm_role_assignment.infra_cd_rg_contributor,
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
       azurerm_role_assignment.infra_cd_apim_service_contributor,
@@ -498,6 +499,11 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_cd_subscription_reader != null
     error_message = "The Infra CD managed identity can't read resources at subscription scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_subscription_rbac_admin != null
+    error_message = "The Infra CD managed identity can't manage IAM roles at subscription scope"
   }
 
   assert {
