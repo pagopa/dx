@@ -51,7 +51,8 @@ variable "continuos_integration" {
         "Reader",
         "Reader and Data Access",
         "PagoPA IaC Reader",
-        "DocumentDB Account Contributor"
+        "DocumentDB Account Contributor",
+        "PagoPA API Management Service List Secrets"
       ]
       resource_groups = {
         terraform-state-rg = [
