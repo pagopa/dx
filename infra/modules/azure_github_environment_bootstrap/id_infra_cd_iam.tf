@@ -6,6 +6,13 @@ resource "azurerm_role_assignment" "infra_cd_subscription_reader" {
   description          = "Allow ${var.repository.name} Infra CD identity to read resources at subscription scope"
 }
 
+resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
+  scope                = var.subscription_id
+  role_definition_name = "Role Based Access Control Administrator"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to manage IAM roles at subscription scope"
+}
+
 # Resource Group
 resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
   scope                = azurerm_resource_group.main.id
