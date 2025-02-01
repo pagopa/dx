@@ -61,7 +61,9 @@ resource "azurerm_linux_function_app_slot" "this" {
     var.slot_app_settings,
     local.function_app.has_durable == 1 ? {
       #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
-      DfStorageConnectionName__accountname = azurerm_storage_account.durable_function[0].name,
+      DfStorageConnectionName__accountname                                                  = azurerm_storage_account.durable_function[0].name,
+      AzureFunctionsJobHost__extensions__durableTask__hubName                               = "StagingTaskHub",
+      AzureFunctionsJobHost__extensions__durableTask__storageProvider__connectionStringName = "DfStorageConnectionName"
     } : {},
   )
 
