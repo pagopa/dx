@@ -41,7 +41,8 @@ jobs:
     name: Get Terraform and pre-commit Version
     runs-on: ubuntu-latest
     outputs:
-      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+      terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}
+      pre_commit_terraform_version: ${{ steps.get-pre-commit-version.outputs.pre_commit_terraform_version }}
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
@@ -53,7 +54,7 @@ jobs:
           default_version: "1.10.4"
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
-        uses: pagopa/dx/.github/actions/get-pre-commit-version@main
+        uses: pagopa/dx/.github/actions/get-pre-commit-version@CES-712-set-static-analysis-pre-commits-version
         with:
           default_version: "1.96.2"
 
