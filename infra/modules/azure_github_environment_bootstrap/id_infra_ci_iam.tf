@@ -92,7 +92,9 @@ resource "azurerm_role_assignment" "infra_ci_rg_ext_pagopa_dns_reader" {
 
 # API Management
 resource "azurerm_role_assignment" "infra_ci_subscription_apim_secrets" {
-  scope                = var.subscription_id
+  count = local.has_apim
+
+  scope                = var.apim_id
   role_definition_name = "PagoPA API Management Service List Secrets"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
   description          = "Allow ${var.repository.name} Infra CI identity to read API Management secrets at subscription scope"
