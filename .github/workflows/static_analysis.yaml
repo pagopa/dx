@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  get-terraform-version:
+  get-versions:
     name: Get Terraform Version
     runs-on: ubuntu-latest
     outputs:
@@ -48,19 +48,24 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
 
       - name: Get terraform version from .terraform-version file
-        id: get-version
+        id: get-terraform-version
         uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
+      - name: Get terraform version from .terraform-version file
+        id: get-pre-commit-version
+        uses: pagopa/dx/.github/actions/get-pre-commit-version@main
+        with:
+          default_version: "1.96.2"
 
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-latest
-    needs: [ get-terraform-version ]
+    needs: [ get-versions ]
     env:
-      TERRAFORM_VERSION: ${{ inputs.terraform_version || needs.get-terraform-version.outputs.terraform_version }}
+      TERRAFORM_VERSION: ${{ inputs.terraform_version || needs.get-versions.outputs.terraform_version }}
     container:
-      image: ghcr.io/antonbabenko/pre-commit-terraform:${{ inputs.pre_commit_tf_tag }}
+      image: ghcr.io/antonbabenko/pre-commit-terraform:${{ inputs.pre_commit_tf_tag || needs.get-versions.outputs.pre_commit_terraform_version }}
     defaults:
       run:
         shell: bash

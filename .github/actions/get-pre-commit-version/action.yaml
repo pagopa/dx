@@ -1,0 +1,38 @@
+name: Get Pre-Commit Terraform Version
+description: Retrieve the `pre-commit-terraform` version from the `.pre-commit-config.yaml` file or return a default version.
+inputs:
+  default_version:
+    description: "Default pre-commit-terraform version to use if the `.pre-commit-config.yaml` file is not found."
+    required: false
+    default: "v1.96.2"
+outputs:
+  pre_commit_terraform_version:
+    description: "The pre-commit-terraform version retrieved or the default."
+runs:
+  using: "composite"
+  steps:
+    - name: Get Pre-Commit Terraform Version
+      shell: bash
+      run: |
+        # Default version from input
+        DEFAULT_VERSION="${{ inputs.default_version }}"
+
+        # Check if the .pre-commit-config.yaml file exists
+        if [ -f ".pre-commit-config.yaml" ]; then
+            # Extract the version using yq with partial match
+            PRE_COMMIT_VERSION=$(yq '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
+
+            # Validate the version format (must start with "v" followed by digits)
+            if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "Pre-commit Terraform version found: $PRE_COMMIT_VERSION"
+            else
+                echo "Error: Invalid or missing Pre-commit Terraform version. Using default: $DEFAULT_VERSION"
+                PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+            fi
+        else
+            echo "No .pre-commit-config.yaml file found. Defaulting to $DEFAULT_VERSION"
+            PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+        fi
+
+        # Output the pre-commit Terraform version
+        echo "pre_commit_terraform_version=$PRE_COMMIT_VERSION" >> $GITHUB_OUTPUT
