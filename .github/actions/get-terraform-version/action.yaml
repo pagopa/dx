@@ -23,14 +23,14 @@ runs:
             
             # Validate the version format
             if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Terraform version found in .terraform-version file: $TERRAFORM_VERSION"
+                echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"
             else
-                echo "Error: Invalid Terraform version format: $TERRAFORM_VERSION"
+                echo "Error: Invalid Terraform version format: ${TERRAFORM_VERSION}"
                 exit 1
             fi
         else
             TERRAFORM_VERSION="$DEFAULT_VERSION"
-            echo "No .terraform-version file found. Defaulting to $TERRAFORM_VERSION"
+            echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
         fi
         
         # Output the Terraform version
