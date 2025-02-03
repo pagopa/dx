@@ -8,12 +8,10 @@ inputs:
 outputs:
   pre_commit_terraform_version:
     description: "The pre-commit-terraform version retrieved or the default."
-    value: ${{ steps.get-version.outputs.pre_commit_terraform_version }}
 runs:
   using: "composite"
   steps:
     - name: Get Pre-Commit Terraform Version
-      id: get-version
       shell: bash
       run: |
         # Default version from input
@@ -41,10 +39,5 @@ runs:
           fi
         fi
 
-        # Save to GITHUB_ENV first (correct for composite actions)
-        echo "pre_commit_terraform_version=$PRE_COMMIT_VERSION" >> "$GITHUB_ENV"
-
-    - name: Set Output
-      id: set-output
-      shell: bash
-      run: echo "pre_commit_terraform_version=${{ env.pre_commit_terraform_version }}" >> "$GITHUB_OUTPUT"
+        # Output the pre-commit Terraform version
+        echo "pre_commit_terraform_version=$PRE_COMMIT_VERSION" >> $GITHUB_OUTPUT
