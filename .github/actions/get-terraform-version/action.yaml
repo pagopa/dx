@@ -8,10 +8,12 @@ inputs:
 outputs:
   terraform_version:
     description: "The Terraform version retrieved or the default."
+    value: ${{ steps.get-version.outputs.terraform_version }}
 runs:
   using: "composite"
   steps:
     - name: Get Terraform Version
+      id: get-version  # Needed to expose outputs in composite actions!
       shell: bash
       run: |
         # Default version provided via input
@@ -34,5 +36,9 @@ runs:
             echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
         fi
         
-        # Output the Terraform version
-        echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
+        # Correct way to set outputs in composite actions
+        echo "terraform_version=$TERRAFORM_VERSION" >> "$GITHUB_ENV"
+    - name: Set Output
+      id: set-output
+      shell: bash
+      run: echo "terraform_version=${{ env.terraform_version }}" >> "$GITHUB_OUTPUT"
