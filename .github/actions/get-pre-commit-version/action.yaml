@@ -26,11 +26,11 @@ runs:
             if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                 echo "Pre-commit Terraform version found: $PRE_COMMIT_VERSION"
             else
-                echo "Error: Invalid or missing Pre-commit Terraform version. Using default: $DEFAULT_VERSION"
+                echo "Error: Invalid or missing Pre-commit Terraform version. Using default: ${DEFAULT_VERSION}"
                 PRE_COMMIT_VERSION="$DEFAULT_VERSION"
             fi
         else
-            echo "No .pre-commit-config.yaml file found. Defaulting to $DEFAULT_VERSION"
+            echo "No .pre-commit-config.yaml file found. Defaulting to ${DEFAULT_VERSION}"
             PRE_COMMIT_VERSION="$DEFAULT_VERSION"
         fi
 
