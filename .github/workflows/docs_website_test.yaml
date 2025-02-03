@@ -17,7 +17,7 @@ on:
 jobs:
   test-deploy:
     # Don't run in Changeset PRs
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'changeset-release/main' }}
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
     name: Test deployment
     runs-on: ubuntu-latest
     env:
