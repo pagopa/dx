@@ -119,6 +119,64 @@ module "storage_account" {
 
 In this example tier is setted to "s", but is possible to choose between "s" or "l" (Check [here](https://registry.terraform.io/modules/pagopa/dx-azure-storage-account/azurerm/latest) for a more specific configuration).
 
+## Note
+
+If you are working in another project within the same subscription where the core infrastructure has already been deployed, you can reference the existing resources using data sources. For example:
+
+```hcl
+data "azurerm_resource_group" "test_rg" {
+  name = "${module.naming_convention.project}-test-rg-01"
+}
+
+data "azurerm_resource_group" "net_rg" {
+  name = "${module.naming_convention.project}-network-rg-01"
+}
+
+data "azurerm_resource_group" "common_rg" {
+  name = "${module.naming_convention.project}-common-rg-01"
+}
+
+data "azurerm_virtual_network" "test_vnet" {
+  name                = "${module.naming_convention.project}-common-vnet-01"
+  resource_group_name = data.azurerm_resource_group.net_rg.name
+}
+
+data "azurerm_subnet" "pep_snet" {
+  name                 = "${module.naming_convention.project}-pep-snet-01"
+  virtual_network_name = data.azurerm_virtual_network.test_vnet.name
+  resource_group_name  = data.azurerm_virtual_network.test_vnet.resource_group_name
+}
+
+data "azurerm_key_vault" "common_kv" {
+  name                = "${module.naming_convention.project}-common-kv-01"
+  resource_group_name = data.azurerm_resource_group.common_rg.name
+}
+
+```
+
+Then, in different modules, you can use these data sources as follows:
+
+```hcl
+  ...
+
+  resource_group_name = data.azurerm_resource_group.test_rg.name
+
+  ...
+
+  subnet_pep_id = data.azurerm_subnet.pep_snet.id
+
+  ...
+
+  virtual_network = {
+    name                = data.azurerm_virtual_network.test_vnet.name
+    resource_group_name = data.azurerm_resource_group.net_rg.name
+  }
+  
+  ...
+
+```
+
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
