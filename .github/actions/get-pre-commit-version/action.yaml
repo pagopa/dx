@@ -24,11 +24,11 @@ runs:
           # Check if the .pre-commit-config.yaml file exists
           if [ -f ".pre-commit-config.yaml" ]; then
             # Extract the version using yq with partial match
-            PRE_COMMIT_VERSION=$(yq '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
+            PRE_COMMIT_VERSION=$(yq -r '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
 
             # Validate the version format (must start with "v" followed by digits)
             if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Pre-commit Terraform version found: $PRE_COMMIT_VERSION"
+                echo "Pre-commit Terraform version found: ${PRE_COMMIT_VERSION}"
             else
                 echo "Error: Invalid or missing Pre-commit Terraform version. Using default: ${DEFAULT_VERSION}"
                 PRE_COMMIT_VERSION="$DEFAULT_VERSION"

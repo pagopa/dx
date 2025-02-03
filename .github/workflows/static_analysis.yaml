@@ -52,6 +52,7 @@ jobs:
         uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
+
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
         uses: pagopa/dx/.github/actions/get-pre-commit-version@CES-712-set-static-analysis-pre-commits-version
