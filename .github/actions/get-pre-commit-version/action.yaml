@@ -16,10 +16,10 @@ runs:
       run: |
         # Default version from input
         DEFAULT_VERSION="${{ inputs.default_version }}"
+        PRE_COMMIT_VERSION="$DEFAULT_VERSION"
 
         if ! command -v yq &>/dev/null; then
           echo "Error: yq command not found. Please ensure yq is installed. Using default: ${DEFAULT_VERSION}"
-          PRE_COMMIT_VERSION="$DEFAULT_VERSION"
         else
           # Check if the .pre-commit-config.yaml file exists
           if [ -f ".pre-commit-config.yaml" ]; then

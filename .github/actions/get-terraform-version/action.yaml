@@ -16,6 +16,7 @@ runs:
       run: |
         # Default version provided via input
         DEFAULT_VERSION="${{ inputs.default_version }}"
+        TERRAFORM_VERSION="${{ inputs.default_version }}"
         
         # Check for the .terraform-version file
         if [ -f ".terraform-version" ]; then
