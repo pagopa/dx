@@ -31,6 +31,8 @@ resource "azurerm_user_assigned_identity" "user" {
   name                = "${module.naming_convention.prefix}-user-sa-${module.naming_convention.suffix}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.environment.location
+
+  tags = var.tags
 }
 
 
@@ -43,6 +45,8 @@ data "azurerm_subnet" "pep" {
 resource "azurerm_resource_group" "rg" {
   name     = "${module.naming_convention.prefix}-rg-sa-${module.naming_convention.suffix}"
   location = var.environment.location
+
+  tags = var.tags
 }
 
 output "pep_id" {

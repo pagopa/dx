@@ -8,3 +8,8 @@ variable "environment" {
     instance_number = string
   })
 }
+
+variable "tags" {
+  type        = map(any)
+  description = "Resources tags"
+}

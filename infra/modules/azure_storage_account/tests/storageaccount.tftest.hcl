@@ -22,6 +22,17 @@ run "setup_tests" {
       app_name        = "test"
       instance_number = "01"
     }
+    
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      ManagementTeam = "Developer Experience"
+      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
+      Test        = "true"
+      TestName    ="Create Storage Account for test"
+    }
   }
 }
 
@@ -39,13 +50,14 @@ run "storage_account_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      ManagementTeam = "Developer Experience"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
       Test        = "true"
-      TestName    = "Create Storage Account for test"
+      TestName    ="Create Storage Account for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
