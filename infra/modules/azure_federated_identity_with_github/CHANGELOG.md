@@ -1,5 +1,11 @@
 # azure_federated_identity_with_github
 
+## 0.0.4
+
+### Patch Changes
+
+- d0d511b: Added APIM list secrets role to CI
+
 ## 0.0.3
 
 ### Patch Changes
