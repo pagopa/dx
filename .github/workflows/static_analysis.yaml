@@ -38,7 +38,7 @@ concurrency:
 
 jobs:
   get-versions:
-    name: Get Terraform Version
+    name: Get Terraform and pre-commit Version
     runs-on: ubuntu-latest
     outputs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
@@ -51,9 +51,9 @@ jobs:
         uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
-      - name: Get terraform version from .terraform-version file
+      - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
-        uses: pagopa/dx/.github/actions/get-pre-commit-version@CES-712-set-static-analysis-pre-commits-version
+        uses: pagopa/dx/.github/actions/get-pre-commit-version@main
         with:
           default_version: "1.96.2"
 
