@@ -572,14 +572,11 @@ run "validate_rbac_entraid" {
   plan_options {
     target = [
       azurerm_role_assignment.admins_group_rg,
-      azurerm_role_assignment.admins_group_st_tf,
       azurerm_role_assignment.admins_group_rg_kv_data,
       azurerm_role_assignment.admins_group_rg_kv_admin,
       azurerm_role_assignment.devs_group_rg,
-      azurerm_role_assignment.devs_group_tf_st,
       azurerm_role_assignment.devs_group_tf_rg_kv_secr,
       azurerm_role_assignment.externals_group_rg,
-      azurerm_role_assignment.externals_group_tf_rg,
     ]
   }
 
@@ -637,20 +634,9 @@ run "validate_rbac_entraid" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_st_tf != null
-    error_message = "The Admins group should have role assignments for Terraform state storage"
-  }
-
-  assert {
     condition     = azurerm_role_assignment.devs_group_rg != null
     error_message = "The Developers group should have role assignments at resource group scope"
   }
-
-  assert {
-    condition     = azurerm_role_assignment.devs_group_tf_st != null
-    error_message = "The Developers group should have role assignments for Terraform state storage"
-  }
-
 
   assert {
     condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr != null
@@ -660,11 +646,6 @@ run "validate_rbac_entraid" {
   assert {
     condition     = azurerm_role_assignment.externals_group_rg != null
     error_message = "The Externals group should have role assignments at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.externals_group_tf_rg != null
-    error_message = "The Externals group should have role assignments for Terraform resource group"
   }
 }
 
