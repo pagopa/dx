@@ -58,22 +58,6 @@ jobs:
         uses: pagopa/dx/.github/actions/get-pre-commit-version@CES-712-set-static-analysis-pre-commits-version
         with:
           default_version: "1.96.2"
-      - name: Debug Terraform Version
-        run: |
-          echo "Terraform Version: ${{ steps.get-terraform-version.outputs.terraform_version }}"
-      
-      - name: Debug Pre-commit Version
-        run: |
-          echo "Pre-commit Version: ${{ steps.get-pre-commit-version.outputs.pre_commit_terraform_version }}"
-  test:
-    name: Test ouputs
-    runs-on: ubuntu-latest
-    needs: [ get-versions ]
-    steps:
-      - name: Debug Pre-commit version
-        run: |
-          echo "pre_commit_tf_tag input: ${{ inputs.pre_commit_tf_tag }}"
-          echo "pre_commit_terraform_version output: ${{ needs.get-versions.outputs.pre_commit_terraform_version }}"
 
   tf_analysis:
     name: Terraform Validation
