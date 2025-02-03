@@ -104,7 +104,7 @@ module "storage_account" {
   subnet_pep_id                       = module.core.common_pep_snet.id
   force_public_network_access_enabled = false
 
-  tier = "s" # Can be 's' or 'l'
+  tier = "s" 
 
   subservices_enabled = {
     blob  = true
