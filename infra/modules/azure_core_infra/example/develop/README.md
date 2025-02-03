@@ -102,7 +102,7 @@ module "storage_account" {
   resource_group_name = module.core.test_resource_group_name
 
   subnet_pep_id                       = module.core.common_pep_snet.id
-  force_public_network_access_enabled = false
+  force_public_network_access_enabled = true
 
   tier = "s"
 
