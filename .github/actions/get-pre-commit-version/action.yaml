@@ -16,22 +16,27 @@ runs:
       run: |
         # Default version from input
         DEFAULT_VERSION="${{ inputs.default_version }}"
-
-        # Check if the .pre-commit-config.yaml file exists
-        if [ -f ".pre-commit-config.yaml" ]; then
-            # Extract the version using yq with partial match
-            PRE_COMMIT_VERSION=$(yq '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
-
-            # Validate the version format (must start with "v" followed by digits)
-            if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Pre-commit Terraform version found: $PRE_COMMIT_VERSION"
-            else
-                echo "Error: Invalid or missing Pre-commit Terraform version. Using default: ${DEFAULT_VERSION}"
-                PRE_COMMIT_VERSION="$DEFAULT_VERSION"
-            fi
+        
+        if ! command -v yq &>/dev/null; then
+          echo "Error: yq command not found. Please ensure yq is installed."
+          PRE_COMMIT_VERSION="$DEFAULT_VERSION"
         else
-            echo "No .pre-commit-config.yaml file found. Defaulting to ${DEFAULT_VERSION}"
-            PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+          # Check if the .pre-commit-config.yaml file exists
+          if [ -f ".pre-commit-config.yaml" ]; then
+              # Extract the version using yq with partial match
+              PRE_COMMIT_VERSION=$(yq '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
+
+              # Validate the version format (must start with "v" followed by digits)
+              if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                  echo "Pre-commit Terraform version found: $PRE_COMMIT_VERSION"
+              else
+                  echo "Error: Invalid or missing Pre-commit Terraform version. Using default: ${DEFAULT_VERSION}"
+                  PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+              fi
+          else
+              echo "No .pre-commit-config.yaml file found. Defaulting to ${DEFAULT_VERSION}"
+              PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+          fi
         fi
 
         # Output the pre-commit Terraform version
