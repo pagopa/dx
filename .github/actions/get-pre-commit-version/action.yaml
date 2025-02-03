@@ -8,10 +8,12 @@ inputs:
 outputs:
   pre_commit_terraform_version:
     description: "The pre-commit-terraform version retrieved or the default."
+    value: ${{ steps.get-pre-commit-version-action.outputs.pre_commit_terraform_version }}
 runs:
   using: "composite"
   steps:
     - name: Get Pre-Commit Terraform Version
+      id: get-pre-commit-version-action
       shell: bash
       run: |
         # Default version from input

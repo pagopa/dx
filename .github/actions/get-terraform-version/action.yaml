@@ -8,10 +8,12 @@ inputs:
 outputs:
   terraform_version:
     description: "The Terraform version retrieved or the default."
+    value: ${{ steps.get-terraform-version-action.outputs.terraform_version }}
 runs:
   using: "composite"
   steps:
     - name: Get Terraform Version
+      id: get-terraform-version-action
       shell: bash
       run: |
         # Default version provided via input
