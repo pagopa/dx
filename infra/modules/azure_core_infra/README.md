@@ -31,7 +31,7 @@ module "core" {
 }
 ```
 
-For more specific examples check out the `./example` folder, here is possible to find a **complete** example that creates a core infrastructure and a **develop** example that in addition to creating the basic infrastructure will create additional resources useful for a development environment.
+For more specific examples check out the `./example` folder. There you'll find a "complete" example that creates the core infrastructure and a "develop" example that, in addition to creating the basic infrastructure, will configure additional resources useful to bootstrap a development environment on Azure.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

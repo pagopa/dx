@@ -15,109 +15,21 @@ The configuration in this example:
 
 ### API Management
 
-This module provisions an Azure API Management service with a subnet in the core virtual network.
+The API Management service is deployed in a dedicated subnet within the core virtual network. It supports internal access via private networking and allows public access when required.
 
-```hcl
-resource "azurerm_subnet" "apim" {
-  name                 = "${module.naming_convention.project}-apim-snet-${local.environment.instance_number}"
-  virtual_network_name = module.core.common_vnet.name
-  resource_group_name  = module.core.network_resource_group_name
-  address_prefixes     = ["10.60.2.0/24"]
-}
-
-module "apim" {
-  source  = "pagopa/dx-azure-api-management/azurerm"
-  version = "~> 0"
-
-  environment         = local.environment
-  resource_group_name = module.core.test_resource_group_name
-  tier                = "s"
-
-  publisher_email = "common-dx@pagopa.it"
-  publisher_name  = "Common DX"
-
-  virtual_network = {
-    name                = module.core.common_vnet.name
-    resource_group_name = module.core.network_resource_group_name
-  }
-
-  subnet_id                     = azurerm_subnet.apim.id
-  virtual_network_type_internal = true
-  enable_public_network_access  = true
-
-  tags = local.tags
-}
-```
-
-In this example tier is setted to "s", but is possible to choose between "s", "m" or "l" (Check [here](https://registry.terraform.io/modules/pagopa/dx-azure-api-management/azurerm/latest) how configure it).
+For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa/dx-azure-api-management/azurerm/latest).
 
 ### Cosmos DB
 
-This module provisions an Azure Cosmos DB account and a database.
+An Azure Cosmos DB account is provisioned with a SQL database to store application data.
 
-```hcl
-module "cosmos" {
-  source  = "pagopa/dx-azure-cosmos-account/azurerm"
-  version = "~> 0"
-
-  environment         = local.environment
-  resource_group_name = module.core.test_resource_group_name
-
-  subnet_pep_id = module.core.common_pep_snet.id
-
-  private_dns_zone_resource_group_name = module.core.network_resource_group_name
-
-  force_public_network_access_enabled = true
-
-  consistency_policy = {
-    consistency_preset = "Default"
-  }
-
-  alerts = {
-    enabled = false
-  }
-
-  tags = local.tags
-}
-
-resource "azurerm_cosmosdb_sql_database" "db" {
-  name                = "db"
-  resource_group_name = module.cosmos.resource_group_name
-  account_name        = module.cosmos.name
-}
-```
-
-Check [here](https://registry.terraform.io/modules/pagopa/dx-azure-cosmos-account/azurerm/latest) for a more specific configuration.
+For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa/dx-azure-cosmos-account/azurerm/latest).
 
 ### Storage Account
 
-This module provisions an Azure Storage Account with only Blob Storage enabled.
+An Azure Storage Account is created with a specific focus on Blob Storage. 
 
-```hcl
-module "storage_account" {
-  source  = "pagopa/dx-azure-storage-account/azurerm"
-  version = "~> 0"
-
-  environment         = local.environment
-  resource_group_name = module.core.test_resource_group_name
-
-  subnet_pep_id                       = module.core.common_pep_snet.id
-  force_public_network_access_enabled = true
-
-  tier = "s"
-
-  subservices_enabled = {
-    blob  = true
-    file  = false
-    queue = false
-    table = false
-  }
-
-  tags = local.tags
-}
-```
-
-In this example tier is setted to "s", but is possible to choose between "s" or "l" (Check [here](https://registry.terraform.io/modules/pagopa/dx-azure-storage-account/azurerm/latest) for a more specific configuration).
+For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa/dx-azure-storage-account/azurerm/latest).
 
 ## Note
 
@@ -171,7 +83,7 @@ Then, in different modules, you can use these data sources as follows:
     name                = data.azurerm_virtual_network.test_vnet.name
     resource_group_name = data.azurerm_resource_group.net_rg.name
   }
-  
+
   ...
 
 ```
