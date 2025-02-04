@@ -51,7 +51,7 @@ variable "secondary_geo_locations" {
   type = list(object({
     location          = optional(string, null)
     failover_priority = optional(number, null)
-    zone_redundant    = optional(bool, false)
+    zone_redundant    = optional(bool, true)
   }))
   description = "(Optional) Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used."
   default     = []
