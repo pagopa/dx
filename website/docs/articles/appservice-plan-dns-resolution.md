@@ -16,7 +16,7 @@ When updating connection configurations for an App Service or Function App in pr
 1. Connect to SCM Console
     - Locate the specific App Service or Function App
     - Connect to the VPN (Production environments only)
-    - Access SCM console: https://<app-name>.scm.azurewebsites.net
+    - Access SCM console: https://&lt;app-name&gt;.scm.azurewebsites.net
 2. Access SSH Tab
 3. Install DNS Tools
     - Run `apt install dnsutils`
