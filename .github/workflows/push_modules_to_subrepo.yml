@@ -17,8 +17,8 @@ jobs:
     uses: ./.github/workflows/get_modified_modules.yaml
     name: Get Modified Modules
     if: ${{ github.event_name != 'workflow_dispatch' }}
-    with:
-      from_ref: ${{ github.event.before }}
+    # with:
+    #   from_ref: ${{ github.event.before }}
 
   get-all-modules:
     uses: ./.github/workflows/get_all_modules.yaml
