@@ -126,7 +126,7 @@ jobs:
             ${{ inputs.check_to_run }}
 
       - name: Run pre-commit
-        if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
+        # if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
