@@ -1,7 +1,7 @@
 # tfsec:ignore:azure-keyvault-ensure-key-expiry
 resource "azurerm_key_vault_key" "key" {
   for_each     = (local.cmk_flags.kv && var.customer_managed_key.key_name == null ? toset(["kv"]) : toset([]))
-  name         = "${replace("${module.naming_convention.prefix}-st-${module.naming_convention.suffix}", "-", "")}-cmk-kv"
+  name         = "${replace("${module.naming_convention.prefix}-st", "-", "")}-cmk-${module.naming_convention.suffix}"
   key_vault_id = var.customer_managed_key.key_vault_id
   key_type     = "RSA"
   key_size     = 4096
