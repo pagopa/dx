@@ -42,7 +42,7 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.environment }}-cd
+  group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.base_path }}-cd
   cancel-in-progress: false
 
 jobs:

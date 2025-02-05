@@ -1,5 +1,13 @@
 # Azure GitHub Environment Bootstrap
 
+## 0.0.2
+
+### Patch Changes
+
+- d0d511b: Added APIM list secrets custom role for infra ci identity
+- 5dc3615: Remove roles from Entra ID groups on Terraform Storage Account
+- 832811e: Add `Role Based Access Control Administrator` role at subscription scope to Infra CD identity
+
 ## 0.0.1
 
 ### Patch Changes

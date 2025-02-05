@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.2.1
+
+### Patch Changes
+
+- c0ed98d: Add Durable Functions configuration to Azure Function App resources
+
 ## 0.2.0
 
 ### Minor Changes

@@ -6,14 +6,6 @@ resource "azurerm_role_assignment" "devs_group_rg" {
   description          = "Allow ${var.repository.name} AD Dev group to apply changes at monorepository resource group scope"
 }
 
-# Storage Account - Terraform state file
-resource "azurerm_role_assignment" "devs_group_tf_st" {
-  scope                = local.tf_storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = var.entraid_groups.devs_object_id
-  description          = "Allow ${var.repository.name} AD Dev group to apply changes to the Terraform state file Storage Account scope"
-}
-
 # Key Vault
 resource "azurerm_role_assignment" "devs_group_tf_rg_kv_secr" {
   scope                = azurerm_resource_group.main.id

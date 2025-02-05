@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
 module "naming_convention" {
   source  = "pagopa/dx-azure-naming-convention/azurerm"
   version = "~> 0"
