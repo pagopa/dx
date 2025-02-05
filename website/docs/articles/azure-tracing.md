@@ -40,17 +40,23 @@ including any other package in the codebase.
 ## Patching native fetch
 
 The **@azure/monitor-opentelemetry** package does not patch the native fetch
-method by default, which is commonly used in modern NodeJS applications. To
-trace fetch calls, you must use the **@azure/monitor-opentelemetry** APIs
-directly.
-
-:::note
+method by default, which is commonly used in modern NodeJS applications.
 
 At the time of writing this document, instrumenting the native fetch of NodeJS
 (based on the undici package) requires an additional step on top of using the
-useAzureMonitor method:
+`useAzureMonitor` method:
 
 [Monitor OpenTelemetry - Add native fetch instrumentation](https://github.com/Azure/azure-sdk-for-js/issues/29864)
+
+See
+[Example Integration with App Service](#example-integration-with-app-service)
+for a complete example.
+
+:::warning
+
+If you are using version 2.x of the **Application Insights SDK**, be aware that
+it does not support instrumentation of the native fetch methods so external HTTP
+requests will not be traced unless you use some custom fetch wrapper.
 
 :::
 
@@ -62,16 +68,14 @@ wrapper around OT functionalities provided by the
 
 [microsoft/ApplicationInsights-node.js: Microsoft Application Insights SDK for Node.js](https://github.com/microsoft/ApplicationInsights-node.js)
 
-The new AI SDK exposes:
+The new AI SDK uses the **@azure/monitor-opentelemetry** package under the hood:
+the **useAzureMonitor** method is called at the bootstrap of the application to
+enable tracing and metrics.
 
-1. The **useAzureMonitor** method, which calls the method exposed by the
-   **@azure/monitor-opentelemetry** package and maps legacy AI configuration
-   onto new OT parameters.
-2. A series of
-   "[shims](https://github.com/microsoft/ApplicationInsights-node.js/tree/main/src/shim)"
-   that enable the SDK's adoption in legacy applications using tracing methods
-   from previous versions (e.g., `trackEvent`) without refactoring the existing
-   code.
+Moreover the SDK provides a series of
+"[shims](https://github.com/microsoft/ApplicationInsights-node.js/tree/main/src/shim)"
+that enable its adoption in legacy applications using tracing methods from
+previous versions (e.g., `trackEvent`) without refactoring the existing code.
 
 :::note
 
@@ -109,6 +113,86 @@ Azure SDKs, and there is no longer a need to set up a custom agent.
 
 :::
 
+## Setting Sample Rate in AI SDK
+
+When using the AI SDK, it's a good practice to limit the number of traces sent
+to **Application Insights** by setting the sample rate.
+
+The sample rate can be set in different ways.
+
+### Set sample rate using the `applicationinsights.json` configuration file
+
+See
+https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
+
+```json
+{
+  "samplingPercentage": 30
+}
+```
+
+### Set sample rate using the `APPLICATIONINSIGHTS_CONFIGURATION_CONTENT` environment variable
+
+This environment variable takes precedence over the `applicationinsights.json`
+and has the same format as the JSON file.
+
+```typescript
+process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] =
+  process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] ??
+  JSON.stringify({
+    samplingPercentage: 5,
+  } satisfies Partial<IJsonConfig>);
+```
+
+### Set sample rate programmatically
+
+```typescript
+import * as ai from "applicationinsights";
+
+ai.setup();
+ai.defaultClient.config.samplingPercentage = 5;
+ai.start();
+```
+
+## Enable sampling of traces and custom events with OpenTelemetry
+
+By default the AI SDK 3.x samples only request and dependencies, not traces or
+custom events. Traces are for example logs emitted by the application using
+`console.log` or `context.log` in Azure Functions.
+
+To enable **parent based** sampling for traces and custom events, you can set
+the following option:
+
+```typescript
+// this enables sampling for traces and custom events
+ai.defaultClient.config.azureMonitorOpenTelemetryOptions = {
+  enableTraceBasedSamplingForLogs: true,
+};
+```
+
+:::warning
+
+This setting works only for traces and custom events that occurs within a **Span
+Context**. This is not always the case, for example when using an Azure
+Function. In many cases you will need to use a custom
+[LogRecordProcessor](https://github.com/open-telemetry/opentelemetry-js/blob/main/experimental/packages/sdk-logs/src/LogRecordProcessor.ts)
+to sample logs.
+
+:::
+
+## Check is sampling is enabled
+
+To check if sampling is enabled, you can use the following query in **Log
+Analytics**:
+
+```
+union requests,dependencies,pageViews,browserTimings,exceptions,traces,customEvents
+| where timestamp > ago(1h)
+| summarize RetainedPercentage = 100/avg(itemCount) by bin(timestamp, 1m), itemType, sdkVersion
+```
+
+If you see values < 100 then sampling is enabled for that item type.
+
 ## Integration with App Service
 
 Both **Azure Functions** and **App Services (NodeJS)** allow integration with
@@ -123,72 +207,137 @@ custom AI agent that starts at bootstrap before importing any other module.
 
 :::warning
 
-This mechanism interferes with the programmatic setup of the AI SDK, overwriting
-its settings. Therefore, it is recommended to disable the default integration by
-removing these environment variables whether you are using the AI SDK
-programmatically.
+On App Services, this mechanism interferes with the programmatic setup of the AI
+SDK, overwriting its settings. Therefore, it is recommended to disable the
+default integration by removing these environment variables whether you are
+using the AI SDK programmatically.
 
 :::
 
-There is currently no way to achieve end-to-end tracing using the basic
-integration.
+At the time of writing, the default integration (agent) does not support
+end-to-end tracing.
 
-If using the AI SDK, ensure that the default AI integration is disabled by
-ensuring that the **APPINSIGHTS_INSTRUMENTATIONKEY** and
-**APPLICATIONINSIGHTS_CONNECTION_STRING** variables are not set. It is
-recommended to use a custom environment variable that will be configured in the
-**useAzureMonitor** and/or **setup** settings.
+If using the AI SDK, check that the default AI integration is disabled by
+ensuring that the `APPINSIGHTS_INSTRUMENTATIONKEY` and
+`APPLICATIONINSIGHTS_CONNECTION_STRING` variables are not set. It is recommended
+to use a custom environment variable that will be configured in the
+`useAzureMonitor` and/or `setup` settings.
 
 To verify that the default integration is indeed disabled, navigate to the
 **"Application Insights"** panel of the App Service on the Azure portal.
 
 ## Integration with Next.js Deployed on Azure App Service
 
-The same considerations apply to applications deployed on **App Service**, but
-since there is no entry point as with other frameworks, you must use the
-**instrumentation module**, which is loaded first by **Next.js** to load
-**Application Insights/OpenTelemetry** as the first thing:
+For applications deployed on **App Service**, similar considerations apply.
+However, since there is no single entry point as with other frameworks, you must
+use the **instrumentation module**. This module is loaded first by **Next.js**
+to ensure that **Application Insights/OpenTelemetry** is initialized before
+anything else:
 
 https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration
 
 ## Integration with Azure Functions
 
-At the time of writing, OT integration with **Azure Functions (NodeJS)** is not
-yet complete:
+**Azure Functions** are a bit more complex to integrate with **OpenTelemetry**
+since you have to handle it both in the **Azure Functions** runtime (host) and
+in the application code (worker).
 
-**[Support open telemetry · Issue #245 · Azure/azure-functions-nodejs-library](https://github.com/Azure/azure-functions-nodejs-library/issues/245)**
+### End-to-End tracing with host AI integration enabled
 
-For full integration, which enables end-to-end tracing of calls, it is necessary
-to incorporate a wrapper around the Functions' handlers that programmatically
-activates the OpenTelemetry mechanisms. Benchmarks have shown that the wrapper
-does not introduce any significant performance penalties.
+The **Azure Functions** runtime (host) activates monitoring when the
+`APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
+
+:::warning
+
+At the time of writing, only when activating OpenTelemetry
+(`"telemetryMode": "OpenTelemetry"` in host.json), the **Azure Functions**
+runtime produces extraneous traces that are not part of the application code.
+This behavior is expected to be fixed in the future:
+
+https://github.com/Azure/azure-functions-host/issues/10770#issuecomment-2627874412
+
+:::
+
+In both configurations (OpenTelemetry enabled or disabled), when using the AI
+3.x SDK, you get end-to-end tracing of the application code (worker). Next step
+is align sample rate in AI SDK and Azure Functions runtime.
+
+### Align Sample Rate in AI SDK and Azure Functions Runtime
+
+AI SDK use a fixed sample rate, while the Azure Functions runtime uses an
+adaptive sampling mechanism. To avoid discrepancies in the number of traces
+recorded, it is recommended to align the sample rate in the AI SDK with the
+Azure Functions runtime.
+
+To align the sample rate in the Azure Functions runtime with the AI SDK, you can
+set these options in `host.json` to the same value used programmatically:
+
+```json
+{
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "minSamplingPercentage": 5,
+        "maxSamplingPercentage": 5,
+        "initialSamplingPercentage": 5
+      }
+    }
+  }
+}
+```
+
+Alternatively, you may use the following environment variables for the same
+purpose:
+
+`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage`
+`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage`
+`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage`
+
+Beware that the runtime also relies on the
+`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings_maxTelemetryItemsPerSecond`
+variable to limit the number of traces sent.
+
+#### Sampling gotchas within Azure Functions
+
+1. We have observed that `traces` and `customEvents` emitted by the AI SDK are
+   not sampled by the Azure Functions runtime. This implies that even if you
+   configure a sample rate of 5% in the AI SDK, you will still see 100% of
+   `traces` and `customEvents`.
+2. When using `"telemetryMode": "OpenTelemetry"` in host.json, it appears that
+   there is no way to enable sampling at all yet:
+   https://github.com/Azure/azure-functions-host/issues/10770#issuecomment-2629318006
+3. If you want to override `logLevels` using environment variables, beware that
+   "App settings that contain a period aren't supported when running on Linux in
+   an Elastic Premium plan or a Dedicated (App Service) plan", see
+   https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+
+### End-to-End tracing with host AI integration disabled
+
+If you choose to disable the default AI integration and rely solely on the AI
+SDK (using a variable other than **APPLICATIONINSIGHTS_CONNECTION_STRING**), you
+will lose end-to-end tracing of the application code (worker) because the
+runtime (host) will no longer record HTTP requests.
+
+To achieve full integration and enable end-to-end tracing of calls in this
+scenario, you need to incorporate a wrapper around the Functions' handlers that
+[programmatically activates the OpenTelemetry mechanisms](#example-of-ot-context-wrapper-for-azure-functions).
+
+Benchmarks have shown that this wrapper does not introduce any significant
+performance penalties, so you can safely use it in production.
 
 ## Cloud Role Name
 
-As of the publication of this document, the **AI SDK 3.x** has certain
-limitations:
+When using the AI SDK, the `cloudRoleName` is set by default to the name of the
+**App Service** or **Azure Function**. This value is used to identify the
+service in **Application Insights** and group traces.
 
-[microsoft/ApplicationInsights-node.js: Microsoft Application Insights SDK for Node.js](https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#limitations-of-application-insights-3x-sdk)
+If you need to customize the `cloudRoleName` (the name of the service in
+Application Insights), you can set the `OTEL_SERVICE_NAME` environment.
 
-The most significant limitation concerns the population of **cloudRoleName**,
-which is not set by default. As a result, tracing details and the application
-map show the origins as **unknown_service**.
-
-The **setAutoPopulateAzureProperties** method is currently a no-op, and by
-default, the AI SDK only uses the **envDetector**, which sets **cloudRoleName**
-from the **OTEL_SERVICE_NAME** environment variable.
-
-Likewise, setting a value for
-**ai.defaultClient.context.tags[ai.defaultClient.context.keys.cloudRole]**
+Setting a value for
+`ai.defaultClient.context.tags[ai.defaultClient.context.keys.cloudRole]`
 produces no result, even though some online tutorials suggest it. These
 tutorials are now considered obsolete.
-
-:::info
-
-For setting an appropriate **cloudRoleName**, the **OTEL_SERVICE_NAME**
-environment variable must be set.
-
-:::
 
 ## Performance
 
@@ -231,13 +380,15 @@ increased linearly with the sampling values.
 
 ## Key Takeaways
 
-1. It's reccomended to start migrating logging and metric tracing procedures to
+1. It is recommended to start migrating logging and metric tracing procedures to
    **OpenTelemetry**, incorporating the new version of the **AI SDK 3.x**.
 2. Adopting **OT** is currently the only method for achieving end-to-end
    tracing, including the tracing of native NodeJS fetch requests.
-3. Disable default integrations and use the SDK programmatically.
-4. The current OT implementation on **Azure Functions** is incomplete; monitor
-   progress and use a wrapper in the meantime.
+3. It is advisable to disable the default integrations and use the SDK
+   programmatically on App Services.
+4. The current OT implementation on **Azure Functions** is still unstable;
+   monitor progress and avoid using `"telemetryMode": "OpenTelemetry"` in
+   host.json.
 
 ## Code Snippets
 
@@ -254,8 +405,8 @@ import { IJsonConfig } from "applicationinsights/out/src/shim/types";
 if (process.env["AI_SDK_CONNECTION_STRING"]) {
   console.log("using opetelemetry");
 
-  // setup sampling percentage from environment, see
-  // https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
+  // setup sampling percentage from environment (optional)
+  // see https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
   // for other options. environment variable is in JSON format and takes
   // precedence over applicationinsights.json
   process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] =
@@ -264,14 +415,11 @@ if (process.env["AI_SDK_CONNECTION_STRING"]) {
       samplingPercentage: 30,
     } satisfies Partial<IJsonConfig>);
 
-  // setup cloudRoleName
+  // setup cloudRoleName (optional)
   process.env.OTEL_SERVICE_NAME =
     process.env.WEBSITE_SITE_NAME ?? "local-app-service";
 
-  ai.setup(process.env["AI_SDK_CONNECTION_STRING"])
-  // needed to avoid data loss on restarts
-  .enableUseDiskRetryCaching()
-  .start();
+  ai.setup(process.env["AI_SDK_CONNECTION_STRING"]).start();
 
   // instrument native node fetch
   // this must be called after starting the AI SDK
@@ -287,7 +435,7 @@ if (process.env["AI_SDK_CONNECTION_STRING"]) {
 export default ai;
 ```
 
-### Example Integration with Azure Functions
+### Example of OT Context wrapper for Azure Functions
 
 ```javascript
 import { HttpRequest, InvocationContext, HttpHandler } from "@azure/functions";
@@ -308,15 +456,11 @@ import {
   SEMATTRS_HTTP_URL,
 } from "@opentelemetry/semantic-conventions";
 
-export default function createAppInsightsWrapper(func: HttpHandler) {
+export default function withAppInsights(func: HttpHandler) {
   return async (req: HttpRequest, invocationContext: InvocationContext) => {
     if (
-      !process.env["AI_SDK_CONNECTION_STRING"] ||
       process.env["DISABLE_FUNCTION_WRAPPER"]
     ) {
-      console.log(
-        `skipping wrapper for function ${invocationContext.functionName}`,
-      );
       return await func(req, invocationContext);
     }
     const startTime = Date.now();
@@ -391,7 +535,7 @@ app.http("root", {
   route: "/",
   methods: ["GET"],
   authLevel: "anonymous",
-  handler: createAppInsightsWrapper(async (req) => ({
+  handler: withAppInsights(async (req) => ({
     body: `Hello, ${req.query.get("name")}!`,
   })),
 });
