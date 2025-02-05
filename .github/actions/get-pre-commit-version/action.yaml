@@ -9,6 +9,9 @@ outputs:
   pre_commit_terraform_version:
     description: "The pre-commit-terraform version retrieved or the default."
     value: ${{ steps.get-pre-commit-version-action.outputs.pre_commit_terraform_version }}
+  pre_commit_terraform_image_tag:
+    description: "The pre-commit-terraform image tag retrieved or the default."
+    value: ${{ steps.get-pre-commit-version-action.outputs.pre_commit_terraform_image_tag }}
 runs:
   using: "composite"
   steps:
@@ -40,6 +43,24 @@ runs:
             PRE_COMMIT_VERSION="$DEFAULT_VERSION"
           fi
         fi
+        # Define the image and tag
+        USER_IMAGE=antonbabenko/pre-commit-terraform
+
+        # Get the pull token to extract information from the GitHub Container Registry (GHCR)
+        TOKEN="$(
+          curl "https://ghcr.io/token?scope=repository:${USER_IMAGE}:pull" |
+          awk -F'"' '$0=$4'
+        )"
+        
+        # Query the GitHub Container Registry (GHCR) API for the manifest list digest
+        DIGEST=$(curl -D - \
+         -H "Authorization: Bearer $TOKEN" \
+         -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+         "https://ghcr.io/v2/${USER_IMAGE}/manifests/${PRE_COMMIT_VERSION}" 2>&1 \
+         | grep -i Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
+
+        DOCKER_IMAGE_TAG="${PRE_COMMIT_VERSION}@${DIGEST}"
 
         # Output the pre-commit Terraform version
         echo "pre_commit_terraform_version=$PRE_COMMIT_VERSION" >> $GITHUB_OUTPUT
+        echo "pre_commit_terraform_image_tag=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT
