@@ -33,7 +33,7 @@ jobs:
 
   terraform-test:
     runs-on: ubuntu-latest
-    needs: [get-modified-modules, get-all-modules]
+    needs: [get-modified-modules] # , get-all-modules]
     if: always()
     environment: dev-ci
     permissions:
