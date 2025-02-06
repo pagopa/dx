@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 0.1.0
+
+### Minor Changes
+
+- 00fccad: Added lock resource
+
 ## 0.0.7
 
 ### Patch Changes
