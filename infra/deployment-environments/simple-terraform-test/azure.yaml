@@ -1,5 +1,10 @@
-name: devcenter-ade-starter
-metadata:
-  template: devcenter-ade-starter@0.0.1-beta
-infra:
-  provider: terraform
+name: terraform-deployment
+description: "Deploy a Terraform environment using Azure Deployment Environments"
+runner: terraform
+
+parameters:
+  - name: app_name
+    type: string
+    required: true
+    description: "Name of the app"
+    default: "test"

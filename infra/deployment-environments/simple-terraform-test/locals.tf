@@ -4,7 +4,7 @@ locals {
     env_short       = "d"
     location        = "italynorth"
     domain          = "ade"
-    app_name        = "test"
+    app_name        = var.app_name
     instance_number = "01"
   }
 
