@@ -22,7 +22,8 @@ module "naming_convention" {
 }
 
 module "naming_convention_gh_runner" {
-  source = "../azure_naming_convention"
+  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  version = "~> 0"
 
   environment = {
     prefix          = var.environment.prefix
