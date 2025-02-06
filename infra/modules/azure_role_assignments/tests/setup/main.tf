@@ -44,6 +44,16 @@ resource "azurerm_user_assigned_identity" "id" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
+
+  tags = {
+    CostCenter  = "TS700 - ENGINEERING"
+    CreatedBy   = "Terraform"
+    Environment = "Dev"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
+    Test        = "true"
+    TestName    = "Create PostgreSQL for test"
+  }
 }
 
 # OUTPUTS
