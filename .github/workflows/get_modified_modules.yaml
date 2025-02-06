@@ -18,7 +18,10 @@ jobs:
       - name: Get modified modules
         id: get-modules
         run: |
-          folders_list=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
+          DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
+          CURRENT_BRANCH_SHA=${{ github.sha }}
+          
+          folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules changed: $folders_list
           echo "modules=$folders_list" >> $GITHUB_OUTPUT
 
