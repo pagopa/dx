@@ -19,7 +19,6 @@ jobs:
         id: get-modules
         run: |
           DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
-          echo $DEFAULT_BRANCH_SHA
           CURRENT_BRANCH_SHA=${{ github.sha }}
 
           folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
