@@ -2,6 +2,9 @@ name: terraform-deployment
 description: "Deploy a Terraform environment using Azure Deployment Environments"
 runner: terraform
 
+infra:
+  provider: terraform
+
 parameters:
   - name: app_name
     type: string
