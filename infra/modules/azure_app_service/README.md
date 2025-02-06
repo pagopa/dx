@@ -43,6 +43,7 @@
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group to deploy resources to | `string` | n/a | yes |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | Staging slot application settings | `map(string)` | `{}` | no |
 | <a name="input_stack"></a> [stack](#input\_stack) | n/a | `string` | `"node"` | no |
+| <a name="input_startup_command"></a> [startup\_command](#input\_startup\_command) | (Optional) Override AppService startup command. If using node, the default value uses PM2 | `string` | `""` | no |
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | (Optional) A list of application setting names that are not swapped between slots | `list(string)` | `[]` | no |
 | <a name="input_subnet_cidr"></a> [subnet\_cidr](#input\_subnet\_cidr) | (Optional) CIDR block to use for the subnet the AppService uses for outbound connectivity. Mandatory if subnet\_id is not set | `string` | `null` | no |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | (Optional) Set the subnet id where you want to host the Function App | `string` | `null` | no |
