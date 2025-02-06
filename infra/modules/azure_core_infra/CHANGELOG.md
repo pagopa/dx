@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 0.0.5
+
+### Patch Changes
+
+- 145a6b9: Fixed naming convention for runner and added new example for develop environment with APIM, Cosmos and storage
+
 ## 0.0.4
 
 ### Patch Changes
