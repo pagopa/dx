@@ -24,12 +24,12 @@ jobs:
   get-modified-modules:
     uses: ./.github/workflows/get_modified_modules.yaml
     name: Get Modified Modules
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    # if: ${{ github.event_name != 'workflow_dispatch' }}
 
-  get-all-modules:
-    uses: ./.github/workflows/get_all_modules.yaml
-    name: Get All Modules
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+  # get-all-modules:
+  #   uses: ./.github/workflows/get_all_modules.yaml
+  #   name: Get All Modules
+  #   if: ${{ github.event_name == 'workflow_dispatch' }}
 
   terraform-test:
     runs-on: ubuntu-latest
