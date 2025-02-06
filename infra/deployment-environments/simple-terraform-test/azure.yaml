@@ -1,0 +1,5 @@
+name: devcenter-ade-starter
+metadata:
+  template: devcenter-ade-starter@0.0.1-beta
+infra:
+  provider: terraform
