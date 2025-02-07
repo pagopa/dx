@@ -52,7 +52,7 @@ resource "azurerm_user_assigned_identity" "id" {
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
     Test        = "true"
-    TestName    = "Create PostgreSQL for test"
+    TestName    = "Create a user assigned identity for test"
   }
 }
 
