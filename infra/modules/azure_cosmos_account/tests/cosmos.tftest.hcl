@@ -44,6 +44,8 @@ run "cosmos_is_correct_plan" {
       TestName       = "Create Cosmos account for test"
     }
 
+    tier = "s"
+
     resource_group_name = run.setup_tests.resource_group_name
 
     subnet_pep_id                        = run.setup_tests.pep_id
@@ -95,6 +97,11 @@ run "cosmos_is_correct_plan" {
   assert {
     condition     = azurerm_cosmosdb_account.this.kind == "GlobalDocumentDB"
     error_message = "The Cosmos DB account must support DocumentDB API"
+  }
+
+  assert {
+    condition     = [ for value in azurerm_cosmosdb_account.this.capabilities : value.name ][0] == "EnableServerless"
+    error_message = "The Cosmos DB account must have serverless enabled"
   }
 
   assert {

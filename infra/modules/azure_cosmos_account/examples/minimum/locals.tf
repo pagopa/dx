@@ -14,14 +14,16 @@ locals {
     "germanywestcentral" = "gwc"
     "spaincentral"       = "spc"
   }
+
   location_short = lookup(local.location_map, local.environment.location, "itn")
   project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
 
   tags = {
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
-    CostCenter  = "TS700 - ENGINEERING"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    Owner          = "DevEx"
+    Source         = "https://github.com/pagopa/dx/modules/azure_cosmos_account/examples/minimum"
+    ManagementTeam = "Developer Experience"
   }
 }
