@@ -46,13 +46,12 @@ resource "azurerm_user_assigned_identity" "id" {
   name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
 
   tags = {
-    CostCenter  = "TS700 - ENGINEERING"
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
-    Test        = "true"
-    TestName    = "Create a user assigned identity for test"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
+    ManagementTeam = "Developer Experience"
   }
 }
 
