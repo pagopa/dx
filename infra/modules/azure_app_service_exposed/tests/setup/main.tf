@@ -20,11 +20,10 @@ module "naming_convention" {
   }
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-app-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_resource_group" "rg" {
+  name = "${module.naming_convention.prefix}-test-rg-${module.naming_convention.suffix}"
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }

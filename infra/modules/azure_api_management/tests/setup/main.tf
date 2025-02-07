@@ -32,9 +32,8 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.50.250.0/24"]
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-apim-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_resource_group" "rg" {
+  name = "${module.naming_convention.prefix}-test-rg-${module.naming_convention.suffix}"
 }
 
 output "subnet_id" {
@@ -42,7 +41,7 @@ output "subnet_id" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }
 
 output "vnet" {

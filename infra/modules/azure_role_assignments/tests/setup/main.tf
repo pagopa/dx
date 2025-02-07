@@ -35,14 +35,13 @@ data "azurerm_subnet" "pep" {
 
 # RESOURCES
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-role-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_resource_group" "rg" {
+  name = "${module.naming_convention.prefix}-test-rg-${module.naming_convention.suffix}"
 }
 
 resource "azurerm_user_assigned_identity" "id" {
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
   name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
 
   tags = {
@@ -64,7 +63,7 @@ output "pep_id" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }
 
 output "vnet" {
