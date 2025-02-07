@@ -36,7 +36,8 @@ data "azurerm_subnet" "pep" {
 # RESOURCES
 
 data "azurerm_resource_group" "rg" {
-  name = "${module.naming_convention.prefix}-rg-${module.naming_convention.suffix}"
+  name = "${var.environment.prefix}-${var.environment.env_short}-itn-${var.environment.app_name}-rg-${module.naming_convention.suffix}"
+
 }
 
 resource "azurerm_user_assigned_identity" "id" {
