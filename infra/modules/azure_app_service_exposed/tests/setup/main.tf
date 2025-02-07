@@ -21,7 +21,7 @@ module "naming_convention" {
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${var.environment.prefix}-${var.environment.env_short}-itn-${var.environment.app_name}-rg-${module.naming_convention.suffix}"
+  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
 
 }
 
