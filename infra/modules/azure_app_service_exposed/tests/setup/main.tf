@@ -21,7 +21,7 @@ module "naming_convention" {
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${module.naming_convention.prefix}-test-rg-${module.naming_convention.suffix}"
+  name = "${module.naming_convention.prefix}-rg-${module.naming_convention.suffix}"
 }
 
 output "resource_group_name" {

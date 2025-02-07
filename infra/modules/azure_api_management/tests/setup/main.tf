@@ -33,7 +33,7 @@ resource "azurerm_subnet" "subnet" {
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${module.naming_convention.prefix}-test-rg-${module.naming_convention.suffix}"
+  name = "${module.naming_convention.prefix}-rg-${module.naming_convention.suffix}"
 }
 
 output "subnet_id" {
