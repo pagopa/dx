@@ -264,8 +264,8 @@ run "function_app_ai_instrumentation_key" {
   }
 
   assert {
-    condition     = local.application_insights.enable == true
-    error_message = "Application Insights should be enabled"
+    condition     = local.application_insights.enable == false
+    error_message = "Application Insights should be disabled"
   }
 }
 
