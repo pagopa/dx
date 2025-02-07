@@ -25,13 +25,14 @@ run "core_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
-      Test        = "true"
-      TestName    = "Create DEV environment for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create DEV environment for test"
     }
 
     virtual_network_cidr = "10.50.0.0/16"

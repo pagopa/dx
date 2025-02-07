@@ -34,13 +34,14 @@ run "app_service_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
-      Test        = "true"
-      TestName    = "Create app service for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create app service for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
@@ -102,7 +103,16 @@ run "app_service_custom_subnet" {
       instance_number = "01"
     }
 
-    tags = {}
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create app service for test"
+    }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"

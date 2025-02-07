@@ -34,13 +34,14 @@ run "cosmos_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cosmos_account/tests"
-      Test        = "true"
-      TestName    = "Create Cosmos account for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cosmos_account/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create Cosmos account for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
