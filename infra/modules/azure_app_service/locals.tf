@@ -17,6 +17,10 @@ locals {
     has_existing_subnet    = var.subnet_id != null
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
+    startup_command = (var.stack == "node"
+      ? (var.startup_command == "" ? "pm2 start index.js -i max --no-daemon" : var.startup_command)
+      : (var.stack == "java" && var.startup_command == "" ? null : var.startup_command)
+    )
   }
 
   app_service_slot = {

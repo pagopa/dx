@@ -76,6 +76,12 @@ variable "java_version" {
   description = "Java version to use"
 }
 
+variable "startup_command" {
+  type        = string
+  default     = ""
+  description = "(Optional) Override AppService startup command. If using node, the default value uses PM2"
+}
+
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
