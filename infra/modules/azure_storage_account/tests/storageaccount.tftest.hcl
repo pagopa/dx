@@ -29,9 +29,9 @@ run "setup_tests" {
       Environment    = "Dev"
       BusinessUnit   = "DevEx"
       ManagementTeam = "Developer Experience"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
-      Test        = "true"
-      TestName    ="Create Storage Account for test"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
+      Test           = "true"
+      TestName       = "Create Storage Account for test"
     }
   }
 }

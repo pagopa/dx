@@ -52,6 +52,8 @@ resource "azurerm_user_assigned_identity" "id" {
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
     ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create role assignments for test"
   }
 }
 
