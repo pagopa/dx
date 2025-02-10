@@ -1,14 +1,31 @@
-# Archiving Data from Decommissioned Projects
+# Archiving data for decommissioned projects
 
-## Overview
+- [Archiving data for decommissioned projects](#archiving-data-for-decommissioned-projects)
+  - [Best practices for data archiving](#best-practices-for-data-archiving)
+  - [Recommended configuration for the destination storage account](#recommended-configuration-for-the-destination-storage-account)
+    - [Sample Terraform configuration](#sample-terraform-configuration)
+    - [Secondary region options](#secondary-region-options)
+  - [Migrating from Azure Cosmos DB](#migrating-from-azure-cosmos-db)
+  - [Migrating from another storage account](#migrating-from-another-storage-account)
+    - [Blob storage migration](#blob-storage-migration)
+      - [Object replication configuration with Terraform](#object-replication-configuration-with-terraform)
+    - [Table storage migration](#table-storage-migration)
+  - [Best practices and recommendations](#best-practices-and-recommendations)
+  - [Conclusion](#conclusion)
 
-When a project is decommissioned, it is important to strike a balance between data retention for legal and auditing purposes and storage cost optimization. Depending on the context and specific requirements, adopting low-cost storage solutions can be considered while ensuring access to the necessary information for potential future audits.. This guide provides a comprehensive approach to data archiving with a focus on Azure storage solutions.
+## Best practices for data archiving
 
-## Best Practices for Data Archiving
+When a project is decommissioned, it is important to strike a balance between
+data retention for legal and auditing purposes and storage cost optimization.
+Depending on the context and specific requirements, adopting low-cost storage
+solutions can be considered while ensuring access to the necessary information
+for potential future audits.. This guide provides a comprehensive approach to
+data archiving with a focus on Azure storage solutions.
 
-### Recommended Storage Account Configuration
+## Recommended configuration for the destination storage account
 
-The optimal storage solution balances flexibility, support, and cost-effectiveness with the following characteristics:
+The optimal storage solution balances flexibility, support, and
+cost-effectiveness with the following characteristics:
 
 - Use Archive storage tier
 - Disable internet access
@@ -19,7 +36,7 @@ The optimal storage solution balances flexibility, support, and cost-effectivene
 - Enable object replication between regions
 - Apply read-only lock
 
-### Sample Terraform Configuration
+### Sample Terraform configuration
 
 ```hcl
 resource "azurerm_storage_account" "backup_primary" {
@@ -59,33 +76,27 @@ resource "azurerm_storage_account" "backup_primary" {
 
 :::note
 
-- Manually set the `access_tier` to `Archive` via Azure Portal after backup completion
+- Manually set the `access_tier` to `Archive` via Azure Portal after backup
+  completion
 - Set `public_network_access_enabled` to `false` only after backup is complete
 
 :::
-### Secondary Region Options
+
+### Secondary region options
+
+You can choose from the following regions for secondary storage:
 
 - Germany West Central (GWC)
 - Spain Central (SPC)
 
-## Data Migration Strategies
+## Migrating from Azure Cosmos DB
 
-### Migrating from Cosmos DB
+[Azure Cosmos DB Data Migration Tool (DMT)](https://github.com/AzureCosmosDB/data-migration-desktop-tool)
+is a command-line tool that can be used to migrate data between Azure Cosmos DB
+and other data sources.
 
-#### Tools
-
-- [Azure Cosmos DB Data Migration Tool (DMT)](https://github.com/AzureCosmosDB/data-migration-desktop-tool)
-
-#### How to use it
-
-Download the release zip file, and edit the `migrationsettings.json` file as described below, according to the desired operation. Then, run the `dmt` executable file via CLI:
-
-```sh
-chmod +x ./dmt
-./dmt
-```
-
-#### Sample Migration Configuration (Cosmos DB to Blob Storage)
+Download the release zip file, and edit the `migrationsettings.json` according
+to the desired operation:
 
 ```json
 {
@@ -106,7 +117,15 @@ chmod +x ./dmt
 }
 ```
 
-#### Restore Configuration (Blob Storage to Cosmos DB)
+Then, run the `dmt` executable file via CLI:
+
+```sh
+chmod +x ./dmt
+./dmt
+```
+
+To restore data from the Azure Blob to Cosmos DB, modify the
+`migrationsettings.json` inverting the source and sink settings:
 
 ```json
 {
@@ -127,21 +146,28 @@ chmod +x ./dmt
 }
 ```
 
-### Migrating from Another Storage Account
+## Migrating from another storage account
 
-#### Blob Storage Migration
+### Blob storage migration
 
-Preferred Method: Object Replication Policy
+The preferred method for migrating blobs between storage accounts is to use
+Object Replication Policy.
 
-It consists in an automatic asynchronous copy of all blobs in a Storage Account container to another Storage Account. The target blob container becomes read-only when the policy is enabled.
+It consists in an automatic asynchronous copy of all blobs in a Storage Account
+container to another Storage Account. The target blob container becomes
+read-only when the policy is enabled.
 
 :::warning
 
-You can't create cascading object replication policies on the same container. For example, you can't have a policy from the container Y of the Storage Account B to the container Z of the Storage Account C, if a policy from the container X of the Storage Account A to the container Y of B already exists.
+You can't create cascading object replication policies on the same container.
+For example, if there is already a policy replicating data from a container in
+storage account A to a container in storage account B, you cannot create another
+policy to replicate data from this container in storage account B to a container
+in storage account C.
 
 :::
 
-##### Terraform Object Replication Configuration
+#### Object replication configuration with Terraform
 
 ```hcl
 resource "azurerm_storage_object_replication" "old_to_new" {
@@ -162,19 +188,21 @@ resource "azurerm_storage_object_replication" "old_to_new" {
 }
 ```
 
-The property `copy_blobs_created_after` accepts either `Everything` or `OnlyNew` as values, but the former is advised.
+The property `copy_blobs_created_after` accepts either `Everything` or `OnlyNew`
+as values, but the former is advised as it ensures all blobs are copied.
 
-#### Table Storage Migration
+### Table storage migration
 
-1. Small Tables:
-   - Use [Microsoft Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer#Download-4)
+1. For small Tables:
+
+   - Use
+     [Microsoft Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer#Download-4)
    - Right-click source table and select `Copy`
    - Right-click `Tables` in destination storage account and select `Paste`
 
-2. Large Tables:
-   - Recommended: Azure Data Factory pipeline
+2. For large Tables we recommend using Azure Data Factory pipelines
 
-## Best Practices and Recommendations
+## Best practices and recommendations
 
 - Always implement access controls
 - Use encryption at rest
@@ -184,4 +212,6 @@ The property `copy_blobs_created_after` accepts either `Everything` or `OnlyNew`
 
 ## Conclusion
 
-Effective data archiving requires a strategic approach that balances data preservation, security, and cost-efficiency. Regularly review and update your archiving strategy to ensure it meets your organization's evolving needs.
+Effective data archiving requires a strategic approach that balances data
+preservation, security, and cost-efficiency. Regularly review and update your
+archiving strategy to ensure it meets your organization's evolving needs.
