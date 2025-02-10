@@ -363,7 +363,9 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_rg_kv_crypto,
       azurerm_role_assignment.infra_cd_rg_st_blob_contributor,
       azurerm_role_assignment.infra_ci_rg_st_queue_contributor,
+      azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
   }
@@ -562,8 +564,18 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor != null
     error_message = "The Infra CD managed identity can't apply changes to DNS zone configurations at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
+    error_message = "The Infra CD managed identity can't associate DNS zone and private endpoints at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor != null
+    error_message = "The Infra CD managed identity can't associate NAT Gateways with subnets at resource group scope"
   }
 
   assert {

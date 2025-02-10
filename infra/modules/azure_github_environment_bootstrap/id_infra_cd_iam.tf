@@ -44,11 +44,26 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
 }
 
 # DNS Zone
-resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
+resource "azurerm_role_assignment" "infra_cd_rg_ext_network_dns_zone_contributor" {
   scope                = var.dns_zone_resource_group_id
   role_definition_name = "Private DNS Zone Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage DNS Zones at resource group level"
+}
+
+resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
+  scope                = var.dns_zone_resource_group_id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to associate DNS Zones and private endpoints at resource group level"
+}
+
+# NAT Gateway
+resource "azurerm_role_assignment" "infra_cd_rg_nat_gw_network_contributor" {
+  scope                = var.nat_gateway_resource_group_id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to associate NAT Gateways to subnets"
 }
 
 # Api Management
