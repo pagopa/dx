@@ -2,7 +2,7 @@
 
 ## Overview
 
-When a project is decommissioned, it's crucial to maintain data for legal and auditing purposes while minimizing storage costs. This guide provides a comprehensive approach to data archiving with a focus on Azure storage solutions.
+When a project is decommissioned, it is important to strike a balance between data retention for legal and auditing purposes and storage cost optimization. Depending on the context and specific requirements, adopting low-cost storage solutions can be considered while ensuring access to the necessary information for potential future audits.. This guide provides a comprehensive approach to data archiving with a focus on Azure storage solutions.
 
 ## Best Practices for Data Archiving
 
@@ -10,15 +10,14 @@ When a project is decommissioned, it's crucial to maintain data for legal and au
 
 The optimal storage solution balances flexibility, support, and cost-effectiveness with the following characteristics:
 
-1. **Blob Storage Configuration**
-   - Use Archive storage tier
-   - Disable internet access
-   - Enforce authentication via Entra ID (disable access keys)
-   - Implement legal hold policies
-   - Configure multi-AZ replication in the primary region
-   - Set up single-AZ replication in a secondary region
-   - Enable object replication between regions
-   - Apply read-only lock
+- Use Archive storage tier
+- Disable internet access
+- Enforce authentication via Entra ID (disable access keys)
+- Implement legal hold policies
+- Configure multi-AZ replication in the primary region
+- Set up single-AZ replication in a secondary region
+- Enable object replication between regions
+- Apply read-only lock
 
 ### Sample Terraform Configuration
 
@@ -58,19 +57,23 @@ resource "azurerm_storage_account" "backup_primary" {
 }
 ```
 
-> **Note:** 
-> - Manually set the `access_tier` to `Archive` via Azure Portal after backup completion
-> - Set `public_network_access_enabled` to `false` only after backup is complete
+:::note
 
+- Manually set the `access_tier` to `Archive` via Azure Portal after backup completion
+- Set `public_network_access_enabled` to `false` only after backup is complete
+
+:::
 ### Secondary Region Options
+
 - Germany West Central (GWC)
 - Spain Central (SPC)
 
 ## Data Migration Strategies
 
-### 1. Migrating from Cosmos DB
+### Migrating from Cosmos DB
 
 #### Tools
+
 - [Azure Cosmos DB Data Migration Tool (DMT)](https://github.com/AzureCosmosDB/data-migration-desktop-tool)
 
 #### Sample Migration Configuration (Cosmos DB to Blob Storage)
@@ -115,12 +118,17 @@ resource "azurerm_storage_account" "backup_primary" {
 }
 ```
 
-### 2. Migrating from Another Storage Account
+### Migrating from Another Storage Account
 
 #### Blob Storage Migration
-- Preferred Method: Object Replication
 
-> **Caution:** Cannot create cascading object replication policies on the same containers
+Preferred Method: Object Replication
+
+:::warning 
+
+You can't create cascading object replication policies on the same container.
+
+:::
 
 ##### Terraform Object Replication Configuration
 
