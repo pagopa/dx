@@ -28,6 +28,18 @@ variable "subnet_pep_id" {
   description = "Id of the subnet which holds private endpoints"
 }
 
+variable "tier" {
+  type        = string
+  description = "The offer type for the Cosmos DB account. Valid values are 's' and 'l'."
+  default     = "l"
+
+  validation {
+    condition     = contains(["s", "l"], var.tier)
+    error_message = "Valid values for tier are 's' and 'l'."
+  }
+
+}
+
 variable "private_dns_zone_resource_group_name" {
   type        = string
   description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
