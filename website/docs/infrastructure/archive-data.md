@@ -1,6 +1,6 @@
-# Archiving data for decommissioned projects
+# Archiving Data for Decommissioned Projects
 
-- [Archiving data for decommissioned projects](#archiving-data-for-decommissioned-projects)
+- [Archiving Data for Decommissioned Projects](#archiving-data-for-decommissioned-projects)
   - [Best practices for data archiving](#best-practices-for-data-archiving)
   - [Recommended configuration for the destination storage account](#recommended-configuration-for-the-destination-storage-account)
     - [Sample Terraform configuration](#sample-terraform-configuration)
@@ -19,7 +19,7 @@ When a project is decommissioned, it is important to strike a balance between
 data retention for legal and auditing purposes and storage cost optimization.
 Depending on the context and specific requirements, adopting low-cost storage
 solutions can be considered while ensuring access to the necessary information
-for potential future audits.. This guide provides a comprehensive approach to
+for potential future audits. This guide provides a comprehensive approach to
 data archiving with a focus on Azure storage solutions.
 
 ## Recommended configuration for the destination storage account
@@ -27,7 +27,7 @@ data archiving with a focus on Azure storage solutions.
 The optimal storage solution balances flexibility, support, and
 cost-effectiveness with the following characteristics:
 
-- Use Archive storage tier
+- Use archive storage tier
 - Disable internet access
 - Enforce authentication via Entra ID (disable access keys)
 - Implement legal hold policies
@@ -188,8 +188,16 @@ resource "azurerm_storage_object_replication" "old_to_new" {
 }
 ```
 
-The property `copy_blobs_created_after` accepts either `Everything` or `OnlyNew`
-as values, but the former is advised as it ensures all blobs are copied.
+The property `copy_blobs_created_after` accepts either `Everything` or
+`OnlyNew`:
+
+- `Everything`: This value ensures that all blobs in the source container,
+  regardless of their creation date, are copied to the destination container.
+  Use this option when you want a complete replication of all existing blobs.
+- `OnlyNew`: This value ensures that only blobs created after the replication
+  policy is applied are copied to the destination container. Use this option
+  when you only need to replicate new blobs created after a certain point in
+  time. as values, but the former is advised as it ensures all blobs are copied.
 
 ### Table storage migration
 
