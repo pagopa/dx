@@ -7,6 +7,7 @@ description: "Deploy a Terraform environment using Azure Deployment Environments
 
 infra:
   provider: terraform
+  path: infra
 
 parameters:
   - name: app_name
