@@ -1,6 +1,7 @@
-name: terraform-deployment
+name: storage-account-terraform
+metadata:
+  template: storage-account-terraform@0.0.1-beta
 description: "Deploy a Terraform environment using Azure Deployment Environments"
-runner: terraform
 
 infra:
   provider: terraform
