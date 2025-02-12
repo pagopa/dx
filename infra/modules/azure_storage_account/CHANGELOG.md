@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.9
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
 ## 0.0.8
 
 ### Patch Changes
