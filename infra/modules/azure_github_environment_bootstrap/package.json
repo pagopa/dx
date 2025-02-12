@@ -1,6 +1,6 @@
 {
   "name": "azure_github_environment_bootstrap",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "provider": "azurerm",
   "description": "Sets up monorepo's settings and required Azure permissions and roles"

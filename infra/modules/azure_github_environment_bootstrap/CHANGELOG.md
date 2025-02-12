@@ -1,5 +1,12 @@
 # Azure GitHub Environment Bootstrap
 
+## 0.0.3
+
+### Patch Changes
+
+- 9673a34: Add roles to associate NAT Gateways and subnets to GitHub App CD identity
+- 16ecc30: Using a common resource group in terraform tests
+
 ## 0.0.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.3
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
 ## 0.1.2
 
 ### Patch Changes

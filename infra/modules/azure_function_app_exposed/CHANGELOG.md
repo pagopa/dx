@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.1.2
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
 ## 0.1.1
 
 ### Patch Changes
