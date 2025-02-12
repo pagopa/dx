@@ -10,10 +10,11 @@ locals {
   repo_name = "dx"
 
   tags = {
-    CostCenter  = "TS700 - ENGINEERING"
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/identity/dev"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    ManagementTeam = "Developer Experience"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/identity/dev"
   }
 }
