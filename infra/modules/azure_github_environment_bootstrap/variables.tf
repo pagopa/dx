@@ -50,6 +50,11 @@ variable "dns_zone_resource_group_id" {
   description = "Id of the resource group holding public DNS zone"
 }
 
+variable "nat_gateway_resource_group_id" {
+  type        = string
+  description = "Id of the resource group hosting NAT Gateways"
+}
+
 variable "opex_resource_group_id" {
   type        = string
   description = "Id of the resource group containing Opex dashboards"
