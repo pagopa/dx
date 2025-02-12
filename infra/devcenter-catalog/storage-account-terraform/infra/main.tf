@@ -1,3 +1,17 @@
+module "naming_convention" {
+  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  version = "~> 0"
+
+  environment = {
+    prefix          = local.environment.prefix
+    env_short       = local.environment.env_short
+    location        = local.environment.location
+    domain          = local.environment.domain
+    app_name        = local.environment.app_name
+    instance_number = local.environment.instance_number
+  }
+}
+
 data "azurerm_resource_group" "test_rg" {
   name = "${module.naming_convention.project}-test-rg-01"
 }
