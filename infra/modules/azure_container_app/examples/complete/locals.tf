@@ -22,7 +22,7 @@ locals {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
     Environment    = "Dev"
-    Owner          = "DevEx"
+    BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_container_app/examples/complete"
     ManagementTeam = "Developer Experience"
   }

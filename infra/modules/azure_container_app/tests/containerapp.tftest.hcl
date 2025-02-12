@@ -37,7 +37,7 @@ run "container_app_is_correct_plan" {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
       Environment    = "Dev"
-      Owner          = "DevEx"
+      BusinessUnit   = "DevEx"
       Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
       ManagementTeam = "Developer Experience"
       Test           = "true"
