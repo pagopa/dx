@@ -63,9 +63,10 @@ run "validate_github_repository" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -156,9 +157,10 @@ run "validate_github_branch_protection" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -180,7 +182,7 @@ run "validate_github_branch_protection" {
 }
 
 run "validate_github_default_branch_override" {
-    command = plan
+  command = plan
 
   plan_options {
     target = [
@@ -213,10 +215,10 @@ run "validate_github_default_branch_override" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      name                = run.setup_tests.repository.name
+      description         = run.setup_tests.repository.description
+      topics              = run.setup_tests.repository.topics
+      reviewers_teams     = run.setup_tests.repository.reviewers_teams
       default_branch_name = "master"
     }
 
@@ -229,9 +231,10 @@ run "validate_github_default_branch_override" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -296,9 +299,10 @@ run "validate_github_id_app" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -639,9 +643,10 @@ run "validate_rbac_entraid" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -722,9 +727,10 @@ run "validate_github_id_opex" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                   = run.setup_tests.pep_vnet_id
+    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
+    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
