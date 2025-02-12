@@ -418,6 +418,7 @@ run "validate_github_id_infra" {
     pep_vnet_id                = run.setup_tests.pep_vnet_id
     dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
     opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
