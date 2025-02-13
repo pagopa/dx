@@ -7,8 +7,12 @@ on:
       - fix-get-modified-modules
 
 jobs:
-  get-modified-modules:
+  get-modified-modules-1:
     uses: ./.github/workflows/get_modified_modules.yaml
-    name: Get Modified Modules
+    name: Get Modified Modules 1
     with:
       current_branch: ${{ github.event.before }}
+
+  get-modified-modules-2:
+    uses: ./.github/workflows/get_modified_modules.yaml
+    name: Get Modified Modules 2
