@@ -5,6 +5,12 @@ resource "azurerm_resource_group" "example" {
   tags = local.tags
 }
 
+data "azurerm_subnet" "pep" {
+  name                 = "${local.project}-pep-snet-01"
+  virtual_network_name = "${local.project}-common-vnet-01"
+  resource_group_name  = "${local.project}-network-rg-01"
+}
+
 module "container_app" {
   source = "../../"
 
@@ -13,6 +19,12 @@ module "container_app" {
 
   create_container_app_environment = true
 
+  virtual_network = {
+    name                = "${local.project}-common-vnet-01"
+    resource_group_name = "${local.project}-network-rg-01"
+  }
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_cidr   = "10.50.100.0/24"
   container_app_template = {
     image = "nginx"
     name  = "nginx"

@@ -49,6 +49,13 @@ run "container_app_is_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
 
     create_container_app_environment = true
+  
+    virtual_network = {
+      name                = "dx-d-itn-common-vnet-01"
+      resource_group_name = "dx-d-itn-network-rg-01"
+    }
+    subnet_pep_id = run.setup_tests.pep_snet_id
+    subnet_cidr   = "10.50.100.0/24"
 
     key_vault = {
       name                = "dx-d-itn-common-kv-01"

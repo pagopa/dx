@@ -35,4 +35,6 @@ locals {
   }
 
   sku = lookup(local.sku_mapping, var.tier, null)
+
+  registry_identity_check = var.registry != null ? var.registry.identity_id != null ? true : false : false
 }

@@ -73,27 +73,41 @@ This Terraform module deploys an Azure Container App along with an Azure Contain
 | [azurerm_container_app.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
 | [azurerm_container_app_environment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
 | [azurerm_key_vault_access_policy.kv_ca_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
+| [azurerm_private_endpoint.app_service_sites](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_role_assignment.kv_ca_role](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_key_vault.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_private_dns_zone.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
+| [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_container_app_environment_id"></a> [container\_app\_environment\_id](#input\_container\_app\_environment\_id) | The ID of the container app environment to deploy the container app to. If not provided, a new container app environment will be created. | `string` | `null` | no |
-| <a name="input_container_app_template"></a> [container\_app\_template](#input\_container\_app\_template) | The template for the container app to deploy | <pre>object({<br/>    image = string<br/>    name  = string<br/>    envs  = optional(map(string), {})<br/>  })</pre> | n/a | yes |
+| <a name="input_container_app_template"></a> [container\_app\_template](#input\_container\_app\_template) | The template for the container app to deploy | <pre>object({<br/>    image = string<br/>    name  = optional(string, "")<br/>    envs  = optional(map(string), {})<br/>  })</pre> | n/a | yes |
 | <a name="input_create_container_app_environment"></a> [create\_container\_app\_environment](#input\_create\_container\_app\_environment) | Determines whether to create a new Container App Environment | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Details of the KeyVault holding secrets for this Container | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>    use_rbac            = optional(bool, false)<br/>    secret_name         = string<br/>  })</pre> | `null` | no |
+| <a name="input_liveness_probe"></a> [liveness\_probe](#input\_liveness\_probe) | Liveness probe configuration for the container app | <pre>object({<br/>    failure_count_threshold = optional(number, 5)<br/>    header = optional(object({<br/>      name  = string<br/>      value = string<br/>    }))<br/>    host             = optional(string)<br/>    initial_delay    = optional(number, 1)<br/>    interval_seconds = optional(number, 10)<br/>    path             = optional(string)<br/>    port             = optional(number, 8080)<br/>    timeout          = optional(number, 5)<br/>    transport        = optional(string, "HTTP")<br/>  })</pre> | `{}` | no |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to use for the container app environment. | `string` | `null` | no |
+| <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | (Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group | `string` | `null` | no |
+| <a name="input_readiness_probe"></a> [readiness\_probe](#input\_readiness\_probe) | Readiness probe configuration for the container app | <pre>object({<br/>    failure_count_threshold = optional(number, 10)<br/>    header = optional(object({<br/>      name  = string<br/>      value = string<br/>    }))<br/>    host                    = optional(string)<br/>    interval_seconds        = optional(number, 10)<br/>    path                    = optional(string)<br/>    port                    = optional(number, 8080)<br/>    success_count_threshold = optional(number, 3)<br/>    timeout                 = optional(number, 5)<br/>    transport               = optional(string, "HTTP")<br/>  })</pre> | `{}` | no |
+| <a name="input_registry"></a> [registry](#input\_registry) | Details of the container registry to use for the container app | <pre>object({<br/>    server               = string<br/>    username             = optional(string)<br/>    password_secret_name = optional(string)<br/>    identity_id          = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group to deploy resources to | `string` | n/a | yes |
+| <a name="input_startup_probe"></a> [startup\_probe](#input\_startup\_probe) | Startup probe configuration for the container app | <pre>object({<br/>    failure_count_threshold = optional(number, 30)<br/>    header = optional(object({<br/>      name  = string<br/>      value = string<br/>    }))<br/>    host             = optional(string)<br/>    interval_seconds = optional(number, 10)<br/>    path             = optional(string)<br/>    port             = optional(number, 8080)<br/>    timeout          = optional(number, 5)<br/>    transport        = optional(string, "HTTP")<br/>  })</pre> | `{}` | no |
+| <a name="input_subnet_cidr"></a> [subnet\_cidr](#input\_subnet\_cidr) | (Optional) CIDR block to use for the subnet used for Container App Environment connectivity. Mandatory if subnet\_id is not set | `string` | `null` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | (Optional) Set the subnet id where you want to host the Container App Environment. Mandatory if subnet\_cidr is not set | `string` | `null` | no |
+| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | Id of the subnet which holds private endpoints | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Container. Valid values are 's', 'm', 'l' and 'xl'. | `string` | `"s"` | no |
+| <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_azurerm_container_app_url"></a> [azurerm\_container\_app\_url](#output\_azurerm\_container\_app\_url) | n/a |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
