@@ -2,7 +2,10 @@ name: Test Diff Modules
 
 on:
   workflow_dispatch:
-    
+  push:
+    branches:
+      - fix-get-modified-modules
+
 jobs:
   get-modified-modules:
     uses: ./.github/workflows/get_modified_modules.yaml
