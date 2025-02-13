@@ -1,5 +1,10 @@
 on:
   workflow_call:
+    inputs:
+      current_branch:
+        description: "Current branch name"
+        required: false
+        type: string
     outputs:
       modules:
         value: ${{ jobs.get-modified-modules.outputs.modules }}
@@ -19,7 +24,8 @@ jobs:
         id: get-modules
         run: |
           DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
-          CURRENT_BRANCH_SHA=${{ github.sha }}
+          echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
+          CURRENT_BRANCH_SHA=${{ inputs.current_branch || github.sha }}
 
           folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules changed: $folders_list

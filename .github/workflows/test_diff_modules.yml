@@ -1,0 +1,11 @@
+name: Test Diff Modules
+
+on:
+  workflow_dispatch:
+    
+jobs:
+  get-modified-modules:
+    uses: ./.github/workflows/get_modified_modules.yaml
+    name: Get Modified Modules
+    with:
+      current_branch: ${{ github.event.before }}
