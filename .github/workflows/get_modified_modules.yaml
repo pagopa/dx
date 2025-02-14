@@ -1,8 +1,8 @@
 on:
   workflow_call:
     inputs:
-      current_branch:
-        description: "Current branch name"
+      current_ref:
+        description: "Current branch reference"
         required: false
         type: string
     outputs:
@@ -25,7 +25,7 @@ jobs:
         run: |
           DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
           echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
-          CURRENT_BRANCH_SHA=${{ inputs.current_branch || github.sha }}
+          CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}
 
           folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA infra/modules | xargs -r dirname | sed 's#^infra\/modules/\([^/]*\).*#\1#' | uniq | jq -R -c . | jq -s -c .)
           echo Modules changed: $folders_list
