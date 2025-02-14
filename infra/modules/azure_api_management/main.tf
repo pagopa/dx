@@ -36,6 +36,8 @@ resource "azurerm_api_management" "this" {
   zones                         = var.tier == "l" ? ["1", "2", "3"] : null
   public_network_access_enabled = var.enable_public_network_access
 
+  min_api_version = "2021-08-01"
+
   # Managed identity type: System
   identity {
     type = "SystemAssigned"
