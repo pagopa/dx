@@ -26,7 +26,7 @@ module "container_app" {
   tier = "m"
 
   container_app_template = {
-    image = "nginx"
+    image = "nginx:latest"
     name  = "nginx"
 
     envs = {
