@@ -7,15 +7,15 @@ resource "azurerm_subnet" "this" {
   address_prefixes     = [var.subnet_cidr]
 
   delegation {
-    name = "default"
+    name = "Microsoft.App/environments"
     service_delegation {
-      name    = "Microsoft.Web/serverFarms"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
     }
   }
 }
 
-resource "azurerm_private_endpoint" "app_service_sites" {
+resource "azurerm_private_endpoint" "this" {
   count = var.create_container_app_environment ? 1 : 0
 
   name                = "${module.naming_convention.prefix}-cae-pep-${module.naming_convention.suffix}"
@@ -27,7 +27,7 @@ resource "azurerm_private_endpoint" "app_service_sites" {
     name                           = "${module.naming_convention.prefix}-cae-pep-${module.naming_convention.suffix}"
     private_connection_resource_id = azurerm_container_app_environment.this[0].id
     is_manual_connection           = false
-    subresource_names              = ["sites"]
+    subresource_names              = ["managedEnvironment"]
   }
 
   private_dns_zone_group {

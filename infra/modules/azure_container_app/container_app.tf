@@ -9,6 +9,15 @@ resource "azurerm_container_app_environment" "this" {
   infrastructure_subnet_id       = var.subnet_id == null ? azurerm_subnet.this[0].id : var.subnet_id
   internal_load_balancer_enabled = true
 
+  workload_profile {
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+    minimum_count         = 0
+    maximum_count         = 1
+  }
+
+  zone_redundancy_enabled = local.sku.zone_redundancy
+
   tags = var.tags
 }
 

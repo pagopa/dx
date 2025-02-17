@@ -24,7 +24,7 @@ module "container_app" {
     resource_group_name = "${local.project}-network-rg-01"
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.100.0/24"
+  subnet_cidr   = "10.50.100.0/23"
   container_app_template = {
     image = "nginx"
     name  = "nginx"
