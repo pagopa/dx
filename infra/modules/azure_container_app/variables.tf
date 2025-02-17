@@ -64,28 +64,6 @@ variable "container_app_template" {
   description = "The template for the container app to deploy"
 }
 
-variable "registry" {
-  type = object({
-    server               = string
-    username             = optional(string)
-    password_secret_name = optional(string)
-    identity_id          = optional(string)
-  })
-  default     = null
-  description = "Details of the container registry to use for the container app"
-}
-
-variable "key_vault" {
-  type = object({
-    name                = string
-    resource_group_name = string
-    use_rbac            = optional(bool, false)
-    secret_name         = string
-  })
-  default     = null
-  description = "Details of the KeyVault holding secrets for this Container"
-}
-
 variable "liveness_probe" {
   type = object({
     failure_count_threshold = optional(number, 5)

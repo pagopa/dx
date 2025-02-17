@@ -35,11 +35,5 @@ module "container_app" {
     }
   }
 
-  key_vault = {
-    name                = "${local.project}-common-kv-${local.environment.instance_number}"
-    resource_group_name = "${local.project}-common-rg-${local.environment.instance_number}"
-    secret_name         = "test-secret"
-  }
-
   tags = local.tags
 }

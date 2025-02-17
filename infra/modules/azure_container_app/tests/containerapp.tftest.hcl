@@ -56,14 +56,7 @@ run "container_app_is_correct_plan" {
     }
     subnet_pep_id = run.setup_tests.pep_snet_id
     subnet_cidr   = "10.50.100.0/24"
-
-    key_vault = {
-      name                = "dx-d-itn-common-kv-01"
-      resource_group_name = "dx-d-itn-common-rg-01"
-      secret_name         = "test-secret"
-      use_rbac           = true
-    }
-
+    
     container_app_template = {
       image = "nginx"
       name  = "nginx"
@@ -99,10 +92,5 @@ run "container_app_is_correct_plan" {
   assert {
     condition     = azurerm_container_app.this.template[0].max_replicas == 1 && azurerm_container_app.this.template[0].min_replicas == 0
     error_message = "The container app replica values are not correct"
-  }
-
-  assert {
-    condition = length(azurerm_role_assignment.kv_ca_role) == 1
-    error_message = "The container app role assignment is not correct"
   }
 }

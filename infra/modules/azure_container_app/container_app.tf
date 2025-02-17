@@ -40,8 +40,7 @@ resource "azurerm_container_app" "this" {
   workload_profile_name        = "Consumption"
 
   identity {
-    type         = local.registry_identity_check ? "SystemAssigned, UserAssigned" : "SystemAssigned"
-    identity_ids = local.registry_identity_check ? [var.registry.identity_id] : []
+    type = "SystemAssigned"
   }
 
   ingress {
@@ -51,27 +50,6 @@ resource "azurerm_container_app" "this" {
     traffic_weight {
       percentage      = 100
       latest_revision = true
-    }
-  }
-
-  dynamic "registry" {
-    for_each = var.registry != null ? [1] : []
-
-    content {
-      server               = var.registry.server
-      password_secret_name = var.registry.password_secret_name
-      username             = var.registry.username
-      identity             = var.registry.identity_id
-    }
-  }
-
-  dynamic "secret" {
-    for_each = var.key_vault != null ? [1] : []
-    content {
-      key_vault_secret_id = "${data.azurerm_key_vault.kv[0].vault_uri}secrets/${var.key_vault.secret_name}"
-
-      identity = "System"
-      name     = var.key_vault.secret_name
     }
   }
 
