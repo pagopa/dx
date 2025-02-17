@@ -25,6 +25,10 @@ resource "azurerm_container_app_environment" "this" {
     ]
   }
 
+  timeouts {
+    create = "60m"
+  }
+
   tags = var.tags
 }
 
