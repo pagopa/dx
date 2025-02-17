@@ -18,6 +18,12 @@ resource "azurerm_container_app_environment" "this" {
 
   zone_redundancy_enabled = local.sku.zone_redundancy
 
+  lifecycle {
+    ignore_changes = [
+      infrastructure_resource_group_name,
+    ]
+  }
+
   tags = var.tags
 }
 

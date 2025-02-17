@@ -27,7 +27,7 @@ resource "azurerm_private_endpoint" "this" {
     name                           = "${module.naming_convention.prefix}-cae-pep-${module.naming_convention.suffix}"
     private_connection_resource_id = azurerm_container_app_environment.this[0].id
     is_manual_connection           = false
-    subresource_names              = ["managedEnvironment"]
+    subresource_names              = ["managedEnvironments"]
   }
 
   private_dns_zone_group {
