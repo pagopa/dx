@@ -19,6 +19,8 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_subscription" "current" {}
+
 resource "azurerm_resource_group" "rg_identity" {
   name     = "${local.project}-identity-rg"
   location = local.location
@@ -34,6 +36,8 @@ module "federated_identities" {
   env       = local.env
 
   repositories = [local.repo_name]
+
+  subscription_id = data.azurerm_subscription.current.id
 
   continuos_integration = {
     enable = true
