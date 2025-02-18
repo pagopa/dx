@@ -24,12 +24,20 @@ run "ids_default" {
   command = plan
 
   variables {
-    prefix              = "dx"
-    env                 = "dev"
-    env_short           = "d"
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      instance_number = "01"
+    }
+
     resource_group_name = run.setup_tests.resource_group_name
-    domain              = "modules"
-    repositories        = ["dx"]
+
+    repository = {
+      name  = "dx"
+      owner = "pagopa"
+    }
 
     subscription_id = run.setup_tests.subscription_id
 
@@ -47,32 +55,32 @@ run "ids_default" {
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.ci_github["dx.environment.dev-ci"].audience[0] == "api://AzureADTokenExchange"
+    condition     = azurerm_federated_identity_credential.ci_github[0].audience[0] == "api://AzureADTokenExchange"
     error_message = "CI federation must be done with AD auth"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.cd_github["dx.environment.dev-cd"].audience[0] == "api://AzureADTokenExchange"
+    condition     = azurerm_federated_identity_credential.cd_github[0].audience[0] == "api://AzureADTokenExchange"
     error_message = "CD federation must be done with AD auth"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.ci_github["dx.environment.dev-ci"].issuer == "https://token.actions.githubusercontent.com"
+    condition     = azurerm_federated_identity_credential.ci_github[0].issuer == "https://token.actions.githubusercontent.com"
     error_message = "CI federation must be done with GitHub"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.ci_github["dx.environment.dev-ci"].issuer == "https://token.actions.githubusercontent.com"
+    condition     = azurerm_federated_identity_credential.ci_github[0].issuer == "https://token.actions.githubusercontent.com"
     error_message = "CD federation must be done with GitHub"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.ci_github["dx.environment.dev-ci"].subject == "repo:pagopa/dx:environment:dev-ci"
+    condition     = azurerm_federated_identity_credential.ci_github[0].subject == "repo:pagopa/dx:environment:infra-dev-ci"
     error_message = "CI federation must be done with the environment of PagoPA's DX repository"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.cd_github["dx.environment.dev-cd"].subject == "repo:pagopa/dx:environment:dev-cd"
+    condition     = azurerm_federated_identity_credential.cd_github[0].subject == "repo:pagopa/dx:environment:infra-dev-cd"
     error_message = "CD federation must be done with the environment of PagoPA's DX repository"
   }
 
@@ -121,12 +129,20 @@ run "ids_custom_roles" {
   command = plan
 
   variables {
-    prefix              = "dx"
-    env                 = "dev"
-    env_short           = "d"
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      instance_number = "01"
+    }
+
     resource_group_name = run.setup_tests.resource_group_name
-    domain              = "modules"
-    repositories        = ["dx"]
+
+    repository = {
+      name  = "dx"
+      owner = "pagopa"
+    }
 
     subscription_id = run.setup_tests.subscription_id
 
@@ -184,12 +200,20 @@ run "cd_disabled" {
   command = plan
 
   variables {
-    prefix              = "dx"
-    env                 = "dev"
-    env_short           = "d"
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      instance_number = "01"
+    }
+
     resource_group_name = run.setup_tests.resource_group_name
-    domain              = "modules"
-    repositories        = ["dx"]
+
+    repository = {
+      name  = "dx"
+      owner = "pagopa"
+    }
 
     subscription_id = run.setup_tests.subscription_id
 
@@ -201,7 +225,7 @@ run "cd_disabled" {
   }
 
   assert {
-    condition = azurerm_user_assigned_identity.cd == []
+    condition     = azurerm_user_assigned_identity.cd == []
     error_message = "CD identity must not be created"
   }
 }
@@ -210,12 +234,20 @@ run "ci_disabled" {
   command = plan
 
   variables {
-    prefix              = "dx"
-    env                 = "dev"
-    env_short           = "d"
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      instance_number = "01"
+    }
+
     resource_group_name = run.setup_tests.resource_group_name
-    domain              = "modules"
-    repositories        = ["dx"]
+
+    repository = {
+      name  = "dx"
+      owner = "pagopa"
+    }
 
     subscription_id = run.setup_tests.subscription_id
 
@@ -227,7 +259,7 @@ run "ci_disabled" {
   }
 
   assert {
-    condition = azurerm_user_assigned_identity.ci == []
+    condition     = azurerm_user_assigned_identity.ci == []
     error_message = "CI identity must not be created"
   }
 }

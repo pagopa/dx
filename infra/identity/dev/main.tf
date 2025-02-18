@@ -22,7 +22,7 @@ provider "azurerm" {
 data "azurerm_subscription" "current" {}
 
 resource "azurerm_resource_group" "rg_identity" {
-  name     = "${local.project}-identity-rg"
+  name     = "${local.project}-identity-rg-${local.instance_number}"
   location = local.location
 
   tags = local.tags
@@ -31,11 +31,19 @@ resource "azurerm_resource_group" "rg_identity" {
 module "federated_identities" {
   source = "../../modules/azure_federated_identity_with_github"
 
-  prefix    = local.prefix
-  env_short = local.env_short
-  env       = local.env
+  environment = {
+    prefix          = local.prefix
+    env_short       = local.env_short
+    location        = local.location
+    domain          = local.domain
+    instance_number = local.instance_number
+  }
 
-  repositories = [local.repo_name]
+  repository = {
+    name = local.repo_name
+  }
+
+  resource_group_name = azurerm_resource_group.rg_identity.name
 
   subscription_id = data.azurerm_subscription.current.id
 

@@ -1,33 +1,27 @@
 locals {
-  name                = var.domain == "" ? "${var.prefix}-${var.env_short}" : "${var.prefix}-${var.env_short}-${var.domain}"
-  resource_group_name = var.resource_group_name == null ? "${var.prefix}-${var.env_short}-identity-rg" : var.resource_group_name
-  identity_name       = "${local.name}-github-%s-identity"
-  federation_prefix   = "${local.name}-github"
+
+  resource_group_name = var.resource_group_name
+  #e.g. dx-d-itn-test-app-github-cd-id-01
+  identity_name = "${module.naming_convention.prefix}-%s-github-%s-id-${module.naming_convention.suffix}"
+  #e.g. dx-environment-app-prod-cd
+  federation_prefix = "${var.repository.name}-environment-%s-${module.naming_convention.env_name}-%s"
 
   is_ci_enabled = var.continuos_integration.enable ? 1 : 0
   is_cd_enabled = var.continuos_delivery.enable ? 1 : 0
 
-  ci_github_federations = local.is_ci_enabled == 1 ? tolist(flatten([
-    for repo in var.repositories : {
-      org               = "pagopa"
-      repository        = repo
-      audience          = ["api://AzureADTokenExchange"]
-      issuer            = "https://token.actions.githubusercontent.com"
-      credentials_scope = "environment"
-      subject           = "${var.env}-ci"
-    }
-  ])) : []
+  ci_github_federations = local.is_ci_enabled == 1 ? {
+    audience = ["api://AzureADTokenExchange"]
+    issuer   = "https://token.actions.githubusercontent.com"
+    # repo:pagopa/dx:environment:app-prod-ci
+    subject = format("repo:${var.repository.owner}/${var.repository.name}:environment:%s-${module.naming_convention.env_name}-ci", var.identity_type)
+  } : null
 
-  cd_github_federations = local.is_cd_enabled == 1 ? tolist(flatten([
-    for repo in var.repositories : {
-      org               = "pagopa"
-      repository        = repo
-      audience          = ["api://AzureADTokenExchange"]
-      issuer            = "https://token.actions.githubusercontent.com"
-      credentials_scope = "environment"
-      subject           = "${var.env}-cd"
-    }
-  ])) : []
+  cd_github_federations = local.is_cd_enabled == 1 ? {
+    audience = ["api://AzureADTokenExchange"]
+    issuer   = "https://token.actions.githubusercontent.com"
+    # repo:pagopa/dx:environment:app-prod-cd
+    subject = format("repo:${var.repository.owner}/${var.repository.name}:environment:%s-${module.naming_convention.env_name}-cd", var.identity_type)
+  } : null
 
   ci_rg_roles = tolist(flatten([
     for rg in data.azurerm_resource_group.ci_details : [

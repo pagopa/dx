@@ -1,44 +1,42 @@
+variable "environment" {
+  type = object({
+    prefix          = string
+    env_short       = string
+    location        = string
+    domain          = string
+    instance_number = string
+  })
+
+  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+}
+
 variable "tags" {
   type        = map(any)
   description = "Resources tags"
 }
 
-variable "env_short" {
+variable "identity_type" {
   type        = string
-  description = "Environment short name"
-}
+  default     = "infra"
+  description = "Scope of the identities to create"
 
-variable "env" {
-  type        = string
-  description = "Environment name"
-}
-
-variable "prefix" {
-  type        = string
-  description = "Project prefix"
+  validation {
+    condition     = contains(["infra", "opex", "app"], var.identity_type)
+    error_message = "Supported values are \"infra\", \"opex\" and \"app\""
+  }
 }
 
 variable "resource_group_name" {
   type        = string
-  default     = null
-  description = "(Optional) Override default resource group"
+  description = "Resource group to deploy resources to"
 }
 
-variable "location" {
-  type        = string
-  description = "Azure region for the Managed Identity"
-  default     = "italynorth"
-}
-
-variable "domain" {
-  type        = string
-  default     = ""
-  description = "(Optional) Domain of the project"
-}
-
-variable "repositories" {
-  type        = list(string)
-  description = "List of repositories to federate"
+variable "repository" {
+  type = object({
+    owner = optional(string, "pagopa")
+    name  = string
+  })
+  description = "Repositories to federate"
 }
 
 variable "continuos_integration" {
