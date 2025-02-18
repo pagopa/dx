@@ -367,6 +367,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_rg_kv_crypto,
       azurerm_role_assignment.infra_cd_rg_st_blob_contributor,
       azurerm_role_assignment.infra_ci_rg_st_queue_contributor,
+      azurerm_role_assignment.infra_ci_rg_st_table_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
       azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
@@ -566,6 +567,11 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_ci_rg_st_queue_contributor != null
     error_message = "The Infra CD managed identity can't write Storage Account queues at resource group scope"
+  }
+
+  assert {
+    condition = azurerm_role_assignment.infra_ci_rg_st_table_contributor != null
+    error_message = "The Infra CD managed identity can't write Storage Account tables at resource group scope"
   }
 
   assert {

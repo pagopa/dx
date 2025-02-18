@@ -116,7 +116,7 @@ resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
   secret_permissions = ["Get", "List", "Set"]
 }
 
-# Storage Account - Blob and Queue
+# Storage Account - Blob, Queue and Table
 resource "azurerm_role_assignment" "infra_cd_rg_st_blob_contributor" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Storage Blob Data Contributor"
@@ -129,4 +129,11 @@ resource "azurerm_role_assignment" "infra_ci_rg_st_queue_contributor" {
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_ci_rg_st_table_contributor" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account tables monorepository resource group scope"
 }
