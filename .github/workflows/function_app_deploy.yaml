@@ -63,8 +63,19 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
+      - name: Detect turbo version
+        id: turbo-version
+        run: echo "::set-output name=version::$(jq -r '.devDependencies.turbo | split(".") | .[0]' package.json)"
+
+      - name: Prune (turbo 1.x)
+        if: steps.turbo-version.outputs.turbo-version == '1'
+        run: |
+          npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+          echo "::warning::Turbo 1.x is deprecated. Please upgrade to the latest version."
+
       - name: Prune
-        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+        if: steps.turbo-version.outputs.turbo-version != '1'
+        run: npx turbo prune --scope ${{ env.WORKSPACE }}
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
