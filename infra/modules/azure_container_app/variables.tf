@@ -39,6 +39,11 @@ variable "log_analytics_workspace_id" {
   type        = string
   description = "The ID of the Log Analytics workspace to use for the container app environment."
   default     = null
+
+  validation {
+    condition     = var.create_container_app_environment == false || var.log_analytics_workspace_id != null
+    error_message = "Please specify the log_analytics_workspace_id when create_container_app_environment is true"
+  }
 }
 
 # ------------ CONTAINER APP ------------ #
@@ -56,9 +61,9 @@ variable "tier" {
 
 variable "container_app_template" {
   type = object({
-    image = string
-    name  = optional(string, "")
-    envs  = optional(map(string), {})
+    image        = string
+    name         = optional(string, "")
+    app_settings = optional(map(string), {})
   })
 
   description = "The template for the container app to deploy"

@@ -82,7 +82,7 @@ This Terraform module deploys an Azure Container App along with an Azure Contain
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_container_app_environment_id"></a> [container\_app\_environment\_id](#input\_container\_app\_environment\_id) | The ID of the container app environment to deploy the container app to. If not provided, a new container app environment will be created. | `string` | `null` | no |
-| <a name="input_container_app_template"></a> [container\_app\_template](#input\_container\_app\_template) | The template for the container app to deploy | <pre>object({<br/>    image = string<br/>    name  = optional(string, "")<br/>    envs  = optional(map(string), {})<br/>  })</pre> | n/a | yes |
+| <a name="input_container_app_template"></a> [container\_app\_template](#input\_container\_app\_template) | The template for the container app to deploy | <pre>object({<br/>    image        = string<br/>    name         = optional(string, "")<br/>    app_settings = optional(map(string), {})<br/>  })</pre> | n/a | yes |
 | <a name="input_create_container_app_environment"></a> [create\_container\_app\_environment](#input\_create\_container\_app\_environment) | Determines whether to create a new Container App Environment | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_liveness_probe"></a> [liveness\_probe](#input\_liveness\_probe) | Liveness probe configuration for the container app | <pre>object({<br/>    failure_count_threshold = optional(number, 5)<br/>    header = optional(object({<br/>      name  = string<br/>      value = string<br/>    }))<br/>    host             = optional(string)<br/>    initial_delay    = optional(number, 1)<br/>    interval_seconds = optional(number, 10)<br/>    path             = optional(string)<br/>    port             = optional(number, 8080)<br/>    timeout          = optional(number, 5)<br/>    transport        = optional(string, "HTTP")<br/>  })</pre> | `{}` | no |
@@ -102,8 +102,6 @@ This Terraform module deploys an Azure Container App along with an Azure Contain
 
 | Name | Description |
 |------|-------------|
-| <a name="output_azurerm_container_app_url"></a> [azurerm\_container\_app\_url](#output\_azurerm\_container\_app\_url) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_name"></a> [name](#output\_name) | n/a |
-| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_container_app_environment"></a> [container\_app\_environment](#output\_container\_app\_environment) | n/a |
+| <a name="output_container_app_name"></a> [container\_app\_name](#output\_container\_app\_name) | n/a |
 <!-- END_TF_DOCS -->

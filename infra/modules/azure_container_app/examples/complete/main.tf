@@ -29,7 +29,7 @@ module "container_app" {
     image = "nginx:latest"
     name  = "nginx"
 
-    envs = {
+    app_settings = {
       key1 = "value1"
       key2 = "value2"
     }

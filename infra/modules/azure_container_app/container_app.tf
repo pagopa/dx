@@ -64,7 +64,7 @@ resource "azurerm_container_app" "this" {
       name   = var.container_app_template.name != "" ? var.container_app_template.name : var.container_app_template.image
 
       dynamic "env" {
-        for_each = var.container_app_template.envs
+        for_each = var.container_app_template.app_settings
 
         content {
           name  = env.key

@@ -61,7 +61,7 @@ run "container_app_is_correct_plan" {
       image = "nginx"
       name  = "nginx"
 
-      envs = {
+      app_settings = {
         "TEST1" = "value1",
         "TEST2" = "value2"
       }

@@ -11,6 +11,11 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${local.project}-network-rg-01"
 }
 
+data "azurerm_log_analytics_workspace" "common" {
+  name                = "${local.project}-common-log-${local.environment.instance_number}"
+  resource_group_name = "${local.project}-common-rg-01"
+}
+
 module "container_app" {
   source = "../../"
 
@@ -18,6 +23,7 @@ module "container_app" {
   resource_group_name = azurerm_resource_group.example.name
 
   create_container_app_environment = true
+  log_analytics_workspace_id       = data.azurerm_log_analytics_workspace.common.id
 
   virtual_network = {
     name                = "${local.project}-common-vnet-01"
