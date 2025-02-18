@@ -4,7 +4,10 @@ locals {
   identity_name       = "${local.name}-github-%s-identity"
   federation_prefix   = "${local.name}-github"
 
-  ci_github_federations = tolist(flatten([
+  is_ci_enabled = var.continuos_integration.enable ? 1 : 0
+  is_cd_enabled = var.continuos_delivery.enable ? 1 : 0
+
+  ci_github_federations = local.is_ci_enabled == 1 ? tolist(flatten([
     for repo in var.repositories : {
       org               = "pagopa"
       repository        = repo
@@ -13,9 +16,9 @@ locals {
       credentials_scope = "environment"
       subject           = "${var.env}-ci"
     }
-  ]))
+  ])) : []
 
-  cd_github_federations = tolist(flatten([
+  cd_github_federations = local.is_cd_enabled == 1 ? tolist(flatten([
     for repo in var.repositories : {
       org               = "pagopa"
       repository        = repo
@@ -24,7 +27,7 @@ locals {
       credentials_scope = "environment"
       subject           = "${var.env}-cd"
     }
-  ]))
+  ])) : []
 
   ci_rg_roles = tolist(flatten([
     for rg in data.azurerm_resource_group.ci_details : [
