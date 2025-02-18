@@ -50,12 +50,12 @@ variable "log_analytics_workspace_id" {
 
 variable "tier" {
   type        = string
-  description = "The offer type for the Container. Valid values are 's', 'm', 'l' and 'xl'."
+  description = "The offer type for the Container. Valid values are 'xs', 's', 'm' and 'l'."
   default     = "s"
 
   validation {
-    condition     = contains(["s", "m", "l", "xl"], var.tier)
-    error_message = "Valid values for tier are 's', 'm', 'l' and 'xl'."
+    condition     = contains(["xs", "s", "m", "l"], var.tier)
+    error_message = "Valid values for tier are 'xs', 's', 'm' and 'l'."
   }
 }
 

@@ -95,7 +95,7 @@ This Terraform module deploys an Azure Container App along with an Azure Contain
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | (Optional) Set the subnet id where you want to host the Container App Environment. Mandatory if subnet\_cidr is not set | `string` | `null` | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | Id of the subnet which holds private endpoints | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Container. Valid values are 's', 'm', 'l' and 'xl'. | `string` | `"s"` | no |
+| <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Container. Valid values are 'xs', 's', 'm' and 'l'. | `string` | `"s"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | `null` | no |
 
 ## Outputs

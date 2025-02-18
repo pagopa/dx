@@ -44,11 +44,12 @@ run "container_app_is_correct_plan" {
       TestName       = "Create Container App for test"
     }
 
-    tier = "s"
+    tier = "xs"
 
     resource_group_name = run.setup_tests.resource_group_name
 
     create_container_app_environment = true
+    log_analytics_workspace_id       = run.setup_tests.log_analytics_id
   
     virtual_network = {
       name                = "dx-d-itn-common-vnet-01"

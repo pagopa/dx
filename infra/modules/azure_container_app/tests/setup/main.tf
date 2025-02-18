@@ -30,10 +30,19 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${var.environment.prefix}-${var.environment.env_short}-itn-network-rg-01"
 }
 
+data "azurerm_log_analytics_workspace" "logs" {
+  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-common-log-${module.naming_convention.suffix}"
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-01"
+}
+
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
 }
 
 output "pep_snet_id" {
   value = data.azurerm_subnet.pep.id
+}
+
+output "log_analytics_id" {
+  value = data.azurerm_log_analytics_workspace.logs.id
 }

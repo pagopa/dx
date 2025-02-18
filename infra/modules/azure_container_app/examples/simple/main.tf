@@ -22,6 +22,8 @@ module "container_app" {
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
+  tier = "xs"
+
   create_container_app_environment = true
   log_analytics_workspace_id       = data.azurerm_log_analytics_workspace.common.id
 
