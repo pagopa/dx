@@ -8,7 +8,7 @@ locals {
     for repo in var.repositories : {
       org               = "pagopa"
       repository        = repo
-      audience          = "api://AzureADTokenExchange"
+      audience          = ["api://AzureADTokenExchange"]
       issuer            = "https://token.actions.githubusercontent.com"
       credentials_scope = "environment"
       subject           = "${var.env}-ci"
@@ -19,7 +19,7 @@ locals {
     for repo in var.repositories : {
       org               = "pagopa"
       repository        = repo
-      audience          = "api://AzureADTokenExchange"
+      audience          = ["api://AzureADTokenExchange"]
       issuer            = "https://token.actions.githubusercontent.com"
       credentials_scope = "environment"
       subject           = "${var.env}-cd"
