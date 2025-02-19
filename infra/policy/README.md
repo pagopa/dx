@@ -8,13 +8,13 @@ It organizes policy definitions and role assignments to ensure consistent govern
 ```shell
 infra/
 ├── policy/
-│   ├── _policy_rules/        # Contains JSON files defining role policies
+│   ├── _policy_rules/        # Contains Terraform templates files defining JSON role policies
 │   ├── dev/                  # Policies assigned to the development environment (DEV-ENGINEERING)
 ```
 
 ## Policy Rules (`infra/policy/_policy_rules`)
 
-This directory contains JSON files that define the role policies to be used in Azure. These files specify permissions and constraints that can be assigned to users, groups, or services.
+This directory contains Terraform Template files that define the JSON role policies to be used in Azure. These files specify permissions and constraints that can be assigned to users, groups, or services.
 
 ## Environment-Specific Policies (`infra/policy/dev`)
 
@@ -28,7 +28,7 @@ Each repository that needs to configure a policy must replicate the same structu
 # infra/policy/prod/policy_specific_tags.tf
 
 data "http" "specific_tags_policy_rule" {
-  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_role.json"
+  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_role.json.tftpl"
 }
 
 resource "azurerm_policy_definition" "specific_tags_policy" {
@@ -43,7 +43,24 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
     version  = "1.0.0"
   })
 
-  policy_rule = templatefile(data.http.specific_tags_policy_rule.response_body, {})
+  policy_rule = templatefile(data.http.specific_tags_policy_rule.response_body, {
+    cost_center = "TS000 - Tecnologia e Servizi",
+    business_units = [
+      "App IO",
+      "CGN",
+      "Carta della Cultura",
+      "IT Wallet",
+    ],
+    management_teams = [
+      "IO Enti & Servizi",
+      "IO Platform",
+      "IO Wallet",
+      "IO Comunicazione",
+      "IO Autenticazione",
+      "IO Bonus & Pagamenti",
+      "IO Firma",
+    ]
+  })
 
   parameters = jsonencode({})
 }

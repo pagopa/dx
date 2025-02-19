@@ -3,7 +3,7 @@
     "anyOf": [
       {
         "field": "tags.CostCenter",
-        "notEquals": "TS000 - Tecnologia e Servizi"
+        "notEquals": "${cost_center}"
       },
       {
         "field": "tags.CreatedBy",
@@ -24,11 +24,7 @@
       {
         "field": "tags.BusinessUnit",
         "notIn": [
-          "App IO",
-          "CGN",
-          "Carta della Cultura",
-          "IT Wallet",
-          "DevEx"
+          ${join(",", [for bu in business_units : "\"${bu}\""])}
         ]
       },
       {
@@ -46,14 +42,7 @@
       {
         "field": "tags.ManagementTeam",
         "notIn": [
-          "IO Enti & Servizi",
-          "IO Platform",
-          "IO Wallet",
-          "IO Comunicazione",
-          "IO Autenticazione",
-          "IO Bonus & Pagamenti",
-          "IO Firma",
-          "Developer Experience"
+          ${join(",", [for mt in management_teams : "\"${mt}\""])}
         ]
       }
     ]
