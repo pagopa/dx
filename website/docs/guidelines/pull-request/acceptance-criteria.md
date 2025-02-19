@@ -8,7 +8,7 @@ sidebar_position: 3
 To ensure that a PR can be approved, the following criteria must be met:
 
 - Code and comments must be written in English
-- A PR must contain the **smallest number of changes** possible
+- A PR must contain the **smallest number of changes** possible allowing the feedback loop to be as quick as possible
 
 [//]: # (- If the pr_enrich workflow assigns the size/large label, a justification for the PR's size must be provided)
 - If backward compatibility is broken, an explanation must be included. Make sure to include a migration guide within the changelog, using [changeset](changeset.md)
