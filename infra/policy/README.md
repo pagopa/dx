@@ -28,7 +28,7 @@ Each repository that needs to configure a policy must replicate the same structu
 # infra/policy/prod/policy_specific_tags.tf
 
 data "http" "specific_tags_policy_rule" {
-  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_role.json.tftpl"
+  url = "https://raw.githubusercontent.com/pagopa/dx/[COMMIT_SHA]/infra/policy/_policy_rules/specific_tags_role_v1.json.tftpl"
 }
 
 resource "azurerm_policy_definition" "specific_tags_policy" {
