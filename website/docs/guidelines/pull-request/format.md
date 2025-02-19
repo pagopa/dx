@@ -5,6 +5,9 @@ sidebar_position: 1
 
 # Format for Pull Requests
 
+This document outlines the required format for pull requests to ensure clarity and consistency.  
+Adhering to these guidelines will facilitate smoother reviews and better communication among team members.
+
 ## Title
 
 The title of a pull request should be concise and meaningful, summarizing the changes made.  
