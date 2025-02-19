@@ -39,7 +39,7 @@ For more specific examples check out the `./example` folder. There you'll find a
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 4.10.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~>4 |
 
 ## Modules
 
