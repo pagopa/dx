@@ -371,6 +371,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_st_table_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_network_private_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
@@ -587,7 +588,12 @@ run "validate_github_id_infra" {
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
-    error_message = "The Infra CD managed identity can't associate DNS zone and private endpoints at resource group scope"
+    error_message = "The Infra CD managed identity can't edit DNS zone at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_network_private_dns_zone_contributor != null
+    error_message = "The Infra CD managed identity can't associate Private DNS zone and private endpoints at resource group scope"
   }
 
   assert {
