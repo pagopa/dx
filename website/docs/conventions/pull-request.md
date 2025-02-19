@@ -15,7 +15,8 @@ Establishing conventions for PRs ensures clarity and consistency, making it easi
 
 The title of a pull request should be concise and meaningful, summarizing the changes made. 
 The title's length should not be longer than 72 characters, because GitHub truncates it.
-It should not include any references to tracking systems such as Jira task IDs.
+
+It should not include any references to tracking systems such as Jira task IDs, as these can clutter the title and are not meaningful to external contributors or reviewers who do not have access to the tracking system.
 
 ## Description
 
