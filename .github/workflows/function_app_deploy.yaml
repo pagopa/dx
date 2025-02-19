@@ -59,7 +59,6 @@ jobs:
       TURBO_CACHE_DIR: .turbo-cache
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
@@ -70,13 +69,13 @@ jobs:
           echo "version=$TURBO_VERSION" >> $GITHUB_OUTPUT
 
       - name: Prune (turbo 1.x)
-        if: steps.turbo-version.outputs.turbo-version == '1'
+        if: steps.turbo-version.outputs.version == '1'
         run: |
           npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
           echo "::warning::Turbo 1.x is deprecated. Please upgrade to the latest version."
 
       - name: Prune
-        if: steps.turbo-version.outputs.turbo-version != '1'
+        if: steps.turbo-version.outputs.version != '1'
         run: npx turbo prune --scope ${{ env.WORKSPACE }}
 
       - name: Enable Corepack
