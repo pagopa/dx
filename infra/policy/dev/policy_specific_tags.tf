@@ -10,7 +10,7 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
     version  = "1.0.0"
   })
 
-  policy_rule = templatefile("../_policy_rules/specific_tags_role.json.tftpl", {
+  policy_rule = templatefile("../_policy_rules/specific_tags_role_v1.json.tftpl", {
     cost_center = "TS000 - Tecnologia e Servizi",
     business_units = [
       "DevEx"
