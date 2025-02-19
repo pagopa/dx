@@ -16,3 +16,4 @@ To ensure that a PR can be approved, the following criteria must be met:
 - The PR must be free of merge conflicts
 - The PR should address only **one specific issue** or add **only one feature**. Avoid combining multiple changes; always submit separate PRs for different issues or features
 - The CI pipeline must run successfully without errors
+- The PR should contain a changeset file to properly handle the versioning of the project
