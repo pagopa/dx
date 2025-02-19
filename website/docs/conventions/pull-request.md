@@ -20,6 +20,7 @@ It should not include any references to tracking systems such as Jira task IDs.
 ## Description
 
 ## Contribution Acceptance Criteria
+
 To ensure that a PR can be approved, the following criteria must be met:
 
 - Code and comments must be written in English
