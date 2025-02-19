@@ -1,0 +1,64 @@
+{
+  "if": {
+    "anyOf": [
+      {
+        "field": "tags.CostCenter",
+        "notEquals": "TS000 - Tecnologia e Servizi"
+      },
+      {
+        "field": "tags.CreatedBy",
+        "notIn": [
+          "Terraform",
+          "ARM",
+          "AzurePortal"
+        ]
+      },
+      {
+        "field": "tags.Environment",
+        "notIn": [
+          "Prod",
+          "Dev",
+          "Uat"
+        ]
+      },
+      {
+        "field": "tags.BusinessUnit",
+        "notIn": [
+          "App IO",
+          "CGN",
+          "Carta della Cultura",
+          "IT Wallet",
+          "DevEx"
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags.CreatedBy",
+            "equals": "Terraform"
+          },
+          {
+            "field": "tags.Source",
+            "notLike": "https://github.com/pagopa/*"
+          }
+        ]
+      },
+      {
+        "field": "tags.ManagementTeam",
+        "notIn": [
+          "IO Enti & Servizi",
+          "IO Platform",
+          "IO Wallet",
+          "IO Comunicazione",
+          "IO Autenticazione",
+          "IO Bonus & Pagamenti",
+          "IO Firma",
+          "Developer Experience"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}
