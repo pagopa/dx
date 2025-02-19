@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 0.0.4
+
+### Patch Changes
+
+- fb9f7ac: Add Table Contributor role to Infra CD Identity on resource group scope
+
 ## 0.0.3
 
 ### Patch Changes

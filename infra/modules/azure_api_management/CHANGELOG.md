@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 0.0.8
+
+### Patch Changes
+
+- f092cf0: Add minimum version for APIM control plane REST APIs
+
 ## 0.0.7
 
 ### Patch Changes
