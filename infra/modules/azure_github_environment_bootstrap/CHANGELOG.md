@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 0.0.5
+
+### Patch Changes
+
+- 65bd64d: Add Storage Table Data Reader role at resource group level to Infra CI identity
+
 ## 0.0.4
 
 ### Patch Changes
