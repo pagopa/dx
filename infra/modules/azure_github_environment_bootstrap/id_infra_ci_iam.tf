@@ -82,6 +82,13 @@ resource "azurerm_role_assignment" "infra_ci_rg_st_queue_reader" {
   description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account queues monorepository resource group scope"
 }
 
+resource "azurerm_role_assignment" "infra_ci_rg_st_table_reader" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Table Data Reader"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account tables monorepository resource group scope"
+}
+
 # DNS Zone
 resource "azurerm_role_assignment" "infra_ci_rg_ext_pagopa_dns_reader" {
   scope                = var.dns_zone_resource_group_id

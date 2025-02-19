@@ -352,6 +352,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_kv_crypto,
       azurerm_role_assignment.infra_ci_rg_st_blob_reader,
       azurerm_role_assignment.infra_ci_rg_st_queue_reader,
+      azurerm_role_assignment.infra_ci_rg_st_table_reader,
       azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_reader,
@@ -492,6 +493,11 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_ci_rg_st_queue_reader != null
     error_message = "The Infra CI managed identity can't read Storage Account queues at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_rg_st_table_reader != null
+    error_message = "The Infra CI managed identity can't read Storage Account tables at resource group scope"
   }
 
   assert {
