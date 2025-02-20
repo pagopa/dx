@@ -8,22 +8,45 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
+variable "location" {
+  type        = string
+  description = "The location of the app service plan"
+
+  validation {
+    condition     = contains(["italynorth", "westeurope", "germanywestcentral"], lower(var.location))
+    error_message = "The location must be one of \"italynorth\", \"westeurope\", \"germanywestcentral\"."
+  }
+}
+
 variable "autoscale_name" {
   type        = string
   description = "(Optional) Override auto generated name for the autoscaler resource"
   default     = null
 }
 
+variable "app_service_plan_id" {
+  type        = string
+  description = "The id of the app service plan containing the service to autoscale."
+}
+
 variable "target_service" {
   type = object({
-    app_service_name  = optional(string)
-    function_app_name = optional(string)
+    app_service = optional(object({
+      id   = optional(string)
+      name = string
+    }))
+    function_app = optional(object({
+      id   = optional(string)
+      name = string
+    }))
   })
 
   validation {
-    condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
+    condition     = length([for v in [var.target_service.app_service, var.target_service.function_app] : v if v != null]) == 1
+    error_message = "Configuration for the target Azure service. Accepts either an App Service or Function App configuration, but not both simultaneously. The id is mandatory when the target service does not exist yet."
   }
+
+  description = "The target service to autoscale. It can be an app service (populate app_service key) or a function app (populate function_app key). If the target service already exists in Azure, it is possible to reference it via its name. Otherwise, for contextual creation of the target service and the autoscaler, the id is mandatory as well."
 }
 
 variable "scheduler" {
