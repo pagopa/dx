@@ -5,8 +5,8 @@ locals {
     sku_name = lookup(
       {
         "s" = "B_Standard_B1ms",
-        "m" = "GP_Standard_D2s_v3",
-        "l" = "GP_Standard_D2ds_v5"
+        "m" = "GP_Standard_D2ds_v5",
+        "l" = "GP_Standard_D4ds_v5"
       },
       var.tier,
       "GP_Standard_D2ds_v5" # Default
