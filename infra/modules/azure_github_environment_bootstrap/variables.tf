@@ -45,11 +45,6 @@ variable "apim_id" {
   default     = null
 }
 
-variable "dns_zone_resource_group_id" {
-  type        = string
-  description = "Id of the resource group holding public DNS zones"
-}
-
 variable "private_dns_zone_resource_group_id" {
   type        = string
   description = "Id of the resource group holding private DNS zones"
@@ -57,7 +52,8 @@ variable "private_dns_zone_resource_group_id" {
 
 variable "nat_gateway_resource_group_id" {
   type        = string
-  description = "Id of the resource group hosting NAT Gateways"
+  default     = null
+  description = "(Optional) Id of the resource group hosting NAT Gateways"
 }
 
 variable "opex_resource_group_id" {

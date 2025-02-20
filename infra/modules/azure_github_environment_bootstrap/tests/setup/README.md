@@ -24,7 +24,7 @@ No modules.
 | [azurerm_container_app_environment.runner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
 | [azurerm_resource_group.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_resource_group.dashboards](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
-| [azurerm_resource_group.external](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
+| [azurerm_resource_group.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 | [azurerm_virtual_network.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
@@ -36,10 +36,10 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_dns_zone_resource_group_id"></a> [dns\_zone\_resource\_group\_id](#output\_dns\_zone\_resource\_group\_id) | n/a |
 | <a name="output_entraid_groups"></a> [entraid\_groups](#output\_entraid\_groups) | n/a |
 | <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | n/a |
+| <a name="output_nat_gateway_resource_group_id"></a> [nat\_gateway\_resource\_group\_id](#output\_nat\_gateway\_resource\_group\_id) | n/a |
 | <a name="output_opex_resource_group_id"></a> [opex\_resource\_group\_id](#output\_opex\_resource\_group\_id) | n/a |
 | <a name="output_pep_vnet_id"></a> [pep\_vnet\_id](#output\_pep\_vnet\_id) | n/a |
 | <a name="output_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#output\_private\_dns\_zone\_resource\_group\_id) | n/a |

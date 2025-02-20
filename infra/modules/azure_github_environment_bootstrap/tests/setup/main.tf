@@ -31,12 +31,12 @@ data "azurerm_virtual_network" "common" {
   resource_group_name = local.vnet.resource_group_name
 }
 
-data "azurerm_resource_group" "dashboards" {
-  name = "dashboards"
+data "azurerm_resource_group" "vnet" {
+  name = local.vnet.resource_group_name
 }
 
-data "azurerm_resource_group" "external" {
-  name = local.dns.resource_group_name
+data "azurerm_resource_group" "dashboards" {
+  name = "dashboards"
 }
 
 data "azurerm_resource_group" "common" {
@@ -114,12 +114,12 @@ output "pep_vnet_id" {
   value = data.azurerm_virtual_network.common.id
 }
 
-output "dns_zone_resource_group_id" {
-  value = data.azurerm_resource_group.external.id
-}
-
 output "private_dns_zone_resource_group_id" {
   value = data.azurerm_resource_group.common.id
+}
+
+output "nat_gateway_resource_group_id" {
+  value = data.azurerm_resource_group.vnet.id
 }
 
 output "opex_resource_group_id" {

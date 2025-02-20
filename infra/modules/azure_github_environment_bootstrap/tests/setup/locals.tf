@@ -35,10 +35,6 @@ locals {
     resource_group_name = "${local.project}-network-rg-01"
   }
 
-  dns = {
-    resource_group_name = "${local.project}-network-rg-01"
-  }
-
   tf_storage_account = {
     name                = "tfdevdx"
     resource_group_name = "terraform-state-rg"

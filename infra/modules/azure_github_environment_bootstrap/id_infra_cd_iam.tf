@@ -60,7 +60,7 @@ resource "azurerm_role_assignment" "infra_cd_rg_network_contributor" {
 
 # NAT Gateway
 resource "azurerm_role_assignment" "infra_cd_rg_nat_gw_network_contributor" {
-  count = var.private_dns_zone_resource_group_id == var.nat_gateway_resource_group_id ? 0 : 1 # avoid duplicated assignment on the same rg
+  count = (var.private_dns_zone_resource_group_id == var.nat_gateway_resource_group_id) || (var.nat_gateway_resource_group_id == null) ? 0 : 1 # avoid duplicated assignment on the same rg
 
   scope                = var.nat_gateway_resource_group_id
   role_definition_name = "Network Contributor"
