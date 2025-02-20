@@ -9,7 +9,7 @@ To maintain consistency and clarity in our Git workflow, branch names should fol
 
 ## Guidelines
 
-- **Keep branch names clean and focused.** Do not include tracking system activity IDs (e.g., Jira task IDs) in the branch name. Instead, [reference them in the PR description](../pull-request/format.md#description)
+- **Keep branch names clean and focused**: do not include tracking system activity IDs (e.g., Jira task IDs) in the branch name. Instead, [reference them in the PR description](../pull-request/format.md#description)
 - **Use lowercase and hyphens (`-`)** to separate words for readability
 - **Keep names concise but descriptive**, avoiding overly generic terms like `update` or `fix`
 
@@ -17,10 +17,10 @@ To maintain consistency and clarity in our Git workflow, branch names should fol
 
 Use one of the following types to categorize the branch activity:
 
-- `features/` – For new features
-- `bugfixes/` – For bug fixes
-- `hotfixes/` – For urgent production fixes
-- `refactors/` – For code refactoring and reducing technical debt
+- `features/`:  for new features
+- `bugfixes/`:  or bug fixes
+- `hotfixes/`: for urgent production fixes
+- `refactors/`: for code refactoring and reducing technical debt
 
 ## Examples
 
@@ -28,8 +28,8 @@ Use one of the following types to categorize the branch activity:
 
 - `features/user-authentication`
 - `bugfixes/login-errors`
-- `hotfixes/payment-gateway`
-- `refactors/dependency-updates`
+- `hotfixes/error-503-on-payment-checkout`
+- `refactors/update-react-in-ui-components-workspace`
 
 ### Examples
 
@@ -37,4 +37,4 @@ Use one of the following types to categorize the branch activity:
 - `new-feature` _(uncategorized)_
 - `update` _(lacks clarity)_
 - `v1.2.0-release` _(versioning should be handled via tags)_
-- `ui-redesign` _(should be `features/ui-redesign`)_
+- `ui-redesign` _(should be `refactors/ui-redesign`)_
