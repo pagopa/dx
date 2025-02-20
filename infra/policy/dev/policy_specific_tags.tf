@@ -10,17 +10,9 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
     version  = "1.0.0"
   })
 
-  policy_rule = templatefile("../_policy_rules/specific_tags_role_v1.json.tftpl", {
-    cost_center = "TS000 - Tecnologia e Servizi",
-    business_units = [
-      "DevEx"
-    ],
-    management_teams = [
-      "Developer Experience"
-    ]
-  })
+  policy_rule = file("../_policy_rules/specific_tags_role_v1.json")
 
-  parameters = jsonencode({})
+  parameters = file("../_policy_rules/specific_tags_parameters_v1.json")
 }
 
 resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
@@ -28,4 +20,23 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
   display_name         = "DevEx Enforce specific tags and values on resources"
   policy_definition_id = azurerm_policy_definition.specific_tags_policy.id
   subscription_id      = data.azurerm_subscription.current.id
+
+  parameters = jsonencode({
+    "CostCenter" = {
+      "value" = "TS000 - Tecnologia e Servizi"
+    },
+    "BusinessUnit" = {
+      "value" = [
+        "DevEx",
+      ]
+    },
+    "ManagementTeam" = {
+      "value" = [
+        "Developer Experience",
+      ]
+    },
+    "SourceOrg" = {
+      "value" = "pagopa"
+    }
+  })
 }

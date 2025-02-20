@@ -3,7 +3,7 @@
     "anyOf": [
       {
         "field": "tags.CostCenter",
-        "notEquals": "${cost_center}"
+        "notEquals": "[parameters('CostCenter')]"
       },
       {
         "field": "tags.CreatedBy",
@@ -23,9 +23,7 @@
       },
       {
         "field": "tags.BusinessUnit",
-        "notIn": [
-          ${join(",", [for bu in business_units : "\"${bu}\""])}
-        ]
+        "notIn": "[parameters('BusinessUnit')]"
       },
       {
         "allOf": [
@@ -35,15 +33,13 @@
           },
           {
             "field": "tags.Source",
-            "notLike": "https://github.com/pagopa/*"
+            "notLike": "[concat('https://github.com/', parameters('SourceOrg'), '/*')]"
           }
         ]
       },
       {
         "field": "tags.ManagementTeam",
-        "notIn": [
-          ${join(",", [for mt in management_teams : "\"${mt}\""])}
-        ]
+        "notIn": "[parameters('ManagementTeam')]"
       }
     ]
   },
