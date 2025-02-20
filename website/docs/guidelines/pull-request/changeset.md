@@ -31,3 +31,28 @@ First, check the [official documentation](https://turbo.build/repo/docs/crafting
      - Now you should be ready to use the latest version of `turbo`
  - Eventually, update the workflow pointing to a specific SHA
 ```
+
+## Monorepo
+
+When working with a monorepo, it is essential to manage changesets properly to ensure that all changes are documented and versioned correctly.  
+If you make changes on multiple workspaces, you should create a changeset for each workspace to maintain a clear and organized history of modifications.
+
+### Example
+
+```markdown
+---
+"dx-website": patch
+---
+
+Fix typo in documentation
+```
+
+```markdown
+---
+"package-A": minor
+---
+
+Update version of dependency `package-B` to `1.2.0`
+```
+
+Both changesets should be included in the same PR if they relate to the same feature or fix and require separate changelogs for the two packages.
