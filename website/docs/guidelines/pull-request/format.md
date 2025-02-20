@@ -11,7 +11,7 @@ Adhering to these guidelines will facilitate smoother reviews and better communi
 ## Title
 
 The title of a pull request should be concise and meaningful, summarizing the changes made.  
-Keep the title within 72 characters to avoid truncation by GitHub.  
+Keep the title within 72 characters to avoid truncation by GitHub, ensuring that the full title is visible in notifications and lists, which aids in quick identification and understanding of the PR's purpose.  
 Avoid including references to tracking systems (e.g., Jira task IDs) in the title, as they can clutter it and may not be useful for external reviewers.
 
 ## Description
