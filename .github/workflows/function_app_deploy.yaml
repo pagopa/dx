@@ -48,9 +48,6 @@ concurrency:
 
 env:
   BUNDLE_NAME: bundle
-  # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
-  YARN_NODE_LINKER: node-modules
-  YARN_NM_HOISTING_LIMITS: workspaces
 
 jobs:
 
@@ -91,8 +88,12 @@ jobs:
           cache: "yarn"
           cache-dependency-path: "./out/yarn.lock"
 
+      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          yarn config set nodeLinker node-modules
+          yarn config set nmHoistingLimits workspaces
+          yarn install --immutable
         working-directory: ./out
 
       - name: Restore turbo cache
