@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.1
+
+### Patch Changes
+
+- 8c05dd7: Removed HA if WEU as Default, added override variable for HA
+
 ## 1.0.0
 
 ### Major Changes
