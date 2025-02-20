@@ -11,7 +11,7 @@ This document provides guidelines on how to create and manage changesets, which 
 
 In cases where the code added in a PR breaks backward compatibility, a migration path or guide must be included in the changeset with `major` update. This ensures that users can transition smoothly to the new version without disruption.
 
-## Example
+### Example
 
 ```markdown
 ---
