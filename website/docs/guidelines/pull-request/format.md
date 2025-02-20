@@ -29,17 +29,32 @@ This ensures that the pull request is automatically linked to the relevant issue
 We enforce the use of `Resolves #<issue-number>` in the description rather than the title. This approach allows for multiple issue references within the description while keeping the title clean and focused.  
 The reference should be placed on a separate line at the end of the description, preceded by a blank line for separation. The sentence should begin with an uppercase letter.
 
-Here are some examples:
+#### Examples
 
-- ```markdown
-  <Pull Request description>
-  
-  Resolves #DX-001
-  ```
-- ```markdown
-  <Pull Request description>
-  
-  Close #DX-002 #DEV-003
-  ```
-  This is the case when the pull request is related to multiple issues on different boards.
+##### Good Examples
 
+```markdown
+<Pull Request description>
+  
+Resolves #DX-001
+```
+```markdown
+<Pull Request description>
+  
+Close #DX-002 #CES-50
+```
+This applies when a single PR resolves multiple tasks tracked by different teams or boards.
+  
+##### Bad Examples
+
+```markdown
+<Pull Request description>
+  
+Close #DX-002 #DX-003
+```
+In this case, you should follow the [Contribution Acceptance Criteria](acceptance-criteria.md) and split the work into two separate PRs, each linked to a single task. This ensures better traceability and avoids merging unrelated changes together.
+
+```markdown
+This PR fixes #DX-002
+```
+This format is discouraged because the reference is embedded within the description, making it harder to read and potentially lacking a clear explanation of the issue being addressed. Instead, provide a meaningful description and place the reference on a separate line at the end.
