@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.0
+
+### Major Changes
+
+- bc3027b: L tier now uses GP_Standard_D4ds_v5 as SKU, and M tier uses GP_Standard_D2ds_v5
+
 ## 0.1.1
 
 ### Patch Changes
