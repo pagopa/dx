@@ -29,15 +29,34 @@ This ensures that the pull request is automatically linked to the relevant issue
 We enforce the use of `Resolves #<issue-number>` in the description rather than the title. This approach allows for multiple issue references within the description while keeping the title clean and focused.  
 The reference should be placed on a separate line at the end of the description, preceded by a blank line for separation. The sentence should begin with an uppercase letter.
 
+### Dependencies
+
+To express dependencies between different PRs, we use [dpulls, a GitHub dependency management tool](https://www.dpulls.com/).  
+This tool allows you to specify the dependencies between PRs, ensuring that they are merged in the correct order.  
+When creating a PR, you can specify the dependent PRs in the description using the `Depends on #<PR-number>` syntax.
+
+Add the dependency reference at the end of the description, preceding the tracking system reference, if present.
+
 ### Examples
 
 #### Good Examples
 
 ```markdown
 <Pull Request description>
-  
+
+Depends on #42
 Resolves #DX-001
 ```
+`Depends on #42` indicates that this pull request relies on PR #42 and should not be merged until that dependency is resolved.  
+`Resolves #DX-001` specifies that this pull request addresses issue `DX-001`, ensuring proper issue tracking.
+
+```markdown
+<Pull Request description>
+
+Depends on #42
+```
+This PR relies on PR #42 but does not resolve any specific issue. The dependency reference is still included to maintain clarity and ensure proper sequencing.
+
 ```markdown
 <Pull Request description>
   
