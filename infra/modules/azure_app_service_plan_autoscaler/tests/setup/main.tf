@@ -58,14 +58,14 @@ module "azure_app_service" {
 }
 
 output "app_service_plan_id" {
-    value = module.azure_app_service.app_service.plan.id
+  value = module.azure_app_service.app_service.plan.id
 }
 
 output "app_service" {
-    value = {
-        name = module.azure_app_service.app_service.app_service.name
-        id   = module.azure_app_service.app_service.app_service.id
-    }
+  value = {
+    name = module.azure_app_service.app_service.app_service.name
+    id   = module.azure_app_service.app_service.app_service.id
+  }
 }
 
 output "resource_group_name" {

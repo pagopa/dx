@@ -3,9 +3,9 @@ locals {
   is_app_service  = local.target_type == "app_service"
   is_function_app = local.target_type == "function_app"
 
-  target_service_id = coalesce(lookup(var.target_service, local.target_type).id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
+  target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
 
-  base_name      = lookup(var.target_service, local.target_type).name
+  base_name      = var.target_service[local.target_type].name
   autoscale_name = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
 
   requests_rule_increase = {
