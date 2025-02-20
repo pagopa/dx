@@ -10,7 +10,7 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
     version  = "1.0.0"
   })
 
-  policy_rule = file("../_policy_rules/specific_tags_role_v1.json")
+  policy_rule = file("../_policy_rules/specific_tags_rule_v1.json")
 
   parameters = file("../_policy_rules/specific_tags_parameters_v1.json")
 }
