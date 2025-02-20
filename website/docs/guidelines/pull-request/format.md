@@ -16,7 +16,7 @@ Avoid including references to tracking systems (e.g., Jira task IDs) in the titl
 
 ## Description
 
-The description of a pull request should provide a detailed explanation of the changes made, the reasons for those changes, and any relevant context.  
+The description of a pull request must explain the rationale behind the modifications, offering a brief overview of the updates along with any relevant context.  
 It should include:
 
 - A summary of the problem being solved or the feature being added
@@ -29,9 +29,9 @@ This ensures that the pull request is automatically linked to the relevant issue
 We enforce the use of `Resolves #<issue-number>` in the description rather than the title. This approach allows for multiple issue references within the description while keeping the title clean and focused.  
 The reference should be placed on a separate line at the end of the description, preceded by a blank line for separation. The sentence should begin with an uppercase letter.
 
-#### Examples
+### Examples
 
-##### Good Examples
+#### Good Examples
 
 ```markdown
 <Pull Request description>
@@ -45,7 +45,7 @@ Close #DX-002 #CES-50
 ```
 This applies when a single PR resolves multiple tasks tracked by different teams or boards.
   
-##### Bad Examples
+#### Bad Examples
 
 ```markdown
 <Pull Request description>
