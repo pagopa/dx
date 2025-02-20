@@ -26,6 +26,10 @@ locals {
     }
   }
 
+  common = {
+    resource_group_name = "${local.project}-common-rg-01"
+  }
+
   vnet = {
     name                = "${local.project}-common-vnet-01"
     resource_group_name = "${local.project}-network-rg-01"

@@ -39,6 +39,10 @@ data "azurerm_resource_group" "external" {
   name = local.dns.resource_group_name
 }
 
+data "azurerm_resource_group" "common" {
+  name = local.common.resource_group_name
+}
+
 data "azuread_group" "admins" {
   display_name = local.adgroups.admins_name
 }
@@ -112,6 +116,10 @@ output "pep_vnet_id" {
 
 output "dns_zone_resource_group_id" {
   value = data.azurerm_resource_group.external.id
+}
+
+output "private_dns_zone_resource_group_id" {
+  value = data.azurerm_resource_group.common.id
 }
 
 output "opex_resource_group_id" {

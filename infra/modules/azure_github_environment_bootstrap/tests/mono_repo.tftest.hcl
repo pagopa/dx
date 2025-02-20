@@ -63,10 +63,10 @@ run "validate_github_repository" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id      = run.setup_tests.dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -371,7 +371,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_st_table_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
-      azurerm_role_assignment.infra_cd_rg_network_private_dns_zone_contributor,
+      azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor,
       azurerm_role_assignment.infra_cd_rg_network_contributor,
       azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
@@ -421,7 +421,7 @@ run "validate_github_id_infra" {
 
     pep_vnet_id                        = run.setup_tests.pep_vnet_id
     dns_zone_resource_group_id         = run.setup_tests.dns_zone_resource_group_id
-    private_dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
     opex_resource_group_id             = run.setup_tests.opex_resource_group_id
     nat_gateway_resource_group_id      = run.setup_tests.dns_zone_resource_group_id
 
@@ -579,7 +579,7 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition = azurerm_role_assignment.infra_ci_rg_st_table_contributor != null
+    condition     = azurerm_role_assignment.infra_ci_rg_st_table_contributor != null
     error_message = "The Infra CD managed identity can't write Storage Account tables at resource group scope"
   }
 
@@ -589,7 +589,7 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_network_private_dns_zone_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor != null
     error_message = "The Infra CD managed identity can't associate Private DNS zone and private endpoints at resource group scope"
   }
 

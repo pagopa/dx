@@ -44,7 +44,7 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
 }
 
 # Private DNS Zone
-resource "azurerm_role_assignment" "infra_cd_rg_network_private_dns_zone_contributor" {
+resource "azurerm_role_assignment" "infra_cd_rg_private_dns_zone_contributor" {
   scope                = var.private_dns_zone_resource_group_id
   role_definition_name = "Private DNS Zone Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
