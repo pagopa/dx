@@ -268,3 +268,9 @@ variable "enable_lock" {
   default     = true
   description = "Define if lock should be enabled."
 }
+
+variable "high_availability_override" {
+  type        = bool
+  default     = false
+  description = "Override if high availability should be enabled."
+}
