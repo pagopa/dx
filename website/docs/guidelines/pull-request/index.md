@@ -1,4 +1,4 @@
-# PR
+# Pull Request
 
 Pull requests (PRs) are a critical part of the development workflow, enabling collaboration and code review.
 
