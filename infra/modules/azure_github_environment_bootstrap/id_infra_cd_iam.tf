@@ -21,13 +21,6 @@ resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_rbac_admin" {
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Role Based Access Control Administrator"
-  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage IAM configuration at monorepository resource group scope"
-}
-
 resource "azurerm_role_assignment" "infra_cd_rg_user_access_admin" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "User Access Administrator"
