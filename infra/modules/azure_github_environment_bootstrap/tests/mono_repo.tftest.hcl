@@ -826,3 +826,118 @@ run "validate_github_id_opex" {
     error_message = "Opex CD subscription reader role assignment should not be null"
   }
 }
+
+run "validate_secondary_rg_iam" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_role_assignment.admins_group_secondary_rg,
+      azurerm_role_assignment.admins_group_secondary_rg_kv_data,
+      azurerm_role_assignment.admins_group_secondary_rg_kv_admin,
+      azurerm_role_assignment.devs_group_secondary_rg,
+      azurerm_role_assignment.devs_group_tf_secondary_rg_kv_secr,
+      azurerm_role_assignment.externals_group_secondary_rg,
+      azurerm_role_assignment.app_cd_secondary_rg_contributor,
+      azurerm_role_assignment.infra_cd_secondary_rg_contributor,
+      azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin,
+    ]
+  }
+
+  variables {
+    environment = {
+      prefix          = run.setup_tests.environment.prefix
+      env_short       = run.setup_tests.environment.env_short
+      location        = run.setup_tests.environment.location
+      domain          = run.setup_tests.environment.domain
+      app_name        = run.setup_tests.environment.app_name
+      instance_number = run.setup_tests.environment.instance_number
+    }
+
+    subscription_id = run.setup_tests.subscription_id
+    tenant_id       = run.setup_tests.tenant_id
+
+    entraid_groups = {
+      admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
+      devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
+      externals_object_id = run.setup_tests.entraid_groups.externals_object_id
+    }
+
+    terraform_storage_account = {
+      name                = run.setup_tests.terraform_storage_account.name
+      resource_group_name = run.setup_tests.terraform_storage_account.resource_group_name
+    }
+
+    repository = {
+      name               = run.setup_tests.repository.name
+      description        = run.setup_tests.repository.description
+      topics             = run.setup_tests.repository.topics
+      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+    }
+
+    github_private_runner = {
+      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
+      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      key_vault = {
+        name                = run.setup_tests.github_private_runner.key_vault.name
+        resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
+      }
+    }
+
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    secondary_resource_group_ids = [
+      run.setup_tests.opex_resource_group_id,
+      run.setup_tests.private_dns_zone_resource_group_id
+    ]
+
+    tags = run.setup_tests.tags
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_secondary_rg != null
+    error_message = "The App CD GitHub federation is not set"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_data != null
+    error_message = "The App CD user assigned identity is not Reader of the subscription"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_admin != null
+    error_message = "The App CD user assigned identity is not Contributor of the resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.devs_group_secondary_rg != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.devs_group_tf_secondary_rg_kv_secr != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.externals_group_secondary_rg != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.app_cd_secondary_rg_contributor != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_secondary_rg_contributor != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin != null
+    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+  }
+}
