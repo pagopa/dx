@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.0.1
+
+### Patch Changes
+
+- f9ceaad: Removed `Role Based Access Control Administrator` role from Infra CI identity at resource group level as it is already inherited from subscription
+
 ## 1.0.0
 
 ### Major Changes
