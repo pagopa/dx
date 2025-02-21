@@ -1,0 +1,49 @@
+{
+  "if": {
+    "anyOf": [
+      {
+        "field": "tags.CostCenter",
+        "notEquals": "[parameters('CostCenter')]"
+      },
+      {
+        "field": "tags.CreatedBy",
+        "notIn": [
+          "Terraform",
+          "ARM",
+          "AzurePortal"
+        ]
+      },
+      {
+        "field": "tags.Environment",
+        "notIn": [
+          "Prod",
+          "Dev",
+          "Uat"
+        ]
+      },
+      {
+        "field": "tags.BusinessUnit",
+        "notIn": "[parameters('BusinessUnit')]"
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags.CreatedBy",
+            "equals": "Terraform"
+          },
+          {
+            "field": "tags.Source",
+            "notLike": "[concat('https://github.com/', parameters('SourceOrg'), '/*')]"
+          }
+        ]
+      },
+      {
+        "field": "tags.ManagementTeam",
+        "notIn": "[parameters('ManagementTeam')]"
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}

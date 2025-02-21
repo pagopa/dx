@@ -1,0 +1,30 @@
+{
+  "CostCenter": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Allowed CostCenter",
+      "description": "Specify the allowed CostCenter value."
+    }
+  },
+  "BusinessUnit": {
+    "type": "Array",
+    "metadata": {
+      "displayName": "Allowed Business Units",
+      "description": "Specify the allowed Business Units."
+    }
+  },
+  "ManagementTeam": {
+    "type": "Array",
+    "metadata": {
+      "displayName": "Allowed Management Teams",
+      "description": "Specify the allowed Management Teams."
+    }
+  },
+  "SourceOrg": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Allowed GitHub Organization",
+      "description": "Specify the allowed GitHub organization for source tagging."
+    }
+  }
+}
