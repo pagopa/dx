@@ -43,8 +43,8 @@ variable "target_service" {
 
   validation {
     condition = (
-      (var.target_service.app_service != null && var.target_service.app_service.name != "") ||
-      (var.target_service.function_app != null && var.target_service.function_app.name != "")
+      (var.target_service.app_service != null && try(var.target_service.app_service.name, "") != "") ||
+      (var.target_service.function_app != null && try(var.target_service.function_app.name, "") != "")
     )
     error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
   }
