@@ -43,27 +43,29 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to manage Private Endpoints at VNet scope"
 }
 
-# DNS Zone
-resource "azurerm_role_assignment" "infra_cd_rg_ext_network_dns_zone_contributor" {
-  scope                = var.dns_zone_resource_group_id
+# Private DNS Zone
+resource "azurerm_role_assignment" "infra_cd_rg_private_dns_zone_contributor" {
+  scope                = var.private_dns_zone_resource_group_id
   role_definition_name = "Private DNS Zone Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage DNS Zones at resource group level"
+  description          = "Allow ${var.repository.name} Infra CD identity to manage Private DNS Zones at resource group level"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
-  scope                = var.dns_zone_resource_group_id
+resource "azurerm_role_assignment" "infra_cd_rg_network_contributor" {
+  scope                = var.private_dns_zone_resource_group_id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to associate DNS Zones and private endpoints at resource group level"
+  description          = "Allow ${var.repository.name} Infra CD identity to associate Private DNS Zones and Private Endpoints at resource group level"
 }
 
 # NAT Gateway
 resource "azurerm_role_assignment" "infra_cd_rg_nat_gw_network_contributor" {
+  count = (var.private_dns_zone_resource_group_id == var.nat_gateway_resource_group_id) || (var.nat_gateway_resource_group_id == null) ? 0 : 1 # avoid duplicated assignment on the same rg
+
   scope                = var.nat_gateway_resource_group_id
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to associate NAT Gateways to subnets"
+  description          = "Allow ${var.repository.name} Infra CD identity to associate NAT Gateways to subnets at resource group level"
 }
 
 # Api Management

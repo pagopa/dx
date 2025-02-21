@@ -89,14 +89,6 @@ resource "azurerm_role_assignment" "infra_ci_rg_st_table_reader" {
   description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account tables monorepository resource group scope"
 }
 
-# DNS Zone
-resource "azurerm_role_assignment" "infra_ci_rg_ext_pagopa_dns_reader" {
-  scope                = var.dns_zone_resource_group_id
-  role_definition_name = "PagoPA DNS Zone Reader"
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read DNS Zone records at resource group level"
-}
-
 # API Management
 resource "azurerm_role_assignment" "infra_ci_subscription_apim_secrets" {
   count = local.has_apim

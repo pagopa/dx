@@ -63,10 +63,9 @@ run "validate_github_repository" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -157,10 +156,9 @@ run "validate_github_branch_protection" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -231,10 +229,9 @@ run "validate_github_default_branch_override" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -299,10 +296,9 @@ run "validate_github_id_app" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -353,7 +349,6 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_st_blob_reader,
       azurerm_role_assignment.infra_ci_rg_st_queue_reader,
       azurerm_role_assignment.infra_ci_rg_st_table_reader,
-      azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_reader,
       azurerm_role_assignment.infra_cd_subscription_rbac_admin,
@@ -370,7 +365,8 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rg_st_queue_contributor,
       azurerm_role_assignment.infra_ci_rg_st_table_contributor,
       azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
-      azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor,
+      azurerm_role_assignment.infra_cd_rg_network_contributor,
       azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
@@ -417,10 +413,10 @@ run "validate_github_id_infra" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id      = run.setup_tests.nat_gateway_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -501,11 +497,6 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader != null
-    error_message = "The Infra CI managed identity can't read external DNS configuration at resource group scope"
-  }
-
-  assert {
     condition     = length(azurerm_key_vault_access_policy.infra_ci_kv_common) == 0
     error_message = "The Infra CI managed identity is not allowed to read from common Key Vault"
   }
@@ -576,18 +567,13 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition = azurerm_role_assignment.infra_ci_rg_st_table_contributor != null
+    condition     = azurerm_role_assignment.infra_ci_rg_st_table_contributor != null
     error_message = "The Infra CD managed identity can't write Storage Account tables at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to DNS zone configurations at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
-    error_message = "The Infra CD managed identity can't associate DNS zone and private endpoints at resource group scope"
+    condition     = azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor != null
+    error_message = "The Infra CD managed identity can't associate Private DNS zone and private endpoints at resource group scope"
   }
 
   assert {
@@ -598,6 +584,76 @@ run "validate_github_id_infra" {
   assert {
     condition     = length(azurerm_key_vault_access_policy.infra_cd_kv_common) == 0
     error_message = "The Infra CD managed identity is not allowed to write to common Key Vaults"
+  }
+}
+
+run "validate_github_id_infra_duplicate_nat_role_assignment" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_network_contributor,
+    ]
+  }
+
+  variables {
+    environment = {
+      prefix          = run.setup_tests.environment.prefix
+      env_short       = run.setup_tests.environment.env_short
+      location        = run.setup_tests.environment.location
+      domain          = run.setup_tests.environment.domain
+      app_name        = run.setup_tests.environment.app_name
+      instance_number = run.setup_tests.environment.instance_number
+    }
+
+    subscription_id = run.setup_tests.subscription_id
+    tenant_id       = run.setup_tests.tenant_id
+
+    entraid_groups = {
+      admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
+      devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
+      externals_object_id = run.setup_tests.entraid_groups.externals_object_id
+    }
+
+    terraform_storage_account = {
+      name                = run.setup_tests.terraform_storage_account.name
+      resource_group_name = run.setup_tests.terraform_storage_account.resource_group_name
+    }
+
+    repository = {
+      name               = run.setup_tests.repository.name
+      description        = run.setup_tests.repository.description
+      topics             = run.setup_tests.repository.topics
+      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+    }
+
+    github_private_runner = {
+      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
+      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      key_vault = {
+        name                = run.setup_tests.github_private_runner.key_vault.name
+        resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
+      }
+    }
+
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id      = run.setup_tests.private_dns_zone_resource_group_id
+
+    tags = run.setup_tests.tags
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor == []
+    error_message = "The Infra CD has a duplicate role on the same resource group"
+  }
+
+  assert {
+    condition = azurerm_role_assignment.infra_cd_rg_network_contributor != null
+    error_message = "The Infra CD has a duplicate role on the same resource group"
   }
 }
 
@@ -656,10 +712,9 @@ run "validate_rbac_entraid" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -740,10 +795,9 @@ run "validate_github_id_opex" {
       }
     }
 
-    pep_vnet_id                   = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id    = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id        = run.setup_tests.opex_resource_group_id
-    nat_gateway_resource_group_id = run.setup_tests.dns_zone_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
