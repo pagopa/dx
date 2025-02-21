@@ -5,7 +5,12 @@ locals {
 
   target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
 
-  base_name      = var.target_service[local.target_type].name
+  base_name = var.target_service[local.target_type].name
+
+  # Generates an autoscaler name by replacing "fn", "func", or "app" with "as".
+  # Example:
+  #   Input:  "dx-d-itn-test-fn-01"
+  #   Output: "dx-d-itn-test-as-01"
   autoscale_name = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
 
   requests_rule_increase = {

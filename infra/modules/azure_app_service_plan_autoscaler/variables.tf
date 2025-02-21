@@ -42,18 +42,12 @@ variable "target_service" {
   })
 
   validation {
-    condition     = length([for v in [var.target_service.app_service, var.target_service.function_app] : v if v != null]) == 1
-    error_message = "Configuration for the target Azure service. Accepts either an App Service or Function App configuration, but not both simultaneously. The id is mandatory when the target service does not exist yet."
-    
-condition = (
-     (var.target_service.app_service != null && var.target_service.app_service.name != "") ||
-     (var.target_service.function_app != null && var.target_service.function_app.name != "")
-   )
-  error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
-      
+    condition = (
+      (var.target_service.app_service != null && var.target_service.app_service.name != "") ||
+      (var.target_service.function_app != null && var.target_service.function_app.name != "")
+    )
+    error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
   }
-
-  description = "The target service to autoscale. It can be an app service (populate app_service key) or a function app (populate function_app key). If the target service already exists in Azure, it is possible to reference it via its name. Otherwise, for contextual creation of the target service and the autoscaler, the id is mandatory as well."
 }
 
 variable "scheduler" {
