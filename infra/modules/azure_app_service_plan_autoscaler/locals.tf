@@ -1,20 +1,22 @@
 locals {
+  target_type     = var.target_service.app_service != null ? "app_service" : "function_app"
+  is_app_service  = local.target_type == "app_service"
+  is_function_app = local.target_type == "function_app"
 
-  is_app_service  = var.target_service.app_service_name != null
-  is_function_app = var.target_service.function_app_name != null
+  target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
 
-  base_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].name : data.azurerm_linux_function_app.this[0].name
+  base_name = var.target_service[local.target_type].name
 
-  autoscale_name      = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
-  resource_group_name = local.is_app_service ? data.azurerm_linux_web_app.this[0].resource_group_name : data.azurerm_linux_function_app.this[0].resource_group_name
-  location            = local.is_app_service ? data.azurerm_linux_web_app.this[0].location : data.azurerm_linux_function_app.this[0].location
-  app_service_id      = local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id
-  app_service_plan_id = local.is_app_service ? data.azurerm_linux_web_app.this[0].service_plan_id : data.azurerm_linux_function_app.this[0].service_plan_id
+  # Generates an autoscaler name by replacing "fn", "func", or "app" with "as".
+  # Example:
+  #   Input:  "dx-d-itn-test-fn-01"
+  #   Output: "dx-d-itn-test-as-01"
+  autoscale_name = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
 
   requests_rule_increase = {
     metric_trigger = {
       metric_name              = "Requests"
-      metric_resource_id       = local.app_service_id
+      metric_resource_id       = local.target_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.requests.statistic_increase, "Average")
@@ -36,7 +38,7 @@ locals {
   requests_rule_decrease = {
     metric_trigger = {
       metric_name              = "Requests"
-      metric_resource_id       = local.app_service_id
+      metric_resource_id       = local.target_service_id
       metric_namespace         = "microsoft.web/sites"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.requests.statistic_decrease, "Average")
@@ -58,7 +60,7 @@ locals {
   cpu_rule_increase = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = var.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.cpu.statistic_increase
@@ -80,7 +82,7 @@ locals {
   cpu_rule_decrease = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = var.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = var.scale_metrics.cpu.statistic_decrease
@@ -102,7 +104,7 @@ locals {
   memory_rule_increase = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = var.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.memory.statistic_increase, "Average")
@@ -124,7 +126,7 @@ locals {
   memory_rule_decrease = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"
-      metric_resource_id       = local.app_service_plan_id
+      metric_resource_id       = var.app_service_plan_id
       metric_namespace         = "microsoft.web/serverfarms"
       time_grain               = "PT1M"
       statistic                = try(var.scale_metrics.memory.statistic_decrease, "Average")
