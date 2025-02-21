@@ -356,7 +356,6 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
       azurerm_role_assignment.infra_cd_apim_service_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
-      azurerm_role_assignment.infra_cd_rg_rbac_admin,
       azurerm_role_assignment.infra_cd_rg_user_access_admin,
       azurerm_role_assignment.infra_cd_rg_kv_secr,
       azurerm_role_assignment.infra_cd_rg_kv_cert,
@@ -529,11 +528,6 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_cd_st_tf_blob_contributor != null
     error_message = "The Infra CD managed identity can't apply changes to the Terraform state file Storage Account scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_rbac_admin != null
-    error_message = "The Infra CD managed identity can't apply changes to RBAC configurations at resource group scope"
   }
 
   assert {
