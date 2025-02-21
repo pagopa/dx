@@ -646,7 +646,7 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
   }
 
   assert {
-    condition = azurerm_role_assignment.infra_cd_rg_network_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_rg_network_contributor != null
     error_message = "The Infra CD has a duplicate role on the same resource group"
   }
 }
@@ -939,4 +939,5 @@ run "validate_secondary_rg_iam" {
   assert {
     condition     = azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin != null
     error_message = "The Infra CD user assigned identity is not User Access Administrator of the secondary resource groups"
+  }
 }
