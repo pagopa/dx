@@ -1,28 +1,28 @@
 # DX - Azure Policy
 
-This folder contains all the Azure Policies made by DX and is designed to manage and deploy Azure policies using Terraform.
-It organizes policy definitions and role assignments to ensure consistent governance across different environments.
+This folder contains shared Azure Policy rules that any team can choose to apply to its own Azure subscriptions to ensure consistent governance across different environments.
+Additionally, the `dev` folder contains Terraform code used to deploy the defined Policy Rules to the DX development subscription on Azure.`
 
 ## Repository Structure
 
 ```shell
 infra/
 ├── policy/
-│   ├── _policy_rules/        # Contains JSON files defining JSON role policies and parameters
+│   ├── _policy_rules/        # Contains JSON files defining shared policy rules and parameters
 │   ├── dev/                  # Policies assigned to the development environment (DEV-ENGINEERING)
 ```
 
 ## Policy Rules (`infra/policy/_policy_rules`)
 
-This directory contains JSON files that define the role policies to be used in Azure, and the JSON file that define the policy parameters. These files specify permissions and constraints that can be assigned to users, groups, or services.
+This directory contains JSON files that define policy rules to be used in Azure, and the JSON file that define the policy rules parameters. These files specify permissions and constraints that can be assigned to users, groups, or services.
 
 ## Environment-Specific Policies (`infra/policy/dev`)
 
-These directory contain the policies that will be assigned using Terraform. Each policy references the definitions in `_policy_rules` and applies them to the appropriate Azure resources.
+These directory contain Terraform resources that deploys the defined policy rules into the provided Azure resources (e.g., subcriptions).
 
 ## Configuration
 
-Each repository that needs to configure a policy must replicate the same structure within the infra folder, excluding _policy_rules. Policies should reference a definition from the dx repository. For example:
+Each repository that needs to apply a policy must replicate the same structure within the `infra` folder, excluding `_policy_rules`. Terraform resources must reference the policy rules and parameters definition from the `dx` repository. For example:
 
 ```hcl
 # infra/policy/prod/policy_specific_tags.tf
