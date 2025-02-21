@@ -898,46 +898,45 @@ run "validate_secondary_rg_iam" {
 
   assert {
     condition     = azurerm_role_assignment.admins_group_secondary_rg != null
-    error_message = "The App CD GitHub federation is not set"
+    error_message = "The Admins group should be Owner of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_data != null
-    error_message = "The App CD user assigned identity is not Reader of the subscription"
+    error_message = "The Admins group should be able to apply changes to KeyVault's data of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_admin != null
-    error_message = "The App CD user assigned identity is not Contributor of the resource group"
+    error_message = "The Admins group should be able to apply changes to KeyVault of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.devs_group_secondary_rg != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+    error_message = "The Devs group should be Owner of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.devs_group_tf_secondary_rg_kv_secr != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+    error_message = "The Devs group should be able to apply changes to KeyVault's secrets of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.externals_group_secondary_rg != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+    error_message = "The Externals group should be able to read resources of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.app_cd_secondary_rg_contributor != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+    error_message = "The App CD user assigned identity is not Contributor of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_secondary_rg_contributor != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
+    error_message = "The Infra CD user assigned identity is not Contributor of the secondary resource groups"
   }
 
   assert {
     condition     = azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin != null
-    error_message = "The App CD user assigned identity is not Blob Contributor of the Terraform resource group"
-  }
+    error_message = "The Infra CD user assigned identity is not User Access Administrator of the secondary resource groups"
 }
