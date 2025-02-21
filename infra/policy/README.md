@@ -1,7 +1,7 @@
 # DX - Azure Policy
 
-This folder contains shared Azure Policy rules that any team can choose to apply to its own Azure subscriptions to ensure consistent governance across different environments.
-Additionally, the `dev` folder contains Terraform code used to deploy the defined Policy Rules to the DX development subscription on Azure.`
+This directory contains shared Azure Policy rules that any team can choose to apply to its own Azure subscriptions to ensure consistent governance across different environments.
+Additionally, the `dev` directory contains Terraform code used to deploy the defined Policy Rules to the DX development subscription on Azure.`
 
 ## Repository Structure
 
@@ -22,7 +22,7 @@ These directory contain Terraform resources that deploys the defined policy rule
 
 ## Configuration
 
-Each repository that needs to apply a policy must replicate the same structure within the `infra` folder, excluding `_policy_rules`. Terraform resources must reference the policy rules and parameters definition from the `dx` repository. For example:
+Each repository that needs to apply a policy must replicate the same structure within the `infra` directory, excluding `_policy_rules`. Terraform resources must reference the policy rules and parameters definition from the `dx` repository. For example:
 
 ```hcl
 # infra/policy/prod/policy_specific_tags.tf
