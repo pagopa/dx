@@ -18,7 +18,7 @@ This directory contains JSON files that define policy rules to be used in Azure,
 
 ## Environment-Specific Policies (`infra/policy/dev`)
 
-These directory contain Terraform resources that deploys the defined policy rules into the provided Azure resources (e.g., subcriptions).
+These directory contain Terraform resources that deploys the defined policy rules into the provided Azure resources (e.g., Subscriptions).
 
 ## Configuration
 
