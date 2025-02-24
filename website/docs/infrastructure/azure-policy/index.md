@@ -190,4 +190,4 @@ The version should be an incrementing integer (e.g., v1, v2, …). The file name
 
 ## Policy Deployment
 
-Once everything is configured, the product team will submit a Pull Request. Optionally, they can share it with the **DX** team for review before merging and applying it in production via the GitHub Action that triggers terraform apply.
+Once everything is configured, the product team will submit a Pull Request. Optionally, they can share it with the **DX** team for review before merging and applying it in production via the GitHub Action that triggers `terraform apply`.
