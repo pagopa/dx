@@ -39,7 +39,7 @@ This guide explains the steps required to apply existing policies or add new one
 
 ## Policy Configuration
 
-Azure Policies are commonly defined in _JSON_ and consist of multiple components: the `policyRule` definitions, the `parameters` and metadata required for deployment on Azure. Since we manage last one using Terraform, the only two sections that remains defined in _JSON_ are the lists of `policyRule` and `parameters`.
+Azure Policies are commonly defined in _JSON_ and consist of multiple components: `policyRule` definitions, `parameters`, and metadata required for deployment on Azure. Since we manage the latter using Terraform, the only two sections that remain defined in _JSON_ are lists of `policyRule` and `parameters`.
 
 ### Reference Documentation
 
