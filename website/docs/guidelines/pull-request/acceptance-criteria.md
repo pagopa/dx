@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Contribution Acceptance Criteria
 
-To ensure that a PR can be approved, the following criteria must be met:
+To increase the likelihood of PR approval, consider meeting the following criteria:
 
 - Code and comments must be written in English
 - A PR must contain the **smallest number of changes** possible allowing the feedback loop to be as quick as possible
