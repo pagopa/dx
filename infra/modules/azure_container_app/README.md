@@ -14,42 +14,42 @@ This Terraform module deploys an Azure Container App along with an Azure Contain
 - Dynamically creates a Container App Environment if no `container_app_environment_id` is provided.
 - Supports environment variables via a map (`container_app_template.envs`).
 - Key Vault secret integration when a Key Vault is specified.
-- With tier specification (s, m, l or xl) creates container app with different replicas, CPU, and memory settings:
+- With tier specification (xs, s, m or l) creates container app with different replicas, CPU, and memory settings:
 
-  ```json
-  "s" = {
-    cpu    = 0.25
-    memory = "0.5Gi"
-    replicas = {
-      min = 0
-      max = 1
-    }
+```json
+"xs" = {
+  cpu    = 0.25
+  memory = "0.5Gi"
+  replicas = {
+    min = 0
+    max = 1
   }
-  "m" = {
-    cpu    = 0.5
-    memory = "1Gi"
-    replicas = {
-      min = 1
-      max = 1
-    }
+}
+"s" = {
+  cpu    = 0.5
+  memory = "1Gi"
+  replicas = {
+    min = 1
+    max = 1
   }
-  "l" = {
-    cpu : 1
-    memory : "2Gi"
-    replicas = {
-      min = 1
-      max = 1
-    }
+}
+"m" = {
+  cpu    = 1.25
+  memory = "2.5Gi"
+  replicas = {
+    min = 1
+    max = 2
   }
-  "xl" = {
-    cpu : 1.25
-    memory : "2.5Gi"
-    replicas = {
-      min = 1
-      max = 2
-    }
+}
+"l" = {
+  cpu    = 2
+  memory = "4Gi"
+  replicas = {
+    min = 2
+    max = 4
   }
-  ```
+}
+```
   
 - Managed Identity (System Assigned) for secure authentication.
 
