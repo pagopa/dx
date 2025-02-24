@@ -12,13 +12,12 @@ Azure Policies are governance tools provided by Microsoft Azure to create, assig
 2. [Policy Configuration](#policy-configuration)
     - [Reference Documentation](#reference-documentation)
     - [Defining Policy Rules](#defining-policy-rules)
-        - [Adding a Policy Rule](#adding-a-policy-rule)
-    - [Defining Parameters](#defining-parameters)
-        - [Adding a Set of Parameters](#adding-a-set-of-parameters)
+    - [Adding Policy Rules](#adding-policy-rules)
+    - [Defining Policy Rules Parameters](#defining-policy-rules-parameters)
+    - [Adding a Set of Parameters](#adding-a-set-of-parameters)
     - [Applying Policies via Terraform](#applying-policies-via-terraform)
 3. [Versioning Policy Rules and Parameters](#versioning-policy-rules-and-parameters)
 4. [Policy Deploymenty](#policy-deployment)
-
 
 ## Goal
 
@@ -33,7 +32,6 @@ Product teams can also propose new DX Policies for additional requirements.
 Policies are applied via Terraform, and the rules that implement them (`policyRule`) are stored in the [DX Repository](https://github.com/pagopa/dx).
 
 This guide explains the steps required to apply existing policies or add new ones.
-
 
 ## Policy Configuration
 
@@ -79,19 +77,18 @@ For example, to create a policy that prevents resource creation outside a config
 
 Here, `[parameters('location')]` is the reference to the associated parameter.
 
-
 ### Defining Policy Rules Parameters
 
 When defining a rule, parameters can be specified as configurable variables. These must also be defined in a _JSON_ file.
 
-#### Adding a Set of Parameters
+### Adding a Set of Parameters
 
 To add a new set of parameters:
 
 1. Create a file `<POLICY_SUMMARY>_parameters_v<VERSION>.json` within the DX repository directory `infra/policy/_policy_rules`.
 2. Define the parameters inside the file following the documentation guidelines.
 
-### Policy Rule Parameters example
+#### Policy Rule Parameters example
 
 Continuing the previous example, create the file `allowed_location_parameters_v1.json` with the following content:
 
@@ -110,8 +107,6 @@ Continuing the previous example, create the file `allowed_location_parameters_v1
 This ensures that when the policy is assigned, a parameter must be set.
 
 It is also possible to specify a list of **allowed** values and a **default** value. For more details, refer to the official documentation.
-
----
 
 ### Applying Policies via Terraform
 
@@ -172,7 +167,6 @@ resource "azurerm_subscription_policy_assignment" "allowed_location_assignment" 
 }
 ```
 
-
 ## Versioning Policy Rules and Parameters
 
 When creating or modifying Policy Rules and/or Parameters in the DX repository, update the `<VERSION>` reference in the _JSON_ file name:
@@ -181,7 +175,6 @@ When creating or modifying Policy Rules and/or Parameters in the DX repository, 
 - `<POLICY_SUMMARY>_parameters_v<VERSION>.json`
 
 The version should be an incrementing integer (e.g., v1, v2, …). The file name should only be updated in case of breaking changes.
-
 
 ## Policy Deployment
 

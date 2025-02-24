@@ -11,18 +11,19 @@ This policy rule ensures that all Azure resources comply with a predefined set o
 
 This policy enforces the following conditions:
 
-- The `CostCenter` tag must match the allowed parameter value.
+- The `CostCenter` tag must match the allowed user-defined value.
 - The `CreatedBy` tag must be one of: `Terraform`, `ARM`, or `AzurePortal`.
 - The `Environment` tag must be one between: `Prod`, `Dev`, or `Uat`.
-- The `BusinessUnit` tag must match one of the allowed values.
+- The `BusinessUnit` tag must be in the user-defined list of allowed values.
 - If `CreatedBy` is `Terraform`, the `Source` tag must match a specific URL with a given GitHub organization.
-- The `ManagementTeam` tag must match one of the allowed values.
+- The `ManagementTeam` tag must be in the user-defined list of allowed values.
 
 If any of these conditions are not met, resource creation is denied.
+The full policy definition can be found in [specific_tags_rule_v1.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_rule_v1.json).
 
 ## Parameters
 
-The policy allows customization through the following parameters:
+The policy allows customization through the following parameters, defined in [specific_tags_parameters_v1.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_parameters_v1.json):
 
 | Parameter       | Type   | Description                                           |
 |---------------|------|---------------------------------------------------|
@@ -30,92 +31,3 @@ The policy allows customization through the following parameters:
 | `BusinessUnit` | Array  | Allowed Business Units.                           |
 | `ManagementTeam` | Array  | Allowed Management Teams.                         |
 | `SourceOrg`    | String | Allowed GitHub organization for source tagging. |
-
-## Policy Rule JSON
-
-```json
-{
-  "if": {
-    "anyOf": [
-      {
-        "field": "tags.CostCenter",
-        "notEquals": "[parameters('CostCenter')]"
-      },
-      {
-        "field": "tags.CreatedBy",
-        "notIn": [
-          "Terraform",
-          "ARM",
-          "AzurePortal"
-        ]
-      },
-      {
-        "field": "tags.Environment",
-        "notIn": [
-          "Prod",
-          "Dev",
-          "Uat"
-        ]
-      },
-      {
-        "field": "tags.BusinessUnit",
-        "notIn": "[parameters('BusinessUnit')]"
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags.CreatedBy",
-            "equals": "Terraform"
-          },
-          {
-            "field": "tags.Source",
-            "notLike": "[concat('https://github.com/', parameters('SourceOrg'), '/*')]"
-          }
-        ]
-      },
-      {
-        "field": "tags.ManagementTeam",
-        "notIn": "[parameters('ManagementTeam')]"
-      }
-    ]
-  },
-  "then": {
-    "effect": "deny"
-  }
-}
-```
-
-## Policy Rule Parameters JSON
-
-```json
-{
-  "CostCenter": {
-    "type": "String",
-    "metadata": {
-      "displayName": "Allowed CostCenter",
-      "description": "Specify the allowed CostCenter value."
-    }
-  },
-  "BusinessUnit": {
-    "type": "Array",
-    "metadata": {
-      "displayName": "Allowed Business Units",
-      "description": "Specify the allowed Business Units."
-    }
-  },
-  "ManagementTeam": {
-    "type": "Array",
-    "metadata": {
-      "displayName": "Allowed Management Teams",
-      "description": "Specify the allowed Management Teams."
-    }
-  },
-  "SourceOrg": {
-    "type": "String",
-    "metadata": {
-      "displayName": "Allowed GitHub Organization",
-      "description": "Specify the allowed GitHub organization for source tagging."
-    }
-  }
-}
-```
