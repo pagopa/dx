@@ -112,7 +112,7 @@ Continuing the previous example, create the file `allowed_location_parameters_v1
 
 This ensures that when the policy is assigned, a parameter must be set.
 
-> It is also possible to specify a list of **allowed** values and a **default** value. For more details, refer to the official documentation.
+It is also possible to specify a list of **allowed** values and a **default** value. For more details, refer to the official documentation.
 
 ---
 
