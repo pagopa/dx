@@ -31,10 +31,12 @@ Use one of the following types to categorize the branch activity:
 - `hotfixes/error-503-on-payment-checkout`
 - `refactors/update-react-in-ui-components-workspace`
 
-### Examples
+### Bad Examples
 
+- `CES-666-fix-that` _(includes superfluous details)_
 - `fix-bug` _(too vague)_
 - `new-feature` _(uncategorized)_
-- `update` _(lacks clarity)_
+- `update` _(lacks scope)_
 - `v1.2.0-release` _(versioning should be handled via tags)_
-- `ui-redesign` _(should be `refactors/ui-redesign`)_
+- `ui-redesign` _(should be `refactors/ui-design`)_
+- `features/authentication_page` _(should use use hyphens instead of underscores)_
