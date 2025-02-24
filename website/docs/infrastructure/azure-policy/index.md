@@ -8,7 +8,7 @@ Azure Policies are governance tools provided by Microsoft Azure to create, assig
 
 ## Index
 
-1. [Objective](#objective)
+1. [Goal](#goal)
 2. [Policy Configuration](#policy-configuration)
     - [Reference Documentation](#reference-documentation)
     - [Defining Policy Rules](#defining-policy-rules)
