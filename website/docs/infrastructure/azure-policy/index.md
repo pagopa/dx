@@ -50,14 +50,14 @@ Azure Policies are commonly defined in _JSON_ and consist of multiple components
 
 Policy Rules consist of if/then blocks that define the conditions to be evaluated once the policy is assigned.
 
-#### Adding a Policy Rule
+### Adding Policy Rules
 
 To add a new rule:
 
 1. Create a file named `<POLICY_SUMMARY>_rule_v<VERSION>.json` inside the `infra/policy/_policy_rules` directory of the **DX** repository.
 2. Define the `policyRule` inside the file following the documentation guidelines.
 
-##### Example of a Policy Rule
+#### Policy Rule example
 
 For example, to create a policy that prevents resource creation outside a configurable region, create the file `allowed_location_rule_v1.json` with the following content:
 
@@ -80,7 +80,7 @@ For example, to create a policy that prevents resource creation outside a config
 Here, `[parameters('location')]` is the reference to the associated parameter.
 
 
-### Defining Parameters
+### Defining Policy Rules Parameters
 
 When defining a rule, parameters can be specified as configurable variables. These must also be defined in a _JSON_ file.
 
@@ -91,7 +91,7 @@ To add a new set of parameters:
 1. Create a file `<POLICY_SUMMARY>_parameters_v<VERSION>.json` within the DX repository directory `infra/policy/_policy_rules`.
 2. Define the parameters inside the file following the documentation guidelines.
 
-#### Example of Parameters
+### Policy Rule Parameters example
 
 Continuing the previous example, create the file `allowed_location_parameters_v1.json` with the following content:
 
