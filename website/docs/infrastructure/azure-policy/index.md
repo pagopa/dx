@@ -1,5 +1,5 @@
 ---
-sidebar_label: Azure Policy Guide
+sidebar_label: How to create and manage Azure Policies
 ---
 
 # Azure Policy Guide
