@@ -17,10 +17,10 @@ To maintain consistency and clarity in our Git workflow, branch names should fol
 
 Use one of the following types to categorize the branch activity:
 
-- `features/`:  for new features
-- `bugfixes/`:  or bug fixes
-- `hotfixes/`: for urgent production fixes
-- `refactors/`: for code refactoring and reducing technical debt
+- `features`: for new features
+- `bugfixes`: or bug fixes
+- `hotfixes`: for urgent production fixes
+- `refactors`: for code refactoring and reducing technical debt
 
 ## Examples
 
