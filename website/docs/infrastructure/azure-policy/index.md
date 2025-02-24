@@ -50,7 +50,7 @@ Azure Policies are commonly defined in _JSON_ and consist of multiple components
 
 ### Defining Policy Rules
 
-The `policyRule` consists of `if/then` blocks, in which you can define some conditions that will be met after being assigned.
+Policy Rules consist of if/then blocks that define the conditions to be evaluated once the policy is assigned.
 
 #### Adding a Policy Rule
 
