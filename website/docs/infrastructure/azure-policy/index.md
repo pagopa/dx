@@ -35,7 +35,6 @@ Policies are applied via Terraform, and the rules that implement them (`policyRu
 
 This guide explains the steps required to apply existing policies or add new ones.
 
----
 
 ## Policy Configuration
 
@@ -81,7 +80,6 @@ For example, to create a policy that prevents resource creation outside a config
 
 Here, `[parameters('location')]` is the reference to the associated parameter.
 
----
 
 ### Defining Parameters
 
@@ -175,7 +173,6 @@ resource "azurerm_subscription_policy_assignment" "allowed_location_assignment" 
 }
 ```
 
----
 
 ## Versioning Policy Rules and Parameters
 
@@ -186,7 +183,6 @@ When creating or modifying Policy Rules and/or Parameters in the DX repository, 
 
 The version should be an incrementing integer (e.g., v1, v2, …). The file name should only be updated in case of breaking changes.
 
----
 
 ## Policy Deployment
 
