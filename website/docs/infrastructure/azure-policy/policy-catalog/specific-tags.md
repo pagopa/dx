@@ -83,7 +83,7 @@ The policy allows customization through the following parameters:
     "effect": "deny"
   }
 }
-````
+```
 
 ## Policy Rule Parameters JSON
 
