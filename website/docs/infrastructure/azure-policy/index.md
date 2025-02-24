@@ -21,7 +21,7 @@ Azure Policies are governance tools provided by Microsoft Azure to create, assig
 
 ---
 
-## Objective
+## Goal
 
 To improve the control and management of resources across different **product team subscriptions**, the **DX** team provides a predefined set of policies that product teams can apply to one or more Azure subscriptions. These policies allow better monitoring of critical configurations and resources, ensuring higher standardization and security.
 
