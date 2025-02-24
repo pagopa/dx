@@ -13,7 +13,7 @@ This policy enforces the following conditions:
 
 - The `CostCenter` tag must match the allowed parameter value.
 - The `CreatedBy` tag must be one of: `Terraform`, `ARM`, or `AzurePortal`.
-- The `Environment` tag must be one of: `Prod`, `Dev`, or `Uat`.
+- The `Environment` tag must be one between: `Prod`, `Dev`, or `Uat`.
 - The `BusinessUnit` tag must match one of the allowed values.
 - If `CreatedBy` is `Terraform`, the `Source` tag must match a specific URL with a given GitHub organization.
 - The `ManagementTeam` tag must match one of the allowed values.
