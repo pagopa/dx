@@ -1,5 +1,120 @@
 # DX - Azure GitHub Environment Bootstrap
 
+This module is useful for anybody that has just created a new repository and wants to focus quickly on their goals rather than spending hours in setting up everything around the repository. Its usage is particularly indicated for mono repositories.
+
+To getting started, define the module via the Terraform registry:
+
+```hcl
+module "repo" {
+  source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
+  version = "~>1"
+}
+```
+
+Then, specify the following required variables:
+
+- `environment`: values such as the Azure region, the domain name, etc. Domain value is used to create the resource group
+- `entraid_groups`: references to Entra ID groups of your domain (Admins and Developers are mandatory)
+- `terraform_storage_account`: name and resource group name of the Storage Account holding the Terraform state file
+- `private_dns_zone_resource_group_id`: Id of the resource group hosting Private DNS Zones used by Private Endpoints
+- `pep_vnet_id`: Id of the Azure VNet hosting Private Endpoints
+- `opex_resource_group_id`: Resource group id of the Opex dashboards
+- `subscription_id`: Azure subscription Id
+- `tenant_id`: Azure tenant Id
+- `repository`: details of the current GitHub repository such as name, owner, description, topics, etc.
+- `github_private_runner`: details of the GitHub private runner
+- `tags`: Azure tags
+
+If necessary, add also:
+
+- `apim_id`: Id of the Azure API Management instance
+- `nat_gateway_resource_group_id`: Id of the Azure NAT Gateway
+- `keyvault_common_ids`: references to the Key Vaults using Access Policies instead of RBAC
+
+These variables are required to:
+
+- create the GitHub private runner associated with the repository
+- create Azure user-assigned Managed identities to work with GitHub workflows in these scenarios: IaC validation and deployments; application deployments, Opex dashboards validation and deployments
+- assignment of IAM roles to allow to previous point workflows to work properly
+- set up the GitHub repository with the best practices
+- creation of an Azure resource group tied within the repository cloud resources
+
+## Notes
+
+### Use Entra Id to authenticate in Storage Accounts
+
+Entra Id should be use as authentication method for Storage Accounts, replacing keys.
+
+Storage Account with Terarform state file:
+
+```hcl
+backend "azurerm" {
+  resource_group_name  = "<value>"
+  storage_account_name = "<value>"
+  container_name       = "<value>"
+  key                  = "<repo-name>.repository.tfstate"
+  use_azuread_auth     = true
+}
+```
+
+Other Storage Accounts:
+
+```hcl
+provider "azurerm" {
+  features {
+  }
+  storage_use_azuread = true
+}
+```
+
+### Import GitHub repository in Terraform state file
+
+Remember to import the GitHub repository you are being using in the Terraform state:
+
+```hcl
+import {
+  id = "<repository-name>"
+  to = module.repo.github_repository.this
+}
+```
+
+### GitHub environments policies and default branch name
+
+You can customize deployment policies on `x-cd` GitHub environment by using the optional properties of the `repository` variable:
+
+- `infra_cd_policy_branches`
+- `opex_cd_policy_branches`
+- `app_cd_policy_branches`
+- `infra_cd_policy_tags`
+- `opex_cd_policy_tags`
+- `app_cd_policy_tags`
+
+The default branch name can be changed from `main` via the `default_branch_name` property.
+
+## Extending the module for custom needs
+
+The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to team needs.
+
+The module export all the ids and names of the resources that creates, so it is straightforward to add further resources. For instance, if you need a `release` GitHub environment with a special deployment policy you can add:
+
+```hcl
+resource "github_repository_environment" "release" {
+  environment = "release"
+  repository  = module.repo.repository.name
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
+resource "github_repository_environment_deployment_policy" "release_branch" {
+  repository     = module.repo.repository.name
+  environment    = github_repository_environment.release.environment
+  branch_pattern = "main"
+}
+```
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
