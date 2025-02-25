@@ -1,5 +1,5 @@
 resource "azurerm_role_assignment" "ci_subscription" {
-  for_each = var.continuos_integration.roles == null ? toset([]) : var.continuos_integration.roles.subscription
+  for_each = (!var.continuos_integration.enable || var.continuos_integration.roles == null) ? toset([]) : var.continuos_integration.roles.subscription
 
   scope                = var.subscription_id
   role_definition_name = each.value
