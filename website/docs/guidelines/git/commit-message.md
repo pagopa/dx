@@ -15,4 +15,4 @@ Writing clear and well-structured commit messages improves collaboration, makes 
 - **Capitalize the subject line**, as you would in a sentence
 - **Do not end the subject line with a period** (`.`) to keep it clean
 - **Use the imperative mood**: write messages as if completing the sentence: _"If applied, this commit will `<subject>`"_
-- **Explain the "why" in the body**: instead of detailing _how_ the change was made (which is visible in the code), focus on _why_ it was necessary
+- **Explain the rationale behind the changes in the body**: instead of detailing _how_ the change was made (which is visible in the code), focus on _why_ it is necessary
