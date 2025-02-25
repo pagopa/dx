@@ -23,21 +23,21 @@ locals {
     subject = format("repo:${var.repository.owner}/${var.repository.name}:environment:%s-${module.naming_convention.env_name}-cd", var.identity_type)
   } : null
 
-  ci_rg_roles = tolist(flatten([
+  ci_rg_roles = var.continuos_integration.enable ? tolist(flatten([
     for rg in data.azurerm_resource_group.ci_details : [
       for role in var.continuos_integration.roles.resource_groups[rg.name] : {
         resource_group_id = rg.id
         role_name         = role
       }
     ]
-  ]))
+  ])) : []
 
-  cd_rg_roles = tolist(flatten([
+  cd_rg_roles = var.continuos_delivery.enable ? tolist(flatten([
     for rg in data.azurerm_resource_group.cd_details : [
       for role in var.continuos_delivery.roles.resource_groups[rg.name] : {
         resource_group_id = rg.id
         role_name         = role
       }
     ]
-  ]))
+  ])) : []
 }

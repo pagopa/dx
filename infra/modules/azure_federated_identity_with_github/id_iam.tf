@@ -7,7 +7,7 @@ resource "azurerm_role_assignment" "ci_subscription" {
 }
 
 resource "azurerm_role_assignment" "cd_subscription" {
-  for_each = var.continuos_delivery.roles == null ? toset([]) : var.continuos_delivery.roles.subscription
+  for_each = (!var.continuos_delivery.enable || var.continuos_delivery.roles == null) ? toset([]) : var.continuos_delivery.roles.subscription
 
   scope                = var.subscription_id
   role_definition_name = each.value
