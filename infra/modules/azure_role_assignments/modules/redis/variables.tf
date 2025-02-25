@@ -7,6 +7,7 @@ variable "redis" {
   description = "A list of Redis role assignments"
   type = list(object({
     cache_name          = string
+    cache_id            = optional(string, null)
     resource_group_name = string
     role                = string
     username            = string

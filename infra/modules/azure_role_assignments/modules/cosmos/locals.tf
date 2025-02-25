@@ -9,6 +9,7 @@ locals {
       for entry in var.cosmos : [
         for collection in entry.collections : {
           account_name        = entry.account_name
+          account_id          = coalesce(entry.account_id, data.azurerm_cosmosdb_account.cosmos["${entry.resource_group_name}|${entry.account_name}"].id)
           resource_group_name = entry.resource_group_name
           role                = entry.role
           database            = entry.database
@@ -19,5 +20,5 @@ locals {
     ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
   }
 
-  accounts = distinct([for assignment in var.cosmos : { account_name = assignment.account_name, resource_group_name = assignment.resource_group_name }])
+  accounts = distinct([for assignment in var.cosmos : { account_name = assignment.account_name, resource_group_name = assignment.resource_group_name } if assignment.account_id == null])
 }

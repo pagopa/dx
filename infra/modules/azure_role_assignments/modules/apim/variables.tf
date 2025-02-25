@@ -9,6 +9,7 @@ variable "apim" {
     name                = string
     resource_group_name = string
     role                = string
+    id                  = optional(string, null)
   }))
 
   validation {
