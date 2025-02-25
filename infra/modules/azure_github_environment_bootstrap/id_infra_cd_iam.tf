@@ -21,13 +21,6 @@ resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_rbac_admin" {
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Role Based Access Control Administrator"
-  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage IAM configuration at monorepository resource group scope"
-}
-
 resource "azurerm_role_assignment" "infra_cd_rg_user_access_admin" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "User Access Administrator"
@@ -43,12 +36,29 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to manage Private Endpoints at VNet scope"
 }
 
-# DNS Zone
-resource "azurerm_role_assignment" "infra_cd_rg_ext_network_contributor" {
-  scope                = var.dns_zone_resource_group_id
+# Private DNS Zone
+resource "azurerm_role_assignment" "infra_cd_rg_private_dns_zone_contributor" {
+  scope                = var.private_dns_zone_resource_group_id
   role_definition_name = "Private DNS Zone Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage DNS Zones at resource group level"
+  description          = "Allow ${var.repository.name} Infra CD identity to manage Private DNS Zones at resource group level"
+}
+
+resource "azurerm_role_assignment" "infra_cd_rg_network_contributor" {
+  scope                = var.private_dns_zone_resource_group_id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to associate Private DNS Zones and Private Endpoints at resource group level"
+}
+
+# NAT Gateway
+resource "azurerm_role_assignment" "infra_cd_rg_nat_gw_network_contributor" {
+  count = (var.private_dns_zone_resource_group_id == var.nat_gateway_resource_group_id) || (var.nat_gateway_resource_group_id == null) ? 0 : 1 # avoid duplicated assignment on the same rg
+
+  scope                = var.nat_gateway_resource_group_id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to associate NAT Gateways to subnets at resource group level"
 }
 
 # Api Management
@@ -101,7 +111,7 @@ resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
   secret_permissions = ["Get", "List", "Set"]
 }
 
-# Storage Account - Blob and Queue
+# Storage Account - Blob, Queue and Table
 resource "azurerm_role_assignment" "infra_cd_rg_st_blob_contributor" {
   scope                = azurerm_resource_group.main.id
   role_definition_name = "Storage Blob Data Contributor"
@@ -114,4 +124,11 @@ resource "azurerm_role_assignment" "infra_ci_rg_st_queue_contributor" {
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues monorepository resource group scope"
+}
+
+resource "azurerm_role_assignment" "infra_ci_rg_st_table_contributor" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account tables monorepository resource group scope"
 }

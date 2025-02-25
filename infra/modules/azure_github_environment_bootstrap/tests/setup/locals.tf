@@ -26,12 +26,12 @@ locals {
     }
   }
 
-  vnet = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
+  common = {
+    resource_group_name = "${local.project}-common-rg-01"
   }
 
-  dns = {
+  vnet = {
+    name                = "${local.project}-common-vnet-01"
     resource_group_name = "${local.project}-network-rg-01"
   }
 
