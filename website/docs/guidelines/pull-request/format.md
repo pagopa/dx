@@ -24,8 +24,8 @@ It should include:
 
 ### Tracking System References
 
-When referencing an activity, such as a Jira task, in a pull request, use one of [GitHub's supported keywords](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) followed by the task ID.
-This ensures that the pull request is automatically linked to the relevant issue.  
+When referencing an activity, such as a Jira task, in a pull request, use one of [GitHub's supported keywords](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) followed by the task ID.  
+Although these keywords do not automatically link the pull request to Jira, we follow this convention to maintain consistency rather than introducing a new one.  
 We recommend placing issue references in the description rather than the title. This approach allows for multiple issue references within the description while keeping the title clean and focused.  
 The reference should be placed on a separate line at the end of the description, preceded by a blank line for separation. The sentence should begin with an uppercase letter.
 
