@@ -75,12 +75,12 @@ The first view is cleaner and easier to read, recommended for developers.
 
 | | **Product Subscription** | **Product Private Endpoints** | **Product Private DNS Zone** | **Product NAT Gateway** | **Product APIM** | **Team Resource Groups** | **Opex Resource Group** |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Entra ID Adm** | Writer | Writer | Writer | Writer | Writer | Writer - Lock manager - IAM manager | (inherited Contributor) |
-| **Entra ID Devs** | Reader | Writer | Reader | Reader | Reader | Writer - No access to Certificate and Keys | (inherited Reader) |
-| **Entra ID Ext** | Reader | Writer | Reader | Reader | Reader | Reader | (inherited Reader) |
+| **Entra ID Adm** | Writer | Writer | Writer | Writer | Writer | Writer - Lock manager - IAM manager | Writer |
+| **Entra ID Devs** | Reader | Writer | Reader | Reader | Reader | Writer - No access to Certificate and Keys | Reader |
+| **Entra ID Ext** | Reader | Writer | Reader | Reader | Reader | Reader | Reader |
 | **** |  |  |  |  |  |  |  |
 | **ID Infra CI** | Reader | Reader | Reader | Reader | List secrets | Reader | Reader |
-| **ID Infra CD** | Reader - IAM Manager | Writer | Writer | Writer | Writer | Writer - Manage roles - Manage resource locks | Reader - Manage roles |
+| **ID Infra CD** | Reader - IAM Manager | Writer | Writer | Writer | Writer | Writer - IAM Manager - Manage resource locks | Reader - IAM Manager |
 | **ID App CD** | Reader | Writer | Writer | Writer | Writer | Writer | Reader |
 | **ID Opex CI** | Reader | Reader | Reader | Reader | Reader | Reader | Reader |
 | **ID Opex CD** | Reader | Reader | Reader | Reader | Reader | Reader | Writer |
@@ -139,7 +139,7 @@ This view is instead recommended for cloud operators.
 
 `Storage Table Data Contributor`: Allows for read, write and delete access to Azure Storage tables and entities
 
-## Code Examples (How-To)
+## Code Examples (How-To) and Common Troubleshooting
 
 ### How to label a resource group as team-owned
 
@@ -148,45 +148,354 @@ Create the resource group in `Repository` Terraform configuration of your mono r
 <details>
   <summary>Example</summary>
 
-  ```hcl
-    resource "azurerm_resource_group" "domain_itn_01" {
-      name     = "name"
-      location = "location"
-      tags     = var.tags
-    }
+```hcl
+  resource "azurerm_resource_group" "domain_itn_01" {
+    name     = "name"
+    location = "location"
+    tags     = local.tags
+  }
 
-    module "repo" {
-      source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
-      version = "~>1"
+  module "repo" {
+    source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
+    version = "~>1"
 
-      TBD = [
-        azurerm_resource_group.domain_itn_01.id
-      ]
-  ```
+    TBD = [
+      azurerm_resource_group.domain_itn_01.id
+    ]
+  }
+```
 
 </details>
 
+### Azure Resources
+
+This sections shows some examples for most common scenario.
+
+#### Notes
+
+The label `set by the module` means that the role is already given by the DX module `azure_github_environment_bootstrap` to Entra ID groups. Applications still needs a role assignment (possibly with the narrowest scope).
+
+Code samples should be set next to the resource definition, unless otherwise specified. The repository can be found in resource tags on Azure Portal.
+
+`Writer` role includes `Reader`, unless otherwise specified.
+
 ### Azure APIM
 
-#### List secrets
+If you get an error about roles while operating on APIM, please add the `apim_id` optional variable to the `azure_github_environment_bootstrap` by specifying the APIM instance resource Id.
 
-#### Entity manager
+### Azure Cache for Redis
+
+#### Team-owned Redis
+
+Set by the module
+
+#### Shared Redis
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+resource "azurerm_role_assignment" "" {
+  scope                = <redis-id>
+  role_definition_name = "Contributor"
+  principal_id         = <who-needs-access>
+}
+```
+
+</details>
 
 ### Azure Cosmos DB
 
+In both scenario, it is mandatory to manually set IAM roles. This approach is recommended as keys are not secure.
+
+It is also recommended to set roles at container level rather than Cosmos DB Account, especially for applications and shared Accounts.
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  cosmos = [
+    {
+      account_name = <st-target-name>
+      resource_group_name  = <st-target-rg-name>
+      role                 = "reader" # or writer
+    }
+  ]
+}
+```
+
+Optionally set the database and container via optional variables `database` and `collections`.
+
+</details>
+
 ### Azure Event Hub
 
-#### List secrets
+#### Team-owned Event Hub
 
-#### Entity manager
+Set by the module
+
+#### Shared Event Hub
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  event_hub = [
+    {
+      namespace_name = <st-target-name>
+      resource_group_name  = <st-target-rg-name>
+      role                 = "reader" # or writer
+    }
+  ]
+}
+```
+
+Optionally set the Event Hubs via `event_hub_names` property.
+
+</details>
+
+### Azure Key Vault
+
+#### Team-owned Key Vault
+
+Set by the module if using RBAC access model (recommended).
+
+<details>
+  <summary>Enabling RBAC access model to Key Vault</summary>
+
+```hcl
+resource "azurerm_key_vault" "" {
+  name                = "name"
+  location            = "location"
+  resource_group_name = "resource-group"
+
+  enable_rbac_authorization = true
+}
+```
+
+</details>
+
+Otherwise via Access Policies:
+
+<details>
+  <summary>Manage Key Vault Access Policies</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  key_vault = [
+    {
+      secrets      = "writer" # or writer or owner
+      certificates = "writer" # or writer or owner
+      keys         = "writer" # or writer or owner
+    }
+  ]
+}
+```
+
+</details>
+
+#### Shared Key Vault
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  key_vault = [
+    {
+      secrets      = "writer" # or writer or owner
+      certificates = "writer" # or writer or owner
+      keys         = "writer" # or writer or owner
+    }
+  ]
+}
+```
+
+### Azure NAT Gateway
+
+If you get an error about roles while associating a NAT Gateway to an AppService/Function App, please add the `nat_gateway_resource_group_id` optional variable to the `azure_github_environment_bootstrap` by specifying the NAT Gateways' resource group Id.
+
+### Azure Notification Hub
+
+#### Team-owned Notification Hub
+
+Set by the module
+
+#### Shared Notification Hub
+
+<details>
+  <summary>Enable Terraform state access via Entra ID</summary>
+
+```hcl
+resource "azurerm_role_assignment" "" {
+  scope                = <notification-hub-namespace-id>
+  role_definition_name = "Contributor"
+  principal_id         = <who-needs-access>
+}
+```
+
+</details>
 
 ### Azure Storage Account
 
+It is recommended to use Entra ID authentication to access Storage Accounts, instead of using keys. In fact, key-based access ignores IAM roles and can be used by anyone without further authentication.
+
+To set Entra ID authentication as default and disabling key access, set the properties TBD of the Storage Account DX module.
+
+<details>
+  <summary>Enable Terraform state access via Entra ID</summary>
+
+```hcl
+backend "azurerm" {
+  ...
+  `use_azuread_auth` = true
+}
+```
+
+</details>
+
+<details>
+  <summary>Enable Storage Account access via Entra ID</summary>
+
+```hcl
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+}
+
+```
+
+</details>
+
 #### Blob
+
+##### Team-owned Storage Account
+
+Set by the module
+
+##### Shared Storage Account
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  storage_blob = [
+    {
+      storage_account_name = <st-target-name>
+      resource_group_name  = <st-target-rg-name>
+      role                 = "reader" # or writer
+    }
+  ]
+}
+```
+
+Optionally set the container name via `container_name` property.
+
+</details>
+
+##### Terraform Storage Account
+
+Set by the module
 
 #### Queue
 
+##### Team-owned Storage Account
+
+Set by the module
+
+##### Shared Storage Account
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  storage_queue = [
+    {
+      storage_account_name = <st-target-name>
+      resource_group_name  = <st-target-rg-name>
+      role                 = "reader" # or writer
+    }
+  ]
+}
+```
+
+Optionally set the container name via `queue_name` property.
+
+</details>
+
+##### Terraform Storage Account
+
+Set by the module
+
 #### Table
+
+##### Team-owned Storage Account
+
+Set by the module
+
+##### Shared Storage Account
+
+<details>
+  <summary>Example</summary>
+
+```hcl
+module "" {
+  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  version = "~>0"
+
+  principal_id = <who-needs-access>
+
+  storage_table = [
+    {
+      storage_account_name = <st-target-name>
+      resource_group_name  = <st-target-rg-name>
+      role                 = "reader" # or writer
+    }
+  ]
+}
+
+Optionally set the table name via `table_name` property.
+
+```
+</details>
+
+##### Terraform Storage Account
+
+Set by the module
 
 ## Best Practices
 
