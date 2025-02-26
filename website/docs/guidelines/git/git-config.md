@@ -88,7 +88,7 @@ When prompted:
 
 Alternatively, you can follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) to generate a GPG key.
 
-:::warning
+:::important
 
 Pay attention to steps `12` and `13` in the GitHub guide. They explain how to copy the public key that you are need to add to your GitHub profile.
 
