@@ -66,7 +66,10 @@ jobs:
           fi
           
           echo "Resources found: $resources"
-          echo "resources=$resources" >> "$GITHUB_OUTPUT"
+          
+          echo 'resources<<EOF' >> $GITHUB_OUTPUT
+          $resources >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Check if resources need to be deleted
         id: check_delete
