@@ -76,7 +76,7 @@ jobs:
         run: |
           today=$(date -u +%Y-%m-%d)  # format YYYY-MM-DD
           ttl=${{ inputs.ttl }}
-          resources=${{ steps.resources.outputs.resources }}
+          resources='${{ steps.resources.outputs.resources }}'
 
           for row in $(echo "$resources" | jq -r '.[] | @base64'); do
             _jq() {
