@@ -1,0 +1,77 @@
+name: Cleanup Resources
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment where search resources.
+        type: string
+        required: true
+        default: "Dev"
+      ttl:
+        description: Time to live in days for resources.
+        type: number
+        required: true
+        default: 30
+
+jobs:
+  cleanup:
+    name: Cleanup Resources
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+    steps:
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Get all resources with Environment=dev and ModifiedOn tag
+        id: resources
+        run: |
+          # Get all resources with Environment=dev and ModifiedOn tag
+          resources=$(az resource list --tag Environment=dev --query "[?tags.ModifiedOn].{id:id, modifiedOn:tags.ModifiedOn}" -o json)
+          
+          # Check if there are resources
+          if [ "$(echo $resources | jq length)" -eq 0 ]; then
+            echo "No resources found with tag Environment=dev and ModifiedOn."
+            exit 0
+          fi
+          
+          echo "Resources found: $resources"
+          echo "resources=$resources" >> "$GITHUB_OUTPUT"
+
+      - name: Check if resources need to be deleted
+        id: check_delete
+        run: |
+          today=$(date -u +%Y-%m-%d)  # format YYYY-MM-DD
+          ttl=${{ inputs.ttl }}
+          resources=${{ steps.resources.outputs.resources }}
+
+          for row in $(echo "$resources" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+
+            modifiedOn=$(_jq '.modifiedOn')
+            resourceId=$(_jq '.id')
+
+            # Expiry Date (ModifiedOn + TTL)
+            expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
+
+            if [[ "$expiryDate" == "$today" ]]; then
+              echo "Resource $resourceId is due for deletion."
+              # Delete resource
+              # az resource delete --ids "$resourceId" --yes
+            else
+              echo "Resource $resourceId is not due for deletion. Expiry date: $expiryDate"
+            fi
+          done
+
+      - name: Finish
+        run: echo "Cleanup process completed."

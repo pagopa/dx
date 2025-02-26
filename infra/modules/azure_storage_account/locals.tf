@@ -54,6 +54,6 @@ locals {
   }
 
   tags = var.environment.env_short == "d" ? merge(var.tags, {
-    "LastApplyDate" = formatdate("YYYY-MM-DD", timestamp())
+    "ModifiedOn" = formatdate("YYYY-MM-DD", timestamp())
   }) : var.tags
 }

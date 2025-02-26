@@ -1,0 +1,16 @@
+name: Cleanup DEV Resources
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  get-modified-modules:
+    uses: ./.github/workflows/reusable/cleanup_resources.yaml
+    name: Cleanup DEV Resources
+    with:
+      environment: "Dev"
+      ttl: 30
