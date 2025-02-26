@@ -2,9 +2,6 @@ name: Cleanup DEV Resources
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - CES-525-define-delete-dev-resources
 
 concurrency:
   group: ${{ github.workflow }}
