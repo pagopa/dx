@@ -36,3 +36,90 @@ Alternatively, you can manually edit your `.gitconfig` file to set your profile.
 This method provides a direct way to configure your Git profile settings.
 
 For more detailed information on Git configuration, you can refer to the [Git manual](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration).
+
+## Signed Commits
+
+### Why Use Signed Commits?
+
+Signed commits provide an additional layer of security and trust in a repository. While **not mandatory**, they can be useful in various scenarios:
+
+- **Authenticity**: ensures that commits are genuinely from the author and have not been tampered with
+- **Trust**: helps reviewers and collaborators verify commit authorship without relying solely on email addresses
+
+## Enabling Signed Commits
+
+To use signed commits, you need to generate a GPG key (if you don't already have one) and configure Git to use it.
+
+### Install GPG
+
+If not yet installed, you can install GPG by running the following command:
+
+```bash
+brew install gpg
+```
+
+Once installed, add the following line to your `~/.gnupg/gpg.conf` file:
+
+```ini
+use-agent
+```
+
+Additionally, add these lines to your shell profile file (`~/.bashrc`, `~/.bash_profile`, or equivalent) and restart your shell:
+
+```bash
+export GPG_TTY=$(tty)
+gpgconf --launch gpg-agent
+```
+
+### Generate a GPG Key (if you don’t have one)
+
+Run the following command and follow the prompts:
+
+```bash
+gpg --full-gen-key
+```
+
+When prompted:
+- Select the key type: `(4) RSA (sign only)` is sufficient for signing commits
+- Choose a key size: `4096` bits is recommended
+- Set an expiration date (e.g., `2y` for two years)
+- Enter your name and email (`Jane Doe <jane.doe@pagopa.it>`)
+- Set a secure passphrase
+
+### List Your GPG Keys
+
+To find your key ID, run:
+
+```bash
+gpg --list-secret-keys --keyid-format SHORT
+```
+
+Look for a line similar to:
+
+```
+sec   rsa4096/ABCDEF1234567890 2025-02-26 [SC]
+```
+
+Copy the key ID (`ABCDEF1234567890`).
+
+### Configure Git to Use Your GPG Key
+
+Set up Git to use your key for signing commits:
+
+```bash
+git config --global user.signingkey ABCDEF1234567890
+git config --global commit.gpgSign true
+```
+
+### Update `.gitconfig` Manually (Optional)
+
+If you prefer, you can edit your `.gitconfig` file and add:
+
+```ini
+[user]
+    signingkey = ABCDEF1234567890
+[commit]
+    gpgSign = true
+```
+
+For more details, refer to the [Git documentation on signing commits](https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work).
