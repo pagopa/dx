@@ -3,16 +3,18 @@ sidebar_label: Profile Setup
 sidebar_position: 3
 ---
 
-# Git Profile Setup
+# Git Configuration
+
+## Profile Setup
 
 Setting up your Git profile with the correct `user.name` and `user.email` is crucial for maintaining consistency in your project's commit history. This guide explains why it's important and how to configure your Git profile.
 
-## Why Set Your Git Profile?
+### Why Set Your Git Profile?
 
 - **Uniformity**: ensures that all commits are associated with a consistent identity, which is especially important in collaborative environments
 - **Professionalism**: using your work email address in commits reflects a professional approach and aligns with organizational standards
 
-## How to Set Your Git Profile
+### How to Set Your Git Profile
 
 To set your Git profile, use the following commands in your terminal:
 
@@ -22,8 +24,6 @@ git config --global user.email "jane.doe@pagopa.it"
 ```
 
 Replace `"Jane Doe"` and `"jane.doe@pagopa.it"` with your actual name and work email address. This configuration will apply globally to all repositories on your machine. If you need to set it for a specific repository, omit the `--global` flag.
-
-## Configuring via `.gitconfig` File
 
 Alternatively, you can manually edit your `.gitconfig` file to set your profile. Open the file located in your home directory and add or update the following lines:
 
@@ -46,11 +46,11 @@ Signed commits provide an additional layer of security and trust in a repository
 - **Authenticity**: ensures that commits are genuinely from the author and have not been tampered with
 - **Trust**: helps reviewers and collaborators verify commit authorship without relying solely on email addresses
 
-## Enabling Signed Commits
+### Enabling Signed Commits
 
 To use signed commits, you need to generate a GPG key (if you don't already have one) and configure Git to use it.
 
-### Install GPG
+#### Install GPG
 
 If not yet installed, you can install GPG by running the following command:
 
@@ -71,7 +71,7 @@ export GPG_TTY=$(tty)
 gpgconf --launch gpg-agent
 ```
 
-### Generate a GPG Key (if you don’t have one)
+#### Generate a GPG Key (if you don’t have one)
 
 Run the following command and follow the prompts:
 
@@ -94,12 +94,12 @@ Pay attention to steps `12` and `13` in the GitHub guide. They explain how to co
 
 :::
 
-### Update Your GPG Key
+#### Update Your GPG Key
 
 To make sure your commits are signed with the correct key, you need to add the key to your GitHub profile.  
 To address that, follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account).
 
-### List Your GPG Keys
+#### List Your GPG Keys
 
 To find your key ID, run:
 
@@ -115,7 +115,7 @@ sec   rsa4096/ABCDEF1234567890 2025-02-26 [SC]
 
 Copy the key ID (`ABCDEF1234567890`).
 
-### Configure Git to Use Your GPG Key
+#### Configure Git to Use Your GPG Key
 
 Set up Git to use your key for signing commits:
 
@@ -124,9 +124,7 @@ git config --global user.signingkey ABCDEF1234567890
 git config --global commit.gpgSign true
 ```
 
-### Update `.gitconfig` Manually (Optional)
-
-If you prefer, you can edit your `.gitconfig` file and add:
+Alternatively, you can edit your `.gitconfig` file and add:
 
 ```ini
 [user]
