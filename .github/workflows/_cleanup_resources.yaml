@@ -19,15 +19,22 @@ jobs:
     name: Cleanup Resources
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-cd
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
     permissions:
       id-token: write
       contents: read
+      actions: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
     steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
       - name: Azure Login
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
         with:

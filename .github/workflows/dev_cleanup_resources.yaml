@@ -3,14 +3,11 @@ name: Cleanup DEV Resources
 on:
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 jobs:
-  get-modified-modules:
+  cleanup-dev-resources:
     uses: ./.github/workflows/_cleanup_resources.yaml
     name: Cleanup DEV Resources
+    secrets: inherit
     with:
-      environment: "dev"
+      environment: 'dev'
       ttl: 30
