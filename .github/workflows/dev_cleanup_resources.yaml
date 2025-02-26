@@ -12,5 +12,5 @@ jobs:
     uses: ./.github/workflows/_cleanup_resources.yaml
     name: Cleanup DEV Resources
     with:
-      environment: "Dev"
+      environment: "dev"
       ttl: 30
