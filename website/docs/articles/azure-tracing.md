@@ -71,7 +71,7 @@ The new AI SDK uses the `@azure/monitor-opentelemetry` package under the hood:
 the `useAzureMonitor` method is called at the bootstrap of the application to
 enable tracing and metrics.
 
-Moreover the SDK provides a series of
+Moreover, the SDK provides a series of
 "[shims](https://github.com/microsoft/ApplicationInsights-node.js/tree/main/src/shim)"
 that enable its adoption in legacy applications using tracing methods from
 previous versions (e.g., `trackEvent`) without refactoring the existing code.
@@ -161,7 +161,7 @@ OpenTelemetry uses Tracer and Loggers for different types of telemetry data:
 
 :::warning
 
-By design OpenTelemetry SDKs samples only _traces_ but not _logs_.
+By design OpenTelemetry SDKs sample only _traces_ but not _logs_.
 
 :::
 
@@ -192,7 +192,7 @@ to sample logs.
 
 :::
 
-## Check is sampling is enabled
+## Check if sampling is enabled
 
 To check if sampling is enabled, you can use the following query in **Log
 Analytics**:
@@ -315,7 +315,7 @@ variable to limit the number of traces sent.
    sampled. This implies that even if you configure a sample rate of 5% in the
    AI SDK, you will still see 100% of `traces` and `customEvents`.
 2. When using `"telemetryMode": "OpenTelemetry"` in `host.json`, it appears that
-   there is no way to enable sampling at all fot the host yet:
+   there is no way to enable sampling at all for the host yet:
    https://github.com/Azure/azure-functions-host/issues/10770#issuecomment-2629318006
 3. If you want to override `logLevels` using environment variables, beware that
    "_App settings that contain a period aren't supported when running on Linux
@@ -413,35 +413,49 @@ import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { metrics, trace } from "@opentelemetry/api";
 import { IJsonConfig } from "applicationinsights/out/src/shim/types";
 
-if (process.env["AI_SDK_CONNECTION_STRING"]) {
-
 // setup sampling percentage from environment (optional)
-  // see https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
-  // for other options. environment variable is in JSON format and takes
-  // precedence over applicationinsights.json
-  process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] =
-    process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] ??
-    JSON.stringify({
-      samplingPercentage: 30,
-    } satisfies Partial<IJsonConfig>);
+// see https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
+// for other options. environment variable is in JSON format and takes
+// precedence over applicationinsights.json
+process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] =
+  process.env["APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"] ??
+  JSON.stringify({
+    samplingPercentage: 30,
+  } satisfies Partial<IJsonConfig>);
 
-  // setup cloudRoleName (optional)
-  process.env.OTEL_SERVICE_NAME =
-    process.env.WEBSITE_SITE_NAME ?? "local-app-service";
+// setup cloudRoleName (optional)
+process.env.OTEL_SERVICE_NAME =
+  process.env.WEBSITE_SITE_NAME ?? "local-app-service";
 
-  ai.setup(process.env["AI_SDK_CONNECTION_STRING"]).start();
+ai.setup(process.env["AI_SDK_CONNECTION_STRING"]).start();
 
-  // instrument native node fetch
-  // this must be called after starting the AI SDK
-  // in order to instantiate the OTEL tracer provider
-  registerInstrumentations({
-    tracerProvider: trace.getTracerProvider(),
-    meterProvider: metrics.getMeterProvider(),
-    // When using Azure Functions, you may want to add Azure Functions support for traces as well
-    // see https://github.com/Azure/azure-functions-nodejs-opentelemetry
-    instrumentations: [new UndiciInstrumentation()],
-  });
-}
+// instrument native node fetch
+// this must be called after starting the AI SDK
+// in order to instantiate the OTEL tracer provider
+registerInstrumentations({
+  tracerProvider: trace.getTracerProvider(),
+  meterProvider: metrics.getMeterProvider(),
+  // When using Azure Functions, you may want to add Azure Functions support for traces as well
+  // see https://github.com/Azure/azure-functions-nodejs-opentelemetry
+  instrumentations: [new UndiciInstrumentation({
+    requestHook: (span, requestInfo) => {
+      const { origin, method, path } = requestInfo;
+      // Default instrumented attributes don't feed well into AppInsights,
+      // so we set them manually.
+      span.setAttributes({
+        "http.url": `${origin}${path}`,
+        "http.method": method,
+        "http.target": path,
+        "http.host": origin,
+      });
+    },
+    responseHook: (span, { response }) => {
+      // Same as above, set the status code manually.
+      span.setAttribute("http.status_code", response.statusCode);
+    },
+  })],
+});
+
 export default ai;
 ```
 
