@@ -22,17 +22,6 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
-variable "expiration_days" {
-  description = "Number of days after which the resource will be deleted."
-  type        = number
-  default     = 30
-
-  validation {
-    condition     = var.expiration_days >= 0
-    error_message = "Expiration days must be greater than or equal to 0."
-  }
-}
-
 # ------------ STORAGE ACCOUNT ------------ #
 variable "tier" {
   type        = string

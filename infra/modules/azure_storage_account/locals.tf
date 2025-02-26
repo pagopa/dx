@@ -53,7 +53,7 @@ locals {
     } : {}
   }
 
-  tags = var.expiration_days > 0 && var.environment.env_short == "d" ? merge(var.tags, {
-    "ExpirationDate" = formatdate("YYYY-MM-DD", timeadd(timestamp(), "${var.expiration_days * 24}h"))
+  tags = var.environment.env_short == "d" ? merge(var.tags, {
+    "LastApplyDate" = formatdate("YYYY-MM-DD", timestamp())
   }) : var.tags
 }
