@@ -63,7 +63,7 @@ resource "azurerm_storage_account" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_security_center_storage_defender" "this" {

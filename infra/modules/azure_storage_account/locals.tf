@@ -52,4 +52,8 @@ locals {
       principal_id        = try(coalesce(var.customer_managed_key.user_assigned_identity_id, azurerm_storage_account.this.identity[0].principal_id), "")
     } : {}
   }
+
+  tags = var.expiration_days > 0 ? merge(var.tags, {
+    "ExpirationDate" = formatdate("YYYY-MM-DD", timeadd(timestamp(), "${var.expiration_days * 24}h"))
+  }) : var.tags
 }
