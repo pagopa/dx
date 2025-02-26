@@ -11,7 +11,7 @@ resource "github_repository" "this" {
   squash_merge_commit_title   = "PR_TITLE"
   squash_merge_commit_message = "BLANK"
 
-  delete_branch_on_merge = false
+  delete_branch_on_merge = true
 
   has_projects = true
 
