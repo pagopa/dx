@@ -6,12 +6,12 @@ on:
       environment:
         description: Environment where search resources.
         type: string
-        required: true
+        required: false
         default: "dev"
       ttl:
         description: Time to live in days for resources.
         type: number
-        required: true
+        required: false
         default: 30
 
 jobs:
@@ -19,6 +19,9 @@ jobs:
     name: Cleanup Resources
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -36,22 +39,22 @@ jobs:
         id: resources
         run: |
           if [ "${{ inputs.environment }}" == "dev" ]; then
-            environemnt="Dev"
+            environment="Dev"
           elif [ "${{ inputs.environment }}" == "uat" ]; then
-            environemnt="Uat"
+            environment="Uat"
           elif [ "${{ inputs.environment }}" == "prod" ]; then
-            environemnt="Prod"
+            environment="Prod"
           else
             echo "Invalid environment. Please provide valid environment."
             exit 1
           fi
 
           # Get all resources with specified Environment tag and ModifiedOn tag
-          resources=$(az resource list --tag Environment=$environemnt --query "[?tags.ModifiedOn].{id:id, modifiedOn:tags.ModifiedOn}" -o json)
+          resources=$(az resource list --tag Environment=$environment --query "[?tags.ModifiedOn].{id:id, modifiedOn:tags.ModifiedOn}" -o json)
           
           # Check if there are resources
           if [ "$(echo $resources | jq length)" -eq 0 ]; then
-            echo "No resources found with tag Environment=$environemnt and ModifiedOn."
+            echo "No resources found with tag Environment=$environment and ModifiedOn."
             exit 0
           fi
           
