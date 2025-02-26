@@ -86,6 +86,19 @@ When prompted:
 - Enter your name and email (`Jane Doe <jane.doe@pagopa.it>`)
 - Set a secure passphrase
 
+Alternatively, you can follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) to generate a GPG key.
+
+:::warning
+
+Pay attention to steps `12` and `13` in the GitHub guide. They explain how to copy the public key that you are need to add to your GitHub profile.
+
+:::
+
+### Update Your GPG Key
+
+To make sure your commits are signed with the correct key, you need to add the key to your GitHub profile.  
+To address that, follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account).
+
 ### List Your GPG Keys
 
 To find your key ID, run:
