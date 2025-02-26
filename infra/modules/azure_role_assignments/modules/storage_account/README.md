@@ -3,7 +3,9 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.114, < 5.0 |
 
 ## Modules
 
@@ -26,9 +28,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The ID of the principal to which assign roles. It can be a managed identity. | `string` | n/a | yes |
-| <a name="input_storage_blob"></a> [storage\_blob](#input\_storage\_blob) | A list of storage blob role assignments | <pre>list(object({<br/>    storage_account_name          = string<br/>    storage_account_id            = optional(string, null)<br/>    resource_group_name           = string<br/>    container_name                = optional(string, "*")<br/>    container_resource_manager_id = optional(string, null)<br/>    role                          = string<br/>  }))</pre> | `[]` | no |
-| <a name="input_storage_queue"></a> [storage\_queue](#input\_storage\_queue) | A list of storage queue role assignments | <pre>list(object({<br/>    storage_account_name      = string<br/>    storage_account_id        = optional(string, null)<br/>    resource_group_name       = string<br/>    queue_name                = optional(string, "*")<br/>    queue_resource_manager_id = optional(string, null)<br/>    role                      = string<br/>  }))</pre> | `[]` | no |
-| <a name="input_storage_table"></a> [storage\_table](#input\_storage\_table) | A list of storage table role assignments | <pre>list(object({<br/>    storage_account_name      = string<br/>    storage_account_id        = optional(string, null)<br/>    resource_group_name       = string<br/>    table_name                = optional(string, "*")<br/>    table_resource_manager_id = optional(string, null)<br/>    role                      = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_storage_blob"></a> [storage\_blob](#input\_storage\_blob) | A list of storage blob role assignments | <pre>list(object({<br/>    storage_account_name          = optional(string, null)<br/>    storage_account_id            = optional(string, null)<br/>    resource_group_name           = optional(string, null)<br/>    container_name                = optional(string, "*")<br/>    container_resource_manager_id = optional(string, null)<br/>    role                          = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_storage_queue"></a> [storage\_queue](#input\_storage\_queue) | A list of storage queue role assignments | <pre>list(object({<br/>    storage_account_name      = optional(string, null)<br/>    storage_account_id        = optional(string, null)<br/>    resource_group_name       = optional(string, null)<br/>    queue_name                = optional(string, "*")<br/>    queue_resource_manager_id = optional(string, null)<br/>    role                      = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_storage_table"></a> [storage\_table](#input\_storage\_table) | A list of storage table role assignments | <pre>list(object({<br/>    storage_account_name      = optional(string, null)<br/>    storage_account_id        = optional(string, null)<br/>    resource_group_name       = optional(string, null)<br/>    table_name                = optional(string, "*")<br/>    table_resource_manager_id = optional(string, null)<br/>    role                      = string<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 

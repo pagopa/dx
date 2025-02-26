@@ -8,9 +8,9 @@ locals {
     for assignment in flatten([
       for entry in var.cosmos : [
         for collection in entry.collections : {
-          account_name        = entry.account_name
-          account_id          = coalesce(entry.account_id, data.azurerm_cosmosdb_account.cosmos["${entry.resource_group_name}|${entry.account_name}"].id)
-          resource_group_name = entry.resource_group_name
+          account_name        = try(provider::azurerm::parse_resource_id(entry.account_id)["resource_name"], entry.account_name)
+          account_id          = try(data.azurerm_cosmosdb_account.cosmos["${entry.resource_group_name}|${entry.account_name}"].id, entry.account_id)
+          resource_group_name = try(provider::azurerm::parse_resource_id(entry.account_id)["resource_group_name"], entry.resource_group_name)
           role                = entry.role
           database            = entry.database
           collection          = collection

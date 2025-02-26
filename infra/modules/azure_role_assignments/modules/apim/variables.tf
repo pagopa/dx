@@ -6,11 +6,22 @@ variable "principal_id" {
 variable "apim" {
   description = "A list of APIM role assignments"
   type = list(object({
-    name                = string
-    resource_group_name = string
+    name                = optional(string, null)
+    resource_group_name = optional(string, null)
     role                = string
     id                  = optional(string, null)
   }))
+
+  validation {
+    condition = alltrue([
+      for apim in var.apim :
+      (
+        apim.id != null
+        || (apim.name != null && apim.resource_group_name != null)
+      )
+    ])
+    error_message = "Each APIM object must specify either 'id' or both 'name' and 'resource_group_name'."
+  }
 
   validation {
     condition = alltrue([
