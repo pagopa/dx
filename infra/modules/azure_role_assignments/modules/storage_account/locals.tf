@@ -8,13 +8,13 @@ locals {
   )
 
   containers       = distinct([for blob in var.storage_blob : { storage_account_name = blob.storage_account_name, resource_group_name = blob.resource_group_name, container_name = blob.container_name } if blob.container_name != "*"])
-  blob_assignments = { for assignment in var.storage_blob : "${assignment.storage_account_name}|${assignment.container_name}|${assignment.role}" => assignment }
+  blob_assignments = { for assignment in var.storage_blob : "${assignment.storage_account_name}|${assignment.container_name}|${assignment.role}" => merge(assignment, { storage_account_id = coalesce(assignment.storage_account_id, data.azurerm_storage_account.this["${assignment.resource_group_name}|${assignment.storage_account_name}"].id), cnt_res_mng_id = coalesce(assignment.container_resource_manager_id, data.azurerm_storage_container.this["${assignment.storage_account_name}|${assignment.container_name}"].resource_manager_id) }) }
 
   tables            = distinct([for table in var.storage_table : { storage_account_name = table.storage_account_name, resource_group_name = table.resource_group_name, table_name = table.table_name } if table.table_name != "*"])
-  table_assignments = { for assignment in var.storage_table : "${assignment.storage_account_name}|${assignment.table_name}|${assignment.role}" => assignment }
+  table_assignments = { for assignment in var.storage_table : "${assignment.storage_account_name}|${assignment.table_name}|${assignment.role}" => merge(assignment, { storage_account_id = coalesce(assignment.storage_account_id, data.azurerm_storage_account.this["${assignment.resource_group_name}|${assignment.storage_account_name}"].id), tbl_res_mng_id = coalesce(assignment.table_resource_manager_id, data.azurerm_storage_table.this["${assignment.storage_account_name}|${assignment.table_name}"].resource_manager_id) }) }
 
   queues            = distinct([for queue in var.storage_queue : { storage_account_name = queue.storage_account_name, resource_group_name = queue.resource_group_name, queue_name = queue.queue_name } if queue.queue_name != "*"])
-  queue_assignments = merge([for key, item in var.storage_queue : { for role_name in local.role_definition_name.queue[lower(item.role)] : "${item.storage_account_name}|${item.queue_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name }) }]...)
+  queue_assignments = merge([for key, item in var.storage_queue : { for role_name in local.role_definition_name.queue[lower(item.role)] : "${item.storage_account_name}|${item.queue_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name, storage_account_id = coalesce(item.storage_account_id, data.azurerm_storage_account.this["${item.resource_group_name}|${item.storage_account_name}"].id), queue_res_mng_id = coalesce(item.queue_resource_manager_id, data.azurerm_storage_queue.this["${item.storage_account_name}|${item.queue_name}"].resource_manager_id) }) }]...)
 
   role_definition_name = {
     blob = {

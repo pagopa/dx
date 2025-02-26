@@ -8,7 +8,7 @@ variable "key_vault" {
   type = list(object({
     name                = string
     id                  = optional(string, null)
-    supports_rbac       = optional(bool, null)
+    has_rbac_support    = optional(bool, null)
     resource_group_name = string
     roles = object({
       secrets      = optional(string, "")

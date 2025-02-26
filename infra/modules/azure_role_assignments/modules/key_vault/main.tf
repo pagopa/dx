@@ -1,10 +1,10 @@
 resource "azurerm_key_vault_access_policy" "this" {
   for_each = {
     for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.secrets}|${assignment.roles.keys}|${assignment.roles.certificates}" => assignment
-    if coalesce(assignment.supports_rbac, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == false
+    if coalesce(assignment.has_rbac_support, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == false
   }
 
-  key_vault_id = coalesce(each.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
+  key_vault_id = coalesce(each.value.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = var.principal_id
 
@@ -16,10 +16,10 @@ resource "azurerm_key_vault_access_policy" "this" {
 resource "azurerm_role_assignment" "secrets" {
   for_each = {
     for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.secrets}" => assignment
-    if coalesce(assignment.supports_rbac, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
+    if coalesce(assignment.has_rbac_support, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
     try(assignment.roles.secrets, "") != ""
   }
-  scope                = coalesce(each.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
+  scope                = coalesce(each.value.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
   role_definition_name = local.permissions_rbac.secrets[each.value.roles.secrets]
   principal_id         = var.principal_id
 }
@@ -27,10 +27,10 @@ resource "azurerm_role_assignment" "secrets" {
 resource "azurerm_role_assignment" "keys" {
   for_each = {
     for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.keys}" => assignment
-    if coalesce(assignment.supports_rbac, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
+    if coalesce(assignment.has_rbac_support, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
     try(assignment.roles.keys, "") != ""
   }
-  scope                = coalesce(each.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
+  scope                = coalesce(each.value.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
   role_definition_name = local.permissions_rbac.keys[each.value.roles.keys]
   principal_id         = var.principal_id
 }
@@ -38,10 +38,10 @@ resource "azurerm_role_assignment" "keys" {
 resource "azurerm_role_assignment" "certificates" {
   for_each = {
     for assignment in var.key_vault : "${assignment.resource_group_name}|${assignment.name}|${assignment.roles.certificates}" => assignment
-    if coalesce(assignment.supports_rbac, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
+    if coalesce(assignment.has_rbac_support, data.azurerm_key_vault.this["${assignment.resource_group_name}|${assignment.name}"].enable_rbac_authorization) == true &&
     try(assignment.roles.certificates, "") != ""
   }
-  scope                = coalesce(each.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
+  scope                = coalesce(each.value.id, data.azurerm_key_vault.this["${each.value.resource_group_name}|${each.value.name}"].id)
   role_definition_name = local.permissions_rbac.certificates[each.value.roles.certificates]
   principal_id         = var.principal_id
 }

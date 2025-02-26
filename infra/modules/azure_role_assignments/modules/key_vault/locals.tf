@@ -1,5 +1,5 @@
 locals {
-  vaults = distinct([for assignment in var.key_vault : { name = assignment.name, resource_group_name = assignment.resource_group_name } if assignment.id == null || assignment.supports_rbac == null])
+  vaults = distinct([for assignment in var.key_vault : { name = assignment.name, resource_group_name = assignment.resource_group_name } if assignment.id == null || assignment.has_rbac_support == null])
 
   permissions = {
     secrets = {
