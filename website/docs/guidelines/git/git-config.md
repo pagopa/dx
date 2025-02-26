@@ -1,5 +1,5 @@
 ---
-sidebar_label: Profile Setup
+sidebar_label: Git Configuration
 sidebar_position: 3
 ---
 
