@@ -17,18 +17,16 @@ To maintain consistency and clarity in our Git workflow, branch names should fol
 
 Use one of the following types to categorize the branch activity:
 
-- `features`: for new features
-- `bugfixes`: or bug fixes
-- `hotfixes`: for urgent production fixes
+- `feats`: for new features
+- `fixes`: for any fix
 - `refactors`: for code refactoring and reducing technical debt
 
 ## Examples
 
 ### Good Examples
 
-- `features/user-authentication`
-- `bugfixes/login-errors`
-- `hotfixes/error-503-on-payment-checkout`
+- `feats/user-authentication`
+- `fixes/login-errors`
 - `refactors/update-react-in-ui-components-workspace`
 
 ### Bad Examples
@@ -39,4 +37,4 @@ Use one of the following types to categorize the branch activity:
 - `update` _(lacks scope)_
 - `v1.2.0-release` _(versioning should be handled via tags)_
 - `ui-redesign` _(should be `refactors/ui-design`)_
-- `features/authentication_page` _(should use use hyphens instead of underscores)_
+- `feats/authentication_page` _(should use use hyphens instead of underscores)_
