@@ -335,6 +335,8 @@ module "" {
 }
 ```
 
+</details>
+
 ### Azure NAT Gateway
 
 If you get an error about roles while associating a NAT Gateway to an AppService/Function App, please add the `nat_gateway_resource_group_id` optional variable to the `azure_github_environment_bootstrap` by specifying the NAT Gateways' resource group Id.
