@@ -92,7 +92,7 @@ jobs:
             if [[ "$expiryDate" == "$today" ]]; then
               echo "Resource $resourceId is due for deletion."
               # Delete resource
-              # az resource delete --ids "$resourceId" --yes
+              az resource delete --ids "$resourceId" --yes
             else
               echo "Resource $resourceId is not due for deletion. Expiry date: $expiryDate"
             fi
