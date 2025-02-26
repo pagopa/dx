@@ -10,4 +10,4 @@ jobs:
     secrets: inherit
     with:
       environment: 'dev'
-      ttl: 0
+      ttl: 30
