@@ -129,7 +129,7 @@ jobs:
           done
 
           if [[ -n "$message" ]]; then
-            echo "The following resources will be deleted tomorrow: \n$message"
+            printf "The following resources will be deleted tomorrow:\n%s\n" "$message" | sed 's/:white_check_mark: //g'
 
             echo "resources_to_notify=true" >> $GITHUB_OUTPUT
 
