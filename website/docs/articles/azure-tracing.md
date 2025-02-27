@@ -67,7 +67,7 @@ Currently, there are some issues with instrumenting ESM applications. The basic 
 
 :::
 
-[Instrumentation of ESM modules are still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental) and the experience may not be as smooth as with CommonJS modules.  
+[Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental) and the experience may not be as smooth as with CommonJS modules.  
 [Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217), it is possible to instrument the `@azure/monitor-opentelemetry` package in a different way.
 
 ### Steps to Instrument an ESM Application
