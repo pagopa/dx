@@ -23,23 +23,24 @@ The author is expected to add comments to notify the reviewers of any important 
 - the addition of a new library
 - potentially insecure code
 - non-obvious assumptions
-### What NOT to Do
-Do not add `TODO` comments in the source code unless specifically requested by the reviewer. If a `TODO` comment is added due to a pending task, it should include a reference, like:
+
+### What NOT to do within a PR
+
+Do not add `TODO` comments in the source code unless specifically requested by the reviewer. If a `TODO` comment is added due to a pending task, it must include a reference to the corresponding task in the backlog, like:
 
 ```
 # TODO: To be removed by https://pagopa.atlassian.net/browse/DX-0000  
 ```
-Do not add comments that simply explain what the code does. If a non-TODO comment is added, it should explain why something was done, not what the code does.
+Do not add comments that simply explain what the code does. If a non-TODO comment is added, it should explain _why_ something was done, not _what_ the code does.
 
 Do not request a review for a PR if one or more CI checks are failing.
 If the CI fails but a review is still necessary, make sure to leave a comment explaining the reasons.
 
-## Responsibilities of Reviewers
+## Responsibilities of PR Reviewers
 
 Reviewers are responsible for carefully examining the proposed solution and ensuring that the PR meets all [Contribution Acceptance Criteria](../pull-request/acceptance-criteria.md).
 
 They must also ensure that technical debt is kept under control, carefully evaluating when it makes sense to create follow-up tasks to address any documented debt introduced by the PR.
-
 
 # Best Practices
 
@@ -61,25 +62,23 @@ Keep in mind that code review is a process that can take multiple iterations, an
 - The first reviewer of your code is you. Before requesting the review, read through the entire `diff`. Does it make sense? Did you include something unrelated to the overall purpose of the changes?
 - Follow the guidelines to compile PR's title and description
 - Don’t take it personally. The review is of the code, not of you
-- Extract unrelated changes and refactorings into future pull requests
+- Extract unrelated changes and refactorings into future PRs
 - Seek to understand the reviewer’s perspective
 - Try to respond to every comment
-- The merge request author resolves only the threads they have fully addressed. If there’s an open reply, an open thread, a suggestion, a question, or anything else, the thread should be left to be resolved by the reviewer
-- It should not be assumed that all feedback requires their recommended changes to be incorporated into the PR before it is merged. It is a judgment call by the PR author and the reviewer as to if this is required, or if a follow-up issue should be created to address the feedback in the future after the PR in question is merged
-- Request a new review from the reviewer once you are ready for another round of review. Follow the [point `5` of the GitHub guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review#requesting-reviews-from-collaborators-and-organization-members)
+- The PR author can only resolve threads that have been fully addressed. If a comment remains open, it must be left for the comment author to resolve
+- Don't assume that _all_ feedback requires to be incorporated. Consider to address non mandatory suggestions with a follow up, after the PR is merged
+- Once ready for the next round, request feedback from the reviewer. Follow the [suggestion about requesting a new review from the GitHub guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review#requesting-reviews-from-collaborators-and-organization-members)
 
-## Reviewer
-
-Understand why the change is necessary (fixes a bug, improves the user experience, refactors the existing code). Then:
+## PR Reviewer
 
 - Be as clear as possible to minimize unnecessary review iterations
 - Communicate which ideas you feel strongly about and those you don’t; you may use the [conventional comments](conventional-comments.md)
 - Identify ways to simplify the code while still solving the problem
 - Offer alternative implementations, but assume the author already considered them (“What do you think about using a custom validator here?”)
 - Seek to understand the author’s perspective
-- Check out the branch, and test the changes locally. Your testing might result in opportunities to add automated tests.
+- Check out the branch, and test the changes locally. Your testing might result in opportunities to add automated tests
 - If a piece of code is unclear, say so! There’s a good chance someone else would be confused by it as well
-- Ensure the author understands what is required for resolving a comment
+- Ensure the author understands what is required to resolve a comment
 - Summarize review feedback with a final note (e.g., “LGTM”, or “I left some suggestions, let me know what you think.”)
 
 ## Credits
