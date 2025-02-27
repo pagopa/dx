@@ -1,5 +1,11 @@
 # docs
 
+## 0.0.4
+
+### Patch Changes
+
+- e06c59a: Update article adding information about the instrumentation of ESM app
+
 ## 0.0.3
 
 ### Patch Changes
