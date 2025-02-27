@@ -58,7 +58,7 @@ If not yet installed, you can install GPG by running the following command:
 brew install gpg
 ```
 
-Once installed, add the following line to your `~/.gnupg/gpg.conf` file:
+Once installed, you could need to add the following line to your `~/.gnupg/gpg.conf` file:
 
 ```ini
 use-agent
@@ -94,7 +94,7 @@ Pay attention to steps `12` and `13` in the GitHub guide. They explain how to co
 
 :::
 
-#### Update Your GPG Key
+#### Update Your GPG Key to GitHub
 
 To make sure your commits are signed with the correct key, you need to add the key to your GitHub profile.  
 To address that, follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account).
@@ -132,5 +132,7 @@ Alternatively, you can edit your `.gitconfig` file and add:
 [commit]
     gpgSign = true
 ```
+
+Doing this, every time you run the commit command (`git commit -m`), by default, it will sign the commit.
 
 For more details, refer to the [Git documentation on signing commits](https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work).
