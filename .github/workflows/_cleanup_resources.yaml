@@ -124,13 +124,12 @@ jobs:
             expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
 
             if [[ "$expiryDate" == "$tomorrow" ]]; then
-              message+="\n:white_check_mark: *Resource:* \`$resourceId\` is set to expire on *$expiryDate*."
+              echo "Resource $resourceId is set to expire on $expiryDate."
+              message+="\n:small_orange_diamond: *Resource:* \`$resourceId\` is set to expire on *$expiryDate*."
             fi
           done
 
           if [[ -n "$message" ]]; then
-            printf "The following resources will be deleted tomorrow:\n%s\n" "$message" | sed 's/:white_check_mark: //g'
-
             echo "resources_to_notify=true" >> $GITHUB_OUTPUT
 
             echo 'slack_message<<EOF' >> $GITHUB_OUTPUT
@@ -150,7 +149,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "The following resources will be deleted tomorrow:"
+                    "text": ":warning: The following resources will be deleted tomorrow: :warning:"
                   }
                 },
                 {
