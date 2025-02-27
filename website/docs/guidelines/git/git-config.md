@@ -79,6 +79,12 @@ Run the following command and follow the prompts:
 gpg --full-gen-key
 ```
 
+:::note
+
+You might need to run the command with `sudo` privileges.
+
+:::
+
 When prompted:
 - Select the key type: `(4) RSA (sign only)` is sufficient for signing commits
 - Choose a key size: `4096` bits is recommended
