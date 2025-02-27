@@ -127,6 +127,8 @@ Make sure to use the correct path to the `instrumentation.mjs` file. It can vary
 
 :::
 
+Once you set everything up and run your application, you should see the telemetry data in Azure Monitor with correlation between services, as the image below shows:
+![AI ESM E2E Tracing](./azure-tracing/ai-e2e-correlation.png)
 
 ## Using the Application Insights SDK
 
