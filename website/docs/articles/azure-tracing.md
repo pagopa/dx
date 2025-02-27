@@ -59,6 +59,89 @@ requests will not be traced unless you use some custom fetch wrapper.
 
 :::
 
+## Instrument ESM applications
+
+Currently, there are some challenges with instrumenting ESM applications. While
+the basic configuration enables data flow to Application Insights (visible on
+the Azure Portal), end-to-end correlation does not function as expected.
+
+[Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental)
+and may not be as seamless as transpiling TypeScript to CommonJS modules.  
+[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217),
+there is an alternative method to instrument the `@azure/monitor-opentelemetry`
+package.
+
+### Steps to Instrument an ESM Application
+
+- Create a new `.mjs` file, you can call it `instrumentation.mjs` for example
+- Add the following code to the beginning of the file:
+
+```javascript
+import { createAddHookMessageChannel } from "import-in-the-middle";
+import { register } from "module";
+
+const { registerOptions, waitForAllMessagesAcknowledged } =
+  createAddHookMessageChannel();
+
+register("import-in-the-middle/hook.mjs", import.meta.url, registerOptions);
+```
+
+- Set up the instrumentation SDK you want to use:
+
+```javascript
+useAzureMonitor();
+```
+
+or in case you want to use the `applicationinsights` SDK:
+
+```javascript
+appInsights.setup().start();
+```
+
+This basic setup for both `@azure/monitor-opentelemetry` and
+`applicationinsights` SDKs is enough to start sending telemetry data to Azure
+Monitor assuming the environment variable
+`APPLICATIONINSIGHTS_CONNECTION_STRING` is set up correctly.
+
+- Import the necessary instrumentations and register them
+
+```javascript
+// If necessary, add other instrumentations, like the undici one
+registerInstrumentations({
+  instrumentations: [instrumentAzureFunctions(), new UndiciInstrumentation()],
+  meterProvider: metrics.getMeterProvider(),
+  tracerProvider: trace.getTracerProvider(),
+});
+```
+
+- At the end of the file, add the following code:
+
+```javascript
+await waitForAllMessagesAcknowledged();
+```
+
+By following these steps, you can configure the `@azure/monitor-opentelemetry`
+or `applicationinsights` package along with other instrumentations in an ESM
+application.
+
+### Running the Instrumented Application
+
+To ensure the instrumentation works correctly, you need to import the
+`instrumentation.mjs` file when running the application by using the
+`NODE_OPTIONS` environment variable:
+
+```bash
+"NODE_OPTIONS": "--import ./dist/instrumentation.mjs",
+```
+
+Ensure you use the correct path to the `instrumentation.mjs` file, as it may
+vary depending on your project structure.
+
+After setting everything up and running your application, you will see telemetry
+data in Azure Monitor with service correlation:
+
+![AI ESM E2E Tracing](./azure-tracing/ai-e2e-correlation.png)
+
 ## Using the Application Insights SDK
 
 The latest version of the Application Insights SDK (3.x) is essentially a
