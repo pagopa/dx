@@ -59,6 +59,14 @@ requests will not be traced unless you use some custom fetch wrapper.
 
 :::
 
+## Instrument ESM applications
+
+:::important
+
+At the moment, there are some issues with the instrumentation of ESM apps. The basic configuration let the data flow through Application Insights (you can see the data on the Azure Portal), but the end-to-end correlation does not work as expected.
+
+:::
+
 ## Using the Application Insights SDK
 
 The latest version of the Application Insights SDK (3.x) is essentially a
