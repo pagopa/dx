@@ -83,11 +83,21 @@ const { registerOptions, waitForAllMessagesAcknowledged } =
   createAddHookMessageChannel();
 register("import-in-the-middle/hook.mjs", import.meta.url, registerOptions);
 ```
-- Add the code to set up the `@azure/monitor-opentelemetry` package:
+- Set up the instrumentation SDK you want to use
 
 ```javascript
 useAzureMonitor();
+```
+or in case you want to use the `applicationinsights` SDK:
 
+```javascript
+appInsights.setup().start();
+```
+This basic setup for both `@azure/monitor-opentelemetry` and `applicationinsights` SDKs is enough to start sending telemetry data to Azure Monitor and assume the environment variable `APPLICATIONINSIGHTS_CONNECTION_STRING` is set.
+
+- Import the necessary instrumentations and register them
+
+```javascript
 // If necessary, add other instrumentations, like the undici one
 registerInstrumentations({
   instrumentations: [instrumentAzureFunctions(), new UndiciInstrumentation()],
@@ -101,7 +111,7 @@ registerInstrumentations({
 await waitForAllMessagesAcknowledged();
 ```
 
-By following these steps, you configure the `@azure/monitor-opentelemetry` package and other instrumentations in an ESM application.
+By following these steps, you configure the `@azure/monitor-opentelemetry` or `applicationinsights` package and other instrumentations in an ESM application.
 
 ### Running the Instrumented Application
 
