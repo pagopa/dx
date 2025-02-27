@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Branch Naming Conventions
 
-To maintain consistency and clarity in our Git workflow, branch names should follow the format `<activity-type>/<activity-name>`. The activity name should be **short, meaningful, and in plural form where applicable**, similar to how you would name a folder containing multiple related files.
+To maintain consistency and clarity in our Git workflow, you could follow the format `<activity-type>/<activity-name>` to name a branch. The activity name should be **short, meaningful, and in plural form where applicable**, similar to how you would name a folder containing multiple related files.
 
 ## Guidelines
 
