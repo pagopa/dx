@@ -1,0 +1,15 @@
+{
+  "Environment": {
+    "type": "String",
+    "metadata": {
+      "displayName": "Environment",
+      "description": "Specify the environment for the resource tagging."
+    },
+    "defaultValue": "Dev",
+    "allowedValues": [
+      "Dev",
+      "Uat",
+      "Prod"
+    ]
+  }
+}

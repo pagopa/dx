@@ -1,0 +1,166 @@
+name: Cleanup Resources
+
+# This workflow is designed to identify and remove Azure resources that have exceeded their time-to-live (TTL) based on their ModifiedOn tag. 
+# It allows teams to automate resource cleanup to maintain a clean and cost-efficient cloud environment.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The target environment where resources will be searched and evaluated for cleanup (e.g., dev, uat, prod)
+        type: string
+        required: false
+        default: "dev"
+      ttl:
+        description: The maximum allowed lifespan of a resource in days. Resources older than this threshold (based on the ModifiedOn tag) will be deleted
+        type: number
+        required: false
+        default: 30
+
+jobs:
+  cleanup:
+    name: Cleanup Resources
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}-cd
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Get all resources with ${{ inputs.environment }} Environment tag and ModifiedOn tag
+        id: resources
+        run: |
+          if [ "${{ inputs.environment }}" == "dev" ]; then
+            environment="Dev"
+          elif [ "${{ inputs.environment }}" == "uat" ]; then
+            environment="Uat"
+          elif [ "${{ inputs.environment }}" == "prod" ]; then
+            environment="Prod"
+          else
+            echo "Invalid environment. Please provide a valid environment: dev, uat, or prod."
+            exit 1
+          fi
+
+          # Get all resources with specified Environment tag and ModifiedOn tag
+          resources=$(az resource list --tag Environment=$environment --query "[?tags.ModifiedOn].{id:id, modifiedOn:tags.ModifiedOn}" -o json)
+          
+          # Check if there are resources
+          if [ "$(echo $resources | jq length)" -eq 0 ]; then
+            echo "No resources found with tag Environment=$environment and ModifiedOn."
+            exit 0
+          fi
+          
+          echo "Resources found: $resources"
+
+          echo 'resources<<EOF' >> $GITHUB_OUTPUT
+          echo $resources | jq -c . >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Check if resources need to be deleted
+        id: check_delete
+        run: |
+          today=$(date -u +%Y-%m-%d)  # format YYYY-MM-DD
+          ttl=${{ inputs.ttl }}
+          resources='${{ steps.resources.outputs.resources }}'
+
+          for row in $(echo "$resources" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+
+            modifiedOn=$(_jq '.modifiedOn')
+            resourceId=$(_jq '.id')
+
+            # Expiry Date (ModifiedOn + TTL)
+            expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
+
+            if [[ "$expiryDate" == "$today" ]]; then
+              echo "Resource $resourceId is due for deletion."
+              # Delete resource
+              # az resource delete --ids "$resourceId" # <----- Uncomment this line to enable resource deletion
+            else
+              echo "Resource $resourceId is not due for deletion. Expiry date: $expiryDate"
+            fi
+          done
+      
+      # ----- TEST: Notify about expiring resources ----- #
+
+      - name: Notify about expiring resources
+        id: notify
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          tomorrow=$(date -u -d "$today + 1 day" +%Y-%m-%d)
+          ttl=${{ inputs.ttl }}
+          resources='${{ steps.resources.outputs.resources }}'
+          message=""
+
+          for row in $(echo "$resources" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+
+            modifiedOn=$(_jq '.modifiedOn')
+            resourceId=$(_jq '.id')
+
+            expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
+
+            if [[ "$expiryDate" == "$tomorrow" ]]; then
+              echo "Resource $resourceId is set to expire on $expiryDate."
+              message+="\n:small_orange_diamond: *Resource:* \`$resourceId\` is set to expire on *$expiryDate*."
+            fi
+          done
+
+          if [[ -n "$message" ]]; then
+            echo "resources_to_notify=true" >> $GITHUB_OUTPUT
+
+            echo 'slack_message<<EOF' >> $GITHUB_OUTPUT
+            echo $message >> $GITHUB_OUTPUT
+            echo 'EOF' >> $GITHUB_OUTPUT
+          fi
+  
+      - name: Send Slack Notification
+        if: env.SLACK_WEBHOOK_URL != '' && steps.notify.outputs.resources_to_notify == 'true'
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "*Resources Expiring Tomorrow*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: The following resources will be deleted tomorrow: :warning:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ steps.notify.outputs.slack_message }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Finish
+        run: echo "Cleanup process completed."
