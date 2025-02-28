@@ -35,7 +35,7 @@ run "verify_basic_cdn_setup" {
   command = plan
   
   variables {
-    resource_group_name = "test-cdn-rg"
+    resource_group_name = run.setup_tests.resource_group_name
     
     environment = {
       prefix          = "dx"
