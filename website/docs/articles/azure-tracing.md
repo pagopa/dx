@@ -1,6 +1,5 @@
 ---
-sidebar_label:
-  The Ultimate Guide to Integrate Tracing in Azure NodeJS Applications
+sidebar_label: Azure and Tracing for NodeJS Applications
 ---
 
 # The Ultimate Guide to Integrate Tracing in Azure NodeJS Applications
