@@ -18,6 +18,7 @@
 
 | Name | Type |
 |------|------|
+| [azurerm_dns_zone.devex_pagopa_it](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_zone) | resource |
 | [azurerm_subnet.snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
@@ -33,6 +34,7 @@
 
 | Name | Description |
 |------|-------------|
+| <a name="output_devex_pagopa_it_zone_name"></a> [devex\_pagopa\_it\_zone\_name](#output\_devex\_pagopa\_it\_zone\_name) | n/a |
 | <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_storage_account_host_name"></a> [storage\_account\_host\_name](#output\_storage\_account\_host\_name) | n/a |
