@@ -1,8 +1,9 @@
 ---
-sidebar_label: Azure and Tracing for NodeJS Applications
+sidebar_label:
+  The Ultimate Guide to Integrate Tracing in Azure NodeJS Applications
 ---
 
-# Azure and Tracing for NodeJS Applications
+# The Ultimate Guide to Integrate Tracing in Azure NodeJS Applications
 
 This guide covers the integration of Azure services with OpenTelemetry (OT) for
 tracing NodeJS applications, along with benchmarking and performance insights.
@@ -56,6 +57,9 @@ for a complete example.
 If you are using version 2.x of the Application Insights SDK, be aware that it
 does not support instrumentation of the native fetch methods so external HTTP
 requests will not be traced unless you use some custom fetch wrapper.
+
+This is a further reason to migrate to the new version of the SDK (3.x) or to
+use the `@azure/monitor-opentelemetry` package.
 
 :::
 
@@ -171,17 +175,20 @@ Although you can enable tracing and metrics using only the
 
 Alternatively, you can use only `@azure/monitor-opentelemetry` to send custom
 events, but in this case, you would need to re-implement the wrapper, similar to
-what the AI SDK does:
+what the AI SDK already does:
 
 [Send Custom Event to AI · Issue #29196 · Azure/azure-sdk-for-js](https://github.com/Azure/azure-sdk-for-js/issues/29196)
 
 :::warning
 
-This approach is not recommended because it requires alignment with the
-internals of Application Insights, which may change over time. On the other
-hand, the AI SDK may fall behind new versions of `@azure/monitor-opentelemetry`.
+Using a wrapper around OpenTelemetry logs to send _custom events_ to Azure is
+possible but not recommended: this approach requires alignment with the
+internals of Application Insights, which may change over time.
 
 :::
+
+On the other hand, the AI SDK may fall behind new versions of
+`@azure/monitor-opentelemetry`.
 
 ## Enabling HTTP KeepAlive
 
@@ -239,7 +246,8 @@ ai.start();
 
 OpenTelemetry uses Tracer and Loggers for different types of telemetry data:
 
-- **traces**: Used for traces and metrics.
+- **traces**: Used for traces (HTTP requests and other external calls) and
+  metrics.
 - **logs**: Used for console logs and custom events.
 
 :::warning
@@ -248,32 +256,24 @@ By design OpenTelemetry SDKs sample only _traces_ but not _logs_.
 
 :::
 
-In the context of Application Insights, the terminology differs slightly.
-_Traces_ in Application Insights refer to logs emitted by the application using
-`console.log` (or `context.log` in Azure Functions) and _custom events_, which
-are considered _logs_ in OpenTelemetry. Conversely, _requests_ and
-_dependencies_ in Application Insights correspond to _traces_ in OpenTelemetry
-¯\_(ツ)\_/¯.
+In the context of Application Insights, the terminology differs:
 
-To enable **parent based** sampling for logs and custom events, you can set the
-following option when initializing the AI SDK:
+- **traces**: Correspond to logs emitted by the application using `console.log`
+  (or `context.log` in Azure Functions) and _custom events_.
+- **dependencies**: Correspond to Opentelemetry _traces_.
+
+To enable **parent based** sampling for _logs_ and _custom events_, you can set
+the following option when initializing the AI SDK _before_ calling `ai.start()`:
 
 ```typescript
-// this enables sampling for traces and custom events
 ai.defaultClient.config.azureMonitorOpenTelemetryOptions = {
   enableTraceBasedSamplingForLogs: true,
 };
 ```
 
-:::warning
-
-This setting only applies to traces and custom events that occur within a **Span
-Context**. This is not always the case, such as when using an Azure Function. In
-most cases, you will need to implement custom logic within a
-[LogRecordProcessor](https://github.com/open-telemetry/opentelemetry-js/blob/main/experimental/packages/sdk-logs/src/LogRecordProcessor.ts)
-to sample logs.
-
-:::
+This setting will ensure that _logs_ and _custom events_ are sampled based on
+the parent trace context. Without this setting, _logs_ and _custom events_ will
+always be forwarded at a 100% sample rate.
 
 ## Check if sampling is enabled
 
@@ -286,9 +286,12 @@ union requests,dependencies,pageViews,browserTimings,exceptions,traces,customEve
 | summarize RetainedPercentage = 100/avg(itemCount) by bin(timestamp, 1m), itemType, sdkVersion
 ```
 
+Of course, you need to add a filter for the Azure Function or App Service
+instance you are interested in.
+
 If you see values < 100 then sampling is enabled for that item type.
 
-## Integration with App Service
+## Integration with App Services
 
 Both **Azure Functions** and **App Services (NodeJS)** allow integration with
 **Application Insights** without using the SDK. This integration is active in
@@ -309,19 +312,20 @@ using the AI SDK programmatically.
 
 :::
 
-At the time of writing, the default integration (agent) does not support
-end-to-end tracing.
-
-If using the AI SDK, check that the default AI integration is disabled by
+When using the AI SDK, check that the default AI integration is disabled by
 ensuring that the `APPINSIGHTS_INSTRUMENTATIONKEY` and
 `APPLICATIONINSIGHTS_CONNECTION_STRING` variables are not set. It is recommended
 to use a custom environment variable that will be configured in the
-`useAzureMonitor` and/or `setup` settings.
+`useAzureMonitor` and/or `ai.setup` settings.
 
 To verify that the default integration is indeed disabled, navigate to the
 **"Application Insights"** panel of the App Service on the Azure portal.
 
-## Integration with Next.js Deployed on Azure App Service
+At the time of writing, the default integration (agent) does not support
+end-to-end tracing which can be achieved only by using the AI SDK 3.x
+programmatically.
+
+### Integration with Next.js Deployed on Azure App Service
 
 For `Next.js` applications deployed on **App Service**, similar considerations
 apply. However, since there is no single entry point as with other frameworks,
@@ -357,10 +361,33 @@ In both configurations (OpenTelemetry enabled or disabled), when using the AI
 3.x SDK, you get end-to-end tracing of the application code (worker). Next step
 is align sample rate in AI SDK and Azure Functions runtime.
 
+#### Azure Function OpenTelemetry Instrumentation
+
+To enable end-to-end tracing in **Azure Functions** with OpenTelemetry, you need
+to add the related instrumentation to the worker code:
+
+https://github.com/Azure/azure-functions-nodejs-opentelemetry
+
+This instrumentation uses the Azure Function runtime (host) telemetry context to
+propagate it to the worker code. If you don't use this instrumentation, worker
+traces will not be linked to the incoming HTTP request.
+
+At the time of writing, there is no way to disable verbose logging when using
+this package:
+
+https://github.com/Azure/azure-functions-nodejs-opentelemetry/issues/8
+
+Until this issue is resolved, it is recommended to extract and use only the part
+that
+[enables end-to-end tracing](https://github.com/Azure/azure-functions-nodejs-opentelemetry/blob/main/src/instrumentation.ts#L54).
+
+See [Code Snippets](#code-snippets) for the hook implementation that enables
+end-to-end tracing in Azure Functions.
+
 ### Align Sample Rate in AI SDK and Azure Functions Runtime
 
-AI SDK use a fixed sample rate, while the Azure Functions runtime uses an
-adaptive sampling mechanism. To avoid discrepancies in the number of traces
+AI SDK use a fixed sample rate, while the Azure Functions runtime (host) uses an
+adaptive sampling mechanism. To minimize discrepancies in the number of traces
 recorded, it is recommended to align the sample rate in the AI SDK with the
 Azure Functions runtime.
 
@@ -384,17 +411,113 @@ set these options in `host.json` to the same value used programmatically:
 Alternatively, you may use the following environment variables for the same
 purpose:
 
-`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage`
-`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage`
-`AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage`
+```bash
+AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage=5
+AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage=5
+AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage=5
+```
 
 Beware that the runtime also relies on the
 `AzureFunctionsJobHost__logging__applicationInsights__samplingSettings_maxTelemetryItemsPerSecond`
-variable to limit the number of traces sent.
+variable to limit the number of traces sent, so perfect alignment cannot be
+guaranteed.
 
-#### Sampling gotchas within Azure Functions
+### Configuring log levels for the Azure Functions runtime
 
-1. Beware that `traces` and `customEvents` emitted by the AI SDK are not
+The Azure Functions runtime (host) allows you to configure log levels for
+different categories of logs. This configuration can be set in `host.json` or
+using environment variables.
+
+For example, to set the log level for `Function` category to `Information`:
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "Function": "Information"
+    }
+  }
+}
+```
+
+To set the same log level using environment variables instead:
+
+```bash
+AzureFunctionsJobHost__logging__logLevel__Function=Information
+```
+
+The latter approach is useful when you want to override the log level at runtime
+without redeploying the function app.
+
+Setting the log level for the `Function` category to `Information` will generate
+two traces for _each_ function execution (e.g.,
+`Executed 'Functions.redis-fetch' (Succeeded, Id=d555444c-a409-4932-86a8-8c84d3777ba8, Duration=184ms)`).
+
+While this can be useful for debugging and monitoring, it is not recommended for
+production as it can produce a _large_ number of traces. Note that setting this
+value to `Warning` or higher will prevent `context.log` and `context.info`
+messages from being recorded in Application Insights. This is considered a
+reasonable trade-off since critical logs can still be captured using
+`context.warning` or `context.error`, and the `Information` level can be enabled
+for debugging purposes when needed.
+
+The suggested approach is to set the default log level to `Warning` or higher in
+production and use the AI SDK for custom events and logging:
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "default": "Warning",
+      "Host.Results": "Information",
+      "Host.Aggregator": "Information"
+    }
+  }
+}
+```
+
+This setup will ensure that only critical logs are recorded in Application
+Insights, while the AI SDK can be used for _custom events_ and to trace
+_exceptions_ and _warnings_.
+
+Moreover we keep the `Host.Results` and `Host.Aggregator` categories at
+`Information` to capture HTTP requests, function execution results and counters,
+useful for monitoring and alerting.
+
+If capturing `context.info` or `context.log` is essential, you can set the log
+level for the specific `Function` category to `Information`:
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "Function.MyFunctionName.User": "Information"
+    }
+  }
+}
+```
+
+Moreover, only for local debugging, you can set
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "Host.Function.Console": "Information"
+    }
+  }
+}
+```
+
+This will capture all `console.log` messages locally, but they won't be sent to
+Application Insights in production.
+
+Refer to https://github.com/anthonychu/functions-log-suppression for more
+details.
+
+### Sampling gotchas within Azure Functions
+
+1. Beware that `traces` (logs) and `customEvents` emitted by the AI SDK are not
    sampled. This implies that even if you configure a sample rate of 5% in the
    AI SDK, you will still see 100% of `traces` and `customEvents`.
 2. When using `"telemetryMode": "OpenTelemetry"` in `host.json`, it appears that
@@ -419,7 +542,7 @@ scenario, you need to incorporate a wrapper around the Functions' handlers that
 Benchmarks have shown that this wrapper does not introduce any significant
 performance penalties, so you can safely use it in production.
 
-## Cloud Role Name
+## Setting Cloud Role Name
 
 When using the AI SDK, the `cloudRoleName` is set by default to the name of the
 **App Service** or **Azure Function**. This value is used to identify the
@@ -433,7 +556,7 @@ Setting a value for
 produces no result, even though some online tutorials suggest it. These
 tutorials are now considered obsolete.
 
-## Performance
+## Sampling and Performance
 
 Load tests were performed on **App Service** and **Azure Functions**, with the
 following conditions:
@@ -482,7 +605,7 @@ increased linearly with the sampling values.
    programmatically on App Services.
 4. The current OT implementation on **Azure Functions** is still unstable;
    monitor progress and avoid using `"telemetryMode": "OpenTelemetry"` in
-   host.json.
+   host.json until issues are solved.
 
 ## Code Snippets
 
@@ -512,14 +635,12 @@ process.env.OTEL_SERVICE_NAME =
 
 ai.setup(process.env["AI_SDK_CONNECTION_STRING"]).start();
 
-// instrument native node fetch
-// this must be called after starting the AI SDK
+// this must be called _after_ starting the AI SDK
 // in order to instantiate the OTEL tracer provider
 registerInstrumentations({
   tracerProvider: trace.getTracerProvider(),
   meterProvider: metrics.getMeterProvider(),
-  // When using Azure Functions, you may want to add Azure Functions support for traces as well
-  // see https://github.com/Azure/azure-functions-nodejs-opentelemetry
+  // instrument native node fetch
   instrumentations: [new UndiciInstrumentation({
     requestHook: (span, requestInfo) => {
       const { origin, method, path } = requestInfo;
@@ -538,7 +659,25 @@ registerInstrumentations({
     },
   })],
 });
-
+//
+// Only when using Azure Function uncommented the code below
+//
+//  import { app } from "@azure/functions";
+//  import { context as otelContext, propagation } from '@opentelemetry/api';
+//
+// app.hook.preInvocation((context) => {
+//   const traceContext = context.invocationContext.traceContext;
+//   if (traceContext) {
+//     context.functionHandler = otelContext.bind(
+//       propagation.extract(otelContext.active(), {
+//         traceparent: traceContext.traceParent,
+//         tracestate: traceContext.traceState,
+//       }),
+//       context.functionHandler,
+//     );
+//   }
+// });
+//
 export default ai;
 ```
 
