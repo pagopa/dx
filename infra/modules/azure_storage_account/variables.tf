@@ -42,12 +42,12 @@ variable "customer_managed_key" {
   type = object({
     enabled                   = optional(bool, false)
     type                      = optional(string, null)
-    key_name                  = optional(string)
+    key_name                  = optional(string, null)
     user_assigned_identity_id = optional(string, null)
-    key_vault_key_id          = optional(string, null)
+    key_vault_id              = optional(string, null)
   })
-  description = "(Optional) Customer managed key to use for encryption. Currently type can only be set to 'kv'."
-  default     = { enabled = false, key_name = null }
+  description = "(Optional) Customer managed key to use for encryption. Currently type can only be set to 'kv'. If the key vault is in the same tenant, and key_name is not set, the key and relevant permissions will be automatically created."
+  default     = { enabled = false }
 }
 
 variable "force_public_network_access_enabled" {
@@ -78,15 +78,15 @@ variable "blob_features" {
     delete_retention_days = optional(number, 0)
     last_access_time      = optional(bool, false)
     versioning            = optional(bool, false)
-    change_feed = object({
+    change_feed = optional(object({
       enabled           = optional(bool, false)
       retention_in_days = optional(number, 0)
-    })
-    immutability_policy = object({
+    }), { enabled = false })
+    immutability_policy = optional(object({
       enabled                       = optional(bool, false)
       allow_protected_append_writes = optional(bool, false)
       period_since_creation_in_days = optional(number, 730)
-    })
+    }), { enabled = false })
   })
   description = "(Optional) Blob features configuration"
   default = {

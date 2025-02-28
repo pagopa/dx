@@ -26,9 +26,9 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-psql-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_resource_group" "rg" {
+  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
+
 }
 
 output "pep_id" {
@@ -36,5 +36,5 @@ output "pep_id" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }

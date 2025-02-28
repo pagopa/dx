@@ -1,8 +1,7 @@
 locals {
-  prefix         = "dx"
-  env_short      = "d"
-  location       = "italynorth"
-  location_short = "itn"
+  prefix    = "dx"
+  env_short = "d"
+  location  = "italynorth"
 
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"

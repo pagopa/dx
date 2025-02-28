@@ -59,12 +59,27 @@ jobs:
       TURBO_CACHE_DIR: .turbo-cache
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
+      - name: Detect turbo version
+        id: turbo-version
+        run: |
+          TURBO_VERSION=$(jq -r '.devDependencies.turbo | split(".") | .[0]' package.json)
+          echo "version=$TURBO_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prune (turbo 1.x)
+        if: steps.turbo-version.outputs.version == '1'
+        run: |
+          npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+          echo "::warning::Turbo 1.x is deprecated. Please upgrade to the latest version."
+
       - name: Prune
-        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+        if: steps.turbo-version.outputs.version != '1'
+        run: npx turbo prune --scope ${{ env.WORKSPACE }}
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
@@ -73,12 +88,16 @@ jobs:
           cache: "yarn"
           cache-dependency-path: "./out/yarn.lock"
 
+      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          yarn config set nodeLinker node-modules
+          yarn config set nmHoistingLimits workspaces
+          yarn install --immutable
         working-directory: ./out
 
       - name: Restore turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
         with:
           path: ./out/${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -111,8 +130,8 @@ jobs:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
-    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
+    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
+    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd

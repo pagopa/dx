@@ -1,5 +1,17 @@
 # azure_function_app_exposed
 
+## 0.1.2
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
+## 0.1.1
+
+### Patch Changes
+
+- c0ed98d: Add Durable Functions configuration to Azure Function App resources
+
 ## 0.1.0
 
 ### Minor Changes

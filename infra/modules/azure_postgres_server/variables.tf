@@ -262,3 +262,15 @@ variable "diagnostic_settings" {
     error_message = "log_analytics_workspace_id and diagnostic_setting_destination_storage_id are mandatory if diagnostic is enabled."
   }
 }
+
+variable "enable_lock" {
+  type        = bool
+  default     = true
+  description = "Define if lock should be enabled."
+}
+
+variable "high_availability_override" {
+  type        = bool
+  default     = false
+  description = "Override if high availability should be enabled."
+}

@@ -26,12 +26,12 @@ locals {
     }
   }
 
-  vnet = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
+  common = {
+    resource_group_name = "${local.project}-common-rg-01"
   }
 
-  dns = {
+  vnet = {
+    name                = "${local.project}-common-vnet-01"
     resource_group_name = "${local.project}-network-rg-01"
   }
 
@@ -49,11 +49,14 @@ locals {
   }
 
   tags = {
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_monorepo_single_env_starter_pack/tests"
-    CostCenter  = "TS700 - ENGINEERING"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    Owner          = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_github_environment_bootstrap/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create Azure Github environment bootstrap for test"
   }
 }
 

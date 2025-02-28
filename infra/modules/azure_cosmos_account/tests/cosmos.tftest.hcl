@@ -34,14 +34,17 @@ run "cosmos_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS700 - ENGINEERING"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cosmos_account/tests"
-      Test        = "true"
-      TestName    = "Create Cosmos account for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cosmos_account/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create Cosmos account for test"
     }
+
+    tier = "s"
 
     resource_group_name = run.setup_tests.resource_group_name
 
@@ -94,6 +97,11 @@ run "cosmos_is_correct_plan" {
   assert {
     condition     = azurerm_cosmosdb_account.this.kind == "GlobalDocumentDB"
     error_message = "The Cosmos DB account must support DocumentDB API"
+  }
+
+  assert {
+    condition     = [ for value in azurerm_cosmosdb_account.this.capabilities : value.name ][0] == "EnableServerless"
+    error_message = "The Cosmos DB account must have serverless enabled"
   }
 
   assert {

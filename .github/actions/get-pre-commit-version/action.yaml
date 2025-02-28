@@ -1,0 +1,66 @@
+name: Get Pre-Commit Terraform Version
+description: Retrieve the `pre-commit-terraform` version from the `.pre-commit-config.yaml` file or return a default version.
+inputs:
+  default_version:
+    description: "Default pre-commit-terraform version to use if the `.pre-commit-config.yaml` file is not found."
+    required: false
+    default: "v1.96.2"
+outputs:
+  pre_commit_terraform_version:
+    description: "The pre-commit-terraform version retrieved or the default."
+    value: ${{ steps.get-pre-commit-version-action.outputs.pre_commit_terraform_version }}
+  pre_commit_terraform_image_tag:
+    description: "The pre-commit-terraform image tag retrieved or the default."
+    value: ${{ steps.get-pre-commit-version-action.outputs.pre_commit_terraform_image_tag }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get Pre-Commit Terraform Version
+      id: get-pre-commit-version-action
+      shell: bash
+      run: |
+        # Default version from input
+        DEFAULT_VERSION="${{ inputs.default_version }}"
+        PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+
+        if ! command -v yq &>/dev/null; then
+          echo "Error: yq command not found. Please ensure yq is installed. Using default: ${DEFAULT_VERSION}"
+        else
+          # Check if the .pre-commit-config.yaml file exists
+          if [ -f ".pre-commit-config.yaml" ]; then
+            # Extract the version using yq with partial match
+            PRE_COMMIT_VERSION=$(yq -r '.repos[] | select(.repo | contains("antonbabenko/pre-commit-terraform")) | .rev' .pre-commit-config.yaml)
+
+            # Validate the version format (must start with "v" followed by digits)
+            if [[ "$PRE_COMMIT_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "Pre-commit Terraform version found: ${PRE_COMMIT_VERSION}"
+            else
+                echo "Error: Invalid or missing Pre-commit Terraform version. Using default: ${DEFAULT_VERSION}"
+                PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+            fi
+          else
+            echo "No .pre-commit-config.yaml file found. Defaulting to ${DEFAULT_VERSION}"
+            PRE_COMMIT_VERSION="$DEFAULT_VERSION"
+          fi
+        fi
+        # Define the image and tag
+        USER_IMAGE=antonbabenko/pre-commit-terraform
+
+        # Get the pull token to extract information from the GitHub Container Registry (GHCR)
+        TOKEN="$(
+          curl "https://ghcr.io/token?scope=repository:${USER_IMAGE}:pull" |
+          awk -F'"' '$0=$4'
+        )"
+        
+        # Query the GitHub Container Registry (GHCR) API for the manifest list digest
+        DIGEST=$(curl -D - \
+         -H "Authorization: Bearer $TOKEN" \
+         -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+         "https://ghcr.io/v2/${USER_IMAGE}/manifests/${PRE_COMMIT_VERSION}" 2>&1 \
+         | grep -i Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
+
+        DOCKER_IMAGE_TAG="${PRE_COMMIT_VERSION}@${DIGEST}"
+
+        # Output the pre-commit Terraform version
+        echo "pre_commit_terraform_version=$PRE_COMMIT_VERSION" >> $GITHUB_OUTPUT
+        echo "pre_commit_terraform_image_tag=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT

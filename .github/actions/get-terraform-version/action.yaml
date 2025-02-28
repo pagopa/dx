@@ -8,29 +8,31 @@ inputs:
 outputs:
   terraform_version:
     description: "The Terraform version retrieved or the default."
+    value: ${{ steps.get-terraform-version-action.outputs.terraform_version }}
 runs:
   using: "composite"
   steps:
     - name: Get Terraform Version
+      id: get-terraform-version-action
       shell: bash
       run: |
         # Default version provided via input
         DEFAULT_VERSION="${{ inputs.default_version }}"
-        
+        TERRAFORM_VERSION="${{ inputs.default_version }}"
         # Check for the .terraform-version file
         if [ -f ".terraform-version" ]; then
             TERRAFORM_VERSION=$(cat .terraform-version)
             
             # Validate the version format
             if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Terraform version found in .terraform-version file: $TERRAFORM_VERSION"
+                echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"
             else
-                echo "Error: Invalid Terraform version format: $TERRAFORM_VERSION"
+                echo "Error: Invalid Terraform version format: ${TERRAFORM_VERSION}"
                 exit 1
             fi
         else
             TERRAFORM_VERSION="$DEFAULT_VERSION"
-            echo "No .terraform-version file found. Defaulting to $TERRAFORM_VERSION"
+            echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
         fi
         
         # Output the Terraform version

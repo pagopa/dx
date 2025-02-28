@@ -34,7 +34,16 @@ run "function_app_is_correct_plan" {
       instance_number = "01"
     }
 
-    tags = {}
+    tags  = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create a function app for test"
+    }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"
@@ -175,7 +184,16 @@ run "function_app_custom_subnet" {
       instance_number = "01"
     }
 
-    tags = {}
+    tags  = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create a function app for test"
+    }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"
@@ -214,7 +232,16 @@ run "function_app_ai_instrumentation_key" {
       instance_number = "01"
     }
 
-    tags = {}
+    tags  = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create a function app for test"
+    }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"
@@ -237,8 +264,8 @@ run "function_app_ai_instrumentation_key" {
   }
 
   assert {
-    condition     = local.application_insights.enable == true
-    error_message = "Application Insights should be enabled"
+    condition     = local.application_insights.enable == false
+    error_message = "Application Insights should be disabled"
   }
 }
 
@@ -255,7 +282,16 @@ run "function_app_with_durable_function" {
       instance_number = "01"
     }
 
-    tags = {}
+    tags  = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create a function app for test"
+    }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "m"
