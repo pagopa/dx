@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.0.2
+
+### Patch Changes
+
+- 3fdcf68: Set `PR_BODY` as commit message when squashing
+
 ## 1.0.1
 
 ### Patch Changes

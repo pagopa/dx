@@ -37,6 +37,10 @@ resource "azurerm_linux_web_app_slot" "this" {
       WEBSITE_RUN_FROM_PACKAGE = 1
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
+      # https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
+      WEBSITE_SWAP_WARMUP_PING_PATH     = var.health_check_path
+      WEBSITE_SWAP_WARMUP_PING_STATUSES = "200,204"
+      WEBSITE_WARMUP_PATH               = var.health_check_path
     },
     var.slot_app_settings,
     local.application_insights.enable ? {
