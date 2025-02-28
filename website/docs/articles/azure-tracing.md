@@ -179,18 +179,17 @@ In the context of Application Insights, the terminology differs:
   (or `context.log` in Azure Functions) and _custom events_.
 - **dependencies**: Correspond to Opentelemetry _traces_.
 
-To enable **parent based** sampling for logs and custom events, you can set the
-following option when initializing the AI SDK:
+To enable **parent based** sampling for _logs_ and _custom events_, you can set
+the following option when initializing the AI SDK _before_ calling `ai.start()`:
 
 ```typescript
-// this enables sampling for traces and custom events
 ai.defaultClient.config.azureMonitorOpenTelemetryOptions = {
   enableTraceBasedSamplingForLogs: true,
 };
 ```
 
-This setting will ensure that logs and custom events are sampled based on the
-parent trace context. Without this setting, _logs_ and _custom events_ will
+This setting will ensure that _logs_ and _custom events_ are sampled based on
+the parent trace context. Without this setting, _logs_ and _custom events_ will
 always be forwarded at a 100% sample rate.
 
 ## Check if sampling is enabled
