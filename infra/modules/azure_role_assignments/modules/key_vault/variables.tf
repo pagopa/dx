@@ -6,10 +6,8 @@ variable "principal_id" {
 variable "key_vault" {
   description = "A list of key vault role assignments"
   type = list(object({
-    name                = optional(string, null)
-    id                  = optional(string, null)
-    has_rbac_support    = optional(bool, null)
-    resource_group_name = optional(string, null)
+    id               = string
+    has_rbac_support = optional(bool, true)
     roles = object({
       secrets      = optional(string, "")
       certificates = optional(string, "")
@@ -26,21 +24,6 @@ variable "key_vault" {
       keys         = []
     })
   }))
-
-  validation {
-    condition = alltrue([
-      for kv_item in var.key_vault :
-      (
-        (kv_item.name != null && kv_item.resource_group_name != null)
-        || (kv_item.id != null && kv_item.has_rbac_support != null)
-      )
-    ])
-
-    error_message = <<EOT
-Each object in "key_vault" must either specify both 'name' and 'resource_group_name',
-or both 'id' and 'has_rbac_support' must be set (non-null).
-EOT
-  }
 
   validation {
     condition = alltrue([

@@ -16,13 +16,12 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/api_management) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_apim"></a> [apim](#input\_apim) | A list of APIM role assignments | <pre>list(object({<br/>    name                = optional(string, null)<br/>    resource_group_name = optional(string, null)<br/>    role                = string<br/>    id                  = optional(string, null)<br/>  }))</pre> | `[]` | no |
+| <a name="input_apim"></a> [apim](#input\_apim) | A list of APIM role assignments | <pre>list(object({<br/>    id   = string<br/>    role = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The ID of the principal to which assign roles. It can be a managed identity. | `string` | n/a | yes |
 
 ## Outputs

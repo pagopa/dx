@@ -6,12 +6,9 @@ variable "principal_id" {
 variable "storage_table" {
   description = "A list of storage table role assignments"
   type = list(object({
-    storage_account_name      = optional(string, null)
-    storage_account_id        = optional(string, null)
-    resource_group_name       = optional(string, null)
-    table_name                = optional(string, "*")
-    table_resource_manager_id = optional(string, null)
-    role                      = string
+    storage_account_id = string
+    table_name         = optional(string, "*")
+    role               = string
   }))
 
   validation {
@@ -32,12 +29,9 @@ variable "storage_table" {
 variable "storage_blob" {
   description = "A list of storage blob role assignments"
   type = list(object({
-    storage_account_name          = optional(string, null)
-    storage_account_id            = optional(string, null)
-    resource_group_name           = optional(string, null)
-    container_name                = optional(string, "*")
-    container_resource_manager_id = optional(string, null)
-    role                          = string
+    storage_account_id = string
+    container_name     = optional(string, "*")
+    role               = string
   }))
 
   validation {
@@ -58,12 +52,9 @@ variable "storage_blob" {
 variable "storage_queue" {
   description = "A list of storage queue role assignments"
   type = list(object({
-    storage_account_name      = optional(string, null)
-    storage_account_id        = optional(string, null)
-    resource_group_name       = optional(string, null)
-    queue_name                = optional(string, "*")
-    queue_resource_manager_id = optional(string, null)
-    role                      = string
+    storage_account_id = string
+    queue_name         = optional(string, "*")
+    role               = string
   }))
 
   validation {

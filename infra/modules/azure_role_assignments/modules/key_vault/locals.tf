@@ -1,16 +1,11 @@
 locals {
-  vaults = distinct([
-    for assignment in var.key_vault :
-    { name = assignment.name, resource_group_name = assignment.resource_group_name }
-  if assignment.id == null || assignment.has_rbac_support == null])
-
   norm_vaults = [
     for vault in var.key_vault :
     merge(vault, {
-      name                = try(provider::azurerm::parse_resource_id(vault.id)["resource_name"], vault.name)
-      id                  = try(data.azurerm_key_vault.this["${vault.resource_group_name}|${vault.name}"].id, vault.id)
-      has_rbac_support    = try(data.azurerm_key_vault.this["${vault.resource_group_name}|${vault.name}"].enable_rbac_authorization, vault.has_rbac_support)
-      resource_group_name = try(provider::azurerm::parse_resource_id(vault.id)["resource_group_name"], vault.resource_group_name)
+      name                = provider::azurerm::parse_resource_id(vault.id)["resource_name"]
+      id                  = vault.id
+      has_rbac_support    = vault.has_rbac_support
+      resource_group_name = provider::azurerm::parse_resource_id(vault.id)["resource_group_name"]
     })
   ]
 
