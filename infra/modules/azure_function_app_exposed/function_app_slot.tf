@@ -40,6 +40,10 @@ resource "azurerm_linux_function_app_slot" "this" {
       SLOT_TASK_HUBNAME = "StagingTaskHub",
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
       FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
+      # https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
+      WEBSITE_SWAP_WARMUP_PING_PATH     = var.health_check_path
+      WEBSITE_SWAP_WARMUP_PING_STATUSES = "200,204"
+      WEBSITE_WARMUP_PATH               = var.health_check_path
     },
     local.application_insights.enable ? {
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
