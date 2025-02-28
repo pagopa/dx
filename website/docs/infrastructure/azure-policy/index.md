@@ -18,7 +18,7 @@ teams can apply to their Subscriptions. These policies allow better monitoring
 of critical configurations and resources, ensuring higher standardization and
 security:
 
-- [List of predefined DX policies](../policy-catalog)
+- [List of predefined DX policies](../azure-policy/policy-catalog)
 - [Repository with predefined DX policies](https://github.com/pagopa/dx/tree/main/infra/policy)
 
 Once applied, these policies help maintain an organized and compliant
@@ -44,13 +44,6 @@ components: `policyRule` definitions, `parameters`, and metadata required for
 deployment on Azure. Since we manage the latter using Terraform, the only two
 sections that remain defined in _JSON_ are lists of `policyRule` and
 `parameters`.
-
-### Reference Documentation
-
-- [Azure Repository with Built-in Policies](https://github.com/Azure/azure-policy)
-- [Tutorial: Creating and Managing Policies](https://learn.microsoft.com/en-us/azure/governance/policy/tutorials/create-and-manage)
-- [Structure definition: Azure Policy Rule](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule)
-- [Structure definition: Azure Policy Parameters](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-parameters)
 
 ### Defining Policy Rules
 
@@ -90,8 +83,6 @@ Here, `[parameters('location')]` is the reference to the associated parameter.
 When defining a rule, parameters can be specified as configurable variables.
 These must also be defined in a _JSON_ file.
 
-### Adding a Set of Parameters
-
 To add a new set of parameters, create a file named
 `<POLICY_SUMMARY>_parameters_v<VERSION>.json` within the
 `infra/policy/_policy_rules` directory of the DX repository. Define the
@@ -125,8 +116,12 @@ must be deployed using Terraform. Product teams that wish to apply DX Policy
 Rules to one or more subscriptions should create the necessary descriptors in
 **their repository** following this file structure:
 
-```yaml
-infra/ ├── policy/ ├── <dev/uat/prod> ├── <policy_name>.tf ├── data.tf
+```plaintext
+infra/
+  ├── policy/
+      ├── <dev/uat/prod>
+          ├── <policy_name>.tf
+          ├── data.tf
 ```
 
 #### Example of Terraform Definition
@@ -187,9 +182,16 @@ version, modify the `<VERSION>` reference in the _JSON_ file name:
 
 Where version is an incrementing integer (e.g., v1, v2, …).
 
-## Policy Deployment
+## Deploying Policies
 
 Once everything is configured, the product team should submit a Pull Request in
 their own repository. Optionally, they can share it with the DX team for review
 before merging and applying it in production via the GitHub Action that triggers
 `terraform apply`.
+
+## Reference Documentation
+
+- [Azure Repository with Built-in Policies](https://github.com/Azure/azure-policy)
+- [Tutorial: Creating and Managing Policies](https://learn.microsoft.com/en-us/azure/governance/policy/tutorials/create-and-manage)
+- [Structure definition: Azure Policy Rule](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-policy-rule)
+- [Structure definition: Azure Policy Parameters](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-parameters)
