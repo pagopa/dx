@@ -4,38 +4,45 @@ sidebar_label: How to create and manage Azure Policies
 
 # How to create and manage Azure Policies
 
-Azure Policies are governance tools provided by Microsoft Azure to create, assign, and manage rules that ensure compliance and adherence to enterprise standards for cloud resources. More information is available in the official documentation: [Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview)
+Azure Policies are governance tools provided by Microsoft Azure to create,
+assign, and manage rules that ensure compliance and adherence to enterprise
+standards for cloud resources. More information is available in the official
+documentation:
+[Azure Policy Overview](https://learn.microsoft.com/en-us/azure/governance/policy/overview).
 
-## Index
+## Goal of DX Azure Policies
 
-1. [Goal](#goal)
-2. [Policy Configuration](#policy-configuration)
-    - [Reference Documentation](#reference-documentation)
-    - [Defining Policy Rules](#defining-policy-rules)
-    - [Adding Policy Rules](#adding-policy-rules)
-    - [Defining Policy Rules Parameters](#defining-policy-rules-parameters)
-    - [Adding a Set of Parameters](#adding-a-set-of-parameters)
-    - [Applying Policies via Terraform](#applying-policies-via-terraform)
-3. [Versioning Policy Rules and Parameters](#versioning-policy-rules-and-parameters)
-4. [Policy Deploymenty](#policy-deployment)
+To improve the control and management of resources across different Azure
+environments, the DX team provides a predefined set of policies that product
+teams can apply to their Subscriptions. These policies allow better monitoring
+of critical configurations and resources, ensuring higher standardization and
+security:
 
-## Goal
+[Repository with predefined DX policies](https://github.com/pagopa/dx/tree/main/infra/policy)
 
-To improve the control and management of resources across different **product team subscriptions**, the **DX** team provides a predefined set of policies that product teams can apply to one or more Azure subscriptions. These policies allow better monitoring of critical configurations and resources, ensuring higher standardization and security.
+Once applied, these policies help maintain an organized and compliant
+environment, reducing the risk of misconfigurations or unauthorized changes.
 
-Once applied, these policies help maintain an organized and compliant environment, reducing the risk of misconfigurations or unauthorized changes.
-
-**DX Policies** extend the functionalities of the [Technology Shared Policies](https://pagopa.atlassian.net/wiki/spaces/DEVOPS/pages/459375134). Unlike DX Policies, which have a limited scope, Technology Shared Policies apply to all corporate subscriptions without distinction.
+**DX Policies** extend the functionalities of the
+[Technology Policies](https://pagopa.atlassian.net/wiki/spaces/DEVOPS/pages/459375134).
+Unlike DX Policies, which have a limited scope, Technology Policies apply to all
+corporate subscriptions without distinction.
 
 Product teams can also propose new DX Policies for additional requirements.
 
-Policies are applied via Terraform, and the rules that implement them (`policyRule`) are stored in the [DX Repository](https://github.com/pagopa/dx).
+Policies are applied via Terraform, and the rules that implement them
+(`policyRule`) are stored in the [DX Repository](https://github.com/pagopa/dx).
 
-This guide explains the steps required to apply existing policies or add new ones.
+This guide explains the steps required to apply existing policies or add new
+ones.
 
 ## Policy Configuration
 
-Azure Policies are commonly defined in _JSON_ and consist of multiple components: `policyRule` definitions, `parameters`, and metadata required for deployment on Azure. Since we manage the latter using Terraform, the only two sections that remain defined in _JSON_ are lists of `policyRule` and `parameters`.
+Azure Policies are commonly defined in _JSON_ and consist of multiple
+components: `policyRule` definitions, `parameters`, and metadata required for
+deployment on Azure. Since we manage the latter using Terraform, the only two
+sections that remain defined in _JSON_ are lists of `policyRule` and
+`parameters`.
 
 ### Reference Documentation
 
@@ -46,18 +53,18 @@ Azure Policies are commonly defined in _JSON_ and consist of multiple components
 
 ### Defining Policy Rules
 
-Policy Rules consist of if/then blocks that define the conditions to be evaluated once the policy is assigned.
+Policy Rules consist of if/then blocks that define the conditions to be
+evaluated once the policy is assigned and the action to be taken if the
+conditions are met.
 
-### Adding Policy Rules
+To add a new rule, create a file named `<POLICY_SUMMARY>_rule_v<VERSION>.json`
+inside the `infra/policy/_policy_rules` directory of the **DX** repository.
+Define the `policyRule` within the file, ensuring it adheres to the
+documentation guidelines.
 
-To add a new rule:
-
-1. Create a file named `<POLICY_SUMMARY>_rule_v<VERSION>.json` inside the `infra/policy/_policy_rules` directory of the **DX** repository.
-2. Define the `policyRule` inside the file following the documentation guidelines.
-
-#### Policy Rule example
-
-For example, to create a policy that prevents resource creation outside a configurable region, create the file `allowed_location_rule_v1.json` with the following content:
+For example, to create a policy that prevents resource creation outside a
+configurable region, create the file `allowed_location_rule_v1.json` with the
+following content:
 
 ```json
 {
@@ -79,18 +86,18 @@ Here, `[parameters('location')]` is the reference to the associated parameter.
 
 ### Defining Policy Rules Parameters
 
-When defining a rule, parameters can be specified as configurable variables. These must also be defined in a _JSON_ file.
+When defining a rule, parameters can be specified as configurable variables.
+These must also be defined in a _JSON_ file.
 
 ### Adding a Set of Parameters
 
-To add a new set of parameters:
+To add a new set of parameters, create a file named
+`<POLICY_SUMMARY>_parameters_v<VERSION>.json` within the
+`infra/policy/_policy_rules` directory of the DX repository. Define the
+parameters inside the file according to the documentation guidelines.
 
-1. Create a file `<POLICY_SUMMARY>_parameters_v<VERSION>.json` within the DX repository directory `infra/policy/_policy_rules`.
-2. Define the parameters inside the file following the documentation guidelines.
-
-#### Policy Rule Parameters example
-
-Continuing the previous example, create the file `allowed_location_parameters_v1.json` with the following content:
+Continuing the previous example, create the file
+`allowed_location_parameters_v1.json` with the following content:
 
 ```json
 {
@@ -106,18 +113,19 @@ Continuing the previous example, create the file `allowed_location_parameters_v1
 
 This ensures that when the policy is assigned, a parameter must be set.
 
-It is also possible to specify a list of **allowed** values and a **default** value. For more details, refer to the official documentation.
+It is also possible to specify a list of **allowed** values and a **default**
+value. For more details, refer to the
+[official documentation](https://learn.microsoft.com/en-us/azure/governance/policy/concepts/definition-structure-parameters).
 
 ### Applying Policies via Terraform
 
-Once the Policy Rule and its corresponding `Parameters` are defined, the policy must be deployed using Terraform. Product teams that wish to apply DX Policy Rules to one or more subscriptions should create the necessary descriptors in **their repository** following this file structure:
+Once the Policy Rule and its corresponding `Parameters` are defined, the policy
+must be deployed using Terraform. Product teams that wish to apply DX Policy
+Rules to one or more subscriptions should create the necessary descriptors in
+**their repository** following this file structure:
 
 ```yaml
-infra/
-├── policy/
-    ├── <dev/uat/prod>
-         ├── <policy_name>.tf
-         ├── data.tf
+infra/ ├── policy/ ├── <dev/uat/prod> ├── <policy_name>.tf ├── data.tf
 ```
 
 #### Example of Terraform Definition
@@ -141,8 +149,8 @@ resource "azurerm_policy_definition" "allowed_location_policy" {
   name         = "${module.naming_convention.project}-allowed-location-policy"
   policy_type  = "Custom"
   mode         = "Indexed"
-  display_name = "DevEx Enforce italynorth location on resources"
-  description  = "Ensures that resources have italynorth location during creation."
+  display_name = "Enforce Italy North region"
+  description  = "Ensures that resources have Italy North region during creation."
 
   metadata = jsonencode({
     category = "Custom DevEx"
@@ -155,7 +163,7 @@ resource "azurerm_policy_definition" "allowed_location_policy" {
 
 resource "azurerm_subscription_policy_assignment" "allowed_location_assignment" {
   name                 = "${module.naming_convention.project}-allowed-location-assignment"
-  display_name         = "DevEx Enforce italynorth location on resources"
+  display_name         = "Enforce Italy North region"
   policy_definition_id = azurerm_policy_definition.allowed_location_policy.id
   subscription_id      = data.azurerm_subscription.current.id
 
@@ -169,13 +177,18 @@ resource "azurerm_subscription_policy_assignment" "allowed_location_assignment" 
 
 ## Versioning Policy Rules and Parameters
 
-When creating or modifying Policy Rules and/or Parameters in the DX repository, update the `<VERSION>` reference in the _JSON_ file name:
+When creating or modifying Policy Rules and/or Parameters in the DX repository,
+the version must be updated only in the case of breaking changes. To update the
+version, modify the `<VERSION>` reference in the _JSON_ file name:
 
 - `<POLICY_SUMMARY>_rule_v<VERSION>.json`
 - `<POLICY_SUMMARY>_parameters_v<VERSION>.json`
 
-The version should be an incrementing integer (e.g., v1, v2, …). The file name should only be updated in case of breaking changes.
+Where version is an incrementing integer (e.g., v1, v2, …).
 
 ## Policy Deployment
 
-Once everything is configured, the product team will submit a Pull Request. Optionally, they can share it with the **DX** team for review before merging and applying it in production via the GitHub Action that triggers `terraform apply`.
+Once everything is configured, the product team should submit a Pull Request in
+their own repository. Optionally, they can share it with the DX team for review
+before merging and applying it in production via the GitHub Action that triggers
+`terraform apply`.
