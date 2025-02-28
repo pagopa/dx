@@ -77,9 +77,7 @@ resource "azurerm_linux_function_app" "this" {
         "AzureFunctionsWebHost__hostid",
         "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage",
         "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage",
-        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage",
-        "AzureFunctionsJobHost__logging__logLevel__default",
-        "AzureFunctionsJobHost__logging__logLevel__Function"
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage"
       ],
       var.sticky_app_setting_names,
     )
