@@ -63,7 +63,7 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.address_space[0], module.network.pep_snet.address_prefixes[0]] == ["10.50.0.0/16", "10.50.2.0/23"]
+    condition     = [tolist(module.network.vnet.address_space)[0], module.network.pep_snet.address_prefixes[0]] == ["10.50.0.0/16", "10.50.2.0/23"]
     error_message = "The VNET address space and PEP subnet configuration must be correct"
   }
 
