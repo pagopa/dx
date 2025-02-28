@@ -1,0 +1,7 @@
+{
+  "name": "azure_cdn",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Allows to easily create an Azure FrontDoor CDN"
+}
