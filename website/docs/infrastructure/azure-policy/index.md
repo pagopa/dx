@@ -18,7 +18,8 @@ teams can apply to their Subscriptions. These policies allow better monitoring
 of critical configurations and resources, ensuring higher standardization and
 security:
 
-[Repository with predefined DX policies](https://github.com/pagopa/dx/tree/main/infra/policy)
+- [List of predefined DX policies](../policy-catalog)
+- [Repository with predefined DX policies](https://github.com/pagopa/dx/tree/main/infra/policy)
 
 Once applied, these policies help maintain an organized and compliant
 environment, reducing the risk of misconfigurations or unauthorized changes.
