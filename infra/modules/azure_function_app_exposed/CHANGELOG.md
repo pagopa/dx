@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.1.3
+
+### Patch Changes
+
+- f17598d: Set up custom warm-up for swap and restart
+
 ## 0.1.2
 
 ### Patch Changes

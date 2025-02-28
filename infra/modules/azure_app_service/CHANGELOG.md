@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.4
+
+### Patch Changes
+
+- f17598d: Set up custom warm-up for swap and restart
+
 ## 0.1.3
 
 ### Patch Changes
