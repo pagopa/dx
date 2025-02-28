@@ -394,11 +394,43 @@ production and use the AI SDK for custom events and logging:
 ```
 
 This setup will ensure that only critical logs are recorded in Application
-Insights, while the AI SDK can be used for custom events and logging.
+Insights, while the AI SDK can be used for _custom events_ and to trace
+_exceptions_ and _warnings_.
 
 Moreover we keep the `Host.Results` and `Host.Aggregator` categories at
 `Information` to capture HTTP requests, function execution results and counters,
 useful for monitoring and alerting.
+
+If capturing `context.info` or `context.log` is essential, you can set the log
+level for the specific `Function` category to `Information`:
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "Function.MyFunctionName.User": "Information"
+    }
+  }
+}
+```
+
+Moreover, only for local debugging, you can set
+
+```json
+{
+  "logging": {
+    "logLevel": {
+      "Host.Function.Console": "Information"
+    }
+  }
+}
+```
+
+This will capture all `console.log` messages locally, but they won't be sent to
+Application Insights in production.
+
+Refer to https://github.com/anthonychu/functions-log-suppression for more
+details.
 
 ### Sampling gotchas within Azure Functions
 
