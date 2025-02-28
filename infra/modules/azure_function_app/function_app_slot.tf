@@ -46,11 +46,12 @@ resource "azurerm_linux_function_app_slot" "this" {
       FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
     },
     local.application_insights.enable ? {
-      # SDK AI Sampling (for dependencies)
+      # AI SDK Sampling, to be used programmatically
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = "100",
 
-      # Azure Function Host (runtime) AI Sampling (for requests, traces, metrics, etc..)
+      # Azure Function Host (runtime) AI Sampling
+      # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = "100",
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = "100",
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = "100"
