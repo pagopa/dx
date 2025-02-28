@@ -51,10 +51,11 @@ module "storage_account" {
   }
 
   resource_group_name = data.azurerm_resource_group.rg.name
-  tier = "s"
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  tier                = "s"
+  subnet_pep_id       = data.azurerm_subnet.pep.id
+  force_public_network_access_enabled = true # just for testing
   static_website = {
-    enabled = true
+    enabled        = true
     index_document = "index.html"
   }
 
@@ -64,6 +65,14 @@ module "storage_account" {
 
   tags = var.tags
 }
+
+resource "azurerm_dns_zone" "devex_pagopa_it" {
+  name                = "devex.pagopa.it"
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  tags = var.tags
+}
+
 
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
@@ -79,4 +88,8 @@ output "resource_group_name" {
 
 output "storage_account_host_name" {
   value = module.storage_account.primary_web_host
+}
+
+output "devex_pagopa_it_zone_name" {
+  value = azurerm_dns_zone.devex_pagopa_it.name
 }

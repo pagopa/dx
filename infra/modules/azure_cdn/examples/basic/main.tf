@@ -17,10 +17,10 @@ module "storage_account" {
   environment = local.environment
 
   resource_group_name = azurerm_resource_group.example.name
-  tier = "s"
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  tier                = "s"
+  subnet_pep_id       = data.azurerm_subnet.pep.id
   static_website = {
-    enabled = true
+    enabled        = true
     index_document = "index.html"
   }
 
@@ -33,30 +33,40 @@ module "storage_account" {
 
 module "azure_cdn" {
   source = "../../"
-  
+
   resource_group_name = azurerm_resource_group.example.name
-  
+
   environment = local.environment
-  
+
   origins = {
     primary = {
       host_name = module.storage_account.primary_web_host
     }
   }
-  
-  delivery_rules = {
-    redirect-to-https = {
-      order = 1
-      request_scheme_condition = "HTTP"
-      actions = {
-        url_redirect_action = {
-          redirect_type = "Found"
-          protocol      = "Https"
-        }
+
+  custom_domains = [
+    {
+      host_name = "bar.com",
+      dns = {
+        # A record with name @ will be created at the apex of bar.com zone
+        zone_name                = "bar.com",
+        zone_resource_group_name = azurerm_resource_group.example.name
       }
+    },
+    {
+      # A record with name foo will be created in bar.com zone
+      host_name = "foo.bar.com",
+      dns = {
+        zone_name                = "bar.com",
+        zone_resource_group_name = azurerm_resource_group.example.name
+      }
+    },
+    {
+      # No DNS record will be created for this domain
+      host_name = "test.bar.com",
     }
-  }
-  
+  ]
+
   tags = local.tags
 }
 
