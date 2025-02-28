@@ -15,35 +15,21 @@ resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
 
 # Resource Group
 resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
-  scope                = azurerm_resource_group.main.id
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_secondary_rg_contributor" {
-  for_each = var.secondary_resource_group_ids
+resource "azurerm_role_assignment" "infra_cd_rg_user_access_admin" {
+  for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at ${each.value} resource group scope"
-}
-
-resource "azurerm_role_assignment" "infra_cd_rg_user_access_admin" {
-  scope                = azurerm_resource_group.main.id
   role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage locks at monorepository resource group scope"
-}
-
-resource "azurerm_role_assignment" "infra_cd_secondary_rg_user_access_admin" {
-  for_each = var.secondary_resource_group_ids
-
-  scope                = each.value
-  role_definition_name = "User Access Administrator"
-  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage locks at ${each.value} resource group scope"
 }
 
 # VNet

@@ -11,6 +11,15 @@ locals {
 
   has_apim = var.apim_id != null ? 1 : 0
 
+  resource_group_ids = merge(
+    {
+      "main" = azurerm_resource_group.main.id
+    },
+    {
+      for rg in var.additional_resource_group_ids : rg => rg
+    }
+  )
+
   # %s is replaced by `ci` or `cd`
   ids = {
     #e.g. io-p-itn-ipatente-app-github-cd-id-01

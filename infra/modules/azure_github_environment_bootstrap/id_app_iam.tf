@@ -8,19 +8,12 @@ resource "azurerm_role_assignment" "app_cd_subscription_reader" {
 
 # Resource Group
 resource "azurerm_role_assignment" "app_cd_rg_contributor" {
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply changes to resources at monorepository resource group scope"
-}
-
-resource "azurerm_role_assignment" "app_cd_secondary_rg_contributor" {
-  for_each = var.secondary_resource_group_ids
+  for_each = local.resource_group_ids
 
   scope                = each.value
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply changes to resources at ${each.value} resource group scope"
+  description          = "Allow ${var.repository.name} App CD identity to apply changes to resources at monorepository resource group scope"
 }
 
 resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {

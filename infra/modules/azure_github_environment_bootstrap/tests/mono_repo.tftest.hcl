@@ -714,22 +714,22 @@ run "validate_rbac_entraid" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rg != null
+    condition     = azurerm_role_assignment.admins_group_rg["main"] != null
     error_message = "The Admins group should have role assignments at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.devs_group_rg != null
+    condition     = azurerm_role_assignment.devs_group_rg["main"] != null
     error_message = "The Developers group should have role assignments at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr != null
+    condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr["main"] != null
     error_message = "The Developers group should have Key Vault Secrets role"
   }
 
   assert {
-    condition     = azurerm_role_assignment.externals_group_rg != null
+    condition     = azurerm_role_assignment.externals_group_rg["main"] != null
     error_message = "The Externals group should have role assignments at resource group scope"
   }
 }
@@ -827,20 +827,20 @@ run "validate_github_id_opex" {
   }
 }
 
-run "validate_secondary_rg_iam" {
+run "validate_rg_iam" {
   command = plan
 
   plan_options {
     target = [
-      azurerm_role_assignment.admins_group_secondary_rg,
-      azurerm_role_assignment.admins_group_secondary_rg_kv_data,
-      azurerm_role_assignment.admins_group_secondary_rg_kv_admin,
-      azurerm_role_assignment.devs_group_secondary_rg,
-      azurerm_role_assignment.devs_group_tf_secondary_rg_kv_secr,
-      azurerm_role_assignment.externals_group_secondary_rg,
-      azurerm_role_assignment.app_cd_secondary_rg_contributor,
-      azurerm_role_assignment.infra_cd_secondary_rg_contributor,
-      azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin,
+      azurerm_role_assignment.admins_group_rg,
+      azurerm_role_assignment.admins_group_rg_kv_data,
+      azurerm_role_assignment.admins_group_rg_kv_admin,
+      azurerm_role_assignment.devs_group_rg,
+      azurerm_role_assignment.devs_group_tf_rg_kv_secr,
+      azurerm_role_assignment.externals_group_rg,
+      azurerm_role_assignment.app_cd_rg_contributor,
+      azurerm_role_assignment.infra_cd_rg_contributor,
+      azurerm_role_assignment.infra_cd_rg_user_access_admin,
     ]
   }
 
@@ -888,7 +888,7 @@ run "validate_secondary_rg_iam" {
     pep_vnet_id                        = run.setup_tests.pep_vnet_id
     private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
     opex_resource_group_id             = run.setup_tests.opex_resource_group_id
-    secondary_resource_group_ids = [
+    additional_resource_group_ids = [
       run.setup_tests.opex_resource_group_id,
       run.setup_tests.private_dns_zone_resource_group_id
     ]
@@ -897,47 +897,47 @@ run "validate_secondary_rg_iam" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_secondary_rg != null
-    error_message = "The Admins group should be Owner of the secondary resource groups"
+    condition     = azurerm_role_assignment.admins_group_rg[run.setup_tests.opex_resource_group_id] != 0
+    error_message = "The Admins group should be Owner of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_data != null
-    error_message = "The Admins group should be able to apply changes to KeyVault's data of the secondary resource groups"
+    condition     = azurerm_role_assignment.admins_group_rg_kv_data[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Admins group should be able to apply changes to KeyVault's data of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_secondary_rg_kv_admin != null
-    error_message = "The Admins group should be able to apply changes to KeyVault of the secondary resource groups"
+    condition     = azurerm_role_assignment.admins_group_rg_kv_admin[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Admins group should be able to apply changes to KeyVault of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.devs_group_secondary_rg != null
-    error_message = "The Devs group should be Owner of the secondary resource groups"
+    condition     = azurerm_role_assignment.devs_group_rg[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Devs group should be Owner of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.devs_group_tf_secondary_rg_kv_secr != null
-    error_message = "The Devs group should be able to apply changes to KeyVault's secrets of the secondary resource groups"
+    condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Devs group should be able to apply changes to KeyVault's secrets of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.externals_group_secondary_rg != null
-    error_message = "The Externals group should be able to read resources of the secondary resource groups"
+    condition     = azurerm_role_assignment.externals_group_rg[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Externals group should be able to read resources of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.app_cd_secondary_rg_contributor != null
-    error_message = "The App CD user assigned identity is not Contributor of the secondary resource groups"
+    condition     = azurerm_role_assignment.app_cd_rg_contributor[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The App CD user assigned identity is not Contributor of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_secondary_rg_contributor != null
-    error_message = "The Infra CD user assigned identity is not Contributor of the secondary resource groups"
+    condition     = azurerm_role_assignment.infra_cd_rg_contributor[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Infra CD user assigned identity is not Contributor of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_secondary_rg_user_access_admin != null
-    error_message = "The Infra CD user assigned identity is not User Access Administrator of the secondary resource groups"
+    condition     = azurerm_role_assignment.infra_cd_rg_user_access_admin[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Infra CD user assigned identity is not User Access Administrator of the additional resource groups"
   }
 }
