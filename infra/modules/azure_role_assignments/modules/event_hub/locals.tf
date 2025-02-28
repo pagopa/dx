@@ -1,6 +1,4 @@
 locals {
-  namespaces = distinct([for assignment in var.event_hub : { namespace_name = assignment.namespace_name, resource_group_name = assignment.resource_group_name } if assignment.namespace_id == null])
-
   assignments = {
     for assignment in flatten([
       for entry in var.event_hub : [
