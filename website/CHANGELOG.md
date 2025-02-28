@@ -1,5 +1,11 @@
 # docs
 
+## 0.0.5
+
+### Patch Changes
+
+- 7a1868c: Improve AI documentation clarity and consistency
+
 ## 0.0.4
 
 ### Patch Changes
