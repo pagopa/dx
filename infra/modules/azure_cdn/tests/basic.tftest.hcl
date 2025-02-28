@@ -51,6 +51,23 @@ run "verify_basic_cdn_setup" {
         host_name = run.setup_tests.storage_account_host_name
       }
     }
+
+    custom_domains = [
+      {
+        host_name = "mywebsite.devex.pagopa.it",
+        dns = {
+          zone_name = run.setup_tests.devex_pagopa_it_zone_name
+          zone_resource_group_name = run.setup_tests.resource_group_name
+        }
+      },
+      {
+        host_name = "devex.pagopa.it",
+        dns = {
+          zone_name = run.setup_tests.devex_pagopa_it_zone_name
+          zone_resource_group_name = run.setup_tests.resource_group_name
+        }
+      }
+    ]
     
     tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
