@@ -50,9 +50,9 @@ module "storage_account" {
     instance_number = var.environment.instance_number
   }
 
-  resource_group_name = data.azurerm_resource_group.rg.name
-  tier                = "s"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  resource_group_name                 = data.azurerm_resource_group.rg.name
+  tier                                = "s"
+  subnet_pep_id                       = data.azurerm_subnet.pep.id
   force_public_network_access_enabled = true # just for testing
   static_website = {
     enabled        = true
