@@ -58,9 +58,7 @@ resource "azurerm_linux_function_app" "this" {
       # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = var.application_insights_sampling_percentage,
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.application_insights_sampling_percentage,
-      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage,
-      AzureFunctionsJobHost__logging__logLevel__default                                                = "Information"
-      AzureFunctionsJobHost__logging__logLevel__Function                                               = "Warning"
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage
     } : {},
     local.function_app.has_durable == 1 ? {
       #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
