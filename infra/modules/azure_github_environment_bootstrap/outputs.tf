@@ -20,3 +20,34 @@ output "github_private_runner" {
     resource_group_name = azurerm_container_app_job.github_runner.resource_group_name
   }
 }
+
+output "identities" {
+  value = {
+    app = {
+      cd = {
+        id   = azurerm_user_assigned_identity.app_cd.id
+        name = azurerm_user_assigned_identity.app_cd.name
+      }
+    }
+    infra = {
+      ci = {
+        id   = azurerm_user_assigned_identity.infra_ci.id
+        name = azurerm_user_assigned_identity.infra_ci.name
+      }
+      cd = {
+        id   = azurerm_user_assigned_identity.infra_cd.id
+        name = azurerm_user_assigned_identity.infra_cd.name
+      }
+    }
+    opex = {
+      ci = {
+        id   = azurerm_user_assigned_identity.opex_ci.id
+        name = azurerm_user_assigned_identity.opex_ci.name
+      }
+      cd = {
+        id   = azurerm_user_assigned_identity.opex_cd.id
+        name = azurerm_user_assigned_identity.opex_cd.name
+      }
+    }
+  }
+}
