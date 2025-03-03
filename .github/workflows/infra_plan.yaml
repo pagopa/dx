@@ -129,7 +129,7 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          script -qec "terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v \"hidden-link:\" | tee plan_output.txt" /dev/null
+          script -qf /dev/null terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:" | tee plan_output.txt
 
           OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
 
