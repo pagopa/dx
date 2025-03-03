@@ -1,5 +1,5 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.enabled && var.tier != "s" ? 1 : 0
+  count = var.application_insights.enabled ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
@@ -11,7 +11,6 @@ resource "azurerm_api_management_logger" "this" {
       connection_string = var.application_insights.connection_string
     }
   }
-
 }
 
 resource "azurerm_monitor_metric_alert" "this" {
