@@ -63,3 +63,17 @@ resource "azurerm_cdn_frontdoor_route" "this" {
     compression_enabled           = true
   }
 }
+
+resource "azurerm_monitor_diagnostic_setting" "diagnostic_settings_cdn_profile" {
+  name                       = "${module.naming_convention.prefix}-cdnp-${module.naming_convention.suffix}"
+  target_resource_id         = azurerm_cdn_frontdoor_profile.this.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}

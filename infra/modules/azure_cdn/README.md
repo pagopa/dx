@@ -53,7 +53,6 @@ module "azure_cdn" {
 ## Examples
 
 - [Basic example](./examples/basic) - Simple CDN configuration with a single origin
-- [Complete example](./examples/complete) - Advanced setup with multiple origins, custom domains, and specialized delivery rules
 
 ## Testing
 
