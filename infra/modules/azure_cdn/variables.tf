@@ -39,3 +39,8 @@ variable "custom_domains" {
   }))
   default = []
 }
+
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "Log Analytics Workspace id to send logs to"
+}
