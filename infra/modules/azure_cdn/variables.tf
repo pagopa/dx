@@ -40,7 +40,33 @@ variable "custom_domains" {
   default = []
 }
 
-variable "log_analytics_workspace_id" {
-  type        = string
-  description = "Log Analytics Workspace id to send logs to"
+
+variable "diagnostic_settings" {
+  type = object({
+    enabled                                   = bool
+    log_analytics_workspace_id                = string
+    diagnostic_setting_destination_storage_id = string
+  })
+  default = {
+    enabled                                   = false
+    log_analytics_workspace_id                = null
+    diagnostic_setting_destination_storage_id = null
+  }
+  description = <<-EOT
+    Define if diagnostic settings should be enabled.
+    if it is:
+    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and 
+    the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
+  EOT
+
+  validation {
+    condition = (
+      !(var.diagnostic_settings.enabled)
+      || (
+        var.diagnostic_settings.log_analytics_workspace_id != null
+        && var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
+      )
+    )
+    error_message = "log_analytics_workspace_id and diagnostic_setting_destination_storage_id are mandatory if diagnostic is enabled."
+  }
 }
