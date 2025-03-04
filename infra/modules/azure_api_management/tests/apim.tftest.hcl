@@ -158,7 +158,7 @@ run "apim_tier_s_create_logger" {
 
     application_insights = {
       enabled = true
-      instrumentation_key = "anInstrumentationKey"
+      connection_string = "aConnectionString"
     }
 
     subnet_id                     = run.setup_tests.subnet_id
