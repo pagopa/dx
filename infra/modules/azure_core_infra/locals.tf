@@ -22,5 +22,6 @@ locals {
     "azure_api_net"            = "azure-api.net"
     "management_azure_api_net" = "management.azure-api.net"
     "scm_azure_api_net"        = "scm.azure-api.net"
+    "container_app"            = "azurecontainerapps.io"
   }
 }
