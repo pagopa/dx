@@ -5,7 +5,7 @@
 Role assignments can now be created contextually with identities and target resources
 
 **Migration guide**:
-Remove all name and resource_group_name parameters from the variables and use the id gotten from a resource, module or data source as follows:
+Remove all `name` and `resource_group_name` parameters from the variables and use the id gotten from a resource, module or data source as follows:
 ```
 ...
 module "roles" {
