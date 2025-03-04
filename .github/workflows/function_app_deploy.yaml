@@ -40,7 +40,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -50,7 +50,6 @@ env:
   BUNDLE_NAME: bundle
 
 jobs:
-
   build:
     name: Build Artifact
     runs-on: ubuntu-latest
@@ -65,7 +64,7 @@ jobs:
       - name: Detect turbo version
         id: turbo-version
         run: |
-          TURBO_VERSION=$(jq -r '.devDependencies.turbo | split(".") | .[0]' package.json)
+          TURBO_VERSION=$(jq -r '.devDependencies.turbo | sub("^[\\^~]";"") | split(".") | .[0]' package.json)
           echo "version=$TURBO_VERSION" >> $GITHUB_OUTPUT
 
       - name: Prune (turbo 1.x)
@@ -149,7 +148,6 @@ jobs:
       USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
 
     steps:
-
       - name: Download Artifact
         uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         with:
