@@ -199,6 +199,11 @@ variable "application_insights" {
     connection_string = null
   }
   description = "Application Insights integration. The connection string used to push data"
+
+  validation {
+    condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
+    error_message = "You must provide a connection string when enabling Application Insights integration"
+  }
 }
 
 
