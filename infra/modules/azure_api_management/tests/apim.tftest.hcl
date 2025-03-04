@@ -57,13 +57,17 @@ run "apim_is_correct_plan" {
 
     subnet_id                     = run.setup_tests.subnet_id
     virtual_network_type_internal = true
-
   }
 
   # Checks some assertions
   assert {
     condition     = azurerm_api_management.this.sku_name == "Premium_1"
     error_message = "The APIM SKU is incorrect, have to be Premium_1"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management_logger.this) == 0
+    error_message = "The APIM logegr should not exist"
   }
 }
 
@@ -115,4 +119,55 @@ run "apim_ai_enabled_without_connection_string" {
     # Specify the exact variable that should fail validation
     var.application_insights.connection_string,
   ]
+}
+
+run "apim_tier_s_create_logger" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create APIM for test"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+    tier                = "s"
+
+    publisher_email = "example@pagopa.it"
+    publisher_name  = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    application_insights = {
+      enabled = true
+      connection_string = "aConnectionString"
+    }
+
+    subnet_id                     = run.setup_tests.subnet_id
+    virtual_network_type_internal = true
+  }
+
+  # Checks some assertions
+  assert {
+    condition     = length(azurerm_api_management_logger.this) > 0
+    error_message = "The APIM logegr does not exist"
+  }
 }
