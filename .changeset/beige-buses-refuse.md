@@ -5,6 +5,12 @@
 Role assignments can now be created contextually with identities and target resources
 
 **Migration guide**:
+When using the azurerm provider version >= 3.114.0, the beta opt-in feature must be enabled by setting the following environment variable:
+
+```
+export ARM_FOURPOINTZERO_BETA=true
+```
+
 Remove all `name` and `resource_group_name` parameters from the variables and use the id gotten from a resource, module or data source as follows:
 ```
 ...
