@@ -191,14 +191,19 @@ variable "lock_enable" {
 
 variable "application_insights" {
   type = object({
-    enabled             = bool
-    instrumentation_key = string
+    enabled           = bool
+    connection_string = string
   })
   default = {
-    enabled             = false
-    instrumentation_key = null
+    enabled           = false
+    connection_string = null
   }
-  description = "Application Insights integration The instrumentation key used to push data"
+  description = "Application Insights integration. The connection string used to push data"
+
+  validation {
+    condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
+    error_message = "You must provide a connection string when enabling Application Insights integration"
+  }
 }
 
 
