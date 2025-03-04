@@ -6,8 +6,8 @@ variable "principal_id" {
 variable "key_vault" {
   description = "A list of key vault role assignments"
   type = list(object({
-    name                = string
-    resource_group_name = string
+    id               = string
+    has_rbac_support = optional(bool, true)
     roles = object({
       secrets      = optional(string, "")
       certificates = optional(string, "")

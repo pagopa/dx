@@ -11,33 +11,29 @@ module "roles" {
 
   storage_table = [
     {
-      storage_account_name = "test"
-      resource_group_name  = "test-rg"
-      table_name           = "test-table"
-      role                 = "reader"
+      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
+      table_name         = "test-table"
+      role               = "reader"
     },
     {
-      storage_account_name = "test2"
-      resource_group_name  = "test-rg"
-      role                 = "writer"
+      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
+      role               = "writer"
     }
   ]
 
   storage_blob = [
     {
-      storage_account_name = "test"
-      resource_group_name  = "test-rg"
-      container_name       = "images"
-      role                 = "reader"
+      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
+      container_name     = "images"
+      role               = "reader"
     }
   ]
 
   storage_queue = [
     {
-      storage_account_name = "test"
-      resource_group_name  = "test-rg"
-      queue_name           = "myqueue"
-      role                 = "writer"
+      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
+      queue_name         = "myqueue"
+      role               = "writer"
     }
   ]
 }
