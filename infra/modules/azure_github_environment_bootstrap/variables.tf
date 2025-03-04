@@ -113,3 +113,16 @@ variable "github_private_runner" {
     memory = optional(string, "1Gi")
   })
 }
+
+variable "secondary_resource_group_ids" {
+  type        = set(string)
+  default     = []
+  description = "(Optional) List of existing resource groups of which the domain team is the owner."
+
+  validation {
+    condition = alltrue([
+      for id in var.secondary_resource_group_ids : provider::azurerm::parse_resource_id(id)["resource_type"] == "resourceGroups"
+    ])
+    error_message = "This variable accepts resource group IDs only"
+  }
+}
