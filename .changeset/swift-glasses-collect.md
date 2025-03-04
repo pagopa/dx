@@ -7,7 +7,7 @@ Replace `instrumentation_key` with `connection_string` to connect Application In
 
 **Migration Guide**
 
-Update your APIM module parameters by replacing the `instrumentation_key` with the `connection_string` parameter.
+Update the `application_insights` block by replacing the `instrumentation_key` with the `connection_string` parameter.
 
 From this:
 ```
