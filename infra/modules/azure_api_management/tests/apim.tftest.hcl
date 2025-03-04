@@ -66,3 +66,53 @@ run "apim_is_correct_plan" {
     error_message = "The APIM SKU is incorrect, have to be Premium_1"
   }
 }
+
+run "apim_ai_enabled_without_connection_string" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create APIM for test"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+    tier                = "l"
+
+    publisher_email = "example@pagopa.it"
+    publisher_name  = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id                     = run.setup_tests.subnet_id
+    virtual_network_type_internal = true
+
+    application_insights = {
+      enabled           = true
+      connection_string = null
+    }
+  }
+
+  expect_failures = [
+    # Specify the exact variable that should fail validation
+    var.application_insights.connection_string,
+  ]
+}
