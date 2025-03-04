@@ -13,7 +13,6 @@ From this:
 ```
 module "apim" {
   source  = "pagopa/dx-azure-api-management/azurerm"
-  version = "~> 0"
   ...
   application_insights = {
     enabled             = true
@@ -25,7 +24,6 @@ to this:
 ```
 module "apim" {
   source  = "pagopa/dx-azure-api-management/azurerm"
-  version = "~> 0"
   ...
   application_insights = {
     enabled           = true
