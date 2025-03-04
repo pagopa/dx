@@ -73,7 +73,6 @@ resource "azurerm_dns_zone" "devex_pagopa_it" {
   tags = var.tags
 }
 
-
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
 }

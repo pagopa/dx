@@ -65,9 +65,11 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "diagnostic_settings_cdn_profile" {
+  count                      = var.diagnostic_settings.enabled ? 1 : 0
   name                       = "${module.naming_convention.prefix}-cdnp-${module.naming_convention.suffix}"
   target_resource_id         = azurerm_cdn_frontdoor_profile.this.id
-  log_analytics_workspace_id = var.log_analytics_workspace_id
+  log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
+  storage_account_id         = var.diagnostic_settings.diagnostic_setting_destination_storage_id
 
   enabled_log {
     category_group = "allLogs"
