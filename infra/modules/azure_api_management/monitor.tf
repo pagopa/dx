@@ -8,7 +8,7 @@ resource "azurerm_api_management_logger" "this" {
   dynamic "application_insights" {
     for_each = var.management_logger_application_insight_enabled ? [1] : []
     content {
-      instrumentation_key = var.application_insights.instrumentation_key
+      connection_string = var.application_insights.connection_string
     }
   }
 
