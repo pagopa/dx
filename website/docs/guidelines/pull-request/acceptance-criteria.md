@@ -13,5 +13,5 @@ To increase the likelihood of PR approval, consider meeting the following criter
 - The changes must include passing unit tests. The only exception is for tests that expose an existing bug
 - The PR must be free of merge conflicts
 - The PR should address only **one specific issue** or add **only one feature**. Avoid combining multiple changes; always submit separate PRs for different issues or features
-- The CI pipeline must run successfully without errors
+- The CI pipeline must run successfully without errors when the PR is _ready for review_. For Draft PRs, it is reasonable to have some errors as the PR is still in progress
 - The PR should contain a changeset file to properly handle the versioning of the project
