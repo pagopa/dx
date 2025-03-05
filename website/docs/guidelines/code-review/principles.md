@@ -60,7 +60,7 @@ They must also ensure that technical debt is kept under control, carefully evalu
 Keep in mind that code review is a process that can take multiple iterations, and reviewers may spot things later that they may not have seen the first time.
 
 - The first reviewer of your code is you. Before requesting the review, read through the entire `diff`. Does it make sense? Did you include something unrelated to the overall purpose of the changes?
-- Follow the guidelines to compile PR's title and description
+- Follow the [guidelines to compile PR's title and description](../pull-request/format.md#format-for-pull-requests)
 - Don’t take it personally. The review is of the code, not of you
 - Extract unrelated changes and refactorings into future PRs
 - Seek to understand the reviewer’s perspective
