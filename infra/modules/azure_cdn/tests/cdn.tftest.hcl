@@ -95,4 +95,14 @@ run "verify_basic_cdn_setup" {
     condition     = azurerm_cdn_frontdoor_origin.this["primary"].host_name == run.setup_tests.storage_account_host_name
     error_message = "Origin hostname doesn't match expected value"
   }
+
+  assert {
+    condition    = azurerm_dns_txt_record.validation["mywebsite.devex.pagopa.it"].name == "_dnsauth.mywebsite"
+    error_message = "DNS TXT record name for mywebsite.devex.pagopa.it custom domain doesn't match expected value"
+  }
+
+  assert {
+    condition    = azurerm_dns_txt_record.validation["devex.pagopa.it"].name == "_dnsauth"
+    error_message = "DNS TXT record name for devex.pagopa.it custom domain doesn't match expected value"
+  }
 }
