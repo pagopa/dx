@@ -9,7 +9,7 @@ Writing clear and well-structured commit messages improves collaboration, makes 
 
 ## General Guidelines
 
-- **Keep it concise**: summarize the change with a short message, ideally no more than **50 characters**. If more characters are needed, do not exceed **72**. This follows the [Git commit best practices](https://www.kernel.org/pub/software/scm/git/docs/git-commit.html#_discussion)
+- **Keep it concise**: keep the subject line concise, ideally under **50 characters**. If necessary, do not exceed **72** characters to maintain readability. This follows the [Git commit best practices](https://git-scm.com/docs/git-commit#_discussion)
 - **PR title consideration**: when opening a pull request with a single commit, the commit message will be used as the PR title—so make it meaningful
 - **Add details when needed**: if additional context is required, add a blank line after the subject and provide a more detailed explanation in the body
 - **Capitalize the subject line**, as you would in a sentence
