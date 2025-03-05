@@ -28,6 +28,8 @@ resource "azurerm_dns_a_record" "this" {
   tags                = var.tags
 }
 
+# Create a DNS TXT record for each custom domain publicly exposed via DNS.
+# This record is used to validate the custom domain and allow the CDN to serve content for it.
 resource "azurerm_dns_txt_record" "validation" {
   for_each            = { for custom_domain in var.custom_domains : custom_domain.host_name => custom_domain if custom_domain.dns.zone_name != null && custom_domain.dns.zone_resource_group_name != null }
   name                = each.value.host_name == each.value.dns.zone_name ? "_dnsauth" : format("_dnsauth.%s", trimsuffix(each.value.host_name, ".${each.value.dns.zone_name}"))
