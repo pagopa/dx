@@ -1,5 +1,5 @@
 resource "azurerm_cdn_frontdoor_profile" "this" {
-  name                = "${module.naming_convention.prefix}-cdnp-${module.naming_convention.suffix}"
+  name                = "${module.naming_convention.prefix}-afd-${module.naming_convention.suffix}"
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
@@ -7,14 +7,14 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
 }
 
 resource "azurerm_cdn_frontdoor_endpoint" "this" {
-  name                     = "${module.naming_convention.prefix}-cdne-${module.naming_convention.suffix}"
+  name                     = "${module.naming_convention.prefix}-fde-${module.naming_convention.suffix}"
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
 
   tags = var.tags
 }
 
 resource "azurerm_cdn_frontdoor_origin_group" "this" {
-  name                     = "${module.naming_convention.prefix}-cdnog-${module.naming_convention.suffix}"
+  name                     = "${module.naming_convention.prefix}-fdog-${module.naming_convention.suffix}"
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
 
   health_probe {
@@ -30,7 +30,7 @@ resource "azurerm_cdn_frontdoor_origin_group" "this" {
 resource "azurerm_cdn_frontdoor_origin" "this" {
   for_each = var.origins
 
-  name                           = "${module.naming_convention.prefix}-${each.key}-cdnp-${module.naming_convention.suffix}"
+  name                           = "${module.naming_convention.prefix}-${each.key}-fdo-${module.naming_convention.suffix}"
   cdn_frontdoor_origin_group_id  = azurerm_cdn_frontdoor_origin_group.this.id
   enabled                        = true
   host_name                      = each.value.host_name
