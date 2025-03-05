@@ -27,3 +27,18 @@ resource "azurerm_dns_a_record" "this" {
   target_resource_id  = azurerm_cdn_frontdoor_endpoint.this.id
   tags                = var.tags
 }
+
+resource "azurerm_dns_txt_record" "validation" {
+  for_each            = { for custom_domain in var.custom_domains : custom_domain.host_name => custom_domain if custom_domain.dns.zone_name != null && custom_domain.dns.zone_resource_group_name != null }
+  name                = each.value.host_name == each.value.dns.zone_name ? "_dnsauth" : format("_dnsauth.%s", trimsuffix(each.value.host_name, ".${each.value.dns.zone_name}"))
+  zone_name           = each.value.dns.zone_name
+  resource_group_name = each.value.dns.zone_resource_group_name
+  ttl                 = "3600"
+  record {
+    value = azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token
+  }
+  tags = merge(var.tags, {
+    origin = each.value.host_name
+    cdn    = azurerm_cdn_frontdoor_profile.this.name
+  })
+}
