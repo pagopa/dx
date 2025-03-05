@@ -110,5 +110,7 @@ terraform test
 |------|-------------|
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the CDN FrontDoor Profile |
+| <a name="output_name"></a> [name](#output\_name) | The name of the CDN FrontDoor Profile |
 | <a name="output_origin_group_id"></a> [origin\_group\_id](#output\_origin\_group\_id) | The ID of the CDN FrontDoor Origin Group |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the resource group the CDN FrontDoor Profile was created in |
 <!-- END_TF_DOCS -->
