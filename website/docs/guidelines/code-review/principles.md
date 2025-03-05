@@ -1,9 +1,9 @@
 ---
-sidebar_label: Principles
+sidebar_label: Code Review Principles
 sidebar_position: 1
 ---
 
-# Principles
+# Code Review Principles
 
 ## Responsibilities of the Pull Request Author
 
