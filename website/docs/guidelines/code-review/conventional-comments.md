@@ -28,7 +28,7 @@ Conventional comments use specific prefixes to indicate the type of feedback bei
 ```
 - `label`: indicates the type of feedback being given
 - `subject`: main content of the comment
-- `decorations` (optional): extra decorating labels for the comment, surrounded by parentheses and comma-separated (e.g. `ui, blocking`)
+- `decorations` (optional): extra decorating labels for the comment, surrounded by parentheses and comma-separated (e.g. `(ui, blocking)`)
 - `discussion` (optional): contains supporting statements, context, reasoning, and anything else to help communicate the “why” and “next steps” for resolving the comment
 
 To see the full list of available labels, take a look at the [Conventional Comments documentation](https://conventionalcomments.org/).
