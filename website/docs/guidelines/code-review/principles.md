@@ -34,6 +34,13 @@ Do not add `TODO` comments in the source code unless specifically requested by t
 Do not add comments that simply explain what the code does. If a non-TODO comment is added, it should explain _why_ something was done, not _what_ the code does.
 
 Do not request a review for a PR if one or more CI checks are failing.
+
+:::note
+
+Feel free to open a Draft PR even if the CI checks are failing. Draft PR does not notify reviewers, unless explicitly requested.  
+
+:::
+
 If the CI fails but a review is still necessary, make sure to leave a comment explaining the reasons.
 
 ## Responsibilities of PR Reviewers
