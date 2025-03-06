@@ -8,12 +8,12 @@ NC="\033[0m" # No color
 
 # Function to display usage instructions
 usage() {
-  echo -e "${YELLOW}Usage:${NC} ./add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]"
+  echo -e "${YELLOW}Usage:${NC} ./add-module.sh --name <module-name> --description <brief-module-description> [--provider <provider>]"
   exit 1
 }
 
 # Default provider and GH organization if not provided
-ORG_NAME="pagopa"
+ORG_NAME="pagopa-dx"
 PROVIDER="azurerm"
 
 # Parse named arguments
@@ -21,7 +21,6 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     --name) MODULE_NAME="$2"; shift ;;
     --description) DESCRIPTION="$2"; shift ;;
-    --gh-org) ORG_NAME="$2"; shift ;;
     --provider) PROVIDER="$2"; shift ;;
     *) echo -e "${RED}Unknown parameter passed: $1${NC}"; usage ;;
   esac
@@ -40,8 +39,7 @@ if [ -z "$DESCRIPTION" ]; then
   usage
 fi
 
-DX_PREFIX="dx"
-SUBREPO_NAME="terraform-$PROVIDER-${DX_PREFIX}-${MODULE_NAME}"
+SUBREPO_NAME="terraform-$PROVIDER-${MODULE_NAME}"
 SUBREPO_NAME=${SUBREPO_NAME//_/\-}
 MODULE_DIR="infra/modules/$MODULE_NAME"
 
@@ -87,7 +85,7 @@ if gh repo view "$ORG_NAME/$SUBREPO_NAME" &> /dev/null; then
   echo -e "${GREEN}Description updated to: $DESCRIPTION${NC}"
 else
   # Confirm before creating the GitHub repository
-  read -p "$(echo -e ${YELLOW}Do you want to create the GitHub repository '$SUBREPO_NAME' in organization '$ORG_NAME'? (y/n): ${NC})" CONFIRM
+  read -p "Do you want to create the GitHub repository '$SUBREPO_NAME' in organization '$ORG_NAME'? (y/n):" CONFIRM
   if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
     echo -e "${YELLOW}Repository creation canceled.${NC}"
     exit 0
