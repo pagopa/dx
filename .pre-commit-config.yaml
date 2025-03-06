@@ -10,6 +10,11 @@ repos:
         exclude: ^.*\/modules\/.*
         pass_filenames: true
         require_serial: true
+      - id: lint-website-pages
+        name: Lint Website Pages (Markdown)
+        entry: yarn dlx prettier --write
+        language: system
+        files: "^website/docs/.*\\.md$"
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:
