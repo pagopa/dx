@@ -67,7 +67,7 @@ run "apim_is_correct_plan" {
 
   assert {
     condition     = length(azurerm_api_management_logger.this) == 0
-    error_message = "The APIM logegr should not exist"
+    error_message = "The APIM logger should not exist"
   }
 }
 
