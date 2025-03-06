@@ -2,13 +2,13 @@
 
 ## Overview
 
-Understanding Azure Identity and Access Management (IAM) roles and permissions is crucial for developer teams to securely and efficiently manage access to cloud resources while maintaining least privilege principles.
+Understanding Azure Identity and Access Management (IAM) roles and permissions is crucial for developer teams to securely and efficiently manage access to cloud resources while maintaining the least privilege principles.
 
 We use three Entra ID security groups per team: Admins (domain experts), Developers (regular team members), and Externals (contractors). This segmentation allows for appropriate access levels based on role responsibilities and trust levels. Each team is responsible and autonomous on how to split members among these groups by making PRs on [eng-azure-authorization](https://github.com/pagopa/eng-azure-authorization/tree/main/src/azure-subscriptions/subscriptions) repository.
 
 ## Permission Hierarchy
 
-This section shows the IAM configuration for each Entra ID group.
+This section outlines the IAM configuration for each Entra ID group.
 
 ### Subscription-Level Access
 
@@ -20,18 +20,18 @@ This section shows the IAM configuration for each Entra ID group.
 #### Developer Group
 
 - `Reader` role on the subscription: can view all resources but cannot modify them
-- Can have an overview of the broader infrastructure context
+- Provides an overview of the broader infrastructure context
 
 #### External Group
 
 - `Reader` role on the subscription: same as Developer group
-- Can understand system architecture while maintaining security
+- Can understand the system architecture while maintaining security
 
 ### Resource Group-Level Access
 
 #### Team-Specific Resource Groups
 
-Resource groups owned and managed by a single team.
+Resource groups are owned and managed by a single team.
 
 ##### Admin Group
 
@@ -57,7 +57,7 @@ Resource groups owned and managed by a single team.
 
 #### Shared Resources-Level Access
 
-Some resources are inherently shared across teams due to their nature or architectural decisions. These include also:
+Some resources are inherently shared across teams due to their nature or architectural decisions. These include (but are not limited to):
 
 - Application Gateways
 - API Management
@@ -65,7 +65,7 @@ Some resources are inherently shared across teams due to their nature or archite
 - Private Endpoints
 - Other product-specific resources
 
-For shared resources, teams must request role assignments through Pull Requests to the repository they are defined (generally `<product-name>-infra`). This process is useful to control access nad management of critical resources with big radius impact.
+For shared resources, teams must request role assignments through Pull Requests to the repository where they are defined (generally `<product-name>-infra`). This process is useful to control access nad management of critical resources with big radius impact.
 
 ## Role-Based Access Matrix
 
