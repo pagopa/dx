@@ -7,12 +7,16 @@ sidebar_position: 3
 
 ## Profile Setup
 
-Setting up your Git profile with the correct `user.name` and `user.email` is crucial for maintaining consistency in your project's commit history. This guide explains why it's important and how to configure your Git profile.
+Setting up your Git profile with the correct `user.name` and `user.email` is
+crucial for maintaining consistency in your project's commit history. This guide
+explains why it's important and how to configure your Git profile.
 
 ### Why Set Your Git Profile?
 
-- **Uniformity**: ensures that all commits are associated with a consistent identity, which is especially important in collaborative environments
-- **Professionalism**: using your work email address in commits reflects a professional approach and aligns with organizational standards
+- **Uniformity**: ensures that all commits are associated with a consistent
+  identity, which is especially important in collaborative environments
+- **Professionalism**: using your work email address in commits reflects a
+  professional approach and aligns with organizational standards
 
 ### How to Set Your Git Profile
 
@@ -23,9 +27,14 @@ git config --global user.name "Jane Doe"
 git config --global user.email "jane.doe@pagopa.it"
 ```
 
-Replace `"Jane Doe"` and `"jane.doe@pagopa.it"` with your actual name and work email address. This configuration will apply globally to all repositories on your machine. If you need to set it for a specific repository, omit the `--global` flag.
+Replace `"Jane Doe"` and `"jane.doe@pagopa.it"` with your actual name and work
+email address. This configuration will apply globally to all repositories on
+your machine. If you need to set it for a specific repository, omit the
+`--global` flag.
 
-Alternatively, you can manually edit your `.gitconfig` file to set your profile. Open the file located in your home directory and add or update the following lines:
+Alternatively, you can manually edit your `.gitconfig` file to set your profile.
+Open the file located in your home directory and add or update the following
+lines:
 
 ```ini
 [user]
@@ -35,20 +44,25 @@ Alternatively, you can manually edit your `.gitconfig` file to set your profile.
 
 This method provides a direct way to configure your Git profile settings.
 
-For more detailed information on Git configuration, you can refer to the [Git manual](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration).
+For more detailed information on Git configuration, you can refer to the
+[Git manual](https://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration).
 
 ## Signed Commits
 
 ### Why Use Signed Commits?
 
-Signed commits provide an additional layer of security and trust in a repository. While **not mandatory**, they can be useful in various scenarios:
+Signed commits provide an additional layer of security and trust in a
+repository. While **not mandatory**, they can be useful in various scenarios:
 
-- **Authenticity**: ensures that commits are genuinely from the author and have not been tampered with
-- **Trust**: helps reviewers and collaborators verify commit authorship without relying solely on email addresses
+- **Authenticity**: ensures that commits are genuinely from the author and have
+  not been tampered with
+- **Trust**: helps reviewers and collaborators verify commit authorship without
+  relying solely on email addresses
 
 ### Enabling Signed Commits
 
-To use signed commits, you need to generate a GPG key (if you don't already have one) and configure Git to use it.
+To use signed commits, you need to generate a GPG key (if you don't already have
+one) and configure Git to use it.
 
 #### Install GPG
 
@@ -58,13 +72,15 @@ If not yet installed, you can install GPG by running the following command:
 brew install gpg
 ```
 
-Once installed, you could need to add the following line to your `~/.gnupg/gpg.conf` file:
+Once installed, you could need to add the following line to your
+`~/.gnupg/gpg.conf` file:
 
 ```ini
 use-agent
 ```
 
-Additionally, add these lines to your shell profile file (`~/.bashrc`, `~/.bash_profile`, or equivalent) and restart your shell:
+Additionally, add these lines to your shell profile file (`~/.bashrc`,
+`~/.bash_profile`, or equivalent) and restart your shell:
 
 ```bash
 export GPG_TTY=$(tty)
@@ -86,24 +102,30 @@ You might need to run the command with `sudo` privileges.
 :::
 
 When prompted:
+
 - Select the key type: `(4) RSA (sign only)` is sufficient for signing commits
 - Choose a key size: `4096` bits is recommended
 - Set an expiration date (e.g., `2y` for two years)
 - Enter your name and email (`Jane Doe <jane.doe@pagopa.it>`)
 - Set a secure passphrase
 
-Alternatively, you can follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) to generate a GPG key.
+Alternatively, you can follow the
+[GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key)
+to generate a GPG key.
 
 :::important
 
-Pay attention to steps `12` and `13` in the GitHub guide. They explain how to copy the public key that you are need to add to your GitHub profile.
+Pay attention to steps `12` and `13` in the GitHub guide. They explain how to
+copy the public key that you are need to add to your GitHub profile.
 
 :::
 
 #### Update Your GPG Key to GitHub
 
-To make sure your commits are signed with the correct key, you need to add the key to your GitHub profile.  
-To address that, follow the [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account).
+To make sure your commits are signed with the correct key, you need to add the
+key to your GitHub profile.  
+To address that, follow the
+[GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account).
 
 #### List Your GPG Keys
 
@@ -139,6 +161,8 @@ Alternatively, you can edit your `.gitconfig` file and add:
     gpgSign = true
 ```
 
-Doing this, every time you run the commit command (`git commit -m`), by default, it will sign the commit.
+Doing this, every time you run the commit command (`git commit -m`), by default,
+it will sign the commit.
 
-For more details, refer to the [Git documentation on signing commits](https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work).
+For more details, refer to the
+[Git documentation on signing commits](https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work).

@@ -5,13 +5,19 @@ sidebar_position: 1
 
 # Branch Naming Conventions
 
-To maintain consistency and clarity in our Git workflow, you could follow the format `<activity-type>/<activity-name>` to name a branch. The activity name should be **short, meaningful, and in plural form where applicable**, similar to how you would name a folder containing multiple related files.
+To maintain consistency and clarity in our Git workflow, you could follow the
+format `<activity-type>/<activity-name>` to name a branch. The activity name
+should be **short, meaningful, and in plural form where applicable**, similar to
+how you would name a folder containing multiple related files.
 
 ## Guidelines
 
-- **Keep branch names clean and focused**: do not include tracking system activity IDs (e.g., Jira task IDs) in the branch name. Instead, [reference them in the PR description](../pull-request/format.md#description)
+- **Keep branch names clean and focused**: do not include tracking system
+  activity IDs (e.g., Jira task IDs) in the branch name. Instead,
+  [reference them in the PR description](../pull-request/format.md#description)
 - **Use lowercase and hyphens (`-`)** to separate words for readability
-- **Keep names concise but descriptive**, avoiding overly generic terms like `update` or `fix`
+- **Keep names concise but descriptive**, avoiding overly generic terms like
+  `update` or `fix`
 
 ## Activity Types
 
