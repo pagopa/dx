@@ -88,7 +88,7 @@ The first view is cleaner and easier to read, recommended for developers.
 | **ID Opex CD** | Reader | Reader | Reader | Reader | Reader | Reader | Writer |
 
 </details>
-<br>
+<br/>
 
 This view is instead recommended for cloud operators.
 
