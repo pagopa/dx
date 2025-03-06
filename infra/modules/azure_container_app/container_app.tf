@@ -2,7 +2,7 @@ resource "azurerm_container_app" "this" {
   name                         = "${module.naming_convention.prefix}-ca-${module.naming_convention.suffix}"
   container_app_environment_id = var.container_app_environment.id
   resource_group_name          = var.resource_group_name
-  revision_mode                = "Single"
+  revision_mode                = var.revision_mode
   workload_profile_name        = "Consumption"
 
   identity {

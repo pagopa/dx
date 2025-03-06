@@ -47,6 +47,17 @@ variable "tier" {
   }
 }
 
+variable "revision_mode" {
+  type        = string
+  description = "The revision mode for the container app. Valid values are 'Single' and 'Multiple'."
+  default     = "Multiple"
+
+  validation {
+    condition     = contains(["Single", "Multiple"], var.revision_mode)
+    error_message = "Valid values for revision_mode are 'Single' and 'Multiple'."
+  }
+}
+
 variable "container_app_templates" {
   type = list(object({
     image        = string
