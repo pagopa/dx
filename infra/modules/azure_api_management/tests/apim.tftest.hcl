@@ -55,15 +55,24 @@ run "apim_is_correct_plan" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
+    application_insights = {
+      enabled           = true
+      connection_string = "aConnectionString"
+    }
+
     subnet_id                     = run.setup_tests.subnet_id
     virtual_network_type_internal = true
-
   }
 
   # Checks some assertions
   assert {
     condition     = azurerm_api_management.this.sku_name == "Premium_1"
     error_message = "The APIM SKU is incorrect, have to be Premium_1"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management_logger.this) > 0
+    error_message = "The APIM logger does not exist"
   }
 }
 
