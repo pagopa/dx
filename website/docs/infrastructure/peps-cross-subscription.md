@@ -4,15 +4,6 @@ sidebar_label: Connecting Resources Across Azure Subscription via Private Endpoi
 
 # Connecting resources across Azure Subscription via Private Endpoints
 
-- [Connecting resources across Azure Subscription via Private Endpoints](#connecting-resources-across-azure-subscription-via-private-endpoints)
-  - [Overview](#overview)
-  - [Step-by-Step Implementation](#step-by-step-implementation)
-    - [Define the Private Endpoint in the caller's Terraform codebase (Subscription B)](#define-the-private-endpoint-in-the-callers-terraform-codebase-subscription-b)
-    - [Request Approval from the Target Team](#request-approval-from-the-target-team)
-      - [Private Endpoint Approval mechanism](#private-endpoint-approval-mechanism)
-        - [Via Azure Portal](#via-azure-portal)
-        - [Via Azure CLI](#via-azure-cli)
-
 ## Overview
 
 This guide explains how to enable network connectivity between two Azure resources in different subscriptions using Azure Private Endpoints via Terraform.
