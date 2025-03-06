@@ -85,7 +85,7 @@ if gh repo view "$ORG_NAME/$SUBREPO_NAME" &> /dev/null; then
   echo -e "${GREEN}Description updated to: $DESCRIPTION${NC}"
 else
   # Confirm before creating the GitHub repository
-  read -p "Do you want to create the GitHub repository '$SUBREPO_NAME' in organization '$ORG_NAME'? (y/n):" CONFIRM
+  read -p "$(echo -e "${YELLOW}Do you want to create the GitHub repository '${SUBREPO_NAME}' in organization '${ORG_NAME}'? (y/n): ${NC}")" CONFIRM
   if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
     echo -e "${YELLOW}Repository creation canceled.${NC}"
     exit 0
