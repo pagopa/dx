@@ -16,16 +16,13 @@ data "azurerm_log_analytics_workspace" "common" {
   resource_group_name = "${local.project}-common-rg-01"
 }
 
-module "container_app" {
+module "container_app_environment" {
   source = "../../"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  tier = "xs"
-
-  create_container_app_environment = true
-  log_analytics_workspace_id       = data.azurerm_log_analytics_workspace.common.id
+  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
   virtual_network = {
     name                = "${local.project}-common-vnet-01"
@@ -33,10 +30,6 @@ module "container_app" {
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
   subnet_cidr   = "10.50.100.0/23"
-  container_app_template = {
-    image = "nginx:latest"
-    name  = "nginx"
-  }
 
   tags = local.tags
 }

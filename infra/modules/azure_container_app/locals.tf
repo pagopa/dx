@@ -7,7 +7,6 @@ locals {
         min = 0
         max = 1
       }
-      zone_redundancy = false
     }
     "s" = {
       cpu    = 0.5
@@ -16,7 +15,6 @@ locals {
         min = 1
         max = 1
       }
-      zone_redundancy = true
     }
     "m" = {
       cpu    = 1.25
@@ -25,7 +23,6 @@ locals {
         min = 1
         max = 2
       }
-      zone_redundancy = true
     }
     "l" = {
       cpu    = 2
@@ -35,7 +32,6 @@ locals {
         max = 4
       }
     }
-    zone_redundancy = true
   }
 
   sku = lookup(local.sku_mapping, var.tier, null)

@@ -1,0 +1,7 @@
+{
+  "name": "azure_container_app_environment",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Provisions an Azure Container App Environment with a given configuration"
+}

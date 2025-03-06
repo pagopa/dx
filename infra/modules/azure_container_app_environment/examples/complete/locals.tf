@@ -23,7 +23,7 @@ locals {
     CreatedBy      = "Terraform"
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/modules/azure_container_app/examples/simple"
+    Source         = "https://github.com/pagopa/dx/modules/azure_container_app_environment/examples/complete"
     ManagementTeam = "Developer Experience"
   }
 }

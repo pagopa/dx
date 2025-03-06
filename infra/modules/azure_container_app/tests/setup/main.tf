@@ -24,25 +24,36 @@ data "azurerm_resource_group" "rg" {
   name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
 }
 
-data "azurerm_subnet" "pep" {
-  name                 = "${var.environment.prefix}-${var.environment.env_short}-itn-pep-snet-01"
-  virtual_network_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-vnet-01"
-  resource_group_name  = "${var.environment.prefix}-${var.environment.env_short}-itn-network-rg-01"
-}
-
 data "azurerm_log_analytics_workspace" "logs" {
   name                = "${var.environment.prefix}-${var.environment.env_short}-itn-common-log-${module.naming_convention.suffix}"
-  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-01"
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-${module.naming_convention.suffix}"
+}
+
+data "azurerm_container_app_environment" "cae" {
+  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-github-runner-cae-${module.naming_convention.suffix}"
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-github-runner-rg-${module.naming_convention.suffix}"
+}
+
+data "azurerm_private_dns_zone" "dns" {
+  name                = "azurecontainerapps.io"
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-network-rg-${module.naming_convention.suffix}"
 }
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
 }
 
-output "pep_snet_id" {
-  value = data.azurerm_subnet.pep.id
-}
-
 output "log_analytics_id" {
   value = data.azurerm_log_analytics_workspace.logs.id
+}
+
+output "container_app_environment_id" {
+  value = data.azurerm_container_app_environment.cae.id
+}
+
+output "private_dns_zone" {
+  value = {
+    name                = data.azurerm_private_dns_zone.dns.name
+    resource_group_name = data.azurerm_private_dns_zone.dns.resource_group_name
+  }
 }

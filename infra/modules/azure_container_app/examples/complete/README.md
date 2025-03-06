@@ -12,13 +12,15 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_container_app"></a> [container\_app](#module\_container\_app) | ../../ | n/a |
+| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | ../../../azure_container_app_environment | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [azurerm_container_app_environment.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
 | [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_log_analytics_workspace.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
+| [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 
 ## Inputs
 

@@ -48,25 +48,27 @@ run "container_app_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
 
-    create_container_app_environment = true
-    log_analytics_workspace_id       = run.setup_tests.log_analytics_id
-  
-    virtual_network = {
-      name                = "dx-d-itn-common-vnet-01"
-      resource_group_name = "dx-d-itn-network-rg-01"
-    }
-    subnet_pep_id = run.setup_tests.pep_snet_id
-    subnet_cidr   = "10.50.100.0/24"
-    
-    container_app_template = {
-      image = "nginx"
-      name  = "nginx"
-
-      app_settings = {
-        "TEST1" = "value1",
-        "TEST2" = "value2"
+    container_app_environment = {
+      id = run.setup_tests.container_app_environment_id
+      private_dns_zone = {
+        name                = run.setup_tests.private_dns_zone.name
+        resource_group_name = run.setup_tests.private_dns_zone.resource_group_name
       }
     }
+
+    log_analytics_workspace_id       = run.setup_tests.log_analytics_id
+
+    container_app_templates = [
+      {
+        image = "nginx:latest"
+        name  = "nginx"
+
+        app_settings = {
+          "TEST1" = "value1",
+          "TEST2" = "value2"
+        }
+      }
+    ]
   }
 
   # Checks some assertions
@@ -76,12 +78,7 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_container_app_environment.this[0].name == "dx-d-itn-modules-test-cae-01"
-    error_message = "The container app environment name is not correct"
-  }
-
-  assert {
-    condition     = azurerm_container_app.this.template[0].container[0].image == "nginx"
+    condition     = azurerm_container_app.this.template[0].container[0].image == "nginx:latest"
     error_message = "The container app image is not correct"
   }
 
@@ -93,5 +90,15 @@ run "container_app_is_correct_plan" {
   assert {
     condition     = azurerm_container_app.this.template[0].max_replicas == 1 && azurerm_container_app.this.template[0].min_replicas == 0
     error_message = "The container app replica values are not correct"
+  }
+
+  assert {
+    condition     = azurerm_private_dns_a_record.this.zone_name == var.container_app_environment.private_dns_zone.name
+    error_message = "The private DNS zone name is not correct"
+  }
+
+  assert {
+    condition     = azurerm_private_dns_a_record.this.resource_group_name == var.container_app_environment.private_dns_zone.resource_group_name
+    error_message = "The private DNS resource group name is not correct"
   }
 }
