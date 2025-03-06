@@ -1,22 +1,29 @@
 ---
-sidebar_label: Connecting Resources Across Azure Subscription via Private Endpoints
+sidebar_label:
+  Connecting Resources Across Azure Subscription via Private Endpoints
 ---
 
 # Connecting resources across Azure Subscription via Private Endpoints
 
 ## Overview
 
-This guide explains how to enable network connectivity between two Azure resources in different subscriptions using Azure Private Endpoints via Terraform.
+This guide explains how to enable network connectivity between two Azure
+resources in different subscriptions using Azure Private Endpoints via
+Terraform.
 
-The diagram below is a high-level view of the architecture described in the next sections. The ultimate goal of is to ensure a clear separation of concerns and resource ownership.
+The diagram below is a high-level view of the architecture described in the next
+sections. The ultimate goal of is to ensure a clear separation of concerns and
+resource ownership.
 
 ![alt text](peps-cross-subscription/architecture.svg)
 
 In short:
 
 - Team B is the exclusive owner of the Private Endpoint
-  - The Private Endpoint code should be declared in the caller's repository (subscription B)
-- Team A must approve the connection request without further interaction between the two teams
+  - The Private Endpoint code should be declared in the caller's repository
+    (subscription B)
+- Team A must approve the connection request without further interaction between
+  the two teams
 - Each resource of the subscription B requires its own Private Endpoint
 - The same Private Endpoint should be used by multiple apps from the same team
 
@@ -43,19 +50,27 @@ resource "azurerm_private_endpoint" "example" {
 
 :::warning
 
-For resources in the same subscription, it is recommended to set the property `is_manual_connection` to `false` in order to skip the approval step as the owner of the two resources is often the same. However, in this case, the property must be set to `true`; otherwise, the approval mechanism will not work.
+For resources in the same subscription, it is recommended to set the property
+`is_manual_connection` to `false` in order to skip the approval step as the
+owner of the two resources is often the same. However, in this case, the
+property must be set to `true`; otherwise, the approval mechanism will not work.
 
 :::
 
 :::info
 
-In this example, the `private_connection_resource_id` value is a hardcoded string. If you prefer to have a reference via Terraform `data` block, you and the Managed Identities federated with your GitHub workflows need to have the `Reader` role on the target resource (subscription A).
+In this example, the `private_connection_resource_id` value is a hardcoded
+string. If you prefer to have a reference via Terraform `data` block, you and
+the Managed Identities federated with your GitHub workflows need to have the
+`Reader` role on the target resource (subscription A).
 
 :::
 
 ### Request Approval from the Target Team
 
-Once the Terraform configuration is applied, the target team (Subscription A) will receive a connection request. The connection between the two resources will not work until the request is not approved.
+Once the Terraform configuration is applied, the target team (Subscription A)
+will receive a connection request. The connection between the two resources will
+not work until the request is not approved.
 
 #### Private Endpoint Approval mechanism
 
@@ -76,6 +91,7 @@ az network private-endpoint-connection approve \
 
 ::: info
 
-It is recommended to add a meaningful description to the connection, indicating who and why is trying to connect to.
+It is recommended to add a meaningful description to the connection, indicating
+who and why is trying to connect to.
 
 :::
