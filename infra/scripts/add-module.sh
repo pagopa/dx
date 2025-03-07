@@ -39,9 +39,9 @@ if [ -z "$DESCRIPTION" ]; then
   usage
 fi
 
-SUBREPO_NAME="terraform-$PROVIDER-${MODULE_NAME}"
+SUBREPO_NAME="terraform-${PROVIDER}-${MODULE_NAME}"
 SUBREPO_NAME=${SUBREPO_NAME//_/\-}
-MODULE_DIR="infra/modules/$MODULE_NAME"
+MODULE_DIR="infra/modules/${MODULE_NAME}"
 
 # Create the module directory if it doesn't exist
 if [ ! -d "$MODULE_DIR" ]; then
