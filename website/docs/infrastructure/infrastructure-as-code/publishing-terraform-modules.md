@@ -119,9 +119,7 @@ The script performs several important steps:
 5. Initializes the repository with the module's base code
 
 After successful initialization, you'll need to:
-1. Contact DevEx team members in the #team_devex_help channel, to add the new repository to:
-   - The dx-pagopa-bot PAT
-   - Track it in the eng-github-authorization
+1. Start developing you module
 2. Create a changeset to produce the first release
 
 ### Adding the Module to the Terraform Registry
@@ -137,7 +135,7 @@ After completing all previous steps and ensuring that the module has been pushed
 
 3. **Add the Repository**  
    - Click **Publish** => **Module**.
-   - Select the **GitHub repository** corresponding to the module (e.g., `terraform-azurerm-dx-azure-api-management`).
+   - Select the **GitHub repository** corresponding to the module (e.g., `terraform-azurerm-azure-api-management`).
    - Confirm the repository settings.
 
 4. **Verify Publication**  
