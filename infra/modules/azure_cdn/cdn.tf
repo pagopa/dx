@@ -58,7 +58,6 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 
   cache {
     query_string_caching_behavior = "IgnoreQueryString"
-    compression_enabled           = true
   }
 }
 

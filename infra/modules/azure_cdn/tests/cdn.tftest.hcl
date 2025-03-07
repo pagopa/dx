@@ -32,7 +32,7 @@ run "setup_tests" {
 }
 
 run "verify_basic_cdn_setup" {
-  command = plan
+  command = apply
   
   variables {
     resource_group_name = run.setup_tests.resource_group_name
