@@ -98,7 +98,7 @@ and reviewers may spot things later that they may not have seen the first time.
   unrelated to the overall purpose of the changes?
 - Follow the
   [guidelines to compile PR's title and description](../pull-request/format.md#format-for-pull-requests)
-- Don’t take it personally. The review is of the code, not of you
+- Don’t take it personally: the review is of the code, not of you
 - Extract unrelated changes and refactorings into future PRs
 - Seek to understand the reviewer’s perspective
 - Try to respond to every comment
@@ -108,6 +108,10 @@ and reviewers may spot things later that they may not have seen the first time.
   address non mandatory suggestions with a follow up, after the PR is merged
 - Once ready for the next round, request feedback from the reviewer. Follow the
   [suggestion about requesting a new review from the GitHub guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/requesting-a-pull-request-review#requesting-reviews-from-collaborators-and-organization-members)
+- If you disagree with a suggestion, explain why: back up your arguments with
+  facts and data
+- If you make a change after a reviewer has approved it, you can ask them to
+  review the PR again
 
 ## PR Reviewer
 
