@@ -41,8 +41,8 @@ module "container_app" {
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  tier = "xs"
-
+  tier          = "xs"
+  revision_mode = "Single"
   container_app_templates = [
     {
       image = "nginx:latest"
@@ -70,6 +70,7 @@ module "container_app" {
       name                = module.container_app_environment.private_dns_zone.name
       resource_group_name = module.container_app_environment.private_dns_zone.resource_group_name
     }
+    private_endpoint_ip = module.container_app_environment.private_endpoint_ip
   }
 
   tags = local.tags

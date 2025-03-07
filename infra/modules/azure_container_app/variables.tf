@@ -30,6 +30,7 @@ variable "container_app_environment" {
       name                = string
       resource_group_name = string
     })
+    private_endpoint_ip = optional(string, "")
   })
   description = "The container app environment to deploy the container app to."
 }
