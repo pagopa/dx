@@ -4,6 +4,15 @@ locals {
     location = var.environment.location
   }
 
+  resource_group_ids = merge(
+    {
+      "main" = azurerm_resource_group.main.id
+    },
+    {
+      for rg in var.additional_resource_group_ids : rg => rg
+    }
+  )
+
   container_apps = {
     job_name    = "${module.naming_convention.prefix}-caj-${module.naming_convention.suffix}"
     secret_name = "personal-access-token"
