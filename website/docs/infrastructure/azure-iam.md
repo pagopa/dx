@@ -111,35 +111,23 @@ This view is instead recommended for cloud operators.
 
 ### Roles explanation
 
-`Reader`: Resource control plane read-only access
-
-`Reader and Data Access`: Resource data plane read access. Allow to write on Storage Account using keys as authentication system
-
-`PagoPA IaC Reader`: List keys and credentials for IaC access
-
-`DocumentDB Account Contributor`: CosmosDB control plane access
-
-`Key Vault Data Access Administrator`: Manage access to Azure Key Vault
-
-`Key Vault Administrator`: Include data plane operations on a key vault and all objects in it, including certificates, keys, and secrets
-
-`Key Vault Secrets Officer`: Perform any action on the secrets of a key vault, except manage permissions.
-
-`Role Based Access Control Administrator`: Manage access to Azure resources by assigning roles using Azure RBAC
-
-`User Access Administrator`: Lets you manage user access to Azure resources, including locks
-
-`Network Contributor`: Lets you manage networks, but not access to them
-
-`Private DNS Zone Contributor`: Lets you manage private DNS zone resources, but not the virtual networks they are linked to.
-
-`API Management Service Contributor`: Can manage service and the APIs
-
-`Storage Blob Data Contributor`: Read, write, and delete Azure Storage containers and blobs
-
-`Storage Queue Data Contributor`: Read, write, and delete Azure Storage queues and queue messages
-
-`Storage Table Data Contributor`: Allows for read, write and delete access to Azure Storage tables and entities
+| Role | Description |
+|------|------------|
+| `Reader` | Resource control plane read-only access |
+| `Reader and Data Access` | Resource data plane read access. Allows writing on Storage Account using keys as authentication system |
+| `PagoPA IaC Reader` | List keys and credentials for IaC access |
+| `DocumentDB Account Contributor` | CosmosDB control plane access |
+| `Key Vault Data Access Administrator` | Manage access to Azure Key Vault |
+| `Key Vault Administrator` | Includes data plane operations on a key vault and all objects in it, including certificates, keys, and secrets |
+| `Key Vault Secrets Officer` | Perform any action on the secrets of a key vault, except managing permissions |
+| `Role Based Access Control Administrator` | Manage access to Azure resources by assigning roles using Azure RBAC |
+| `User Access Administrator` | Lets you manage user access to Azure resources, including locks |
+| `Network Contributor` | Lets you manage networks, but not access to them |
+| `Private DNS Zone Contributor` | Lets you manage private DNS zone resources, but not the virtual networks they are linked to |
+| `API Management Service Contributor` | Can manage the service and the APIs |
+| `Storage Blob Data Contributor` | Read, write, and delete Azure Storage containers and blobs |
+| `Storage Queue Data Contributor` | Read, write, and delete Azure Storage queues and queue messages |
+| `Storage Table Data Contributor` | Allows for read, write, and delete access to Azure Storage tables and entities |
 
 ## Code Examples (How-To) and Common Troubleshooting
 
