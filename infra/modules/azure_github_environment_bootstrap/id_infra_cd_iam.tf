@@ -14,18 +14,22 @@ resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
 }
 
 # Resource Group
-resource "azurerm_role_assignment" "infra_cd_rg_contributor" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_contributor" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at monorepository resource group scope"
+  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at ${each.value} resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_user_access_admin" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_user_access_admin" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage locks at monorepository resource group scope"
+  description          = "Allow ${var.repository.name} Infra CD identity to manage locks at ${each.value} resource group scope"
 }
 
 # VNet
@@ -80,22 +84,28 @@ resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
 }
 
 # Key Vault
-resource "azurerm_role_assignment" "infra_cd_rg_kv_secr" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_kv_secr" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to changes to KeyVault's secrets at monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_kv_cert" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_kv_cert" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Key Vault Certificates Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's certificates at monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rg_kv_crypto" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_kv_crypto" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Key Vault Crypto Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's keys at monorepository resource group scope"
@@ -112,22 +122,28 @@ resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
 }
 
 # Storage Account - Blob, Queue and Table
-resource "azurerm_role_assignment" "infra_cd_rg_st_blob_contributor" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_cd_rgs_st_blob_contributor" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account blobs monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rg_st_queue_contributor" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_ci_rgs_st_queue_contributor" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues monorepository resource group scope"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rg_st_table_contributor" {
-  scope                = azurerm_resource_group.main.id
+resource "azurerm_role_assignment" "infra_ci_rgs_st_table_contributor" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account tables monorepository resource group scope"

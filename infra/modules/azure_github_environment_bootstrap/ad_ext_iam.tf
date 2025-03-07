@@ -1,9 +1,9 @@
 # Resource Group
-resource "azurerm_role_assignment" "externals_group_rg" {
-  count = var.entraid_groups.externals_object_id == null ? 0 : 1
+resource "azurerm_role_assignment" "externals_group_rgs" {
+  for_each = var.entraid_groups.externals_object_id == null ? {} : local.resource_group_ids
 
-  scope                = azurerm_resource_group.main.id
+  scope                = each.value
   role_definition_name = "Reader"
   principal_id         = var.entraid_groups.externals_object_id
-  description          = "Allow ${var.repository.name} AD external group to read resources at resource group scope"
+  description          = "Allow ${var.repository.name} AD external group to read resources at ${each.value} resource group scope"
 }
