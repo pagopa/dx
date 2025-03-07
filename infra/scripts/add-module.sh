@@ -120,7 +120,6 @@ EOL
     git push -u origin main
     rm .gitignore
     echo -e "${GREEN}Module '${MODULE_NAME}' pushed to GitHub repository.${NC}"
-    echo -e "${YELLOW}Please, ask the DevEx members to add the new repository to the dx-pagopa-bot PAT and on eng-github-authorization repo.${NC}"
     echo -e "${YELLOW}The creation of a changeset is required to produce the first release. Please run yarn changeset from the root of the repo.${NC}"
   else
     echo -e "${YELLOW}Module '${MODULE_NAME}' already has a Git repository. Skipping initialization.${NC}"
