@@ -93,7 +93,7 @@ jobs:
             # Expiry Date (ModifiedOn + TTL)
             expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
 
-            if [[ "$expiryDate" == "$today" ]]; then
+            if [[ "$expiryDate" > "$today" || "$expiryDate" == "$today" ]]; then
               echo "Resource $resourceId is due for deletion."
               # Delete resource
               # az resource delete --ids "$resourceId" # <----- Uncomment this line to enable resource deletion
@@ -108,6 +108,7 @@ jobs:
         id: notify
         run: |
           today=$(date -u +%Y-%m-%d)
+          week=$(date -u -d "$today + 7 days" +%Y-%m-%d)
           tomorrow=$(date -u -d "$today + 1 day" +%Y-%m-%d)
           ttl=${{ inputs.ttl }}
           resources='${{ steps.resources.outputs.resources }}'
@@ -122,8 +123,9 @@ jobs:
             resourceId=$(_jq '.id')
 
             expiryDate=$(date -d "$modifiedOn + $ttl days" +%Y-%m-%d)
-
-            if [[ "$expiryDate" == "$tomorrow" ]]; then
+            
+            # Notify about resources expiring a week before and the day before
+            if [[ "$expiryDate" == "$tomorrow" || "$expiryDate" == "$week" ]]; then
               echo "Resource $resourceId is set to expire on $expiryDate."
               message+="\n:small_orange_diamond: *Resource:* \`$resourceId\` is set to expire on *$expiryDate*."
             fi

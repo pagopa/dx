@@ -2,6 +2,8 @@ name: Cleanup DEV Resources
 
 on:
   workflow_dispatch:
+  # schedule:
+  #   - cron: '00 08 * * 1' # Run at 08:00 every Monday
 
 jobs:
   cleanup-dev-resources:
