@@ -5,7 +5,7 @@ on:
 
 jobs:
   cleanup-dev-resources:
-    uses: ./.github/workflows/_cleanup_resources.yaml
+    uses: ./.github/workflows/chron-azure-cleanup-resources.yaml
     name: Cleanup DEV Resources
     secrets: inherit
     with:
