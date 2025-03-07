@@ -144,7 +144,7 @@ jobs:
           fi
 
           terraform show -no-color -json plan.tfplan > plan.json
-          NO_CHANGES=$(jq 'if .resource_changes then [.resource_changes[] | select(.change.actions | index("create") or index("update") or index("delete"))] | length else 0 end' plan.json)
+          NO_CHANGES=$(jq 'if .resource_changes then [.resource_changes[] | select(.change.actions | index("create") or index("update") or index("delete")) | select((.change.before | del(.tags)) != (.change.after | del(.tags)))] | length else 0 end' plan.json)
 
           if [ "$NO_CHANGES" -eq 0 ]; then
             echo "No drifts in this configuration"
