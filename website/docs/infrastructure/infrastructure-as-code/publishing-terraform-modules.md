@@ -13,7 +13,7 @@ This documentation is intended for contributors working on DevEx Terraform modul
 
 :::
 
-The Terraform Registry serves as a central repository where organizations can publish and share their Terraform modules with the community. It provides a standardized way to discover, distribute, and version infrastructure as code components. Our organization maintains a collection of modules in the PagoPA namespace, which you can find [here](https://registry.terraform.io/namespaces/pagopa).
+The Terraform Registry serves as a central repository where organizations can publish and share their Terraform modules with the community. It provides a standardized way to discover, distribute, and version infrastructure as code components. Our organization maintains a collection of modules in the PagoPA namespace, which you can find [here](https://registry.terraform.io/namespaces/pagopa-dx).
 
 We'll cover the entire lifecycle from initialization to publication, including our versioning system and automated workflows.
 
@@ -59,8 +59,8 @@ The Terraform Registry has specific requirements about repository structure - ea
 
 1. Takes the code from our monorepo's `infra/modules` directory
 2. Pushes each module to its dedicated sub-repository, following the Terraform Registry naming convention:
-   - Repository name format: `terraform-<PROVIDER>-dx-<NAME>`
-   - Example: `terraform-azurerm-dx-azure-api-management`
+   - Repository name format: `terraform-<PROVIDER>-<NAME>`
+   - Example: `terraform-azurerm-azure-api-management`
 
 This process is handled by the [`Push modules to subrepo`](https://github.com/pagopa/dx/blob/main/.github/workflows/push_modules_to_subrepo.yml) GitHub Action, which:
 - Identifies modified modules in the monorepo
@@ -76,9 +76,9 @@ infra/modules/
 ```
 
 They will be automatically pushed to separate repositories:
-- `terraform-azurerm-dx-azure-api-management`
-- `terraform-azurerm-dx-azure-container-app`
-- `terraform-azurerm-dx-azure-cosmos-db`
+- `terraform-azurerm-azure-api-management`
+- `terraform-azurerm-azure-container-app`
+- `terraform-azurerm-azure-cosmos-db`
 
 Each sub-repository maintains its own version history and tags, making it compatible with the Terraform Registry while allowing us to keep our centralized development workflow in the monorepo.
 
@@ -100,13 +100,12 @@ To create a new module, we provide an automated initialization script called `ad
 The script must be executed in the root of the dx repository and accepts the following parameters:
 
 ```bash
-./infra/scripts/add-module.sh --name <module-name> --description <brief-module-description> [--gh-org <organization>] [--provider <provider>]
+./infra/scripts/add-module.sh --name <module-name> --description <brief-module-description> [--provider <provider>]
 ```
 
 Parameters explained:
 - `--name`: Required. The name of your module (e.g., `azure_api_management`)
 - `--description`: Required. A brief description of the module's objective (e.g., `Deploys an Azure API Management service with monitoring and network configuration`)
-- `--gh-org`: Optional. The GitHub organization where the module's sub-repository will be created. Defaults to `pagopa`.
 - `--provider`: Optional. Defaults to `azurerm`. Specifies the cloud provider (e.g., `aws`, `azurerm`)
 
 ### What the Initialization Script Does
