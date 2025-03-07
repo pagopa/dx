@@ -7,6 +7,7 @@ locals {
       container_name                = blob.container_name
       container_resource_manager_id = blob.container_name != "*" ? "${blob.storage_account_id}/blobServices/default/containers/${blob.container_name}" : "*"
       role                          = blob.role
+      description                   = blob.description
     }
   ]
   blob_assignments = { for assignment in local.norm_blobs : "${assignment.storage_account_name}|${assignment.container_name}|${assignment.role}" => assignment }
@@ -20,6 +21,7 @@ locals {
       table_name                = table.table_name
       table_resource_manager_id = table.table_name != "*" ? "${table.storage_account_id}/tableServices/default/tables/${table.table_name}" : "*"
       role                      = table.role
+      description               = table.description
     }
   ]
   table_assignments = { for assignment in local.norm_tables : "${assignment.storage_account_name}|${assignment.table_name}|${assignment.role}" => assignment }
@@ -33,6 +35,7 @@ locals {
       queue_name                = queue.queue_name
       queue_resource_manager_id = queue.queue_name != "*" ? "${queue.storage_account_id}/queueServices/default/queues/${queue.queue_name}" : "*"
       role                      = queue.role
+      description               = queue.description
     }
   ]
   queue_assignments = merge([for key, item in local.norm_queues : { for role_name in local.role_definition_name.queue[lower(item.role)] : "${item.storage_account_name}|${item.queue_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name }) }]...)

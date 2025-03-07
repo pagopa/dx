@@ -3,8 +3,6 @@ locals {
     for vault in var.key_vault :
     merge(vault, {
       name                = provider::azurerm::parse_resource_id(vault.id)["resource_name"]
-      id                  = vault.id
-      has_rbac_support    = vault.has_rbac_support
       resource_group_name = provider::azurerm::parse_resource_id(vault.id)["resource_group_name"]
     })
   ]

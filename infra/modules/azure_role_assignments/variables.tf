@@ -31,6 +31,7 @@ variable "key_vault" {
   type = list(object({
     id               = string
     has_rbac_support = optional(bool, null)
+    description      = optional(string, null)
     roles = object({
       secrets      = optional(string, "")
       certificates = optional(string, "")
@@ -58,6 +59,7 @@ variable "storage_table" {
     table_name                = optional(string, "*")
     table_resource_manager_id = optional(string, null)
     role                      = string
+    description               = optional(string, null)
   }))
 
   default = []
@@ -71,6 +73,7 @@ variable "storage_blob" {
     container_name                = optional(string, "*")
     container_resource_manager_id = optional(string, null)
     role                          = string
+    description                   = optional(string, null)
   }))
 
   default = []
@@ -83,6 +86,7 @@ variable "storage_queue" {
     queue_name                = optional(string, "*")
     queue_resource_manager_id = optional(string, null)
     role                      = string
+    description               = optional(string, null)
   }))
 
   default = []
@@ -94,6 +98,7 @@ variable "event_hub" {
     namespace_id    = string
     event_hub_names = optional(list(string), ["*"])
     role            = string
+    description     = optional(string, null)
   }))
 
   default = []
@@ -102,8 +107,9 @@ variable "event_hub" {
 variable "apim" {
   description = "A list of APIM role assignments"
   type = list(object({
-    id   = string
-    role = string
+    id          = string
+    role        = string
+    description = optional(string, null)
   }))
 
   default = []

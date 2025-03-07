@@ -41,14 +41,17 @@ run "rbac_role_assignment_is_correct" {
       {
         id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "owner"
+        description         = "This is an owner"
       },
       {
         id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "writer"
+        description         = "This is a writer"
       },
       {
         id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "reader"
+        description         = "This is a reader"
       }
     ]
 

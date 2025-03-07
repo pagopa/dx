@@ -9,6 +9,7 @@ locals {
           role                = entry.role
           event_hub_name      = event_hub_name
           event_hub_id        = "${entry.namespace_id}/eventhubs/${event_hub_name}"
+          description         = entry.description
         }
       ]
     ]) : "${provider::azurerm::parse_resource_id(assignment.namespace_id)["resource_name"]}|${assignment.event_hub_name}|${assignment.role}" => assignment

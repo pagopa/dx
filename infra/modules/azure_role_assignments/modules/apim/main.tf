@@ -3,4 +3,5 @@ resource "azurerm_role_assignment" "this" {
   role_definition_name = local.role_definition_name[lower(each.value.role)]
   scope                = each.value.id
   principal_id         = var.principal_id
+  description          = each.value.description
 }

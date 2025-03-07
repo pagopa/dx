@@ -4,6 +4,7 @@ locals {
     id                  = apim.id
     resource_group_name = provider::azurerm::parse_resource_id(apim.id)["resource_group_name"]
     role                = apim.role
+    description         = apim.description
   }]
   role_definition_name = {
     reader = "API Management Service Reader Role"

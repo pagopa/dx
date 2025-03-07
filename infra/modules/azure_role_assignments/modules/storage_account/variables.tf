@@ -9,6 +9,7 @@ variable "storage_table" {
     storage_account_id = string
     table_name         = optional(string, "*")
     role               = string
+    description        = optional(string, null)
   }))
 
   validation {
@@ -32,6 +33,7 @@ variable "storage_blob" {
     storage_account_id = string
     container_name     = optional(string, "*")
     role               = string
+    description        = optional(string, null)
   }))
 
   validation {
@@ -55,6 +57,7 @@ variable "storage_queue" {
     storage_account_id = string
     queue_name         = optional(string, "*")
     role               = string
+    description        = optional(string, null)
   }))
 
   validation {

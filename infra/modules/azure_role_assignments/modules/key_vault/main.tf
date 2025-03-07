@@ -22,6 +22,7 @@ resource "azurerm_role_assignment" "secrets" {
   scope                = each.value.id
   role_definition_name = local.permissions_rbac.secrets[each.value.roles.secrets]
   principal_id         = var.principal_id
+  description          = each.value.description
 }
 
 resource "azurerm_role_assignment" "keys" {
@@ -33,6 +34,7 @@ resource "azurerm_role_assignment" "keys" {
   scope                = each.value.id
   role_definition_name = local.permissions_rbac.keys[each.value.roles.keys]
   principal_id         = var.principal_id
+  description          = each.value.description
 }
 
 resource "azurerm_role_assignment" "certificates" {
@@ -44,4 +46,5 @@ resource "azurerm_role_assignment" "certificates" {
   scope                = each.value.id
   role_definition_name = local.permissions_rbac.certificates[each.value.roles.certificates]
   principal_id         = var.principal_id
+  description          = each.value.description
 }
