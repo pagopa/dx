@@ -56,6 +56,12 @@ variable "revision_mode" {
   }
 }
 
+variable "target_port" {
+  type        = number
+  description = "The target port for the container app."
+  default     = 8080
+}
+
 variable "container_app_templates" {
   type = list(object({
     image        = string
