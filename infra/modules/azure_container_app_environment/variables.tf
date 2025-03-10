@@ -63,7 +63,16 @@ variable "virtual_network" {
     name                = string
     resource_group_name = string
   })
-  description = "Virtual network in which to create the subnet"
+  default = {
+    name                = null
+    resource_group_name = null
+  }
+  description = "(Optional) Virtual network in which to create the subnet"
+
+  validation {
+    condition     = (var.subnet_id != null) != (var.virtual_network.name != null && var.virtual_network.resource_group_name != null)
+    error_message = "Please specify the subnet_id or the virtual_network.name and virtual_network.resource_group_name, not both"
+  }
 }
 
 variable "private_dns_zone_resource_group_name" {
