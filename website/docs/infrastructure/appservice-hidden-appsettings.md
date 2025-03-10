@@ -53,7 +53,7 @@ hide. Moreover, it is an Azure best practice with the following benefits:
 
 ### Techniques to Facilitate the Code Refactoring
 
-However, this transition require some code refactoring. We recommend to
+However, this transition requires some code refactoring. We recommend to
 encapsulate the logic in the submodule of your AppService/Functions Apps in
 something like:
 
