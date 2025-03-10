@@ -38,9 +38,19 @@ In fact, an AppService can access a KeyVault secret by:
 - Giving AppService system-assigned managed identity the access to read secrets:
   - KeyVaults using Access Policies should give `Get` and `List` permissions
   - KeyVaults using RBAC should be given `Key Vault Secrets User`
-- By referencing the secrets from the AppService environment variables
-  - Use the syntax
-    `@Microsoft.KeyVault(VaultName=<kv-name>;SecretName=<secret-name>)`
+- By referencing the secrets from the AppService environment variables, using
+  one between:
+  - `@Microsoft.KeyVault(VaultName=<kv-name>;SecretName=<secret-name>)`
+  - `@Microsoft.KeyVault(SecretUri=https://<kv-name>.vault.azure.net/secrets/<secret-name>)`
+
+:::warning
+
+Despite it is possible to refer a specific secret version, the practice is
+discouraged as it requires a manual secret rotation. More information are
+available
+[here](https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#source-app-settings-from-key-vault)
+
+:::
 
 Adopting this approach, Terraform code will not have any sensitive value to
 hide. Moreover, it is an Azure best practice with the following benefits:
