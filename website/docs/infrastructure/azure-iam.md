@@ -1,4 +1,4 @@
-# Azure IAM Roles and Permissions for Developer Teams
+# Managing Azure IAM Roles and Permissions
 
 ## Overview
 
@@ -6,15 +6,25 @@ Understanding Azure Identity and Access Management (IAM) roles and permissions
 is crucial for developer teams to securely and efficiently manage access to
 cloud resources while maintaining the least privilege principles.
 
-We use three Entra ID security groups per team: Admins (domain experts),
-Developers (regular team members), and Externals (contractors). This
-segmentation allows for appropriate access levels based on role responsibilities
-and trust levels. Each team is responsible and autonomous on how to split
-members among these groups by making PRs on
+In order to ensure a clear separation of concerns and resource ownership, as DX
+team, we have defined a set of guidelines and best practices for managing IAM
+roles and permissions in Azure.
+
+## Roles and Permissions
+
+We propose a role-based access control (RBAC) model that leverages Azure Entra
+ID groups to manage access to Azure resources. Each team will have three Entra
+ID security groups:
+
+- Admins (domain experts)
+- Developers (regular team members)
+- Externals (contractors)
+
+This segmentation allows for appropriate access levels based on role
+responsibilities and trust levels. Each team is responsible and autonomous on
+how to split members among these groups by making PRs on
 [eng-azure-authorization](https://github.com/pagopa/eng-azure-authorization/tree/main/src/azure-subscriptions/subscriptions)
 repository.
-
-## Permission Hierarchy
 
 This section outlines the IAM configuration for each Entra ID group.
 
@@ -33,14 +43,15 @@ This section outlines the IAM configuration for each Entra ID group.
 
 #### External Group
 
-- `Reader` role on the subscription: same as Developer group
+- `Reader` role on the subscription (same as Developer group)
 - Can understand the system architecture while maintaining security
 
 ### Resource Group-Level Access
 
 #### Team-Specific Resource Groups
 
-Resource groups are owned and managed by a single team.
+While subscriptions may be shared across teams, resource groups are owned and
+managed by a single team.
 
 ##### Admin Group
 
