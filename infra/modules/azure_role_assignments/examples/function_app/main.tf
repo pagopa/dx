@@ -40,25 +40,25 @@ module "roles" {
       collections = ["x", "y"]
     },
     {
-      account_id = "<THE_COSMOS_ACCOUNT_ID>"
+      account_id  = "<THE_COSMOS_ACCOUNT_ID>"
       description = "Why this role is assigned"
-      role       = "reader"
-      database   = "b"
+      role        = "reader"
+      database    = "b"
     }
   ]
 
   redis = [
     {
-      cache_id = "<THE_REDIS_CACHE_ID>"
+      cache_id    = "<THE_REDIS_CACHE_ID>"
       description = "Why this role is assigned"
-      role     = "reader"
-      username = "pippo"
+      role        = "reader"
+      username    = "pippo"
     }
   ]
 
   key_vault = [
     {
-      id = "<THE_KEY_VAULT_ID>"
+      id          = "<THE_KEY_VAULT_ID>"
       description = "Why this role is assigned"
       roles = {
         secrets = "reader"
