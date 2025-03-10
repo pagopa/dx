@@ -64,11 +64,7 @@ module "container_app" {
     }
   ]
 
-  container_app_environment = {
-    id                                   = module.container_app_environment.id
-    private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
-    private_endpoint_ip                  = module.container_app_environment.private_endpoint_ip
-  }
+  container_app_environment_id = module.container_app_environment.id
 
   tags = local.tags
 }

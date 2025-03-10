@@ -48,12 +48,9 @@ run "container_app_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
 
-    container_app_environment = {
-      id = run.setup_tests.container_app_environment_id
-      private_dns_zone_resource_group_name = run.setup_tests.private_dns_zone.resource_group_name
-    }
+    container_app_environment_id = run.setup_tests.container_app_environment_id
 
-    log_analytics_workspace_id       = run.setup_tests.log_analytics_id
+    log_analytics_workspace_id = run.setup_tests.log_analytics_id
 
     container_app_templates = [
       {
@@ -87,10 +84,5 @@ run "container_app_is_correct_plan" {
   assert {
     condition     = azurerm_container_app.this.template[0].max_replicas == 1 && azurerm_container_app.this.template[0].min_replicas == 0
     error_message = "The container app replica values are not correct"
-  }
-
-  assert {
-    condition     = azurerm_private_dns_a_record.this.resource_group_name == var.container_app_environment.private_dns_zone_resource_group_name
-    error_message = "The private DNS resource group name is not correct"
   }
 }

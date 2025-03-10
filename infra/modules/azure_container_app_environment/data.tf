@@ -4,6 +4,6 @@ data "azurerm_virtual_network" "this" {
 }
 
 data "azurerm_private_dns_zone" "this" {
-  name                = "azurecontainerapps.io"
+  name                = "privatelink.italynorth.azurecontainerapps.io"
   resource_group_name = var.private_dns_zone_resource_group_name == null ? var.virtual_network.resource_group_name : var.private_dns_zone_resource_group_name
 }

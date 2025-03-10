@@ -23,13 +23,9 @@ variable "resource_group_name" {
 }
 # ------------ CONTAINER ENVIRONMENT ------------ #
 
-variable "container_app_environment" {
-  type = object({
-    id                                   = string
-    private_dns_zone_resource_group_name = string
-    private_endpoint_ip                  = optional(string, "")
-  })
-  description = "The container app environment to deploy the container app to."
+variable "container_app_environment_id" {
+  type        = string
+  description = "The container app environemnt id."
 }
 
 # ------------ CONTAINER APP ------------ #
