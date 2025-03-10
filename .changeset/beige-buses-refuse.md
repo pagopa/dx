@@ -11,7 +11,9 @@ When using the azurerm provider version >= 3.114.0, enable the beta opt-in featu
 export ARM_FOURPOINTZERO_BETA=true
 ```
 
-Remove all `name` and `resource_group_name` parameters from the variables and use the id gotten from a resource, module or data source as follows:
+A `description` field has been added to the role assignments. This field is **required** and can be used to provide why the role assignment is being created.
+
+Also, remove all `name` and `resource_group_name` parameters from the variables and use the id gotten from a resource, module or data source as follows:
 ```
 ...
 module "roles" {
@@ -43,6 +45,7 @@ module "roles" {
       storage_account_id = module.storage_account.id
       table_name         = "test-table"
       role               = "reader"
+      description        = "Allow the test identity read access to the test-table"
     }
   ]
 ...
