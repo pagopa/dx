@@ -90,7 +90,8 @@ If you wonder why we're working with these specific technologies, check out our
 We're going to update this list as we progress and - eventually - consider other
 languages (e.g., JAVA), and platforms (e.g., AWS).
 
-Aside, we experiment with *new* technologies and tools to improve our daily work.
+Aside, we experiment with _new_ technologies and tools to improve our daily
+work.
 
 ## How to stay updated
 
