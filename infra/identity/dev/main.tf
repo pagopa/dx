@@ -79,6 +79,7 @@ module "roles_ci" {
     {
       name                = "${local.project}-${local.location_short}-common-kv-01"
       resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
+      description         = "Allow dx repo CI to read secrets"
       roles = {
         secrets = "reader"
       }
@@ -94,6 +95,7 @@ module "roles_cd" {
     {
       name                = "${local.project}-${local.location_short}-common-kv-01"
       resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
+      description         = "Allow dx repo CD to read secrets"
       roles = {
         secrets = "reader"
       }

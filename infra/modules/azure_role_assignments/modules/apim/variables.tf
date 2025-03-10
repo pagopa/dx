@@ -8,7 +8,7 @@ variable "apim" {
   type = list(object({
     id          = string
     role        = string
-    description = optional(string, null)
+    description = string
   }))
 
   validation {

@@ -8,6 +8,7 @@ variable "cosmos" {
   type = list(object({
     account_id  = string
     role        = string
+    description = string
     database    = optional(string, "*")
     collections = optional(list(string), ["*"])
   }))

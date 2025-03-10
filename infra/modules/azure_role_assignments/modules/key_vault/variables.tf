@@ -8,7 +8,7 @@ variable "key_vault" {
   type = list(object({
     id               = string
     has_rbac_support = optional(bool, true)
-    description      = optional(string, null)
+    description      = string
     roles = object({
       secrets      = optional(string, "")
       certificates = optional(string, "")

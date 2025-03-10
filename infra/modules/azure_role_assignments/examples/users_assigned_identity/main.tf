@@ -14,10 +14,12 @@ module "roles" {
       storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
       table_name         = "test-table"
       role               = "reader"
+      description = "Why this role is assigned"
     },
     {
       storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
       role               = "writer"
+      description = "Why this role is assigned"
     }
   ]
 
@@ -26,6 +28,7 @@ module "roles" {
       storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
       container_name     = "images"
       role               = "reader"
+      description = "Why this role is assigned"
     }
   ]
 
@@ -34,6 +37,7 @@ module "roles" {
       storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
       queue_name         = "myqueue"
       role               = "writer"
+      description = "Why this role is assigned"
     }
   ]
 }

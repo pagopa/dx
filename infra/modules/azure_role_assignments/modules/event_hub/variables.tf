@@ -9,7 +9,7 @@ variable "event_hub" {
     namespace_id    = string
     event_hub_names = optional(list(string), ["*"])
     role            = string
-    description     = optional(string, null)
+    description     = string
   }))
 
   validation {
