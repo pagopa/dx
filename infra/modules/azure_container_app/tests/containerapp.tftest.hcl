@@ -50,10 +50,7 @@ run "container_app_is_correct_plan" {
 
     container_app_environment = {
       id = run.setup_tests.container_app_environment_id
-      private_dns_zone = {
-        name                = run.setup_tests.private_dns_zone.name
-        resource_group_name = run.setup_tests.private_dns_zone.resource_group_name
-      }
+      private_dns_zone_resource_group_name = run.setup_tests.private_dns_zone.resource_group_name
     }
 
     log_analytics_workspace_id       = run.setup_tests.log_analytics_id
@@ -93,12 +90,7 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_private_dns_a_record.this.zone_name == var.container_app_environment.private_dns_zone.name
-    error_message = "The private DNS zone name is not correct"
-  }
-
-  assert {
-    condition     = azurerm_private_dns_a_record.this.resource_group_name == var.container_app_environment.private_dns_zone.resource_group_name
+    condition     = azurerm_private_dns_a_record.this.resource_group_name == var.container_app_environment.private_dns_zone_resource_group_name
     error_message = "The private DNS resource group name is not correct"
   }
 }
