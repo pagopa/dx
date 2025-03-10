@@ -39,7 +39,7 @@ In fact, an AppService can access a KeyVault secret by:
   - KeyVaults using Access Policies should give `Get` and `List` permissions
   - KeyVaults using RBAC should be given `Key Vault Secrets User`
 - By referencing the secrets from the AppService environment variables
-  - Use the syntaxt
+  - Use the syntax
     `@Microsoft.KeyVault(VaultName=<kv-name>;SecretName=<secret-name>)`
 
 Adopting this approach, Terraform code will not have any sensitive value to
