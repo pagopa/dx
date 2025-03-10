@@ -1,19 +1,20 @@
 ---
-sidebar_label: Azure IAM Management in Cross-Subscription Contexts
+sidebar_label: Implement Azure IAM Across Subscriptions using Terraform
 ---
 
-# Azure IAM Management in Cross-Subscription Contexts
+# Implement Azure IAM Across Subscriptions using Terraform
+
+Managing Azure Identity and Access Management (IAM) across multiple
+subscriptions can be complex. This guide provides a step-by-step approach to
+implementing cross-subscription role assignments using Terraform, ensuring a
+clear separation of concerns and resource ownership.
 
 ## Overview
 
-In Azure, to allow a resource (e.g., Managed Identity, Service Principal) to
-access another one, you need to create a `Role Assignment` resource that assigns
-specific roles to the target.
-
-However, Terraform code is organized in separate Git repositories for each
-subscription, leading to a challenging scenario. This document provides specific
-guidelines for managing Azure Identity and Access Management (IAM) resources
-when permissions need to be granted across different subscriptions.
+In Azure, to enable a resource (e.g., Managed Identity, Service Principal) to
+access another resource, you need to create a `Role Assignment` that assigns
+specific roles to the target. However, managing Terraform code across separate
+Git repositories for each subscription can be challenging.
 
 The diagram below is a high-level view of the architecture described in the next
 sections. The ultimate goal is to ensure a clear separation of concerns and
@@ -35,7 +36,7 @@ To implement a cross-subscription role assignment, you will need:
 
 ### Defining the Terraform Code
 
-To create a `Role Assignment`, you can use the friendly DX Terraform module
+To create a `Role Assignment`, you can use the DX Terraform module
 [dx-azure-role-assignments](https://registry.terraform.io/modules/pagopa/dx-azure-role-assignments/azurerm/latest)
 which allows you to give more roles at a time to the same principal and
 abstracts away the complexity of the role choice.
@@ -124,3 +125,10 @@ If the access requirements change:
 
 - The team in Subscription A should create a new request
 - The team in Subscription B should update the role assignment
+
+## Conclusion
+
+Implementing Azure IAM across subscriptions using Terraform can streamline your
+access management processes. By following the steps outlined in this guide and
+adhering to best practices, you can ensure secure and efficient management of
+cross-subscription permissions.
