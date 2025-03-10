@@ -27,7 +27,7 @@ This Terraform module deploys an Azure Container App Environment along with nece
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa/dx-azure-naming-convention/azurerm | ~> 0 |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa/dx-azure-naming-convention/azurerm | ~> 0.0 |
 
 ## Resources
 
