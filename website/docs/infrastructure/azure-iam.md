@@ -89,7 +89,7 @@ architectural decisions. These include (but are not limited to):
 
 For shared resources, teams must request role assignments through Pull Requests
 to the repository where they are defined (generally `<product-name>-infra`).
-This process is useful to control access nad management of critical resources
+This process is useful to control access and management of critical resources
 with big radius impact.
 
 ## Role-Based Access Matrix
@@ -162,7 +162,8 @@ This view is instead recommended for cloud operators.
 
 Create the resource group in `Repository` Terraform configuration of your mono
 repository and pass its resource id to the `azure_github_environment_bootstrap`
-moduel via the `TBD` variable. All roles will be automatically applied.
+module via the `additional_resource_group_ids` variable. All roles will be
+automatically applied.
 
 <details>
   <summary>Example</summary>
@@ -176,7 +177,7 @@ moduel via the `TBD` variable. All roles will be automatically applied.
 
   module "repo" {
     source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
-    version = "~>1"
+    version = "~>1.0"
 
     TBD = [
       azurerm_resource_group.domain_itn_01.id
@@ -231,7 +232,7 @@ resource "azurerm_role_assignment" "" {
 
 ### Azure Cosmos DB
 
-In both scenario, it is mandatory to manually set IAM roles. This approach is
+In both scenarios, it is mandatory to manually set IAM roles. This approach is
 recommended as keys are not secure.
 
 It is also recommended to set roles at container level rather than Cosmos DB
@@ -243,7 +244,7 @@ Account, especially for applications and shared Accounts.
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -276,7 +277,7 @@ Set by the module
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -323,7 +324,7 @@ Otherwise via Access Policies:
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -347,7 +348,7 @@ module "" {
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -439,7 +440,7 @@ Set by the module
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -475,7 +476,7 @@ Set by the module
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
@@ -511,7 +512,7 @@ Set by the module
 ```hcl
 module "" {
   source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~>0"
+  version = "~>0.0"
 
   principal_id = <who-needs-access>
 
