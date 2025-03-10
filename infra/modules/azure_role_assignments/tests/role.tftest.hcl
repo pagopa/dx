@@ -31,6 +31,7 @@ run "rbac_role_assignment_is_correct" {
       {
         id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-common-rg-01/providers/Microsoft.KeyVault/vaults/dx-d-itn-common-kv-01"
         has_rbac_support    = true
+        description         = "This can read secrets"
         roles = {
           secrets = "reader"
         }
@@ -57,8 +58,9 @@ run "rbac_role_assignment_is_correct" {
 
     storage_table = [
       {
-        storage_account_id   = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Storage/storageAccounts/dxditnplaygrounddfstfd01"
-        role = "reader"
+        storage_account_id  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Storage/storageAccounts/dxditnplaygrounddfstfd01"
+        role                = "reader"
+        description         = "This is a reader"
       }
     ]
   }
