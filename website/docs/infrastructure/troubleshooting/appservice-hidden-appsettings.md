@@ -1,8 +1,9 @@
 ---
-sidebar_label: Hidden AppService/FunctionApp AppSettings in Terraform Plan
+sidebar_label:
+  Preserving Azure AppService AppSettings Visibility in Terraform Plan
 ---
 
-# Hidden AppService/FunctionApp AppSettings in Terraform Plan
+# Hidden Preserving Azure AppService AppSettings Visibility in Terraform Plan
 
 ## Overview
 
@@ -23,24 +24,6 @@ being used, and include everything under a generic change of the property
 
 As a result, it is difficult to predict what the actual changes are, undermining
 the trust and confidence of developers in application deployment stage.
-
-## Troubleshooting History
-
-### Reproducing the issue
-
-At the beginning, we thought the issue was caused by either a specific `azurerm`
-or Terraform version. So we tried to replicate the issue in a safe environment
-by playing with the version of the two, by setting sensitive values in various
-ways: through a sensitive output, a sensitive variable or using the `sensitive`
-function.
-
-However, we couldn't reproduce the issue at all. We also found different
-behaviors in the same Terraform configuration(!).
-
-### GitHub issue on `azurerm` GitHub repository
-
-[We also opened an issue](https://github.com/hashicorp/terraform-provider-azurerm/issues/28509)
-on `azurerm` GitHub repository, but without any luck yet (07/03/2025).
 
 ## The Proposed Workaround
 
@@ -112,9 +95,7 @@ app_settings = [
 ]
 ```
 
-### FAQs
-
-#### What if I am using the sensitive output of another resource/module as environment variable?
+### Managing Sensitive Resource Outputs
 
 Unfortunately, like any other sensitive value it may cause the issue illustrated
 above. Then, it is required to save that output value into the KeyVault and
@@ -137,3 +118,21 @@ This code requires either the `Set` policy assignment or the
 
 More info can be found
 [here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret).
+
+## Troubleshooting History
+
+### Reproducing the issue
+
+At the beginning, we thought the issue was caused by either a specific `azurerm`
+or Terraform version. So we tried to replicate the issue in a safe environment
+by playing with the version of the two, by setting sensitive values in various
+ways: through a sensitive output, a sensitive variable or using the `sensitive`
+function.
+
+However, we couldn't reproduce the issue at all. We also found different
+behaviors in the same Terraform configuration(!).
+
+### GitHub issue on `azurerm` GitHub repository
+
+[We also opened an issue](https://github.com/hashicorp/terraform-provider-azurerm/issues/28509)
+on `azurerm` GitHub repository, but without any luck yet (07/03/2025).
