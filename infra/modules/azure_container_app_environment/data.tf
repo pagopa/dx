@@ -1,4 +1,6 @@
 data "azurerm_virtual_network" "this" {
+  count = local.has_existing_subnet ? 0 : 1
+
   name                = var.virtual_network.name
   resource_group_name = var.virtual_network.resource_group_name
 }

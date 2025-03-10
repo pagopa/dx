@@ -1,9 +1,9 @@
 resource "azurerm_subnet" "this" {
-  count = var.subnet_id == null ? 1 : 0
+  count = local.has_existing_subnet ? 0 : 1
 
   name                 = "${module.naming_convention.prefix}-cae-snet-${module.naming_convention.suffix}"
-  virtual_network_name = data.azurerm_virtual_network.this.name
-  resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.this[0].name
+  resource_group_name  = data.azurerm_virtual_network.this[0].resource_group_name
   address_prefixes     = [var.subnet_cidr]
 
   delegation {
