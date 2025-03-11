@@ -1,9 +1,9 @@
 ---
 sidebar_position: 1
-sidebar_label: Drift Detection
+sidebar_label: Detecting Drift in Infrastructure as Code
 ---
 
-# Drift Detection Workflow
+# Detecting Drift in Infrastructure as Code
 
 The
 [existing Drift Detection workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml)

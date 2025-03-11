@@ -48,8 +48,7 @@ In fact, an AppService (or an Azure Function) can access a KeyVault secret by:
 
 Despite it is possible to refer a specific secret **version**, the practice is
 discouraged as it requires a manual secret rotation. More information is
-available
-[here](https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#source-app-settings-from-key-vault)
+available [here][def]
 
 :::
 
@@ -132,8 +131,8 @@ resource "azurerm_key_vault_secret" "example" {
 This code requires either the `Set` policy assignment or the
 `Key Vault Secrets Officer` role.
 
-More info can be found
-[here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret).
+More info can be found in the
+[official KeyVault documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret).
 
 ## Troubleshooting
 
