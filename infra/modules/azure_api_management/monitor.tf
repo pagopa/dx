@@ -20,14 +20,12 @@ resource "azurerm_api_management_diagnostic" "this" {
   identifier               = "applicationinsights"
   api_management_name      = azurerm_api_management.this.name
   resource_group_name      = azurerm_api_management.this.resource_group_name
-  api_management_logger_id = azurerm_api_management_logger.this.id
+  api_management_logger_id = azurerm_api_management_logger.this[0].id
 
   always_log_errors         = true
   http_correlation_protocol = "W3C"
   sampling_percentage       = "100.0"
   verbosity                 = "information"
-
-  depends_on = [azurerm_api_management_logger.this]
 }
 
 resource "azurerm_monitor_metric_alert" "this" {
