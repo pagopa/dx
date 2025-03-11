@@ -1,8 +1,8 @@
 ---
-sidebar_label: How to create and manage Azure Policies
+sidebar_label: Creating and Managing Azure Policies
 ---
 
-# How to create and manage Azure Policies
+# Creating and Managing Azure Policies
 
 Azure Policies are governance tools provided by Microsoft Azure to create,
 assign, and manage rules that ensure compliance and adherence to enterprise
