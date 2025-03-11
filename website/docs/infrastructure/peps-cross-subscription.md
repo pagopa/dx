@@ -53,16 +53,17 @@ resource "azurerm_private_endpoint" "example" {
 For resources in the same subscription, it is recommended to set the property
 `is_manual_connection` to `false` in order to skip the approval step as the
 owner of the two resources is often the same. However, in this case, the
-property must be set to `true`; otherwise, the approval mechanism will not work.
+property must be set to `true`, otherwise the approval mechanism will not work.
 
 :::
 
 :::info
 
 In this example, the `private_connection_resource_id` value is a hardcoded
-string. If you prefer to have a reference via Terraform `data` block, you and
-the Managed Identities federated with your GitHub workflows need to have the
-`Reader` role on the target resource (subscription A).
+string. If you prefer to have a reference via Terraform `data` block, the
+account or the Managed Identity federated with the GitHub workflow that wants to
+run `terraform plan` need to have the `Reader` role on the target resource
+(subscription A).
 
 :::
 
@@ -73,6 +74,8 @@ will receive a connection request. The connection between the two resources will
 not work until the request is not approved.
 
 #### Private Endpoint Approval mechanism
+
+You can choose to approve the request either via Azure Portal or Azure CLI.
 
 ##### Via Azure Portal
 
