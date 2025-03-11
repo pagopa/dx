@@ -24,9 +24,8 @@ resource "azurerm_api_management_diagnostic" "this" {
 
   always_log_errors         = true
   http_correlation_protocol = "W3C"
-  sampling_percentage       = var.application_insights.sampling_percentage
   verbosity                 = "information"
-  operation_name_format     = "Url"
+  sampling_percentage       = var.application_insights.sampling_percentage
 }
 
 resource "azurerm_monitor_metric_alert" "this" {
