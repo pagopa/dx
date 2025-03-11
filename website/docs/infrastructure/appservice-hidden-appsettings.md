@@ -48,7 +48,8 @@ In fact, an AppService (or an Azure Function) can access a KeyVault secret by:
 
 Despite it is possible to refer a specific secret **version**, the practice is
 discouraged as it requires a manual secret rotation. More information is
-available [here][def]
+available in the
+[official KeyVault documentation](https://learn.microsoft.com/en-us/azure/key-vault/keys/how-to-configure-key-rotation#key-rotation-policy).
 
 :::
 
