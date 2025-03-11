@@ -126,6 +126,7 @@ and reviewers may spot things later that they may not have seen the first time.
   in opportunities to add automated tests
 - If a piece of code is unclear, say so! There’s a good chance someone else
   would be confused by it as well
+- Suggest to simplify and eventually comment tricky code 
 - Ensure the author understands what is required to resolve a comment
 - Summarize review feedback with a final note (e.g., “LGTM”, or “I left some
   suggestions, let me know what you think.”)
