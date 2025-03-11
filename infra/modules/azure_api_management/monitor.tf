@@ -4,6 +4,7 @@ resource "azurerm_api_management_logger" "this" {
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
+  resource_id         = var.application_insights.id
 
   dynamic "application_insights" {
     for_each = var.management_logger_application_insight_enabled ? [1] : []

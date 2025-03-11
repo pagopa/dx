@@ -193,10 +193,12 @@ variable "application_insights" {
   type = object({
     enabled           = bool
     connection_string = string
+    id                = optional(string, null)
   })
   default = {
     enabled           = false
     connection_string = null
+    id                = null
   }
   description = "Application Insights integration. The connection string used to push data"
 
