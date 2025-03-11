@@ -76,7 +76,7 @@ run "apim_is_correct_plan" {
   }
 }
 
-run "apim_ai_enabled_without_connection_string" {
+run "plan_with_invalid_parameters" {
   command = plan
 
   variables {
@@ -117,11 +117,12 @@ run "apim_ai_enabled_without_connection_string" {
     application_insights = {
       enabled           = true
       connection_string = null
+      sampling_percentage = 101
     }
   }
 
   expect_failures = [
     # Specify the exact variable that should fail validation
-    var.application_insights.connection_string,
+    var.application_insights,
   ]
 }
