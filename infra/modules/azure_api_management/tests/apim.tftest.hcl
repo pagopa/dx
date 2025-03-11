@@ -115,8 +115,8 @@ run "plan_with_invalid_parameters" {
     virtual_network_type_internal = true
 
     application_insights = {
-      enabled           = true
-      connection_string = null
+      enabled             = true
+      connection_string   = null
       sampling_percentage = 101
     }
   }
