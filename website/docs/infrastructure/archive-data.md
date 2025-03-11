@@ -1,17 +1,8 @@
-# Archiving Data for Decommissioned Projects
+---
+sidebar_label: Archiving Data for Decommissioned Projects
+---
 
-- [Archiving Data for Decommissioned Projects](#archiving-data-for-decommissioned-projects)
-  - [Best practices for data archiving](#best-practices-for-data-archiving)
-  - [Recommended configuration for the destination storage account](#recommended-configuration-for-the-destination-storage-account)
-    - [Sample Terraform configuration](#sample-terraform-configuration)
-    - [Secondary region options](#secondary-region-options)
-  - [Migrating from Azure Cosmos DB](#migrating-from-azure-cosmos-db)
-  - [Migrating from another storage account](#migrating-from-another-storage-account)
-    - [Blob storage migration](#blob-storage-migration)
-      - [Object replication configuration with Terraform](#object-replication-configuration-with-terraform)
-    - [Table storage migration](#table-storage-migration)
-  - [Best practices and recommendations](#best-practices-and-recommendations)
-  - [Conclusion](#conclusion)
+# Archiving Data for Decommissioned Projects
 
 ## Best practices for data archiving
 

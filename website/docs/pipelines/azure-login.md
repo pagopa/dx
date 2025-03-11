@@ -1,9 +1,9 @@
 ---
 sidebar_position: 1
-sidebar_label: Azure Login for GitHub Actions
+sidebar_label: Configuring Azure Login for GitHub Actions
 ---
 
-# Azure Login
+# Configuring Azure Login for GitHub Actions
 
 There are several ways to log into Azure by a GitHub Action. The DX chosen
 method doesn't require maintenance or secret management as it is a passwordless

@@ -1,8 +1,8 @@
 ---
-sidebar_label: Implement Azure IAM Across Subscriptions using Terraform
+sidebar_label: Implementing Azure IAM Across Subscriptions using Terraform
 ---
 
-# Implement Azure IAM Across Subscriptions using Terraform
+# Implementing Azure IAM Across Subscriptions using Terraform
 
 Managing Azure Identity and Access Management (IAM) across multiple
 subscriptions can be complex. This guide provides a step-by-step approach to
