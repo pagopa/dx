@@ -1,7 +1,7 @@
 resource "aws_amplify_app" "this" {
   name         = "${local.project}-${var.environment.domain}-${var.environment.app_name}-${var.environment.instance_number}"
   repository   = "https://github.com/${var.repository.organization}/${var.repository.name}"
-  access_token = var.github_authorization == "PAT" ? var.github_pat : null
+  access_token = var.github_authorization_type == "PAT" ? var.github_pat : null
 
   environment_variables = local.environment_variables
   platform              = var.is_ssr ? "WEB_COMPUTE" : "WEB"
@@ -61,7 +61,7 @@ resource "aws_amplify_branch" "this" {
 }
 
 resource "aws_codeconnections_connection" "this" {
-  for_each      = var.github_authorization == "AWS" && var.create_codeconnection ? toset(["github"]) : []
+  for_each      = var.github_authorization_type == "AWS" && var.create_codeconnection ? toset(["github"]) : []
   name          = "${local.project}-github"
   provider_type = "GitHub"
   tags          = var.tags

@@ -39,13 +39,13 @@ variable "build_information" {
   })
 }
 
-variable "github_authorization" {
+variable "github_authorization_type" {
   type        = string
   description = "Authorization can be done via GitHub PAT or AWS Codeconnection. Valid values are `PAT`, `AWS`. If a Codeconnection is not present in your AWS account, use the create_codeconnection variable to create one."
 
   validation {
-    condition     = contains(["PAT", "AWS"], var.github_authorization)
-    error_message = "The variable `github_authorization` must be one of `PAT`, `AWS`."
+    condition     = contains(["PAT", "AWS"], var.github_authorization_type)
+    error_message = "The variable `github_authorization_type` must be one of `PAT`, `AWS`."
   }
 }
 
