@@ -208,6 +208,11 @@ variable "application_insights" {
     condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
     error_message = "You must provide a connection string when enabling Application Insights integration"
   }
+
+  validation {
+    condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
+    error_message = "Invalid `sampling_percentage` value provided. Valid values are between 0 and 100"
+  }
 }
 
 
