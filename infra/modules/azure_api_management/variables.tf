@@ -191,14 +191,16 @@ variable "lock_enable" {
 
 variable "application_insights" {
   type = object({
-    enabled           = bool
-    connection_string = string
-    id                = optional(string, null)
+    enabled             = bool
+    connection_string   = string
+    id                  = optional(string, null)
+    sampling_percentage = optional(number, 100)
   })
   default = {
-    enabled           = false
-    connection_string = null
-    id                = null
+    enabled             = false
+    connection_string   = null
+    id                  = null
+    sampling_percentage = 100
   }
   description = "Application Insights integration. The connection string used to push data"
 
