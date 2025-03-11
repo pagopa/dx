@@ -14,6 +14,22 @@ resource "azurerm_api_management_logger" "this" {
   }
 }
 
+resource "azurerm_api_management_diagnostic" "this" {
+  count = var.application_insights.enabled ? 1 : 0
+
+  identifier               = "applicationinsights"
+  api_management_name      = azurerm_api_management.this.name
+  resource_group_name      = azurerm_api_management.this.resource_group_name
+  api_management_logger_id = azurerm_api_management_logger.this.id
+
+  always_log_errors         = true
+  http_correlation_protocol = "W3C"
+  sampling_percentage       = "100.0"
+  verbosity                 = "information"
+
+  depends_on = [azurerm_api_management_logger.this]
+}
+
 resource "azurerm_monitor_metric_alert" "this" {
   for_each = var.tier != "s" ? var.metric_alerts : {}
 
