@@ -24,7 +24,7 @@ variable "repository" {
   type = object({
     organization = string
     name         = string
-    branch_name  = string
+    branch_name  = optional(string, "main")
   })
 
   description = "Source repository information"
@@ -41,18 +41,12 @@ variable "build_information" {
 
 variable "github_authorization_type" {
   type        = string
-  description = "Authorization can be done via GitHub PAT or AWS Codeconnection. Valid values are `PAT`, `AWS`. If a Codeconnection is not present in your AWS account, use the create_codeconnection variable to create one."
+  description = "Authorization can be done via GitHub PAT or AWS Codeconnection. Valid values are `PAT`, `AWS`. A Codeconnection must already be present and configured in your AWS account. Otherwise, a GitHub PAT must be provided securely via the `github_pat` variable."
   default     = "AWS"
   validation {
     condition     = contains(["PAT", "AWS"], var.github_authorization_type)
     error_message = "The variable `github_authorization_type` must be one of `PAT`, `AWS`."
   }
-}
-
-variable "create_codeconnection" {
-  type        = bool
-  description = "If a codeconnection creation is requested please note that, after apply, it will also need a manual configuration from the AWS console to work."
-  default     = false
 }
 
 variable "github_pat" {
@@ -97,8 +91,10 @@ variable "custom_domain" {
 variable "monitoring" {
   type = object({
     enabled       = bool,
-    target_emails = list(string)
+    target_emails = optional(list(string), [])
   })
+
+  default = { enabled = false }
 
   description = "Monitoring configuration"
 }

@@ -10,7 +10,7 @@ resource "aws_amplify_app" "this" {
   # The default build_spec added by the Amplify Console for React.
   build_spec = yamlencode({
     version = 1
-    applications = {
+    applications = [{
       frontend = {
         appRoot = var.build_information.app_path
         phases = {
@@ -24,6 +24,7 @@ resource "aws_amplify_app" "this" {
         buildPath = "/"
       }
     }
+    ]
   })
 
   # The default rewrites and redirects added by the Amplify Console.
@@ -60,15 +61,8 @@ resource "aws_amplify_branch" "this" {
   tags                = var.tags
 }
 
-resource "aws_codeconnections_connection" "this" {
-  for_each      = var.github_authorization_type == "AWS" && var.create_codeconnection ? toset(["github"]) : []
-  name          = "${local.project}-github"
-  provider_type = "GitHub"
-  tags          = var.tags
-}
-
 resource "aws_ssm_parameter" "secret" {
-  for_each = var.secrets
+  for_each = { for secret in var.secrets : secret.name => secret }
 
   name        = format("/amplify/%s/%s/%s", aws_amplify_app.this.id, aws_amplify_branch.this.branch_name, each.value.name)
   description = "AWS Amplify secret app: ${aws_amplify_app.this.name} branch: ${aws_amplify_branch.this.branch_name}"
