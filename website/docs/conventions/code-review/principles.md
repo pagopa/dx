@@ -17,7 +17,7 @@ Before requesting a review, the author must ensure that:
   been left in the code
 - the best way to maximize the chances of having a PR approved without excessive
   iterations is to perform a self-review following the
-  [Contribution Acceptance Criteria](../pull-request/acceptance-criteria.md)
+  [Contribution Acceptance Criteria](../pull-requests/acceptance-criteria.md)
 
 During the self-review, the author should add comments within the PR to explain
 decisions, trade-offs, or areas where additional context would help the reviewer
@@ -62,7 +62,7 @@ explaining the reasons.
 
 Reviewers are responsible for carefully examining the proposed solution and
 ensuring that the PR meets all
-[Contribution Acceptance Criteria](../pull-request/acceptance-criteria.md).
+[Contribution Acceptance Criteria](../pull-requests/acceptance-criteria.md).
 
 They must also ensure that technical debt is kept under control, carefully
 evaluating when it makes sense to create follow-up tasks to address any
@@ -97,7 +97,7 @@ and reviewers may spot things later that they may not have seen the first time.
   through the entire `diff`. Does it make sense? Did you include something
   unrelated to the overall purpose of the changes?
 - Follow the
-  [guidelines to compile PR's title and description](../pull-request/format.md#format-for-pull-requests)
+  [guidelines to compile PR's title and description](../pull-requests/format.md#format-for-pull-requests)
 - Don’t take it personally: the review is of the code, not of you
 - Extract unrelated changes and refactorings into future PRs
 - Seek to understand the reviewer’s perspective
@@ -126,7 +126,7 @@ and reviewers may spot things later that they may not have seen the first time.
   in opportunities to add automated tests
 - If a piece of code is unclear, say so! There’s a good chance someone else
   would be confused by it as well
-- Suggest to simplify and eventually comment tricky code 
+- Suggest to simplify and eventually comment tricky code
 - Ensure the author understands what is required to resolve a comment
 - Summarize review feedback with a final note (e.g., “LGTM”, or “I left some
   suggestions, let me know what you think.”)
