@@ -57,10 +57,10 @@ is usually the same.
 However, since the resources in this scenario are in different subscriptions,
 the property must be set to `true` to initiate the approval process.
 
-The `private_connection_resource_id` value is hardcoded in this example. string.
-If you prefer to have a reference via Terraform `data` block, the users that
-will apply the Terraform configuration and the Managed Identities federated with
-the GitHub workflows need to have the `Reader` role on the target resource.
+The `private_connection_resource_id` value is hardcoded in this example. To have
+a reference via Terraform `data` block instead, the users that will apply the
+Terraform configuration and the Managed Identities federated with the GitHub
+workflows need to have the `Reader` role on the target resource.
 
 ### Target Team: Approves the Private Endpoint Request
 
