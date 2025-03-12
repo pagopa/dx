@@ -1,5 +1,17 @@
 # docs
 
+## 0.1.0
+
+### Minor Changes
+
+- 6f727d4: Create Pull Request guidelines
+
+### Patch Changes
+
+- d68e21d: Edit terraform registry documentation after namespace change to pagopa-dx
+- 5d51cf0: Make sidebar collapsible to make navigation easier
+- 7a1868c: Improve AI documentation clarity and consistency
+
 ## 0.0.4
 
 ### Patch Changes

@@ -1,5 +1,54 @@
 # azure_api_management
 
+## 1.0.0
+
+### Major Changes
+
+- 7e82050: Replace `instrumentation_key` with `connection_string` to connect Application Insights
+
+  **Migration Guide**
+
+  Update the `application_insights` block by replacing the `instrumentation_key` with the `connection_string` parameter.
+
+  From this:
+
+  ```
+  module "apim" {
+    source  = "pagopa/dx-azure-api-management/azurerm"
+    ...
+    application_insights = {
+      enabled             = true
+      instrumentation_key = "<the-ai-instrumentation-key>"
+    }
+  }
+  ```
+
+  to this:
+
+  ```
+  module "apim" {
+    source  = "pagopa/dx-azure-api-management/azurerm"
+    ...
+    application_insights = {
+      enabled           = true
+      connection_string = "<the-ai-connection-string>"
+    }
+  }
+  ```
+
+### Patch Changes
+
+- 525585b: Create APIM logger when AI is enabled
+- 9570654: Add `resource_id` attribute when creating the APIM logger
+
+  ## NOTE
+
+  It is possible to use this module's version even if you omit the `id` parameter within the `application_insights` block.
+
+  If you add the `id`, this will force the recreation of the Logger resource. If you have some reference to the Logger instance, you should use the `logger_id` output provided by the module.
+
+- 76eaa55: Set the minimum version of Azure provider to `4.1.0`
+
 ## 0.0.8
 
 ### Patch Changes

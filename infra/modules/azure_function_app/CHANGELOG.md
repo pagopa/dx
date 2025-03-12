@@ -1,5 +1,12 @@
 # azure_function_app
 
+## 0.2.3
+
+### Patch Changes
+
+- f17598d: Set up custom warm-up for swap and restart
+- 32bb588: Align Host and Worker sample rate in Azure Functions module AI tracing
+
 ## 0.2.2
 
 ### Patch Changes
