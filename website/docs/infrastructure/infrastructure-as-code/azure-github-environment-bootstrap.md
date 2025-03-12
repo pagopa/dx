@@ -48,13 +48,13 @@ repositories is recommended.
 
 ## Getting Started
 
-We recommend to reference the module via the Terraform Registry, and pin the We
-recommend referencing the module via the Terraform Registry, and pin the
+We recommend to reference the module via the Terraform Registry, and pin the
+version to the latest stable release:
 
 ```hcl
 module "repo" {
   source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
-  version = "~>1"
+  version = "~>1.0"
 }
 ```
 
