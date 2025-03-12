@@ -159,10 +159,8 @@ jobs:
             --name ${{ inputs.function_app_name }} \
             --query "[?name=='WEBSITE_SWAP_WARMUP_PING_STATUSES'||name=='WEBSITE_SWAP_WARMUP_PING_PATH']")
           if [ $(echo "$WARMUP_SETTINGS" | jq 'length') -ne 2 ]; then
-            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to its latest version."
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
             exit 1
-          else
-            echo "::info::Warm-up settings are configured."
           fi
 
       - name: Clear the routing rules
@@ -193,10 +191,10 @@ jobs:
             --async false
 
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == 'true' }}
+        if: ${{ inputs.use_staging_slot == true }}
         run: |
           az webapp deployment slot swap \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.function_app_name }} \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
             --slot staging \
             --target-slot production
