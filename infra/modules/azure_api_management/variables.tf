@@ -195,12 +195,14 @@ variable "application_insights" {
     connection_string   = string
     id                  = optional(string, null)
     sampling_percentage = number
+    verbosity           = string
   })
   default = {
     enabled             = false
     connection_string   = null
     id                  = null
     sampling_percentage = 0
+    verbosity           = "error"
   }
   description = "Application Insights integration. The connection string used to push data"
 
@@ -212,6 +214,11 @@ variable "application_insights" {
   validation {
     condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
     error_message = "Invalid `sampling_percentage` value provided. Valid values are between 0 and 100"
+  }
+
+  validation {
+    condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
+    error_message = "Invalid `verbosity` value provided. Valid values are 'verbose', 'information', 'error'"
   }
 }
 

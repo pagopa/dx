@@ -59,6 +59,7 @@ run "apim_is_correct_plan" {
       enabled             = true
       connection_string   = "aConnectionString"
       sampling_percentage = 50
+      verbosity           = "error"
     }
 
     subnet_id                     = run.setup_tests.subnet_id
@@ -119,6 +120,7 @@ run "plan_with_invalid_parameters" {
       enabled             = true
       connection_string   = null
       sampling_percentage = 101
+      verbosity           = "error"
     }
   }
 
