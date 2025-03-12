@@ -152,6 +152,12 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
+      - name: Clear the routing rules
+        run: |
+          az webapp traffic-routing clear \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }}
+
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}
         run: |
