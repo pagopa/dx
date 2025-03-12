@@ -1,22 +1,27 @@
 # DX - Azure GitHub Environment Bootstrap
 
-This module is useful for anybody that has just created a new repository and wants to focus quickly on their goals rather than spending hours in setting up everything around the repository. Its usage is particularly indicated for mono repositories.
+The Azure GitHub Environment Bootstrap module is designed for users who have just created a new GitHub repository and want to quickly focus on their goals without spending hours on setup. It is particularly useful for mono repositories.
 
-The following are the actions performed by the module:
+The module performs the following actions:
 
-- create the GitHub private runner associated with the repository
-- create Azure user-assigned Managed identities to work with GitHub workflows in these scenarios: IaC validation and deployments; application deployments, Opex dashboards validation and deployments
-- assignment of IAM roles to allow to previous point workflows to work properly
-- set up the GitHub repository with the best practices
-- creation of an Azure resource group tied within the repository cloud resources
+- Creates the **GitHub Private Runner** associated with the repository.
+- Creates Azure user-assigned **Managed Identities** to let GitHub workflows deploy:
+  1. Infrastructure resources (IaC).
+  2. Applications.
+  3. Opex dashboards.
+- Assigns **IAM roles** to allow workflows to work properly.
+- Sets up the **GitHub repository settings** following best practices.
+- Creates an Azure **resource group** tied with the Cloud Resources defined
+  within the repository.
 
-## Notes
+## Gotchas
 
-### Use Entra Id to authenticate in Storage Accounts
+### Use Entra Id to Authenticate Connections to Storage Accounts
 
-Entra Id should be use as authentication method for Storage Accounts, replacing keys.
+Entra Id should be used as the authentication method for Storage Accounts, replacing
+access keys.
 
-Storage Account with Terarform state file:
+Storage Account with Terraform state file:
 
 ```hcl
 backend "azurerm" {
@@ -38,9 +43,10 @@ provider "azurerm" {
 }
 ```
 
-### Import GitHub repository in Terraform state file
+### Import GitHub repository in the Terraform state file
 
-Remember to import the GitHub repository you are being using in the Terraform state:
+Remember to import the GitHub repository you are using in the Terraform
+state:
 
 ```hcl
 import {
@@ -49,9 +55,10 @@ import {
 }
 ```
 
-### GitHub environments policies and default branch name
+### Set up GitHub Environments Policies and Default Branch Name
 
-You can customize deployment policies on `x-cd` GitHub environment by using the optional properties of the `repository` variable:
+You can customize deployment policies on `x-cd` GitHub environment by using the
+optional properties of the `repository` variable:
 
 - `infra_cd_policy_branches`
 - `opex_cd_policy_branches`
@@ -60,13 +67,16 @@ You can customize deployment policies on `x-cd` GitHub environment by using the 
 - `opex_cd_policy_tags`
 - `app_cd_policy_tags`
 
-The default branch name can be changed from `main` via the `default_branch_name` property.
+The default branch name can be changed via the `default_branch_name` property.
 
 ## Extending the module for custom needs
 
-The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to team needs.
+The module provides the basic configuration adhering to DX and Technology
+standards. However, it can be extended according to team needs.
 
-The module export all the ids and names of the resources that creates, so it is straightforward to add further resources. For instance, if you need a `release` GitHub environment with a special deployment policy you can add:
+The module export all the ids and names of the resources that creates, so it is
+straightforward to add further resources. For instance, if you need a `release`
+GitHub environment with a special deployment policy you can add:
 
 ```hcl
 resource "github_repository_environment" "release" {
