@@ -66,3 +66,16 @@ resource "aws_codeconnections_connection" "this" {
   provider_type = "GitHub"
   tags          = var.tags
 }
+
+resource "aws_ssm_parameter" "secret" {
+  for_each = var.secrets
+
+  name        = format("/amplify/%s/%s/%s", aws_amplify_app.this.id, aws_amplify_branch.this.branch_name, each.value.name)
+  description = "AWS Amplify secret app: ${aws_amplify_app.this.name} branch: ${aws_amplify_branch.this.branch_name}"
+  type        = "SecureString"
+  tier        = "Standard"
+  value       = each.value.value
+  data_type   = "text"
+
+  tags = var.tags
+}

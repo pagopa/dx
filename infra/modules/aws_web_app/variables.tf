@@ -68,6 +68,15 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "secrets" {
+  type = list(object({
+    name  = string
+    value = optional(string, "Fill the value in the AWS console")
+  }))
+  default     = []
+  description = "Secrets for the application. The value is optional to allow setting it manually via AWS console."
+}
+
 variable "is_ssr" {
   type        = bool
   description = "Set to true if the application is a server-side rendered application"

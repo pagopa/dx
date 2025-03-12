@@ -28,6 +28,7 @@ No modules.
 | [aws_sns_topic.amplify_app_branch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [aws_sns_topic_policy.amplify_app_branch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
 | [aws_sns_topic_subscription.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
+| [aws_ssm_parameter.secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
 | [aws_iam_policy_document.amplify](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.amplify_app_branch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
@@ -46,6 +47,7 @@ No modules.
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Monitoring configuration | <pre>object({<br/>    enabled       = bool,<br/>    target_emails = list(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_redirect_rules"></a> [redirect\_rules](#input\_redirect\_rules) | Redirect rules for the application. A default one is automatically created to redirect all 404s to index.html. Read the [configuration guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/amplify_app#custom_rule-block) to add more. | <pre>list(object({<br/>    source = string<br/>    status = optional(string, null)<br/>    target = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_repository"></a> [repository](#input\_repository) | Source repository information | <pre>object({<br/>    organization = string<br/>    name         = string<br/>    branch_name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_secrets"></a> [secrets](#input\_secrets) | Secrets for the application. The value is optional to allow setting it manually via AWS console. | <pre>list(object({<br/>    name  = string<br/>    value = optional(string, "Fill the value in the AWS console")<br/>  }))</pre> | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 
 ## Outputs
