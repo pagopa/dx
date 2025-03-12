@@ -79,9 +79,8 @@ available in the
 
 ### Examples
 
-The following repositories have been using the
-`Azure GitHub Environment Bootstrap` module since the early stages, and can be
-used as examples:
+Explore these repositories, which have successfully adopted the
+`Azure GitHub Environment Bootstrap` module from its early stages:
 
 - [IO Messages](https://github.com/pagopa/io-messages/tree/main/infra/repository)
 - [IO Wallet](https://github.com/pagopa/io-wallet/tree/main/infra/repository)
