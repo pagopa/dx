@@ -152,13 +152,26 @@ jobs:
           tenant-id: ${{ env.ARM_TENANT_ID }}
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
+      - name: Check if the custom warm-up is configured
+        run: |
+          WARMUP_SETTINGS=$(az webapp config appsettings list \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
+            --query "[?name=='WEBSITE_SWAP_WARMUP_PING_STATUSES'||name=='WEBSITE_SWAP_WARMUP_PING_PATH']")
+          if [ $(echo "$WARMUP_SETTINGS" | jq 'length') -ne 2 ]; then
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to its latest version."
+            exit 1
+          else
+            echo "::info::Warm-up settings are configured."
+          fi
+
       - name: Clear the routing rules
         run: |
           az webapp traffic-routing clear \
             --resource-group ${{ inputs.resource_group_name }} \
             --name ${{ inputs.function_app_name }}
 
-      - name: Deploy
+      - name: Deploy to Production
         if: ${{ inputs.use_staging_slot == false }}
         run: |
           az webapp deploy \
