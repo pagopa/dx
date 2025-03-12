@@ -73,8 +73,9 @@ well-known by our user base. The following data is requested:
 - the IDs of the product-shared cloud resources, if any (API Management, Private
   Endpoints, VNet, etc.)
 
-More details about the usage can be found
-[here](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest).
+More details about the usage can be found in the documentation, which is
+available in the
+[module entry in the Terraform Registry](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest).
 
 ### Examples
 
