@@ -14,7 +14,7 @@ how you would name a folder containing multiple related files.
 
 - **Keep branch names clean and focused**: do not include tracking system
   activity IDs (e.g., Jira task IDs) in the branch name. Instead,
-  [reference them in the PR description](../pull-request/format.md#description)
+  [reference them in the PR description](../pull-requests/format.md#description)
 - **Use lowercase and hyphens (`-`)** to separate words for readability
 - **Keep names concise but descriptive**, avoiding overly generic terms like
   `update` or `fix`

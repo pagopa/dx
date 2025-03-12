@@ -35,6 +35,6 @@ messages.
 It is used to generate changelogs and automate versioning.
 
 Since
-[we use Changesets to handle versioning and changelogs](../pull-request/changeset.md),
+[we use Changesets to handle versioning and changelogs](../pull-requests/changeset.md),
 we do not require Conventional Commits. Instead, we focus on clear, structured
 messages that enhance readability.
