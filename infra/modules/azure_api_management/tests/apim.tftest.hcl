@@ -56,8 +56,9 @@ run "apim_is_correct_plan" {
     }
 
     application_insights = {
-      enabled           = true
-      connection_string = "aConnectionString"
+      enabled             = true
+      connection_string   = "aConnectionString"
+      sampling_percentage = 50
     }
 
     subnet_id                     = run.setup_tests.subnet_id
