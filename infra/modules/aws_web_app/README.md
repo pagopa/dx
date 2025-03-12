@@ -29,8 +29,10 @@ No modules.
 | [aws_sns_topic_policy.amplify_app_branch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_policy) | resource |
 | [aws_sns_topic_subscription.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic_subscription) | resource |
 | [aws_ssm_parameter.secret](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_iam_policy_document.amplify](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.amplify_app_branch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.secrets](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
@@ -41,7 +43,7 @@ No modules.
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration. Sub domains are optional and in the form of dev (dev.example.com), test (test.example.com), etc. | <pre>object({<br/>    name        = string<br/>    zone_id     = string<br/>    sub_domains = optional(list(string), [])<br/>  })</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the application | `map(string)` | `{}` | no |
-| <a name="input_github_authorization_type"></a> [github\_authorization\_type](#input\_github\_authorization\_type) | Authorization can be done via GitHub PAT or AWS Codeconnection. Valid values are `PAT`, `AWS`. If a Codeconnection is not present in your AWS account, use the create\_codeconnection variable to create one. | `string` | n/a | yes |
+| <a name="input_github_authorization_type"></a> [github\_authorization\_type](#input\_github\_authorization\_type) | Authorization can be done via GitHub PAT or AWS Codeconnection. Valid values are `PAT`, `AWS`. If a Codeconnection is not present in your AWS account, use the create\_codeconnection variable to create one. | `string` | `"AWS"` | no |
 | <a name="input_github_pat"></a> [github\_pat](#input\_github\_pat) | GitHub PAT to use for authentication as an alternative to AWS Codeconnection. | `string` | `null` | no |
 | <a name="input_is_ssr"></a> [is\_ssr](#input\_is\_ssr) | Set to true if the application is a server-side rendered application | `bool` | `false` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Monitoring configuration | <pre>object({<br/>    enabled       = bool,<br/>    target_emails = list(string)<br/>  })</pre> | n/a | yes |
