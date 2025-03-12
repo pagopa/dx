@@ -12,24 +12,26 @@ resources in different subscriptions using Azure Private Endpoints via
 Terraform.
 
 The diagram below is a high-level view of the architecture described in the next
-sections. The ultimate goal of is to ensure a clear separation of concerns and
+sections. The ultimate goal is to ensure a clear separation of concerns and
 resource ownership.
 
-![alt text](peps-cross-subscription/architecture.svg)
+![Private Endpoint Architecture](peps-cross-subscription/architecture.svg)
 
 In short:
 
-- Team B is the exclusive owner of the Private Endpoint
-  - The Private Endpoint code should be declared in the caller's repository
-    (subscription B)
+- Team B manages services in subscription B that need to connect to services in
+  subscription A.
+- Team B, the caller, exclusively owns the Private Endpoint.
+- The Private Endpoint Terraform code should be maintained in Team B's
+  repository.
 - Team A must approve the connection request without further interaction between
-  the two teams
-- Each resource of the subscription B requires its own Private Endpoint
-- The same Private Endpoint should be used by multiple apps from the same team
+  the two teams.
+- Each resource in subscription B requires its own Private Endpoint.
+- Multiple applications from the same team should use the same Private Endpoint.
 
 ## Step-by-Step Implementation
 
-### Define the Private Endpoint in the caller's Terraform codebase (Subscription B)
+### Caller Team: Defines the Private Endpoint in the Terraform codebase
 
 Add the following code in caller's repository to create a Private Endpoint:
 
@@ -48,42 +50,33 @@ resource "azurerm_private_endpoint" "example" {
 }
 ```
 
-:::warning
+For resources within the same subscription, the `is_manual_connection` property
+is typically set to `false` to bypass the approval step, as the resource owner
+is usually the same.
 
-For resources in the same subscription, it is recommended to set the property
-`is_manual_connection` to `false` in order to skip the approval step as the
-owner of the two resources is often the same. However, in this case, the
-property must be set to `true`, otherwise the approval mechanism will not work.
+However, since the resources in this scenario are in different subscriptions,
+the property must be set to `true` to initiate the approval process.
 
-:::
+The `private_connection_resource_id` value is hardcoded in this example. string.
+If you prefer to have a reference via Terraform `data` block, the users that
+will apply the Terraform configuration and the Managed Identities federated with
+the GitHub workflows need to have the `Reader` role on the target resource.
 
-:::info
+### Target Team: Approves the Private Endpoint Request
 
-In this example, the `private_connection_resource_id` value is a hardcoded
-string. If you prefer to have a reference via Terraform `data` block, the
-account or the Managed Identity federated with the GitHub workflow that wants to
-run `terraform plan` need to have the `Reader` role on the target resource
-(subscription A).
+Once the Terraform configuration is applied, a connection request is created in
+the target subscription. The target team must approve the request in order to
+activate the connection.
 
-:::
+There are two ways to approve a Private Endpoint connection.
 
-### Request Approval from the Target Team
-
-Once the Terraform configuration is applied, the target team (Subscription A)
-will receive a connection request. The connection between the two resources will
-not work until the request is not approved.
-
-#### Private Endpoint Approval mechanism
-
-You can choose to approve the request either via Azure Portal or Azure CLI.
-
-##### Via Azure Portal
+#### Via Azure Portal
 
 1. In the Azure Portal, navigate to `Private Link Center`
 2. Select `Pending Connections`
 3. Locate the request and click `Approve`
 
-##### Via Azure CLI
+#### Via Azure CLI
 
 ```bash
 az network private-endpoint-connection approve \
@@ -95,6 +88,7 @@ az network private-endpoint-connection approve \
 ::: info
 
 It is recommended to add a meaningful description to the connection, indicating
-who and why is trying to connect to.
+who is trying to connect and why this connection is necessary to facilitate the
+integration.
 
 :::
