@@ -18,32 +18,31 @@
       "nvmInstallPath": "/opt/nvm"
     }
   },
-  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "postStartCommand": {
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+    "install-yarn-and-deps": "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 yarn install"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-azuretools.vscode-docker",
+        "-vscjava.vscode-java-pack",
+        "-ms-dotnettools.csharp",
+        "-ms-azuretools.vscode-azureterraform",
+        "ms-azuretools.vscode-azure-github-copilot",
+        "ms-vscode.vscode-websearchforcopilot",
         "azapi-vscode.azapi",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
-        "-vscjava.vscode-java-pack",
-        "-ms-dotnettools.csharp",
         "arcanis.vscode-zipfs",
         "esbenp.prettier-vscode",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
-        "redis.redis-for-vscode",
         "vitest.explorer",
         "redhat.vscode-yaml",
-        "dbaeumer.vscode-eslint"
-      ],
-      "settings": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[terraform]": {
-          "editor.defaultFormatter": "hashicorp.terraform"
-        }
-      }
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "github.copilot-chat"
+      ]
     }
   }
 }
