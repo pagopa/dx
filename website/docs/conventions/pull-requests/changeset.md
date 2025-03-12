@@ -14,19 +14,18 @@ tracking and auditing of changes over time.
 
 There are multiple ways to create a changeset file:
 
-- follow the
-  [official Changesets guide](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
-- [enable the Changeset bot](https://github.com/apps/changeset-bot) in your
+- Follow the
+  [official Changesets guide](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md).
+- [Enable the Changeset bot](https://github.com/apps/changeset-bot) in your
   repository and interact with it on pull requests. The bot will add a comment
   to each PR, summarizing whether it includes a changeset or not. If it doesn’t,
-  you can create one directly through the GitHub UI
+  you can create one directly through the GitHub UI.
 
 ## Breaking Changes
 
-In cases where the code added in a PR breaks backward compatibility, a migration
-path or guide must be included in the changeset with `major` update. This
-ensures that users can transition smoothly to the new version without
-disruption.
+When the code added in a PR breaks backward compatibility, a migration path or
+guide must be included in the changeset with a `major` update. This ensures that
+users can transition smoothly to the new version without disruption.
 
 ### Example
 
