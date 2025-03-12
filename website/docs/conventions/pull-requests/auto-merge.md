@@ -8,7 +8,8 @@ sidebar_position: 2
 [Auto-merge is a powerful feature in GitHub](https://github.blog/changelog/2021-02-04-pull-request-auto-merge-is-now-generally-available/)
 that automatically merges pull requests once they meet the required conditions,
 such as passing all status checks (e.g., CI pipeline, dependency on another PR)
-or receiving approvals from designated reviewers.  
+or receiving approvals from designated reviewers.
+
 This feature simplifies the development process, reduces manual work, and
 ensures code is merged automatically when ready, saving time and avoiding
 delays.
@@ -16,9 +17,9 @@ delays.
 ## Benefits of Auto Merge
 
 - **Time Saving**: eliminates the need for manual intervention once the PR meets
-  the conditions
+  the conditions.
 - **Consistency**: ensures that only code passing all tests and reviews gets
-  merged, maintaining high quality
+  merged, maintaining high quality.
 - **Faster Time to Production**: automates the merge process, enabling faster
   deployment of code
 
