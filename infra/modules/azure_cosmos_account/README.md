@@ -1,4 +1,50 @@
-# azure_cosmos_account
+# DX - Azure Cosmos Account
+
+This Terraform module provisions an Azure Cosmos DB Account with configurable settings, including failover locations, consistency policies, and backup configurations.
+
+## Features
+
+- Supports automatic failover
+- Configurable geo-replication
+- Uses customer-managed keys (CMK) if enabled
+- Supports zone redundancy for high availability
+- Implements Continuous 30-day backup policy
+- Enables serverless mode if applicable
+
+## Examples
+
+```hcl
+module "cosmosdb" {
+  source  = "pagopa/dx-azure-cosmos-account/azurerm"
+  version = "~> 0"
+
+  environment                = var.environment
+  resource_group_name        = var.resource_group_name
+
+  force_public_network_access_enabled = false
+
+  primary_geo_location       = {
+    location       = "italynorth"
+    zone_redundant = true
+  }
+
+  secondary_geo_locations = [
+    {
+      location          = "westeurope"
+      failover_priority = 1
+      zone_redundant    = false
+    }
+  ]
+
+  tier = "s" # Set to "s" to enable serverless mode
+
+  alerts = {
+    enabled = false
+  }
+
+  tags = var.tags
+}
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -37,6 +83,7 @@
 | <a name="input_secondary_geo_locations"></a> [secondary\_geo\_locations](#input\_secondary\_geo\_locations) | (Optional) Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used. | <pre>list(object({<br/>    location          = optional(string, null)<br/>    failover_priority = optional(number, null)<br/>    zone_redundant    = optional(bool, true)<br/>  }))</pre> | `[]` | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | Id of the subnet which holds private endpoints | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
+| <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Cosmos DB account. Valid values are 's' and 'l'. | `string` | `"l"` | no |
 
 ## Outputs
 

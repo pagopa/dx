@@ -1,5 +1,18 @@
 # azure_storage_account
 
+## 0.0.9
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
+## 0.0.8
+
+### Patch Changes
+
+- e7a44b0: Allowing key vault based customer managed key to be automatically created and used by the storage account's system assigned managed identity
+- 4eb8f9f: Removed provider definition and test updated
+
 ## 0.0.7
 
 ### Patch Changes

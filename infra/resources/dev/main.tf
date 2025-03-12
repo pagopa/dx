@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.114.0"
+      version = "~> 4.0"
     }
   }
 
@@ -18,13 +18,6 @@ provider "azurerm" {
   features {
   }
   storage_use_azuread = true
-}
-
-resource "azurerm_resource_group" "dx" {
-  name     = "${local.prefix}-${local.env_short}-${local.location_short}-rg-01"
-  location = local.location
-
-  tags = local.tags
 }
 
 module "core" {

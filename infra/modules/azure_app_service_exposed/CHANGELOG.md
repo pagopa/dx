@@ -1,5 +1,17 @@
 # azure_app_service_exposed
 
+## 0.0.10
+
+### Patch Changes
+
+- f17598d: Set up custom warm-up for swap and restart
+
+## 0.0.9
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
 ## 0.0.8
 
 ### Patch Changes

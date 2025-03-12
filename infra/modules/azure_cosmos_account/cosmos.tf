@@ -47,6 +47,14 @@ resource "azurerm_cosmosdb_account" "this" {
     }
   }
 
+  dynamic "capabilities" {
+    for_each = var.tier == "s" ? [1] : []
+
+    content {
+      name = "EnableServerless"
+    }
+  }
+
   default_identity_type = var.customer_managed_key.enabled ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity_id}" : "FirstPartyIdentity"
 
   tags = var.tags

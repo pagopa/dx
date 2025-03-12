@@ -41,22 +41,43 @@ resource "azurerm_linux_function_app" "this" {
       SLOT_TASK_HUBNAME = "ProductionTaskHub",
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
       FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
+      # https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
+      WEBSITE_SWAP_WARMUP_PING_PATH     = var.health_check_path
+      WEBSITE_SWAP_WARMUP_PING_STATUSES = "200,204"
+      WEBSITE_WARMUP_PATH               = var.health_check_path
     },
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length(local.function_app.name) > 32 && !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
     local.application_insights.enable ? {
+      # AI SDK Sampling, to be used programmatically
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
-    } : {}
+      APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage,
+
+      # Azure Function Host (runtime) AI Sampling
+      # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = var.application_insights_sampling_percentage,
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.application_insights_sampling_percentage,
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.application_insights_sampling_percentage
+    } : {},
+    local.function_app.has_durable == 1 ? {
+      #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
+      DfStorageConnectionName__accountname                                                  = azurerm_storage_account.durable_function[0].name,
+      AzureFunctionsJobHost__extensions__durableTask__hubName                               = "ProductionTaskHub",
+      AzureFunctionsJobHost__extensions__durableTask__storageProvider__connectionStringName = "DfStorageConnectionName"
+    } : {},
   )
 
   sticky_settings {
     app_setting_names = concat(
       [
         "SLOT_TASK_HUBNAME",
+        "AzureFunctionsJobHost__extensions__durableTask__hubName",
         "APPINSIGHTS_SAMPLING_PERCENTAGE",
-        "AzureFunctionsWebHost__hostid"
+        "AzureFunctionsWebHost__hostid",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage",
+        "AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage"
       ],
       var.sticky_app_setting_names,
     )

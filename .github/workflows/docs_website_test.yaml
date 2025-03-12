@@ -16,9 +16,10 @@ on:
 
 jobs:
   test-deploy:
+    # Don't run in Changeset PRs
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
     name: Test deployment
     runs-on: ubuntu-latest
-
     env:
       TURBO_CACHE_DIR: .turbo-cache
 
@@ -40,7 +41,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Setup turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
         with:
           path: ${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}

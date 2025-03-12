@@ -14,7 +14,7 @@ resource "azurerm_resource_group" "example" {
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  resource_group_name  = "${local.project}-network-rg-01"
 }
 
 # tflint-ignore: terraform_required_providers
@@ -71,9 +71,9 @@ module "azure_postgres" {
 
   environment                          = local.environment
   resource_group_name                  = azurerm_resource_group.example.name
-  private_dns_zone_resource_group_name = azurerm_resource_group.example.name
+  private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
 
-  tier = "l"
+  tier = "s"
 
   administrator_credentials = {
     name     = azurerm_key_vault_secret.postgres_username.value

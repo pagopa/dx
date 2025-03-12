@@ -18,6 +18,11 @@ on:
         type: boolean
         required: false
         default: false
+      override_github_environment:
+          description: Set a value if GitHub Environment name is different than the TF environment folder
+          type: string
+          required: false
+          default: ''
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -32,7 +37,7 @@ jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.environment }}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true

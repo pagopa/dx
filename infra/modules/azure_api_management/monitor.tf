@@ -1,17 +1,17 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.enabled && var.tier != "s" ? 1 : 0
+  count = var.application_insights.enabled ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
+  resource_id         = var.application_insights.id
 
   dynamic "application_insights" {
     for_each = var.management_logger_application_insight_enabled ? [1] : []
     content {
-      instrumentation_key = var.application_insights.instrumentation_key
+      connection_string = var.application_insights.connection_string
     }
   }
-
 }
 
 resource "azurerm_monitor_metric_alert" "this" {

@@ -4,14 +4,6 @@ sidebar_position: 1
 
 # Developer Experience Initiative
 
-:::warning
-
-This initiative (expecially its documentation) is a work in progress. As of now
-(Jun 2024), we're near to release the first version of our tools and docs. Stay
-tuned!
-
-:::
-
 ## What this is all about
 
 Whether it's your first day or you've been an engineer at PagoPA for years, your
@@ -78,21 +70,27 @@ creating effective solutions.
 
 ## Current status
 
-We're currently working on the following:
+We're working on the following:
 
-- [x] Terraform configuration for GitHub Action runners that have access to
-      Azure
-- [x] Github Actions to plan and apply changes to Azure infrastructure
-- [x] Terraform abstractions to deploy Typescript applications on Azure
-- [x] Sane Typescript (eslint) linting presets
-- [ ] Templates for Typescript applications (serverless, express, etc.)
-- [ ] Documentation for the above items
+- [x] Terraform configuration for GitHub Action runners with Azure access
+- [x] Custom Terraform modules for common Azure resources
+- [x] GitHub Actions to plan and apply infrastructure changes
+- [x] GitHub Actions for safe deployment of TypeScript applications on Azure
+- [x] Standardized TypeScript linting presets (eslint)
+- [ ] Scaffold templates for TypeScript applications (monorepo)
+- [ ] Scaffold templates for Terraform modules
+- [ ] Complete web application template using Next.js
+- [ ] OpenAPI client generator for TypeScript
+- [ ] OpenAPI server generator for TypeScript
+- [ ] Documentation for all the above items
 
 If you wonder why we're working with these specific technologies, check out our
 [Achitecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
 
 We're going to update this list as we progress and - eventually - consider other
 languages (e.g., JAVA), and platforms (e.g., AWS).
+
+Aside, we experiment with *new* technologies and tools to improve our daily work.
 
 ## How to stay updated
 

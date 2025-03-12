@@ -122,3 +122,9 @@ variable "sticky_app_setting_names" {
   description = "(Optional) A list of application setting names that are not swapped between slots"
   default     = []
 }
+
+variable "has_durable_functions" {
+  type        = bool
+  description = "(Optional) Enable if the Function App hosts Durable Functions"
+  default     = false
+}

@@ -4361,6 +4361,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_container_app@workspace:infra/modules/azure_container_app":
+  version: 0.0.0-use.local
+  resolution: "azure_container_app@workspace:infra/modules/azure_container_app"
+  languageName: unknown
+  linkType: soft
+
+"azure_container_app_environment@workspace:infra/modules/azure_container_app_environment":
+  version: 0.0.0-use.local
+  resolution: "azure_container_app_environment@workspace:infra/modules/azure_container_app_environment"
+  languageName: unknown
+  linkType: soft
+
 "azure_core_infra@workspace:infra/modules/azure_core_infra":
   version: 0.0.0-use.local
   resolution: "azure_core_infra@workspace:infra/modules/azure_core_infra"

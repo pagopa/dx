@@ -18,7 +18,7 @@ jobs:
     name: Get Modified Modules
     if: ${{ github.event_name != 'workflow_dispatch' }}
     with:
-      from_ref: ${{ github.event.before }}
+      current_ref: ${{ github.event.before }}
 
   get-all-modules:
     uses: ./.github/workflows/get_all_modules.yaml
@@ -43,4 +43,4 @@ jobs:
         uses: ./.github/actions/push-module
         with:
           module: ${{ matrix.module }}
-          github_pat: ${{ secrets.BOT_GH_TOKEN }}
+          github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}

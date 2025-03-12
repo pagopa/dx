@@ -8,21 +8,45 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
+variable "location" {
+  type        = string
+  description = "The location of the app service plan"
+
+  validation {
+    condition     = contains(["italynorth", "westeurope", "germanywestcentral"], lower(var.location))
+    error_message = "The location must be one of \"italynorth\", \"westeurope\", \"germanywestcentral\"."
+  }
+}
+
 variable "autoscale_name" {
   type        = string
   description = "(Optional) Override auto generated name for the autoscaler resource"
   default     = null
 }
 
+variable "app_service_plan_id" {
+  type        = string
+  description = "The id of the app service plan containing the service to autoscale."
+}
+
 variable "target_service" {
   type = object({
-    app_service_name  = optional(string)
-    function_app_name = optional(string)
+    app_service = optional(object({
+      id   = optional(string)
+      name = string
+    }))
+    function_app = optional(object({
+      id   = optional(string)
+      name = string
+    }))
   })
 
   validation {
-    condition     = (var.target_service.app_service_name != null) != (var.target_service.function_app_name != null)
-    error_message = "Only one between \"app_service_name\" and \"function_app_name\" can have a value. It is not possible to set both of them \"null\"."
+    condition = (
+      (var.target_service.app_service != null && try(var.target_service.app_service.name, "") != "") ||
+      (var.target_service.function_app != null && try(var.target_service.function_app.name, "") != "")
+    )
+    error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
   }
 }
 

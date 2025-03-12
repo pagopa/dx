@@ -63,9 +63,9 @@ run "validate_github_repository" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -156,9 +156,9 @@ run "validate_github_branch_protection" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -180,7 +180,7 @@ run "validate_github_branch_protection" {
 }
 
 run "validate_github_default_branch_override" {
-    command = plan
+  command = plan
 
   plan_options {
     target = [
@@ -213,10 +213,10 @@ run "validate_github_default_branch_override" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      name                = run.setup_tests.repository.name
+      description         = run.setup_tests.repository.description
+      topics              = run.setup_tests.repository.topics
+      reviewers_teams     = run.setup_tests.repository.reviewers_teams
       default_branch_name = "master"
     }
 
@@ -229,9 +229,9 @@ run "validate_github_default_branch_override" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -250,7 +250,7 @@ run "validate_github_id_app" {
       azurerm_user_assigned_identity.app_cd,
       azurerm_federated_identity_credential.github_app_cd,
       azurerm_role_assignment.app_cd_subscription_reader,
-      azurerm_role_assignment.app_cd_rg_contributor,
+      azurerm_role_assignment.app_cd_rgs_contributor,
       azurerm_role_assignment.app_cd_tf_rg_blob_contributor,
     ]
   }
@@ -296,9 +296,9 @@ run "validate_github_id_app" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -319,7 +319,7 @@ run "validate_github_id_app" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.app_cd_rg_contributor != null
+    condition     = length(azurerm_role_assignment.app_cd_rgs_contributor) == 1
     error_message = "The App CD user assigned identity is not Contributor of the resource group"
   }
 
@@ -341,28 +341,32 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_subscription_reader,
       azurerm_role_assignment.infra_ci_subscription_data_access,
       azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader,
-      azurerm_role_assignment.infra_ci_rg_cosmos_contributor,
+      azurerm_role_assignment.infra_ci_rgs_cosmos_contributor,
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
-      azurerm_role_assignment.infra_ci_rg_kv_secr,
-      azurerm_role_assignment.infra_ci_rg_kv_cert,
-      azurerm_role_assignment.infra_ci_rg_kv_crypto,
-      azurerm_role_assignment.infra_ci_rg_st_blob_reader,
-      azurerm_role_assignment.infra_ci_rg_st_queue_reader,
-      azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader,
+      azurerm_role_assignment.infra_ci_rgs_kv_secr,
+      azurerm_role_assignment.infra_ci_rgs_kv_cert,
+      azurerm_role_assignment.infra_ci_rgs_kv_crypto,
+      azurerm_role_assignment.infra_ci_rgs_st_blob_reader,
+      azurerm_role_assignment.infra_ci_rgs_st_queue_reader,
+      azurerm_role_assignment.infra_ci_rgs_st_table_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_reader,
-      azurerm_role_assignment.infra_cd_rg_contributor,
+      azurerm_role_assignment.infra_cd_subscription_rbac_admin,
+      azurerm_role_assignment.infra_cd_rgs_contributor,
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
       azurerm_role_assignment.infra_cd_apim_service_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
-      azurerm_role_assignment.infra_cd_rg_rbac_admin,
-      azurerm_role_assignment.infra_cd_rg_user_access_admin,
-      azurerm_role_assignment.infra_cd_rg_kv_secr,
-      azurerm_role_assignment.infra_cd_rg_kv_cert,
-      azurerm_role_assignment.infra_cd_rg_kv_crypto,
-      azurerm_role_assignment.infra_cd_rg_st_blob_contributor,
-      azurerm_role_assignment.infra_ci_rg_st_queue_contributor,
-      azurerm_role_assignment.infra_cd_rg_ext_network_contributor,
+      azurerm_role_assignment.infra_cd_rgs_user_access_admin,
+      azurerm_role_assignment.infra_cd_rgs_kv_secr,
+      azurerm_role_assignment.infra_cd_rgs_kv_cert,
+      azurerm_role_assignment.infra_cd_rgs_kv_crypto,
+      azurerm_role_assignment.infra_cd_rgs_st_blob_contributor,
+      azurerm_role_assignment.infra_ci_rgs_st_queue_contributor,
+      azurerm_role_assignment.infra_ci_rgs_st_table_contributor,
+      azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
+      azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor,
+      azurerm_role_assignment.infra_cd_rg_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
   }
@@ -408,9 +412,10 @@ run "validate_github_id_infra" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id      = run.setup_tests.nat_gateway_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -446,7 +451,7 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_cosmos_contributor != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_cosmos_contributor != null
     error_message = "The Infra CI managed identity can't read Cosmos DB keys at resource group scope"
   }
 
@@ -461,33 +466,33 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_kv_secr != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_kv_secr != null
     error_message = "The Infra CI managed identity can't read Key Vault secrets at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_kv_cert != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_kv_cert != null
     error_message = "The Infra CI managed identity can't read Key Vault certificates at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_kv_crypto != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_kv_crypto != null
     error_message = "The Infra CI managed identity can't read Key Vault keys at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_st_blob_reader != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_st_blob_reader != null
     error_message = "The Infra CI managed identity can't read Storage Account blobs at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_st_queue_reader != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_st_queue_reader != null
     error_message = "The Infra CI managed identity can't read Storage Account queues at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_ext_pagopa_dns_reader != null
-    error_message = "The Infra CI managed identity can't read external DNS configuration at resource group scope"
+    condition     = azurerm_role_assignment.infra_ci_rgs_st_table_reader != null
+    error_message = "The Infra CI managed identity can't read Storage Account tables at resource group scope"
   }
 
   assert {
@@ -501,7 +506,12 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_subscription_rbac_admin != null
+    error_message = "The Infra CD managed identity can't manage IAM roles at subscription scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rgs_contributor != null
     error_message = "The Infra CD managed identity can't apply changes to resources at resource group scope"
   }
 
@@ -521,43 +531,48 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_rbac_admin != null
-    error_message = "The Infra CD managed identity can't apply changes to RBAC configurations at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_user_access_admin != null
+    condition     = azurerm_role_assignment.infra_cd_rgs_user_access_admin != null
     error_message = "The Infra CD managed identity can't apply changes to locks at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_kv_secr != null
+    condition     = azurerm_role_assignment.infra_cd_rgs_kv_secr != null
     error_message = "The Infra CD managed identity can't read Key Vault secrets at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_kv_cert != null
+    condition     = azurerm_role_assignment.infra_cd_rgs_kv_cert != null
     error_message = "The Infra CD managed identity can't write Key Vault certificates at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_kv_crypto != null
+    condition     = azurerm_role_assignment.infra_cd_rgs_kv_crypto != null
     error_message = "The Infra CD managed identity can't write Key Vault keys at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_st_blob_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_rgs_st_blob_contributor != null
     error_message = "The Infra CD managed identity can't write Storage Account blobs at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rg_st_queue_contributor != null
+    condition     = azurerm_role_assignment.infra_ci_rgs_st_queue_contributor != null
     error_message = "The Infra CD managed identity can't write Storage Account queues at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_ext_network_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to DNS zone configurations at resource group scope"
+    condition     = azurerm_role_assignment.infra_ci_rgs_st_table_contributor != null
+    error_message = "The Infra CD managed identity can't write Storage Account tables at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor != null
+    error_message = "The Infra CD managed identity can't associate Private DNS zone and private endpoints at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor != null
+    error_message = "The Infra CD managed identity can't associate NAT Gateways with subnets at resource group scope"
   }
 
   assert {
@@ -566,20 +581,13 @@ run "validate_github_id_infra" {
   }
 }
 
-run "validate_rbac_entraid" {
+run "validate_github_id_infra_duplicate_nat_role_assignment" {
   command = plan
 
   plan_options {
     target = [
-      azurerm_role_assignment.admins_group_rg,
-      azurerm_role_assignment.admins_group_st_tf,
-      azurerm_role_assignment.admins_group_rg_kv_data,
-      azurerm_role_assignment.admins_group_rg_kv_admin,
-      azurerm_role_assignment.devs_group_rg,
-      azurerm_role_assignment.devs_group_tf_st,
-      azurerm_role_assignment.devs_group_tf_rg_kv_secr,
-      azurerm_role_assignment.externals_group_rg,
-      azurerm_role_assignment.externals_group_tf_rg,
+      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_network_contributor,
     ]
   }
 
@@ -624,47 +632,105 @@ run "validate_rbac_entraid" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    nat_gateway_resource_group_id      = run.setup_tests.private_dns_zone_resource_group_id
 
     tags = run.setup_tests.tags
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rg != null
+    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor == []
+    error_message = "The Infra CD has a duplicate role on the same resource group"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rg_network_contributor != null
+    error_message = "The Infra CD has a duplicate role on the same resource group"
+  }
+}
+
+run "validate_rbac_entraid" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_role_assignment.admins_group_rgs,
+      azurerm_role_assignment.admins_group_rgs_kv_data,
+      azurerm_role_assignment.admins_group_rgs_kv_admin,
+      azurerm_role_assignment.devs_group_rgs,
+      azurerm_role_assignment.devs_group_tf_rgs_kv_secr,
+      azurerm_role_assignment.externals_group_rgs,
+    ]
+  }
+
+  variables {
+    environment = {
+      prefix          = run.setup_tests.environment.prefix
+      env_short       = run.setup_tests.environment.env_short
+      location        = run.setup_tests.environment.location
+      domain          = run.setup_tests.environment.domain
+      app_name        = run.setup_tests.environment.app_name
+      instance_number = run.setup_tests.environment.instance_number
+    }
+
+    subscription_id = run.setup_tests.subscription_id
+    tenant_id       = run.setup_tests.tenant_id
+
+    entraid_groups = {
+      admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
+      devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
+      externals_object_id = run.setup_tests.entraid_groups.externals_object_id
+    }
+
+    terraform_storage_account = {
+      name                = run.setup_tests.terraform_storage_account.name
+      resource_group_name = run.setup_tests.terraform_storage_account.resource_group_name
+    }
+
+    repository = {
+      name               = run.setup_tests.repository.name
+      description        = run.setup_tests.repository.description
+      topics             = run.setup_tests.repository.topics
+      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+    }
+
+    github_private_runner = {
+      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
+      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      key_vault = {
+        name                = run.setup_tests.github_private_runner.key_vault.name
+        resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
+      }
+    }
+
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+
+    tags = run.setup_tests.tags
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_rgs["main"] != null
     error_message = "The Admins group should have role assignments at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_st_tf != null
-    error_message = "The Admins group should have role assignments for Terraform state storage"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.devs_group_rg != null
+    condition     = azurerm_role_assignment.devs_group_rgs["main"] != null
     error_message = "The Developers group should have role assignments at resource group scope"
   }
 
   assert {
-    condition     = azurerm_role_assignment.devs_group_tf_st != null
-    error_message = "The Developers group should have role assignments for Terraform state storage"
-  }
-
-
-  assert {
-    condition     = azurerm_role_assignment.devs_group_tf_rg_kv_secr != null
+    condition     = azurerm_role_assignment.devs_group_tf_rgs_kv_secr["main"] != null
     error_message = "The Developers group should have Key Vault Secrets role"
   }
 
   assert {
-    condition     = azurerm_role_assignment.externals_group_rg != null
+    condition     = azurerm_role_assignment.externals_group_rgs["main"] != null
     error_message = "The Externals group should have role assignments at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.externals_group_tf_rg != null
-    error_message = "The Externals group should have role assignments for Terraform resource group"
   }
 }
 
@@ -723,9 +789,9 @@ run "validate_github_id_opex" {
       }
     }
 
-    pep_vnet_id                = run.setup_tests.pep_vnet_id
-    dns_zone_resource_group_id = run.setup_tests.dns_zone_resource_group_id
-    opex_resource_group_id     = run.setup_tests.opex_resource_group_id
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
 
     tags = run.setup_tests.tags
   }
@@ -758,5 +824,120 @@ run "validate_github_id_opex" {
   assert {
     condition     = azurerm_role_assignment.opex_cd_subscription_reader != null
     error_message = "Opex CD subscription reader role assignment should not be null"
+  }
+}
+
+run "validate_rgs_iam" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_role_assignment.admins_group_rgs,
+      azurerm_role_assignment.admins_group_rgs_kv_data,
+      azurerm_role_assignment.admins_group_rgs_kv_admin,
+      azurerm_role_assignment.devs_group_rgs,
+      azurerm_role_assignment.devs_group_tf_rgs_kv_secr,
+      azurerm_role_assignment.externals_group_rgs,
+      azurerm_role_assignment.app_cd_rgs_contributor,
+      azurerm_role_assignment.infra_cd_rgs_contributor,
+      azurerm_role_assignment.infra_cd_rgs_user_access_admin,
+    ]
+  }
+
+  variables {
+    environment = {
+      prefix          = run.setup_tests.environment.prefix
+      env_short       = run.setup_tests.environment.env_short
+      location        = run.setup_tests.environment.location
+      domain          = run.setup_tests.environment.domain
+      app_name        = run.setup_tests.environment.app_name
+      instance_number = run.setup_tests.environment.instance_number
+    }
+
+    subscription_id = run.setup_tests.subscription_id
+    tenant_id       = run.setup_tests.tenant_id
+
+    entraid_groups = {
+      admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
+      devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
+      externals_object_id = run.setup_tests.entraid_groups.externals_object_id
+    }
+
+    terraform_storage_account = {
+      name                = run.setup_tests.terraform_storage_account.name
+      resource_group_name = run.setup_tests.terraform_storage_account.resource_group_name
+    }
+
+    repository = {
+      name               = run.setup_tests.repository.name
+      description        = run.setup_tests.repository.description
+      topics             = run.setup_tests.repository.topics
+      reviewers_teams    = run.setup_tests.repository.reviewers_teams
+      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+    }
+
+    github_private_runner = {
+      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
+      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      key_vault = {
+        name                = run.setup_tests.github_private_runner.key_vault.name
+        resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
+      }
+    }
+
+    pep_vnet_id                        = run.setup_tests.pep_vnet_id
+    private_dns_zone_resource_group_id = run.setup_tests.private_dns_zone_resource_group_id
+    opex_resource_group_id             = run.setup_tests.opex_resource_group_id
+    additional_resource_group_ids = [
+      run.setup_tests.opex_resource_group_id,
+      run.setup_tests.private_dns_zone_resource_group_id
+    ]
+
+    tags = run.setup_tests.tags
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_rgs[run.setup_tests.opex_resource_group_id] != 0
+    error_message = "The Admins group should be Owner of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_rgs_kv_data[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Admins group should be able to apply changes to KeyVault's data of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admins_group_rgs_kv_admin[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Admins group should be able to apply changes to KeyVault of the additional resource groups"
+  }
+
+  assert {
+    condition = azurerm_role_assignment.devs_group_rgs[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Devs group should be Owner of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.devs_group_tf_rgs_kv_secr[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Devs group should be able to apply changes to KeyVault's secrets of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.externals_group_rgs[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Externals group should be able to read resources of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.app_cd_rgs_contributor[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The App CD user assigned identity is not Contributor of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rgs_contributor[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Infra CD user assigned identity is not Contributor of the additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_rgs_user_access_admin[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Infra CD user assigned identity is not User Access Administrator of the additional resource groups"
   }
 }

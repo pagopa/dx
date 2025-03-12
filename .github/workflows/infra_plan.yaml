@@ -50,7 +50,7 @@ jobs:
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
-      group: ${{ github.workflow }}-${{ inputs.environment }}-ci
+      group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.base_path }}-ci
       cancel-in-progress: false
     permissions:
       id-token: write

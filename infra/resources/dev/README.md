@@ -6,13 +6,11 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 3.114.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.114.0 |
+No providers.
 
 ## Modules
 
@@ -22,9 +20,7 @@
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [azurerm_resource_group.dx](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+No resources.
 
 ## Inputs
 

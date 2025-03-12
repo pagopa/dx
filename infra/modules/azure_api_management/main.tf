@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0, < 5.0"
+      version = ">= 4.1.0, < 5.0"
     }
   }
 }
@@ -35,6 +35,8 @@ resource "azurerm_api_management" "this" {
   sku_name                      = local.apim.sku_name
   zones                         = var.tier == "l" ? ["1", "2", "3"] : null
   public_network_access_enabled = var.enable_public_network_access
+
+  min_api_version = "2021-08-01"
 
   # Managed identity type: System
   identity {

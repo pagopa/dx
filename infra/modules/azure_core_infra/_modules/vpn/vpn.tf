@@ -13,7 +13,7 @@ resource "azurerm_subnet" "vpn_snet" {
 }
 
 module "vpn" {
-  source = "github.com/pagopa/terraform-azurerm-v3//vpn_gateway?ref=v8.33.0"
+  source = "github.com/pagopa/terraform-azurerm-v4//vpn_gateway?ref=v1.9.0"
 
   name                  = "${var.project}-vgw-01"
   location              = var.location
@@ -58,7 +58,7 @@ resource "azurerm_subnet" "dns_forwarder_snet" {
 }
 
 module "dns_forwarder" {
-  source              = "github.com/pagopa/terraform-azurerm-v3//dns_forwarder?ref=v8.33.1"
+  source              = "github.com/pagopa/terraform-azurerm-v4//dns_forwarder?ref=v1.9.0"
   name                = "${var.project}-dns-forwarder-ci-01"
   location            = var.location
   resource_group_name = var.resource_group_name

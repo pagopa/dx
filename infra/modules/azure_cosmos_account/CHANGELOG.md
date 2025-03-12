@@ -1,5 +1,12 @@
 # azure_cosmos_account
 
+## 0.0.6
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+- 0fc4eec: Added tier variable into cosmos account module
+
 ## 0.0.5
 
 ### Patch Changes

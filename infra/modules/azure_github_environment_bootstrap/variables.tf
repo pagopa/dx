@@ -45,9 +45,15 @@ variable "apim_id" {
   default     = null
 }
 
-variable "dns_zone_resource_group_id" {
+variable "private_dns_zone_resource_group_id" {
   type        = string
-  description = "Id of the resource group holding public DNS zone"
+  description = "Id of the resource group holding private DNS zones"
+}
+
+variable "nat_gateway_resource_group_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Id of the resource group hosting NAT Gateways"
 }
 
 variable "opex_resource_group_id" {
@@ -106,4 +112,17 @@ variable "github_private_runner" {
     cpu    = optional(number, 0.5)
     memory = optional(string, "1Gi")
   })
+}
+
+variable "additional_resource_group_ids" {
+  type        = set(string)
+  default     = []
+  description = "(Optional) List of existing resource groups of which the domain team is the owner."
+
+  validation {
+    condition = alltrue([
+      for id in var.additional_resource_group_ids : provider::azurerm::parse_resource_id(id)["resource_type"] == "resourceGroups"
+    ])
+    error_message = "This variable accepts resource group IDs only"
+  }
 }

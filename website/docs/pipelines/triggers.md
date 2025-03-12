@@ -1,9 +1,9 @@
 ---
 sidebar_position: 1
-sidebar_label: Pipeline Triggers
+sidebar_label: Setting Up Pipeline Triggers
 ---
 
-# The role of triggers in pipelines
+# Setting Up Pipeline Triggers
 
 Triggers in a CI/CD pipeline are more than just automated switches; they embody
 the principles of flow and harmony within software development. By defining when
