@@ -74,7 +74,7 @@ well-known by our user base. The following data is requested:
   Endpoints, VNet, etc.)
 
 More details about the usage can be found
-[here](https://registry.terraform.io/modules/pagopa/dx-azure-github-environment-bootstrap/azurerm/latest).
+[here](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest).
 
 ### Examples
 
