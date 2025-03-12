@@ -4,7 +4,7 @@ sidebar_label: Using Terraform Registry Modules
 
 # Using Terraform Registry Modules
 
-The Terraform Registry serves as a central repository for discovering, sharing, and managing infrastructure modules. PagoPA maintains its own collection of modules in our dedicated namespace at [registry.terraform.io/namespaces/pagopa](https://registry.terraform.io/namespaces/pagopa), making it easier for teams to share and reuse infrastructure components.
+The Terraform Registry serves as a central repository for discovering, sharing, and managing infrastructure modules. PagoPA maintains its own collection of modules in our dedicated namespace at [registry.terraform.io/namespaces/pagopa-dx](https://registry.terraform.io/namespaces/pagopa-dx), making it easier for teams to share and reuse infrastructure components.
 
 :::note
 This documentation is relevant for all individual contributors making use of DevEx terraform modules.
@@ -116,8 +116,8 @@ module "roles" {
 **After (Registry source):**
 ```hcl
 module "roles" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
-  version = "~> 0"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 0.0"
 
   principal_id = var.data_factory_principal_id
 
@@ -135,13 +135,13 @@ Let's break down the key changes:
 
 1. **Source Format**
    - Old: `github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main`
-   - New: `pagopa/dx-azure-role-assignments/azurerm`
+   - New: `pagopa-dx/azure-role-assignments/azurerm`
    
    The Registry format follows the pattern: `<NAMESPACE>/<NAME>/<PROVIDER>`
 
 2. **Version Specification**
    - Old: Using git ref (`?ref=main`)
-   - New: Using semantic versioning (`version = "~> 0"`)
+   - New: Using semantic versioning (`version = "~> 0.0"`)
    
    The `~>` operator allows updates within the same major version, providing stability while allowing minor updates.
 
