@@ -194,13 +194,13 @@ variable "application_insights" {
     enabled             = bool
     connection_string   = string
     id                  = optional(string, null)
-    sampling_percentage = optional(number, 100)
+    sampling_percentage = number
   })
   default = {
     enabled             = false
     connection_string   = null
     id                  = null
-    sampling_percentage = 100
+    sampling_percentage = 0
   }
   description = "Application Insights integration. The connection string used to push data"
 
