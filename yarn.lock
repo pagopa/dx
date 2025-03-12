@@ -4351,6 +4351,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_cdn@workspace:infra/modules/azure_cdn":
+  version: 0.0.0-use.local
+  resolution: "azure_cdn@workspace:infra/modules/azure_cdn"
+  languageName: unknown
+  linkType: soft
+
 "azure_container_app@workspace:infra/modules/azure_container_app":
   version: 0.0.0-use.local
   resolution: "azure_container_app@workspace:infra/modules/azure_container_app"
@@ -4360,12 +4366,6 @@ __metadata:
 "azure_container_app_environment@workspace:infra/modules/azure_container_app_environment":
   version: 0.0.0-use.local
   resolution: "azure_container_app_environment@workspace:infra/modules/azure_container_app_environment"
-  languageName: unknown
-  linkType: soft
-
-"azure_cdn@workspace:infra/modules/azure_cdn":
-  version: 0.0.0-use.local
-  resolution: "azure_cdn@workspace:infra/modules/azure_cdn"
   languageName: unknown
   linkType: soft
 
