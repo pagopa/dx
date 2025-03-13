@@ -50,31 +50,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Azure Login
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
-        with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+      - uses: ./.github/actions/azure-login
+        name: Azure Login
 
-      - name: Set Terraform Version
+      - name: Terraform Setup and init
         id: set-terraform-version
-        run: |
-          set -eu
-          terraform_version=$(cat .terraform-version)
-          printf "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
-
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
-        name: Setup Terraform
+        uses: ./.github/actions/terraform-setup
         with:
-          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
-
-      - name: Terraform Init
-        working-directory: infra/modules/${{ matrix.module }}
-        run: |
-          set -euo
-
-          terraform init
+          working_dir: infra/modules/${{ matrix.module }}
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}

@@ -1,14 +1,21 @@
 name: Get Terraform Version
 description: Retrieve the Terraform version from the `.terraform-version` file or return a default version.
+
 inputs:
+  terraform_version:
+    description: "Specify the Terraform version to use, if not set, it will be read from .terraform-version file"
+    type: string
+    required: false
   default_version:
     description: "Default Terraform version to use if the `.terraform-version` file is not found."
     required: false
     default: "1.10.4"
+
 outputs:
   terraform_version:
     description: "The Terraform version retrieved or the default."
     value: ${{ steps.get-terraform-version-action.outputs.terraform_version }}
+
 runs:
   using: "composite"
   steps:
@@ -19,21 +26,26 @@ runs:
         # Default version provided via input
         DEFAULT_VERSION="${{ inputs.default_version }}"
         TERRAFORM_VERSION="${{ inputs.default_version }}"
-        # Check for the .terraform-version file
-        if [ -f ".terraform-version" ]; then
-            TERRAFORM_VERSION=$(cat .terraform-version)
-            
-            # Validate the version format
-            if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-                echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"
-            else
-                echo "Error: Invalid Terraform version format: ${TERRAFORM_VERSION}"
-                exit 1
-            fi
+
+        if [ "${{ inputs.terraform_version }}" == "" ]; then
+          # Check for the .terraform-version file
+          if [ -f ".terraform-version" ]; then
+              TERRAFORM_VERSION=$(cat .terraform-version)
+              
+              # Validate the version format
+              if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                  echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"
+              else
+                  echo "Error: Invalid Terraform version format: ${TERRAFORM_VERSION}"
+                  exit 1
+              fi
+          else
+              TERRAFORM_VERSION="$DEFAULT_VERSION"
+              echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
+          fi
         else
-            TERRAFORM_VERSION="$DEFAULT_VERSION"
-            echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
+          TERRAFORM_VERSION=${{ inputs.terraform_version }}
         fi
-        
+
         # Output the Terraform version
         echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT

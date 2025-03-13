@@ -118,12 +118,10 @@ jobs:
         working-directory: ./out/apps/${{ env.WORKSPACE }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
-          if-no-files-found: error
-          retention-days: 7
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
 
   deploy:
     name: Deploy
@@ -149,16 +147,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: ./.github/actions/download-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
-
-      - name: Azure Login
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
-        with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          
+      - uses: ./.github/actions/azure-login
+        name: Azure Login
 
       - name: Deploy
         uses: azure/webapps-deploy@4bfb30bef2c330e36be280cb1e5726d0fac06233 # v2

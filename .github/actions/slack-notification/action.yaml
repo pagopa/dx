@@ -1,0 +1,77 @@
+name: "Slack Notification"
+description: "Send a notification to a Slack channel"
+
+inputs:
+  id:
+    description: "ID of the notification in mrkdwn format"
+    type: string
+    required: true
+  title:
+    description: "Visible title of the notification in mrkdwn format"
+    type: string
+    required: false
+  text:
+    description: "Text of the notification in mrkdwn format"
+    type: string
+    required: false
+  slack_webhook_url:
+    description: "Slack Webhook URL to send the notification to (override the one in the environment)"
+    type: string
+    required: false
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Check inputs and set defaults
+      id: check-values
+      shell: bash
+      run: |
+        set -eu
+        if [ "${{ inputs.title }}" == "" ]; then
+          title="*${{ inputs.id }}*"
+        else
+          title="${{ inputs.title }}"
+        fi
+
+        if [ "${{ inputs.slack_webhook_url }}" == "" ]; then
+          if [ "${{ env.SLACK_WEBHOOK_URL }}" == "" ]; then
+            echo "No Slack Webhook URL provided. Exiting."
+            exit 1
+          fi
+          slack_webhook_url="${{ env.SLACK_WEBHOOK_URL }}"
+        else
+          slack_webhook_url="${{ inputs.slack_webhook_url }}"
+        fi
+        
+        echo "title=$title" >> "$GITHUB_OUTPUT"
+        echo "slack_webhook_url=$slack_webhook_url" >> "$GITHUB_OUTPUT"
+
+    # Reference: https://github.com/slackapi/slack-github-action
+    # The slack action need the environment variable SLACK_WEBHOOK_URL to be set
+    - name: Slack Notification
+      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+      with:
+        payload: |
+          {
+            "text": "${{ inputs.id }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ steps.check-values.outputs.title }}"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ inputs.text }}"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        SLACK_WEBHOOK_URL: ${{ steps.check-values.outputs.slack_webhook_url }}
