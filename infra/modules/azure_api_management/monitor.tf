@@ -14,7 +14,7 @@ resource "azurerm_api_management_logger" "this" {
   }
 }
 
-resource "azurerm_api_management_diagnostic" "this" {
+resource "azurerm_api_management_diagnostic" "applicationinsights" {
   count = var.application_insights.enabled ? 1 : 0
 
   identifier               = "applicationinsights"
