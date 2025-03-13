@@ -223,16 +223,89 @@ variable "application_insights" {
 
   validation {
     condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
-    error_message = "Invalid `sampling_percentage` value provided. Valid values are between 0 and 100"
+    error_message = "Invalid 'sampling_percentage' value provided. Valid values are between 0 and 100"
   }
 
   validation {
     condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
-    error_message = "Invalid `verbosity` value provided. Valid values are 'verbose', 'information', 'error'"
+    error_message = "Invalid 'verbosity' value provided. Valid values are 'verbose', 'information', 'error'"
   }
 }
 
+variable "monitoring" {
+  type = object({
+    enabled                    = bool
+    log_analytics_workspace_id = string
+    sampling_percentage        = number
+    verbosity                  = string
 
+    logs = optional(object({
+      enabled    = bool
+      groups     = optional(list(string), [])
+      categories = optional(list(string), [])
+    }), { enabled = false, groups = [], categories = [] })
+
+    metrics = optional(object({
+      enabled = bool
+    }), { enabled = false })
+
+  })
+  default = {
+    enabled                    = false
+    log_analytics_workspace_id = null
+    sampling_percentage        = 0
+    verbosity                  = "error"
+  }
+  description = "Enable collecting resources to send to Azure Monitor into AzureDiagnostics table"
+
+  validation {
+    condition     = var.monitoring.sampling_percentage >= 0 && var.monitoring.sampling_percentage <= 100
+    error_message = "Invalid 'sampling_percentage' value provided. Valid values are between 0 and 100"
+  }
+
+  validation {
+    condition     = contains(["verbose", "information", "error"], var.monitoring.verbosity)
+    error_message = "Invalid 'verbosity' value provided. Valid values are 'verbose', 'information', 'error'"
+  }
+
+  # At least one between logs and metrics must be enabled
+  validation {
+    condition = (
+      # If monitoring is not enabled, no validation needed
+      !var.monitoring.enabled ||
+      # At least one of logs or metrics must be enabled
+      var.monitoring.logs.enabled ||
+      var.monitoring.metrics.enabled
+    )
+    error_message = "At least one between 'logs' and 'metrics' must be enabled when monitoring is enabled."
+  }
+
+  # Exactly one of logs.groups or logs.categories must be provided, but not both
+  validation {
+    condition = (
+      !var.monitoring.logs.enabled ||
+      (length(var.monitoring.logs.groups) == 0) != (length(var.monitoring.logs.categories) == 0)
+    )
+    error_message = "If logs are enabled, exactly one of 'logs.groups' or 'logs.categories' must be provided, but not both."
+  }
+
+  # Validate logs.groups values
+  validation {
+    condition = var.monitoring.logs.enabled == false || alltrue([
+      for group in var.monitoring.logs.groups : contains(data.azurerm_monitor_diagnostic_categories.apim.log_category_groups, group)
+    ])
+    error_message = format("Invalid value in 'logs.groups'. Allowed values are: %#v", join(", ", data.azurerm_monitor_diagnostic_categories.apim.log_category_groups))
+  }
+
+  # Validate logs.categories values
+  validation {
+    condition = var.monitoring.enabled == false || alltrue([
+      for category in var.monitoring.logs.categories : contains(data.azurerm_monitor_diagnostic_categories.apim.log_category_types, category)
+    ])
+    error_message = format("Invalid value in 'logs.categories'. Allowed values are: %#v", join(", ", data.azurerm_monitor_diagnostic_categories.apim.log_category_types))
+  }
+
+}
 
 variable "metric_alerts" {
   default = {}
