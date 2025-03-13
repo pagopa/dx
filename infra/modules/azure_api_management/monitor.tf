@@ -29,6 +29,54 @@ resource "azurerm_api_management_diagnostic" "applicationinsights" {
   sampling_percentage = var.application_insights.sampling_percentage
 }
 
+// Collect diagnostic logs and metrics to a Log Analytics workspace
+resource "azurerm_monitor_diagnostic_setting" "apim" {
+  count = var.monitoring.enabled ? 1 : 0
+
+  name               = "${local.apim.name}-diagnostic"
+  target_resource_id = azurerm_api_management.this.id
+
+  log_analytics_workspace_id     = var.monitoring.log_analytics_workspace_id
+  log_analytics_destination_type = "AzureDiagnostics"
+
+  # Add logs only if enabled
+  dynamic "enabled_log" {
+    for_each = var.monitoring.logs.enabled ? (
+      length(var.monitoring.logs.groups) > 0 ? var.monitoring.logs.groups : var.monitoring.logs.categories
+    ) : []
+
+    content {
+      category_group = length(var.monitoring.logs.groups) > 0 ? enabled_log.value : null
+      category       = length(var.monitoring.logs.categories) > 0 ? enabled_log.value : null
+    }
+  }
+
+  # Add metrics if enabled
+  metric {
+    category = "AllMetrics"
+    enabled  = var.monitoring.metrics.enabled
+  }
+}
+
+resource "azurerm_api_management_diagnostic" "azuremonitor" {
+  count = var.monitoring.enabled ? 1 : 0
+
+  identifier          = "azuremonitor"
+  api_management_name = azurerm_api_management.this.name
+  resource_group_name = azurerm_api_management.this.resource_group_name
+
+  // https://github.com/hashicorp/terraform-provider-azurerm/issues/29050
+  // At the moment, this is the only working value we know
+  // Also, an example on the official docs uses `/loggers/azuremonitor`
+  // (ref: https://learn.microsoft.com/en-us/rest/api/apimanagement/diagnostic/create-or-update?view=rest-apimanagement-2024-05-01&tabs=HTTP)
+  api_management_logger_id = "${azurerm_api_management.this.id}/loggers/azuremonitor"
+
+  always_log_errors = true
+
+  verbosity           = var.monitoring.verbosity
+  sampling_percentage = var.monitoring.sampling_percentage
+}
+
 resource "azurerm_monitor_metric_alert" "this" {
   for_each = var.tier != "s" ? var.metric_alerts : {}
 
