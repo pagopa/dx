@@ -14,9 +14,9 @@ explains why it's important and how to configure your Git profile.
 ### Why Set Your Git Profile?
 
 - **Uniformity**: ensures that all commits are associated with a consistent
-  identity, which is especially important in collaborative environments
+  identity, which is especially important in collaborative environments.
 - **Professionalism**: using your work email address in commits reflects a
-  professional approach and aligns with organizational standards
+  professional approach and aligns with organizational standards.
 
 ### How to Set Your Git Profile
 
@@ -55,9 +55,9 @@ Signed commits provide an additional layer of security and trust in a
 repository. While **not mandatory**, they can be useful in various scenarios:
 
 - **Authenticity**: ensures that commits are genuinely from the author and have
-  not been tampered with
+  not been tampered with.
 - **Trust**: helps reviewers and collaborators verify commit authorship without
-  relying solely on email addresses
+  relying solely on email addresses.
 
 ### Enabling Signed Commits
 
@@ -72,7 +72,7 @@ If not yet installed, you can install GPG by running the following command:
 brew install gpg
 ```
 
-Once installed, you could need to add the following line to your
+Once installed, you might need to add the following line to your
 `~/.gnupg/gpg.conf` file:
 
 ```ini
@@ -103,11 +103,11 @@ You might need to run the command with `sudo` privileges.
 
 When prompted:
 
-- Select the key type: `(4) RSA (sign only)` is sufficient for signing commits
-- Choose a key size: `4096` bits is recommended
-- Set an expiration date (e.g., `2y` for two years)
-- Enter your name and email (`Jane Doe <jane.doe@pagopa.it>`)
-- Set a secure passphrase
+- Select the key type: `(4) RSA (sign only)` is sufficient for signing commits.
+- Choose a key size: `4096` bits is recommended.
+- Set an expiration date (e.g., `2y` for two years).
+- Enter your name and email (`Jane Doe <jane.doe@pagopa.it>`).
+- Set a secure passphrase.
 
 Alternatively, you can follow the
 [GitHub guide](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key)
@@ -116,7 +116,7 @@ to generate a GPG key.
 :::important
 
 Pay attention to steps `12` and `13` in the GitHub guide. They explain how to
-copy the public key that you are need to add to your GitHub profile.
+copy the public key that you need to add to your GitHub profile.
 
 :::
 
