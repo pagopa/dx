@@ -189,17 +189,15 @@ variable "certificate_names" {
   description = "List of key vault certificate name"
 }
 
-
 variable "lock_enable" {
   type        = bool
   default     = false
   description = "Apply lock to block accidental deletions."
 }
 
-
-#------------#
-# Monitoring #
-#------------#
+#------------------------#
+# Tracing and Monitoring #
+#------------------------#
 
 variable "application_insights" {
   type = object({
@@ -303,8 +301,6 @@ variable "action_group_id" {
   type        = string
   default     = null
 }
-
-
 
 variable "management_logger_application_insight_enabled" {
   type        = bool
