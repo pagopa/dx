@@ -8,24 +8,15 @@ resource "aws_amplify_app" "this" {
   iam_service_role_arn  = aws_iam_role.this.arn
 
   # The default build_spec added by the Amplify Console for React.
-  build_spec = yamlencode({
-    version = 1
-    applications = [{
-      frontend = {
-        appRoot = var.build_information.app_path
-        phases = {
-          preBuild = { commands = var.build_information.install_commands }
-          build    = { commands = concat(["env >> ${var.build_information.app_path}/.env"], var.build_information.build_commands) }
-        }
-        artifacts = {
-          baseDirectory = var.build_information.build_path
-          files         = ["**/*"]
-        }
-        buildPath = "/"
-      }
+  build_spec = templatefile(
+    "${path.module}/templates/buildspec.yaml.tpl",
+    {
+      app_root = var.build_information.app_path
+      pre_build_commands = jsonencode(var.build_information.install_commands)
+      build_commands = jsonencode(concat(["env >> ${var.build_information.app_path}/.env"], var.build_information.build_commands))
+      build_dir = var.build_information.build_path
     }
-    ]
-  })
+  )
 
   # The default rewrites and redirects added by the Amplify Console.
   dynamic "custom_rule" {
