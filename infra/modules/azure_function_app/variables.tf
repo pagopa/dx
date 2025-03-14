@@ -40,7 +40,7 @@ variable "subnet_id" {
 
 variable "application_insights_connection_string" {
   type        = string
-  sensitive   = true
+  sensitive   = false
   default     = null
   description = "(Optional) Application Insights connection string"
 }
@@ -178,7 +178,7 @@ variable "action_group_id" {
 variable "application_insights_key" {
   type        = string
   description = "(Optional) Application Insights key"
-  sensitive   = true
+  sensitive   = false
   default     = null
 }
 
