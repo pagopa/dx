@@ -20,8 +20,8 @@ jobs:
 
       - uses: ./.github/actions/node-setup
         name: Node Setup
-        with:
-          working_dir: ./
+        # with:
+        #   working_dir: ./
 
       - name: Make Zip File
         run: |
