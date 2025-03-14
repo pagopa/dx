@@ -1,12 +1,10 @@
 name: "Node Setup"
 description: "Setup Node.js and Turbo cache"
 
+# To start the turbo cache, set the TURBO_CACHE_DIR environment variable to the directory where you want to store the cache.
+# For example, you can set it to .turbo-cache in your project directory.
+
 inputs:
-  turbo_cache_dir:
-    description: "Specify the turbo cache directory"
-    type: string
-    required: false
-    default: ""
   working_dir:
     description: "Specify the working directory"
     type: string
@@ -28,10 +26,10 @@ runs:
         cache-dependency-path: "${{ inputs.working_dir }}/yarn.lock"
 
     - name: Setup turbo cache
-      if: ${{ inputs.turbo_cache_dir != '' }}
+      if: ${{ env.TURBO_CACHE_DIR != '' }}
       uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
       with:
-        path: ${{ inputs.turbo_cache_dir }}
+        path: ${{ env.TURBO_CACHE_DIR }}
         key: ${{ runner.os }}-turbo-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-turbo-
