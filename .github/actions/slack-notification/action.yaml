@@ -47,6 +47,18 @@ runs:
         echo "title=$title" >> "$GITHUB_OUTPUT"
         echo "slack_webhook_url=$slack_webhook_url" >> "$GITHUB_OUTPUT"
 
+    - name: Prepare JSON payload
+      id: prepare-payload
+      shell: bash
+      run: |
+        ID_JSON=$(jq -n --arg v "${{ inputs.id }}" '$v')
+        TITLE_JSON=$(jq -n --arg v "${{ steps.check-values.outputs.title }}" '$v')
+        TEXT_JSON=$(jq -n --arg v "${{ inputs.text }}" '$v')
+        
+        echo "id_json=${ID_JSON}" >> "$GITHUB_OUTPUT"
+        echo "title_json=${TITLE_JSON}" >> "$GITHUB_OUTPUT"
+        echo "text_json=${TEXT_JSON}" >> "$GITHUB_OUTPUT"
+
     # Reference: https://github.com/slackapi/slack-github-action
     # The slack action need the environment variable SLACK_WEBHOOK_URL to be set
     - name: Slack Notification
@@ -54,20 +66,20 @@ runs:
       with:
         payload: |
           {
-            "text": "${{ inputs.id }}",
+            "text": ${{ steps.prepare-payload.outputs.id_json }},
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ steps.check-values.outputs.title }}"
+                  "text": ${{ steps.prepare-payload.outputs.title_json }}
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ inputs.text }}"
+                  "text": ${{ steps.prepare-payload.outputs.text_json }}
                 }
               }
             ]
