@@ -2,6 +2,9 @@ name: Test Terraform modules plan
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feats/make-modular-workflows-with-actions # FOR TESTING
   pull_request:
     types: [opened, synchronize]
     branches:
