@@ -1,6 +1,6 @@
 ---
 sidebar_label: Conventional Comments
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # Conventional Comments
@@ -49,7 +49,7 @@ To see the full list of available labels, take a look at the
 
 ## Best Practices
 
-In addition to the [Code Review Best Practices](principles.md#best-practices),
+In addition to the [Code Review Best Practices](./index.md#best-practices),
 consider the following best practices when using conventional comments:
 
 - leave actionable comments: make sure the author knows what to do next
