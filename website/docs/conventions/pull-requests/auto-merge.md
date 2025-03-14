@@ -29,7 +29,7 @@ You can enable auto-merge for a repository by following the
 [official GitHub documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request#enabling-auto-merge).
 
 If the repository settings are managed through
-[Terraform, using the `azure_github_environment_bootstrap` module](https://registry.terraform.io/modules/pagopa/dx-azure-github-environment-bootstrap/azurerm/latest),
+[Terraform, using the `azure_github_environment_bootstrap` module](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest),
 auto-merge is enabled by default.  
 This means that while the feature is available for the repository, it does not
 automatically merge all PRs.
