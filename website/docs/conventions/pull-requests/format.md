@@ -32,6 +32,9 @@ context. It should include:
 - A summary of the problem being solved or the feature being added.
 - When applicable: a reference to the tracking system at the end of the
   description using `Resolves #<Jira task ID>` (e.g., `Resolves #DX-1234`).
+- Don't include images or links in the description, as they add noise to the Git
+  history since the PR description is used as the commit message. Use a comment
+  to provide more context instead.
 
 ### Tracking System References
 
