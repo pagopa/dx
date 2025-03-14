@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.1.1
+
+### Patch Changes
+
+- 9075297: Add documentation in README
+
 ## 1.1.0
 
 ### Minor Changes
