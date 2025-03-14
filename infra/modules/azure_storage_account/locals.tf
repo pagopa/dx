@@ -52,4 +52,8 @@ locals {
       principal_id        = try(coalesce(var.customer_managed_key.user_assigned_identity_id, azurerm_storage_account.this.identity[0].principal_id), "")
     } : {}
   }
+
+  tags = var.environment.env_short == "d" ? merge(var.tags, {
+    "ModifiedOn" = formatdate("YYYY-MM-DD", timestamp())
+  }) : var.tags
 }
