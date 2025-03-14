@@ -31,7 +31,7 @@ context. It should include:
 
 - A summary of the problem being solved or the feature being added.
 - When applicable: a reference to the tracking system at the end of the
-  description using `Resolves #<Jira task ID>` (e.g., `Resolves #DX-1234`).
+  description using `Resolves <Jira task ID>` (e.g., `Resolves DX-1234`).
 - Don't include images or links in the description, as they add noise to the Git
   history since the PR description is used as summary of the merge commit. Use a
   comment to provide more context instead.
@@ -52,6 +52,18 @@ The reference should be placed on a separate line at the end of the description,
 preceded by a blank line for separation. The sentence should begin with an
 uppercase letter.
 
+:::note
+
+Avoid using `#` as a prefix for issue references. When configuring an
+[autolink reference](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/configuring-autolinks-to-reference-external-resources),
+the reference prefix must start with a letter.
+
+For example, if you set the autolink reference for Jira as `DX-` and include
+`#DX-123` in a PR description, GitHub will automatically exclude the `#` from
+the generated link.
+
+:::
+
 ### Dependencies
 
 To express dependencies between different PRs, we use
@@ -71,12 +83,12 @@ tracking system reference, if present.
 ```markdown
 <Pull Request description>
 
-Depends on #42 Resolves #DX-001
+Depends on #42 Resolves DX-001
 ```
 
 `Depends on #42` indicates that this pull request relies on PR #42 and should
 not be merged until that dependency is resolved.  
-`Resolves #DX-001` specifies that this pull request addresses issue `DX-001`,
+`Resolves DX-001` specifies that this pull request addresses issue `DX-001`,
 ensuring proper issue tracking.
 
 ```markdown
@@ -91,7 +103,7 @@ reference is still included to maintain clarity and ensure proper sequencing.
 ```markdown
 <Pull Request description>
   
-Close #DX-002 #CES-50
+Close DX-002 CES-50
 ```
 
 This applies when a single PR resolves multiple tasks tracked by different teams
@@ -104,7 +116,7 @@ or boards.
 
 <!-- Bad: multiple tasks in the same PR -->
 
-Close #DX-002 #DX-003
+Close DX-002 DX-003
 ```
 
 In this case, you should follow the
@@ -115,7 +127,7 @@ traceability and avoids merging unrelated changes together.
 ```markdown
 <!-- Bad: verbose reference within the PR description instead of placing it at the end -->
 
-This PR fixes #DX-002...
+This PR fixes DX-002...
 ```
 
 This format is discouraged because the reference is embedded within the
