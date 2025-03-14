@@ -4,7 +4,7 @@
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags to be applied to all resources"
+  description = "Resources tags"
 }
 
 variable "environment" {
