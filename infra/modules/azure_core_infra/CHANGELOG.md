@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.1
+
+### Patch Changes
+
+- d29a1f4: Add azure container app private DNS zone support
+
 ## 1.0.0
 
 ### Major Changes

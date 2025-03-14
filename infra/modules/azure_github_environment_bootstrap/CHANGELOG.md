@@ -1,5 +1,17 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.1.1
+
+### Patch Changes
+
+- 9075297: Add documentation in README
+
+## 1.1.0
+
+### Minor Changes
+
+- f4748cd: Add an optional variable to accept a list of resource group to apply IAM roles to
+
 ## 1.0.2
 
 ### Patch Changes

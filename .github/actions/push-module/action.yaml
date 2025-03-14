@@ -42,13 +42,12 @@ runs:
       shell: bash
       env:
         MODULE_NAME: ${{ inputs.module }}
-        DX_PREFIX: ${{ inputs.dx_prefix }}
-        REPO_OWNER: ${{ github.repository_owner }}
+        REPO_OWNER: pagopa-dx
       run: |
         set -euo pipefail
         REGISTRY_MODULE_NAME=${MODULE_NAME//_/\-}
         PROVIDER=$(jq -r '.provider // "azurerm"' infra/modules/${MODULE_NAME}/package.json)
-        REPO_URL=https://github.com/$REPO_OWNER/terraform-$PROVIDER-${DX_PREFIX}-${REGISTRY_MODULE_NAME}
+        REPO_URL=https://github.com/$REPO_OWNER/terraform-${PROVIDER}-${REGISTRY_MODULE_NAME}
 
         git remote add module-repo "$REPO_URL"
 
