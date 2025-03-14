@@ -22,7 +22,7 @@ on:
         description: Set a value if GitHub Environment name is different than the TF environment folder
         type: string
         required: false
-        default: ''
+        default: ""
       use_labels:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
@@ -32,7 +32,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -43,9 +43,9 @@ env:
 
 jobs:
   tf_plan:
-    name: 'Terraform Plan'
-    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
-    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
+    name: "Terraform Plan"
+    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
+    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
@@ -61,7 +61,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
       - name: Set directory
@@ -129,7 +128,7 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:"  | tee plan_output.txt
+          terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:" --line-buffered  | tee plan_output.txt
 
           OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
 
@@ -183,7 +182,6 @@ jobs:
               body: commentBody,
               issue_number: context.issue.number
             })
-
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result
