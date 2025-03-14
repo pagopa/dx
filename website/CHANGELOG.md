@@ -1,5 +1,11 @@
 # docs
 
+## 0.1.1
+
+### Patch Changes
+
+- 193f552: Update PR description guideline discouraging the use of images and links in PR description
+
 ## 0.1.0
 
 ### Minor Changes
