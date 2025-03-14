@@ -178,18 +178,18 @@ jobs:
         id: drift_notify
         uses: ./.github/actions/slack-notification
         with:
-          id: "Drift Detected"
-          title: ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
-          text: "*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>"
+          id: 'Drift Detected'
+          title: ':x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*.'
+          text: '*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>'
 
       - name: Failure Notification
         if: ${{ failure() }}
         id: failure_notify
         uses: ./.github/actions/slack-notification
         with:
-          id: "Workflow Failed"
-          title: ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
-          text: "Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
+          id: 'Workflow Failed'
+          title: ':x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed.'
+          text: 'Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n'
 
       # Exit with an error if drift is detected, to ensure
       # the failure is reflected in the README badge
