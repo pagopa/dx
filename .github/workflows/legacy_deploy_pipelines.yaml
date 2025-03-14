@@ -129,12 +129,10 @@ jobs:
           cd ..
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: "${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip"
-          if-no-files-found: error
-          retention-days: 7
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: "${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip"
 
   deploy:
     if: ${{ !github.event.act }}
@@ -150,21 +148,17 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: ./.github/actions/download-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
-      - name: Azure Login
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
+      - uses: ./.github/actions/azure-login
+        name: Azure Login
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}

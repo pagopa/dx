@@ -1,0 +1,39 @@
+name: "Terraform Setup"
+description: "Setup Terraform and initialize the working directory"
+
+inputs:
+  working_dir:
+    description: "Specify the working directory for Terraform init command to run"
+    type: string
+    required: false
+    default: "."
+  terraform_version:
+    description: "Specify the Terraform version to use, if not set, it will be read from .terraform-version file"
+    type: string
+    required: false
+
+outputs:
+  terraform_version:
+    description: "The Terraform version that was used"
+    value: ${{ steps.set-terraform-version.outputs.terraform_version }}
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Get Terraform Version
+      id: get-version
+      uses: ./.github/actions/get-terraform-version
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # pin@v3.0.0
+      name: Setup Terraform
+      with:
+        terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+
+    - name: Terraform Init
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+      run: |
+        terraform init

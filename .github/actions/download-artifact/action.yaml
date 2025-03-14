@@ -1,0 +1,26 @@
+name: "Download Artifact"
+description: "Download an artifact from a previous job"
+
+# This action downloads an artifact from a previous job in the workflow.
+# It is necessary to specify needs: [job_name] in the workflow file.
+
+inputs:
+  bundle_name:
+    description: "Name of the bundle to download"
+    type: string
+    required: true
+  file_path:
+    description: "Path to the directory where the artifact will be downloaded. You can also rename the artifact by specifying a different name in the path."
+    type: string
+    required: false
+    default: "."
+
+runs:
+  using: "composite"
+
+  steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        with:
+          name: ${{ inputs.bundle_name }}
+          path: ${{ inputs.file_path }}
