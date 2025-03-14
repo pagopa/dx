@@ -29,8 +29,9 @@ run "rbac_role_assignment_is_correct" {
 
     key_vault = [
       {
-        name                = "dx-d-itn-common-kv-01"
-        resource_group_name = "dx-d-itn-common-rg-01"
+        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-common-rg-01/providers/Microsoft.KeyVault/vaults/dx-d-itn-common-kv-01"
+        has_rbac_support    = true
+        description         = "This can read secrets"
         roles = {
           secrets = "reader"
         }
@@ -39,19 +40,27 @@ run "rbac_role_assignment_is_correct" {
 
     apim = [
       {
-        name                = "dx-d-itn-playground-pg-apim-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
+        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "owner"
+        description         = "This is an owner"
       },
       {
-        name                = "dx-d-itn-playground-pg-apim-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
+        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "writer"
+        description         = "This is a writer"
       },
       {
-        name                = "dx-d-itn-playground-pg-apim-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
+        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         role                = "reader"
+        description         = "This is a reader"
+      }
+    ]
+
+    storage_table = [
+      {
+        storage_account_id  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Storage/storageAccounts/dxditnplaygrounddfstfd01"
+        role                = "reader"
+        description         = "This is a reader"
       }
     ]
   }

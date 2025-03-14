@@ -6,11 +6,11 @@ variable "principal_id" {
 variable "cosmos" {
   description = "A list of CosmosDB role assignments"
   type = list(object({
-    account_name        = string
-    resource_group_name = string
-    role                = string
-    database            = optional(string, "*")
-    collections         = optional(list(string), ["*"])
+    account_id  = string
+    role        = string
+    description = string
+    database    = optional(string, "*")
+    collections = optional(list(string), ["*"])
   }))
 
   validation {
@@ -25,11 +25,10 @@ variable "cosmos" {
       for assignment in flatten([
         for entry in var.cosmos : [
           for collection in entry.collections : {
-            account_name        = entry.account_name
-            resource_group_name = entry.resource_group_name
-            role                = entry.role
-            database            = entry.database
-            collection          = collection
+            account_id = entry.account_id
+            role       = entry.role
+            database   = entry.database
+            collection = collection
           }
         ]
       ]) : assignment
@@ -37,11 +36,10 @@ variable "cosmos" {
         for assignment in flatten([
           for entry in var.cosmos : [
             for collection in entry.collections : {
-              account_name        = entry.account_name
-              resource_group_name = entry.resource_group_name
-              role                = entry.role
-              database            = entry.database
-              collection          = collection
+              account_id = entry.account_id
+              role       = entry.role
+              database   = entry.database
+              collection = collection
             }
           ]
         ]) : assignment
