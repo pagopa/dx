@@ -56,8 +56,10 @@ run "apim_is_correct_plan" {
     }
 
     application_insights = {
-      enabled           = true
-      connection_string = "aConnectionString"
+      enabled             = true
+      connection_string   = "aConnectionString"
+      sampling_percentage = 50
+      verbosity           = "error"
     }
 
     subnet_id                     = run.setup_tests.subnet_id
@@ -74,9 +76,19 @@ run "apim_is_correct_plan" {
     condition     = length(azurerm_api_management_logger.this) > 0
     error_message = "The APIM logger does not exist"
   }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 0
+    error_message = "No diagnostic setting should be created when monitoring is disabled"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management_diagnostic.azuremonitor) == 0
+    error_message = "No API Management diagnostic should be created when monitoring is disabled"
+  }
 }
 
-run "apim_ai_enabled_without_connection_string" {
+run "plan_with_invalid_parameters" {
   command = plan
 
   variables {
@@ -115,13 +127,15 @@ run "apim_ai_enabled_without_connection_string" {
     virtual_network_type_internal = true
 
     application_insights = {
-      enabled           = true
-      connection_string = null
+      enabled             = true
+      connection_string   = null
+      sampling_percentage = 101
+      verbosity           = "error"
     }
   }
 
   expect_failures = [
     # Specify the exact variable that should fail validation
-    var.application_insights.connection_string,
+    var.application_insights,
   ]
 }
