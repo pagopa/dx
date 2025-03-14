@@ -54,20 +54,20 @@ runs:
       with:
         payload: |
           {
-            "text": '${{ inputs.id }}',
+            "text": "${{ inputs.id }}",
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": '${{ steps.check-values.outputs.title }}'
+                  "text": "${{ steps.check-values.outputs.title }}"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": '${{ inputs.text }}'
+                  "text": "${{ inputs.text }}"
                 }
               }
             ]

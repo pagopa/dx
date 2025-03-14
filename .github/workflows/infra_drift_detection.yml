@@ -187,9 +187,9 @@ jobs:
         id: failure_notify
         uses: ./.github/actions/slack-notification
         with:
-          id: "Workflow Failed"
-          title: ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
-          text: "Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
+          id: 'Workflow Failed'
+          title: ':x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed.'
+          text: 'Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n'
 
       # Exit with an error if drift is detected, to ensure
       # the failure is reflected in the README badge
