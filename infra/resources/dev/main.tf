@@ -45,11 +45,3 @@ module "core" {
 
   tags = local.tags
 }
-
-# TEST
-resource "azurerm_resource_group" "test-actions" {
-  name     = "dx-d-itn-test-actions-rg"
-  location = "italynorth"
-
-  tags = local.tags
-}
