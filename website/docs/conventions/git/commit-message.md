@@ -34,7 +34,11 @@ is a specification for adding human and machine-readable meaning to commit
 messages.  
 It is used to generate changelogs and automate versioning.
 
+:::note
+
 Since
 [we use Changesets to handle versioning and changelogs](../pull-requests/changeset.md),
 we do not require Conventional Commits. Instead, we focus on clear, structured
 messages that enhance readability.
+
+:::
