@@ -912,7 +912,7 @@ run "validate_rgs_iam" {
   }
 
   assert {
-    condition = azurerm_role_assignment.devs_group_rgs[run.setup_tests.opex_resource_group_id] != null
+    condition     = azurerm_role_assignment.devs_group_rgs[run.setup_tests.opex_resource_group_id] != null
     error_message = "The Devs group should be Owner of the additional resource groups"
   }
 
