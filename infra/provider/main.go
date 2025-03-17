@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/pagopa/terraform-provider-azure-dx/internal/provider"
+	"github.com/pagopa-dx/terraform-provider-azure/internal/provider"
 )
 
 var (
@@ -24,12 +24,8 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
-	// providerserver.Serve(context.Background(), provider.New(version), providerserver.ServeOpts{
-	// 	Address: "registry.terraform.io/pagopa/azure-dx",
-	// })
-
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/pagopa/azure-dx",
+		Address: "registry.terraform.io/pagopa-dx/azure",
 		Debug:   debug,
 	}
 

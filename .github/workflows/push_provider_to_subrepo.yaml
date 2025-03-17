@@ -29,6 +29,6 @@ jobs:
         id: push-to-subrepository
         uses: ./.github/actions/push-to-subrepo
         with:
-          name: "azure-dx"
+          name: "azure"
           repo_type: "provider"
           github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}
