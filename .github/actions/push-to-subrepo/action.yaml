@@ -94,10 +94,10 @@ runs:
         if [[ "$REPO_TYPE" == "provider" ]]; then
           # For providers, add 'v' prefix to the tag
           # Ref.: https://developer.hashicorp.com/terraform/registry/providers/publishing#creating-a-github-release
-          TAG_NAME="v$(jq -r '.version' $PREFIX_PATH/package.json)"
+          TAG_NAME="v$(jq -r '.version' package.json)"
         else
           # For modules, use version as is
-          TAG_NAME=$(jq -r '.version' $PREFIX_PATH/package.json)
+          TAG_NAME=$(jq -r '.version' package.json)
         fi
 
         # Check if the tag exists on the remote

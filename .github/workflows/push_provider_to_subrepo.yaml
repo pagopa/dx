@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - feats/add-pagopa-dx-terraform-provider #for test
     paths:
       - "infra/provider/**"
 
