@@ -1972,6 +1972,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@devcontainers/cli@npm:^0.73.0":
+  version: 0.73.0
+  resolution: "@devcontainers/cli@npm:0.73.0"
+  bin:
+    devcontainer: devcontainer.js
+  checksum: 10c0/120ce40be4b9061263fcdbb59e77720a2fc33a89de8fa3056aed9fd5171543512c6cc782aa76f7a4b27c49a816d7588a1fd1275daa8f6727b5757ce4e5f52e52
+  languageName: node
+  linkType: hard
+
 "@discoveryjs/json-ext@npm:0.5.7":
   version: 0.5.7
   resolution: "@discoveryjs/json-ext@npm:0.5.7"
@@ -2849,6 +2858,7 @@ __metadata:
   resolution: "@pagopa/dx@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.27.1"
+    "@devcontainers/cli": "npm:^0.73.0"
     prettier: "npm:3.2.5"
     turbo: "npm:^2.0.12"
   languageName: unknown
