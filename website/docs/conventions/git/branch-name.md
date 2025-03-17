@@ -27,6 +27,13 @@ Use one of the following types to categorize the branch activity:
 - `feats`: for new features
 - `fixes`: for any fix
 - `refactors`: for code refactoring and reducing technical debt
+- `chores`: for system tasks that are not user-facing
+- `docs`: for documentation-related tasks
+
+This categorization helps quickly identify the purpose of the branch and
+provides context to the team. Additionally, it allows us to gain **insights into
+the effort invested in different types of activities** and how they are
+integrated into the development process.
 
 ## Examples
 
