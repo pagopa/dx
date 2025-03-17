@@ -32,7 +32,7 @@ resource "github_repository" "this" {
 }
 
 resource "github_repository_autolink_reference" "jira" {
-  for_each = toset(local.jira_boards)
+  for_each = toset(local.jira_boards_ids)
 
   key_prefix          = format("%s-", each.value)
   repository          = github_repository.this.name

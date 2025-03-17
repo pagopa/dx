@@ -20,5 +20,5 @@ locals {
     }
   }
 
-  jira_boards = ["CES"]
+  jira_boards_ids = ["CES"]
 }
