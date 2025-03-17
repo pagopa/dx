@@ -29,8 +29,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/node-setup
-        name: Node Setup
+      - name: Node Setup and Install
+        uses: ./.github/actions/node-setup-install
 
       - name: Test build website
         run: yarn run build

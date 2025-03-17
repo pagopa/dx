@@ -49,8 +49,8 @@ jobs:
       - name: Prune
         run: npx turbo@2 prune --scope ${{ env.WORKSPACE }}
 
-      - uses: ./.github/actions/node-setup
-        name: Node Setup
+      - name: Node Setup and Install
+        uses: ./.github/actions/node-setup-install
         with:
           working_dir: ./out
 

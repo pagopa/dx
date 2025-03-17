@@ -25,7 +25,7 @@ runs:
       id: get-version
       uses: ./.github/actions/get-terraform-version
       with:
-        terraform_version: ${{ inputs.terraform_version }}
+        override_version: ${{ inputs.terraform_version }}
 
     - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # pin@v3.0.0
       name: Setup Terraform

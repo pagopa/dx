@@ -19,8 +19,8 @@ jobs:
           fetch-tags: 'true'
           fetch-depth: 0
 
-      - uses: ./.github/actions/node-setup
-        name: Node Setup
+      - name: Node Setup and Install
+        uses: ./.github/actions/node-setup-install
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

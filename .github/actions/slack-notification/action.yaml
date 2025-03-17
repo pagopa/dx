@@ -15,9 +15,9 @@ inputs:
     type: string
     required: false
   slack_webhook_url:
-    description: "Slack Webhook URL to send the notification to (override the one in the environment)"
+    description: "Slack Webhook URL to send the notification to"
     type: string
-    required: false
+    required: true
 
 runs:
   using: "composite"
@@ -33,22 +33,10 @@ runs:
         else
           title="${{ inputs.title }}"
         fi
-
-        if [ "${{ inputs.slack_webhook_url }}" == "" ]; then
-          if [ "${{ env.SLACK_WEBHOOK_URL }}" == "" ]; then
-            echo "No Slack Webhook URL provided. Exiting."
-            exit 1
-          fi
-          slack_webhook_url="${{ env.SLACK_WEBHOOK_URL }}"
-        else
-          slack_webhook_url="${{ inputs.slack_webhook_url }}"
-        fi
         
         echo "title=$title" >> "$GITHUB_OUTPUT"
-        echo "slack_webhook_url=$slack_webhook_url" >> "$GITHUB_OUTPUT"
 
     # Reference: https://github.com/slackapi/slack-github-action
-    # The slack action need the environment variable SLACK_WEBHOOK_URL to be set
     - name: Slack Notification
       uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
       with:
@@ -74,4 +62,4 @@ runs:
           }
       env:
         SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        SLACK_WEBHOOK_URL: ${{ steps.check-values.outputs.slack_webhook_url }}
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}

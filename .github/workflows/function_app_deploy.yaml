@@ -143,8 +143,8 @@ jobs:
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
 
       - name: Check if the custom warm-up is configured
         run: |
