@@ -1,5 +1,16 @@
 # docs
 
+## 0.2.0
+
+### Minor Changes
+
+- 2aa5329: Create code review guidelines
+- c92f4c3: Create Git guidelines
+
+### Patch Changes
+
+- 133aa87: Add a note about Tracking System Reference to avoid the use of `#`
+
 ## 0.1.1
 
 ### Patch Changes
