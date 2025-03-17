@@ -34,7 +34,7 @@ resource "github_repository" "this" {
 resource "github_repository_autolink_reference" "jira" {
   for_each = toset(local.jira_boards)
 
-  key_prefix          = "${each.value}-"
+  key_prefix          = format("%s-", each.value)
   repository          = github_repository.this.name
   target_url_template = "https://pagopa.atlassian.net/browse/${each.value}-<num>"
 }
