@@ -9,9 +9,9 @@ on:
 jobs:
   node-test:
     runs-on: ubuntu-latest
-
+    
     env:
-      TURBO_CACHE_DIR: .turbo-cache
+      # TURBO_CACHE_DIR: .turbo-cache
       BUNDLE_NAME: "test-actions"
 
     steps:
@@ -51,3 +51,8 @@ jobs:
         uses: ./.github/actions/download-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
+
+      - name: Terraform Setup and init
+        uses: ./.github/actions/terraform-setup
+        with:
+          terraform_version: 1.10.0
