@@ -4,7 +4,7 @@ resource "github_repository" "this" {
 
   visibility = "public"
 
-  allow_auto_merge            = false
+  allow_auto_merge            = true
   allow_rebase_merge          = false
   allow_merge_commit          = false
   allow_squash_merge          = true
