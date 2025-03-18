@@ -31,7 +31,7 @@ locals {
   }
 
   application_insights = {
-    enable = var.application_insights_connection_string != null
+    enable = nonsensitive(var.application_insights_connection_string != null)
   }
 
   storage_account = {

@@ -56,8 +56,10 @@ run "apim_is_correct_plan" {
     }
 
     application_insights = {
-      enabled           = true
-      connection_string = "aConnectionString"
+      enabled             = true
+      connection_string   = "aConnectionString"
+      sampling_percentage = 50
+      verbosity           = "error"
     }
 
     subnet_id                     = run.setup_tests.subnet_id
@@ -76,7 +78,7 @@ run "apim_is_correct_plan" {
   }
 }
 
-run "apim_ai_enabled_without_connection_string" {
+run "plan_with_invalid_parameters" {
   command = plan
 
   variables {
@@ -115,13 +117,15 @@ run "apim_ai_enabled_without_connection_string" {
     virtual_network_type_internal = true
 
     application_insights = {
-      enabled           = true
-      connection_string = null
+      enabled             = true
+      connection_string   = null
+      sampling_percentage = 101
+      verbosity           = "error"
     }
   }
 
   expect_failures = [
     # Specify the exact variable that should fail validation
-    var.application_insights.connection_string,
+    var.application_insights,
   ]
 }

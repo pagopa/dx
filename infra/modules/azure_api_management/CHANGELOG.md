@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.0.1
+
+### Patch Changes
+
+- c322c0a: Create APIM diagnostic resource, when AI is enabled, so the requests on the APIM are sent to Application Insights
+
 ## 1.0.0
 
 ### Major Changes
