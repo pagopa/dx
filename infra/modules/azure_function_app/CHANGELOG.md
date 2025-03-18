@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.2.4
+
+### Patch Changes
+
+- d1a6a1c: Fix visibility of app settings containing sensitive values in Terraform Plan
+
 ## 0.2.3
 
 ### Patch Changes
