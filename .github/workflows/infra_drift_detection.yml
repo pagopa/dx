@@ -49,7 +49,6 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
     steps:
       # Exit with error if SLACK_WEBHOOK_URL is not set
       - name: Check Slack Webhook
@@ -85,28 +84,11 @@ jobs:
         name: Checkout
 
       - name: Azure Login
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # pin@v2
-        with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+        uses: ./.github/actions/azure-login
 
-      - name: Set Terraform Version
+      - name: Terraform Setup
         id: set-terraform-version
-        run: |
-          set -eu
-          if [ -f .terraform-version ]; then
-            terraform_version=$(cat .terraform-version)
-          else
-            echo "Terraform version file not found."
-            exit 1
-          fi
-          echo "terraform_version=$terraform_version" >> "$GITHUB_OUTPUT"
-
-      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # pin@v3.0.0
-        name: Setup Terraform
-        with:
-          terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+        uses: ./.github/actions/terraform-setup
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -194,58 +176,25 @@ jobs:
             core.setOutput("commit_url", `${data.repository.html_url}/commit/${data.head_sha}`);
             core.setOutput("committer_name", data.head_commit.committer.name);
 
-      # Reference: https://github.com/slackapi/slack-github-action
       - name: Drift Notification
         if: ${{ steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+        uses: ./.github/actions/slack-notification
         with:
-          payload: |
-            {
-              "text": "Drift Detected",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>"
-                  }
-                }
-              ]
-            }
+          id: 'Drift Detected'
+          title: ':x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*.'
+          text: '*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>'
+          slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
       - name: Failure Notification
         if: ${{ failure() }}
         id: failure_notify
-        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+        uses: ./.github/actions/slack-notification
         with:
-          payload: |
-            {
-              "text": "Workflow Failed",
-              "blocks": [
-                {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
-                    }
-                },
-                {
-                    "type": "section",
-                    "text": {
-                      "type": "mrkdwn",
-                      "text": "Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n"
-                    }
-                }
-              ]
-            }
+          id: 'Workflow Failed'
+          title: ':x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed.'
+          text: 'Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n'
+          slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
       # Exit with an error if drift is detected, to ensure
       # the failure is reflected in the README badge
