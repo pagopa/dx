@@ -19,7 +19,7 @@ teams can apply to their Subscriptions. These policies allow better monitoring
 of critical configurations and resources, ensuring higher standardization and
 security:
 
-- [List of predefined DX policies](../azure-policy/policy-catalog)
+- [List of predefined DX policies](./policy-catalog/index.md)
 - [Repository with predefined DX policies](https://github.com/pagopa/dx/tree/main/infra/policy)
 
 Once applied, these policies help maintain an organized and compliant
