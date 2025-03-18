@@ -6,10 +6,10 @@ variable "principal_id" {
 variable "redis" {
   description = "A list of Redis role assignments"
   type = list(object({
-    cache_name          = string
-    resource_group_name = string
-    role                = string
-    username            = string
+    cache_id    = string
+    role        = string
+    username    = string
+    description = string
   }))
 
   validation {
