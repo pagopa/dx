@@ -92,7 +92,6 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
-        shell: bash
         run: |
           terraform init
 

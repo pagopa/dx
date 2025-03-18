@@ -68,8 +68,9 @@ jobs:
 
       - name: Terraform Init
         working-directory: infra/modules/${{ matrix.module }}
-        shell: bash
         run: |
+          set -euo
+
           terraform init
 
       - name: Terraform Test

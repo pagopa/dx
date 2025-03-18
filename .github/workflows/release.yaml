@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets

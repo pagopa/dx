@@ -109,7 +109,6 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
-        shell: bash
         run: |
           terraform init
 
@@ -171,7 +170,6 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        shell: bash
         run: |
           terraform init
 
