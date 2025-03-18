@@ -35,12 +35,12 @@ jobs:
       - name: Get all modules
         id: get-all-modules
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: ./.github/actions/get-all-modules
+        uses: pagopa/dx/.github/actions/get-all-modules@main
 
       - name: Get modified modules
         id: get-modified-modules
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: ./.github/actions/get-modified-modules
+        uses: pagopa/dx/.github/actions/get-modified-modules@main
 
   terraform-test:
     runs-on: ubuntu-latest
@@ -60,11 +60,11 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: ./.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Terraform Init
         working-directory: infra/modules/${{ matrix.module }}

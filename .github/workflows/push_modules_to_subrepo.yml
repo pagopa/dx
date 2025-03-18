@@ -27,12 +27,12 @@ jobs:
       - name: Get all modules
         id: get-all-modules
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: ./.github/actions/get-all-modules
+        uses: pagopa/dx/.github/actions/get-all-modules@main
 
       - name: Get modified modules
         id: get-modified-modules
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: ./.github/actions/get-modified-modules
+        uses: pagopa/dx/.github/actions/get-modified-modules@main
 
   push-modified-modules:
     runs-on: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
           fetch-depth: 0
       - name: Push module to subrepository
         id: push-to-subrepository
-        uses: ./.github/actions/push-module
+        uses: pagopa/dx/.github/actions/push-module@main
         with:
           module: ${{ matrix.module }}
           github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}

@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Node Setup
-        uses: ./.github/actions/node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Install dependencies
         run: yarn install --immutable

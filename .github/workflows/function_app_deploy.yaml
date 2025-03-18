@@ -114,7 +114,7 @@ jobs:
         working-directory: ./out/apps/${{ env.WORKSPACE }}
 
       - name: Upload Artifact
-        uses: ./.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
@@ -139,12 +139,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: ./.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Check if the custom warm-up is configured
         run: |
