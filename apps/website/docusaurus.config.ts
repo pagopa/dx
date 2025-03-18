@@ -29,6 +29,19 @@ const config: Config = {
     locales: ["en"],
   },
 
+  plugins: [
+    [
+      "@docusaurus/plugin-client-redirects",
+      {
+        redirects: [
+          {
+            from: "/docs/infrastructure/infrastructure-as-code/azure-github-environment-bootstrap",
+            to: "/docs/articles/azure-github-environment-bootstrap",
+          },
+        ],
+      },
+    ],
+  ],
   presets: [
     [
       "classic",

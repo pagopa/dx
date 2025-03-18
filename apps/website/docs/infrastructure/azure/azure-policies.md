@@ -1,5 +1,6 @@
 ---
 sidebar_label: Creating and Managing Azure Policies
+sidebar_position: 1
 ---
 
 # Creating and Managing Azure Policies

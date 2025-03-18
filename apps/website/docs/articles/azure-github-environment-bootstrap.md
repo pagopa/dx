@@ -29,7 +29,7 @@ To accomplish the setup, the module provisions:
   infrastructure of the entire repository as it will share the same lifecycle
   and IAM setup
 - the IAM setup of both team and Azure user-assigned managed identities
-  following the [latest DevEx framework](../azure-iam.md)
+  following the [latest DevEx framework](../infrastructure/azure-iam.md)
 - the GitHub repository settings according to the best practices found by the DX
   team
 
@@ -65,7 +65,7 @@ well-known by our user base. The following data is requested:
 
 - the Azure subscription and tenant IDs
 - the IDs of team-specific Entra ID groups as expected by
-  [DevEx IAM framework](../azure-iam.md)
+  [DevEx IAM framework](../infrastructure/azure-iam.md)
 - the ID of an existing Azure Container App Environment
 - the details of the Storage Account holding the Terraform state file
 - the details of the current repository (name, description, topics, optionally
