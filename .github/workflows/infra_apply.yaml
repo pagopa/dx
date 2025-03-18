@@ -103,11 +103,15 @@ jobs:
       - uses: ./.github/actions/azure-login
         name: Azure Login
 
-      - name: Terraform Setup and Init
+      - name: Terraform Setup
         uses: ./.github/actions/terraform-setup
         id: set-terraform-version
-        with:
-          working_dir: ${{ steps.directory.outputs.dir }}
+
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        shell: bash
+        run: |
+          terraform init
 
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -160,11 +164,16 @@ jobs:
           restore-keys: |
             terraform-${{ needs.tf_plan.outputs.working_dir }}
         
-      - name: Terraform Setup and init
+      - name: Terraform Setup
         uses: ./.github/actions/terraform-setup
         with:
-          working_dir: ${{ needs.tf_plan.outputs.working_dir }}
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        shell: bash
+        run: |
+          terraform init
 
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}

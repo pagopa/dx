@@ -33,9 +33,4 @@ runs:
         key: ${{ runner.os }}-turbo-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-turbo-
-
-    - name: Install dependencies
-      shell: bash
-      run: yarn install --immutable
-      working-directory: ${{ inputs.working_dir }}
       

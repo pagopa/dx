@@ -2,11 +2,6 @@ name: "Terraform Setup"
 description: "Setup Terraform and initialize the working directory"
 
 inputs:
-  working_dir:
-    description: "Specify the working directory for Terraform init command to run"
-    type: string
-    required: false
-    default: "."
   terraform_version:
     description: "Specify the Terraform version to use, if not set, it will be read from .terraform-version file"
     type: string
@@ -31,9 +26,3 @@ runs:
       name: Setup Terraform
       with:
         terraform_version: ${{ steps.get-version.outputs.terraform_version }}
-
-    - name: Terraform Init
-      working-directory: ${{ inputs.working_dir }}
-      shell: bash
-      run: |
-        terraform init

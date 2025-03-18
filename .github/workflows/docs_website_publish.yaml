@@ -28,8 +28,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Node Setup and Install
-        uses: ./.github/actions/node-setup-install
+      - name: Node Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Build website
         run: yarn run build

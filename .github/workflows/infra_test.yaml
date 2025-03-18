@@ -62,11 +62,15 @@ jobs:
       - uses: ./.github/actions/azure-login
         name: Azure Login
 
-      - name: Terraform Setup and init
+      - name: Terraform Setup
         id: set-terraform-version
         uses: ./.github/actions/terraform-setup
-        with:
-          working_dir: infra/modules/${{ matrix.module }}
+
+      - name: Terraform Init
+        working-directory: infra/modules/${{ matrix.module }}
+        shell: bash
+        run: |
+          terraform init
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}

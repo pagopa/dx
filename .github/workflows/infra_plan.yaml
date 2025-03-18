@@ -100,11 +100,15 @@ jobs:
       - uses: ./.github/actions/azure-login
         name: Azure Login
 
-      - name: Terraform Setup and init
+      - name: Terraform Setup
         id: set-terraform-version
         uses: ./.github/actions/terraform-setup
-        with:
-          working_dir: ${{ steps.directory.outputs.dir }}
+
+      - name: Terraform Init
+        working-directory: ${{ steps.directory.outputs.dir }}
+        shell: bash
+        run: |
+          terraform init
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
