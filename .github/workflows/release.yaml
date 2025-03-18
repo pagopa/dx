@@ -18,15 +18,9 @@ jobs:
           # https://github.com/actions/checkout/issues/1471#issuecomment-1771231294
           fetch-tags: 'true'
           fetch-depth: 0
-      # Corepack is an official tool by Node.js that manages package managers versions
-      - name: Setup yarn
-        run: corepack enable
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
-        with:
-          node-version-file: ".node-version"
-          cache: "yarn"
+      - name: Node Setup
+        uses: ./.github/actions/node-setup
 
       - name: Install dependencies
         run: yarn

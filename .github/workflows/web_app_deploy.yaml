@@ -49,15 +49,10 @@ jobs:
       - name: Prune
         run: npx turbo@2 prune --scope ${{ env.WORKSPACE }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+      - name: Node Setup
+        uses: ./.github/actions/node-setup
         with:
-          node-version-file: ".node-version"
-          cache: "yarn"
-          cache-dependency-path: "./out/yarn.lock"
+          working_dir: ./out
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -110,12 +105,10 @@ jobs:
         working-directory: ./out/apps/${{ inputs.workspace_name }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        uses: ./.github/actions/upload-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: ${{ steps.make-artifact.outputs.artifact-path }}
-          if-no-files-found: error
-          retention-days: 7
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: ${{ steps.make-artifact.outputs.artifact-path }}
 
   deploy:
     name: Deploy
@@ -129,18 +122,17 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: ./.github/actions/download-artifact
         with:
-          name: ${{ env.BUNDLE_NAME }}
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Azure Login
-        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
+        uses: ./.github/actions/azure-login
         env:
           ARM_USE_OIDC: true
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}

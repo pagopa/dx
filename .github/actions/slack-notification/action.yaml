@@ -1,0 +1,65 @@
+name: "Slack Notification"
+description: "Send a notification to a Slack channel"
+
+inputs:
+  id:
+    description: "ID of the notification in mrkdwn format"
+    type: string
+    required: true
+  title:
+    description: "Visible title of the notification in mrkdwn format"
+    type: string
+    required: false
+  text:
+    description: "Text of the notification in mrkdwn format"
+    type: string
+    required: false
+  slack_webhook_url:
+    description: "Slack Webhook URL to send the notification to"
+    type: string
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Check inputs and set defaults
+      id: check-values
+      shell: bash
+      run: |
+        set -eu
+        if [ "${{ inputs.title }}" == "" ]; then
+          title="*${{ inputs.id }}*"
+        else
+          title="${{ inputs.title }}"
+        fi
+        
+        echo "title=$title" >> "$GITHUB_OUTPUT"
+
+    # Reference: https://github.com/slackapi/slack-github-action
+    - name: Slack Notification
+      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+      with:
+        payload: |
+          {
+            "text": "${{ inputs.id }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ steps.check-values.outputs.title }}"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "${{ inputs.text }}"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}

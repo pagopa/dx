@@ -191,20 +191,34 @@ variable "lock_enable" {
 
 variable "application_insights" {
   type = object({
-    enabled           = bool
-    connection_string = string
-    id                = optional(string, null)
+    enabled             = bool
+    connection_string   = string
+    id                  = optional(string, null)
+    sampling_percentage = number
+    verbosity           = string
   })
   default = {
-    enabled           = false
-    connection_string = null
-    id                = null
+    enabled             = false
+    connection_string   = null
+    id                  = null
+    sampling_percentage = 0
+    verbosity           = "error"
   }
-  description = "Application Insights integration. The connection string used to push data"
+  description = "Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100) and the verbosity level (verbose, information, error)."
 
   validation {
     condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
     error_message = "You must provide a connection string when enabling Application Insights integration"
+  }
+
+  validation {
+    condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
+    error_message = "Invalid `sampling_percentage` value provided. Valid values are between 0 and 100"
+  }
+
+  validation {
+    condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
+    error_message = "Invalid `verbosity` value provided. Valid values are 'verbose', 'information', 'error'"
   }
 }
 

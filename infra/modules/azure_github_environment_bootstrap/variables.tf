@@ -91,6 +91,7 @@ variable "repository" {
     infra_cd_policy_tags     = optional(set(string), [])
     opex_cd_policy_tags      = optional(set(string), [])
     app_cd_policy_tags       = optional(set(string), [])
+    jira_boards_ids          = optional(list(string), [])
   })
 
   description = "Information about this repository"

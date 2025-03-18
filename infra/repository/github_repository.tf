@@ -4,7 +4,7 @@ resource "github_repository" "this" {
 
   visibility = "public"
 
-  allow_auto_merge            = false
+  allow_auto_merge            = true
   allow_rebase_merge          = false
   allow_merge_commit          = false
   allow_squash_merge          = true
@@ -29,5 +29,12 @@ resource "github_repository" "this" {
       path   = "/"
     }
   }
+}
 
+resource "github_repository_autolink_reference" "jira" {
+  for_each = toset(local.jira_boards_ids)
+
+  key_prefix          = format("%s-", each.value)
+  repository          = github_repository.this.name
+  target_url_template = "https://pagopa.atlassian.net/browse/${each.value}-<num>"
 }

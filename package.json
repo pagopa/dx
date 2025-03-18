@@ -3,11 +3,12 @@
   "packageManager": "yarn@4.4.0",
   "workspaces": [
     "packages/**",
-    "website",
+    "apps/**",
     "infra/modules/*",
     "infra/scripts"
   ],
   "devDependencies": {
+    "@devcontainers/cli": "^0.73.0",
     "prettier": "3.2.5",
     "turbo": "^2.0.12"
   },

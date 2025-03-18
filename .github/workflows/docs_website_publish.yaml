@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "website/**"
+      - "apps/website/**"
   workflow_dispatch:
 
 # env:
@@ -13,7 +13,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./website
+    working-directory: ./apps/website
 
 jobs:
   build:
@@ -28,31 +28,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup yarn
-        run: corepack enable
-
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
-        with:
-          node-version-file: ".node-version"
-          cache: yarn
-
-      - name: Setup turbo cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+      - name: Node Setup
+        uses: ./.github/actions/node-setup
 
       - name: Install dependencies
         run: yarn install --immutable
+
       - name: Build website
         run: yarn run build
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: ./website/build
+          path: ./apps/website/build
 
   deploy:
     name: Deploy to GitHub Pages
