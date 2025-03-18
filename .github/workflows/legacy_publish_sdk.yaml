@@ -90,7 +90,7 @@ jobs:
         working-directory: .
 
       - name: Upload Artifact
-        uses: ./.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ inputs.artifactName }}
           file_path: "${{ env.GENERATED_CODE_DIR }}"
@@ -109,7 +109,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Download Artifact
-        uses: ./.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ inputs.artifactName }}
           file_path: ${{ env.GENERATED_CODE_DIR }}

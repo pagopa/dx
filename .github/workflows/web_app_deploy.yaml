@@ -50,7 +50,7 @@ jobs:
         run: npx turbo@2 prune --scope ${{ env.WORKSPACE }}
 
       - name: Node Setup
-        uses: ./.github/actions/node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
         with:
           working_dir: ./out
 
@@ -105,7 +105,7 @@ jobs:
         working-directory: ./out/apps/${{ inputs.workspace_name }}
 
       - name: Upload Artifact
-        uses: ./.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
@@ -122,12 +122,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: ./.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
