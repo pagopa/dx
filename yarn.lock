@@ -5929,9 +5929,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docs@workspace:website":
+"docs@workspace:apps/website":
   version: 0.0.0-use.local
-  resolution: "docs@workspace:website"
+  resolution: "docs@workspace:apps/website"
   dependencies:
     "@docusaurus/core": "npm:^3.5.2"
     "@docusaurus/module-type-aliases": "npm:^3.5.2"

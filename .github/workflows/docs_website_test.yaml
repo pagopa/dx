@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "website/**"
+      - "apps/website/**"
 
 # env:
 #   WORKING_DIR: ./website

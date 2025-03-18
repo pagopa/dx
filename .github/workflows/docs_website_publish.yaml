@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "website/**"
+      - "apps/website/**"
   workflow_dispatch:
 
 # env:
@@ -13,7 +13,7 @@ on:
 
 defaults:
   run:
-    working-directory: ./website
+    working-directory: ./apps/website
 
 jobs:
   build:
@@ -52,7 +52,7 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: ./website/build
+          path: ./apps/website/build
 
   deploy:
     name: Deploy to GitHub Pages
