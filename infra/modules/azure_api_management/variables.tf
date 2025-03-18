@@ -204,7 +204,7 @@ variable "application_insights" {
     sampling_percentage = 0
     verbosity           = "error"
   }
-  description = "Application Insights integration. The connection string used to push data"
+  description = "Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100) and the verbosity level (verbose, information, error)."
 
   validation {
     condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
