@@ -70,8 +70,8 @@ the Azure Portal), end-to-end correlation does not function as expected.
 
 [Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental)
 and may not be as seamless as transpiling TypeScript to CommonJS modules.  
-[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217),
-there is an alternative method to instrument the `@azure/monitor-opentelemetry`
+[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217), there
+is an alternative method to instrument the `@azure/monitor-opentelemetry`
 package.
 
 ### Steps to Instrument an ESM Application
