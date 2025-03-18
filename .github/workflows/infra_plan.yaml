@@ -97,8 +97,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
 
       - name: Terraform Setup
         id: set-terraform-version

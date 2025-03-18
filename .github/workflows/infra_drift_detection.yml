@@ -83,8 +83,8 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
         name: Checkout
 
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
 
       - name: Terraform Setup
         id: set-terraform-version

@@ -100,8 +100,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
 
       - name: Terraform Setup
         uses: ./.github/actions/terraform-setup
@@ -146,8 +146,8 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
 
       - name: Download Terraform Plan as Artifact
         uses: ./.github/actions/download-artifact

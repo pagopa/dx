@@ -152,8 +152,8 @@ jobs:
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
-      - uses: ./.github/actions/azure-login
-        name: Azure Login
+      - name: Azure Login
+        uses: ./.github/actions/azure-login
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
