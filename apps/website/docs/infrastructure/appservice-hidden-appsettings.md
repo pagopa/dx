@@ -1,36 +1,31 @@
 ---
-sidebar_label: Ensuring Azure AppSettings Visibility in Terraform Plans
+sidebar_label: Using Secrets in AppService Environment Variables
 ---
 
-# Ensuring Azure AppSettings Visibility in Terraform Plans
+# Using Secrets in AppService Environment Variables
 
 ## Overview
 
-After a recent update to the `terraform` binary and the `azurerm` provider, the
-Terraform Plan outputs no longer display the key-value pair differences when a
-sensitive value is used in the `app_settings` property of an Azure (Function)
-App.
+Using secret values in AppService (or FunctionApp) is a common challenge for
+developers. Terraform is often used to set secrets exported by other resources
+such as Storage Accounts, but this approach is not convenient as involves lot of
+downsides. In fact, anyone is able to read AppSettings, sensitive values are
+stored in plain text in Terraform state file and the secret rotation must be
+executed manually through Terraform.
 
-```hcl
-~ resource "azurerm_linux_function_app" "this" {
-  ~ app_settings                        = (sensitive value)
-    id                                  = <hidden>
-    name                                = <hidden>
-    tags                                = { hidden }
-    # (32 unchanged attributes hidden)
-}
-```
+This guide aims to instruct developers with best practices, providing guidelines
+for a better secrets management including the following benefits:
 
-As a result, it is difficult to predict what the actual changes are, undermining
-the trust and confidence of developers in application deployment stage.
+- Updating a value in KeyVault does not require a Terraform Apply anymore:
+  through the Azure Portal it is possible to force new values pulling from
+  KeyVault
+- If a secret reference is broken (e.g. missing secret, lack of read
+  permissions, etc.), Azure Portal highlights it in red
+- It becomes easier to track where secrets have been used
 
-## The Proposed Workaround
+## How-To use Key Vault References as AppSettings
 
-To mitigate the problem and restore developers' confidence we propose here a
-workaround that excludes any sensitive value from the app settings, by
-leveraging the native integration between AppService and KeyVault.
-
-In fact, an AppService (or an Azure Function) can access a KeyVault secret by:
+To use secrets from KeyVault as AppSettings values, you can follow these steps:
 
 1. Granting the AppService's system-assigned managed identity access to read
    secrets:
@@ -52,19 +47,6 @@ available in the
 [official KeyVault documentation](https://learn.microsoft.com/en-us/azure/key-vault/keys/how-to-configure-key-rotation#key-rotation-policy).
 
 :::
-
-Adopting this approach, Terraform will not consider values as sensitive in the
-Plan output, showing the actual changes in the `app_settings` property.
-
-Moreover, the approach of using KeyVault for secret management is an Azure best
-practice with the following benefits:
-
-- Updating a value in KeyVault does not require a Terraform Apply anymore:
-  through the Azure Portal it is possible to force new values pulling from
-  KeyVault
-- If a secret reference is broken (e.g. missing secret, lack of read
-  permissions, etc.), Azure Portal highlights it in red
-- It becomes easier to track where secrets have been used
 
 ### Techniques to Facilitate the Code Refactoring
 
@@ -134,18 +116,3 @@ This code requires either the `Set` policy assignment or the
 
 More info can be found in the
 [official KeyVault documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret).
-
-## Troubleshooting
-
-Initially, we hypothesized that the issue stemmed from a specific version of
-either `azurerm` or Terraform. To investigate, we attempted to replicate the
-problem in a controlled environment by experimenting with different versions of
-both tools. We set sensitive values in various ways, including through sensitive
-outputs, sensitive variables, and the `sensitive` function.
-
-Despite our efforts, we were unable to reproduce the issue. Additionally, we
-observed inconsistent behaviors within the same Terraform configuration.
-
-We also opened an issue on the
-[azurerm GitHub repository](https://github.com/hashicorp/terraform-provider-azurerm/issues/28509),
-but as of 07/03/2025, we have not received a response.
