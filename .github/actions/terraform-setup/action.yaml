@@ -18,7 +18,7 @@ runs:
   steps:
     - name: Get Terraform Version
       id: get-version
-      uses: ./.github/actions/get-terraform-version
+      uses: pagopa/dx/.github/actions/get-terraform-version@main
       with:
         override_version: ${{ inputs.terraform_version }}
 

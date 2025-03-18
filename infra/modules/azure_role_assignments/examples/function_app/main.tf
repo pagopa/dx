@@ -33,33 +33,33 @@ module "roles" {
 
   cosmos = [
     {
-      account_name        = "dx-d-cosmos-example-cms"
-      resource_group_name = "dx-d-example-cms-rg"
-      role                = "writer"
-      database            = "a"
-      collections         = ["x", "y"]
+      account_id  = "<THE_COSMOS_ACCOUNT_ID>"
+      description = "Why this role is assigned"
+      role        = "writer"
+      database    = "a"
+      collections = ["x", "y"]
     },
     {
-      account_name        = "dx-d-cosmos-example-cms"
-      resource_group_name = "dx-d-example-cms-rg"
-      role                = "reader"
-      database            = "b"
+      account_id  = "<THE_COSMOS_ACCOUNT_ID>"
+      description = "Why this role is assigned"
+      role        = "reader"
+      database    = "b"
     }
   ]
 
   redis = [
     {
-      cache_name          = "dx-d-itn-example-redis-01"
-      resource_group_name = "dx-d-itn-example-rg-01"
-      role                = "reader"
-      username            = "pippo"
+      cache_id    = "<THE_REDIS_CACHE_ID>"
+      description = "Why this role is assigned"
+      role        = "reader"
+      username    = "pippo"
     }
   ]
 
   key_vault = [
     {
-      name                = "dx-d-example-kv"
-      resource_group_name = "dx-d-example-rg"
+      id          = "<THE_KEY_VAULT_ID>"
+      description = "Why this role is assigned"
       roles = {
         secrets = "reader"
       }

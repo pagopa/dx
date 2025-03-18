@@ -1,5 +1,11 @@
 locals {
-  vaults = distinct([for assignment in var.key_vault : { name = assignment.name, resource_group_name = assignment.resource_group_name }])
+  norm_vaults = [
+    for vault in var.key_vault :
+    merge(vault, {
+      name                = provider::azurerm::parse_resource_id(vault.id)["resource_name"]
+      resource_group_name = provider::azurerm::parse_resource_id(vault.id)["resource_group_name"]
+    })
+  ]
 
   permissions = {
     secrets = {

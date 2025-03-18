@@ -84,11 +84,11 @@ jobs:
         name: Checkout
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: ./.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -179,7 +179,7 @@ jobs:
       - name: Drift Notification
         if: ${{ steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
-        uses: ./.github/actions/slack-notification
+        uses: pagopa/dx/.github/actions/slack-notification@main
         with:
           id: 'Drift Detected'
           title: ':x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*.'
@@ -189,7 +189,7 @@ jobs:
       - name: Failure Notification
         if: ${{ failure() }}
         id: failure_notify
-        uses: ./.github/actions/slack-notification
+        uses: pagopa/dx/.github/actions/slack-notification@main
         with:
           id: 'Workflow Failed'
           title: ':x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed.'

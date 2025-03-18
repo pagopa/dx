@@ -98,11 +98,11 @@ jobs:
           done
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: ./.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}

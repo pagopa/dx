@@ -101,10 +101,10 @@ jobs:
           done
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
-        uses: ./.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         id: set-terraform-version
 
       - name: Terraform Init
@@ -124,7 +124,7 @@ jobs:
             | grep -v "hidden-link:"
 
       - name: Upload Terraform Plan as Artifact
-        uses: ./.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: tfplan
           file_path: ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
@@ -147,10 +147,10 @@ jobs:
         name: Checkout
 
       - name: Azure Login
-        uses: ./.github/actions/azure-login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Download Terraform Plan as Artifact
-        uses: ./.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: tfplan
           file_path: ${{ needs.tf_plan.outputs.working_dir }}
@@ -164,7 +164,7 @@ jobs:
             terraform-${{ needs.tf_plan.outputs.working_dir }}
         
       - name: Terraform Setup
-        uses: ./.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 

@@ -8,8 +8,9 @@ locals {
     for assignment in flatten([
       for entry in var.cosmos : [
         for collection in entry.collections : {
-          account_name        = entry.account_name
-          resource_group_name = entry.resource_group_name
+          account_name        = provider::azurerm::parse_resource_id(entry.account_id)["resource_name"]
+          account_id          = entry.account_id
+          resource_group_name = provider::azurerm::parse_resource_id(entry.account_id)["resource_group_name"]
           role                = entry.role
           database            = entry.database
           collection          = collection
@@ -18,6 +19,4 @@ locals {
       ]
     ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
   }
-
-  accounts = distinct([for assignment in var.cosmos : { account_name = assignment.account_name, resource_group_name = assignment.resource_group_name }])
 }

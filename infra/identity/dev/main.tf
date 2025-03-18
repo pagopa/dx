@@ -77,8 +77,8 @@ module "roles_ci" {
 
   key_vault = [
     {
-      name                = "${local.project}-${local.location_short}-common-kv-01"
-      resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
+      id          = data.azurerm_key_vault.common.id
+      description = "Allow dx repo CI to read secrets"
       roles = {
         secrets = "reader"
       }
@@ -92,8 +92,8 @@ module "roles_cd" {
 
   key_vault = [
     {
-      name                = "${local.project}-${local.location_short}-common-kv-01"
-      resource_group_name = "${local.project}-${local.location_short}-common-rg-01"
+      id          = data.azurerm_key_vault.common.id
+      description = "Allow dx repo CD to read secrets"
       roles = {
         secrets = "reader"
       }
