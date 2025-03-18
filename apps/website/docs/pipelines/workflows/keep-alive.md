@@ -5,11 +5,9 @@ sidebar_label: Keep Alive repositories
 
 # Keep Alive Workflow
 
-## Overview
+GitHub [automatically disables scheduled workflows](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/disabling-and-enabling-a-workflow) in repositories that have been inactive for 60 days. This workflow demonstrates a practical implementation of the [Keep Alive action](../actions/keep-alive.md) to prevent this issue by detecting repository inactivity and creating an empty commit when necessary.
 
-GitHub automatically disables scheduled workflows in repositories that have been inactive for 60 days. This workflow demonstrates a practical implementation of the [Keep Alive action](../actions/keep-alive.md) to prevent this issue by detecting repository inactivity and creating an empty commit when necessary.
-
-## The Workflow as an Example
+## Usage
 
 This workflow serves as a reference implementation showing how to effectively use the Keep Alive action in your own repositories. It demonstrates:
 
@@ -17,19 +15,17 @@ This workflow serves as a reference implementation showing how to effectively us
 - How to determine when a repository is approaching the inactivity threshold
 - How to conditionally invoke the Keep Alive action
 
-## How It Works
+### How It Works
 
 The Keep Alive workflow:
 
 1. Runs daily at midnight (or can be triggered manually)
 2. Calculates the number of days since the last commit
-3. If 55 or more days have passed since the last commit, the workflow:
-   - Uses the [Keep Alive action](../actions/keep-alive.md) to create an empty commit
-   - The action handles the rest of the process (configuring git, creating and pushing the commit)
+3. If 55 or more days have passed since the last commit, the workflow uses the [Keep Alive action](../actions/keep-alive.md) to create and push an empty commit
 
 By creating a commit before reaching the 60-day threshold, the workflow ensures that GitHub never disables the scheduled actions in the repository.
 
-## Implementation Example
+### Implementation Example
 
 Here's how the workflow is implemented:
 
@@ -63,24 +59,20 @@ jobs:
       # Use the Keep Alive action when needed
       - name: Keep Alive
         if: env.days_since_commit >= '55'
-        uses: ./.github/actions/keep-alive
+        uses: pagopa/dx/.github/actions/keep-alive@main
 ```
 
-## Adapting This Workflow
+### Adapting This Workflow
 
 When implementing this pattern in your own repositories:
 
 1. **Adjust the threshold** - The 55-day threshold can be modified based on your specific needs
 2. **Consider the schedule** - The daily check frequency can be adjusted
-3. **Ensure proper permissions** - The workflow requires `contents: write` to push commits
-
-## Best Practices
-
-- Use this pattern only in repositories where maintaining scheduled workflows during periods of inactivity is necessary
-- Consider whether your repository truly needs scheduled workflows before implementing this solution
-- Review the activity logs periodically to ensure the workflow is functioning correctly
+3. **Ensure proper permissions**:
+   - The workflow requires `contents: write` to push commits
+   - Enable `Read and Write permissions` for workflows inside repository settings
 
 ## See Also
 
-For more information about the action used by this workflow, see the [Keep Alive Action documentation](../actions/keep-alive.md).
-To view the workflow in the DX repository, visit the [Keep Alive Workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/keep_alive.yml).
+- For more information about the action used by this workflow, see the [Keep Alive Action documentation](../actions/keep-alive.md).
+- To view the workflow in the DX repository, visit the [Keep Alive Workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/keep_alive.yml).
