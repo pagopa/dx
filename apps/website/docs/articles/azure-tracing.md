@@ -172,8 +172,12 @@ Although you can enable tracing and metrics using only the
 
 :::
 
-Alternatively, you can use only `@azure/monitor-opentelemetry` (from version
-1.9.x) to send custom events:
+Alternatively, you can use only `@azure/monitor-opentelemetry` to send custom
+events. To achieve this, ensure you are using version
+[1.0.0-beta.29](https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/monitor/monitor-opentelemetry-exporter/CHANGELOG.md#100-beta29-2025-03-04)
+or later of the `@azure/monitor-opentelemetry-exporter`.
+
+https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/monitor/monitor-opentelemetry-exporter/CHANGELOG.md#100-beta29-2025-03-04
 
 ```typescript
 import {
