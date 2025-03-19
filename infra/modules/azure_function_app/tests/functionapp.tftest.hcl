@@ -66,7 +66,7 @@ run "function_app_is_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_service_plan.this[0].sku_name == "P0v3"
+    condition     = module.app_service_plan[0].sku_name == "P0v3"
     error_message = "The App Service Plan is incorrect, have to be P0v3"
   }
 

@@ -14,3 +14,8 @@ module "app_service_plan" {
 
   tags = var.tags
 }
+
+moved {
+  from = azurerm_service_plan.this[0]
+  to   = module.app_service_plan.azurerm_service_plan.this
+}
