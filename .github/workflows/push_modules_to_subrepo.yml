@@ -15,7 +15,7 @@ concurrency:
 jobs:
   detect-modules:
     runs-on: ubuntu-latest
-    name: Detect Modules to Test
+    name: Detect Modules to Push
     outputs:
       modules: ${{ steps.get-all-modules.outputs.modules || steps.get-modified-modules.outputs.modules }}
     steps:
