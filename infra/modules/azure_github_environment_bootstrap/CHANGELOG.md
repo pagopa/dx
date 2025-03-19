@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.3.0
+
+### Minor Changes
+
+- 6ef0285: Add Log Analytics Workspace role assignment
+
 ## 1.2.0
 
 ### Minor Changes
