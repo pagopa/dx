@@ -173,21 +173,42 @@ Although you can enable tracing and metrics using only the
 :::
 
 Alternatively, you can use only `@azure/monitor-opentelemetry` to send custom
-events, but in this case, you would need to re-implement the wrapper, similar to
-what the AI SDK already does:
+events. To achieve this, ensure you are using version
+[1.0.0-beta.29](https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/monitor/monitor-opentelemetry-exporter/CHANGELOG.md#100-beta29-2025-03-04)
+or later of the `@azure/monitor-opentelemetry-exporter`.
 
-[Send Custom Event to AI · Issue #29196 · Azure/azure-sdk-for-js](https://github.com/Azure/azure-sdk-for-js/issues/29196)
+```typescript
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import { logs } from "@opentelemetry/api-logs";
 
-:::warning
+useAzureMonitor(/* Add your Azure Monitor options here */);
 
-Using a wrapper around OpenTelemetry logs to send _custom events_ to Azure is
-possible but not recommended: this approach requires alignment with the
-internals of Application Insights, which may change over time.
+// ...
 
-:::
+// The logger name can be any string and is used to identify the logger
+// within log processors. This allows different processing rules to be applied,
+// enabling custom settings for sampling and log levels.
 
-On the other hand, the AI SDK may fall behind new versions of
-`@azure/monitor-opentelemetry`.
+// The AI SDK uses "ApplicationInsightsLogger" as the default logger name.
+// Refer to the source code here:
+// https://github.com/microsoft/ApplicationInsights-node.js/blob/03c380558f15fd46c20ba90de343e8d427f1be30/src/main.ts#L39
+// It is not mandatory to use the same name. However, if you do, the logger
+// will inherit the same configuration settings as the AI SDK.
+
+logs.getLogger("ApplicationInsightsLogger").emit({
+  attributes: {
+    "microsoft.custom_event.name": "my-custom-event",
+    "foo": "bar",
+    ... // other custom attributes
+  },
+});
+```
+
+When evalutating to chose between the AI SDK and the Azure Monitor package,
+consider that the AI SDK may fall behind new versions of
+`@azure/monitor-opentelemetry`, so going with the latter may be more
+future-proof. The AI SDK is still advantageous if you need to use legacy AI
+methods.
 
 ## Enabling HTTP KeepAlive
 
