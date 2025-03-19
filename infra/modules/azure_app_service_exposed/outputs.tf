@@ -2,8 +2,8 @@ output "app_service" {
   value = {
     resource_group_name = azurerm_linux_web_app.this.resource_group_name
     plan = {
-      id   = try(azurerm_service_plan.this[0].id, null)
-      name = try(azurerm_service_plan.this[0].name, null)
+      id   = try(module.app_service_plan[0].id, null)
+      name = try(module.app_service_plan[0].name, null)
     }
     app_service = {
       id           = azurerm_linux_web_app.this.id

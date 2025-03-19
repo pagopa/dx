@@ -14,6 +14,7 @@ This module is used to create an Azure App Service, allowing it to be configured
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_app_service_plan"></a> [app\_service\_plan](#module\_app\_service\_plan) | ../azure_app_service_plan | n/a |
 | <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa-dx/azure-naming-convention/azurerm | ~> 0.0 |
 
 ## Resources
@@ -22,7 +23,6 @@ This module is used to create an Azure App Service, allowing it to be configured
 |------|------|
 | [azurerm_linux_web_app.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_web_app) | resource |
 | [azurerm_linux_web_app_slot.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_web_app_slot) | resource |
-| [azurerm_service_plan.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/service_plan) | resource |
 
 ## Inputs
 

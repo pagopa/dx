@@ -3,7 +3,7 @@ resource "azurerm_linux_web_app" "this" {
   location            = var.environment.location
   resource_group_name = var.resource_group_name
 
-  service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
+  service_plan_id = local.app_service_plan.enable ? module.app_service_plan[0].id : var.app_service_plan_id
 
   https_only                    = true
   public_network_access_enabled = true
