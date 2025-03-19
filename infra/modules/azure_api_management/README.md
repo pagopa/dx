@@ -1,40 +1,33 @@
-# DX - Azure APIM
+# DX - Azure API Management
 
-## Examples
+This module deploys an Azure API Management instance with optional configurations for networking, monitoring, autoscaling, and custom domains.
 
-```hcl
-module "apim" {
-  source = "./infra/modules/azure_api_management"
+## Resources Created
 
-  tags = {
-    Environment = "Production"
-    Team        = "API Team"
-  }
+This module creates the following resources:
 
-  environment = {
-    prefix          = "prod"
-    env_short       = "prd"
-    location        = "westeurope"
-    app_name        = "myapp"
-    instance_number = "001"
-  }
+- **Azure API Management Instance**: The main API Management resource to manage APIs, policies, and configurations.
+- **Application Insights Logger** (Optional): Enables logging and monitoring of API requests and responses. Requires `application_insights.enabled = true`.
+- **Autoscale Settings** (Optional): Configures autoscaling for Premium tier instances based on capacity metrics. Only available for `tier = "l"`.
+- **Private DNS A Records** (Optional): Creates DNS records for internal API Management endpoints. Requires `virtual_network_type_internal = true`.
+- **Network Security Group (NSG)** (Optional): Secures the API Management subnet with specific inbound rules. Requires `virtual_network_type_internal = true`.
+- **Management Lock** (Optional): Prevents accidental deletion of the API Management instance. Requires `lock_enable = true`.
+- **Custom Domain Certificates** (Optional): Configures custom domains using certificates stored in Azure Key Vault. Requires `hostname_configuration` and `key_vault_id`.
+- **Metric Alerts** (Optional): Sets up alerts for monitoring API Management metrics. Not available for `tier = "s"`.
 
-  resource_group_name   = "my-resource-group"
-  tier                  = "s"
+## Features
 
-  publisher_email = "email@example.com"
-  publisher_name = "Example Publisher"
+- Supports internal and public virtual network configurations (Optional: Internal requires `virtual_network_type_internal = true` and `subnet_id`).
 
-  virtual_network                = {
-    name                = "my-vnet"
-    resource_group_name = "my-vnet-rg"
-  }
-  subnet_id                      = "/subscriptions/xxx/resourceGroups/my-vnet-rg/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/apim-subnet"
-  virtual_network_type_internal  = true
+## Tier Comparison
 
-  # Additional variables...
-}
-```
+The following table outlines the differences and specific behaviors based on the selected tier:
+
+| Tier  | Description         | Features                                                                                     | Specific Behaviors                                                                                     |
+|-------|---------------------|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `s`   | Developer Tier      | Suitable for development and testing. No SLA. Limited scalability.                          | No autoscaling, no zones, `azurerm_monitor_metric_alert` is disabled.                                |
+| `m`   | Standard Tier       | Suitable for production workloads. Includes SLA and moderate scalability.                   | No autoscaling, no zones, `azurerm_monitor_metric_alert` is enabled.                                 |
+| `l`   | Premium Tier        | Suitable for large-scale production workloads. Includes SLA, high scalability, and autoscale support. | Autoscaling enabled, zones configured (`["1", "2", "3"]`), `azurerm_monitor_metric_alert` is enabled. |
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
