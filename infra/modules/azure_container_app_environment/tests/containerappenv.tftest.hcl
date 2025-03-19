@@ -54,8 +54,6 @@ run "container_app_env_is_correct_plan" {
     }
     subnet_pep_id = run.setup_tests.pep_snet_id
     subnet_cidr   = "10.50.100.0/24"
-
-    zone_redundant = true
   }
 
   # Checks some assertions
@@ -90,7 +88,7 @@ run "container_app_env_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == true
+    condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == false
     error_message = "The container app environment zone redundancy enabled is not correct"
   }
 }

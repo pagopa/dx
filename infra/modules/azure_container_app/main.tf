@@ -8,7 +8,7 @@ terraform {
 }
 
 module "naming_convention" {
-  source  = "pagopa/dx-azure-naming-convention/azurerm"
+  source  = "pagopa-dx/azure-naming-convention/azurerm"
   version = "~> 0.0"
 
   environment = {
