@@ -178,19 +178,10 @@ events. To achieve this, ensure you are using version
 or later of the `@azure/monitor-opentelemetry-exporter`.
 
 ```typescript
-import {
-  AzureMonitorOpenTelemetryOptions,
-  useAzureMonitor,
-} from "@azure/monitor-opentelemetry";
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import { logs } from "@opentelemetry/api-logs";
 
-const options: AzureMonitorOpenTelemetryOptions = {
-  azureMonitorExporterOptions: {
-    connectionString: process.env["APPLICATIONINSIGHTS_CONNECTION_STRING"],
-  },
-  // other options...
-};
-useAzureMonitor(options);
+useAzureMonitor(/* Add your Azure Monitor options here */);
 
 // ...
 
