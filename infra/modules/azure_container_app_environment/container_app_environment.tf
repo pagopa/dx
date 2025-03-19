@@ -14,7 +14,7 @@ resource "azurerm_container_app_environment" "this" {
     maximum_count         = 1
   }
 
-  zone_redundancy_enabled = var.zone_redundant
+  zone_redundancy_enabled = var.environment.env_short != "p" ? false : true
 
   lifecycle {
     ignore_changes = [

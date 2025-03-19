@@ -28,12 +28,6 @@ variable "log_analytics_workspace_id" {
   description = "The ID of the Log Analytics workspace to use for the container app environment."
 }
 
-variable "zone_redundant" {
-  type        = bool
-  description = "Indicates whether the container app environment is zone redundant or not"
-  default     = true
-}
-
 # ------------ NETWORKING ------------ #
 
 variable "subnet_id" {
