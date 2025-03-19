@@ -45,6 +45,12 @@ variable "apim_id" {
   default     = null
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "(Optional) ID of the Log Analytics Workspace"
+  default     = null
+}
+
 variable "private_dns_zone_resource_group_id" {
   type        = string
   description = "Id of the resource group holding private DNS zones"
