@@ -23,8 +23,8 @@ output "function_app" {
   value = {
     resource_group_name = azurerm_linux_function_app.this.resource_group_name
     plan = {
-      id   = try(azurerm_service_plan.this[0].id, var.app_service_plan_id)
-      name = try(azurerm_service_plan.this[0].name, null)
+      id   = try(module.app_service_plan[0].id, var.app_service_plan_id)
+      name = try(module.app_service_plan[0].name, null)
     }
     function_app = {
       id               = azurerm_linux_function_app.this.id

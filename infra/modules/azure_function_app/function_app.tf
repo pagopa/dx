@@ -3,7 +3,7 @@ resource "azurerm_linux_function_app" "this" {
   location            = var.environment.location
   resource_group_name = var.resource_group_name
 
-  service_plan_id = local.app_service_plan.enable ? azurerm_service_plan.this[0].id : var.app_service_plan_id
+  service_plan_id = local.app_service_plan.enable ? module.app_service_plan[0].id : var.app_service_plan_id
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
