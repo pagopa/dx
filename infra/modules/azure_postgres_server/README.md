@@ -1,4 +1,35 @@
-# DX - Azure PostgreSQL Flex Server
+# DX - Azure PostgreSQL Flexible Server
+
+This Terraform module provisions an Azure PostgreSQL Flexible Server along with optional configurations for high availability, monitoring, and private networking.
+
+## Resources Created
+
+- **Primary Server**: The primary PostgreSQL Flexible Server.
+- **Replica Server**: (Optional) A replica PostgreSQL Flexible Server for read scaling. Only for `l` tier.
+- **PgBouncer Configuration**: (Optional) Enables PgBouncer for connection pooling. Controlled by `pgbouncer_enabled`.
+- **Replica PgBouncer Configuration**: (Optional) Enables PgBouncer on the replica server. Only for `l` tier and if `pgbouncer_enabled` is true.
+- **Primary Private Endpoint**: Private endpoint for the primary server.
+- **Replica Private Endpoint**: (Optional) Private endpoint for the replica server. Only for `l` tier.
+- **Primary Metric Alerts**: (Optional) Metric alerts for the primary server. Controlled by `alerts_enabled`.
+- **Replica Metric Alerts**: (Optional) Metric alerts for the replica server. Only for `l` tier and if `alerts_enabled` is true.
+- **Primary Diagnostic Settings**: (Optional) Diagnostic settings for the primary server. Ccontrolled by `diagnostic_settings.enabled`.
+- **Replica Diagnostic Settings**: (Optional) Diagnostic settings for the replica server. Only for `l` tier and if `diagnostic_settings.enabled` is true.
+- **Management Lock**: (Optional) Management lock to prevent accidental deletion. Controlled by `enable_lock`.
+
+## Features
+
+- Configurable High Availability based on workload tier and location.
+- Default and custom metric alerts, diagnostic settings for logs and metrics.
+- Private endpoints and DNS zone integration.
+- Connection pooling support with PgBouncer configuration.
+
+## Tier Comparison
+
+| Tier | SKU Name               | High Availability | Geo-Redundant Backup  | Replica Server | Auto Grow |
+|------|------------------------|-------------------|-----------------------|----------------|-----------|
+| `s`  | `B_Standard_B1ms`      | None              | None                  | None           | None      |
+| `m`  | `GP_Standard_D2ds_v5`  | Yes               | Yes                   | None           | Yes       |
+| `l`  | `GP_Standard_D4ds_v5`  | Yes               | Yes                   | Yes            | Yes       |
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
