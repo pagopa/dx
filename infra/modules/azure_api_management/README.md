@@ -23,11 +23,11 @@ This module creates the following resources:
 
 The following table outlines the differences and specific behaviors based on the selected tier:
 
-| Tier  | Description         | Features                                                                                     | Specific Behaviors                                                                                     |
-|-------|---------------------|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `s`   | Developer Tier      | Suitable for development and testing. No SLA. Limited scalability.                          | No autoscaling, no zones, `azurerm_monitor_metric_alert` is disabled.                                |
-| `m`   | Standard Tier       | Suitable for production workloads. Includes SLA and moderate scalability.                   | No autoscaling, no zones, `azurerm_monitor_metric_alert` is enabled.                                 |
-| `l`   | Premium Tier        | Suitable for large-scale production workloads. Includes SLA, high scalability, and autoscale support. | Autoscaling enabled, zones configured (`["1", "2", "3"]`), `azurerm_monitor_metric_alert` is enabled. |
+| Tier  | Description                                         | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
+|-------|-----------------------------------------------------|------|---------------------|-------------|------------------|---------------|
+| `s`   | Developer Tier, for development and testing.        | None | Limited             | No          | No               | Disabled      |
+| `m`   | Standard Tier, for production workloads.            | Yes  | Moderate            | No          | No               | Enabled       |
+| `l`   | Premium Tier, for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
