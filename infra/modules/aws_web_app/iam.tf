@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "secrets" {
 
 data "aws_iam_policy_document" "logging" {
   statement {
-    sid = "PushLogs"
+    sid    = "PushLogs"
     effect = "Allow"
     actions = [
       "logs:CreateLogStream",
@@ -43,7 +43,7 @@ data "aws_iam_policy_document" "logging" {
   }
 
   statement {
-    sid = "CreateLogGroup"
+    sid    = "CreateLogGroup"
     effect = "Allow"
     actions = [
       "logs:CreateLogGroup"
@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "logging" {
   }
 
   statement {
-    sid = "DescribeLogGroups"
+    sid    = "DescribeLogGroups"
     effect = "Allow"
     actions = [
       "logs:DescribeLogGroups"
@@ -69,14 +69,14 @@ resource "aws_iam_policy" "secrets" {
   name        = "${local.project}-${var.environment.app_name}-amplify-secrets-policy-${var.environment.instance_number}"
   description = "Allow amplify app ${aws_amplify_app.this.name} to read secrets"
   policy      = data.aws_iam_policy_document.secrets.json
-  tags = var.tags
+  tags        = var.tags
 }
 
 resource "aws_iam_policy" "logging" {
   name        = "${local.project}-${var.environment.app_name}-amplify-logging-policy-${var.environment.instance_number}"
   description = "Allow amplify app ${aws_amplify_app.this.name} to push logs to cloudwatch"
   policy      = data.aws_iam_policy_document.logging.json
-  tags = var.tags
+  tags        = var.tags
 }
 
 resource "aws_iam_role" "this" {

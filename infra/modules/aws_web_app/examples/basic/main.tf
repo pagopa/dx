@@ -4,17 +4,17 @@ module "web_app" {
   environment = local.environment
   repository = {
     organization = "pagopa"
-    name = "developer-portal"
-    branch_name = "main"
+    name         = "dx"
+    branch_name  = "main"
   }
 
   github_authorization_type = "AWS"
 
   build_information = {
-    app_path = "website"
-    build_path = "website/build"
+    app_path         = "website"
+    build_path       = "website/build"
     install_commands = ["corepack enable", "yarn install --immutable"]
-    build_commands = ["yarn workspace docs run build"]
+    build_commands   = ["yarn workspace docs run build"]
   }
 
   # monitoring = {

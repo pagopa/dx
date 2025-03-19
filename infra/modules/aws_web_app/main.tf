@@ -11,10 +11,10 @@ resource "aws_amplify_app" "this" {
   build_spec = templatefile(
     "${path.module}/templates/buildspec.yaml.tpl",
     {
-      app_root = var.build_information.app_path
+      app_root           = var.build_information.app_path
       pre_build_commands = jsonencode(var.build_information.install_commands)
-      build_commands = jsonencode(concat(["env >> ${var.build_information.app_path}/.env"], var.build_information.build_commands))
-      build_dir = var.build_information.build_path
+      build_commands     = jsonencode(concat(["env >> ${var.build_information.app_path}/.env"], var.build_information.build_commands))
+      build_dir          = var.build_information.build_path
     }
   )
 
@@ -63,4 +63,11 @@ resource "aws_ssm_parameter" "secret" {
   data_type   = "text"
 
   tags = var.tags
+}
+
+resource "aws_amplify_webhook" "branch" {
+  for_each    = var.github_authorization_type == "AWS" ? toset([aws_amplify_branch.this.branch_name]) : []
+  app_id      = aws_amplify_app.this.id
+  branch_name = aws_amplify_branch.this.branch_name
+  description = "Amplify Triggers"
 }
