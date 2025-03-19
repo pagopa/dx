@@ -20,8 +20,8 @@ provider "azurerm" {
 }
 
 module "naming_convention" {
-  source  = "pagopa/dx-azure-naming-convention/azurerm"
-  version = "~> 0"
+  source  = "pagopa-dx/azure-naming-convention/azurerm"
+  version = "~> 0.0"
 
   environment = {
     prefix          = local.environment.prefix

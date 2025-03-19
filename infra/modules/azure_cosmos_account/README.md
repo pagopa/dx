@@ -16,7 +16,7 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 ```hcl
 module "cosmosdb" {
   source  = "pagopa/dx-azure-cosmos-account/azurerm"
-  version = "~> 0"
+  version = "~> 0.0"
 
   environment                = var.environment
   resource_group_name        = var.resource_group_name
@@ -57,7 +57,7 @@ module "cosmosdb" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa/dx-azure-naming-convention/azurerm | ~> 0 |
+| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa-dx/azure-naming-convention/azurerm | ~> 0.0 |
 
 ## Resources
 
