@@ -177,8 +177,6 @@ events. To achieve this, ensure you are using version
 [1.0.0-beta.29](https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/monitor/monitor-opentelemetry-exporter/CHANGELOG.md#100-beta29-2025-03-04)
 or later of the `@azure/monitor-opentelemetry-exporter`.
 
-https://github.com/Azure/azure-sdk-for-js/blob/main/sdk/monitor/monitor-opentelemetry-exporter/CHANGELOG.md#100-beta29-2025-03-04
-
 ```typescript
 import {
   AzureMonitorOpenTelemetryOptions,
