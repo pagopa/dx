@@ -107,7 +107,7 @@ Each sub-repository maintains its own version history and tags, making it
 compatible with the Terraform Registry while allowing us to keep our centralized
 development workflow in the monorepo.
 
-![Monorepo splitting strategy](./publishing-terraform-modules/push-to-subrepo.png)
+![Monorepo splitting strategy](./push-to-subrepo.png)
 
 This approach gives us the best of both worlds:
 
