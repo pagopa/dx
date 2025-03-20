@@ -25,20 +25,6 @@ This module deploys an Azure API Management instance with optional configuration
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
 
-## Troubleshooting
-
-1. **Error: Missing `connection_string` for Application Insights**
-   - **Cause**: `application_insights.enabled` is set to `true`, but no `connection_string` is provided.
-   - **Solution**: Ensure `application_insights.connection_string` is set when enabling Application Insights.
-
-2. **Error: Invalid `sampling_percentage` Value**
-   - **Cause**: The `sampling_percentage` is outside the valid range (0-100).
-   - **Solution**: Set `sampling_percentage` to a value between 0 and 100.
-
-3. **Error: Invalid `tier` Value**
-   - **Cause**: The `tier` variable is set to an unsupported value.
-   - **Solution**: Use one of the allowed values: `s`, `m`, or `l`.
-
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
