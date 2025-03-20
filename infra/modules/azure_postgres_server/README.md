@@ -1,4 +1,29 @@
-# DX - Azure PostgreSQL Flex Server
+# DX - Azure PostgreSQL Flexible Server
+
+This Terraform module provisions an Azure PostgreSQL Flexible Server along with optional configurations for high availability, monitoring, and private networking.
+
+## Features
+
+- **Primary and Replica Servers**: Provisions a primary PostgreSQL Flexible Server and optionally a replica server for read scaling.
+- **High Availability**: Supports zone-redundant high availability for production-grade reliability.
+- **Monitoring**: Includes default and customizable metric alerts, as well as diagnostic settings for logs and metrics to ensure operational visibility.
+- **Connection Pooling**: Enables PgBouncer for efficient connection pooling, reducing overhead for high-connection scenarios.
+- **Private Networking**: Integrates private endpoints and DNS zone configurations for secure and isolated network access.
+- **Backup and Recovery**: Configurable backup retention and geo-redundant backups for disaster recovery.
+- **Scalability**: Supports auto-grow storage and scaling configurations for dynamic workload demands.
+- **Management Lock**: Adds a management lock to prevent accidental deletion of critical resources.
+
+## Tier Comparison
+
+| Tier | Description                                                      | High Availability | Geo-Redundant Backup  | Replica Server | Auto Grow |
+|------|------------------------------------------------------------------|-------------------|-----------------------|----------------|-----------|
+| `s`  | Ideal for lightweight workloads, testing, and development.       | None              | None                  | None           | None      |
+| `m`  | Suitable for production with low to moderate performance needs.  | Yes               | Yes                   | None           | Yes       |
+| `l`  | Best for high-demand production workloads with scaling needs.    | Yes               | Yes                   | Yes            | Yes       |
+
+## Usage Example
+
+A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-postgres-server/tree/main/example/complete) directory.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
