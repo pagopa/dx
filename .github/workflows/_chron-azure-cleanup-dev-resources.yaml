@@ -1,0 +1,15 @@
+name: Cleanup DEV Resources
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '00 08 * * 1' # Run at 08:00 every Monday
+
+jobs:
+  cleanup-dev-resources:
+    uses: ./.github/workflows/chron-azure-cleanup-resources.yaml
+    name: Cleanup DEV Resources
+    secrets: inherit
+    with:
+      environment: 'dev'
+      ttl: 30
