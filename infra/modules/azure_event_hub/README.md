@@ -2,29 +2,26 @@
 
 This Terraform module provisions an Azure Event Hub namespace, event hubs, consumer groups, authorization rules, private endpoints, and monitoring configurations.
 
-## Resources Created
-
-- **Event Hub Namespace**: Creates the Event Hub namespace, which acts as a container for Event Hubs.
-- **Event Hubs**: Creates individual Event Hubs within the namespace.
-- **Consumer Groups**: Manages consumer groups for each Event Hub.
-- **Authorization Rules**: Configures access policies for Event Hubs.
-- **Private Endpoint**: Creates a private endpoint for secure access to the Event Hub namespace. *(Optional: requires `subnet_pep_id`)*
-- **Monitoring**: Configures metric alerts for monitoring Event Hub health. *(Optional: requires `metric_alerts` and `tier` set to `m` or `l`)*
-
 ## Features
 
-- Create multiple Event Hubs with customizable partitions and retention policies.
-- Define as many consumer groups as needed for each Event Hub.
-- Configure granular access policies for Event Hubs with support for listen, send, and manage permissions.
-- Set up network rules to allow or deny access based on IP ranges or virtual network subnets.
+- **Event Hub Namespace**: Creates the Event Hub namespace, which acts as a container for Event Hubs.
+- **Event Hubs**: Create multiple Event Hubs with customizable partitions and retention policies.
+- **Consumer Groups**: Define as many consumer groups as needed for each Event Hub.
+- **Authorization Rules**: Configure granular access policies for Event Hubs with support for listen, send, and manage permissions.
+- **Private Endpoint**: Creates a private endpoint for secure access to the Event Hub namespace.
+- **Monitoring**: Configures metric alerts for monitoring Event Hub health.
 
-## Tier Characteristics
+## Tiers and Configurations
 
-| Tier | Description                                                                 | SKU       | Capacity | Auto Inflate | Maximum Throughput Units |
-|------|-----------------------------------------------------------------------------|-----------|----------|--------------|--------------------------|
-| `s`  | Standard tier for basic workloads.                                          | Standard  | N/A      | No           | N/A                      |
-| `m`  | Medium tier for moderate workloads.                                         | Standard  | 1        | No           | N/A                      |
-| `l`  | Large tier for demanding workloads with auto-scaling and higher capacity.   | Premium   | 2        | Yes          | 15                       |
+| Tier | Description                                                                   | Capacity | Auto Inflate | Maximum Throughput Units |
+|------|-------------------------------------------------------------------------------|----------|--------------|--------------------------|
+| `s`  | Designed for test and development environments with limited requirements.     | N/A      | No           | N/A                      |
+| `m`  | Suitable for production environments with low to moderate demands.            | 1        | No           | N/A                      |
+| `l`  | Ideal for high-demand production environments with auto-scaling capabilities. | 2        | Yes          | 15                       |
+
+### Usage Example
+
+For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-event-hub/tree/main/example/complete) folder in the module repository.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
