@@ -1,6 +1,6 @@
 locals {
-  project        = "${var.environment.prefix}-${var.environment.env_short}"
-  domain         = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
+  project = "${var.environment.prefix}-${var.environment.env_short}"
+  domain  = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
 
   app_prefix = "${local.project}${local.domain}${var.environment.app_name}"
   app_suffix = var.environment.instance_number
@@ -14,6 +14,6 @@ locals {
     "xl" = "BUILD_GENERAL1_2XLARGE"
   }
 
-  has_github_personal_access_token = lookup(var.personal_access_token, "value", null) != null
+  has_github_personal_access_token               = lookup(var.personal_access_token, "value", null) != null
   has_github_personal_access_token_ssm_parameter = lookup(var.personal_access_token, "ssm_parameter_name", null) != null
 }

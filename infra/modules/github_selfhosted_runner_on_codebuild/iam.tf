@@ -17,7 +17,7 @@ resource "aws_iam_role" "codebuild_role" {
 
 resource "aws_iam_role_policy_attachment" "codebuild_policy" {
   role       = aws_iam_role.codebuild_role.name
-  policy_arn   = "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
 }
 
 resource "aws_iam_policy" "github_connection" {
