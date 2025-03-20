@@ -1,40 +1,29 @@
-# DX - Azure APIM
+# DX - Azure API Management
 
-## Examples
+This module deploys an Azure API Management instance with optional configurations for networking, monitoring, autoscaling, and custom domains.
 
-```hcl
-module "apim" {
-  source = "./infra/modules/azure_api_management"
+## Features
 
-  tags = {
-    Environment = "Production"
-    Team        = "API Team"
-  }
+- **Azure API Management Instance**: Manage APIs, policies, and configurations.
+- **Application Insights Integration**: Enable logging and monitoring of API requests and responses.
+- **Autoscaling**: Configure autoscaling for Premium tier instances based on capacity metrics.
+- **Private DNS A Records**: Create DNS records for internal API Management endpoints.
+- **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
+- **Management Lock**: Prevent accidental deletion of the API Management instance.
+- **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
+- **Metric Alerts**: Set up alerts for monitoring API Management metrics.
 
-  environment = {
-    prefix          = "prod"
-    env_short       = "prd"
-    location        = "westeurope"
-    app_name        = "myapp"
-    instance_number = "001"
-  }
+## Tiers and Configurations
 
-  resource_group_name   = "my-resource-group"
-  tier                  = "s"
+| Tier  | Description                                         | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
+|-------|-----------------------------------------------------|------|---------------------|-------------|------------------|---------------|
+| `s`   | Developer Tier, for development and testing.        | None | Limited             | No          | No               | Disabled      |
+| `m`   | Standard Tier, for production workloads.            | Yes  | Moderate            | No          | No               | Enabled       |
+| `l`   | Premium Tier, for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
 
-  publisher_email = "email@example.com"
-  publisher_name = "Example Publisher"
+## Usage Example
 
-  virtual_network                = {
-    name                = "my-vnet"
-    resource_group_name = "my-vnet-rg"
-  }
-  subnet_id                      = "/subscriptions/xxx/resourceGroups/my-vnet-rg/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/apim-subnet"
-  virtual_network_type_internal  = true
-
-  # Additional variables...
-}
-```
+For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
