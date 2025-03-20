@@ -49,21 +49,21 @@ variable "build_timeout" {
 
 variable "vpc" {
   type = object({
-    id                  = string
-    private_subnets     = list(string)
+    id              = string
+    private_subnets = list(string)
   })
 
   description = "The VPC used to deploy the resources"
 }
 
 variable "personal_access_token" {
-  type        = object({
+  type = object({
     ssm_parameter_name = optional(string, null)
     value              = optional(string, null)
   })
   description = "GitHub personal access token used to authenticate. If none provided, the GitHub App will be used. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html)."
   sensitive   = true
-  default = null
+  default     = null
 
   validation {
     condition = var.personal_access_token == null || ((var.personal_access_token.ssm_parameter_name != null) != (var.personal_access_token.value != null))
@@ -80,12 +80,12 @@ variable "env_variables" {
 
 variable "secrets" {
   type = map(object({
-    ssm_parameter_name = optional(string, null)
+    ssm_parameter_name   = optional(string, null)
     secrets_manager_name = optional(string, null)
   }))
 
   description = "Secrets to be used in the build environment. The key is the name of the environment variable, and the value is the name of the SSM parameter or Secrets Manager secret. These are intended as an addition to the ones specified in the GitHub environment."
-  default = []
+  default     = {}
 
   validation {
     condition = alltrue([
