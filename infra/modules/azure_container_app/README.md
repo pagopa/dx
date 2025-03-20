@@ -1,56 +1,29 @@
 # DX - Azure Container APP
 
-## Overview
-
 This Terraform module deploys an Azure Container App in a provided Azure Container App Environment. It supports System Assigned Managed Identity and configurable scaling options.
-
-## Resources Created
-
-- `azurerm_container_app`: Deploys a containerized application in the specified environment.
-- `azurerm_private_dns_a_record`: Creates a private DNS A record for the container app.
 
 ## Features
 
-- Supports different templates configuration via a map (`container_app_templates`).
-- With tier specification (xs, s, m, or l) creates container app with different replicas, CPU, and memory settings:
+- **Container App Deployment**: Deploys a containerized application in the specified Azure Container App Environment.
+- **Private Endpoint Integration**: Creates a private DNS A record for the container app, enabling secure internal communication.
+- **Managed Identity**: Provides System Assigned Managed Identity for secure authentication with Azure resources.
+- **Health Probes**: Configurable liveness, readiness, and startup probes to monitor and ensure container health.
+- **Ingress Configuration**: Supports secure ingress with options for external or internal access and target port configuration.
+- **Dynamic Templates**: Allows defining multiple container templates with customizable settings, including environment variables and probes.
+- **Revision Management**: Supports both `Single` and `Multiple` revision modes for managing application updates.
 
-```json
-"xs" = {
-  cpu    = 0.25
-  memory = "0.5Gi"
-  replicas = {
-    min = 0
-    max = 1
-  }
-}
-"s" = {
-  cpu    = 0.5
-  memory = "1Gi"
-  replicas = {
-    min = 1
-    max = 1
-  }
-}
-"m" = {
-  cpu    = 1.25
-  memory = "2.5Gi"
-  replicas = {
-    min = 1
-    max = 2
-  }
-}
-"l" = {
-  cpu    = 2
-  memory = "4Gi"
-  replicas = {
-    min = 2
-    max = 4
-  }
-}
-```
+## Tiers and Configurations
 
-- Managed Identity (System Assigned) for secure authentication.
-- Probes for liveness, readiness, and startup to ensure container health.
+| Tier | Description                                                    | CPU   | Memory | Replicas (Min-Max) |
+|------|----------------------------------------------------------------|-------|--------|--------------------|
+| xs   | Minimal configuration for testing.                             | 0.25  | 0.5Gi  | 0-1                |
+| s    | Suitable for development, testing, and small-scale production. | 0.5   | 1Gi    | 1-1                |
+| m    | Low-load production environments.                              | 1.25  | 2.5Gi  | 1-2                |
+| l    | High-load production environments.                             | 2     | 4Gi    | 2-4                |
+
+## Usage Example
+
+A complete usage example can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app/tree/main/examples/complete) directory.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
