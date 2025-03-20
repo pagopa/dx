@@ -13,11 +13,6 @@ locals {
     }
   )
 
-  container_apps = {
-    job_name    = "${module.naming_convention.prefix}-caj-${module.naming_convention.suffix}"
-    secret_name = "personal-access-token"
-  }
-
   has_apim                    = var.apim_id != null ? 1 : 0
   has_log_analytics_workspace = var.log_analytics_workspace_id != null ? 1 : 0
 

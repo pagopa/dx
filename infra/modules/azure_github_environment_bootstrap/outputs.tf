@@ -15,9 +15,9 @@ output "repository" {
 
 output "github_private_runner" {
   value = {
-    id                  = azurerm_container_app_job.github_runner.id
-    name                = azurerm_container_app_job.github_runner.name
-    resource_group_name = azurerm_container_app_job.github_runner.resource_group_name
+    id                  = module.github_runner.container_app_job.id
+    name                = module.github_runner.container_app_job.name
+    resource_group_name = module.github_runner.container_app_job.resource_group_name
   }
 }
 
