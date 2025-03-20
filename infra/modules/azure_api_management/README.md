@@ -2,32 +2,42 @@
 
 This module deploys an Azure API Management instance with optional configurations for networking, monitoring, autoscaling, and custom domains.
 
-## Resources Created
-
-This module creates the following resources:
-
-- **Azure API Management Instance**: The main API Management resource to manage APIs, policies, and configurations.
-- **Application Insights Logger** (Optional): Enables logging and monitoring of API requests and responses. Requires `application_insights.enabled = true`.
-- **Autoscale Settings** (Optional): Configures autoscaling for Premium tier instances based on capacity metrics. Only available for `tier = "l"`.
-- **Private DNS A Records** (Optional): Creates DNS records for internal API Management endpoints. Requires `virtual_network_type_internal = true`.
-- **Network Security Group (NSG)** (Optional): Secures the API Management subnet with specific inbound rules. Requires `virtual_network_type_internal = true`.
-- **Management Lock** (Optional): Prevents accidental deletion of the API Management instance. Requires `lock_enable = true`.
-- **Custom Domain Certificates** (Optional): Configures custom domains using certificates stored in Azure Key Vault. Requires `hostname_configuration` and `key_vault_id`.
-- **Metric Alerts** (Optional): Sets up alerts for monitoring API Management metrics. Not available for `tier = "s"`.
-
 ## Features
 
-- Supports internal and public virtual network configurations (Optional: Internal requires `virtual_network_type_internal = true` and `subnet_id`).
+- **Azure API Management Instance**: Manage APIs, policies, and configurations.
+- **Application Insights Integration**: Enable logging and monitoring of API requests and responses.
+- **Autoscaling**: Configure autoscaling for Premium tier instances based on capacity metrics.
+- **Private DNS A Records**: Create DNS records for internal API Management endpoints.
+- **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
+- **Management Lock**: Prevent accidental deletion of the API Management instance.
+- **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
+- **Metric Alerts**: Set up alerts for monitoring API Management metrics.
 
-## Tier Comparison
-
-The following table outlines the differences and specific behaviors based on the selected tier:
+## Tiers and Configurations
 
 | Tier  | Description                                         | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
 |-------|-----------------------------------------------------|------|---------------------|-------------|------------------|---------------|
 | `s`   | Developer Tier, for development and testing.        | None | Limited             | No          | No               | Disabled      |
 | `m`   | Standard Tier, for production workloads.            | Yes  | Moderate            | No          | No               | Enabled       |
 | `l`   | Premium Tier, for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
+
+## Usage Example
+
+For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
+
+## Troubleshooting
+
+1. **Error: Missing `connection_string` for Application Insights**
+   - **Cause**: `application_insights.enabled` is set to `true`, but no `connection_string` is provided.
+   - **Solution**: Ensure `application_insights.connection_string` is set when enabling Application Insights.
+
+2. **Error: Invalid `sampling_percentage` Value**
+   - **Cause**: The `sampling_percentage` is outside the valid range (0-100).
+   - **Solution**: Set `sampling_percentage` to a value between 0 and 100.
+
+3. **Error: Invalid `tier` Value**
+   - **Cause**: The `tier` variable is set to an unsupported value.
+   - **Solution**: Use one of the allowed values: `s`, `m`, or `l`.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
