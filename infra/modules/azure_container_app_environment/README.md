@@ -1,20 +1,31 @@
 # DX - Azure Container App Environment
 
-## Overview
-
 This Terraform module deploys an Azure Container App Environment along with necessary networking components.
-
-## Resources Created
-
-- `azurerm_container_app_environment`: Deploys an Azure Container App Environment.
-- `azurerm_subnet`: Creates a subnet for the container app environment if not provided.
-- `azurerm_private_endpoint`: Creates a private endpoint for secure connectivity.
-- `azurerm_private_dns_zone`: Configures a private DNS zone for the container app environment.
 
 ## Features
 
-- Zone redundancy support for high availability.
-- Configurable networking options including custom subnets and private endpoints.
+- **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
+- **Subnet Creation**: Creates a subnet for the container app environment if not provided.
+- **Private Endpoint**: Enables secure connectivity by creating a private endpoint.
+- **Zone Redundancy**: Supports zone redundancy for high availability, enabled by default unless the environment is set to development.
+
+## Usage Example
+
+For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app-environment/tree/main/examples/complete) directory.
+
+## Troubleshooting
+
+### Private Endpoint Deletion Timeout
+
+When working with private endpoints (currently in preview), the `terraform destroy` process may get stuck while trying to delete the private endpoint. This happens because the private endpoint is not automatically detached from the environment, causing the operation to time out.
+
+**Solution:**
+
+1. Navigate to the Azure Portal.
+2. Go to the specific Container App Environment.
+3. Navigate to the **Networking** section.
+4. Manually remove the connection between the private endpoint and the container app environment.
+5. Re-run the `terraform destroy` command.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
