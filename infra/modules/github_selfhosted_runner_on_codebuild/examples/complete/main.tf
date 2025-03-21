@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-AWS-0178
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
@@ -30,6 +31,7 @@ module "runner" {
     private_subnets = module.vpc.private_subnets
   }
 
+  # If I cannot create an AWS CodeConnection, it's possible to use a personal access token
   # personal_access_token = {
   #   ssm_parameter_name = "/github/runner/token"
   # }
@@ -38,11 +40,11 @@ module "runner" {
     ENV_SHORT = local.environment.env_short
   }
 
-  # secrets = {
-  #   DB_URL = { ssm_parameter_name = "/db/url" },
-  #   DB_USERNAME = { ssm_parameter_name = "/db/username" },
-  #   DB_PASSWORD = { ssm_parameter_name = "/db/password" }
-  # }
+  secrets = {
+    DB_URL      = { ssm_parameter_name = "/db/url" },
+    DB_USERNAME = { ssm_parameter_name = "/db/username" },
+    DB_PASSWORD = { ssm_parameter_name = "/db/password" }
+  }
 
   tags = local.tags
 }
