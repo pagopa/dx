@@ -12,7 +12,6 @@ locals {
     "s"  = "BUILD_GENERAL1_SMALL"
     "m"  = "BUILD_GENERAL1_MEDIUM"
     "l"  = "BUILD_GENERAL1_LARGE"
-    "xl" = "BUILD_GENERAL1_2XLARGE"
   }
 
   has_github_personal_access_token               = try(var.personal_access_token.value, null) != null
