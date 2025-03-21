@@ -39,7 +39,7 @@ concurrency:
 jobs:
   get-versions:
     name: Get Terraform and pre-commit Version
-    runs-on: ubuntu-latest
+    runs-on: codebuild-dx-d-modules-test-runner-${{ github.run_id }}-${{ github.run_attempt }}
     if: ${{ inputs.terraform_version == '' || inputs.pre_commit_tf_tag == '' }}
     outputs:
       terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}
@@ -63,7 +63,7 @@ jobs:
 
   tf_analysis:
     name: Terraform Validation
-    runs-on: ubuntu-latest
+    runs-on: codebuild-dx-d-modules-test-runner-${{ github.run_id }}-${{ github.run_attempt }}
     needs: [ get-versions ]
     # Ensures execution even if get-versions is skipped
     if: ${{ always() }}

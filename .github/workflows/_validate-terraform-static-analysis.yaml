@@ -13,7 +13,6 @@ on:
 jobs:
   tf_analysis:
     # Don't run in Changeset PRs
-    runs-on: codebuild-dx-d-modules-test-runner-${{ github.run_id }}-${{ github.run_attempt }}
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     uses: ./.github/workflows/static_analysis.yaml
     name: Terraform Validation
