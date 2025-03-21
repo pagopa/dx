@@ -11,7 +11,6 @@ on:
 jobs:
   js_code_review:
     # Don't run in Changeset PRs
-    runs-on: codebuild-dx-d-modules-test-runner-${{ github.run_id }}-${{ github.run_attempt }}
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     uses: ./.github/workflows/js_code_review.yaml
     name: Code Review
