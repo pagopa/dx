@@ -11,7 +11,7 @@ The module sets up a fully managed GitHub runner using AWS CodeBuild, which auto
 - Managed scaling - AWS CodeBuild handles the provisioning and scaling of runners
 - VPC support - Run workflows in your private network
 - Flexible authentication - Support for both GitHub Apps and Personal Access Tokens
-- Custom environment variables and secrets management
+- Additional environment variables and secrets merged with the ones set in GitHub
 - Configurable build specifications through different tiers
 
 ## Usage Example
@@ -96,6 +96,91 @@ module "github_runner" {
     # OR
     value = "ghp_your_token"  # Direct value (not recommended for production)
   }
+}
+```
+
+## Extending Permissions and Access
+
+### Additional IAM Permissions
+
+The module outputs the CodeBuild IAM role that can be used to attach additional policies. Here's how to grant specific permissions:
+
+```hcl
+# Grant access to DynamoDB table
+resource "aws_iam_role_policy_attachment" "dynamodb" {
+  role       = module.runner.iam_role.name
+  policy_arn = aws_iam_policy.dynamodb.arn
+}
+
+resource "aws_iam_policy" "dynamodb" {
+  name = "${local.project}-dynamodb-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = aws_dynamodb_table.my_table.arn
+      }
+    ]
+  })
+}
+
+# Grant access to specific SSM parameters
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = module.runner.iam_role.name
+  policy_arn = aws_iam_policy.ssm.arn
+}
+
+resource "aws_iam_policy" "ssm" {
+  name = "${local.project}-ssm-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = [
+          "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/myapp/*"
+        ]
+      }
+    ]
+  })
+}
+```
+
+### Security Group Rules
+
+The module outputs the CodeBuild security group that can be used to add custom rules:
+
+```hcl
+# Allow access to RDS database
+resource "aws_security_group_rule" "database_access" {
+  type                     = "egress"
+  from_port               = 5432
+  to_port                 = 5432
+  protocol                = "tcp"
+  source_security_group_id = aws_security_group.database.id
+  security_group_id       = module.runner.security_group.id
+  description             = "Allow access to PostgreSQL database"
+}
+
+# Allow access to Redis cluster
+resource "aws_security_group_rule" "redis_access" {
+  type                     = "egress"
+  from_port               = 6379
+  to_port                 = 6379
+  protocol                = "tcp"
+  source_security_group_id = aws_security_group.redis.id
+  security_group_id       = module.runner.security_group.id
+  description             = "Allow access to Redis cluster"
 }
 ```
 
