@@ -355,6 +355,33 @@ before anything else:
 
 https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration
 
+It is possible to use the `@azure/monitor-opentelemetry` package to instrument a
+Next.js application. However, in order to track the HTTP calls made by the
+application, you need to use the `undici` instrumentation. This instrumentation
+is not included in the `@azure/monitor-opentelemetry` package, so you need to
+add it manually.  
+Here is a snippet to enable tracing in a Next.js application that uses the App
+router:
+
+```javascript
+// apps/instrumentation.ts
+
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import { metrics, trace } from "@opentelemetry/api";
+import { registerInstrumentations } from "@opentelemetry/instrumentation";
+import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
+
+export async function register() {
+  useAzureMonitor();
+
+  registerInstrumentations({
+    instrumentations: [new UndiciInstrumentation()],
+    meterProvider: metrics.getMeterProvider(),
+    tracerProvider: trace.getTracerProvider(),
+  });
+}
+```
+
 ## Integration with Azure Functions
 
 **Azure Functions** are a bit more complex to integrate with **OpenTelemetry**
