@@ -47,7 +47,7 @@ resource "aws_codebuild_project" "github_runner" {
   logs_config {
     cloudwatch_logs {
       group_name  = local.cloudwatch_log_group
-      stream_name = "log-stream"
+      stream_name = local.cloudwatch_log_stream
     }
   }
 
