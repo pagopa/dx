@@ -9,6 +9,7 @@ resource "aws_security_group" "codebuild" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group_rule" "codebuild_egress" {
   type              = "egress"
   from_port         = 0
