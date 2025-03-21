@@ -1,4 +1,119 @@
-# github_selfhosted_runner_on_codebuild
+# GitHub self-hosted runner on AWS CodeBuild
+
+This module creates a GitHub self-hosted runner on AWS CodeBuild, providing a secure and scalable solution for running GitHub Actions workflows in your AWS infrastructure.
+
+## Overview
+
+The module sets up a fully managed GitHub runner using AWS CodeBuild, which automatically scales based on your workflow needs. It supports both GitHub App and Personal Access Token authentication methods, and can be configured to run in a VPC for enhanced security.
+
+### Key Features
+
+- Managed scaling - AWS CodeBuild handles the provisioning and scaling of runners
+- VPC support - Run workflows in your private network
+- Flexible authentication - Support for both GitHub Apps and Personal Access Tokens
+- Custom environment variables and secrets management
+- Configurable build specifications through different tiers
+
+## Usage Example
+
+```hcl
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name = "${local.app_prefix}-vpc-${local.app_suffix}"
+  cidr = "10.0.0.0/16"
+
+  azs             = ["eu-south-1a", "eu-south-1b", "eu-south-1c"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+
+  enable_nat_gateway = true
+  single_nat_gateway = true # For development environments
+
+  tags = local.tags
+}
+
+module "runner" {
+  source      = "pagopa-dx/github-selfhosted-runner-on-codebuild/aws"
+  version     = "~> 1.0"
+  environment = local.environment
+
+  tier = "m"
+  repository = {
+    owner = "pagopa"
+    name  = "developer-portal"
+  }
+
+  vpc = {
+    id              = module.vpc.vpc_id
+    private_subnets = module.vpc.private_subnets
+  }
+
+  env_variables = {
+    ENV_SHORT = local.environment.env_short
+  }
+
+  secrets = {
+    DB_URL      = { ssm_parameter_name = "/db/url" }
+  }
+
+  tags = local.tags
+}
+```
+
+## Tiers and Configurations
+
+The module supports different tiers to accommodate various workload requirements:
+
+- **Small (s)**: 2 vCPU, 4GB RAM - Suitable for basic CI/CD workflows
+- **Medium (m)**: 4 vCPU, 8GB RAM - Default tier, balanced for most use cases
+- **Large (l)**: 8 vCPU, 16GB RAM - For resource-intensive builds
+
+## Authentication Methods
+
+### GitHub App (Recommended)
+Use AWS CodeBuild's native GitHub App integration for enhanced security and simplified token management. 
+
+**Important Notes:**
+- Even though the GitHub App connection can be created via Terraform using `aws_codestar_connections_connection`, it requires manual approval in the AWS Console
+- The connection needs to be configured only once per AWS account as it is account-wide
+- To complete the setup:
+  1. Go to the AWS Console > CodeBuild > Settings > Connections
+  2. Find your connection and click on "Update pending connection"
+  3. Follow the GitHub authorization flow
+  4. The connection status should change from "Pending" to "Available"
+
+### Personal Access Token
+For scenarios where GitHub App integration is not possible, you can use a Personal Access Token:
+
+```hcl
+module "github_runner" {
+  # ... other configuration ...
+
+  personal_access_token = {
+    ssm_parameter_name = "/github/pat"  # Store token in SSM Parameter Store
+    # OR
+    value = "ghp_your_token"  # Direct value (not recommended for production)
+  }
+}
+```
+
+## Troubleshooting
+
+Common issues and solutions:
+
+1. **VPC Connectivity Issues**
+   - Ensure the VPC has an Internet Gateway or NAT Gateway
+   - Check security group rules allow outbound traffic
+
+2. **Authentication Failures**
+   - Verify PAT has required permissions (repo, workflow)
+   - Check SSM parameter exists and is accessible
+
+3. **Build Timeouts**
+   - Adjust `build_timeout` value (default 480 minutes)
+   - Consider using a larger tier for resource-intensive workflows
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
