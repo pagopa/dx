@@ -29,13 +29,18 @@ resource "aws_iam_policy" "github_connection" {
     Statement = [
       {
         Action = [
-          "codeconnections:*",
-          "codestar-connections:*"
+          "codeconnections:UseConnection"
         ]
         Effect = "Allow"
         Resource = [
-          "*"
+          "arn:aws:codestar-connections:*:*:connection/*",
+          "arn:aws:codeconnections:*:*:connection/*"
         ]
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "codeconnections:ProviderPermissionsRequired" : "read_only"
+          }
+        }
       }
     ]
   })
