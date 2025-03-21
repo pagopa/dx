@@ -32,12 +32,23 @@ variable "resource_group_name" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
+  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'."
   default     = "s"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
+    condition     = contains(["s", "m", "l", "xl"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\" or \"xl\"."
+  }
+}
+
+variable "zones_override" {
+  type        = list(string)
+  description = "Override the default availability zones for the SKU. This is only available for the Premium SKU."
+  default     = []
+
+  validation {
+    condition     = length(var.zones_override) == 0 || (length(var.zones_override) <= 3 && alltrue([for zone in var.zones_override : contains(["1", "2", "3"], zone)]))
+    error_message = "Allowed values for \"zones_override\" are [], [\"1\"], [\"1\", \"2\"], or [\"1\", \"2\", \"3\"]."
   }
 }
 
@@ -103,6 +114,12 @@ variable "enable_public_network_access" {
   type        = bool
   description = "Enable public network access"
   default     = false
+}
+
+variable "public_ip_address_id" {
+  type        = string
+  description = "(Optional) The id of the public ip address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
+  default     = null
 }
 
 #---------------------------#

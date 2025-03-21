@@ -15,11 +15,12 @@ This module deploys an Azure API Management instance with optional configuration
 
 ## Tiers and Configurations
 
-| Tier  | Description                                         | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
-|-------|-----------------------------------------------------|------|---------------------|-------------|------------------|---------------|
-| `s`   | Developer Tier, for development and testing.        | None | Limited             | No          | No               | Disabled      |
-| `m`   | Standard Tier, for production workloads.            | Yes  | Moderate            | No          | No               | Enabled       |
-| `l`   | Premium Tier, for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
+| Tier  | Description                                              | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
+|-------|----------------------------------------------------------|------|---------------------|-------------|------------------|---------------|
+| `s`   | Developer Tier, for development and testing.             | None | Limited             | No          | No               | Disabled      |
+| `m`   | Standard Tier, for production workloads.                 | Yes  | Moderate            | No          | No               | Enabled       |
+| `l`   | Premium Tier, for large-scale production workloads.      | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
+| `xl`  | Premium Tier, for very large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
 
 ## Usage Example
 
@@ -78,15 +79,17 @@ For a complete example of how to use this module, refer to the [example/complete
 | <a name="input_management_logger_application_insight_enabled"></a> [management\_logger\_application\_insight\_enabled](#input\_management\_logger\_application\_insight\_enabled) | (Optional) if false, disables management logger application insight block | `bool` | `true` | no |
 | <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Map of name = criteria objects | <pre>map(object({<br/>    description = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H<br/>    frequency = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.<br/>    window_size = string<br/>    # Possible values are 0, 1, 2, 3.<br/>    severity = number<br/>    # Possible values are true, false<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name      = string<br/>        metric_namespace = string<br/>        # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation       = string<br/>        alert_sensitivity = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `{}` | no |
 | <a name="input_notification_sender_email"></a> [notification\_sender\_email](#input\_notification\_sender\_email) | Email address from which the notification will be sent. | `string` | `null` | no |
+| <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id) | (Optional) The id of the public ip address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network. | `string` | `null` | no |
 | <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email) | The email of publisher/company. | `string` | n/a | yes |
 | <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name) | The name of publisher/company. | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group to deploy resources to | `string` | n/a | yes |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | The id of the subnet that will be used for the API Management. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'. | `string` | `"s"` | no |
+| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'. | `string` | `"s"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_virtual_network_type_internal"></a> [virtual\_network\_type\_internal](#input\_virtual\_network\_type\_internal) | The type of virtual network you want to use, if true it will be Internal and you need to specify a subnet\_id, otherwise it will be None | `bool` | `true` | no |
 | <a name="input_xml_content"></a> [xml\_content](#input\_xml\_content) | Xml content for all api policy | `string` | `null` | no |
+| <a name="input_zones_override"></a> [zones\_override](#input\_zones\_override) | Override the default availability zones for the SKU. This is only available for the Premium SKU. | `list(string)` | `[]` | no |
 
 ## Outputs
 

@@ -4,11 +4,6 @@ module "naming_convention" {
   environment = local.environment
 }
 
-data "azurerm_monitor_action_group" "example" {
-  name                = replace("${local.environment.prefix}-${local.environment.env_short}-error", "-", "")
-  resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
-}
-
 resource "azurerm_resource_group" "example" {
   name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
   location = local.environment.location
@@ -38,8 +33,6 @@ module "azure_apim" {
   }
   subnet_id                     = azurerm_subnet.example.id
   virtual_network_type_internal = true
-
-  action_group_id = data.azurerm_monitor_action_group.example.id
 
   tags = local.tags
 }
