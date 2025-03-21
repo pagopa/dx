@@ -22,13 +22,13 @@ variable "environment" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l', 'xl'."
+  description = "Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l'."
 
   default = "m"
 
   validation {
-    condition     = contains(["s", "m", "l", "xl"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", \"xl\"."
+    condition     = contains(["s", "m", "l"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\"."
   }
 }
 
