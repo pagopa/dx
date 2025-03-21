@@ -20,6 +20,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
 }
 
+#trivy:ignore:avd-aws-0057
 resource "aws_iam_policy" "github_connection" {
   name        = "${local.app_prefix}-gh-connection-${local.app_suffix}"
   description = "Policy to allow to use the github connection"
@@ -29,7 +30,7 @@ resource "aws_iam_policy" "github_connection" {
     Statement = [
       {
         Action = [
-          "codeconnections:UseConnection"
+          "codeconnections:*"
         ]
         Effect = "Allow"
         Resource = [
@@ -38,7 +39,7 @@ resource "aws_iam_policy" "github_connection" {
         ]
         Condition = {
           "ForAllValues:StringEquals" = {
-            "codeconnections:ProviderPermissionsRequired" : "read_only"
+            "codeconnections:FullRepositoryId" = "${var.repository.owner}/${var.repository.name}"
           }
         }
       }
@@ -116,7 +117,7 @@ resource "aws_iam_policy" "cloudwatch" {
         Effect = "Allow"
         Resource = [
           "arn:aws:logs:${var.environment.location}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:*",
-          "arn:aws:logs:${var.environment.location}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:log-stream:log-stream/*"
+          "arn:aws:logs:${var.environment.location}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:log-stream:${local.cloudwatch_log_stream}/*"
         ]
       }
     ]

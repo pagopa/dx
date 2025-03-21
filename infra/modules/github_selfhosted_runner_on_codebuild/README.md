@@ -43,7 +43,7 @@ No modules.
 | <a name="input_repository"></a> [repository](#input\_repository) | Source repository information | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | Secrets to be used in the build environment. The key is the name of the environment variable, and the value is the name of the SSM parameter or Secrets Manager secret. These are intended as an addition to the ones specified in the GitHub environment. | <pre>map(object({<br/>    ssm_parameter_name   = optional(string, null)<br/>    secrets_manager_name = optional(string, null)<br/>  }))</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l', 'xl'. | `string` | `"l"` | no |
+| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l', 'xl'. | `string` | `"m"` | no |
 | <a name="input_vpc"></a> [vpc](#input\_vpc) | The VPC used to deploy the resources | <pre>object({<br/>    id              = string<br/>    private_subnets = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs

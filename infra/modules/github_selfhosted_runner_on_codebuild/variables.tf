@@ -24,10 +24,10 @@ variable "tier" {
   type        = string
   description = "Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l', 'xl'."
 
-  default = "l"
+  default = "m"
 
   validation {
-    condition     = contains(["s", "m", "l", "xl", "premium", "standard", "test"], var.tier)
+    condition     = contains(["s", "m", "l", "xl"], var.tier)
     error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", \"xl\"."
   }
 }
@@ -66,7 +66,7 @@ variable "personal_access_token" {
   default     = null
 
   validation {
-    condition = var.personal_access_token == null || ((var.personal_access_token.ssm_parameter_name != null) != (var.personal_access_token.value != null))
+    condition = var.personal_access_token == null || !alltrue([(try(var.personal_access_token.ssm_parameter_name, null) != null), (try(var.personal_access_token.value, null) != null)])
 
     error_message = "If the variable is set, either ssm_parameter_name or value must be set. Not both."
   }
