@@ -176,7 +176,7 @@ automatically applied.
   }
 
   module "repo" {
-    source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
+    source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
     version = "~>1.0"
 
     TBD = [
@@ -243,7 +243,7 @@ Account, especially for applications and shared Accounts.
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -276,7 +276,7 @@ Set by the module
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -323,7 +323,7 @@ Otherwise via Access Policies:
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -347,7 +347,7 @@ module "" {
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -439,7 +439,7 @@ Set by the module
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -475,7 +475,7 @@ Set by the module
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>
@@ -511,7 +511,7 @@ Set by the module
 
 ```hcl
 module "" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~>0.0"
 
   principal_id = <who-needs-access>

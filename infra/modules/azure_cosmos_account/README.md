@@ -15,7 +15,7 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 
 ```hcl
 module "cosmosdb" {
-  source  = "pagopa/dx-azure-cosmos-account/azurerm"
+  source  = "pagopa-dx/azure-cosmos-account/azurerm"
   version = "~> 0.0"
 
   environment                = var.environment

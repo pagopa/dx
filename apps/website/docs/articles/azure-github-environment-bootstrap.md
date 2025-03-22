@@ -53,7 +53,7 @@ version to the latest stable release:
 
 ```hcl
 module "repo" {
-  source  = "pagopa/dx-azure-github-environment-bootstrap/azurerm"
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~>1.0"
 }
 ```
