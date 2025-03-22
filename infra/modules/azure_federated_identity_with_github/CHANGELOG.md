@@ -1,5 +1,11 @@
 # azure_federated_identity_with_github
 
+## 1.0.1
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 1.0.0
 
 ### Major Changes
