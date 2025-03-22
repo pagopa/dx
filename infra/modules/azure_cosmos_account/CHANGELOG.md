@@ -1,5 +1,11 @@
 # azure_cosmos_account
 
+## 0.0.7
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 0.0.6
 
 ### Patch Changes

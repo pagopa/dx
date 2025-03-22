@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.3.1
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 1.3.0
 
 ### Minor Changes

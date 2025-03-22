@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.1.4
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 0.1.3
 
 ### Patch Changes
