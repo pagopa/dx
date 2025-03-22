@@ -43,7 +43,7 @@ abstracts away the complexity of the role choice.
 
 ```hcl
 module "roles" {
-  source  = "pagopa/dx-azure-role-assignments/azurerm"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 0.0"
 
   principal_id = "caller-resource-id"

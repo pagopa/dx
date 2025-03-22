@@ -14,7 +14,8 @@ The module, named `azure_core_infra`, includes the following:
 
 ```hcl
 module "core" {
-  source = "github.com/pagopa/dx//infra/modules/azure_core_infra?ref=main"
+  source = "pagopa-dx/azure-core-infra/azurerm"
+  version = "~> 1.0"
 
   test_enabled = true # set to false if you want to create all resources
 
