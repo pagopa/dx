@@ -107,6 +107,7 @@ variable "github_private_runner" {
   type = object({
     container_app_environment_id       = string
     container_app_environment_location = string
+    replica_timeout_in_seconds         = optional(number, 1800)
     polling_interval_in_seconds        = optional(number, 30)
     min_instances                      = optional(number, 0)
     max_instances                      = optional(number, 30)
@@ -115,6 +116,7 @@ variable "github_private_runner" {
       name                = string
       resource_group_name = string
       secret_name         = optional(string, "github-runner-pat")
+      use_rbac            = optional(bool, false)
     })
     cpu    = optional(number, 0.5)
     memory = optional(string, "1Gi")
