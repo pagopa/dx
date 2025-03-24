@@ -1,4 +1,6 @@
 locals {
+  # Defines the naming prefix for APIM, dynamically handling cases where app_name 
+  # is not "apim" or a domain is specified, to avoid redundant naming logic.
   prefix = var.environment.app_name != "apim" ? module.naming_convention.prefix : var.environment.domain != null ? "${module.naming_convention.project}-${var.environment.domain}" : module.naming_convention.project
   apim = {
     name           = "${local.prefix}-apim-${module.naming_convention.suffix}"

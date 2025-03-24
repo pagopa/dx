@@ -19,8 +19,8 @@ This module deploys an Azure API Management instance with optional configuration
 |-------|----------------------------------------------------------|------|---------------------|-------------|------------------|---------------|
 | `s`   | Developer Tier, for development and testing.             | None | Limited             | No          | No               | Disabled      |
 | `m`   | Standard Tier, for production workloads.                 | Yes  | Moderate            | No          | No               | Enabled       |
-| `l`   | Premium Tier, for large-scale production workloads.      | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
-| `xl`  | Premium Tier, for very large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
+| `l`   | Premium Tier, designed for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2"]`     | Enabled       |
+| `xl`  | Premium Tier, optimized for large-scale production workloads requiring maximum scalability, resilience, and multi-zone redundancy. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
 
 ## Usage Example
 
