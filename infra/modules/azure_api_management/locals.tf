@@ -3,13 +3,13 @@ locals {
   apim = {
     name           = "${local.prefix}-apim-${module.naming_convention.suffix}"
     autoscale_name = contains(["l", "xl"], var.tier) ? "${local.prefix}-apim-as-${module.naming_convention.suffix}" : null
-    zones          = length(var.zones_override) > 0 ? var.zones_override : ["1", "2", "3"]
+    zones          = var.tier == "xl" ? ["1", "2", "3"] : var.tier == "l" ? ["1", "2"] : null
     sku_name = lookup(
       {
         "s"  = "Developer_1",
         "m"  = "Standard_1",
-        "l"  = "Premium_1",
-        "xl" = "Premium_2"
+        "l"  = "Premium_2",
+        "xl" = "Premium_3"
       },
       var.tier,
       "Premium_1" # Default

@@ -91,7 +91,6 @@ For a complete example of how to use this module, refer to the [example/complete
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_virtual_network_type_internal"></a> [virtual\_network\_type\_internal](#input\_virtual\_network\_type\_internal) | The type of virtual network you want to use, if true it will be Internal and you need to specify a subnet\_id, otherwise it will be None | `bool` | `true` | no |
 | <a name="input_xml_content"></a> [xml\_content](#input\_xml\_content) | Xml content for all api policy | `string` | `null` | no |
-| <a name="input_zones_override"></a> [zones\_override](#input\_zones\_override) | Override the default availability zones for the SKU. This is only available for the Premium SKU. | `list(string)` | `[]` | no |
 
 ## Outputs
 

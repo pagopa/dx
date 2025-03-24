@@ -78,3 +78,7 @@ output "vnet" {
     resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
 }
+
+output "tags" {
+  value = local.tags
+}

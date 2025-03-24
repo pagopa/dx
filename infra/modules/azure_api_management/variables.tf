@@ -41,17 +41,6 @@ variable "tier" {
   }
 }
 
-variable "zones_override" {
-  type        = list(string)
-  description = "Override the default availability zones for the SKU. This is only available for the Premium SKU."
-  default     = []
-
-  validation {
-    condition     = length(var.zones_override) == 0 || (length(var.zones_override) <= 3 && alltrue([for zone in var.zones_override : contains(["1", "2", "3"], zone)]))
-    error_message = "Allowed values for \"zones_override\" are [], [\"1\"], [\"1\", \"2\"], or [\"1\", \"2\", \"3\"]."
-  }
-}
-
 variable "autoscale" {
   type = object(
     {

@@ -35,5 +35,6 @@
 | <a name="output_pip_id"></a> [pip\_id](#output\_pip\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | n/a |
+| <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 | <a name="output_vnet"></a> [vnet](#output\_vnet) | n/a |
 <!-- END_TF_DOCS -->

@@ -33,16 +33,7 @@ run "apim_is_correct_plan" {
       instance_number = "01"
     }
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create APIM for test"
-    }
+    tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
@@ -76,6 +67,11 @@ run "apim_is_correct_plan" {
     condition     = length(azurerm_api_management_logger.this) > 0
     error_message = "The APIM logger does not exist"
   }
+
+  assert {
+    condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
+    error_message = "The APIM zones are incorrect, they should be ['1', '2']"
+  }
 }
 
 run "plan_with_invalid_parameters" {
@@ -91,16 +87,7 @@ run "plan_with_invalid_parameters" {
       instance_number = "01"
     }
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create APIM for test"
-    }
+    tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
@@ -143,20 +130,10 @@ run "apim_test_zones_public_ip" {
       instance_number = "01"
     }
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create APIM for test"
-    }
+    tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "xl"
-    zones_override     = ["1", "2"]
 
     publisher_email = "example@pagopa.it"
     publisher_name  = "Example Publisher"
@@ -185,8 +162,8 @@ run "apim_test_zones_public_ip" {
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
-    error_message = "The APIM zones are incorrect, they should be ['1', '2']"
+    condition     = length(azurerm_api_management.this.zones) == 3 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2") && contains(azurerm_api_management.this.zones, "3")
+    error_message = "The APIM zones are incorrect, they should be ['1', '2', '3']"
   }
 
   assert {
