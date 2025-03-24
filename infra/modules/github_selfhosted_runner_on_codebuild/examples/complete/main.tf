@@ -23,7 +23,7 @@ module "runner" {
   tier = "m"
   repository = {
     owner = "pagopa"
-    name  = "developer-portal"
+    name  = "dx"
   }
 
   vpc = {
