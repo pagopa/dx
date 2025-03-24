@@ -24,7 +24,6 @@ func (f *resourceNameFunction) Definition(ctx context.Context, req function.Defi
 		Summary:     "Return Azure dx resources naming convention",
 		Description: "Given a name, a resource name, an instance number and a resource type, returns the Azure dx resources naming convention.",
 
-		// L'ordine di inserimento è questo
 		Parameters: []function.Parameter{
 			function.MapParameter{
 				Name:        "configuration",
