@@ -59,8 +59,8 @@ run "apim_is_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_api_management.this.sku_name == "Premium_1"
-    error_message = "The APIM SKU is incorrect, have to be Premium_1"
+    condition     = azurerm_api_management.this.sku_name == "Premium_2"
+    error_message = "The APIM SKU is incorrect, have to be Premium_2"
   }
 
   assert {
@@ -157,8 +157,8 @@ run "apim_test_zones_public_ip" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_api_management.this.sku_name == "Premium_2"
-    error_message = "The APIM SKU is incorrect, have to be Premium_2"
+    condition     = azurerm_api_management.this.sku_name == "Premium_3"
+    error_message = "The APIM SKU is incorrect, have to be Premium_3"
   }
 
   assert {
