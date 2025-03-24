@@ -15,4 +15,6 @@ locals {
       "Premium_1" # Default
     )
   }
+
+  private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
 }

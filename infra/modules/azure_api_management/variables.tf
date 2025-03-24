@@ -122,6 +122,19 @@ variable "public_ip_address_id" {
   default     = null
 }
 
+variable "private_dns_zone_resource_group_name" {
+  type        = string
+  description = "(Optional) The resource group name of the private DNS zone. This is only required when resource group name is different from the VNet resource group."
+  default     = null
+}
+
+variable "create_network_security_group" {
+  type        = bool
+  description = "Create a network security group for the API Management"
+  default     = true
+
+}
+
 #---------------------------#
 # Policies & Configurations #
 #---------------------------#
