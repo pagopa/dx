@@ -32,8 +32,6 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
 
 # Define security group
 resource "azurerm_network_security_group" "nsg_apim" {
-  count = var.create_network_security_group ? 1 : 0
-
   name                = "${local.prefix}-apim-nsg-${module.naming_convention.suffix}"
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   location            = var.environment.location
@@ -54,8 +52,6 @@ resource "azurerm_network_security_group" "nsg_apim" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "snet_nsg" {
-  count = var.create_network_security_group ? 1 : 0
-
   subnet_id                 = var.subnet_id
-  network_security_group_id = azurerm_network_security_group.nsg_apim[0].id
+  network_security_group_id = azurerm_network_security_group.nsg_apim.id
 }

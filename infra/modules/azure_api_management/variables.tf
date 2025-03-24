@@ -117,13 +117,6 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
 }
 
-variable "create_network_security_group" {
-  type        = bool
-  description = "Create a network security group for the API Management"
-  default     = true
-
-}
-
 #---------------------------#
 # Policies & Configurations #
 #---------------------------#
