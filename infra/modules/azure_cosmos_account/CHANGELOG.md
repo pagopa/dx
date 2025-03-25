@@ -1,5 +1,11 @@
 # azure_cosmos_account
 
+## 0.0.8
+
+### Patch Changes
+
+- 6488609: Update Cosmos module README.md
+
 ## 0.0.7
 
 ### Patch Changes
