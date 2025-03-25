@@ -45,6 +45,7 @@ variable "autoscale" {
   type = object(
     {
       enabled                       = bool
+      legacy_name                   = optional(string, "")
       default_instances             = number
       minimum_instances             = number
       maximum_instances             = number
@@ -60,6 +61,7 @@ variable "autoscale" {
   )
   default = {
     enabled                       = true
+    legacy_name                   = ""
     default_instances             = 1
     minimum_instances             = 1
     maximum_instances             = 5
@@ -72,7 +74,7 @@ variable "autoscale" {
     scale_in_value                = "1"
     scale_in_cooldown             = "PT30M"
   }
-  description = "Configure Apim autoscale rule on capacity metric"
+  description = "Configure Apim autoscale rule on capacity metric. If 'legacy_name' is set, it will be used for autoscale; otherwise, a name will be automatically generated following the naming convention."
 }
 
 #------------#

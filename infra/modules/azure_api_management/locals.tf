@@ -3,7 +3,7 @@ locals {
   # is not "apim" or a domain is specified, to avoid redundant naming logic.
   prefix = var.environment.app_name != "apim" ? module.naming_convention.prefix : var.environment.domain != null ? "${module.naming_convention.project}-${var.environment.domain}" : module.naming_convention.project
   apim = {
-    name           = "${local.prefix}-apim-${module.naming_convention.suffix}"
+    name           = var.autoscale.legacy_name == "" ? "${local.prefix}-apim-${module.naming_convention.suffix}" : var.autoscale.legacy_name
     autoscale_name = contains(["l", "xl"], var.tier) ? "${local.prefix}-apim-as-${module.naming_convention.suffix}" : null
     zones          = var.tier == "xl" ? ["1", "2", "3"] : var.tier == "l" ? ["1", "2"] : null
     sku_name = lookup(
