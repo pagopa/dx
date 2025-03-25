@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.1.0
+
+### Minor Changes
+
+- c9f0d4b: Added zones_override and public_ip variables, added new Tier xl for Premium_2
+
 ## 1.0.2
 
 ### Patch Changes
