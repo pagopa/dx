@@ -1,5 +1,12 @@
 # azure_postgres_server
 
+## 1.0.2
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+- b8be01a: Update PostgreSQL module README
+
 ## 1.0.1
 
 ### Patch Changes
