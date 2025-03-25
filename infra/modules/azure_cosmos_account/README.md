@@ -4,47 +4,26 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 
 ## Features
 
-- Supports automatic failover
-- Configurable geo-replication
-- Uses customer-managed keys (CMK) if enabled
-- Supports zone redundancy for high availability
-- Implements Continuous 30-day backup policy
-- Enables serverless mode if applicable
+- **Automatic Failover**: Supports automatic failover to ensure high availability.
+- **Geo-Replication**: Configurable geo-replication for disaster recovery and performance optimization.
+- **Customer-Managed Keys (CMK)**: Uses customer-managed keys (CMK) for encryption if enabled.
+- **Zone Redundancy**: Supports zone redundancy for high availability in primary and secondary regions.
+- **Backup Policy**: Implements a Continuous 30-day backup policy for data protection.
+- **Serverless Mode**: Enables serverless mode for cost-efficient, on-demand scaling.
 
-## Examples
+## Tiers and Configurations
 
-```hcl
-module "cosmosdb" {
-  source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = "~> 0.0"
+| Tier  | Description                                                                                        | Serverless Mode |
+|-------|----------------------------------------------------------------------------------------------------|-----------------|
+| `s`   | Recommended for development or testing environments where cost efficiency and flexibility are key. | Enabled         |
+| `l`   | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled        |
 
-  environment                = var.environment
-  resource_group_name        = var.resource_group_name
+## Usage Example
 
-  force_public_network_access_enabled = false
+For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples), which includes:
 
-  primary_geo_location       = {
-    location       = "italynorth"
-    zone_redundant = true
-  }
-
-  secondary_geo_locations = [
-    {
-      location          = "westeurope"
-      failover_priority = 1
-      zone_redundant    = false
-    }
-  ]
-
-  tier = "s" # Set to "s" to enable serverless mode
-
-  alerts = {
-    enabled = false
-  }
-
-  tags = var.tags
-}
-```
+- A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/complete) demonstrating all features.
+- A [minimum example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/minimum) for basic configurations.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
