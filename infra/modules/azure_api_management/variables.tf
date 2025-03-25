@@ -32,12 +32,12 @@ variable "resource_group_name" {
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
+  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'."
   default     = "s"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
+    condition     = contains(["s", "m", "l", "xl"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\" or \"xl\"."
   }
 }
 
@@ -103,6 +103,18 @@ variable "enable_public_network_access" {
   type        = bool
   description = "Enable public network access"
   default     = false
+}
+
+variable "public_ip_address_id" {
+  type        = string
+  description = "(Optional) The id of the public ip address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
+  default     = null
+}
+
+variable "private_dns_zone_resource_group_name" {
+  type        = string
+  description = "(Optional) The resource group name of the private DNS zone. This is only required when resource group name is different from the VNet resource group."
+  default     = null
 }
 
 #---------------------------#

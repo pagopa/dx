@@ -3,7 +3,7 @@
 resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
   name                = azurerm_api_management.this.name
   zone_name           = data.azurerm_private_dns_zone.azure_api_net.name
-  resource_group_name = data.azurerm_virtual_network.this.resource_group_name
+  resource_group_name = local.private_dns_zone_resource_group_name
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
@@ -13,7 +13,7 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
 resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
   name                = azurerm_api_management.this.name
   zone_name           = data.azurerm_private_dns_zone.management_azure_api_net.name
-  resource_group_name = data.azurerm_virtual_network.this.resource_group_name
+  resource_group_name = local.private_dns_zone_resource_group_name
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
@@ -23,7 +23,7 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
 resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   name                = azurerm_api_management.this.name
   zone_name           = data.azurerm_private_dns_zone.scm_azure_api_net.name
-  resource_group_name = data.azurerm_virtual_network.this.resource_group_name
+  resource_group_name = local.private_dns_zone_resource_group_name
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
@@ -32,7 +32,7 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
 
 # Define security group
 resource "azurerm_network_security_group" "nsg_apim" {
-  name                = "${module.naming_convention.prefix}-apim-nsg-${module.naming_convention.suffix}"
+  name                = "${local.prefix}-apim-nsg-${module.naming_convention.suffix}"
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
   location            = var.environment.location
 
