@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.5
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 0.1.4
 
 ### Patch Changes

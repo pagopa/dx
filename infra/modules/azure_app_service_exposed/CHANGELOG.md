@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.11
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 0.0.10
 
 ### Patch Changes

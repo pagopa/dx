@@ -1,5 +1,15 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.4.0
+
+### Minor Changes
+
+- 21341a4: Add variables to control GitHub runner timeout and support to KeyVaults using RBAC
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
 ## 1.3.0
 
 ### Minor Changes
