@@ -59,13 +59,8 @@ variable "vpc" {
 
 variable "codeconnection_arn" {
   type        = string
-  description = "The ARN of the CodeConnection connection"
+  description = "The ARN of the CodeConnection connection. One of personal_access_token or codeconnection_arn must be set. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html)."
   default     = null
-
-  validation {
-    condition     = var.personal_access_token != null || var.codeconnection_arn != null
-    error_message = "Either personal_access_token or codeconnection_arn must be set."
-  }
 }
 
 variable "personal_access_token" {
@@ -73,7 +68,7 @@ variable "personal_access_token" {
     ssm_parameter_name = optional(string, null)
     value              = optional(string, null)
   })
-  description = "GitHub personal access token used to authenticate. If none provided, the GitHub App will be used. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html)."
+  description = "GitHub personal access token used to authenticate. One of personal_access_token or codeconnection_arn must be set."
   sensitive   = true
   default     = null
 
@@ -81,11 +76,6 @@ variable "personal_access_token" {
     condition = var.personal_access_token == null || !alltrue([(try(var.personal_access_token.ssm_parameter_name, null) != null), (try(var.personal_access_token.value, null) != null)])
 
     error_message = "If the variable is set, either ssm_parameter_name or value must be set. Not both."
-  }
-
-  validation {
-    condition     = var.personal_access_token != null || var.codeconnection_arn != null
-    error_message = "Either personal_access_token or codeconnection_arn must be set."
   }
 }
 
