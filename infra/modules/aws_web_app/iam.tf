@@ -66,21 +66,21 @@ data "aws_iam_policy_document" "logging" {
 }
 
 resource "aws_iam_policy" "secrets" {
-  name        = "${local.project}-${var.environment.app_name}-amplify-secrets-policy-${var.environment.instance_number}"
+  name        = "${local.app_prefix}-amplify-secrets-policy-${local.app_suffix}"
   description = "Allow amplify app ${aws_amplify_app.this.name} to read secrets"
   policy      = data.aws_iam_policy_document.secrets.json
   tags        = var.tags
 }
 
 resource "aws_iam_policy" "logging" {
-  name        = "${local.project}-${var.environment.app_name}-amplify-logging-policy-${var.environment.instance_number}"
+  name        = "${local.app_prefix}-amplify-logging-policy-${local.app_suffix}"
   description = "Allow amplify app ${aws_amplify_app.this.name} to push logs to cloudwatch"
   policy      = data.aws_iam_policy_document.logging.json
   tags        = var.tags
 }
 
 resource "aws_iam_role" "this" {
-  name               = "${local.project}-${var.environment.app_name}-amplify-role-${var.environment.instance_number}"
+  name               = "${local.app_prefix}-amplify-role-${local.app_suffix}"
   description        = "Role to assume in the application"
   assume_role_policy = data.aws_iam_policy_document.amplify.json
 }

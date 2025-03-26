@@ -1,5 +1,5 @@
 resource "aws_amplify_app" "this" {
-  name         = "${local.project}-${var.environment.domain}-${var.environment.app_name}-${var.environment.instance_number}"
+  name         = "${local.app_prefix}-amp-${local.app_suffix}"
   repository   = "https://github.com/${var.repository.organization}/${var.repository.name}"
   access_token = var.github_authorization_type == "PAT" ? var.github_pat : null
 
