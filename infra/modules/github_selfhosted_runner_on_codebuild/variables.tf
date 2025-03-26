@@ -5,6 +5,7 @@
 variable "tags" {
   type        = map(any)
   description = "Resources tags"
+  default     = {}
 }
 
 variable "environment" {
@@ -56,6 +57,17 @@ variable "vpc" {
   description = "The VPC used to deploy the resources"
 }
 
+variable "codeconnection_arn" {
+  type        = string
+  description = "The ARN of the CodeConnection connection"
+  default     = null
+
+  validation {
+    condition     = var.personal_access_token != null || var.codeconnection_arn != null
+    error_message = "Either personal_access_token or codeconnection_arn must be set."
+  }
+}
+
 variable "personal_access_token" {
   type = object({
     ssm_parameter_name = optional(string, null)
@@ -69,6 +81,11 @@ variable "personal_access_token" {
     condition = var.personal_access_token == null || !alltrue([(try(var.personal_access_token.ssm_parameter_name, null) != null), (try(var.personal_access_token.value, null) != null)])
 
     error_message = "If the variable is set, either ssm_parameter_name or value must be set. Not both."
+  }
+
+  validation {
+    condition     = var.personal_access_token != null || var.codeconnection_arn != null
+    error_message = "Either personal_access_token or codeconnection_arn must be set."
   }
 }
 
