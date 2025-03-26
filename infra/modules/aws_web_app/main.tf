@@ -52,8 +52,8 @@ resource "aws_amplify_branch" "this" {
   tags                = var.tags
 }
 
-resource "aws_ssm_parameter" "secret" {
-  for_each = { for secret in var.secrets : secret.name => secret }
+resource "aws_ssm_parameter" "managed_secret" {
+  for_each = { for secret in var.secrets : secret.name => secret if secret.value != null }
 
   name        = format("/amplify/%s/%s/%s", aws_amplify_app.this.id, aws_amplify_branch.this.branch_name, each.value.name)
   description = "AWS Amplify secret app: ${aws_amplify_app.this.name} branch: ${aws_amplify_branch.this.branch_name}"
@@ -61,6 +61,23 @@ resource "aws_ssm_parameter" "secret" {
   tier        = "Standard"
   value       = each.value.value
   data_type   = "text"
+
+  tags = var.tags
+}
+
+resource "aws_ssm_parameter" "console_managed_secret" {
+  for_each = { for secret in var.secrets : secret.name => secret if secret.value == null }
+
+  name        = format("/amplify/%s/%s/%s", aws_amplify_app.this.id, aws_amplify_branch.this.branch_name, each.value.name)
+  description = "AWS Amplify secret app: ${aws_amplify_app.this.name} branch: ${aws_amplify_branch.this.branch_name}"
+  type        = "SecureString"
+  tier        = "Standard"
+  value       = "Fill the value in the AWS console"
+  data_type   = "text"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 
   tags = var.tags
 }

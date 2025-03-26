@@ -65,7 +65,7 @@ variable "environment_variables" {
 variable "secrets" {
   type = list(object({
     name  = string
-    value = optional(string, "Fill the value in the AWS console")
+    value = optional(string, null)
   }))
   default     = []
   description = "Secrets for the application. The value is optional to allow setting it manually via AWS console."
