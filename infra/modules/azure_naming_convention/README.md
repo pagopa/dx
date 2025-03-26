@@ -1,4 +1,37 @@
-# DX - Common Variables Validation
+# DX - Azure Naming Convention
+
+This Terraform module provides a standardized naming convention for Azure resources. It ensures consistency and compliance with organizational naming standards.
+
+## Features
+
+- **Location Mapping**: Converts Azure region names (e.g., `italynorth`) into short codes (e.g., `itn`).
+- **Flexible Domain Handling**: Supports optional domain names for resources shared across multiple domains.
+- **Validation Rules**: Enforces strict validation for input variables to ensure naming consistency.
+
+## Usage Example
+
+Below is an example of how to use this module to generate standardized names for Azure resources:
+
+```hcl
+module "naming_convention" {
+  source = "./modules/azure_naming_convention"
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    domain          = "web"
+    app_name        = "app"
+    instance_number = "01"
+  }
+}
+
+output "resource_name" {
+  value = "${module.naming_convention.prefix}-example-${module.naming_convention.suffix}"
+}
+```
+
+This configuration will generate a resource name like `dx-d-itn-web-app-example-01`.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
