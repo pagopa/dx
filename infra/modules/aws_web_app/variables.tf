@@ -80,7 +80,6 @@ variable "is_ssr" {
 variable "custom_domain" {
   type = object({
     zone_name   = string
-    zone_id     = string
     sub_domains = optional(list(string), [])
   })
 

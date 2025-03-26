@@ -24,7 +24,6 @@ module "web_app" {
 
   # custom_domain = {
   #   zone_name   = "dx.pagopa.it"
-  #   zone_id     = "Z0*******************P"
   #   sub_domains = [""]
   # }
 
