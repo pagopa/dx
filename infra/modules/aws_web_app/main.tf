@@ -33,8 +33,12 @@ resource "aws_amplify_app" "this" {
     }
   }
 
-  cache_config {
-    type = "AMPLIFY_MANAGED"
+  dynamic "cache_config" {
+    for_each = var.is_ssr ? toset([]) : toset(["enabled"])
+
+    content {
+      type = "AMPLIFY_MANAGED"
+    }
   }
 
   tags = var.tags
