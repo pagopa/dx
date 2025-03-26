@@ -5,7 +5,13 @@ sidebar_label: Deploy Pipelines - Legacy
 
 # Deploy Pipelines - Legacy
 
-The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications for projects that still rely on a legacy architecture. This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications for projects that still rely on a legacy architecture.
+
+:::note
+
+This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+
+:::
 
 ## How It Works
 

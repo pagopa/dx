@@ -5,7 +5,13 @@ sidebar_label: Publish SDK - Legacy
 
 # Publish SDK - Legacy
 
-The [Publish SDK - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_publish_sdk.yaml) is used to generate and publish SDKs for projects that still rely on a legacy architecture. This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+The [Publish SDK - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_publish_sdk.yaml) is used to generate and publish SDKs for projects that still rely on a legacy architecture.
+
+:::note
+
+This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+
+:::
 
 ## How It Works
 
