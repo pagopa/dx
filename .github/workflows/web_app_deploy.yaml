@@ -71,6 +71,9 @@ jobs:
         run: |
           set -e
 
+          # generate node_modules folder excluding devDependencies
+          yarn workspaces focus --production
+
           if [ -e "next.config.js" ] && grep -q 'output: "standalone"' "next.config.js"; then
             echo "::debug:: the workspace contains a Next.js standalone app"
             mv .next/static .next/standalone/apps/${{ inputs.workspace_name }}/.next/
@@ -87,9 +90,6 @@ jobs:
             echo "::error::invalid target"
             exit 1
           fi
-
-          # generate node_modules folder excluding devDependencies
-          yarn workspaces focus --production
 
           FORMAT=$(jq -r 'if .type == "module" then "esm" else "cjs" end' package.json)
           SHORT_SHA=$(git rev-parse --short ${{ github.sha }})
