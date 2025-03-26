@@ -1,0 +1,62 @@
+---
+sidebar_position: 1
+sidebar_label: Deploy Pipelines - Legacy
+---
+
+# Deploy Pipelines - Legacy
+
+The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications for projects that still rely on a legacy architecture. This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+
+## How It Works
+
+The workflow performs the following steps:
+
+1. Checks out the code from the repository.
+2. Set up `Node.js`, installs dependencies and builds the project.
+3. Packages the application into a zip file.
+4. Uploads the zip file as an artifact.
+5. Deploys the artifact to an Azure Web App, optionally using a staging slot.
+
+## Usage
+
+To use the Deploy Pipelines workflow, you can invoke it as a reusable workflow in your repository. Below is an example configuration:
+
+```yaml
+name: Deploy Pipelines
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy_pipelines:
+    uses: pagopa/dx/.github/workflows/legacy_deploy_pipelines.yaml@main
+    name: Deploy on PROD
+    secrets: inherit
+    with:
+      environment: "prod"
+      resource_group_name: "my-resource-group"
+      app_name: "my-app"
+      health_check_path: "/health"
+      use_staging_slot: true
+      use_private_agent: false
+```
+
+### Configuration Variables
+
+- **environment**: Specifies the deployment environment (e.g., `dev`, `uat`, `prod`).
+- **resource_group_name**: Name of the Azure resource group.
+- **app_name**: Name of the Azure Web App.
+- **health_check_path**: Path for the health check endpoint. Default is `/info`.
+- **use_staging_slot**: Whether to deploy to a staging slot. Default is `true`.
+- **use_private_agent**: Whether to use a private agent for deployment. Default is `true`.
+
+### Notes
+
+- The workflow supports slot swapping for zero-downtime deployments.
+- Ensure that the necessary Azure credentials are configured as secrets in your repository.
+
+::warning
+
+Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and `ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication.
+
+::
