@@ -24,6 +24,19 @@ The workflow performs the following steps:
 5. Generates API definitions.
 6. Executes unit tests and uploads coverage reports to Codecov.
 
+:::info
+
+Ensure that `yarn` is properly configured in your project with the necessary scripts for linting, testing, and generating API definitions. For example, your `package.json` should include scripts like:
+
+- `lint`: To run code linting.
+- `lint-api`: To validate API specifications.
+- `generate`: To generate API models or definitions.
+- `test:coverage`: To execute tests and generate coverage reports.
+
+These scripts are required for the workflow to function as expected.
+
+:::
+
 ## Usage
 
 To use the Code Review workflow, you can invoke it as a reusable workflow in your repository. Below is an example configuration:

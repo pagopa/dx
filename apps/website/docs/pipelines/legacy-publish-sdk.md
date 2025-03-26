@@ -23,6 +23,18 @@ The workflow performs the following steps:
 4. Uploads the generated SDK as an artifact.
 5. Optionally deploys the artifact to a private or public npm registry.
 
+:::info
+
+Ensure that `yarn` is properly configured in your project with the necessary scripts for building and generating SDKs. For example, your `package.json` should include scripts like:
+
+- `generate`: To generate API models or SDK definitions.
+- `build`: To compile the project.
+- `prebuild` or `predeploy`: To clean and prepare the environment before building.
+
+These scripts are essential for the workflow to function correctly.
+
+:::
+
 ## Usage
 
 To use the Publish SDK workflow, you can invoke it as a reusable workflow in your repository. Below is an example configuration:

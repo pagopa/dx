@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-sidebar_label: Deploy Pipelines - Legacy
+sidebar_label: Deploy Azure Web App - Legacy
 ---
 
-# Deploy Pipelines - Legacy
+# Deploy Azure Web App - Legacy
 
-The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications for projects that still rely on a legacy architecture.
+The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications to **Azure Web App**, which is part of the Azure App Service platform.
 
 :::note
 
@@ -22,6 +22,17 @@ The workflow performs the following steps:
 3. Packages the application into a zip file.
 4. Uploads the zip file as an artifact.
 5. Deploys the artifact to an Azure Web App, optionally using a staging slot.
+
+:::info
+
+Ensure that `yarn` is properly configured in your project with the necessary scripts for building and deploying the application. For example, your `package.json` should include scripts like:
+
+- `build`: To compile the project.
+- `predeploy`: To prepare the application for deployment, such as cleaning and generating necessary files.
+
+These scripts are critical for the workflow to execute successfully.
+
+:::
 
 ## Usage
 
