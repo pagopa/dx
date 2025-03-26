@@ -86,5 +86,5 @@ resource "aws_codebuild_webhook" "github_webhook" {
     }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.github_connection, aws_codebuild_source_credential.string, aws_codebuild_source_credential.ssm]
+  depends_on = [aws_iam_role_policy_attachment.github_connection, aws_codebuild_source_credential.string, aws_codebuild_source_credential.ssm, aws_codebuild_source_credential.codeconnection]
 }
