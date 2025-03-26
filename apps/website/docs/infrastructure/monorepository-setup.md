@@ -25,8 +25,8 @@ Ensure appropriate access control for your repository:
 
 - Grant access to your peers who need it.
 - Always provide `Admin` access to:
-  - Cloud engineers (`engineering-team-cloud-eng`) to get support of DX tooling
-    in future.
+  - Cloud engineers (`engineering-team-cloud-eng`) to get future support of DX
+    tooling.
   - The BOT user associated with your product.
 
 ### CODEOWNERS Definition
@@ -34,16 +34,17 @@ Ensure appropriate access control for your repository:
 Define a `CODEOWNERS` file to manage repository ownership. A common setup is:
 
 - Your team has control over the entire repository (`*`).
-- Cloud engineers have control over the `infra` and `.github` paths.
+- Both your team and cloud engineers have control over the `infra` and `.github`
+  paths.
 
 Example `CODEOWNERS` file:
 
 ```md
 # See https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
 
-* <your-team>
-/infra/ <your-team> @engineering-team-cloud-eng
-.github/ <your-team> @engineering-team-cloud-eng
+- <your-team>
+  /infra/ <your-team> @engineering-team-cloud-eng
+  .github/ <your-team> @engineering-team-cloud-eng
 ```
 
 ### Creation of Dotfiles
@@ -63,19 +64,41 @@ Create the following dotfiles at the root of your repository:
 - `.trivyignore`: Define rules for Trivy vulnerability scanning
   ([example](https://github.com/pagopa/dx/blob/main/.trivyignore)).
 
-### Creation of GitHub PAT
+### GitHub PAT
+
+To apply changes to your repository via Terraform, you need a Personal Access
+Token (PAT) as authentication mechanism. You need a single PAT for all
+repositories you manage via Terraform. Then, skip the next paragraph if you
+already a have a PAT in your account with the permissions listed below.
+
+#### Creation of GitHub PAT
 
 If you do not already have a Personal Access Token (PAT), follow these steps:
 
-1. Go to your GitHub settings.
-2. Under `Developer settings`, create a new fine-grained PAT with the following
-   permissions:
-   - `read`: `metadata`
-   - `read+write`: `variables`, `administration`, `environments`, `secrets`
+1. Go to your GitHub settings, under `Developer settings`, create a new
+   fine-grained PAT:
+
+- Add the the following permissions:
+- `read`: `metadata`
+- `read+write`: `variables`, `administration`, `environments`, `secrets`
+- Select `Only select repositories` and add the new repository
+- Add a meaningful description like "PAT to manage GitHub locally via Terraform"
+
+2. Set the variable `GITHUB_TOKEN` with the generated PAT value to your CLI
+   profile.
+
+#### Update of GitHub PAT
+
+If you already have the PAT in both your GitHub account and your CLI profile, be
+sure that the new repository is accessible from that PAT.
+
+1. Go to your GitHub settings, under `Developer settings`, select the existing
+   fine-grained PAT:
+2. Under `Only select repository`, select your new repository
 
 :::warning
 
-Ensure the PAT has access to your repository.
+PATs have an expiration date. Be sure to periodically renew it.
 
 :::
 
