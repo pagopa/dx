@@ -68,6 +68,13 @@ resource "aws_codebuild_source_credential" "ssm" {
   token       = data.aws_ssm_parameter.personal_access_token[0].value
 }
 
+resource "aws_codebuild_source_credential" "codeconnection" {
+  count       = (!local.has_github_personal_access_token_ssm_parameter && !local.has_github_personal_access_token) ? 1 : 0
+  auth_type   = "CODECONNECTIONS"
+  server_type = "GITHUB"
+  token       = var.codeconnection_arn
+}
+
 resource "aws_codebuild_webhook" "github_webhook" {
   project_name = aws_codebuild_project.github_runner.name
   build_type   = "BUILD"
