@@ -1,8 +1,8 @@
 ---
-sidebar_label: Creating a brand-new Mono-Repository on GitHub using DX tools
+sidebar_label: Creating a Brand-New Mono-Repository on GitHub Using DX Tools
 ---
 
-# Creating a brand-new Mono-Repository on GitHub using DX tools
+# Creating a Brand-New Mono-Repository on GitHub Using DX Tools
 
 This guide provides step-by-step instructions for creating and setting up a new
 mono-repository on GitHub using DX tools.
@@ -25,8 +25,8 @@ Ensure appropriate access control for your repository:
 
 - Grant access to your peers who need it.
 - Always provide `Admin` access to:
-  - Cloud engineers (`engineering-team-cloud-eng`) to get future support of DX
-    tooling.
+  - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
+    DX tooling.
   - The BOT user associated with your product.
 
 ### CODEOWNERS Definition
@@ -67,38 +67,39 @@ Create the following dotfiles at the root of your repository:
 ### GitHub PAT
 
 To apply changes to your repository via Terraform, you need a Personal Access
-Token (PAT) as authentication mechanism. You need a single PAT for all
-repositories you manage via Terraform. Then, skip the next paragraph if you
-already a have a PAT in your account with the permissions listed below.
+Token (PAT) as an authentication mechanism. You need a single PAT for all
+repositories you manage via Terraform. Skip the next paragraph if you already
+have a PAT in your account with the permissions listed below.
 
 #### Creation of GitHub PAT
 
 If you do not already have a Personal Access Token (PAT), follow these steps:
 
-1. Go to your GitHub settings, under `Developer settings`, create a new
+1. Go to your GitHub settings, under `Developer settings`, and create a new
    fine-grained PAT:
 
-- Add the the following permissions:
-- `read`: `metadata`
-- `read+write`: `variables`, `administration`, `environments`, `secrets`
-- Select `Only select repositories` and add the new repository
-- Add a meaningful description like "PAT to manage GitHub locally via Terraform"
+- Add the following permissions:
+  - `read`: `metadata`
+  - `read+write`: `variables`, `administration`, `environments`, `secrets`
+- Select `Only select repositories` and add the new repository.
+- Add a meaningful description like "PAT to manage GitHub locally via
+  Terraform."
 
-2. Set the variable `GITHUB_TOKEN` with the generated PAT value to your CLI
+2. Set the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
    profile.
 
 #### Update of GitHub PAT
 
-If you already have the PAT in both your GitHub account and your CLI profile, be
-sure that the new repository is accessible from that PAT.
+If you already have the PAT in both your GitHub account and your CLI profile,
+ensure that the new repository is accessible from that PAT.
 
-1. Go to your GitHub settings, under `Developer settings`, select the existing
-   fine-grained PAT:
-2. Under `Only select repository`, select your new repository
+1. Go to your GitHub settings, under `Developer settings`, and select the
+   existing fine-grained PAT.
+2. Under `Only select repositories`, add your new repository.
 
 :::warning
 
-PATs have an expiration date. Be sure to periodically renew it.
+PATs have an expiration date. Be sure to renew them periodically.
 
 :::
 
