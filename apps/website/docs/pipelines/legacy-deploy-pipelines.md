@@ -55,8 +55,8 @@ jobs:
 - The workflow supports slot swapping for zero-downtime deployments.
 - Ensure that the necessary Azure credentials are configured as secrets in your repository.
 
-::warning
+:::warning
 
 Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and `ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication.
 
-::
+:::

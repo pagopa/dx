@@ -53,8 +53,8 @@ jobs:
 - Ensure that the `CODEGEN_VERSION` is correctly resolved in your project to avoid issues with the generator package.
 - The workflow supports both public and private npm registries for publishing.
 
-::warning
+:::warning
 
 Make sure to configure the necessary secrets (e.g., `NPM_TOKEN`) in your repository for secure authentication.
 
-::
+:::

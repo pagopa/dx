@@ -12,7 +12,7 @@ The [Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.gith
 The workflow performs the following steps:
 
 1. Checks out the code from the repository.
-2. Sets up Node.js and enables Corepack for managing package managers.
+2. Sets up `Node.js` and enables `Corepack` for managing package managers.
 3. Installs dependencies and builds the project.
 4. Runs linting and API linting checks.
 5. Generates API definitions.
@@ -40,8 +40,8 @@ jobs:
 - Ensure that your project includes scripts for linting, testing, and generating API definitions.
 - To enable Codecov integration, set the `CODECOV_TOKEN` secret in your repository.
 
-::warning
+:::warning
 
 Make sure to configure the necessary secrets and permissions for this workflow to function correctly.
 
-::
+:::
