@@ -5,7 +5,7 @@ sidebar_label: Publish SDK - Legacy
 
 # Publish SDK - Legacy
 
-The [Publish SDK - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_publish_sdk.yaml) is used to generate and publish SDKs for projects that still rely on a legacy architecture.
+The [Publish SDK - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_publish_sdk.yaml) is used to generate and publish SDKs for **Node.js** projects.
 
 :::note
 

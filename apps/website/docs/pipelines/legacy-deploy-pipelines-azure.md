@@ -5,7 +5,7 @@ sidebar_label: Deploy Azure Web App - Legacy
 
 # Deploy Azure Web App - Legacy
 
-The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy applications to **Azure Web App**, which is part of the Azure App Service platform.
+The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy **Node.js** applications to **Azure Web App**, which is part of the Azure App Service platform.
 
 :::note
 

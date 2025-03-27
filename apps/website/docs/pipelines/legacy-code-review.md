@@ -5,7 +5,7 @@ sidebar_label: Code Review - Legacy
 
 # Code Review - Legacy
 
-The [Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_code_review.yaml) is used to perform code quality checks for projects that still rely on a legacy architecture.
+The [Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_code_review.yaml) is used to perform code quality checks for **Node.js** projects.
 
 :::note
 
