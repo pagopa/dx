@@ -46,11 +46,14 @@ run "rbac_role_assignment_is_correct" {
       },
       {
         id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
+        name = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
         role                = "writer"
         description         = "This is a writer"
       },
       {
-        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
+        name = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
         role                = "reader"
         description         = "This is a reader"
       }
@@ -58,7 +61,8 @@ run "rbac_role_assignment_is_correct" {
 
     storage_table = [
       {
-        storage_account_id  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Storage/storageAccounts/dxditnplaygrounddfstfd01"
+        storage_account_name  = "dxditnplaygrounddfstfd01"
+        resource_group_name = "dx-d-itn-test-rg-01"
         role                = "reader"
         description         = "This is a reader"
       }
