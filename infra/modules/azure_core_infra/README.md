@@ -1,39 +1,23 @@
-# Core Infrastructure module
+# DX - Azure Core Infrastructure
 
-The module provisions all the resources required for the initial configuration of a subscription.
+This Terraform module provisions the core infrastructure required for the initial configuration of an Azure subscription.
 
-The module, named `azure_core_infra`, includes the following:
+## Features
 
-- A virtual network (`VNet`) with subnets for private endpoints.
-- A VPN, if specified.
-- Resource groups for the VNet, common resources, and testing.
-- A common Key Vault with a private endpoint.
-- Private DNS zones for all resource types.
+- **Virtual Network (VNet)**: Creates a virtual network with subnets for private endpoints.
+- **VPN Support**: Optionally provisions a VPN with configurable settings.
+- **Resource Groups**: Creates resource groups for the VNet, common resources, and testing environments.
+- **Key Vault**: Deploys a common Key Vault with a private endpoint for secure storage.
+- **Private DNS Zones**: Configures private DNS zones for all resource types.
+- **Log Analytics Workspace**: Creates a Log Analytics Workspace for monitoring and diagnostics.
+- **GitHub Runner**: Provisions a GitHub Runner for CI/CD workflows.
 
-## Examples
+## Usage Example
 
-```hcl
-module "core" {
-  source = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 1.0"
+For detailed usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example), which includes:
 
-  test_enabled = true # set to false if you want to create all resources
-
-  environment  = local.environment
-
-  virtual_network_cidr = "10.50.0.0/16"
-  pep_subnet_cidr      = "10.50.2.0/23"
-
-  vpn = {
-    cidr_subnet              = "10.50.133.0/24"
-    dnsforwarder_cidr_subnet = "10.50.252.8/29"
-  }
-
-  tags = local.tags
-}
-```
-
-For more specific examples check out the `./example` folder. There you'll find a "complete" example that creates the core infrastructure and a "develop" example that, in addition to creating the basic infrastructure, will configure additional resources useful to bootstrap a development environment on Azure.
+- A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example/complete) that demonstrates all features and provisions the core infrastructure.
+- A [develop example](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example/develop) that extends the basic infrastructure with additional resources to bootstrap a development environment on Azure.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

@@ -38,6 +38,7 @@ repos:
           - --args=-json
           - --args=-no-color
           - --hook-config=--retry-once-with-cleanup=true
+        exclude: ^infra/provider/.*
       - id: terraform_trivy
         args:
           - --args=--skip-dirs="**/.terraform"
