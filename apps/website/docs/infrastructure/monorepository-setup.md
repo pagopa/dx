@@ -67,9 +67,14 @@ Create the following dotfiles at the root of your repository:
 ### GitHub PAT
 
 To apply changes to your repository via Terraform, you need a Personal Access
-Token (PAT) as an authentication mechanism. You need a single PAT for all
-repositories you manage via Terraform. Skip the next paragraph if you already
-have a PAT in your account with the permissions listed below.
+Token (PAT) for authentication. A single PAT with the following permissions is
+required for all repositories managed through Terraform:
+
+- `read`: `metadata`
+- `read+write`: `variables`, `administration`, `environments`, `secrets`
+
+If you already have a PAT configured with these permissions, you may skip the
+next section.
 
 #### Creation of GitHub PAT
 
@@ -77,14 +82,12 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
 
 1. Go to your GitHub settings, under `Developer settings`, and create a new
    fine-grained PAT:
-
-- Add the following permissions:
-  - `read`: `metadata`
-  - `read+write`: `variables`, `administration`, `environments`, `secrets`
-- Select `Only select repositories` and add the new repository.
-- Add a meaningful description like "PAT to manage GitHub locally via
-  Terraform."
-
+   - Add these permissions:
+     - `read`: `metadata`
+     - `read+write`: `variables`, `administration`, `environments`, `secrets`
+   - Select `Only select repositories` and add the new repository.
+   - Add a meaningful description like "PAT to manage GitHub locally via
+     Terraform."
 2. Set the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
    profile.
 
