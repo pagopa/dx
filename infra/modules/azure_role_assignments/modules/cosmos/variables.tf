@@ -6,7 +6,8 @@ variable "principal_id" {
 variable "cosmos" {
   description = "A list of CosmosDB role assignments"
   type = list(object({
-    account_id  = string
+    account_name  = string
+    resource_group_name = string
     role        = string
     description = string
     database    = optional(string, "*")

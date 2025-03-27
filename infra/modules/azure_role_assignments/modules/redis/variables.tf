@@ -6,7 +6,8 @@ variable "principal_id" {
 variable "redis" {
   description = "A list of Redis role assignments"
   type = list(object({
-    cache_id    = string
+    cache_name    = string
+    resource_group_name = string
     role        = string
     username    = string
     description = string

@@ -2,8 +2,9 @@ locals {
   norm_vaults = [
     for vault in var.key_vault :
     merge(vault, {
-      name                = provider::azurerm::parse_resource_id(vault.id)["resource_name"]
-      resource_group_name = provider::azurerm::parse_resource_id(vault.id)["resource_group_name"]
+      name                = vault.name
+      id = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${vault.name}"
+      resource_group_name = vault.resource_group_name
     })
   ]
 

@@ -6,7 +6,8 @@ variable "principal_id" {
 variable "event_hub" {
   description = "A list of event hub role assignments"
   type = list(object({
-    namespace_id    = string
+    namespace_name    = string
+    resource_group_name = string
     event_hub_names = optional(list(string), ["*"])
     role            = string
     description     = string

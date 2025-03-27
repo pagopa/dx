@@ -6,9 +6,9 @@ locals {
   }
 
   norm_caches = [for cache in var.redis : {
-    cache_name          = provider::azurerm::parse_resource_id(cache.cache_id)["resource_name"]
-    cache_id            = cache.cache_id
-    resource_group_name = provider::azurerm::parse_resource_id(cache.cache_id)["resource_group_name"]
+    cache_name          = cache.cache_name
+    cache_id            = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${cache.resource_group_name}/providers/Microsoft.Cache/Redis/${cache.cache_name}"
+    resource_group_name = cache.resource_group_name
     role                = cache.role
     username            = cache.username
   }]
