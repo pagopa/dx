@@ -47,19 +47,6 @@ jobs:
           working_directory: "."
 ```
 
-### Configuration Variables
-
-- **storage_account_name**: The name of the Azure Storage account where the assets will be uploaded. This account must have the necessary permissions to allow blob synchronization.
-- **blob_container_name**: The name of the Blob Storage container within the Azure Storage account. This container will store the synchronized assets.
-- **resource_group_name**: The name of the Azure resource group containing the CDN.
-- **profile_name**: The name of the CDN profile associated with the endpoint.
-- **endpoint_name**: The name of the CDN endpoint where the assets will be served..
-- **selective_purge_paths**: (Optional) A list of relative paths to purge specific files. Leave empty to purge all files.  
-  _Example_: `./path/file1 ./path/file2` or `./path/dir/*` for recursive purging.  
-  The format should follow the parameters as described in the [official documentation](https://learn.microsoft.com/en-us/cli/azure/cdn/endpoint?view=azure-cli-latest#az-cdn-endpoint-purge-required-parameters).
-- **sync_dir_name**: (Optional) The directory containing the files to sync. Default is `dist`.
-- **working_directory**: (Optional) The base directory containing the `sync_dir_name`. Default is `.`.
-
 ### Adapting This Workflow
 
 When implementing this action in your repository:

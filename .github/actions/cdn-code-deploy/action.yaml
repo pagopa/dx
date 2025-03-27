@@ -6,23 +6,23 @@ description: Assets deployment to CDN
 
 inputs:
   storage_account_name:
-    description: Storage account name.
+    description: Azure Storage account name where the assets will be uploaded.
     type: string
     required: true
   blob_container_name:
-    description: Blob container name.
+    description: Blob container name within the Azure Storage account.
     type: string
     required: true
   resource_group_name:
-    description: CDN resource group name.
+    description: Azure resource group containing the CDN.
     type: string
     required: true
   profile_name:
-    description: CDN Profile name.
+    description: CDN Profile name associated with the endpoint.
     type: string
     required: true
   endpoint_name:
-    description: CDN endpoint name.
+    description: CDN endpoint name where the assets will be served.
     type: string
     required: true
   selective_purge_paths:
