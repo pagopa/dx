@@ -5,6 +5,7 @@
     "packages/**",
     "apps/**",
     "infra/modules/*",
+    "infra/provider",
     "infra/scripts"
   ],
   "devDependencies": {

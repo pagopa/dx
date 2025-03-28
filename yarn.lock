@@ -14403,6 +14403,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"provider-azure@workspace:infra/provider":
+  version: 0.0.0-use.local
+  resolution: "provider-azure@workspace:infra/provider"
+  languageName: unknown
+  linkType: soft
+
 "proxy-addr@npm:~2.0.7":
   version: 2.0.7
   resolution: "proxy-addr@npm:2.0.7"
