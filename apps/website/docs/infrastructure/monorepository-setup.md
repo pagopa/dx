@@ -23,7 +23,7 @@ the configuration.
 
 Ensure appropriate access control for your repository:
 
-- Grant access to your peers who need it.
+- [Grant access](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github) to your peers who need it.
 - Always provide `Admin` access to:
   - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
     DX tooling.
@@ -88,7 +88,7 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
    - Select `Only select repositories` and add the new repository.
    - Add a meaningful description like "PAT to manage GitHub locally via
      Terraform."
-2. Set, in your local environment, the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
+2. Set in your local environment the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
    profile.
 
 #### Update of GitHub PAT
@@ -102,7 +102,7 @@ ensure that the new repository is accessible from that PAT.
 
 :::warning
 
-PATs have an expiration date. [Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat).
+PATs have an expiration date. [Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat ).
 
 :::
 
