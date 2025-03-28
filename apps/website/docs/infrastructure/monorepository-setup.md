@@ -88,7 +88,7 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
    - Select `Only select repositories` and add the new repository.
    - Add a meaningful description like "PAT to manage GitHub locally via
      Terraform."
-2. Set the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
+2. Set, in your local environment, the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
    profile.
 
 #### Update of GitHub PAT
