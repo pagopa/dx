@@ -102,7 +102,7 @@ ensure that the new repository is accessible from that PAT.
 
 :::warning
 
-PATs have an expiration date. Be sure to renew them periodically.
+PATs have an expiration date. [Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat).
 
 :::
 
