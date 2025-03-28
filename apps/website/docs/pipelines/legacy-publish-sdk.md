@@ -25,7 +25,7 @@ The workflow performs the following steps:
 
 :::info
 
-Ensure that `yarn` is properly configured in your project with the necessary scripts for building and generating SDKs. For example, your `package.json` should include scripts like:
+Ensure that `yarn` is properly configured in your project with the necessary scripts for building and generating SDKs. The `package.json` file must define the following npm tasks:
 
 - `generate`: To generate API models or SDK definitions.
 - `build`: To compile the project.

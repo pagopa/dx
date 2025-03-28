@@ -25,7 +25,7 @@ The workflow performs the following steps:
 
 :::info
 
-Ensure that `yarn` is properly configured in your project with the necessary scripts for building and deploying the application. For example, your `package.json` should include scripts like:
+Ensure that `yarn` is properly configured in your project with the necessary scripts for building and deploying the application. The `package.json` file must define the following npm tasks:
 
 - `build`: To compile the project.
 - `predeploy`: To prepare the application for deployment, such as cleaning and generating necessary files.

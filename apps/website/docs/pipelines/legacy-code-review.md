@@ -26,7 +26,7 @@ The workflow performs the following steps:
 
 :::info
 
-Ensure that `yarn` is properly configured in your project with the necessary scripts for linting, testing, and generating API definitions. For example, your `package.json` should include scripts like:
+Ensure that `yarn` is properly configured in your project with the necessary scripts for linting, testing, and generating API definitions. The `package.json` file must define the following npm tasks:
 
 - `lint`: To run code linting.
 - `lint-api`: To validate API specifications.
@@ -39,7 +39,7 @@ These scripts are required for the workflow to function as expected.
 
 ## Usage
 
-To use the Code Review workflow, you can invoke it as a reusable workflow in your repository. Below is an example configuration:
+To use the Code Review workflow, invoke it as a reusable workflow in your repository. Below is an example configuration:
 
 ```yaml
 name: Code Review
