@@ -1,5 +1,11 @@
 ---
-sidebar_label: Benchmark for Typescript Code Generators from OpenAPI
+title: "Benchmark for Typescript Code Generators from OpenAPI"
+description: Generating TypeScript Code from OpenAPI Specification
+slug: typescript-openapi-generators-0.1-alpha
+hide_table_of_contents: false
+date: 2024-09-24T17:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
 ---
 
 # Benchmark for Typescript Code Generators from OpenAPI
@@ -23,48 +29,44 @@ tool (make) or adopt an existing tool.
 
 ### Main Requirements
 
-1. **Runtime Payload Control**  
-   The generators must provide runtime controls on the payloads to ensure data
-   integrity and adherence to defined schemas. We believe runtime control is
-   necessary to guarantee that the Typescript type matches the actual structure
-   of the payload. Without this, there's a higher chance of runtime errors due
-   to discrepancies in the data format.
+1. **Runtime Payload Control** The generators must provide runtime controls on
+   the payloads to ensure data integrity and adherence to defined schemas. We
+   believe runtime control is necessary to guarantee that the Typescript type
+   matches the actual structure of the payload. Without this, there's a higher
+   chance of runtime errors due to discrepancies in the data format.
 
-2. **Generation of Isomorphic Types**  
-   The ability to generate types usable both on the client and server sides
-   (e.g., in Express route handlers).
+2. **Generation of Isomorphic Types** The ability to generate types usable both
+   on the client and server sides (e.g., in Express route handlers).
 
-3. **Support for String Patterns (Regex)**  
-   Generators must support string patterns using regular expressions to enforce
-   constraints on string values.
+3. **Support for String Patterns (Regex)** Generators must support string
+   patterns using regular expressions to enforce constraints on string values.
 
-4. **Support for JSON Schema Constraints**  
-   For example, the handling of constraints such as minimum, maximum,
-   exclusiveMinimum, and exclusiveMaximum is essential for validating numeric
-   data.
+4. **Support for JSON Schema Constraints** For example, the handling of
+   constraints such as minimum, maximum, exclusiveMinimum, and exclusiveMaximum
+   is essential for validating numeric data.
 
-5. **Community and Maintainability**  
-   A strong community and/or easily maintainable codebase are crucial for the
-   long-term viability and support of the generator.
+5. **Community and Maintainability** A strong community and/or easily
+   maintainable codebase are crucial for the long-term viability and support of
+   the generator.
 
 ### Additional Features (Nice to Have)
 
-1. **Support for Security Headers**  
-   Generators should support security headers to enhance API security.
+1. **Support for Security Headers** Generators should support security headers
+   to enhance API security.
 
-2. **Support for File Uploads**  
-   The ability to handle file uploads seamlessly within the API.
+2. **Support for File Uploads** The ability to handle file uploads seamlessly
+   within the API.
 
-3. **Support for File Downloads (Octet Stream)**  
-   There must be support for file downloads, specifically as an octet stream.
+3. **Support for File Downloads (Octet Stream)** There must be support for file
+   downloads, specifically as an octet stream.
 
-4. **Minimal Footprint**  
-   Generators should aim for minimal footprint, e.g., generating one type per
-   file with tree-shaking capabilities to optimize performance.
+4. **Minimal Footprint** Generators should aim for minimal footprint, e.g.,
+   generating one type per file with tree-shaking capabilities to optimize
+   performance.
 
-5. **Developer Experience**  
-   High performance during code generation is important. The generator should be
-   fast and not slow down the IDE, even during type inference.
+5. **Developer Experience** High performance during code generation is
+   important. The generator should be fast and not slow down the IDE, even
+   during type inference.
 
 ## Comparison
 
