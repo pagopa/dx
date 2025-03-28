@@ -3,14 +3,20 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "cosmos" {
   description = "A list of CosmosDB role assignments"
   type = list(object({
-    account_id  = string
-    role        = string
-    description = string
-    database    = optional(string, "*")
-    collections = optional(list(string), ["*"])
+    account_name        = string
+    resource_group_name = string
+    role                = string
+    description         = string
+    database            = optional(string, "*")
+    collections         = optional(list(string), ["*"])
   }))
 
   validation {

@@ -1,9 +1,9 @@
 locals {
   norm_blobs = [
     for blob in var.storage_blob : {
-      storage_account_name          = provider::azurerm::parse_resource_id(blob.storage_account_id)["resource_name"]
-      storage_account_id            = blob.storage_account_id
-      resource_group_name           = provider::azurerm::parse_resource_id(blob.storage_account_id)["resource_group_name"]
+      storage_account_name          = blob.storage_account_name
+      storage_account_id            = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${blob.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${blob.storage_account_name}")
+      resource_group_name           = blob.resource_group_name
       container_name                = blob.container_name
       container_resource_manager_id = blob.container_name != "*" ? "${blob.storage_account_id}/blobServices/default/containers/${blob.container_name}" : "*"
       role                          = blob.role
@@ -15,9 +15,9 @@ locals {
 
   norm_tables = [
     for table in var.storage_table : {
-      storage_account_name      = provider::azurerm::parse_resource_id(table.storage_account_id)["resource_name"]
-      storage_account_id        = table.storage_account_id
-      resource_group_name       = provider::azurerm::parse_resource_id(table.storage_account_id)["resource_group_name"]
+      storage_account_name      = table.storage_account_name
+      storage_account_id        = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${table.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${table.storage_account_name}")
+      resource_group_name       = table.resource_group_name
       table_name                = table.table_name
       table_resource_manager_id = table.table_name != "*" ? "${table.storage_account_id}/tableServices/default/tables/${table.table_name}" : "*"
       role                      = table.role
@@ -29,9 +29,9 @@ locals {
 
   norm_queues = [
     for queue in var.storage_queue : {
-      storage_account_name      = provider::azurerm::parse_resource_id(queue.storage_account_id)["resource_name"]
-      storage_account_id        = queue.storage_account_id
-      resource_group_name       = provider::azurerm::parse_resource_id(queue.storage_account_id)["resource_group_name"]
+      storage_account_name      = queue.storage_account_name
+      storage_account_id        = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${queue.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${queue.storage_account_name}")
+      resource_group_name       = queue.resource_group_name
       queue_name                = queue.queue_name
       queue_resource_manager_id = queue.queue_name != "*" ? "${queue.storage_account_id}/queueServices/default/queues/${queue.queue_name}" : "*"
       role                      = queue.role

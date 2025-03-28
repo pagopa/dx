@@ -33,6 +33,8 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
 
+data "azurerm_subscription" "current" {}
+
 # RESOURCES
 
 data "azurerm_resource_group" "rg" {
@@ -80,4 +82,8 @@ output "identity_name" {
 
 output "principal_id" {
   value = azurerm_user_assigned_identity.id.principal_id
+}
+
+output "subscription_id" {
+  value = data.azurerm_subscription.current.subscription_id
 }

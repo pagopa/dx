@@ -14,45 +14,7 @@
   ```
 
   A `description` field has been added to the role assignments. This field is **required** and can be used to provide why the role assignment is being created.
-
-  Also, remove all `name` and `resource_group_name` parameters from the variables and use the id gotten from a resource, module or data source as follows:
-
-  ```
-  ...
-  module "roles" {
-    source       = "../../"
-    principal_id = azurerm_user_assigned_identity.id.principal_id
-
-    storage_table = [
-      {
-        storage_account_name = "test"
-        resource_group_name  = "test-rg"
-        table_name           = "test-table"
-        role                 = "reader"
-      }
-    ]
-  ...
-  }
-  ```
-
-  becomes
-
-  ```
-  ...
-  module "roles" {
-    source       = "../../"
-    principal_id = azurerm_user_assigned_identity.id.principal_id
-
-    storage_table = [
-      {
-        storage_account_id = module.storage_account.id
-        table_name         = "test-table"
-        role               = "reader"
-        description        = "Allow the test identity read access to the test-table"
-      }
-    ]
-  ...
-  }
+  A `subscription_id` field has been added to the role assignments. This field is **required** and must be used to provide the subscription ID of the target resource.
   ```
 
 ## 0.1.3

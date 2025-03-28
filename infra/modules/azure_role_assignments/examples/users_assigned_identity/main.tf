@@ -6,38 +6,44 @@ resource "azurerm_user_assigned_identity" "id" {
 
 
 module "roles" {
-  source       = "../../"
-  principal_id = azurerm_user_assigned_identity.id.principal_id
+  source = "../../"
+
+  principal_id    = azurerm_user_assigned_identity.id.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
 
   storage_table = [
     {
-      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
-      table_name         = "test-table"
-      role               = "reader"
-      description        = "Why this role is assigned"
+      storage_account_name = "<THE_STORAGE_ACCOUNT_NAME>"
+      resource_group_name  = "<THE_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME>"
+      table_name           = "test-table"
+      role                 = "reader"
+      description          = "Why this role is assigned"
     },
     {
-      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
-      role               = "writer"
-      description        = "Why this role is assigned"
+      storage_account_name = "<THE_STORAGE_ACCOUNT_NAME>"
+      resource_group_name  = "<THE_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME>"
+      role                 = "writer"
+      description          = "Why this role is assigned"
     }
   ]
 
   storage_blob = [
     {
-      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
-      container_name     = "images"
-      role               = "reader"
-      description        = "Why this role is assigned"
+      storage_account_name = "<THE_STORAGE_ACCOUNT_NAME>"
+      resource_group_name  = "<THE_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME>"
+      container_name       = "images"
+      role                 = "reader"
+      description          = "Why this role is assigned"
     }
   ]
 
   storage_queue = [
     {
-      storage_account_id = "<THE_STORAGE_ACCOUNT_ID>"
-      queue_name         = "myqueue"
-      role               = "writer"
-      description        = "Why this role is assigned"
+      storage_account_name = "<THE_STORAGE_ACCOUNT_NAME>"
+      resource_group_name  = "<THE_STORAGE_ACCOUNT_RESOURCE_GROUP_NAME>"
+      queue_name           = "myqueue"
+      role                 = "writer"
+      description          = "Why this role is assigned"
     }
   ]
 }
