@@ -1,75 +1,39 @@
-# DX
+<div align="center">
 
-DevEx repository for shared tools and pipelines.
+<img src="./assets/pagopa-logo.jpg" width="100" alt="PagoPA icon">
 
-- [DX](#dx)
-  - [GitHub Action Templates](#github-action-templates)
-    - [infra_plan.yaml](#infra_planyaml)
-      - [What it does](#what-it-does)
-      - [Example](#example)
-      - [Requirements](#requirements)
-    - [infra_apply.yaml](#infra_applyyaml)
-      - [What it does](#what-it-does-1)
-      - [Requirements](#requirements-1)
-  - [Terraform Modules](#terraform-modules)
-    - [GitHub SelfHosted Runner on Container App job](#github-selfhosted-runner-on-container-app-job)
+# DevEx Initiative: Transforming the Development Experience at PagoPA
 
-## GitHub Action Templates
+![Static Badge](https://img.shields.io/badge/getting%20started-blue?logo=docusaurus&label=doc&cacheSeconds=5000&link=https%3A%2F%2Fpagopa.github.io%2Fdx%2Fdocs%2F)
+[![Shield: Doc](https://img.shields.io/badge/contributions-welcome-red)](#Contributing)
+![Static Badge](https://img.shields.io/badge/latest%20news-blue?logo=docusaurus&label=blog&cacheSeconds=5000&link=https%3A%2F%2Fpagopa.github.io%2Fdx%2Fblog%2F)
 
-### infra_plan.yaml
+Imagine being able to release the first API for a new digital service into production in minutes instead of weeks, having fewer decisions to make, less code to interpret and maintain, onboarding new team members with zero downtime: this is the goal we set for ourselves with the Developer Experience (DevEx) initiative.
 
-As a `workflow_call`, this action should be invoked and used as template by other GitHub Actions to validate Pull Requests containing Terraform code changes. It provides all job steps that must be run to validate a Terraform configuration, and includes the job properties configuration as well.
+At the heart of the Engineering Area, a group of Senior, Cloud, and Staff Engineers has decided to tackle the daily challenges that slow down our work. We're here to break down barriers, simplify processes, and make software development smoother and more rewarding for everyone.
 
-#### What it does
+**Terraform Download Stats**
 
-This template is useful to validate Pull Requests with Terraform code changes. It is also suggested to run the workflow everytime the PR code changes only if the PR status is ready (no drafts).
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-role-assignments/azurerm?label=azure-role-assignments&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-role-assignments%2Fazurerm%2Flatest&logo=terraform)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-function-app/azurerm?logo=terraform&label=azure-function-app&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-function-app%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm?logo=terraform&label=github-selfhosted-runner-on-container-app-jobs&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fgithub-selfhosted-runner-on-container-app-jobs%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service-plan-autoscaler/azurerm?logo=terraform&label=azure-app-service-plan-autoscaler&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service-plan-autoscaler%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-cosmos-account/azurerm?logo=terraform&label=azure-cosmos-account&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-cosmos-account%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service/azurerm?logo=terraform&label=azure-app-service&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-api-management/azurerm?logo=terraform&label=azure-api-management&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-api-management%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-storage-account/azurerm?logo=terraform&label=azure-storage-account&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-storage-account%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-event-hub/azurerm?logo=terraform&label=azure-event-hub&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-event-hub%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-federated-identity-with-github/azurerm?logo=terraform&label=azure-federated-identity-with-github&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-federated-identity-with-github%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-container-app-environment/azurerm?logo=terraform&label=azure-container-app-environment&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-container-app-environment%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-github-environment-bootstrap/azurerm?logo=terraform&label=azure-github-environment-bootstrap&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-github-environment-bootstrap%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-container-app/azurerm?logo=terraform&label=azure-container-app&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-container-app%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-cdn/azurerm?logo=terraform&label=azure-cdn&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-cdn%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-postgres-server/azurerm?logo=terraform&label=azure-postgres-server&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-postgres-server%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-function-app-exposed/azurerm?logo=terraform&label=azure-function-app-exposed&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-function-app-exposed%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service-exposed/azurerm?logo=terraform&label=azure-app-service-exposed&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service-exposed%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-core-infra/azurerm?logo=terraform&label=azure-core-infra&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-core-infra%2Fazurerm%2Flatest)
 
-The workflow template authenticates with Azure and performs a `terraform plan` command to validate the changes.
-
-Ultimately, it prints out a comment in the PR view with the plan output. In case of multiple executions, it updates the previous comment with the latest changes.
-
-It supports optional input with the agent it should run on (GitHub managed or not), or custom environment variables.
-
-#### Example
-
-An example of its use can be found [here](https://github.com/pagopa/dx-typescript/blob/main/.github/workflows/pr_infra.yaml).
-It is recommended to stick to the same naming conventions shown in the example.
-
-#### Requirements
-
-This workflow template leverages on managed identities to authenticate with Azure. Managed identities can be easily created through the module `azure_federated_identity_with_github` available in this repository.
-
-Terraform definitions are intended to work for an environment in a specific region. Each pair environment/region is a Terraform project on its own and they will be located in the `<env>/<region>` subfolder. Every automation will expect resources to be in such folders.
-
-### infra_apply.yaml
-
-As a `workflow_call`, this action should be invoked and used as template by other GitHub Actions to deploy infrastructure changes after a PR have been merged. It provides all job steps that must be run to apply a Terraform configuration, and includes the job properties configuration as well.
-
-#### What it does
-
-This template is useful to deploy Terraform code changes. It is also suggested to run the workflow everytime a PR is merged in the `main` branch.
-
-The workflow authenticates with Azure and perform a `terraform plan` to inform the user about the next changes. If there aren't any unexpected change, the user can approve the second step of the workflow and apply them.
-
-**Note**: the deployment approval step must be configured at GitHub repositiory level, by changing settings of the `<env>-cd` environment. Otherwise, the deployment is done automatically.
-
-This workflow is set to be run once per time, abolishing concurrent runs.
-
-#### Requirements
-
-This workflow template leverages on managed identities to authenticate with Azure. Managed identities can be easily created through the module `azure_federated_identity_with_github` available in this repository.
-
-Terraform definitions are intended to work for an environment in a specific region. Each pair environment/region is a Terraform project on its own and they will be located in the `<env>/<region>` subfolder. Every automation will expect resources to be in such folders.
-
-## Terraform Modules
-
-### GitHub SelfHosted Runner on Container App job
-
-This module helps to create the necessary infrastructure to run GitHub Actions on a self-hosted agent. Generally, this scenario pertains to infrastructure pipelines requiring access to private resources such as AKS and Storage Accounts. If there aren't private resources, please use GitHub managed runners.
-
-This module creates a Container App Job on an existing Container App Environment. It requires your repository name as input, in order to create a trigger on the GitHub Actions status of that repository. Moreover, it has a dependencies on a KeyVault where it creates a read-only access policy to access secrets.
-
-N.B. If you are adding a new Container App Job, it is likely that your repository must be added to GITHUB PAT access scope. Ask for this one-time operation to `engineering-team-cloud-eng` team.
+</div>
 
 ## NPM packages
 
