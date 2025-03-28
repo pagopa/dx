@@ -45,8 +45,10 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 
 	var resourceAbbreviations = map[string]string{
 		// Compute
-		"virtual_machine":   "vm",
-		"container_app_job": "caj",
+		"virtual_machine":           "vm",
+		"container_app_job":         "caj",
+		"container_app":             "ca",
+		"container_app_environment": "cae",
 
 		// Storage
 		"storage_account":          "st",
@@ -63,8 +65,15 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"network_security_group":      "nsg",
 		"apim_network_security_group": "apim-nsg",
 		"app_gateway":                 "agw",
+		"cdn_frontdoor_profile":       "afd",
+		"cdn_frontdoor_endpoint":      "fde",
+		"cdn_frontdoor_origin_group":  "fdog",
+		"cdn_frontdoor_origin":        "fdo",
+		"cdn_frontdoor_route":         "cdnr",
+		"nat_gateway":                 "ng",
 
 		// Private Endpoints
+		"private_endpoint":                 "pep",
 		"cosmos_private_endpoint":          "cosno-pep",
 		"postgre_private_endpoint":         "psql-pep",
 		"postgre_replica_private_endpoint": "psql-pep-replica",
@@ -77,32 +86,46 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"file_private_endpoint":            "file-pep",
 		"table_private_endpoint":           "table-pep",
 		"eventhub_private_endpoint":        "evhns-pep",
+		"container_app_private_endpoint":   "cae-pep",
+		"key_vault_private_endpoint":       "kv-pep",
+
+		// Public IPs
+		"public_ip": "pip",
 
 		// Subnets
-		"app_subnet":      "app-snet",
-		"apim_subnet":     "apim-snet",
-		"function_subnet": "func-snet",
+		"subnet":                  "snet",
+		"app_subnet":              "app-snet",
+		"apim_subnet":             "apim-snet",
+		"function_subnet":         "func-snet",
+		"container_app_subnet":    "cae-snet",
+		"private_endpoint_subnet": "pep-snet",
 
 		// Databases
 		"cosmos_db":         "cosmos",
 		"cosmos_db_nosql":   "cosno",
 		"postgresql":        "psql",
 		"postgresq_replica": "psql-replica",
+		"redis_cache":       "redis",
 
 		// Integration
 		"eventhub_namespace": "evhns",
 		"function_app":       "func",
 		"app_service":        "app",
 		"app_service_plan":   "asp",
+		"static_web_app":     "stapp",
 
 		// Security
 		"key_vault": "kv",
 
 		// Monitoring
-		"application_insights": "appi",
+		"application_insights":           "appi",
+		"log_analytics":                  "log",
+		"cdn_monitor_diagnostic_setting": "cdnp",
 
 		// Miscellaneous
 		"resource_group": "rg",
+		"ai_search":      "srch",
+		"load_testing":   "lt",
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))
