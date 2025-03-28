@@ -29,7 +29,8 @@ run "rbac_role_assignment_is_correct" {
 
     key_vault = [
       {
-        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-common-rg-01/providers/Microsoft.KeyVault/vaults/dx-d-itn-common-kv-01"
+        name                = "dx-d-itn-common-kv-01"
+        resource_group_name = "dx-d-itn-common-rg-01"
         has_rbac_support    = true
         description         = "This can read secrets"
         roles = {
@@ -40,12 +41,12 @@ run "rbac_role_assignment_is_correct" {
 
     apim = [
       {
-        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
+        name                  = "dx-d-itn-playground-pg-apim-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
         role                = "owner"
         description         = "This is an owner"
       },
       {
-        id                  = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.ApiManagement/service/dx-d-itn-playground-pg-apim-01"
         name = "dx-d-itn-playground-pg-apim-01"
         resource_group_name = "dx-d-itn-test-rg-01"
         role                = "writer"

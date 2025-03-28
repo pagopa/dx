@@ -15,9 +15,9 @@ locals {
 
   norm_tables = [
     for table in var.storage_table : {
-      storage_account_name          = table.storage_account_name
-      storage_account_id            = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${table.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${table.storage_account_name}"
-      resource_group_name           = table.resource_group_name
+      storage_account_name      = table.storage_account_name
+      storage_account_id        = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${table.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${table.storage_account_name}"
+      resource_group_name       = table.resource_group_name
       table_name                = table.table_name
       table_resource_manager_id = table.table_name != "*" ? "${table.storage_account_id}/tableServices/default/tables/${table.table_name}" : "*"
       role                      = table.role
@@ -29,9 +29,9 @@ locals {
 
   norm_queues = [
     for queue in var.storage_queue : {
-      storage_account_name          = queue.storage_account_name
-      storage_account_id            = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${queue.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${queue.storage_account_name}"
-      resource_group_name           = queue.resource_group_name
+      storage_account_name      = queue.storage_account_name
+      storage_account_id        = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${queue.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${queue.storage_account_name}"
+      resource_group_name       = queue.resource_group_name
       queue_name                = queue.queue_name
       queue_resource_manager_id = queue.queue_name != "*" ? "${queue.storage_account_id}/queueServices/default/queues/${queue.queue_name}" : "*"
       role                      = queue.role

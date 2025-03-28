@@ -6,10 +6,10 @@ variable "principal_id" {
 variable "apim" {
   description = "A list of APIM role assignments"
   type = list(object({
-    name          = string
+    name                = string
     resource_group_name = string
-    role        = string
-    description = string
+    role                = string
+    description         = string
   }))
 
   validation {
