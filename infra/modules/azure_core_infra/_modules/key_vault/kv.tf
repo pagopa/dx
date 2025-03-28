@@ -1,6 +1,12 @@
 #tfsec:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "common" {
-  name                = "${var.project}-common-kv-01"
+  name = provider::dx::resource_name(merge(
+    var.name_env,
+    {
+      name          = "common",
+      domain        = "",
+      resource_type = "key_vault",
+  }))
   location            = var.location
   resource_group_name = var.resource_group_name
   tenant_id           = var.tenant_id

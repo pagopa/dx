@@ -1,17 +1,14 @@
-variable "project" {
-  type        = string
-  description = "IO prefix, short environment and short location"
-}
+variable "name_env" {
+  type = object({
+    prefix          = string,
+    environment     = string,
+    location        = string,
+    domain          = string,
+    name            = string,
+    instance_number = optional(number, 1),
+  })
+  description = "Map with naming values for resource names"
 
-variable "prefix" {
-  type        = string
-  description = "IO prefix, short environment, short location and domain"
-}
-
-variable "suffix" {
-  type        = string
-  description = "Suffix for resource names"
-  default     = "01"
 }
 
 variable "resource_group_name" {

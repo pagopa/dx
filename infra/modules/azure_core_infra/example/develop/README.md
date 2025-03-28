@@ -102,7 +102,6 @@ Then, in different modules, you can use these data sources as follows:
 | <a name="module_apim"></a> [apim](#module\_apim) | ../../../azure_api_management | n/a |
 | <a name="module_core"></a> [core](#module\_core) | ../.. | n/a |
 | <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | ../../../azure_cosmos_account | n/a |
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa-dx/azure-naming-convention/azurerm | ~> 0.0 |
 | <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | ../../../azure_storage_account | n/a |
 
 ## Resources

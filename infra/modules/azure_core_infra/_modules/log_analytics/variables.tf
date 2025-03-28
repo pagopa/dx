@@ -1,11 +1,11 @@
-variable "prefix" {
-  type        = string
-  description = "Prefix for resource names"
-}
-
-variable "suffix" {
-  type        = string
-  description = "Suffix for resource names"
+variable "name_env" {
+  type = object({
+    prefix          = string,
+    environment     = string,
+    location        = string,
+    instance_number = optional(number, 1),
+  })
+  description = "Map with naming values for resource names"
 }
 
 variable "resource_group_name" {
