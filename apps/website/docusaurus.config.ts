@@ -34,10 +34,7 @@ const config: Config = {
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
-          {
-            from: "/docs/infrastructure/infrastructure-as-code/azure-github-environment-bootstrap",
-            to: "/docs/articles/azure-github-environment-bootstrap",
-          },
+
         ],
       },
     ],

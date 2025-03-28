@@ -1,3 +1,7 @@
+---
+sidebar_label: Managing Azure IAM Roles and Permissions
+---
+
 # Managing Azure IAM Roles and Permissions
 
 ## Overview
