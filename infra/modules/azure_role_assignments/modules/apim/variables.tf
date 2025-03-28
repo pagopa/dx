@@ -3,6 +3,11 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "apim" {
   description = "A list of APIM role assignments"
   type = list(object({

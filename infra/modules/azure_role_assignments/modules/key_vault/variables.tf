@@ -3,6 +3,11 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "key_vault" {
   description = "A list of key vault role assignments. The description is set only for rbac supported key vaults."
   type = list(object({

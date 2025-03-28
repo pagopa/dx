@@ -26,6 +26,7 @@ run "rbac_role_assignment_is_correct" {
 
   variables {
     principal_id = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
 
     key_vault = [
       {
@@ -41,19 +42,19 @@ run "rbac_role_assignment_is_correct" {
 
     apim = [
       {
-        name                  = "dx-d-itn-playground-pg-apim-01"
+        name                = "dx-d-itn-playground-pg-apim-01"
         resource_group_name = "dx-d-itn-test-rg-01"
         role                = "owner"
         description         = "This is an owner"
       },
       {
-        name = "dx-d-itn-playground-pg-apim-01"
+        name                = "dx-d-itn-playground-pg-apim-01"
         resource_group_name = "dx-d-itn-test-rg-01"
         role                = "writer"
         description         = "This is a writer"
       },
       {
-        name = "dx-d-itn-playground-pg-apim-01"
+        name                = "dx-d-itn-playground-pg-apim-01"
         resource_group_name = "dx-d-itn-test-rg-01"
         role                = "reader"
         description         = "This is a reader"
@@ -62,10 +63,10 @@ run "rbac_role_assignment_is_correct" {
 
     storage_table = [
       {
-        storage_account_name  = "dxditnplaygrounddfstfd01"
-        resource_group_name = "dx-d-itn-test-rg-01"
-        role                = "reader"
-        description         = "This is a reader"
+        storage_account_name = "dxditnplaygrounddfstfd01"
+        resource_group_name  = "dx-d-itn-test-rg-01"
+        role                 = "reader"
+        description          = "This is a reader"
       }
     ]
   }

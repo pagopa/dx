@@ -3,6 +3,11 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "cosmos" {
   description = "A list of CosmosDB role assignments"
   type = list(object({

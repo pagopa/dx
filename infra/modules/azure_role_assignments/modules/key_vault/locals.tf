@@ -3,7 +3,7 @@ locals {
     for vault in var.key_vault :
     merge(vault, {
       name                = vault.name
-      id                  = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${vault.name}")
+      id                  = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${vault.name}")
       resource_group_name = vault.resource_group_name
     })
   ]
