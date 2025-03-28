@@ -54,9 +54,3 @@ When implementing this action in your repository:
 1. **Adjust paths** - Ensure `sync_dir_name` and `working_directory` match your project structure.
 2. **Selective purge** - Use `selective_purge_paths` to optimize cache purging for specific files or directories.
 3. **Permissions** - Ensure the Azure CLI is authenticated and has the necessary permissions to access the storage account and CDN.
-
-:::warning
-
-Make sure to configure the required Azure credentials in your GitHub repository secrets for secure authentication.
-
-:::
