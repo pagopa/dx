@@ -1,7 +1,7 @@
 locals {
   norm_apims = [for apim in var.apim : {
     name                = apim.name
-    id                  = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${apim.resource_group_name}/providers/Microsoft.ApiManagement/service/${apim.name}"
+    id                  = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${apim.resource_group_name}/providers/Microsoft.ApiManagement/service/${apim.name}")
     resource_group_name = apim.resource_group_name
     role                = apim.role
     description         = apim.description

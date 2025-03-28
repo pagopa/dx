@@ -9,7 +9,7 @@ locals {
       for entry in var.cosmos : [
         for collection in entry.collections : {
           account_name        = entry.account_name
-          account_id          = "/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}"
+          account_id          = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}")
           resource_group_name = entry.resource_group_name
           role                = entry.role
           database            = entry.database
