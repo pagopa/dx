@@ -13,3 +13,5 @@ data "azurerm_subnet" "private_endpoints_subnet" {
   virtual_network_name = data.azurerm_virtual_network.itn_common.name
   resource_group_name  = data.azurerm_virtual_network.itn_common.resource_group_name
 }
+
+data "azurerm_subscription" "current" {}

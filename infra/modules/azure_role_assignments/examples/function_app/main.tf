@@ -28,9 +28,9 @@ module "function" {
 }
 
 module "roles" {
-  source       = "../../"
-  principal_id = module.function.function_app.function_app.principal_id
-
+  source          = "../../"
+  principal_id    = module.function.function_app.function_app.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
   cosmos = [
     {
       account_name        = "<THE_COSMOS_ACCOUNT_NAME>"
