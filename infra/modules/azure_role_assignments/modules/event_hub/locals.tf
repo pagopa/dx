@@ -12,7 +12,7 @@ locals {
           description         = entry.description
         }
       ]
-    ]) : "${provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.EventHub/namespaces/${entry.namespace_name}")}|${assignment.event_hub_name}|${assignment.role}" => assignment
+    ]) : "${provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${assignment.resource_group_name}/providers/Microsoft.EventHub/namespaces/${assignment.namespace_name}")}|${assignment.event_hub_name}|${assignment.role}" => assignment
   }
 
   role_definition_name = {
