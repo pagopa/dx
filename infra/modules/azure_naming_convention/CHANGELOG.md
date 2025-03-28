@@ -1,5 +1,11 @@
 # azure_naming_convention
 
+## 0.0.6
+
+### Patch Changes
+
+- db2a6db: Update naming convention README based on guide lines
+
 ## 0.0.5
 
 ### Patch Changes

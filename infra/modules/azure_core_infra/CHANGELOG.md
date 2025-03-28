@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.3
+
+### Patch Changes
+
+- 0ceea35: Update Core Infra module README.md to follow guide lines
+
 ## 1.0.2
 
 ### Patch Changes
