@@ -1,12 +1,13 @@
-variable "prefix" {
-  type        = string
-  description = "Prefix for resource names"
-}
+variable "name_env" {
+  type = object({
+    prefix          = string,
+    environment     = string,
+    name            = optional(string, "github-runner"),
+    location        = string,
+    instance_number = optional(number, 1),
+  })
+  description = "Map with naming values for resource names"
 
-variable "suffix" {
-  type        = string
-  description = "Suffix for resource names"
-  default     = "01"
 }
 
 variable "resource_group_name" {

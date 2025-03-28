@@ -1,8 +1,12 @@
-variable "project" {
-  type        = string
-  description = "env prefix, short environment and short location"
+variable "name_env" {
+  type = object({
+    prefix          = string,
+    environment     = string,
+    location        = string,
+    instance_number = optional(number, 1),
+  })
+  description = "Map with naming values for resource names"
 }
-
 variable "resource_group_name" {
   type        = string
   description = "Resource group name"

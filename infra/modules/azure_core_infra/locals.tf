@@ -1,7 +1,17 @@
 locals {
-  project = module.naming_convention.project
-  prefix  = module.naming_convention.prefix
-  suffix  = module.naming_convention.suffix
+  env_short = tomap({
+    "italynorth" = "itn",
+    "westeurope" = "weu"
+  })[var.environment.location]
+
+  project = "${var.environment.prefix}-${var.environment.env_short}-${local.env_short}"
+  naming_constants = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = local.env_short,
+    domain          = var.environment.domain,
+    instance_number = tonumber(var.environment.instance_number),
+  }
 
   vpn_enabled = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != ""
 

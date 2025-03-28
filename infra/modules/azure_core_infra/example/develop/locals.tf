@@ -8,6 +8,15 @@ locals {
     instance_number = "01"
   }
 
+  env_name = {
+    prefix          = local.environment.prefix,
+    environment     = local.environment.env_short,
+    location        = "itn",
+    domain          = local.environment.domain,
+    name            = local.environment.app_name,
+    instance_number = 1,
+  }
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
