@@ -70,8 +70,8 @@ the Azure Portal), end-to-end correlation does not function as expected.
 
 [Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental)
 and may not be as seamless as transpiling TypeScript to CommonJS modules.  
-[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217),
-there is an alternative method to instrument the `@azure/monitor-opentelemetry`
+[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217), there
+is an alternative method to instrument the `@azure/monitor-opentelemetry`
 package.
 
 ### Steps to Instrument an ESM Application
@@ -354,6 +354,33 @@ you must use the **instrumentation module**. This module is loaded first by
 before anything else:
 
 https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration
+
+It is possible to use the `@azure/monitor-opentelemetry` package to instrument a
+Next.js application. However, in order to track the HTTP calls made by the
+application, you need to use the `undici` instrumentation. This instrumentation
+is not included in the `@azure/monitor-opentelemetry` package, so you need to
+add it manually.  
+Here is a snippet to enable tracing in a Next.js application that uses the App
+router:
+
+```javascript
+// apps/instrumentation.ts
+
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import { metrics, trace } from "@opentelemetry/api";
+import { registerInstrumentations } from "@opentelemetry/instrumentation";
+import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
+
+export async function register() {
+  useAzureMonitor();
+
+  registerInstrumentations({
+    instrumentations: [new UndiciInstrumentation()],
+    meterProvider: metrics.getMeterProvider(),
+    tracerProvider: trace.getTracerProvider(),
+  });
+}
+```
 
 ## Integration with Azure Functions
 
