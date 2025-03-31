@@ -42,17 +42,13 @@ variable "target_service" {
   })
 
   validation {
-    condition = (
-      (var.target_service.app_service != null && alltrue([
-        can(var.target_service.app_service.id) ? var.target_service.app_service.id != "" : false,
-        can(var.target_service.app_service.name) ? var.target_service.app_service.name == "" : true
-      ])) ||
-      (var.target_service.function_app != null && alltrue([
-        can(var.target_service.function_app.id) ? var.target_service.function_app.id != "" : false,
-        can(var.target_service.function_app.name) ? var.target_service.function_app.name == "" : true
-      ]))
-    )
-    error_message = "You must specify either 'id' or 'name' (but not both) for exactly one target service: either 'app_service' or 'function_app'."
+    condition = var.target_service.app_service != null && !alltrue([var.target_service.app_service.id == null, var.target_service.app_service.name == null])
+    error_message = "You must specify either 'id' or 'name' (but not both)."
+  }
+
+    validation {
+    condition = var.target_service.function_app != null && !alltrue([var.target_service.function_app.id == null, var.target_service.function_app.name == null])
+    error_message = "You must specify either 'id' or 'name' (but not both)."
   }
 
   validation {
