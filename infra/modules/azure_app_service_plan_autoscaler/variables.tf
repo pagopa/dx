@@ -32,22 +32,18 @@ variable "app_service_plan_id" {
 variable "target_service" {
   type = object({
     app_service = optional(object({
-      id   = optional(string)
-      name = optional(string)
+      id   = optional(string, null)
+      name = optional(string, null)
     }))
     function_app = optional(object({
-      id   = optional(string)
-      name = optional(string)
+      id   = optional(string, null)
+      name = optional(string, null)
     }))
   })
 
   validation {
-    condition = var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null])
-    error_message = "You must specify either 'id' or 'name' (but not both)."
-  }
-
-    validation {
-    condition = var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null])
+    condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null] && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null])) ||
+                var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null]) && !alltrue([try(var.target_service.function_app.id, null) != null, try(var.target_service.function_app.name, null) != null]))
     error_message = "You must specify either 'id' or 'name' (but not both)."
   }
 
