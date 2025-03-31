@@ -1,14 +1,14 @@
 locals {
-  env_short = tomap({
+  location_short = tomap({
     "italynorth" = "itn",
     "westeurope" = "weu"
   })[var.environment.location]
 
-  project = "${var.environment.prefix}-${var.environment.env_short}-${local.env_short}"
+  project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
-    location        = local.env_short,
+    location        = local.location_short,
     domain          = var.environment.domain,
     instance_number = tonumber(var.environment.instance_number),
   }
