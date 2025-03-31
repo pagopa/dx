@@ -1,6 +1,6 @@
 #tfsec:ignore:azure-storage-queue-services-logging-enabled
 resource "azurerm_storage_account" "this" {
-  name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
+  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
   resource_group_name           = var.resource_group_name
   location                      = var.environment.location
   account_kind                  = "StorageV2"

@@ -1,14 +1,14 @@
 locals {
 
   naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
+    prefix      = var.environment.prefix,
+    environment = var.environment.env_short,
     location = tomap({
       "italynorth" = "itn",
       "westeurope" = "weu"
     })[var.environment.location]
     domain          = var.environment.domain,
-    name        = var.environment.app_name,
+    name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
 
@@ -32,22 +32,22 @@ locals {
 
   peps = {
     blob = {
-      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "blob_private_endpoint" }))
+      name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "blob_private_endpoint" }))
       dns_zone = "privatelink.blob.core.windows.net"
     }
 
     file = {
-      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "file_private_endpoint" }))
+      name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "file_private_endpoint" }))
       dns_zone = "privatelink.file.core.windows.net"
     }
 
     queue = {
-      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "queue_private_endpoint" }))
+      name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "queue_private_endpoint" }))
       dns_zone = "privatelink.queue.core.windows.net"
     }
 
     table = {
-      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "table_private_endpoint" }))
+      name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "table_private_endpoint" }))
       dns_zone = "privatelink.table.core.windows.net"
     }
   }
