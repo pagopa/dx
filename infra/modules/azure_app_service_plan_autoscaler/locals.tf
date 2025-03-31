@@ -3,7 +3,7 @@ locals {
   is_app_service  = local.target_type == "app_service"
   is_function_app = local.target_type == "function_app"
   name_is_provided = try(var.target_service[local.target_type].name, null) != null
-  target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
+  target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? try(data.azurerm_linux_web_app.this[0].id, null) : try(data.azurerm_linux_function_app.this[0].id, null))
 
   base_name = local.name_is_provided ? var.target_service[local.target_type].name : reverse(split("/", var.target_service[local.target_type].id))[0]
 
