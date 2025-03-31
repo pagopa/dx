@@ -1,6 +1,6 @@
 resource "azurerm_subnet" "pep_snet" {
   name = provider::dx::resource_name(merge(
-    var.naming_config
+    var.naming_config,
     {
       name          = "pep",
       resource_type = "subnet",

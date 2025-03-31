@@ -21,7 +21,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
-| <a name="input_name_env"></a> [name\_env](#input\_name\_env) | Map with naming values for resource names | <pre>object({<br/>    prefix          = string,<br/>    environment     = string,<br/>    location        = string,<br/>    domain          = string,<br/>    name            = string,<br/>    instance_number = optional(number, 1),<br/>  })</pre> | n/a | yes |
+| <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Map with naming values for resource names | <pre>object({<br/>    prefix          = string,<br/>    environment     = string,<br/>    location        = string,<br/>    domain          = string,<br/>    name            = string,<br/>    instance_number = optional(number, 1),<br/>  })</pre> | n/a | yes |
 | <a name="input_private_dns_zone"></a> [private\_dns\_zone](#input\_private\_dns\_zone) | Private dns zone id and resource group name | <pre>object({<br/>    id                  = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | Private endpoint subnet id | `string` | n/a | yes |

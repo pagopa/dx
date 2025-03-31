@@ -1,5 +1,5 @@
 locals {
-  cae_name = provider::dx::resource_name(merge(var.name_env, {
+  cae_name = provider::dx::resource_name(merge(var.naming_config, {
     resource_type = "container_app_environment",
   }))
 }

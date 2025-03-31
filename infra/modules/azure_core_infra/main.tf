@@ -77,7 +77,7 @@ resource "azurerm_resource_group" "test" {
 module "network" {
   source = "./_modules/networking"
 
-  name_env            = local.naming_config
+  naming_config       = local.naming_config
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
@@ -128,7 +128,7 @@ module "vpn" {
 module "key_vault" {
   source = "./_modules/key_vault"
 
-  name_env = merge(local.naming_config, { name = var.environment.app_name })
+  naming_config = merge(local.naming_config, { name = var.environment.app_name })
 
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
@@ -183,7 +183,7 @@ module "common_log_analytics" {
 module "github_runner" {
   source = "./_modules/github_runner"
 
-  name_env = local.naming_config
+  naming_config = local.naming_config
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location

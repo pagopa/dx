@@ -1,5 +1,5 @@
 resource "azurerm_subnet" "runner_snet" {
-  name = provider::dx::resource_name(merge(var.name_env, {
+  name = provider::dx::resource_name(merge(var.naming_config, {
     resource_type = "subnet",
   }))
   virtual_network_name = var.virtual_network.name

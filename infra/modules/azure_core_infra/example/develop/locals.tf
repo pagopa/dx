@@ -9,12 +9,11 @@ locals {
   }
 
   naming_config = {
-    prefix          = local.environment.prefix,
-    environment     = local.environment.env_short,
-    location        = "itn",
-    domain          = local.environment.domain,
-    name            = local.environment.app_name,
-    instance_number = 1,
+    prefix      = local.environment.prefix,
+    environment = local.environment.env_short,
+    location    = "itn",
+    domain      = local.environment.domain,
+    name        = local.environment.app_name,
   }
 
   tags = {

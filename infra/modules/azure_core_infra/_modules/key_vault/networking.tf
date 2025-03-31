@@ -3,7 +3,7 @@
 #
 locals {
   pep_name = provider::dx::resource_name(merge(
-    var.name_env,
+    var.naming_config,
     {
       resource_type = "key_vault_private_endpoint",
   }))
