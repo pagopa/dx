@@ -14,7 +14,7 @@ inputs:
     type: string
     required: true
   resource_group_name:
-    description: Azure resource group containing the CDN.
+    description: CDN resource group name.
     type: string
     required: true
   profile_name:
