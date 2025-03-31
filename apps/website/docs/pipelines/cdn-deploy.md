@@ -5,19 +5,25 @@ sidebar_label: Deploying Assets to CDN
 
 # CDN Code Deploy
 
-The [CDN Code Deploy action](https://github.com/pagopa/dx/tree/main/.github/actions/cdn-code-deploy) is a utility that simplifies the deployment of assets to a Content Delivery Network (CDN). It also provides the ability to selectively purge specific paths or perform a full purge of the CDN cache.
+The
+[CDN Code Deploy action](https://github.com/pagopa/dx/tree/main/.github/actions/cdn-code-deploy)
+is a utility that simplifies the deployment of assets to a Content Delivery
+Network (CDN). It also provides the ability to selectively purge specific paths
+or perform a full purge of the CDN cache.
 
 ## How It Works
 
 The action performs the following steps:
 
 1. Synchronizes the specified directory with the Azure Blob Storage container.
-2. Optionally purges specific paths in the CDN cache if `selective_purge_paths` is provided.
+2. Optionally purges specific paths in the CDN cache if `selective_purge_paths`
+   is provided.
 3. If no specific paths are provided, purges the entire CDN cache.
 
 ## Usage
 
-To use the CDN Code Deploy action, create a workflow file in your repository. Below is an example configuration:
+To use the CDN Code Deploy action, create a workflow file in your repository.
+Below is an example configuration:
 
 ```yaml
 name: CDN Code Deploy
@@ -51,6 +57,9 @@ jobs:
 
 When implementing this action in your repository:
 
-1. **Adjust paths** - Ensure `sync_dir_name` and `working_directory` match your project structure.
-2. **Selective purge** - Use `selective_purge_paths` to optimize cache purging for specific files or directories.
-3. **Permissions** - Ensure the Azure CLI is authenticated and has the necessary permissions to access the storage account and CDN.
+1. **Adjust paths** - Ensure `sync_dir_name` and `working_directory` match your
+   project structure.
+2. **Selective purge** - Use `selective_purge_paths` to optimize cache purging
+   for specific files or directories.
+3. **Permissions** - Ensure the Azure CLI is authenticated and has the necessary
+   permissions to access the storage account and CDN.
