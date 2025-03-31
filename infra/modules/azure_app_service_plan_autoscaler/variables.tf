@@ -42,7 +42,7 @@ variable "target_service" {
   })
 
   validation {
-    condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null] && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null])) ||
+    condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null]) && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null]) ||
                 var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null]) && !alltrue([try(var.target_service.function_app.id, null) != null, try(var.target_service.function_app.name, null) != null]))
     error_message = "You must specify either 'id' or 'name' (but not both)."
   }
