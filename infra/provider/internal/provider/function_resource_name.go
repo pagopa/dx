@@ -51,12 +51,13 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"container_app_environment": "cae",
 
 		// Storage
-		"storage_account":          "st",
-		"blob_storage":             "blob",
-		"queue_storage":            "queue",
-		"table_storage":            "table",
-		"file_storage":             "file",
-		"function_storage_account": "stfn",
+		"storage_account":              "st",
+		"blob_storage":                 "blob",
+		"queue_storage":                "queue",
+		"table_storage":                "table",
+		"file_storage":                 "file",
+		"function_storage_account":     "stfn",
+		"customer_key_storage_account": "stcmk",
 
 		// Networking
 		"api_management":              "apim",
@@ -232,18 +233,14 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 
 	// Generate resource name
+	result = strings.ToLower(fmt.Sprintf("%s-%s-%s-%02d",
+		result,
+		name,
+		abbreviation,
+		instance))
+
 	if strings.Contains(resourceType, "storage_account") {
-		result = strings.ToLower(fmt.Sprintf("%s%s%s%02d",
-			result,
-			name,
-			abbreviation,
-			instance))
-	} else {
-		result = strings.ToLower(fmt.Sprintf("%s-%s-%s-%02d",
-			result,
-			name,
-			abbreviation,
-			instance))
+		result = strings.ReplaceAll(result, "-", "")
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, resp.Result.Set(ctx, result))
