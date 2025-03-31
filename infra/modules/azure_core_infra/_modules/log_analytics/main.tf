@@ -8,7 +8,7 @@ terraform {
 
 resource "azurerm_log_analytics_workspace" "this" {
   name = provider::dx::resource_name(merge(
-    var.name_env,
+    var.naming_config,
     {
       name          = "common",
       resource_type = "log_analytics",

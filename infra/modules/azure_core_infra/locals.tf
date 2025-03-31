@@ -5,7 +5,7 @@ locals {
   })[var.environment.location]
 
   project = "${var.environment.prefix}-${var.environment.env_short}-${local.env_short}"
-  naming_constants = {
+  naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
     location        = local.env_short,

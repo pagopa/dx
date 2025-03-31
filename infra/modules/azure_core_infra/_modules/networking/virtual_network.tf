@@ -1,6 +1,6 @@
 resource "azurerm_virtual_network" "vnet" {
   name = provider::dx::resource_name(merge(
-    var.name_env,
+    var.naming_config,
     {
       name          = "common",
       resource_type = "virtual_network",

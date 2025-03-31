@@ -15,7 +15,7 @@ terraform {
 #------------------------#
 resource "azurerm_resource_group" "common" {
   name = provider::dx::resource_name(merge(
-    local.naming_constants,
+    local.naming_config,
     {
       name          = "common",
       domain        = "",
@@ -28,7 +28,7 @@ resource "azurerm_resource_group" "common" {
 
 resource "azurerm_resource_group" "network" {
   name = provider::dx::resource_name(merge(
-    local.naming_constants,
+    local.naming_config,
     {
       name          = "network",
       domain        = "",
@@ -42,7 +42,7 @@ resource "azurerm_resource_group" "network" {
 
 resource "azurerm_resource_group" "gh_runner" {
   name = provider::dx::resource_name(merge(
-    local.naming_constants,
+    local.naming_config,
     {
       name          = "github-runner",
       domain        = "",
@@ -58,7 +58,7 @@ resource "azurerm_resource_group" "test" {
   count = var.test_enabled ? 1 : 0
 
   name = provider::dx::resource_name(merge(
-    local.naming_constants,
+    local.naming_config,
     {
       name          = "test",
       domain        = "",
@@ -77,7 +77,7 @@ resource "azurerm_resource_group" "test" {
 module "network" {
   source = "./_modules/networking"
 
-  name_env            = local.naming_constants
+  name_env            = local.naming_config
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
@@ -128,7 +128,7 @@ module "vpn" {
 module "key_vault" {
   source = "./_modules/key_vault"
 
-  name_env = merge(local.naming_constants, { name = var.environment.app_name })
+  name_env = merge(local.naming_config, { name = var.environment.app_name })
 
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
@@ -168,7 +168,7 @@ module "dns" {
 module "common_log_analytics" {
   source = "./_modules/log_analytics"
 
-  name_env = local.naming_constants
+  naming_config = local.naming_config
 
   resource_group_name = azurerm_resource_group.common.name
   location            = var.environment.location
@@ -183,7 +183,7 @@ module "common_log_analytics" {
 module "github_runner" {
   source = "./_modules/github_runner"
 
-  name_env = local.naming_constants
+  name_env = local.naming_config
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location

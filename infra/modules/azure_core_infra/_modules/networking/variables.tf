@@ -1,4 +1,4 @@
-variable "name_env" {
+variable "naming_config" {
   type = object({
     prefix          = string,
     environment     = string,

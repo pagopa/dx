@@ -27,7 +27,7 @@ module "core" {
 resource "azurerm_subnet" "apim" {
   name = provider::dx::resource_name(merge({
     resource_type = "apim_subnet",
-  }, local.env_name))
+  }, local.naming_config))
   virtual_network_name = module.core.common_vnet.name
   resource_group_name  = module.core.network_resource_group_name
   address_prefixes     = ["10.60.2.0/24"]

@@ -1,7 +1,7 @@
 #tfsec:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "common" {
   name = provider::dx::resource_name(merge(
-    var.name_env,
+    var.naming_config,
     {
       name          = "common",
       domain        = "",
