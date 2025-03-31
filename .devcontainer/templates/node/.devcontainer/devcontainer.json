@@ -10,6 +10,7 @@
       "installTFsec": true,
       "installTerraformDocs": true
     },
+    "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
     "ghcr.io/pagopa/devcontainer-features/plantuml:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "${templateOption:nodeVersion}",

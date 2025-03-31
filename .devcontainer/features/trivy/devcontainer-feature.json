@@ -1,0 +1,13 @@
+{
+  "id": "trivy",
+  "version": "1.0.0",
+  "name": "Trivy",
+  "description": "Installs Trivy",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/trivy",
+  "customizations": {
+    "vscode": {
+      "extensions": ["aquasecurityofficial.trivy-vulnerability-scanner"]
+    }
+  },
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
