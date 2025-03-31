@@ -5,35 +5,72 @@ sidebar_label: Configuring Azure Login for GitHub Actions
 
 # Configuring Azure Login for GitHub Actions
 
-There are several ways to log into Azure by a GitHub Action. The DX chosen
-method doesn't require maintenance or secret management as it is a passwordless
-approach. Once set up, it just works.
+There are several ways to log into Azure using a GitHub Action. The DX-preferred
+method is passwordless, requiring no maintenance or secret management. Once set
+up, it works seamlessly.
 
-Only two components are needed to let GitHub Actions log into Azure:
+:::tip
 
-1. An Azure Managed Identity resource
-1. A federation between the Azure Managed Identity and the GitHub repository
-
-The folder `infra/identity` contains the Terraform definition to create both the
-Managed Identity and the federation with GitHub using a
-[Terraform custom module](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github)
-. The module also provides a set of default roles in the current Azure
-subscription, which are likely to be enough for new repositories (more on this
-later...).
-
-Once the Managed Identity is created, get the `client id` value and note it
-apart.
-
-:::note
-
-The Managed Identity Client Id is available in the Azure Portal, navigating to
-the Managed Identity resource:
-![Azure Portal showing the client id](image_azmi.png)
+The modules `azure_federated_identity_with_github` and
+`azure_github_environment_bootstrap` already implement the steps described in
+this article. While the latter also creates the required GitHub Environments and
+secrets, both modules provide a default set of roles in the current Azure
+subscription, which is likely sufficient for new repositories (more on this
+later).
 
 :::
 
-Your GitHub repository is now federated with the Managed Identity which GitHub
-Actions will use to log into Azure:
+To enable GitHub Actions to log into Azure, you need only two components:
+
+1. A User-Assigned Azure Managed Identity resource
+2. A federation between the Azure Managed Identity and the GitHub repository
+
+Create a User-Assigned Managed Identity using the following command:
+
+```bash
+az identity create --name <myIdentity> \
+  --resource-group <myRg> \
+  --location <myLocation> \
+  --tags <myTags>
+```
+
+After creating the Managed Identity, retrieve its `client id` and save it for
+later use.
+
+:::note
+
+You can obtain the Managed Identity Client ID in the Azure Portal by navigating
+to the Managed Identity resource:  
+![Azure Portal showing the client id](image_azmi.png)
+
+Alternatively, you can find it using the Azure CLI:
+
+```bash
+az identity show --name <myIdentity> \
+  --resource-group <myRg>
+```
+
+:::
+
+To federate the identity with GitHub, navigate to the `Federated Credentials`
+blade and create a new credential. Select the option
+`Configure a GitHub issued token to impersonate this application and deploy to Azure`,
+and fill in the required fields. Alternatively, use the Azure CLI:
+
+```bash
+az identity federated-credential create --identity-name <federationName> \
+  --name <myName> \
+  --resource-group <myRg> \
+  --audiences "api://AzureADTokenExchange" \
+  --issuer "https://token.actions.githubusercontent.com" \
+  --subject "repo:{Organization}/{Repository}:{Entity}"
+```
+
+Here, `Entity` can be a GitHub `Environment`, `Branch`, `Pull Request`, or
+`Tag`.
+
+Your GitHub repository is now federated with the Managed Identity, allowing
+GitHub Actions to log into Azure for the specified `Entity`:
 
 ```yaml
 - name: Azure Login
@@ -51,13 +88,13 @@ changed over time.
 
 :::important
 
-> Rather than specifying the `azure/login` action directly, you'd likely find
-> yourself more often passing them as workflow arguments to
+> Instead of specifying the `azure/login` action directly, you will often pass
+> these values as workflow arguments to
 > [DX Terraform Modules](https://github.com/pagopa/dx/tree/main/infra/modules).
 
 :::
 
-## GitHub environments
+## GitHub Environments
 
 A GitHub pipeline could use GitHub environments to inherits settings, secrets,
 variables, permissions and other stuff. As Azure subscriptions are grouped by
@@ -65,27 +102,26 @@ project (`PROD-IO`, `PROD-SELFCARE`, etc.) and environment (`DEV-SELFCARE`,
 `UAT-SELFCARE`, etc.), GitHub environments are used to get the value of a given
 secret depending on the current scope which comprises both.
 
-Values for `tenant id`, `subscription id` and `managed identity client id` can
-be stored as secrets tied to a specific GitHub environment. In particular:
+The following values can be stored as secrets tied to specific GitHub
+environments:
 
-- `tenant id`: the value is always the same and could be stored as repository
-  secret
-- `subscription id`: if the project has a single environment it could be stored
-  as repository secret; otherwise use an environment secret
-- `managed identity client id`: always as environment secret
+- `tenant id`: This value is constant and can be stored as a repository secret.
+- `subscription id`: If the project has a single environment, store it as a
+  repository secret; otherwise, use an environment secret.
+- `managed identity client id`: Always store this as an environment secret.
 
 :::tip
 
-GitHub environments and secrets may be created via Terraform using the
+GitHub environments and secrets can be created via Terraform using the
 [provided DX module](https://github.com/pagopa/dx/tree/main/infra/repository).
 
 :::
 
-### Managing multiple GitHub environments
+### Managing Multiple GitHub Environments
 
-A managed identity has a set of roles in a given subscription. Therefore,
-multiple pipelines that require the same roles can use the same managed
-identity, including the same GitHub environment.
+A Managed Identity has a set of roles within a given subscription. Multiple
+pipelines requiring the same roles can share the same Managed Identity and
+GitHub environment.
 
 Let's consider a scenario where a repository has two Azure Functions Apps, each
 with its own application code and Terraform code. The Terraform deployments
@@ -102,22 +138,22 @@ a dedicated GitHub environment.
 
 :::tip
 
-Generally, the following convention is used to name the GitHub environments:
+The following naming convention is generally used for GitHub environments:
 
-- `<env>-ci/cd`: dedicated to IaC (Terraform HCL) code (i.e. `prod-ci`)
-- `app-<env>-ci/cd`: dedicated to applicatives (Azure Functions or App Service)
-  deployments
-- `opex-<env>-ci/cd`: dedicated to the Opex dashboard deployments
+- `infra-<env>-ci/cd`: For Infrastructure as Code (Terraform HCL) (e.g.,
+  `infra-prod-ci`)
+- `app-<env>-ci/cd`: For application deployments (e.g., Azure Functions or App
+  Services)
+- `opex-<env>-ci/cd`: For Opex dashboard deployments
 
-For any other need, add the desired environment sticking to this pattern.
+For other needs, create environments following this pattern.
 
 :::
 
-## Managing identity roles
+## Managing Identity Roles
 
-The module mentioned earlier, which creates a Managed Identity federated with
-GitHub, assigns a default set of roles to the Identity. However, it is highly
-likely that these roles will need to be changed over time.
+The module that creates a Managed Identity federated with GitHub assigns a
+default set of roles. However, these roles may need to be updated over time.
 
 This can happen when, for example, a new resource is added to the configuration
 that requires special roles. Or when the Terraform code needs to read a secret
@@ -128,12 +164,11 @@ Therefore, it is important to update the identity definition with the
 appropriate roles whenever a new role is needed. There are numerous scenarios
 where this could occur, but some common examples include:
 
-- Modifying roles of system-assigned managed identities
-- Accessing a new entity from the KeyVault (such as certificates, secrets, or
-  keys)
-- Adding VNet peerings
-- Updating APIM configuration
-- Reading from a Storage Account container, queue, or table
+- Modify roles for system-assigned managed identities
+- Access new entities in a KeyVault (e.g., certificates, secrets, or keys)
+- Add VNet peerings
+- Update APIM configurations
+- Read from a Storage Account container, queue, or table
 
 The general advice is to check the CI pipeline, as it may fail due to a missing
 role. In such cases, identify the required role using the official documentation
@@ -141,14 +176,14 @@ and create a pull request (PR) with the updated definition.
 
 :::warning
 
-Setting new roles is quite easy and must be done separately for CI and CD
+Setting new roles is straightforward but must be done separately for CI and CD
 identities.
 
 :::
 
 :::tip
 
-Granularity is set at subscription and resource group level. Check the module
-documentation for details.
+Roles are assigned at the subscription and resource group levels. Refer to the
+module documentation for details.
 
 :::
