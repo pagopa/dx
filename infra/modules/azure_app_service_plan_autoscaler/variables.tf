@@ -33,20 +33,27 @@ variable "target_service" {
   type = object({
     app_service = optional(object({
       id   = optional(string)
-      name = string
+      name = optional(string)
     }))
     function_app = optional(object({
       id   = optional(string)
-      name = string
+      name = optional(string)
     }))
   })
 
   validation {
     condition = (
-      (var.target_service.app_service != null && try(var.target_service.app_service.name, "") != "") ||
-      (var.target_service.function_app != null && try(var.target_service.function_app.name, "") != "")
+      (var.target_service.app_service != null && xor(try(var.target_service.app_service.id, "") != "", try(var.target_service.app_service.name, "") != "")) ||
+      (var.target_service.function_app != null && xor(try(var.target_service.function_app.id, "") != "", try(var.target_service.function_app.name, "") != ""))
     )
-    error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
+    error_message = "You must specify either 'id' or 'name' (but not both) for exactly one target service: either 'app_service' or 'function_app'."
+  }
+
+  validation {
+    condition = (
+      xor(var.target_service.app_service != null, var.target_service.function_app != null)
+    )
+    error_message = "You must specify exactly one target service: either 'app_service' or 'function_app', but not both."
   }
 }
 

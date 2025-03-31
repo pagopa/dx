@@ -2,7 +2,7 @@ locals {
   target_type     = var.target_service.app_service != null ? "app_service" : "function_app"
   is_app_service  = local.target_type == "app_service"
   is_function_app = local.target_type == "function_app"
-  id_is_provided = try(var.target_service[local.target_type].id, null) != null
+  name_is_provided = try(var.target_service[local.target_type].name, null) != null
   target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
 
   base_name = var.target_service[local.target_type].name
