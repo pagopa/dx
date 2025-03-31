@@ -105,10 +105,10 @@ secret depending on the current scope which comprises both.
 The following values can be stored as secrets tied to specific GitHub
 environments:
 
-- `tenant id`: This value is constant and can be stored as a repository secret.
-- `subscription id`: If the project has a single environment, store it as a
+- `ARM_TENANT_ID`: This value is constant and can be stored as a repository secret.
+- `ARM_SUBSCRIPTION_ID`: If the project has a single environment, store it as a
   repository secret; otherwise, use an environment secret.
-- `managed identity client id`: Always store this as an environment secret.
+- `ARM_CLIENT_ID`: Always store this as an environment secret.
 
 :::tip
 
