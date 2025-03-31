@@ -5,7 +5,7 @@ locals {
   name_is_provided = try(var.target_service[local.target_type].name, null) != null
   target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? data.azurerm_linux_web_app.this[0].id : data.azurerm_linux_function_app.this[0].id)
 
-  base_name = var.target_service[local.target_type].name
+  base_name = local.name_is_provided ? var.target_service[local.target_type].name : reverse(split("/", var.target_service[local.target_type].name))[0]
 
   # Generates an autoscaler name by replacing "fn", "func", or "app" with "as".
   # Example:
