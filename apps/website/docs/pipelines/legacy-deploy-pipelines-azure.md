@@ -5,11 +5,15 @@ sidebar_label: Deploy Azure Web App - Legacy
 
 # Deploy Azure Web App - Legacy
 
-The [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml) is used to build and deploy **Node.js** applications to **Azure Web App**, which is part of the Azure App Service platform.
+The
+[Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml)
+is used to build and deploy **Node.js** applications to **Azure Web App**, which
+is part of the Azure App Service platform.
 
-:::note
+:::caution
 
-This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+This workflow has been deprecated as part of the migration to a monorepo
+architecture.
 
 :::
 
@@ -25,10 +29,13 @@ The workflow performs the following steps:
 
 :::info
 
-Ensure that `yarn` is properly configured in your project with the necessary scripts for building and deploying the application. The `package.json` file must define the following npm tasks:
+Ensure that `yarn` is properly configured in your project with the necessary
+scripts for building and deploying the application. The `package.json` file must
+define the following npm tasks:
 
 - `build`: To compile the project.
-- `predeploy`: To prepare the application for deployment, such as cleaning and generating necessary files.
+- `predeploy`: To prepare the application for deployment, such as cleaning and
+  generating necessary files.
 
 These scripts are critical for the workflow to execute successfully.
 
@@ -36,7 +43,8 @@ These scripts are critical for the workflow to execute successfully.
 
 ## Usage
 
-To use the Deploy Pipelines workflow, you can invoke it as a reusable workflow in your repository. Below is an example configuration:
+To use the Deploy Pipelines workflow, you can invoke it as a reusable workflow
+in your repository. Below is an example configuration:
 
 ```yaml
 name: Deploy Pipelines
@@ -58,22 +66,17 @@ jobs:
       use_private_agent: false
 ```
 
-### Configuration Variables
-
-- **environment**: Specifies the deployment environment (e.g., `dev`, `uat`, `prod`).
-- **resource_group_name**: Name of the Azure resource group.
-- **app_name**: Name of the Azure Web App.
-- **health_check_path**: Path for the health check endpoint. Default is `/info`.
-- **use_staging_slot**: Whether to deploy to a staging slot. Default is `true`.
-- **use_private_agent**: Whether to use a private agent for deployment. Default is `true`.
-
 ### Notes
 
 - The workflow supports slot swapping for zero-downtime deployments.
-- Ensure that the necessary Azure credentials are configured as secrets in your repository.
+- Ensure that the necessary Azure credentials are configured as secrets in your
+  repository.
 
 :::warning
 
-Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and `ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication.
+Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and
+`ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication. For
+detailed instructions, refer to:
+[Configuring Azure Login for GitHub Actions](./azure-login.md).
 
 :::

@@ -5,11 +5,14 @@ sidebar_label: Code Review - Legacy
 
 # Code Review - Legacy
 
-The [Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_code_review.yaml) is used to perform code quality checks for **Node.js** projects.
+The
+[Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_code_review.yaml)
+is used to perform code quality checks for **Node.js** projects.
 
-:::note
+:::caution
 
-This workflow will eventually be deprecated as part of the migration to a monorepo architecture.
+This workflow has been deprecated as part of the migration to a monorepo
+architecture.
 
 :::
 
@@ -26,7 +29,9 @@ The workflow performs the following steps:
 
 :::info
 
-Ensure that `yarn` is properly configured in your project with the necessary scripts for linting, testing, and generating API definitions. The `package.json` file must define the following npm tasks:
+Ensure that `yarn` is properly configured in your project with the necessary
+scripts for linting, testing, and generating API definitions. The `package.json`
+file must define the following npm tasks:
 
 - `lint`: To run code linting.
 - `lint-api`: To validate API specifications.
@@ -39,7 +44,8 @@ These scripts are required for the workflow to function as expected.
 
 ## Usage
 
-To use the Code Review workflow, invoke it as a reusable workflow in your repository. Below is an example configuration:
+To use the Code Review workflow, invoke it as a reusable workflow in your
+repository. Below is an example configuration:
 
 ```yaml
 name: Code Review
@@ -56,11 +62,7 @@ jobs:
 
 ### Notes
 
-- Ensure that your project includes scripts for linting, testing, and generating API definitions.
-- To enable Codecov integration, set the `CODECOV_TOKEN` secret in your repository.
-
-:::warning
-
-Make sure to configure the necessary secrets and permissions for this workflow to function correctly.
-
-:::
+- Ensure that your project includes scripts for linting, testing, and generating
+  API definitions.
+- To enable Codecov integration, set the `CODECOV_TOKEN` secret in your
+  repository.
