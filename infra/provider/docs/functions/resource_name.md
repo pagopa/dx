@@ -84,6 +84,7 @@ The following table lists the resource types and their abbreviations used in the
 |cosmos_db|cosmos|
 |cosmos_db_nosql|cosno|
 |cosmos_private_endpoint|cosno-pep|
+|customer_key_storage_account|stcmk|
 |eventhub_namespace|evhns|
 |eventhub_private_endpoint|evhns-pep|
 |file_private_endpoint|file-pep|
