@@ -1,4 +1,17 @@
 locals {
+
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location = tomap({
+      "italynorth" = "itn",
+      "westeurope" = "weu"
+    })[var.environment.location]
+    domain          = var.environment.domain,
+    name        = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   tiers = {
     s = {
       alerts                     = false
@@ -19,22 +32,22 @@ locals {
 
   peps = {
     blob = {
-      name     = "${module.naming_convention.prefix}-blob-pep-${module.naming_convention.suffix}"
+      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "blob_private_endpoint" }))
       dns_zone = "privatelink.blob.core.windows.net"
     }
 
     file = {
-      name     = "${module.naming_convention.prefix}-file-pep-${module.naming_convention.suffix}"
+      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "file_private_endpoint" }))
       dns_zone = "privatelink.file.core.windows.net"
     }
 
     queue = {
-      name     = "${module.naming_convention.prefix}-queue-pep-${module.naming_convention.suffix}"
+      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "queue_private_endpoint" }))
       dns_zone = "privatelink.queue.core.windows.net"
     }
 
     table = {
-      name     = "${module.naming_convention.prefix}-table-pep-${module.naming_convention.suffix}"
+      name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "table_private_endpoint" }))
       dns_zone = "privatelink.table.core.windows.net"
     }
   }
