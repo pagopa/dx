@@ -8,7 +8,16 @@ locals {
     instance_number = "01"
   }
 
-  project = module.naming_convention.project
+  naming_config = {
+    prefix      = local.environment.prefix,
+    environment = local.environment.env_short,
+    location = tomap({
+      "italynorth" = "itn",
+      "westeurope" = "weu"
+    })[local.environment.location]
+    name            = local.environment.app_name,
+    instance_number = tonumber(local.environment.instance_number),
+  }
 
   tags = {
     CreatedBy   = "Terraform"
