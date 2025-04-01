@@ -2,4 +2,4 @@
 "azure_core_infra": patch
 ---
 
-Remove naming convention module and use provider pagopa-dx
+Replace naming convention module with provider functions
