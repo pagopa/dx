@@ -38,7 +38,8 @@ Ensure appropriate access control for your repository:
 - Always provide `Admin` access to:
   - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
     DX tooling.
-  - The [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
+  - The
+    [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
 
 ### CODEOWNERS Definition
 
@@ -67,13 +68,20 @@ Create the following dotfiles at the root of your repository:
 - `.gitignore`: Add rules to manage Terraform files
   ([example](https://github.com/pagopa/dx-typescript/blob/main/.gitignore#L1)).
 - `.pre-commit-config.yaml`: Define pre-commit hooks
-  ([example](https://github.com/pagopa/dx/blob/main/.pre-commit-config.yaml)).
+  ([example](https://github.com/pagopa/dx-typescript/blob/main/.pre-commit-config.yaml)).
 - `.editorconfig`: Enforce consistent coding styles
   ([example](https://github.com/pagopa/dx-typescript/blob/main/.editorconfig)).
 - `.tflint.hcl`: Configure TFLint for Terraform linting
   ([example](https://github.com/pagopa/dx/blob/main/.tflint.hcl)).
 - `.trivyignore`: Define rules for Trivy vulnerability scanning
   ([example](https://github.com/pagopa/dx/blob/main/.trivyignore)).
+
+:::tip
+
+You can easily download all these files by using
+[the initializer shell script](https://github.com/pagopa/dx/blob/main/scripts/dotfiles_initializer.sh)
+
+:::
 
 ### GitHub PAT
 
