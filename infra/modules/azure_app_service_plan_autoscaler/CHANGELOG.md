@@ -1,5 +1,11 @@
 # azure_app_service_plan_autoscaler
 
+## 1.1.0
+
+### Minor Changes
+
+- 889576c: Made target service name and id mutually exclusive to reduce entropy in the configuration
+
 ## 1.0.0
 
 ### Major Changes
