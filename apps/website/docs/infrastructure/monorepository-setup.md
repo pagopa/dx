@@ -16,18 +16,29 @@ supported. Additional tooling to support other scenarios is under development.
 
 ## Repository Setup
 
-Start by creating the repository on GitHub. Then, follow these steps to complete
-the configuration.
+Start by creating the repository on GitHub:
+
+```bash
+gh repo create <org>/<repo-name> \
+  --add-readme \
+  --description <some-text> \
+  --disable-wiki \
+  --public \
+  --clone
+```
+
+Then, follow these steps to complete the configuration.
 
 ### Repository Access Control
 
 Ensure appropriate access control for your repository:
 
-- [Grant access](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github) to your peers who need it.
+- [Grant access](https://pagopa.atlassian.net/wiki/search?text=github%20gestione%20utenze)
+  to your peers who need it.
 - Always provide `Admin` access to:
   - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
     DX tooling.
-  - The BOT user associated with your product.
+  - The [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
 
 ### CODEOWNERS Definition
 
@@ -42,9 +53,9 @@ Example `CODEOWNERS` file:
 ```md
 # See https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
 
-* <your-team>
-/infra/ <your-team> @engineering-team-devex 
-.github/ <your-team> @engineering-team-devex 
+- <your-team>
+  /infra/ <your-team> @engineering-team-devex 
+  .github/ <your-team> @engineering-team-devex
 ```
 
 ### Creation of Dotfiles
@@ -88,8 +99,8 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
    - Select `Only select repositories` and add the new repository.
    - Add a meaningful description like "PAT to manage GitHub locally via
      Terraform."
-2. Set in your local environment the variable `GITHUB_TOKEN` with the generated PAT value in your CLI
-   profile.
+2. Set in your local environment the variable `GITHUB_TOKEN` with the generated
+   PAT value in your CLI profile.
 
 #### Update of GitHub PAT
 
@@ -102,7 +113,8 @@ ensure that the new repository is accessible from that PAT.
 
 :::warning
 
-PATs have an expiration date. [Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat ).
+PATs have an expiration date.
+[Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat).
 
 :::
 
