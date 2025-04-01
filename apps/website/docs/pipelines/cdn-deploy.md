@@ -53,8 +53,6 @@ jobs:
           working_directory: "."
 ```
 
-### Adapting This Workflow
-
 When implementing this action in your repository:
 
 1. **Adjust paths** - Ensure `sync_dir_name` and `working_directory` match your
