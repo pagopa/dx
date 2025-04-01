@@ -61,7 +61,7 @@ run "autoscaler_with_existing_app_service" {
 
     target_service = {
       app_service = {
-        name   = run.setup_tests.app_service.name
+        id     = run.setup_tests.app_service.id
       }
     }
 
