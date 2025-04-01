@@ -19,7 +19,7 @@ module "azure_function_app" {
   source = "../../../azure_function_app"
 
   environment         = local.environment
-  tier                = "s"
+  tier                = "m"
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
@@ -39,7 +39,7 @@ module "azure_function_app" {
 
 
 module "func_autoscaler" {
-  source  = "../../"
+  source = "../../"
 
   resource_group_name = module.azure_function_app.function_app.resource_group_name
   location            = local.environment.location
@@ -48,7 +48,7 @@ module "func_autoscaler" {
 
   target_service = {
     function_app = {
-      name   = module.azure_function_app.function_app.function_app.name
+      id = module.azure_function_app.function_app.function_app.id
     }
   }
 
@@ -61,7 +61,7 @@ module "func_autoscaler" {
       decrease_by               = 1
       cooldown_decrease         = 1
       upper_threshold           = 40
-      lower_threshold            = 15
+      lower_threshold           = 15
     },
     requests = {
       time_aggregation_increase = "Maximum"
@@ -71,7 +71,7 @@ module "func_autoscaler" {
       decrease_by               = 1
       cooldown_decrease         = 1
       upper_threshold           = 3000
-      lower_threshold            = 300
+      lower_threshold           = 300
     }
   }
 

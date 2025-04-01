@@ -41,6 +41,8 @@ variable "target_service" {
     }))
   })
 
+  description = "The target service to autoscale. You can specify either an app service or a function app, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
+
   validation {
     condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null]) && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null]) ||
     var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null]) && !alltrue([try(var.target_service.function_app.id, null) != null, try(var.target_service.function_app.name, null) != null]))
