@@ -9,12 +9,11 @@ This module is used to create an Azure App Service, allowing it to be configured
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.111.0, < 5.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~>0 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa-dx/azure-naming-convention/azurerm | ~> 0.0 |
+No modules.
 
 ## Resources
 

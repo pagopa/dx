@@ -8,7 +8,14 @@ locals {
     instance_number = "01"
   }
 
-  project = module.naming_convention.project
+  location_short = "itn"
+
+  naming_config = {
+    prefix          = local.environment.prefix,
+    environment     = local.environment.env_short,
+    location        = local.location_short,
+    instance_number = tonumber(local.environment.instance_number),
+  }
 
   tags = {
     CreatedBy   = "Terraform"
