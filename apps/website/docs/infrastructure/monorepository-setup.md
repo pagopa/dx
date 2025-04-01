@@ -43,7 +43,7 @@ Example `CODEOWNERS` file:
 # See https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
 
 * <your-team>
-/infra/ <your-team> @engineering-team-cloud-eng
+/infra/ <your-team> @engineering-team-devex 
 .github/ <your-team> @engineering-team-devex 
 ```
 
