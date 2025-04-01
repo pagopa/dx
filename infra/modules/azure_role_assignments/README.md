@@ -1,3 +1,11 @@
+# DX - Azure Role Assignments
+
+This module abstract the complexity of Azure IAM roles.
+
+## Usage Example
+
+For a complete example of how to use this module, refer to the [examples/function_app](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/function_app) folder in the module repository.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
