@@ -44,7 +44,7 @@ Example `CODEOWNERS` file:
 
 * <your-team>
 /infra/ <your-team> @engineering-team-cloud-eng
-.github/ <your-team> @engineering-team-cloud-eng
+.github/ <your-team> @engineering-team-devex 
 ```
 
 ### Creation of Dotfiles
