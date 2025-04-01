@@ -32,21 +32,29 @@ variable "app_service_plan_id" {
 variable "target_service" {
   type = object({
     app_service = optional(object({
-      id   = optional(string)
-      name = string
+      id   = optional(string, null)
+      name = optional(string, null)
     }))
     function_app = optional(object({
-      id   = optional(string)
-      name = string
+      id   = optional(string, null)
+      name = optional(string, null)
     }))
   })
 
+  description = "The target service to autoscale. You can specify either an app service or a function app, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
+
+  validation {
+    condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null]) && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null]) ||
+    var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null]) && !alltrue([try(var.target_service.function_app.id, null) != null, try(var.target_service.function_app.name, null) != null]))
+    error_message = "You must specify either 'id' or 'name' (but not both)."
+  }
+
   validation {
     condition = (
-      (var.target_service.app_service != null && try(var.target_service.app_service.name, "") != "") ||
-      (var.target_service.function_app != null && try(var.target_service.function_app.name, "") != "")
+      (var.target_service.app_service != null && var.target_service.function_app == null) ||
+      (var.target_service.app_service == null && var.target_service.function_app != null)
     )
-    error_message = "You must specify exactly one target service with a non-empty name. For contextual creation, provide a valid name (and id if updating an existing resource)."
+    error_message = "You must specify exactly one target service: either 'app_service' or 'function_app', but not both."
   }
 }
 
