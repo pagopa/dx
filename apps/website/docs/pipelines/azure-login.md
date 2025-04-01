@@ -11,12 +11,20 @@ up, it works seamlessly.
 
 :::tip
 
-The modules `azure_federated_identity_with_github` and
-`azure_github_environment_bootstrap` already implement the steps described in
-this article. While the latter also creates the required GitHub Environments and
-secrets, both modules provide a default set of roles in the current Azure
-subscription, which is likely sufficient for new repositories (more on this
-later).
+DX modules
+[`azure_federated_identity_with_github`](https://registry.terraform.io/modules/pagopa-dx/azure-federated-identity-with-github/azurerm/latest)
+and
+[`azure_github_environment_bootstrap`](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
+already implement the steps described in this article. Both modules provide a
+default set of roles in the current Azure subscription, which is likely
+sufficient for new repositories. However, the latter also creates the required
+GitHub Environments and secrets. If you're already using
+`azure_federated_identity_with_github`, you can skip the first section and read
+about [GitHub Environments](#github-environments) and
+[how to manage multiple environments](#managing-multiple-github-environments).
+Instead, `azure_github_environment_bootstrap` users might find it more useful to
+read about
+[best practices for managing Azure IAM](../infrastructure/azure/azure-iam).
 
 :::
 
@@ -81,10 +89,10 @@ GitHub Actions to log into Azure for the specified `Entity`:
     subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 ```
 
-Despite the three mentioned values are not secrets, they should not be harcoded
-in the pipeline but shall be stored as repository or GitHub _environment_
-secrets. This as they are likely to be used in multiple workflows and could be
-changed over time.
+Although the three mentioned values are not secrets, they should not be
+hardcoded in the pipeline but stored as repository or GitHub _environment_
+secrets. This is because they are likely to be used in multiple workflows and
+could change over time.
 
 :::important
 
@@ -96,16 +104,18 @@ changed over time.
 
 ## GitHub Environments
 
-A GitHub pipeline could use GitHub environments to inherits settings, secrets,
-variables, permissions and other stuff. As Azure subscriptions are grouped by
-project (`PROD-IO`, `PROD-SELFCARE`, etc.) and environment (`DEV-SELFCARE`,
-`UAT-SELFCARE`, etc.), GitHub environments are used to get the value of a given
-secret depending on the current scope which comprises both.
+A GitHub pipeline can use GitHub environments to inherit settings, secrets,
+variables, permissions, and other configurations. As Azure subscriptions are
+grouped by project (`PROD-IO`, `PROD-SELFCARE`, etc.) and environment
+(`DEV-SELFCARE`, `UAT-SELFCARE`, etc.), GitHub environments are used to retrieve
+the value of a given secret depending on the current scope, which comprises
+both.
 
 The following values can be stored as secrets tied to specific GitHub
 environments:
 
-- `ARM_TENANT_ID`: This value is constant and can be stored as a repository secret.
+- `ARM_TENANT_ID`: This value is constant and can be stored as a repository
+  secret.
 - `ARM_SUBSCRIPTION_ID`: If the project has a single environment, store it as a
   repository secret; otherwise, use an environment secret.
 - `ARM_CLIENT_ID`: Always store this as an environment secret.
@@ -123,14 +133,14 @@ A Managed Identity has a set of roles within a given subscription. Multiple
 pipelines requiring the same roles can share the same Managed Identity and
 GitHub environment.
 
-Let's consider a scenario where a repository has two Azure Functions Apps, each
-with its own application code and Terraform code. The Terraform deployments
-require high privileges to create and update networking resources, identities,
-key vault secrets, and more. On the other hand, the roles required for the
-Function App deployments are limited to write access for the Function App
-resource control plane. These deployments do not need access to other resources
-such as networking, storage, or secrets. However, both Function Apps require the
-same roles as the action performed is identical.
+Consider a scenario where a repository has two Azure Functions Apps, each with
+its own application code and Terraform code. The Terraform deployments require
+high privileges to create and update networking resources, identities, key vault
+secrets, and more. On the other hand, the roles required for the Function App
+deployments are limited to write access for the Function App resource control
+plane. These deployments do not need access to other resources such as
+networking, storage, or secrets. However, both Function Apps require the same
+roles as the action performed is identical.
 
 In this case, the two Function App pipelines can share the same Managed Identity
 and the related GitHub environment. However, the Terraform code should point to
@@ -152,8 +162,10 @@ For other needs, create environments following this pattern.
 
 ## Managing Identity Roles
 
-The module that creates a Managed Identity federated with GitHub assigns a
-default set of roles. However, these roles may need to be updated over time.
+The module
+[`azure_federated_identity_with_github`](https://registry.terraform.io/modules/pagopa-dx/azure-federated-identity-with-github/azurerm/latest)
+assigns a default set of roles. However, these roles may need to be updated over
+time.
 
 This can happen when, for example, a new resource is added to the configuration
 that requires special roles. Or when the Terraform code needs to read a secret
