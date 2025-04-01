@@ -25,7 +25,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~>4 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.2 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.2, < 1.0.0 |
 
 ## Modules
 
