@@ -4,34 +4,53 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.110, < 5.0"
     }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~>0"
+    }
   }
 }
 
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+locals {
+  naming_config = {
+    prefix      = var.environment.prefix,
+    environment = var.environment.env_short,
+    location = tomap({
+      "italynorth" = "itn",
+      "westeurope" = "weu"
+    })[var.environment.location]
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
   }
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "resource_group"
+  }))
 }
 
 data "azurerm_log_analytics_workspace" "logs" {
-  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-common-log-${module.naming_convention.suffix}"
-  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "resource_group"
+  }))
 }
 
 data "azurerm_container_app_environment" "cae" {
-  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-github-runner-cae-${module.naming_convention.suffix}"
-  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-github-runner-rg-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "github-runner",
+    resource_type = "container_app_environment"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "github-runner",
+    resource_type = "resource_group"
+  }))
 }
 
 output "resource_group_name" {

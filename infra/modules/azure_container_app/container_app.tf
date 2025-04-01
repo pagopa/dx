@@ -1,5 +1,5 @@
 resource "azurerm_container_app" "this" {
-  name                         = "${module.naming_convention.prefix}-ca-${module.naming_convention.suffix}"
+  name                         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app" }))
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
   revision_mode                = var.revision_mode
