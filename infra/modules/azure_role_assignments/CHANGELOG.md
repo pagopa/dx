@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.0.1
+
+### Patch Changes
+
+- acb24e0: Update README with module description and link to examples
+
 ## 1.0.0
 
 ### Major Changes
@@ -15,6 +21,9 @@
 
   A `description` field has been added to the role assignments. This field is **required** and can be used to provide why the role assignment is being created.
   A `subscription_id` field has been added to the role assignments. This field is **required** and must be used to provide the subscription ID of the target resource.
+
+  ```
+
   ```
 
 ## 0.1.3
