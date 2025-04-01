@@ -33,7 +33,7 @@ To enable GitHub Actions to log into Azure, you need only two components:
 1. A User-Assigned Azure Managed Identity resource
 2. A federation between the Azure Managed Identity and the GitHub repository
 
-Create a User-Assigned Managed Identity using the following command:
+Create a User-Assigned Managed Identity using the command:
 
 ```bash
 az identity create --name <myIdentity> \
@@ -41,6 +41,13 @@ az identity create --name <myIdentity> \
   --location <myLocation> \
   --tags <myTags>
 ```
+
+:::warning
+
+You need write access (e.g. `Contributor` role) to the resource group set in the
+command above
+
+:::
 
 After creating the Managed Identity, retrieve its `client id` and save it for
 later use.
