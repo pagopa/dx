@@ -36,6 +36,6 @@ locals {
   storage_account = {
     replication_type = local.tier == "s" ? "LRS" : "ZRS"
     name             = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
-    durable_name     = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" })), "stfn", "stfd")
+    durable_name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
   }
 }
