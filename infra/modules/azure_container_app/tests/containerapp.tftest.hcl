@@ -81,7 +81,7 @@ run "container_app_is_correct_plan" {
     condition = length([
       for env in azurerm_container_app.this.template[0].container[0].env :
       env if env.secret_name == null
-    ]) == 2
+    ]) == 2 # number of settings set above
     error_message = "The number of variables in the container app is not correct"
   }
 
@@ -89,7 +89,7 @@ run "container_app_is_correct_plan" {
     condition = length([
       for env in azurerm_container_app.this.template[0].container[0].env :
       env if env.secret_name != null
-    ]) == 2
+    ]) == 2 # number of secrets set above
     error_message = "The number of secrets set as variables in the container app is not correct"
   }
 
