@@ -1,7 +1,7 @@
 module "github_repository" {
-  for_each = var.repository.configure ? [var.repository.name] : []
-  source  = "pagopa-dx/github-environment-bootstrap/github"
-  version = "~> 0.0"
+  for_each = var.repository.configure ? toset([var.repository.name]) : []
+  source   = "pagopa-dx/github-environment-bootstrap/github"
+  version  = "~> 0.0"
 
   repository = {
     name                = var.repository.name
