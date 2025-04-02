@@ -13,7 +13,7 @@ locals {
 
   db = {
     name         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql" }))
-    replica_name = var.tier == "l" ? provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresq_replica" })) : null
+    replica_name = var.tier == "l" ? provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" })) : null
     sku_name = lookup(
       {
         "s" = "B_Standard_B1ms",
