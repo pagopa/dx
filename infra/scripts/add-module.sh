@@ -119,6 +119,7 @@ EOL
     git branch -M main
     git push -u origin main
     rm .gitignore
+    rm -rf .git
     echo -e "${GREEN}Module '${MODULE_NAME}' pushed to GitHub repository.${NC}"
     echo -e "${YELLOW}The creation of a changeset is required to produce the first release. Please run yarn changeset from the root of the repo.${NC}"
   else
