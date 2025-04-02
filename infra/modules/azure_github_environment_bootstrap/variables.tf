@@ -98,6 +98,7 @@ variable "repository" {
     opex_cd_policy_tags      = optional(set(string), [])
     app_cd_policy_tags       = optional(set(string), [])
     jira_boards_ids          = optional(list(string), [])
+    configure                = optional(bool, true) # Disable this option only if you already setup the repository for another cloud service provider in the same project
   })
 
   description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies."

@@ -53,7 +53,7 @@ state:
 ```hcl
 import {
   id = "<repository-name>"
-  to = module.repo.github_repository.this
+  to = module.repo.module.github_repository.github_repository.this
 }
 ```
 
