@@ -1,0 +1,7 @@
+{
+  "name": "github_environment_bootstrap",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Create and configure a new GitHub repository"
+}
