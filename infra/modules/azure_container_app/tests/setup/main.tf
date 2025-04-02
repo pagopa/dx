@@ -34,6 +34,27 @@ data "azurerm_container_app_environment" "cae" {
   resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-github-runner-rg-${module.naming_convention.suffix}"
 }
 
+data "azurerm_key_vault" "kv" {
+  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-common-kv-${module.naming_convention.suffix}"
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-${module.naming_convention.suffix}"
+}
+
+resource "azurerm_key_vault_secret" "test1" {
+  name            = "TESTSECRET1"
+  value           = "value1"
+  key_vault_id    = data.azurerm_key_vault.kv.id
+  expiration_date = timeadd(timestamp(), "30m")
+  content_type    = "application/text"
+}
+
+resource "azurerm_key_vault_secret" "test2" {
+  name            = "TESTSECRET2"
+  value           = "value2"
+  key_vault_id    = data.azurerm_key_vault.kv.id
+  expiration_date = timeadd(timestamp(), "30m")
+  content_type    = "application/text"
+}
+
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
 }
@@ -44,4 +65,18 @@ output "log_analytics_id" {
 
 output "container_app_environment_id" {
   value = data.azurerm_container_app_environment.cae.id
+}
+
+output "key_vault_secret1" {
+  value = {
+    secret_id = azurerm_key_vault_secret.test1.versionless_id
+    name      = azurerm_key_vault_secret.test1.name
+  }
+}
+
+output "key_vault_secret2" {
+  value = {
+    secret_id = azurerm_key_vault_secret.test2.versionless_id
+    name      = azurerm_key_vault_secret.test2.name
+  }
 }

@@ -22,7 +22,7 @@ resource "azurerm_container_app" "this" {
   dynamic "secret" {
     for_each = var.secrets
     content {
-      name                = secret.value.name
+      name                = lower(secret.value.name)
       key_vault_secret_id = secret.value.key_vault_secret_id
       identity            = "System"
     }
@@ -55,7 +55,7 @@ resource "azurerm_container_app" "this" {
 
           content {
             name        = env.value.name
-            secret_name = env.value.name
+            secret_name = lower(env.value.name)
           }
         }
 
