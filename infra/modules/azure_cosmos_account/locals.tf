@@ -1,4 +1,16 @@
 locals {
+  naming_config = {
+    prefix      = var.environment.prefix,
+    environment = var.environment.env_short,
+    location = tomap({
+      "italynorth" = "itn",
+      "westeurope" = "weu"
+    })[var.environment.location]
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   primary_location = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
 
   consistency_presets = {
@@ -31,5 +43,4 @@ locals {
     max_interval_in_seconds = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds : null
     max_staleness_prefix    = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
   } : local.consistency_presets[local.selected_preset]
-
 }
