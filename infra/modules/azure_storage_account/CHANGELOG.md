@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.11
+
+### Patch Changes
+
+- f0d352b: Replace naming convention module with DX provider functions
+
 ## 0.0.10
 
 ### Patch Changes
