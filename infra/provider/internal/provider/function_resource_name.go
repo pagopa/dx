@@ -51,13 +51,14 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"container_app_environment": "cae",
 
 		// Storage
-		"storage_account":              "st",
-		"blob_storage":                 "blob",
-		"queue_storage":                "queue",
-		"table_storage":                "table",
-		"file_storage":                 "file",
-		"function_storage_account":     "stfn",
-		"customer_key_storage_account": "stcmk",
+		"storage_account":                  "st",
+		"blob_storage":                     "blob",
+		"queue_storage":                    "queue",
+		"table_storage":                    "table",
+		"file_storage":                     "file",
+		"function_storage_account":         "stfn",
+		"customer_key_storage_account":     "stcmk",
+		"durable_function_storage_account": "stfd",
 
 		// Networking
 		"api_management":              "apim",
@@ -72,6 +73,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"cdn_frontdoor_origin":        "fdo",
 		"cdn_frontdoor_route":         "cdnr",
 		"nat_gateway":                 "ng",
+		"postgre_endpoint":            "psql-ep",
 
 		// Private Endpoints
 		"private_endpoint":                 "pep",
@@ -102,11 +104,11 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"private_endpoint_subnet": "pep-snet",
 
 		// Databases
-		"cosmos_db":         "cosmos",
-		"cosmos_db_nosql":   "cosno",
-		"postgresql":        "psql",
-		"postgresq_replica": "psql-replica",
-		"redis_cache":       "redis",
+		"cosmos_db":          "cosmos",
+		"cosmos_db_nosql":    "cosno",
+		"postgresql":         "psql",
+		"postgresql_replica": "psql-replica",
+		"redis_cache":        "redis",
 
 		// Integration
 		"eventhub_namespace": "evhns",
