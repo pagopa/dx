@@ -33,16 +33,7 @@ run "container_app_is_correct_plan" {
       instance_number = "01"
     }
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create Container App for test"
-    }
+    tags = run.setup_tests.tags
 
     tier = "xs"
 
@@ -87,8 +78,19 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = length(azurerm_container_app.this.template[0].container[0].env) == 4
+    condition = length([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env if env.secret_name == null
+    ]) == 2
     error_message = "The number of variables in the container app is not correct"
+  }
+
+  assert {
+    condition = length([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env if env.secret_name != null
+    ]) == 2
+    error_message = "The number of secrets set as variables in the container app is not correct"
   }
 
   assert {
@@ -124,6 +126,18 @@ run "container_app_is_correct_plan" {
       if env.secret_name == null
     ])
     error_message = "The container app setting names are not correct"
+  }
+
+  assert {
+    condition = alltrue([
+      for env in azurerm_container_app.this.template[0].container[0].env : contains([
+        "value1",
+        "value2"
+        ],
+      env.value)
+      if env.secret_name == null
+    ])
+    error_message = "The container app setting values are not correct"
   }
 
   assert {

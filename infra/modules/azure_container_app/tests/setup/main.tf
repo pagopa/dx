@@ -7,6 +7,19 @@ terraform {
   }
 }
 
+locals {
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create Container App for test"
+  }
+}
+
 module "naming_convention" {
   source = "../../../azure_naming_convention"
 
@@ -79,4 +92,8 @@ output "key_vault_secret2" {
     secret_id = azurerm_key_vault_secret.test2.versionless_id
     name      = azurerm_key_vault_secret.test2.name
   }
+}
+
+output "tags" {
+  value = local.tags
 }

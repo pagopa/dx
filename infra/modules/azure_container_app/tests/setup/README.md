@@ -39,4 +39,5 @@
 | <a name="output_key_vault_secret2"></a> [key\_vault\_secret2](#output\_key\_vault\_secret2) | n/a |
 | <a name="output_log_analytics_id"></a> [log\_analytics\_id](#output\_log\_analytics\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 <!-- END_TF_DOCS -->
