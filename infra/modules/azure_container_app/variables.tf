@@ -121,17 +121,26 @@ variable "container_app_templates" {
   description = "List of container app templates"
 
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
+    condition = alltrue([
+      for template in var.container_app_templates :
+      template.liveness_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)
+    ])
     error_message = "Valid values for liveness_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
   }
 
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)])
+    condition = alltrue([
+      for template in var.container_app_templates :
+      template.readiness_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)
+    ])
     error_message = "Valid values for readiness_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
   }
 
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)])
+    condition = alltrue([
+      for template in var.container_app_templates :
+      template.startup_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)
+    ])
     error_message = "Valid values for startup_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
   }
 }
