@@ -1,6 +1,6 @@
 {
   "id": "trivy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Trivy",
   "description": "Installs Trivy",
   "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/trivy",
