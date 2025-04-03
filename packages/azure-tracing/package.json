@@ -1,0 +1,10 @@
+{
+  "name": "@pagopa/azure-tracing",
+  "version": "0.0.0",
+  "dependencies": {
+    "@azure/monitor-opentelemetry": "^1.9.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.2.2"
+  }
+}
