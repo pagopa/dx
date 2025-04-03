@@ -4,47 +4,64 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.110, < 5.0"
     }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
+    }
   }
 }
 
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = {
+locals {
+  naming_config = {
     prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
+    environment     = var.environment.env_short
     location        = var.environment.location
     domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+    name            = var.environment.app_name
+    instance_number = tonumber(var.environment.instance_number)
+  }
+
+  virtual_network = {
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = null,
+      name          = "common",
+      resource_type = "virtual_network"
+    }))
+    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = null,
+      name          = "network",
+      resource_type = "resource_group"
+    }))
   }
 }
 
 resource "azurerm_subnet" "snet" {
-  name                 = "${module.naming_convention.prefix}-snet-sa-${module.naming_convention.suffix}"
-  virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "sa",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
   address_prefixes     = ["10.50.200.0/24"]
 }
 
-resource "azurerm_user_assigned_identity" "user" {
-  name                = "${module.naming_convention.prefix}-user-sa-${module.naming_convention.suffix}"
-  resource_group_name = data.azurerm_resource_group.rg.name
-  location            = var.environment.location
-
-  tags = var.tags
-}
-
-
 data "azurerm_subnet" "pep" {
-  name                 = "${module.naming_convention.project}-pep-snet-01"
-  virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
-
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "test",
+    resource_type = "resource_group"
+  }))
 }
 
 output "pep_id" {
@@ -57,8 +74,4 @@ output "subnet_id" {
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
-}
-
-output "user_assigned_identity_id" {
-  value = azurerm_user_assigned_identity.user.id
 }
