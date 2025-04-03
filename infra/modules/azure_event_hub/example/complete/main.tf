@@ -1,29 +1,21 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
-data "azurerm_monitor_action_group" "example" {
-  name                = replace("${local.environment.prefix}-${local.environment.env_short}-error", "-", "")
-  resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
-}
-
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
   location = local.environment.location
 }
 
 data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
@@ -34,9 +26,8 @@ module "azure_event_hub" {
   resource_group_name = azurerm_resource_group.example.name
   tier                = "l"
 
-  subnet_pep_id = data.azurerm_subnet.pep.id
-
-  action_group_id = data.azurerm_monitor_action_group.example.id
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   allowed_sources = {
     subnet_ids = [azurerm_subnet.example.id]
