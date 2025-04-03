@@ -57,7 +57,7 @@ if [ ! -f "${PACKAGE_JSON}" ]; then
   cat <<EOL > "${PACKAGE_JSON}"
 {
   "name": "${MODULE_NAME}",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "provider": "${PROVIDER}",
   "description": "${DESCRIPTION}"
@@ -95,7 +95,7 @@ else
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}GitHub repository created successfully: https://github.com/${ORG_NAME}/${SUBREPO_NAME}${NC}"
-    
+
     # Add dx-pagopa-bot as a collaborator with admin permissions
     gh api -X PUT /repos/${ORG_NAME}/${SUBREPO_NAME}/collaborators/dx-pagopa-bot -f permission=admin
   else

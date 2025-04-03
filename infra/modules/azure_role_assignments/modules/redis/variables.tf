@@ -3,13 +3,19 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "redis" {
   description = "A list of Redis role assignments"
   type = list(object({
-    cache_id    = string
-    role        = string
-    username    = string
-    description = string
+    cache_name          = string
+    resource_group_name = string
+    role                = string
+    username            = string
+    description         = string
   }))
 
   validation {

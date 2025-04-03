@@ -28,38 +28,42 @@ module "function" {
 }
 
 module "roles" {
-  source       = "../../"
-  principal_id = module.function.function_app.function_app.principal_id
-
+  source          = "../../"
+  principal_id    = module.function.function_app.function_app.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
   cosmos = [
     {
-      account_id  = "<THE_COSMOS_ACCOUNT_ID>"
-      description = "Why this role is assigned"
-      role        = "writer"
-      database    = "a"
-      collections = ["x", "y"]
+      account_name        = "<THE_COSMOS_ACCOUNT_NAME>"
+      resource_group_name = "<THE_COSMOS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
+      role                = "writer"
+      database            = "a"
+      collections         = ["x", "y"]
     },
     {
-      account_id  = "<THE_COSMOS_ACCOUNT_ID>"
-      description = "Why this role is assigned"
-      role        = "reader"
-      database    = "b"
+      account_name        = "<THE_COSMOS_ACCOUNT_NAME>"
+      resource_group_name = "<THE_COSMOS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
+      role                = "reader"
+      database            = "b"
     }
   ]
 
   redis = [
     {
-      cache_id    = "<THE_REDIS_CACHE_ID>"
-      description = "Why this role is assigned"
-      role        = "reader"
-      username    = "pippo"
+      cache_name          = "<THE_REDIS_CACHE_NAME>"
+      resource_group_name = "<THE_REDIS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
+      role                = "reader"
+      username            = "pippo"
     }
   ]
 
   key_vault = [
     {
-      id          = "<THE_KEY_VAULT_ID>"
-      description = "Why this role is assigned"
+      name                = "<THE_KEY_VAULT_NAME>"
+      resource_group_name = "<THE_KEY_VAULT_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
       roles = {
         secrets = "reader"
       }

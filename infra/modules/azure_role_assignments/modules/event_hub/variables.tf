@@ -3,13 +3,19 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "event_hub" {
   description = "A list of event hub role assignments"
   type = list(object({
-    namespace_id    = string
-    event_hub_names = optional(list(string), ["*"])
-    role            = string
-    description     = string
+    namespace_name      = string
+    resource_group_name = string
+    event_hub_names     = optional(list(string), ["*"])
+    role                = string
+    description         = string
   }))
 
   validation {

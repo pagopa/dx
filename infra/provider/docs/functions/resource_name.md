@@ -44,7 +44,7 @@ resource_name(configuration map of string) string
 |:---|:---:|:---:|:---|
 |prefix|String|Yes|Prefix that define the repository domain (Max 2 characters)|
 |environment|String|Yes|Environment where the resources will be deployed (d, u or p)|
-|location|String|Yes|Location where the resources will be deployed (itn or weu)|
+|location|String|Yes|Location where the resources will be deployed (itn/italynorth or weu/westeurope)|
 |domain|String|No|Optional value that specify the domain|
 |name|String|Yes|Name of the resource|
 |resource_type|String|Yes|Type of the resource (see the table below)|
@@ -84,6 +84,8 @@ The following table lists the resource types and their abbreviations used in the
 |cosmos_db|cosmos|
 |cosmos_db_nosql|cosno|
 |cosmos_private_endpoint|cosno-pep|
+|customer_key_storage_account|stcmk|
+|durable_function_storage_account|stfd|
 |eventhub_namespace|evhns|
 |eventhub_private_endpoint|evhns-pep|
 |file_private_endpoint|file-pep|
@@ -99,10 +101,11 @@ The following table lists the resource types and their abbreviations used in the
 |log_analytics|log|
 |nat_gateway|ng|
 |network_security_group|nsg|
+|postgre_endpoint|psql-ep|
 |postgre_private_endpoint|psql-pep|
 |postgre_replica_private_endpoint|psql-pep-replica|
 |postgresql|psql|
-|postgresq_replica|psql-replica|
+|postgresql_replica|psql-replica|
 |private_endpoint|pep|
 |private_endpoint_subnet|pep-snet|
 |public_ip|pip|
