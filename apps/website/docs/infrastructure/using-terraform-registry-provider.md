@@ -55,7 +55,7 @@ The DX Azure provider accepts the following inputs (all currently optional):
 | ------------- | ------ | -------- | ------------------------------------ |
 | `prefix`      | String | No       | Two-character project prefix.        |
 | `environment` | String | No       | Deployment environment (d, u, or p). |
-| `location`    | String | No       | Deployment location (itn or weu).    |
+| `location`    | String | No       | Deployment location (itn/italynorth or weu/westeurope).    |
 | `domain`      | String | No       | Optional domain for naming.          |
 
 ## Functions
@@ -74,7 +74,7 @@ parameters.
 | ----------------- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `prefix`          | String  | Yes      | Prefix that defines the repository domain.                                                                                                                                                                        |
 | `environment`     | String  | Yes      | Deployment environment (d, u, or p).                                                                                                                                                                              |
-| `location`        | String  | Yes      | Deployment location (itn or weu).                                                                                                                                                                                 |
+| `location`        | String  | Yes      | Deployment location (itn, weu, italynorth or westeurope).                                                                                                                                                                                 |
 | `domain`          | String  | No       | Optional value specifying the domain.                                                                                                                                                                             |
 | `name`            | String  | Yes      | Name of the resource.                                                                                                                                                                                             |
 | `resource_type`   | String  | Yes      | Type of the resource. The list of supported resource types can be found in the [documentation table](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/functions/resource_name#resource-types). |
