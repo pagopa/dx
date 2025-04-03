@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.0.6
+
+### Patch Changes
+
+- 53147e6: Fix resource_name function domain parameter adding null value support
+
 ## 0.0.5
 
 ### Patch Changes
