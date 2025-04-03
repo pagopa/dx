@@ -86,7 +86,7 @@ variable "container_app_templates" {
       port             = optional(number, 8080)
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
-    }), {})
+    }), null)
 
     readiness_probe = optional(object({
       failure_count_threshold = optional(number, 10)
@@ -101,7 +101,7 @@ variable "container_app_templates" {
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
       transport               = optional(string, "HTTP")
-    }), {})
+    }), null)
 
     startup_probe = optional(object({
       failure_count_threshold = optional(number, 30)
@@ -115,7 +115,7 @@ variable "container_app_templates" {
       port             = optional(number, 8080)
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
-    }), {})
+    }), null)
   }))
 
   description = "List of container app templates"
