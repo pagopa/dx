@@ -81,7 +81,7 @@ variable "container_app_templates" {
       }))
       initial_delay    = optional(number, 30)
       interval_seconds = optional(number, 10)
-      path             = optional(string)
+      path             = string
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
     })
@@ -119,6 +119,7 @@ variable "container_app_templates" {
     error_message = "Valid values for liveness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
+  # as Terraform does not support lazy evaluation, a ternary operator is necessary to avoid crash on null values
   validation {
     condition = alltrue([
       for template in var.container_app_templates :
@@ -127,6 +128,7 @@ variable "container_app_templates" {
     error_message = "Valid values for readiness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
+  # ditto
   validation {
     condition = alltrue([
       for template in var.container_app_templates :
