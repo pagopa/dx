@@ -1,29 +1,22 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-network-rg-01"
-}
-
-data "azurerm_monitor_action_group" "example" {
-  name                = replace("${local.environment.prefix}-${local.environment.env_short}-error", "-", "")
-  resource_group_name = "${local.environment.prefix}-${local.environment.env_short}-rg-common"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
   location = local.environment.location
 }
 
 resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-network-rg-01"
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
   address_prefixes     = ["10.50.246.0/24"]
 }
 
@@ -41,12 +34,12 @@ module "azure_storage_account" {
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   customer_managed_key = {
-    enabled      = true
-    type         = "kv"
-    key_vault_id = "your-kv-id"
+    enabled = true
+    # type         = "kv"
+    # key_vault_id = "your-kv-id"
   }
 
   blob_features = {
@@ -82,8 +75,6 @@ module "azure_storage_account" {
     ip_rules                   = ["203.0.113.0/24"]
     virtual_network_subnet_ids = [azurerm_subnet.example.id]
   }
-
-  action_group_id = data.azurerm_monitor_action_group.example.id
 
   static_website = {
     enabled            = true
