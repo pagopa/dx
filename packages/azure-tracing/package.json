@@ -1,6 +1,7 @@
 {
   "name": "@pagopa/azure-tracing",
   "version": "0.0.0",
+  "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "keywords": [
     "azure",
@@ -17,10 +18,17 @@
     "@opentelemetry/instrumentation-undici": "^0.11.0"
   },
   "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node20": "^20.1.5",
+    "eslint": "8.57.0",
+    "shx": "^0.4.0",
     "typescript": "~5.2.2"
   },
   "scripts": {
-    "build": "tsc"
+    "clean": "shx rm -rf dist",
+    "build": "tsc",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "typecheck": "tsc --noEmit"
   }
 }

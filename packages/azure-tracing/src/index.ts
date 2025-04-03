@@ -22,7 +22,7 @@ import { metrics, trace } from "@opentelemetry/api";
  * init();
  * @param instrumentations the list of instrumentations to register with the Azure Monitor.
  */
-const init = (instrumentations: readonly Instrumentation[]) => {
+export const init = (instrumentations: readonly Instrumentation[]) => {
   useAzureMonitor();
 
   registerInstrumentations({
