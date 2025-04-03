@@ -48,7 +48,7 @@ terraform {
 provider "dx" {
   prefix      = "<project_prefix>" # e.g., "dx", "io"
   environment = "<environment>"    # d, u, or p (dev, uat, or prod)
-  location    = "<location>"       # itn (Italy North) or weu (West Europe)
+  location    = "<location>"       # itn/italynorth or weu/westeurope
 }
 ```
 
@@ -58,7 +58,7 @@ provider "dx" {
 |:---|:---:|:---:|:---|
 |prefix|String|No|Two-character project prefix.|
 |environment|String|No|Deployment environment (d, u, or p).|
-|location|String|No|Deployment location (itn or weu).|
+|location|String|No|Deployment location (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional domain for naming.|
 
 ## Functions
@@ -73,7 +73,7 @@ Generates a resource name based on the standardized prefix and additional parame
 |:---|:---:|:---:|:---|
 |prefix|String|Yes|Prefix that define the repository domain (Max 2 characters).|
 |environment|String|Yes|Environment where the resources will be deployed (d, u or p).|
-|location|String|Yes|Location where the resources will be deployed (itn or weu).|
+|location|String|Yes|Location where the resources will be deployed (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional value that specify the domain.|
 |resource|String|Yes|Name of the resource.|
 |type|String|Yes|Type of the resource (see table).|

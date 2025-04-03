@@ -44,7 +44,7 @@ resource_name(configuration map of string) string
 |:---|:---:|:---:|:---|
 |prefix|String|Yes|Prefix that define the repository domain (Max 2 characters)|
 |environment|String|Yes|Environment where the resources will be deployed (d, u or p)|
-|location|String|Yes|Location where the resources will be deployed (itn or weu)|
+|location|String|Yes|Location where the resources will be deployed (itn/italynorth or weu/westeurope)|
 |domain|String|No|Optional value that specify the domain|
 |name|String|Yes|Name of the resource|
 |resource_type|String|Yes|Type of the resource (see the table below)|
