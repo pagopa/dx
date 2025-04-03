@@ -93,7 +93,7 @@ variable "container_app_templates" {
         value = string
       }))
       interval_seconds        = optional(number, 10)
-      path                    = optional(string)
+      path                    = string
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
       transport               = optional(string, "HTTP")
@@ -106,7 +106,7 @@ variable "container_app_templates" {
         value = string
       }))
       interval_seconds = optional(number, 10)
-      path             = optional(string)
+      path             = string
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
     }), null)
