@@ -65,23 +65,11 @@ Create the following dotfiles at the root of your repository:
 
 - `.terraform-version`: Specify the Terraform version to use (typically
   [the latest available](https://developer.hashicorp.com/terraform/install?product_intent=terraform)).
-- `.gitignore`: Add rules to manage Terraform files
-  ([example](https://github.com/pagopa/dx-typescript/blob/main/.gitignore#L1)).
-- `.pre-commit-config.yaml`: Define pre-commit hooks
-  ([example](https://github.com/pagopa/dx-typescript/blob/main/.pre-commit-config.yaml)).
-- `.editorconfig`: Enforce consistent coding styles
-  ([example](https://github.com/pagopa/dx-typescript/blob/main/.editorconfig)).
-- `.tflint.hcl`: Configure TFLint for Terraform linting
-  ([example](https://github.com/pagopa/dx/blob/main/.tflint.hcl)).
-- `.trivyignore`: Define rules for Trivy vulnerability scanning
-  ([example](https://github.com/pagopa/dx/blob/main/.trivyignore)).
-
-:::tip
-
-You can easily download all these files by using
-[the initializer shell script](https://github.com/pagopa/dx/blob/main/scripts/dotfiles_initializer.sh)
-
-:::
+- `.gitignore`: Add rules to manage Terraform files.
+- `.pre-commit-config.yaml`: Define pre-commit hooks.
+- `.editorconfig`: Enforce consistent coding styles.
+- `.tflint.hcl`: Configure TFLint for Terraform linting.
+- `.trivyignore`: Define rules for Trivy vulnerability scanning.
 
 ### GitHub PAT
 
