@@ -1,10 +1,10 @@
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import { metrics, trace } from "@opentelemetry/api";
 import {
   Instrumentation,
-  registerInstrumentations
+  registerInstrumentations,
 } from "@opentelemetry/instrumentation";
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
-import { metrics, trace } from "@opentelemetry/api";
 
 /**
  * Initialize the Azure Monitor with the given instrumentations.
@@ -30,4 +30,4 @@ export const init = (instrumentations: readonly Instrumentation[]) => {
     meterProvider: metrics.getMeterProvider(),
     tracerProvider: trace.getTracerProvider(),
   });
-}
+};
