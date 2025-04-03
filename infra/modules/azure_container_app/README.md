@@ -52,8 +52,9 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group to deploy resources to | `string` | n/a | yes |
 | <a name="input_revision_mode"></a> [revision\_mode](#input\_revision\_mode) | The revision mode for the container app. Valid values are 'Single' and 'Multiple'. | `string` | `"Multiple"` | no |
+| <a name="input_secrets"></a> [secrets](#input\_secrets) | Key Vault secret references to be used in all the containers of this Container App. | <pre>list(object({<br/>    name                = string<br/>    key_vault_secret_id = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
-| <a name="input_target_port"></a> [target\_port](#input\_target\_port) | The target port for the container app. | `number` | `8080` | no |
+| <a name="input_target_port"></a> [target\_port](#input\_target\_port) | The target port for the Container App. | `number` | `8080` | no |
 | <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Container. Valid values are 'xs', 's', 'm' and 'l'. | `string` | `"s"` | no |
 
 ## Outputs

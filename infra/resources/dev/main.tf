@@ -45,3 +45,17 @@ module "core" {
 
   tags = local.tags
 }
+
+resource "azurerm_role_assignment" "kv_ci" {
+  scope                = module.core.common_key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_user_assigned_identity.infra_dev_ci.principal_id
+  description          = "Allow CI identity to access Key Vault secrets"
+}
+
+resource "azurerm_role_assignment" "kv_cd" {
+  scope                = module.core.common_key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_user_assigned_identity.infra_dev_cd.principal_id
+  description          = "Allow CD identity to access Key Vault secrets"
+}

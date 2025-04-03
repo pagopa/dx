@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 0.1.0
+
+### Minor Changes
+
+- 9b7429b: Add support to secrets with KeyVault reference
+
 ## 0.0.3
 
 ### Patch Changes

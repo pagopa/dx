@@ -54,8 +54,17 @@ variable "revision_mode" {
 
 variable "target_port" {
   type        = number
-  description = "The target port for the container app."
+  description = "The target port for the Container App."
   default     = 8080
+}
+
+variable "secrets" {
+  type = list(object({
+    name                = string
+    key_vault_secret_id = string
+  }))
+  default     = []
+  description = "Key Vault secret references to be used in all the containers of this Container App."
 }
 
 variable "container_app_templates" {

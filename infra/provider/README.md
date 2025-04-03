@@ -48,7 +48,7 @@ terraform {
 provider "dx" {
   prefix      = "<project_prefix>" # e.g., "dx", "io"
   environment = "<environment>"    # d, u, or p (dev, uat, or prod)
-  location    = "<location>"       # itn (Italy North) or weu (West Europe)
+  location    = "<location>"       # itn/italynorth or weu/westeurope
 }
 ```
 
@@ -58,7 +58,7 @@ provider "dx" {
 |:---|:---:|:---:|:---|
 |prefix|String|No|Two-character project prefix.|
 |environment|String|No|Deployment environment (d, u, or p).|
-|location|String|No|Deployment location (itn or weu).|
+|location|String|No|Deployment location (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional domain for naming.|
 
 ## Functions
@@ -73,7 +73,7 @@ Generates a resource name based on the standardized prefix and additional parame
 |:---|:---:|:---:|:---|
 |prefix|String|Yes|Prefix that define the repository domain (Max 2 characters).|
 |environment|String|Yes|Environment where the resources will be deployed (d, u or p).|
-|location|String|Yes|Location where the resources will be deployed (itn or weu).|
+|location|String|Yes|Location where the resources will be deployed (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional value that specify the domain.|
 |resource|String|Yes|Name of the resource.|
 |type|String|Yes|Type of the resource (see table).|
@@ -135,6 +135,7 @@ The following table lists the resource types and their abbreviations used in the
 |cosmos_db_nosql|cosno|
 |cosmos_private_endpoint|cosno-pep|
 |customer_key_storage_account|stcmk|
+|durable_function_storage_account|stfd|
 |eventhub_namespace|evhns|
 |eventhub_private_endpoint|evhns-pep|
 |file_private_endpoint|file-pep|
@@ -150,10 +151,11 @@ The following table lists the resource types and their abbreviations used in the
 |log_analytics|log|
 |nat_gateway|ng|
 |network_security_group|nsg|
+|postgre_endpoint|psql-ep|
 |postgre_private_endpoint|psql-pep|
 |postgre_replica_private_endpoint|psql-pep-replica|
 |postgresql|psql|
-|postgresq_replica|psql-replica|
+|postgresql_replica|psql-replica|
 |private_endpoint|pep|
 |private_endpoint_subnet|pep-snet|
 |public_ip|pip|

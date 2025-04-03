@@ -16,7 +16,7 @@ The dx provider is used to generate and manage naming of Azure resources.
 provider "dx" {
   prefix      = "<project_prefix>" # e.g., "dx", "io"
   environment = "<environment>"    # d, u, or p (dev, uat, or prod)
-  location    = "<location>"       # itn (Italy North) or weu (West Europe)
+  location    = "<location>"       # itn/italynorth or weu/westeurope
   domain      = "<domain>"         # e.g., "test"
 }
 ```
@@ -28,5 +28,5 @@ provider "dx" {
 
 - `domain` (String) The team domain name
 - `environment` (String) Environment where the resources will be deployed
-- `location` (String) Location where the resources will be deployed
+- `location` (String) Location where the resources will be deployed (e.g., `itn`, `weu`, `italynorth`, `westeurope`)
 - `prefix` (String) Prefix that define the repository domain

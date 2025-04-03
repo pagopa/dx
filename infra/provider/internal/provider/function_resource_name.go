@@ -51,13 +51,14 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"container_app_environment": "cae",
 
 		// Storage
-		"storage_account":              "st",
-		"blob_storage":                 "blob",
-		"queue_storage":                "queue",
-		"table_storage":                "table",
-		"file_storage":                 "file",
-		"function_storage_account":     "stfn",
-		"customer_key_storage_account": "stcmk",
+		"storage_account":                  "st",
+		"blob_storage":                     "blob",
+		"queue_storage":                    "queue",
+		"table_storage":                    "table",
+		"file_storage":                     "file",
+		"function_storage_account":         "stfn",
+		"customer_key_storage_account":     "stcmk",
+		"durable_function_storage_account": "stfd",
 
 		// Networking
 		"api_management":              "apim",
@@ -72,6 +73,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"cdn_frontdoor_origin":        "fdo",
 		"cdn_frontdoor_route":         "cdnr",
 		"nat_gateway":                 "ng",
+		"postgre_endpoint":            "psql-ep",
 
 		// Private Endpoints
 		"private_endpoint":                 "pep",
@@ -102,11 +104,11 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"private_endpoint_subnet": "pep-snet",
 
 		// Databases
-		"cosmos_db":         "cosmos",
-		"cosmos_db_nosql":   "cosno",
-		"postgresql":        "psql",
-		"postgresq_replica": "psql-replica",
-		"redis_cache":       "redis",
+		"cosmos_db":          "cosmos",
+		"cosmos_db_nosql":    "cosno",
+		"postgresql":         "psql",
+		"postgresql_replica": "psql-replica",
+		"redis_cache":        "redis",
 
 		// Integration
 		"eventhub_namespace": "evhns",
@@ -189,9 +191,24 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		return
 	}
 
-	// Validate provider Location configuration
-	if strings.ToLower(location) != "weu" && strings.ToLower(location) != "itn" {
-		resp.Error = function.NewFuncError("Location must be 'weu' or 'itn'")
+	// Convert location to lowercase once
+	location = strings.ToLower(location)
+
+	// Define valid locations and their normalized values
+	locationMappings := map[string]string{
+		"weu":        "weu",
+		"westeurope": "weu",
+		"itn":        "itn",
+		"italynorth": "itn",
+	}
+
+	// Check if the location is valid and normalize it
+	if normalizedLocation, valid := locationMappings[location]; valid {
+		location = normalizedLocation
+	} else {
+		// Create a more dynamic error message listing allowed values
+		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
+		resp.Error = function.NewFuncError(fmt.Sprintf("Location must be one of: %s", strings.Join(allowedLocations, ", ")))
 		return
 	}
 
