@@ -6,19 +6,16 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = "~>0.0"
+      version = ">= 0.0.5, < 1.0.0"
     }
   }
 }
 
 locals {
   naming_config = {
-    prefix      = var.environment.prefix,
-    environment = var.environment.env_short,
-    location = tomap({
-      "italynorth" = "itn",
-      "westeurope" = "weu"
-    })[var.environment.location]
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
     name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
