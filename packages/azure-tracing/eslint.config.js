@@ -1,8 +1,3 @@
 import lintRules from "@pagopa/eslint-config";
 
-export default [
-  ...lintRules,
-  {
-    ignores: ["dist/*"],
-  },
-];
+export default [...lintRules];
