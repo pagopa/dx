@@ -191,9 +191,24 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		return
 	}
 
-	// Validate provider Location configuration
-	if strings.ToLower(location) != "weu" && strings.ToLower(location) != "itn" {
-		resp.Error = function.NewFuncError("Location must be 'weu' or 'itn'")
+	// Convert location to lowercase once
+	location = strings.ToLower(location)
+
+	// Define valid locations and their normalized values
+	locationMappings := map[string]string{
+		"weu":        "weu",
+		"westeurope": "weu",
+		"itn":        "itn",
+		"italynorth": "itn",
+	}
+
+	// Check if the location is valid and normalize it
+	if normalizedLocation, valid := locationMappings[location]; valid {
+		location = normalizedLocation
+	} else {
+		// Create a more dynamic error message listing allowed values
+		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
+		resp.Error = function.NewFuncError(fmt.Sprintf("Location must be one of: %s", strings.Join(allowedLocations, ", ")))
 		return
 	}
 

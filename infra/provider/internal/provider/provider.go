@@ -69,7 +69,7 @@ func (p *dxProvider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "Location where the resources will be deployed",
 				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"weu", "itn"}...),
+					stringvalidator.OneOf([]string{"weu", "itn", "westeurope", "italynorth"}...),
 				},
 			},
 		},
@@ -104,10 +104,12 @@ func (p *dxProvider) Configure(ctx context.Context, req provider.ConfigureReques
 		)
 	}
 
-	if strings.ToLower(config.Location.ValueString()) != "weu" && strings.ToLower(config.Location.ValueString()) != "itn" {
+	validLocations := []string{"weu", "itn", "westeurope", "italynorth"}
+	location := strings.ToLower(config.Location.ValueString())
+	if !contains(validLocations, location) {
 		resp.Diagnostics.AddError(
 			"Location value error",
-			"The 'location' configuration must be 'weu' or 'itn'.",
+			"The 'location' configuration must be one of: 'weu', 'itn', 'westeurope', or 'italynorth'.",
 		)
 	}
 }
