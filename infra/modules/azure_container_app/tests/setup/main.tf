@@ -24,9 +24,9 @@ locals {
   }
 
   naming_config = {
-    prefix      = var.environment.prefix,
-    environment = var.environment.env_short,
-    location = var.environment.location
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
     name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
@@ -70,27 +70,6 @@ data "azurerm_key_vault" "kv" {
     name          = "common",
     resource_type = "resource_group"
   }))
-}
-
-resource "azurerm_key_vault_secret" "test1" {
-  name            = "TESTSECRET1"
-  value           = "value1"
-  key_vault_id    = data.azurerm_key_vault.kv.id
-  expiration_date = timeadd(timestamp(), "30m")
-  content_type    = "application/text"
-}
-
-resource "azurerm_key_vault_secret" "test2" {
-  name            = "TESTSECRET2"
-  value           = "value2"
-  key_vault_id    = data.azurerm_key_vault.kv.id
-  expiration_date = timeadd(timestamp(), "30m")
-  content_type    = "application/text"
-}
-
-data "azurerm_key_vault" "kv" {
-  name                = "${var.environment.prefix}-${var.environment.env_short}-itn-common-kv-${module.naming_convention.suffix}"
-  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-itn-common-rg-${module.naming_convention.suffix}"
 }
 
 resource "azurerm_key_vault_secret" "test1" {

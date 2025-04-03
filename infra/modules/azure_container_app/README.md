@@ -31,7 +31,7 @@ A complete usage example can be found in the [example/complete](https://github.c
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~>0.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.5, < 1.0.0 |
 
 ## Modules
 
