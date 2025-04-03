@@ -11,7 +11,7 @@ locals {
   naming_config = {
     prefix      = local.environment.prefix,
     environment = local.environment.env_short,
-    location    = "itn",
+    location    = local.environment.location,
     domain      = local.environment.domain,
     name        = local.environment.app_name,
   }
