@@ -8,12 +8,10 @@ locals {
     instance_number = "01"
   }
 
-  location_short = "itn"
-
   naming_config = {
     prefix          = local.environment.prefix,
     environment     = local.environment.env_short,
-    location        = local.location_short,
+    location        = local.environment.location,
     instance_number = tonumber(local.environment.instance_number),
   }
 
