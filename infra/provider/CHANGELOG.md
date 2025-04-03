@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.0.5
+
+### Patch Changes
+
+- 222b6a2: Improve resource_name function with italynorth/westeurope values support for location parameter
+
 ## 0.0.4
 
 ### Patch Changes
