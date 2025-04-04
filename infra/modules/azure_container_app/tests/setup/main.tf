@@ -48,7 +48,7 @@ data "azurerm_key_vault" "kv" {
 }
 
 resource "azurerm_key_vault_secret" "test1" {
-  name            = "TEST_SECRET1"
+  name            = "TESTSECRET1"
   value           = "value1"
   key_vault_id    = data.azurerm_key_vault.kv.id
   expiration_date = timeadd(timestamp(), "30m")

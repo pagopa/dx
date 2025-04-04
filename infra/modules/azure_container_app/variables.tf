@@ -64,7 +64,6 @@ variable "secrets" {
     key_vault_secret_id = string
   }))
   default     = []
-  sensitive = false
   description = "Key Vault secret references to be used in all the containers of this Container App."
 }
 
