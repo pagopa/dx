@@ -29,8 +29,8 @@ resource "azurerm_container_app" "this" {
   # }
 
   secret {
-    name = replace(lower("APPLICATIONINSIGHTS_CONNECTION_STRING"), "_", "-")
-    key_vault_secret_id = "https://io-p-messages-kv.vault.azure.net/secrets/azdo-sp-acme-challenge-weubeta-messages-internal-io-pagopa-it"
+    name = replace(lower("SENDERS_TO_USE"), "_", "-")
+    key_vault_secret_id = format("%s%s%s", "https://io-p-messages-kv.vault.azure.net/", "secrets/", "azdo-sp-acme-challenge-weubeta-messages-internal-io-pagopa-it")
     identity            = "System"
   }
 
