@@ -1,5 +1,13 @@
 # @pagopa/eslint-config
 
+## 4.0.2
+
+### Patch Changes
+
+- 1d9504e: Add `typescript` as dependency.
+
+  `typescript-eslint` package requires `typescript` as dependency starging from version 8.
+
 ## 4.0.1
 
 ### Patch Changes
