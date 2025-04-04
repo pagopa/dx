@@ -22,9 +22,9 @@ resource "azurerm_container_app" "this" {
   dynamic "secret" {
     for_each = var.secrets
     content {
-      name                = replace(lower(secret.value.name), "_", "-")
-      key_vault_secret_id = secret.value.key_vault_secret_id
-      identity            = "System"
+      name                = nonsensitive(replace(lower(secret.value.name), "_", "-"))
+      key_vault_secret_id = nonsensitive(secret.value.key_vault_secret_id)
+      identity            = nonsensitive("System")
     }
   }
 
