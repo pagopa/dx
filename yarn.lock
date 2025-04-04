@@ -286,7 +286,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.29":
+"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.29, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.29":
   version: 1.0.0-beta.29
   resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.29"
   dependencies:
@@ -3341,7 +3341,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/api-logs@npm:0.200.0":
+"@opentelemetry/api-logs@npm:0.200.0, @opentelemetry/api-logs@npm:^0.200.0":
   version: 0.200.0
   resolution: "@opentelemetry/api-logs@npm:0.200.0"
   dependencies:
@@ -3939,7 +3939,9 @@ __metadata:
   resolution: "@pagopa/azure-tracing@workspace:packages/azure-tracing"
   dependencies:
     "@azure/monitor-opentelemetry": "npm:^1.9.0"
+    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.29"
     "@opentelemetry/api": "npm:^1.9.0"
+    "@opentelemetry/api-logs": "npm:^0.200.0"
     "@opentelemetry/instrumentation": "npm:^0.200.0"
     "@opentelemetry/instrumentation-undici": "npm:^0.11.0"
     "@pagopa/eslint-config": "workspace:^"
