@@ -4,23 +4,22 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.111.0, < 5.0"
     }
-  }
-}
-
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
+    }
   }
 }
 
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
@@ -39,14 +38,20 @@ data "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  name                 = "${module.naming_convention.project}-apim-snet-test-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "apim_subnet"
+  }))
   virtual_network_name = data.azurerm_virtual_network.vnet.name
   resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
   address_prefixes     = ["10.50.250.0/24"]
 }
 
 resource "azurerm_public_ip" "pip" {
-  name                = "${module.naming_convention.project}-apim-pip-test-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "apim-test",
+    resource_type = "public_ip"
+  }))
   resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   location            = var.environment.location
   allocation_method   = "Static"
@@ -57,7 +62,10 @@ resource "azurerm_public_ip" "pip" {
 }
 
 data "azurerm_resource_group" "rg" {
-  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "resource_group"
+  }))
 }
 
 output "subnet_id" {
