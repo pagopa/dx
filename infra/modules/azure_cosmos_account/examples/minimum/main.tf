@@ -1,5 +1,8 @@
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-example-rg-${local.environment.instance_number}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "example",
+    resource_type = "resource_group"
+  }))
   location = local.environment.location
 }
 

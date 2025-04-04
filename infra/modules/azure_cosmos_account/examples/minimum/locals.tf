@@ -8,15 +8,27 @@ locals {
     instance_number = "01"
   }
 
-  location_map = {
-    "italynorth"         = "itn"
-    "westeurope"         = "weu"
-    "germanywestcentral" = "gwc"
-    "spaincentral"       = "spc"
+  naming_config = {
+    prefix          = local.environment.prefix,
+    environment     = local.environment.env_short,
+    location        = local.environment.location,
+    domain          = local.environment.domain,
+    name            = local.environment.app_name,
+    instance_number = tonumber(local.environment.instance_number),
   }
 
-  location_short = lookup(local.location_map, local.environment.location, "itn")
-  project        = "${local.environment.prefix}-${local.environment.env_short}-${local.location_short}"
+  virtual_network = {
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = "",
+      name          = "common",
+      resource_type = "virtual_network"
+    }))
+    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = "",
+      name          = "network",
+      resource_type = "resource_group"
+    }))
+  }
 
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"

@@ -1,5 +1,5 @@
 resource "azurerm_cosmosdb_account" "this" {
-  name                          = "${module.naming_convention.prefix}-cosno-${module.naming_convention.suffix}"
+  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_db_nosql" }))
   location                      = var.environment.location
   resource_group_name           = var.resource_group_name
   offer_type                    = "Standard" # It is a required field that can only be set to Standard
