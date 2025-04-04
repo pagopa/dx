@@ -167,8 +167,8 @@ run "container_app_is_correct_plan" {
   assert {
     condition = alltrue([
       for env in azurerm_container_app.this.template[0].container[0].env : contains([
-        lower(run.setup_tests.key_vault_secret1.name),
-        lower(run.setup_tests.key_vault_secret2.name),
+        replace(lower(run.setup_tests.key_vault_secret1.name), "_", "-"),
+        replace(lower(run.setup_tests.key_vault_secret2.name), "_", "-"),
         ],
       env.secret_name)
       if env.secret_name != null
