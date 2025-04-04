@@ -1,17 +1,17 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-network-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = local.environment.domain,
+    resource_type = "resource_group"
+  }))
   location = local.environment.location
 }
 
@@ -29,8 +29,8 @@ module "azure_function_app" {
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
+    name                = local.virtual_network.name
+    resource_group_name = local.virtual_network.resource_group_name
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
   subnet_cidr   = "10.50.248.0/24"
