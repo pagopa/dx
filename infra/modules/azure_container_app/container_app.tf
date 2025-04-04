@@ -19,13 +19,19 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  dynamic "secret" {
-    for_each = var.secrets
-    content {
-      name                = nonsensitive(replace(lower(secret.value.name), "_", "-"))
-      key_vault_secret_id = nonsensitive(secret.value.key_vault_secret_id)
-      identity            = nonsensitive("System")
-    }
+  # dynamic "secret" {
+  #   for_each = var.secrets
+  #   content {
+  #     name                = nonsensitive(replace(lower(secret.value.name), "_", "-"))
+  #     key_vault_secret_id = nonsensitive(secret.value.key_vault_secret_id)
+  #     identity            = nonsensitive("System")
+  #   }
+  # }
+
+  secret {
+    name = replace(lower("APPLICATIONINSIGHTS_CONNECTION_STRING"), "_", "-")
+    key_vault_secret_id = "https://io-p-messages-kv.vault.azure.net/secrets/azdo-sp-acme-challenge-weubeta-messages-internal-io-pagopa-it"
+    identity            = "System"
   }
 
   template {
