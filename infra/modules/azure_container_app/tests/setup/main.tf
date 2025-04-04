@@ -39,17 +39,6 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
-data "azurerm_log_analytics_workspace" "logs" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "common",
-    resource_type = "log_analytics"
-  }))
-  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "common",
-    resource_type = "resource_group"
-  }))
-}
-
 data "azurerm_container_app_environment" "cae" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "github-runner",
@@ -90,10 +79,6 @@ resource "azurerm_key_vault_secret" "test2" {
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
-}
-
-output "log_analytics_id" {
-  value = data.azurerm_log_analytics_workspace.logs.id
 }
 
 output "container_app_environment_id" {

@@ -63,10 +63,9 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.liveness_probe == null ? [] : [container.value.liveness_probe]
 
           content {
-            port                    = liveness_probe.value.port
+            port                    = var.target_port
             transport               = liveness_probe.value.transport
             failure_count_threshold = liveness_probe.value.failure_count_threshold
-            host                    = liveness_probe.value.host
             initial_delay           = liveness_probe.value.initial_delay
             interval_seconds        = liveness_probe.value.interval_seconds
             path                    = liveness_probe.value.path
@@ -87,10 +86,9 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.readiness_probe == null ? [] : [container.value.readiness_probe]
 
           content {
-            port                    = readiness_probe.value.port
+            port                    = var.target_port
             transport               = readiness_probe.value.transport
             failure_count_threshold = readiness_probe.value.failure_count_threshold
-            host                    = readiness_probe.value.host
             interval_seconds        = readiness_probe.value.interval_seconds
             path                    = readiness_probe.value.path
             success_count_threshold = readiness_probe.value.success_count_threshold
@@ -111,10 +109,9 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.startup_probe == null ? [] : [container.value.startup_probe]
 
           content {
-            port                    = startup_probe.value.port
+            port                    = var.target_port
             transport               = startup_probe.value.transport
             failure_count_threshold = startup_probe.value.failure_count_threshold
-            host                    = startup_probe.value.host
             interval_seconds        = startup_probe.value.interval_seconds
             path                    = startup_probe.value.path
             timeout                 = startup_probe.value.timeout

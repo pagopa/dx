@@ -26,9 +26,10 @@ func (f *resourceNameFunction) Definition(ctx context.Context, req function.Defi
 
 		Parameters: []function.Parameter{
 			function.MapParameter{
-				Name:        "configuration",
-				Description: "A map containing the following keys: prefix, environment, location, domain (Optional), name, resource_type and instance_number.",
-				ElementType: types.StringType,
+				Name:           "configuration",
+				Description:    "A map containing the following keys: prefix, environment, location, domain (Optional), name, resource_type and instance_number.",
+				ElementType:    types.StringType,
+				AllowNullValue: true,
 			},
 		},
 		Return: function.StringReturn{},
@@ -36,10 +37,7 @@ func (f *resourceNameFunction) Definition(ctx context.Context, req function.Defi
 }
 
 func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
-	// var prefix, name, resourceType string
-	// var instance int64
-
-	var configuration map[string]string
+	var configuration map[string]types.String
 
 	var result string
 
@@ -150,6 +148,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 	allowedKeys := append(requiredKeys, optionalKeys...)
 
+	// Check required keys
 	for _, key := range requiredKeys {
 		if _, exists := configuration[key]; !exists {
 			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map.", key))
@@ -157,6 +156,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		}
 	}
 
+	// Validate keys
 	for key := range configuration {
 		if !contains(allowedKeys, key) {
 			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed.", key))
@@ -164,13 +164,12 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		}
 	}
 
-	prefix := configuration["prefix"]
-	environment := configuration["environment"]
-	location := configuration["location"]
-	domain := configuration["domain"] // Optional
-	name := configuration["name"]
-	resourceType := configuration["resource_type"]
-	instanceNumberStr := configuration["instance_number"]
+	prefix := configuration["prefix"].ValueString()
+	environment := configuration["environment"].ValueString()
+	location := configuration["location"].ValueString()
+	name := configuration["name"].ValueString()
+	resourceType := configuration["resource_type"].ValueString()
+	instanceNumberStr := configuration["instance_number"].ValueString()
 
 	// Validate instance number
 	instance, err := strconv.Atoi(instanceNumberStr)
@@ -235,13 +234,14 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		return
 	}
 
-	// Check if domain is provided
-	if domain != "" {
+	// Check if domain is provided and not null
+	domain, domainExists := configuration["domain"]
+	if domainExists && !domain.IsNull() && domain.ValueString() != "" {
 		result = fmt.Sprintf("%s-%s-%s-%s",
 			prefix,
 			environment,
 			location,
-			domain)
+			domain.ValueString())
 	} else {
 		result = fmt.Sprintf("%s-%s-%s",
 			prefix,

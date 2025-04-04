@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.12
+
+### Patch Changes
+
+- 6ab08ed: Update provider dx version to support null domain, update test and example
+
 ## 0.0.11
 
 ### Patch Changes

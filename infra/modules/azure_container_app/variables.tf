@@ -73,20 +73,18 @@ variable "container_app_templates" {
     name         = optional(string, "")
     app_settings = optional(map(string), {})
 
-    liveness_probe = optional(object({
-      failure_count_threshold = optional(number, 5)
+    liveness_probe = object({
+      failure_count_threshold = optional(number, 3)
       header = optional(object({
         name  = string
         value = string
       }))
-      host             = optional(string)
-      initial_delay    = optional(number, 1)
+      initial_delay    = optional(number, 30)
       interval_seconds = optional(number, 10)
-      path             = optional(string)
-      port             = optional(number, 8080)
+      path             = string
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
-    }), {})
+    })
 
     readiness_probe = optional(object({
       failure_count_threshold = optional(number, 10)
@@ -94,44 +92,48 @@ variable "container_app_templates" {
         name  = string
         value = string
       }))
-      host                    = optional(string)
       interval_seconds        = optional(number, 10)
-      path                    = optional(string)
-      port                    = optional(number, 8080)
+      path                    = string
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
       transport               = optional(string, "HTTP")
-    }), {})
+    }), null)
 
     startup_probe = optional(object({
-      failure_count_threshold = optional(number, 30)
+      failure_count_threshold = optional(number, 10)
       header = optional(object({
         name  = string
         value = string
       }))
-      host             = optional(string)
       interval_seconds = optional(number, 10)
-      path             = optional(string)
-      port             = optional(number, 8080)
+      path             = string
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
-    }), {})
+    }), null)
   }))
 
-  description = "List of container app templates"
+  description = "List of containers to be deployed in the Container App. Each container can have its own settings, including liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name."
 
   validation {
     condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
-    error_message = "Valid values for liveness_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
+    error_message = "Valid values for liveness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
+  # as Terraform does not support lazy evaluation, a ternary operator is necessary to avoid crash on null values
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)])
-    error_message = "Valid values for readiness_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
+    condition = alltrue([
+      for template in var.container_app_templates :
+      template.readiness_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)
+    ])
+    error_message = "Valid values for readiness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
+  # ditto
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)])
-    error_message = "Valid values for startup_probe transport are 'HTTP', 'TCP' and 'HTTPS'."
+    condition = alltrue([
+      for template in var.container_app_templates :
+      template.startup_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)
+    ])
+    error_message = "Valid values for startup_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 }

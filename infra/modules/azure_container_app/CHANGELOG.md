@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 0.1.1
+
+### Patch Changes
+
+- 8df9bae: Fix an issue which prevented to disable startup and and readiness probes.
+
 ## 0.1.0
 
 ### Minor Changes

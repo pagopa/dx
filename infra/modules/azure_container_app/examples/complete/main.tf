@@ -66,6 +66,10 @@ module "container_app" {
         key1 = "value1"
         key2 = "value2"
       }
+
+      liveness_probe = {
+        path = "/"
+      }
     },
     {
       image = "nginx:latest"
@@ -74,6 +78,9 @@ module "container_app" {
       app_settings = {
         key1 = "value1"
         key2 = "value2"
+      }
+      liveness_probe = {
+        path = "/"
       }
     }
   ]

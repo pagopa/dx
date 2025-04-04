@@ -41,8 +41,6 @@ run "container_app_is_correct_plan" {
 
     container_app_environment_id = run.setup_tests.container_app_environment_id
 
-    log_analytics_workspace_id = run.setup_tests.log_analytics_id
-
     container_app_templates = [
       {
         image = "nginx:latest"
@@ -51,6 +49,10 @@ run "container_app_is_correct_plan" {
         app_settings = {
           "TEST1" = "value1",
           "TEST2" = "value2"
+        }
+
+        liveness_probe = {
+          path = "/"
         }
       }
     ]
@@ -99,6 +101,11 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
+    condition     = azurerm_container_app.this.template[0].max_replicas == 1 && azurerm_container_app.this.template[0].min_replicas == 0
+    error_message = "The container app replica values are not correct"
+  }
+
+  assert {
     condition = alltrue([
       for secret in azurerm_container_app.this.secret : secret.name == lower(secret.name)
     ])
@@ -114,6 +121,11 @@ run "container_app_is_correct_plan" {
       secret.key_vault_secret_id)
     ])
     error_message = "The container app secrets kv references are not correct"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].liveness_probe[0].path == "/"
+    error_message = "The container app liveness probe path is not correct"
   }
 
   assert {
