@@ -1,5 +1,5 @@
 resource "azurerm_cdn_frontdoor_profile" "this" {
-  name                = "${module.naming_convention.prefix}-afd-${module.naming_convention.suffix}"
+  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_profile" }))
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
@@ -7,14 +7,14 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
 }
 
 resource "azurerm_cdn_frontdoor_endpoint" "this" {
-  name                     = "${module.naming_convention.prefix}-fde-${module.naming_convention.suffix}"
+  name                     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" }))
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
 
   tags = var.tags
 }
 
 resource "azurerm_cdn_frontdoor_origin_group" "this" {
-  name                     = "${module.naming_convention.prefix}-fdog-${module.naming_convention.suffix}"
+  name                     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_origin_group" }))
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
 
   health_probe {
@@ -28,7 +28,10 @@ resource "azurerm_cdn_frontdoor_origin_group" "this" {
 resource "azurerm_cdn_frontdoor_origin" "this" {
   for_each = var.origins
 
-  name                           = "${module.naming_convention.prefix}-${each.key}-fdo-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "${var.environment.app_name}-${each.key}"
+    resource_type = "cdn_frontdoor_origin"
+  }))
   cdn_frontdoor_origin_group_id  = azurerm_cdn_frontdoor_origin_group.this.id
   enabled                        = true
   host_name                      = each.value.host_name
@@ -41,7 +44,7 @@ resource "azurerm_cdn_frontdoor_origin" "this" {
 }
 
 resource "azurerm_cdn_frontdoor_route" "this" {
-  name                            = "${module.naming_convention.prefix}-cdnr-${module.naming_convention.suffix}"
+  name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_route" }))
   cdn_frontdoor_endpoint_id       = azurerm_cdn_frontdoor_endpoint.this.id
   cdn_frontdoor_origin_group_id   = azurerm_cdn_frontdoor_origin_group.this.id
   cdn_frontdoor_origin_ids        = [for origin in azurerm_cdn_frontdoor_origin.this : origin.id]
@@ -63,7 +66,7 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 
 resource "azurerm_monitor_diagnostic_setting" "diagnostic_settings_cdn_profile" {
   count                      = var.diagnostic_settings.enabled ? 1 : 0
-  name                       = "${module.naming_convention.prefix}-cdnp-${module.naming_convention.suffix}"
+  name                       = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_monitor_diagnostic_setting" }))
   target_resource_id         = azurerm_cdn_frontdoor_profile.this.id
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.diagnostic_setting_destination_storage_id
