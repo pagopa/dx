@@ -4,6 +4,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "sourceMap": true,
-    "declaration": true
+    "declaration": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext"
   }
 }
