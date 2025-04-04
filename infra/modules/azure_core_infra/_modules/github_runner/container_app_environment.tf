@@ -1,5 +1,11 @@
+locals {
+  cae_name = provider::dx::resource_name(merge(var.naming_config, {
+    resource_type = "container_app_environment",
+  }))
+}
+
 resource "azurerm_container_app_environment" "cae" {
-  name                = "${var.prefix}-cae-${var.suffix}"
+  name                = local.cae_name
   location            = var.location
   resource_group_name = var.resource_group_name
 
@@ -14,7 +20,7 @@ resource "azurerm_container_app_environment" "cae" {
 
 resource "azurerm_management_lock" "lock_cae" {
   lock_level = "CanNotDelete"
-  name       = "${var.prefix}-cae-${var.suffix}"
+  name       = local.cae_name
   notes      = "This Container App Environment cannot be deleted"
   scope      = azurerm_container_app_environment.cae.id
 }
