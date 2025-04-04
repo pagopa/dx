@@ -1,4 +1,7 @@
-# github_environment_bootstrap
+# DX - Internal GitHub environment bootstrap module
+
+## This module is for internal use only
+
 ## Overview
 
 The `github_environment_bootstrap` module simplifies the process of creating and configuring GitHub repositories. It ensures consistency and compliance with organizational standards.

@@ -4,6 +4,8 @@ locals {
     location = var.environment.location
   }
 
+  repository_name = var.repository.configure ? module.github_repository[var.repository.name].name : var.repository.name
+
   resource_group_ids = merge(
     {
       "main" = azurerm_resource_group.main.id
