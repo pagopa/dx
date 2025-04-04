@@ -12,23 +12,13 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>4"
     }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
+    }
   }
 }
 
 provider "azurerm" {
   features {}
-}
-
-module "naming_convention" {
-  source  = "pagopa-dx/azure-naming-convention/azurerm"
-  version = "~> 0.0"
-
-  environment = {
-    prefix          = local.environment.prefix
-    env_short       = local.environment.env_short
-    location        = local.environment.location
-    domain          = local.environment.domain
-    app_name        = local.environment.app_name
-    instance_number = local.environment.instance_number
-  }
 }

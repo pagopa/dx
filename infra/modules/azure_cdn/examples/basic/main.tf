@@ -1,13 +1,19 @@
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming_convention.project}-cdn-rg-${local.environment.instance_number}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "cdn",
+    resource_type = "resource_group"
+  }))
   location = local.environment.location
 }
 
 data "azurerm_subnet" "pep" {
-  name                 = "${module.naming_convention.project}-pep-snet-01"
-  virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 
