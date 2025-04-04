@@ -19,20 +19,20 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  # dynamic "secret" {
-  #   for_each = var.secrets
-  #   content {
-  #     name                = nonsensitive(replace(lower(secret.value.name), "_", "-"))
-  #     key_vault_secret_id = nonsensitive(secret.value.key_vault_secret_id)
-  #     identity            = nonsensitive("System")
-  #   }
-  # }
-
-  secret {
-    name = replace(lower("SENDERS_TO_USE"), "_", "-")
-    key_vault_secret_id = format("%s%s%s", "https://io-p-messages-kv.vault.azure.net/", "secrets/", "azdo-sp-acme-challenge-weubeta-messages-internal-io-pagopa-it")
-    identity            = "System"
+  dynamic "secret" {
+    for_each = nonsensitive(var.secrets)
+    content {
+      name                = nonsensitive(replace(lower(secret.value.name), "_", "-"))
+      key_vault_secret_id = nonsensitive(secret.value.key_vault_secret_id)
+      identity            = "System"
+    }
   }
+
+  # secret {
+  #   name = replace(lower("SENDERS_TO_USE"), "_", "-")
+  #   key_vault_secret_id = format("%s%s%s", "https://io-p-messages-kv.vault.azure.net/", "secrets/", "azdo-sp-acme-challenge-weubeta-messages-internal-io-pagopa-it")
+  #   identity            = "System"
+  # }
 
   template {
     min_replicas = local.sku.replicas.min
