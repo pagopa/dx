@@ -5,14 +5,17 @@ module "naming_convention" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = local.environment.app_name,
+    resource_type = "resource_group"
+  }))
   location = local.environment.location
 }
 
 resource "azurerm_subnet" "example" {
   name                 = "example-subnet"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-network-rg-01"
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
   address_prefixes     = ["10.50.250.0/24"]
 }
 
@@ -28,8 +31,8 @@ module "azure_apim" {
   publisher_name  = "Example Publisher"
 
   virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
+    name                = local.virtual_network.name
+    resource_group_name = local.virtual_network.resource_group_name
   }
   subnet_id                     = azurerm_subnet.example.id
   virtual_network_type_internal = true

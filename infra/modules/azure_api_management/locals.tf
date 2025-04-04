@@ -1,10 +1,18 @@
 locals {
-  # Defines the naming prefix for APIM, dynamically handling cases where app_name 
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
+  # Defines the naming convention for APIM, dynamically handling cases where app_name 
   # is not "apim" or a domain is specified, to avoid redundant naming logic.
-  prefix = var.environment.app_name != "apim" ? module.naming_convention.prefix : var.environment.domain != null ? "${module.naming_convention.project}-${var.environment.domain}" : module.naming_convention.project
   apim = {
-    name           = "${local.prefix}-apim-${module.naming_convention.suffix}"
-    autoscale_name = contains(["l", "xl"], var.tier) ? "${local.prefix}-apim-as-${module.naming_convention.suffix}" : null
+    name           = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management" })), "-apim-apim-", "-apim-")
+    autoscale_name = contains(["l", "xl"], var.tier) ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management_autoscale" })), "-apim-apim-", "-apim-") : null
     zones          = var.tier == "xl" ? ["1", "2", "3"] : var.tier == "l" ? ["1", "2"] : null
     sku_name = lookup(
       {
