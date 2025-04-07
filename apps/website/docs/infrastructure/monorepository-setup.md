@@ -126,5 +126,5 @@ Terraform module.
    for detailed instructions.
 
 For more information, see the
-[availability blog post](../articles/azure-github-environment-bootstrap.md) and
+[availability blog post](../../blog/003-azure-github-environment-bootstrap.mdx) and
 the [IAM Framework documentation](./azure/azure-iam.md).
