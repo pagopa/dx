@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.0.4
+
+### Patch Changes
+
+- 0f9f624: Replace naming convention module with DX provider functions
+
 ## 0.0.3
 
 ### Patch Changes

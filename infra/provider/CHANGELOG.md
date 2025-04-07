@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.0.7
+
+### Patch Changes
+
+- a0a265e: Add managed identity resource type support for resource_name function
+
 ## 0.0.6
 
 ### Patch Changes
