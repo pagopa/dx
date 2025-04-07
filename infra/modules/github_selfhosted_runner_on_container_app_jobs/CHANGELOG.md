@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.5
+
+### Patch Changes
+
+- d112b74: Replace naming convention module with DX provider functions
+
 ## 1.0.4
 
 ### Patch Changes

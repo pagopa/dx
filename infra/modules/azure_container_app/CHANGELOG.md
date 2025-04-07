@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 0.1.2
+
+### Patch Changes
+
+- 0fd9f3a: Replace some unsupported characters from secret names
+
 ## 0.1.1
 
 ### Patch Changes
