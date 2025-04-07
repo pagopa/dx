@@ -14,7 +14,7 @@ supported. Additional tooling to support other scenarios is under development.
 
 :::
 
-## Repository Setup
+## Setup GitHub Repository
 
 Start by creating the repository on GitHub:
 
@@ -29,9 +29,9 @@ gh repo create <org>/<repo-name> \
 
 Then, follow these steps to complete the configuration.
 
-### Repository Access Control
+### Ensure an Appropriate Repository Access Control
 
-Ensure appropriate access control for your repository:
+To manage the access control for your repository, follow:
 
 - [Grant access](https://pagopa.atlassian.net/wiki/search?text=github%20gestione%20utenze)
   to your peers who need it.
@@ -41,7 +41,7 @@ Ensure appropriate access control for your repository:
   - The
     [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
 
-### CODEOWNERS Definition
+### Define CODEOWNERS
 
 Define a `CODEOWNERS` file to manage repository ownership. A common setup is:
 
@@ -59,7 +59,7 @@ Example `CODEOWNERS` file:
   .github/ <your-team> @engineering-team-devex
 ```
 
-### Creation of Dotfiles
+### Create Dot Files
 
 Create the following dotfiles at the root of your repository:
 
@@ -71,7 +71,7 @@ Create the following dotfiles at the root of your repository:
 - `.tflint.hcl`: Configure TFLint for Terraform linting.
 - `.trivyignore`: Define rules for Trivy vulnerability scanning.
 
-### GitHub PAT
+### Generate a PAT to Use GitHub via Terraform
 
 To apply changes to your repository via Terraform, you need a Personal Access
 Token (PAT) for authentication. A single PAT with the following permissions is
@@ -83,7 +83,7 @@ required for all repositories managed through Terraform:
 If you already have a PAT configured with these permissions, you may skip the
 next section.
 
-#### Creation of GitHub PAT
+#### Create the GitHub PAT
 
 If you do not already have a Personal Access Token (PAT), follow these steps:
 
@@ -98,7 +98,7 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
 2. Set in your local environment the variable `GITHUB_TOKEN` with the generated
    PAT value in your CLI profile.
 
-#### Update of GitHub PAT
+#### Update the GitHub PAT
 
 If you already have the PAT in both your GitHub account and your CLI profile,
 ensure that the new repository is accessible from that PAT.
@@ -114,7 +114,7 @@ PATs have an expiration date.
 
 :::
 
-### GitHub Settings and Link to Azure
+### Link GitHub to Azure
 
 Follow GitHub best practices and connect your repository to Azure using the
 [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
