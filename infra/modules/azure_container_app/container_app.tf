@@ -35,11 +35,11 @@ resource "azurerm_container_app" "this" {
     dynamic "container" {
       for_each = var.container_app_templates
       content {
-
-        cpu    = local.sku.cpu
+        # get the name from the image if not set according to formats: registry.name/org/name:sha-value - nginix:latest
+        name   = container.value.name == "" ? split(":", split("/", container.value.image)[length(split("/", container.value.image)) - 1])[0] : container.value.name
         image  = container.value.image
+        cpu    = local.sku.cpu
         memory = local.sku.memory
-        name   = container.value.name != "" ? container.value.name : container.value.image
 
         dynamic "env" {
           for_each = container.value.app_settings

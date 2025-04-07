@@ -24,14 +24,7 @@ run "container_app_is_correct_plan" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
+    environment = run.setup_tests.environment
 
     tags = run.setup_tests.tags
 
@@ -44,7 +37,6 @@ run "container_app_is_correct_plan" {
     container_app_templates = [
       {
         image = "nginx:latest"
-        name  = "nginx"
 
         app_settings = {
           "TEST1" = "value1",
@@ -77,6 +69,11 @@ run "container_app_is_correct_plan" {
   assert {
     condition     = azurerm_container_app.this.template[0].container[0].image == "nginx:latest"
     error_message = "The container app image is not correct"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].name == "nginx"
+    error_message = "The container app container name auto-generated is wrong"
   }
 
   assert {
@@ -174,5 +171,78 @@ run "container_app_is_correct_plan" {
       if env.secret_name != null
     ])
     error_message = "The container app environment secret values are not correct"
+  }
+}
+
+run "container_app_correct_container_name" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    tier = "xs"
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    container_app_environment_id = run.setup_tests.container_app_environment_id
+
+    container_app_templates = [
+      {
+        image = "ghcr.io/pagopa/selfcare-dashboard-backend:sha-4b7f62d"
+
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].image == "ghcr.io/pagopa/selfcare-dashboard-backend:sha-4b7f62d"
+    error_message = "The container app image is not correct"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].name == "selfcare-dashboard-backend"
+    error_message = "The container app container name auto-generated is wrong"
+  }
+}
+
+run "container_app_correct_custom_container_name" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    tier = "xs"
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    container_app_environment_id = run.setup_tests.container_app_environment_id
+
+    container_app_templates = [
+      {
+        image = "nginx:latest"
+        name  = "custom-nginx"
+
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].image == "nginx:latest"
+    error_message = "The container app image is not correct"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].name == "custom-nginx"
+    error_message = "The container app container name auto-generated is wrong"
   }
 }
