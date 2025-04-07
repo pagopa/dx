@@ -56,7 +56,7 @@ resource "azurerm_key_vault_secret" "test1" {
 }
 
 resource "azurerm_key_vault_secret" "test2" {
-  name            = "TESTSECRET2"
+  name            = "TEST-SECRET2"
   value           = "value2"
   key_vault_id    = data.azurerm_key_vault.kv.id
   expiration_date = timeadd(timestamp(), "30m")
@@ -74,7 +74,7 @@ output "container_app_environment_id" {
 output "key_vault_secret1" {
   value = {
     secret_id = azurerm_key_vault_secret.test1.versionless_id
-    name      = azurerm_key_vault_secret.test1.name
+    name      = "${azurerm_key_vault_secret.test1.name}_SECRET"
   }
 }
 
