@@ -17,12 +17,14 @@ import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
  * It is recommended to call this function at the beginning of your application.
  *
  * @example
- * import { init } from "@pagopa/azure-tracing/azure-monitor";
+ * import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
  *
- * init();
+ * initAzureMonitor();
  * @param instrumentations the list of instrumentations to register with the Azure Monitor.
  */
-export const init = (instrumentations: readonly Instrumentation[] = []) => {
+export const initAzureMonitor = (
+  instrumentations: readonly Instrumentation[] = [],
+) => {
   useAzureMonitor();
 
   registerInstrumentations({
