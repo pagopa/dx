@@ -16,7 +16,7 @@ resource "azurerm_resource_group" "example" {
 
 data "azurerm_subnet" "pep" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = "",
+    domain        = null,
     name          = "pep",
     resource_type = "subnet"
   }))
@@ -31,11 +31,11 @@ resource "random_password" "password" {
 }
 
 resource "azurerm_key_vault" "example" {
-  name = replace(provider::dx::resource_name(merge(local.naming_config, {
-    domain        = "",
-    name          = "key_vault",
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "example",
     resource_type = "key_vault"
-  })), "-key_vault-", "-")
+  }))
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.example.name
   sku_name            = "standard"
