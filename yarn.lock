@@ -6659,6 +6659,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_app_service_plan@workspace:infra/modules/azure_app_service_plan":
+  version: 0.0.0-use.local
+  resolution: "azure_app_service_plan@workspace:infra/modules/azure_app_service_plan"
+  languageName: unknown
+  linkType: soft
+
 "azure_app_service_plan_autoscaler@workspace:infra/modules/azure_app_service_plan_autoscaler":
   version: 0.0.0-use.local
   resolution: "azure_app_service_plan_autoscaler@workspace:infra/modules/azure_app_service_plan_autoscaler"
