@@ -1,5 +1,5 @@
 resource "azurerm_container_app_environment" "this" {
-  name                       = "${module.naming_convention.prefix}-cae-${module.naming_convention.suffix}"
+  name                       = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app_environment" }))
   location                   = var.environment.location
   resource_group_name        = var.resource_group_name
   log_analytics_workspace_id = var.log_analytics_workspace_id
