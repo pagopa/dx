@@ -8,6 +8,14 @@ terraform {
 }
 
 locals {
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    domain          = "modules"
+    app_name        = "test"
+    instance_number = "01"
+  }
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
@@ -87,4 +95,8 @@ output "key_vault_secret2" {
 
 output "tags" {
   value = local.tags
+}
+
+output "environment" {
+  value = local.environment
 }

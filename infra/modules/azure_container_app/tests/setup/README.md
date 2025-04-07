@@ -34,6 +34,7 @@
 | Name | Description |
 |------|-------------|
 | <a name="output_container_app_environment_id"></a> [container\_app\_environment\_id](#output\_container\_app\_environment\_id) | n/a |
+| <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 | <a name="output_key_vault_secret1"></a> [key\_vault\_secret1](#output\_key\_vault\_secret1) | n/a |
 | <a name="output_key_vault_secret2"></a> [key\_vault\_secret2](#output\_key\_vault\_secret2) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
