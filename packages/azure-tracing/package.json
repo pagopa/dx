@@ -13,7 +13,15 @@
   ],
   "main": "./dist/azure-functions.mjs",
   "exports": {
-    "import": "./dist/azure-functions.mjs"
+    ".": {
+      "import": "./dist/azure-functions.mjs"
+    },
+    "./logger": {
+      "import": "./dist/logger.js"
+    },
+    "./azure-monitor": {
+      "import": "./dist/azure-monitor.js"
+    }
   },
   "dependencies": {
     "@azure/functions": "^4.7.0",
