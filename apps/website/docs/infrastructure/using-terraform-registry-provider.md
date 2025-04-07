@@ -119,8 +119,7 @@ version = "~> 0.0"
 This ensures that breaking changes are avoided while allowing minor updates and
 patches. For example:
 
-- `~> 0.0` allows updates to `0.0.x` but not `0.1.0`.
-- `~> 1.0` allows updates to `1.x.x` but not `2.0.0`.
+- `~> 0.0` allows updates to `0.x.x` but not `1.0.0`.
 
 When publishing a new release, ensure the version tag starts with a `v` (e.g.,
 `v0.1.0`) as required by the
