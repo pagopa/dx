@@ -40,4 +40,6 @@ locals {
     max_interval_in_seconds = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds : null
     max_staleness_prefix    = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
   } : local.consistency_presets[local.selected_preset]
+
+  private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
 }
