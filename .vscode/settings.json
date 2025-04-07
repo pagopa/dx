@@ -4,6 +4,10 @@
     "**/.pnp.*": true
   },
   "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
   "github.copilot.chat.codeGeneration.instructions": [
     {
       "file": ".github/copilot/code-instructions.md"
@@ -28,5 +32,7 @@
     {
       "file": ".github/copilot/test-instructions.md"
     }
-  ]
+  ],
+  "typescript.tsdk": ".yarn/sdks/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
