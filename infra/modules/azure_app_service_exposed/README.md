@@ -1,6 +1,26 @@
-# DX - Azure App Service Module
+# DX - Azure App Service Exposed Module
 
-This module is used to create an Azure App Service, allowing it to be configured as exposed.
+This module deploys an AppService with a strong opinionated configuration in terms of deployment strategy. This module is ideal when you need your AppService to remain accessible from the public internet.
+
+## Features
+
+- **AppService**: An AppService instance running Java or TypeScript code
+- **AppService Slot**: A slot named `Staging` to test code before switching to production
+- **App Service Plan**: A Linux-based Plan
+
+## Tiers and Configuration
+
+| Tier | Description                      | SLA    | Staging Slot | Autoscaling | Multi AZ |
+| ---- | -------------------------------- | ------ | ------------ | ----------- | -------- |
+| xs   | Non-production tier              | N/A    | No           | No          | No       |
+| s    | Non-production tier              | 99.95% | No           | Max 3       | No       |
+| m    | Standard production tier         | 99.95% | Yes          | Max 30      | Yes      |
+| l    | Above average production tier    | 99.95% | Yes          | Max 30      | Yes      |
+| xl   | High-performance production tier | 99.95% | Yes          | Max 30      | Yex      |
+
+## Usage Example
+
+For a complete example of how to use this module, refer to the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-exposed/tree/main/examples/complete) folder in the module repository.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
