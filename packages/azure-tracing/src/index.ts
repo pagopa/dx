@@ -17,7 +17,7 @@ import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
  * It is recommended to call this function at the beginning of your application.
  *
  * @example
- * import { init } from "@azure/monitor-opentelemetry";
+ * import { init } from "@azure/monitor-tracing";
  *
  * init();
  * @param instrumentations the list of instrumentations to register with the Azure Monitor.
