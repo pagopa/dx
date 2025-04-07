@@ -26,10 +26,12 @@ locals {
     has_existing_subnet    = var.subnet_id != null
     zone_balancing_enabled = local.tier != "s"
     is_slot_enabled        = local.tier == "s" ? 0 : 1
+    private_endpoint_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_private_endpoint" }))
   }
 
   app_service_slot = {
-    name = "staging"
+    name                  = "staging"
+    private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_slot_private_endpoint" }))
   }
 
   application_insights = {
