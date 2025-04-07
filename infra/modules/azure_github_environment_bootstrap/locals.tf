@@ -3,22 +3,20 @@ locals {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
     location        = var.environment.location
-    domain          = null
-    name            = var.environment.domain, # app_name is mandatory for any resource except resource groups
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  env_name = lookup(
-    {
-      "d" = "dev"
-      "u" = "uat"
-      "p" = "prod"
-    },
-    var.environment.env_short
-  )
+  env_name = {
+    "d" = "dev"
+    "u" = "uat"
+    "p" = "prod"
+  }[var.environment.env_short]
 
   resource_group = {
-    name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = var.environment.domain # app_name is mandatory for any resource except resource groups
+      resource_type = "resource_group"
+    }))
     location = var.environment.location
   }
 
@@ -38,16 +36,19 @@ locals {
   ids = {
     #e.g. io-p-itn-ipatente-app-github-cd-id-01
     infra_name = provider::dx::resource_name(merge(local.naming_config, {
-      name = "infra-github-%s"
-      resource_type = "managed_identity" 
+      domain        = var.environment.domain
+      name          = "infra-github-%s"
+      resource_type = "managed_identity"
     }))
-    app_name   = provider::dx::resource_name(merge(local.naming_config, {
-      name = "app-github-%s"
-      resource_type = "managed_identity" 
+    app_name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = var.environment.domain
+      name          = "app-github-%s"
+      resource_type = "managed_identity"
     }))
-    opex_name  = provider::dx::resource_name(merge(local.naming_config, {
-      name = "opex-github-%s"
-      resource_type = "managed_identity" 
+    opex_name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = var.environment.domain
+      name          = "opex-github-%s"
+      resource_type = "managed_identity"
     }))
 
     # e.g. infra-prod-cd
