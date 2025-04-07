@@ -52,3 +52,5 @@ dist
 .env
 node_modules
 .turbo
+
+.pnpm-store
