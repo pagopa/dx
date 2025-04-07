@@ -1,7 +1,16 @@
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   db = {
-    name         = "${module.naming_convention.prefix}-psql-${module.naming_convention.suffix}"
-    replica_name = var.tier == "l" ? "${module.naming_convention.prefix}-psql-replica-${module.naming_convention.suffix}" : null
+    name         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql" }))
+    replica_name = var.tier == "l" ? provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" })) : null
     sku_name = lookup(
       {
         "s" = "B_Standard_B1ms",
