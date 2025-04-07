@@ -22,7 +22,7 @@ import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
  * init();
  * @param instrumentations the list of instrumentations to register with the Azure Monitor.
  */
-export const init = (instrumentations: readonly Instrumentation[]) => {
+export const init = (instrumentations: readonly Instrumentation[] = []) => {
   useAzureMonitor();
 
   registerInstrumentations({
