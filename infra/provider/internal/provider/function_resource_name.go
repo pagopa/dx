@@ -116,7 +116,8 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"static_web_app":     "stapp",
 
 		// Security
-		"key_vault": "kv",
+		"key_vault":        "kv",
+		"managed_identity": "id",
 
 		// Monitoring
 		"application_insights":           "appi",
