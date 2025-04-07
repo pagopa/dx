@@ -1,6 +1,24 @@
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = null
+    name            = var.environment.domain, # app_name is mandatory for any resource except resource groups
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
+  env_name = lookup(
+    {
+      "d" = "dev"
+      "u" = "uat"
+      "p" = "prod"
+    },
+    var.environment.env_short
+  )
+
   resource_group = {
-    name     = "${module.naming_convention.prefix}-rg-${module.naming_convention.suffix}"
+    name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
     location = var.environment.location
   }
 
@@ -19,19 +37,28 @@ locals {
   # %s is replaced by `ci` or `cd`
   ids = {
     #e.g. io-p-itn-ipatente-app-github-cd-id-01
-    infra_name = "${module.naming_convention.prefix}-infra-github-%s-id-${module.naming_convention.suffix}"
-    app_name   = "${module.naming_convention.prefix}-app-github-%s-id-${module.naming_convention.suffix}"
-    opex_name  = "${module.naming_convention.prefix}-opex-github-%s-id-${module.naming_convention.suffix}"
+    infra_name = provider::dx::resource_name(merge(local.naming_config, {
+      name = "infra-github-%s"
+      resource_type = "managed_identity" 
+    }))
+    app_name   = provider::dx::resource_name(merge(local.naming_config, {
+      name = "app-github-%s"
+      resource_type = "managed_identity" 
+    }))
+    opex_name  = provider::dx::resource_name(merge(local.naming_config, {
+      name = "opex-github-%s"
+      resource_type = "managed_identity" 
+    }))
 
     # e.g. infra-prod-cd
-    infra_environment_name = "infra-${module.naming_convention.env_name}-%s"
-    app_environment_name   = "app-${module.naming_convention.env_name}-%s"
-    opex_environment_name  = "opex-${module.naming_convention.env_name}-%s"
+    infra_environment_name = "infra-${local.env_name}-%s"
+    app_environment_name   = "app-${local.env_name}-%s"
+    opex_environment_name  = "opex-${local.env_name}-%s"
 
     issuer   = "https://token.actions.githubusercontent.com"
     audience = ["api://AzureADTokenExchange"]
 
-    federated_identity_name = "${var.repository.name}-environment-%s-${module.naming_convention.env_name}-%s"
+    federated_identity_name = "${var.repository.name}-environment-%s-${local.env_name}-%s"
 
     location = var.environment.location
   }
