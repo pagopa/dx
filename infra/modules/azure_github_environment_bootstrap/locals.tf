@@ -14,7 +14,7 @@ locals {
 
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = var.environment.domain # app_name is mandatory for any resource except resource groups
+      name          = var.environment.domain
       resource_type = "resource_group"
     }))
     location = var.environment.location
