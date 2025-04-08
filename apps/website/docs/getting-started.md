@@ -15,7 +15,7 @@ understand core concepts and start using our tools effectively.
 ## Key Concepts to Know
 
 We know you're eager to dive in and start coding, but spending a few minutes on
-this section will save you from getting stuck later and blaming the tools 🫷.
+this section will save you from getting stuck later 🫷.
 
 ### Mono Repositories: yes please!
 
