@@ -30,11 +30,11 @@ locals {
 
   keys = { for hk in flatten([for h in var.eventhubs :
     [for k in h.keys : {
-      hub = replace(local.eventhub.name, "${var.environment.app_name}-evhns", h.name)
+      hub = replace(local.eventhub.name, "-evhns-", "-${h.name}-")
       key = k
   }]]) : "${hk.hub}.${hk.key.name}" => hk }
 
-  hubs = { for h in var.eventhubs : replace(local.eventhub.name, "${var.environment.app_name}-evhns", h.name) => h }
+  hubs = { for h in var.eventhubs : replace(local.eventhub.name, "-evhns-", "-${h.name}-") => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
