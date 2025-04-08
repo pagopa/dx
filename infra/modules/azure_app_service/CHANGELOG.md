@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.7
+
+### Patch Changes
+
+- 7edba50: Replace naming convention module with DX provider functions
+
 ## 0.1.6
 
 ### Patch Changes

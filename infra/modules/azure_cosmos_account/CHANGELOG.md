@@ -1,5 +1,11 @@
 # azure_cosmos_account
 
+## 0.0.9
+
+### Patch Changes
+
+- be7d383: Replace naming convention module with DX provider functions
+
 ## 0.0.8
 
 ### Patch Changes
