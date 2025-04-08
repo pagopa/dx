@@ -19,6 +19,9 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
