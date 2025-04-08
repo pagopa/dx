@@ -51,6 +51,13 @@ jobs:
             FILE_NAME=$(basename "$FILE")
             if ! [[ "$FILE_NAME" =~ $NAMING_PATTERN ]]; then
               echo "Error: File '$FILE_NAME' does not follow the naming convention."
+              echo "Required format: [_]<scope>-<type>-<description>.yaml"
+              echo "  - <_> only if is an internal workflow"
+              echo "  - <scope> must be one of: cron, build, validate, release"
+              echo "  - <type> must be one of: docker, typescript, terraform, changesets, docusaurus, bash, azure, aws"
+              echo "  - <description> must be lowercase divided by hyphens (-)"
+              echo "  - file extension must be .yaml"
+              echo "Example: validate-bash-script-checks.yaml or _cron-azure-backup.yaml"
               exit 1
             fi
           done
