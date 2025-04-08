@@ -1,0 +1,58 @@
+name: Validate Workflow Naming
+
+on:
+  workflow_dispatch: # TEST
+    inputs:
+      current_ref:
+        description: "Current branch reference"
+        required: false
+        type: string
+        default: ""
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  validate-naming:
+    name: Validate Workflow Naming Convention
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Validate workflow file naming convention
+        run: |
+          set -eu
+
+          echo "Checking naming convention for new workflow files in .github/workflows directory"
+          BASE_BRANCH="origin/main" #"origin/${{ github.event.pull_request.base.ref }}"
+          HEAD_BRANCH=${{ inputs.current_ref || github.sha }} #"origin/${{ github.event.pull_request.head.ref }}"
+
+          echo "- FROM  Base ref: $BASE_BRANCH"
+          echo "- TO    Head ref: $HEAD_BRANCH"
+
+          # Find all new files in the .github/workflows directory that are added in the pull request
+          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/')
+
+          # Define the naming pattern
+          # Pattern is: [_]<scope>-<type>-<description>.yaml
+          NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
+
+          # Check each new file
+          for FILE in $NEW_FILES; do
+            FILE_NAME=$(basename "$FILE")
+            if ! [[ "$FILE_NAME" =~ $NAMING_PATTERN ]]; then
+              echo "Error: File '$FILE_NAME' does not follow the naming convention."
+              exit 1
+            fi
+          done
+
+          echo "All new workflow files follow the naming convention."
