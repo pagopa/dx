@@ -38,7 +38,7 @@ adding support for AWS as well.
 
 ### Terraform Modules
 
-All our Terraform modules are available on
+All DX Terraform modules are available on
 [the public Terraform Registry](https://registry.terraform.io/namespaces/pagopa-dx)
 under the `pagopa-dx` organization.
 
@@ -46,7 +46,7 @@ Keep in mind
 [you can contribute](https://pagopa.github.io/dx/docs/infrastructure/contributing-to-dx-terraform-modules/)
 to improve them.
 
-### Our Design Principles
+### DX Design Principles
 
 DX tools are designed to make teams
 [autonomous in their daily work](index.md#how-this-differs-from-technology-standards-iniative)
@@ -95,4 +95,6 @@ Stay up to date with DX [blog](https://pagopa.github.io/dx/blog/).
 ### Contributing
 
 If excited about DX work, contribute by following the
-[contribution guidelines](TBD).
+[contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTE.md),
+but remember to follow the
+[Code of Conduct](https://github.com/pagopa/dx/blob/main/CODE_OF_CONDUCT.md).
