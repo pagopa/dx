@@ -55,7 +55,7 @@ the tools work internally—though everything is open source and
 [contributions are welcome](https://pagopa.github.io/dx/docs/conventions/pull-requests/acceptance-criteria).
 Instead, you can focus on delivering value.
 
-We also provide guidance to help you adopt useful conventions during your
+We also provide guidance to help teams adopt useful conventions during their
 journey:
 
 - [Optimize Git](./conventions/git/index.md) usage.
