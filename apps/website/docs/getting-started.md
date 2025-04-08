@@ -19,7 +19,7 @@ this section will save you from getting stuck later and blaming the tools 🫷.
 
 ### Mono Repositories: yes please!
 
-Using a mono repository is mandatory to adopt our tooling, as several components
+Using a mono repository is mandatory to adopt DX tooling, as several components
 are designed on that assumption.
 [Mono repos offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
 and our tools are designed with them in mind.
