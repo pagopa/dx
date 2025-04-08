@@ -19,9 +19,3 @@ provider "azurerm" {
   }
   storage_use_azuread = true
 }
-
-module "naming_convention" {
-  source      = "pagopa-dx/azure-naming-convention/azurerm"
-  version     = "~> 0.0"
-  environment = local.environment
-}

@@ -11,13 +11,11 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.19.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.26.0 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | pagopa-dx/azure-naming-convention/azurerm | ~> 0.0 |
+No modules.
 
 ## Resources
 
