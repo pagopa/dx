@@ -8,98 +8,109 @@ Thank you for your interest in contributing to the DX repository! This document 
 
 We recommend using devcontainers to working with this repository. They ensure a consistent and isolated development environment, coming with pre-configured with all the necessary tools and dependencies for this project
 
+#### Visual Studio Code or Any Supported IDE
+
 Install DevContainer extension in your IDE ([VS Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for example), run Docker or Rancher and spin the DX devcontainer by opening the command palette (`F1`) and selecting `Dev Containers: Reopen in Container`.
+
+> [!TIP]
+> If you are using macOS with [Rancher Desktop](https://rancherdesktop.io/), configure it to use `VZ` as _Virtual Machine Type_ and `virtiofs` as volume _Mount Type_.
+
+#### Console
+
+If you use a code editor that doesn't support Dev Container, you can still run it in your terminal.
+
+1. Follow the instruction of the following chapter ("Using local machine") to setup your local environment
+2. Run devcontainer from your terminal
+   ```bash
+   yarn devcontainer up --workspace-folder .
+   yarn devcontainer exec -- workspace-folder . /bin/bash
+   ```
 
 ### Local Development Setup (Alternative)
 
-If you prefer not to use dev containers, you can bootstrap your local development environment by following these steps:
+If you prefer not to use dev containers, you can bootstrap the local development on your machine.
 
-#### Prerequisites
+This project use specific versions of `node`, `yarn` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
 
-1. **Node.js**
+1. Install and configure the follow tool in your machine
 
-   - Use [nodenv](https://github.com/nodenv/nodenv) to install the required version of Node.js specified in the `.node-version` file.
-     ```sh
-     nodenv install
-     node --version
-     ```
+   - [nodenv](https://github.com/nodenv/nodenv) - Node version manager
+   - [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
+   - [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
+   - [tflint](https://github.com/terraform-linters/tflint) - A Pluggable Terraform Linter
+   - [pre-commit](https://pre-commit.com/) - A framework for managing and maintaining multi-language pre-commit hooks
 
-2. **Yarn**
+2. Install `node` at the right version used by this project
 
-   - Yarn must be installed using [Corepack](https://yarnpkg.com/getting-started/install), which is included by default in Node.js.
-     ```sh
-     corepack enable
-     yarn --version
-     ```
+   ```bash
+    cd path/to/io-messages
+    nodenv install
+   ```
 
-3. **Terraform**
+3. Install `yarn` using [corepack](https://nodejs.org/api/corepack.html) (Node Package Manager version manager, it is distributed with `node`). This step will also install all the required dependencies
 
-   - Use [tfenv](https://github.com/tfutils/tfenv) to install the required version of Terraform specified in the `.terraform-version` file.
-     ```sh
-     tfenv install
-     terraform version
-     ```
+   > [!IMPORTANT]
+   > Yarn uses Plug and Play for dependency management. For more information, see: [Yarn Plug’n’Play](https://yarnpkg.com/features/pnp)
 
-4. **pre-commit**
-   - Install `pre-commit` by following the [official documentation](https://pre-commit.com/).
-     ```sh
-     pre-commit install
-     ```
+   ```bash
+   corepack enable
+   yarn
+   ```
 
-#### Installing Dependencies
+4. Build all the workspaces contained by this repo
+   ```bash
+   yarn build
+   ```
 
-Run the following command to install all dependencies for the project:
+## Release management
 
-```sh
-yarn
+We use [changesets](https://github.com/changesets/changesets) to automate package versioning and releases.
+
+Each Pull Request that includes changes that require a version bump must include a _changeset file_ that describes the introduced changes.
+
+To create a _changeset file_ run the following command and follow the instructions.
+
+```bash
+yarn changeset
 ```
 
-To add a dependency to a specific workspace, use:
+## Useful commands
 
-```sh
-yarn workspace <workspace name> add <package name>
-yarn workspace <workspace name> add -D <package name>
+This project uses `yarn` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
+
+### Work with workspaces
+
+```bash
+# build all the workspaces using turbo
+yarn build
+# or
+yarn turbo build
+
+# to execute COMMAND on WORKSPACE_NAME
+yarn workspace WORKSPACE_NAME run command
+# to execute COMMAD on all workspaces
+yarn workspace foreach run command
+
+# run unit tests on citizen-func
+yarn workspace citizen-func run test
+# or (with turbo)
+yarn turbo test -- citizen-func
+
+# run the typecheck script on all workspaces
+yarn workspaces foreach run typecheck
 ```
 
-To add a shared development dependency for the monorepo, use:
+### Add dependencies
 
-```sh
-yarn add -D <package name>
+```bash
+# add a dependency to the workspace root
+yarn add turbo
+
+# add vitest as devDependency on citizen-func
+yarn workspace citizen-func add -D vitest
+
+# add zod as dependency on each workspace
+yarn workspace foreach add zod
 ```
-
-## Opening a Pull Request
-
-1. **Fork the Repository**
-
-   - Create a fork of this repository in your GitHub account.
-
-2. **Create a Feature Branch**
-
-   - Use a descriptive name for your branch, such as `feature/add-new-feature` or `bugfix/fix-issue`.
-
-3. **Make Your Changes**
-
-   - Ensure your changes adhere to the project's coding standards and guidelines.
-
-4. **Test Your Changes**
-
-   - Run the following scripts to verify your changes:
-     ```sh
-     yarn lint
-     yarn test
-     ```
-
-5. **Commit Your Changes**
-
-   - Write clear and concise commit messages.
-
-6. **Push and Open a PR**
-   - Push your branch to your fork and open a pull request against the `main` branch of this repository.
-
-## Code Review Process
-
-- All pull requests require at least one approval from a maintainer.
-- Ensure your PR description includes the context and purpose of the changes.
-- Address any feedback promptly to expedite the review process.
 
 Thank you for contributing to DX!
