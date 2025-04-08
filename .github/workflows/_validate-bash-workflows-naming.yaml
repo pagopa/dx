@@ -48,8 +48,9 @@ jobs:
 
           # Check each new file
           for FILE in $NEW_FILES; do
-            if [[ ! $(basename "$FILE") =~ $NAMING_PATTERN ]]; then
-              echo "Error: File '$FILE' does not follow the naming convention."
+            FILE_NAME=$(basename "$FILE")
+            if [[ ! $FILE_NAME =~ $NAMING_PATTERN ]]; then
+              echo "Error: File '$FILE_NAME' does not follow the naming convention."
               exit 1
             fi
           done
