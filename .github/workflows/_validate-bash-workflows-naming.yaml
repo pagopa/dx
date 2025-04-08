@@ -43,8 +43,8 @@ jobs:
           NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/')
 
           # Define the naming pattern
-          # Pattern is: <_><scope>-<type>-<description>.yaml
-          NAMING_PATTERN='^_[a-z]+-(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
+          # Pattern is: [_]<scope>-<type>-<description>.yaml
+          NAMING_PATTERN='^_?[a-z]+-(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
 
           # Check each new file
           for FILE in $NEW_FILES; do
