@@ -1,5 +1,13 @@
 # docs
 
+## 0.2.1
+
+### Patch Changes
+
+- dd1bf6d: Add cdn action documentation
+- b065065: Add Legacy workloads documentation on website
+- e0ed5af: Add Terraform Provider documentation page
+
 ## 0.2.0
 
 ### Minor Changes

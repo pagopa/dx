@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.12
+
+### Patch Changes
+
+- 6421087: Add module documentation in README files
+
 ## 0.0.11
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.6
+
+### Patch Changes
+
+- 6421087: Add module documentation in README files
+
 ## 0.1.5
 
 ### Patch Changes

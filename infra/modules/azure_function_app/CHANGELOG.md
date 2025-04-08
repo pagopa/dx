@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.2.6
+
+### Patch Changes
+
+- 625aefe: Replace naming convention module with DX provider functions
+
 ## 0.2.5
 
 ### Patch Changes

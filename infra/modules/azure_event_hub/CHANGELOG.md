@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.8
+
+### Patch Changes
+
+- 8b1739a: Replace naming convention module with DX provider functions
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.6
+
+### Patch Changes
+
+- ac04089: Add module description and main features
+
 ## 1.0.5
 
 ### Patch Changes
