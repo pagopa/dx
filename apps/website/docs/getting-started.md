@@ -19,15 +19,15 @@ this section will save you from getting stuck later and blaming the tools 🫷.
 
 ### Mono Repositories: yes please!
 
-While using a mono repository isn't mandatory for adopting our tooling, it is
-highly recommended.
+Using a mono repository is mandatory to adopt our tooling, as several components
+are designed on that assumption.
 [Mono repos offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
 and our tools are designed with them in mind.
 
 ### Supported Platforms
 
-Our tools are built to work seamlessly with [GitHub](TBD Tech Radar) and
-multiple Cloud Service Providers (CSPs).
+Our tools are built to work seamlessly with GitHub and multiple Cloud Service
+Providers (CSPs).
 
 :::info
 
@@ -73,10 +73,11 @@ you're ready, create a repository on GitHub and
 ## Set Up Your First GitHub Workflows
 
 The DX repository
-[provides several templates](https://github.com/pagopa/dx/tree/main/.github) to
-speed up continuous integration and delivery for your apps and IaC code. These
-templates cover various scenarios, such as TypeScript code validation, web app
-deployment (including FaaS!), building and pushing Docker images to
+[provides several templates](https://github.com/pagopa/dx/tree/main/.github) -
+all [properly documented](./pipelines/index.md) - to speed up continuous
+integration and delivery for your apps and IaC code. These templates cover
+various scenarios, such as TypeScript code validation, web app deployment
+(including FaaS!), building and pushing Docker images to
 [GitHub registry](https://github.com/orgs/pagopa/packages?repo_name=dx), and
 more. Feel free to choose the ones that best suit your needs!
 
