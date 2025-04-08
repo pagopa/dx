@@ -22,7 +22,7 @@ this section will save you from getting stuck later 🫷.
 Using a mono repository is mandatory to adopt DX tooling, as several components
 are designed on that assumption.
 [Mono repos offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
-and our tools are designed with them in mind.
+and DX tools are designed with them in mind.
 
 ### Supported Platforms
 
