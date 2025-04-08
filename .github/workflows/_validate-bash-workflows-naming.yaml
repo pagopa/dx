@@ -8,9 +8,6 @@ on:
         required: false
         type: string
         default: ""
-  push: # TEST
-    branches:
-      - feats/add-workflow-for-naming-convention-check
   pull_request:
     paths:
       - '.github/workflows/**'
@@ -31,7 +28,7 @@ jobs:
           set -eu
 
           echo "Checking naming convention for new workflow files in .github/workflows directory"
-          BASE_BRANCH=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}')) #"origin/${{ github.event.pull_request.base.ref }}"
+          BASE_BRANCH="origin/main" #"origin/${{ github.event.pull_request.base.ref }}"
           HEAD_BRANCH=${{ inputs.current_ref || github.sha }} #"origin/${{ github.event.pull_request.head.ref }}"
 
           echo "- FROM  Base ref: $BASE_BRANCH"
