@@ -143,7 +143,7 @@ data "http" "allowed_location_policy_parameters" {
 # allowed_locations.tf File
 
 resource "azurerm_policy_definition" "allowed_location_policy" {
-  name         = "${module.naming_convention.project}-allowed-location-policy"
+  name         = "${local.project}-allowed-location-policy"
   policy_type  = "Custom"
   mode         = "Indexed"
   display_name = "Enforce Italy North region"
@@ -159,7 +159,7 @@ resource "azurerm_policy_definition" "allowed_location_policy" {
 }
 
 resource "azurerm_subscription_policy_assignment" "allowed_location_assignment" {
-  name                 = "${module.naming_convention.project}-allowed-location-assignment"
+  name                 = "${local.project}-allowed-location-assignment"
   display_name         = "Enforce Italy North region"
   policy_definition_id = azurerm_policy_definition.allowed_location_policy.id
   subscription_id      = data.azurerm_subscription.current.id
