@@ -77,7 +77,7 @@ To apply changes to your repository via Terraform, you need to have the
 [right permissions](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 as well as your local CLI authenticate within GitHub. The latter is achievable
 by using either [gh cli](https://cli.github.com/) or a PAT token. Using the GH
-CLI is recommended over a PAT token. recommended.
+CLI is recommended over a PAT token.
 
 #### Authenticate with GH CLI (recommended)
 
