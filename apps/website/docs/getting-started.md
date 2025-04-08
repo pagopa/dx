@@ -48,7 +48,7 @@ to improve them.
 
 ### Our Design Principles
 
-Our tools are designed to make you
+DX tools are designed to make teams
 [autonomous in your daily work](index.md#how-this-differs-from-technology-standards-iniative)
 by providing golden paths and best practices. You don't need to understand how
 the tools work internally—though everything is open source and
