@@ -1,0 +1,52 @@
+name: Validate Workflow Naming
+
+on:
+  workflow_dispatch: # TEST
+    inputs:
+      current_ref:
+        description: "Current branch reference"
+        required: false
+        type: string
+        default: ""
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  validate-naming:
+    name: Validate Workflow Naming Convention
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
+
+      - name: Validate workflow file naming convention
+        run: |
+          set -eu
+
+          echo "Checking naming convention for new workflow files in .github/workflows directory"
+          BASE_BRANCH=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}')) #"origin/${{ github.event.pull_request.base.ref }}"
+          HEAD_BRANCH=${{ inputs.current_ref || github.sha }} #"origin/${{ github.event.pull_request.head.ref }}"
+
+          echo "- FROM  Base ref: $BASE_BRANCH"
+          echo "- TO    Head ref: $HEAD_BRANCH"
+
+          # Find all new files in the .github/workflows directory that are added in the pull request
+          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/')
+
+          # Define the naming pattern
+          # Pattern is: <_><scope>-<type>-<description>.yaml
+          NAMING_PATTERN='^_[a-z]+-(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
+
+          # Check each new file
+          for FILE in $NEW_FILES; do
+            if [[ ! $(basename "$FILE") =~ $NAMING_PATTERN ]]; then
+              echo "Error: File '$FILE' does not follow the naming convention."
+              exit 1
+            fi
+          done
+
+          echo "All new workflow files follow the naming convention."
