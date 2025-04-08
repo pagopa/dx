@@ -30,8 +30,7 @@ If you use a code editor that doesn't support Dev Container, you can still run i
 
 If you prefer not to use dev containers, you can bootstrap the local development on your machine.
 
-This project use specific versions of `node`, `yarn` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
-
+This project uses specific versions of `node`, `yarn` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
 1. Install and configure the follow tool in your machine
 
    - [nodenv](https://github.com/nodenv/nodenv) - Node version manager
@@ -43,7 +42,7 @@ This project use specific versions of `node`, `yarn` and `terraform`. To make su
 2. Install `node` at the right version used by this project
 
    ```bash
-    cd path/to/io-messages
+    cd path/to/DX
     nodenv install
    ```
 

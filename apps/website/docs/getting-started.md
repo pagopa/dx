@@ -49,7 +49,7 @@ to improve them.
 ### DX Design Principles
 
 DX tools are designed to make teams
-[autonomous in their daily work](index.md#how-this-differs-from-technology-standards-iniative)
+[autonomous in their daily work](index.md#how-this-differs-from-technology-standards-initiative)
 by providing golden paths and best practices. They don't need to understand how
 the tools work internally—though everything is open source and
 [contributions are welcome](https://pagopa.github.io/dx/docs/conventions/pull-requests/acceptance-criteria).
