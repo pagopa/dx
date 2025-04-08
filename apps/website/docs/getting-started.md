@@ -26,7 +26,7 @@ and DX tools are designed with them in mind.
 
 ### Supported Platforms
 
-Our tools are built to work seamlessly with GitHub and multiple Cloud Service
+DX tools are built to work seamlessly with GitHub and multiple Cloud Service
 Providers (CSPs).
 
 :::info
