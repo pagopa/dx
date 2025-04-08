@@ -44,7 +44,7 @@ jobs:
 
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>.yaml
-          NAMING_PATTERN='^_?[a-z]+-(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
+          NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+\.yaml$'
 
           # Check each new file
           for FILE in $NEW_FILES; do
