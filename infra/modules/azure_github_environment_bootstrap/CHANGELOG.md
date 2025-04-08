@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.4.1
+
+### Patch Changes
+
+- c534615: Replace naming convention module with DX provider functions
+
 ## 1.4.0
 
 ### Minor Changes

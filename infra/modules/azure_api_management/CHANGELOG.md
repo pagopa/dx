@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.1.1
+
+### Patch Changes
+
+- fe9c039: Replace naming convention module with DX provider functions
+
 ## 1.1.0
 
 ### Minor Changes

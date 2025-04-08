@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.0.13
+
+### Patch Changes
+
+- 7edba50: Replace naming convention module with DX provider functions
+
 ## 0.0.12
 
 ### Patch Changes
