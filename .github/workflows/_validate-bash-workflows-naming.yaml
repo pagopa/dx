@@ -1,13 +1,6 @@
 name: Validate Workflow Naming
 
 on:
-  workflow_dispatch: # TEST
-    inputs:
-      current_ref:
-        description: "Current branch reference"
-        required: false
-        type: string
-        default: ""
   pull_request:
     paths:
       - '.github/workflows/**'
@@ -33,8 +26,8 @@ jobs:
           set -eu
 
           echo "Checking naming convention for new workflow files in .github/workflows directory"
-          BASE_BRANCH="origin/main" #"origin/${{ github.event.pull_request.base.ref }}"
-          HEAD_BRANCH=${{ inputs.current_ref || github.sha }} #"origin/${{ github.event.pull_request.head.ref }}"
+          BASE_BRANCH="origin/${{ github.event.pull_request.base.ref }}"
+          HEAD_BRANCH="origin/${{ github.event.pull_request.head.ref }}"
 
           echo "- FROM  Base ref: $BASE_BRANCH"
           echo "- TO    Head ref: $HEAD_BRANCH"
