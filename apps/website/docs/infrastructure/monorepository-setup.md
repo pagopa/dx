@@ -71,7 +71,27 @@ Create the following dotfiles at the root of your repository:
 - `.tflint.hcl`: Configure TFLint for Terraform linting.
 - `.trivyignore`: Define rules for Trivy vulnerability scanning.
 
-### Generate a PAT to Use GitHub via Terraform
+### Authenticating with GitHub for Terraform Operations
+
+To apply changes to your repository via Terraform, you need to have the
+[right permissions](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+as well as your local CLI authenticate within GitHub. The latter is achievable
+by using either [gh cli](https://cli.github.com/) or a PAT token. Using the GH
+CLI is recommended over a PAT token. recommended.
+
+#### Authenticate with GH CLI (recommended)
+
+Open your shell and run the command:
+
+```bash
+
+gh auth login
+
+```
+
+Follow the instructions on screen and you are ready to go.
+
+#### Authenticate with PAT token
 
 To apply changes to your repository via Terraform, you need a Personal Access
 Token (PAT) for authentication. A single PAT with the following permissions is
@@ -83,7 +103,7 @@ required for all repositories managed through Terraform:
 If you already have a PAT configured with these permissions, you may skip the
 next section.
 
-#### Create the GitHub PAT
+##### Create the GitHub PAT
 
 If you do not already have a Personal Access Token (PAT), follow these steps:
 
@@ -98,7 +118,7 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
 2. Set in your local environment the variable `GITHUB_TOKEN` with the generated
    PAT value in your CLI profile.
 
-#### Update the GitHub PAT
+##### Update the GitHub PAT
 
 If you already have the PAT in both your GitHub account and your CLI profile,
 ensure that the new repository is accessible from that PAT.
@@ -126,5 +146,5 @@ Terraform module.
    for detailed instructions.
 
 For more information, see the
-[availability blog post](../../blog/003-azure-github-environment-bootstrap.mdx) and
-the [IAM Framework documentation](./azure/azure-iam.md).
+[availability blog post](../../blog/003-azure-github-environment-bootstrap.mdx)
+and the [IAM Framework documentation](./azure/azure-iam.md).
