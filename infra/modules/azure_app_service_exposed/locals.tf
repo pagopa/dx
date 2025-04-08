@@ -1,14 +1,29 @@
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
   app_service_plan = {
     enable = var.app_service_plan_id == null
   }
 
   app_service = {
-    name                   = "${module.naming_convention.prefix}-app-${module.naming_convention.suffix}"
+    name                   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service" }))
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s" && local.tier != "xs"
     is_slot_enabled        = local.tier == "s" || local.tier == "xs" ? 0 : 1
     always_on              = local.tier == "xs" ? false : true
+  }
+
+  app_service_slot = {
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = "${var.environment.app_name}-staging",
+      resource_type = "app_service"
+    }))
   }
 
   application_insights = {
