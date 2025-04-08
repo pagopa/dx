@@ -1,5 +1,11 @@
 # azure_container_app_environment
 
+## 0.0.5
+
+### Patch Changes
+
+- b013061: Replace naming convention module with DX provider functions
+
 ## 0.0.4
 
 ### Patch Changes

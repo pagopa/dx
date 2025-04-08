@@ -1,5 +1,12 @@
 # azure_container_app
 
+## 0.1.3
+
+### Patch Changes
+
+- b013061: Replace naming convention module with DX provider functions
+- a6eeb06: Auto generate the container name if not provided. Previous version used the image name as container name, but it contains invalid characters.
+
 ## 0.1.2
 
 ### Patch Changes

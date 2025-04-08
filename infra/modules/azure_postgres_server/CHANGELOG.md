@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.3
+
+### Patch Changes
+
+- f5c125e: Replace naming convention module with DX provider functions
+
 ## 1.0.2
 
 ### Patch Changes

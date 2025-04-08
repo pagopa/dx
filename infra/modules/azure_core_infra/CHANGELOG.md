@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.4
+
+### Patch Changes
+
+- d6f755a: Replace naming convention module with provider functions
+
 ## 1.0.3
 
 ### Patch Changes
