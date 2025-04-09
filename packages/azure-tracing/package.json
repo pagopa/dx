@@ -21,6 +21,9 @@
     },
     "./azure-monitor": {
       "import": "./dist/azure-monitor.js"
+    },
+    "./azure-functions": {
+      "import": "./dist/azure-functions-hooks.js"
     }
   },
   "dependencies": {
