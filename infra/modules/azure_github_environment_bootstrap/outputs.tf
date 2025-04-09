@@ -8,7 +8,7 @@ output "resource_group" {
 
 output "repository" {
   value = {
-    id   = var.repository.configure ? module.github_repository[var.repository.name].id : null
+    id   = try(module.github_repository[var.repository.name].id, null)
     name = local.repository_name
   }
 }

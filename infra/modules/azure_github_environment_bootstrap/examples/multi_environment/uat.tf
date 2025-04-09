@@ -3,34 +3,34 @@ data "azurerm_subscription" "current_uat" {
 }
 
 data "azurerm_client_config" "current_uat" {
-    provider = azurerm.uat
+  provider = azurerm.uat
 }
 
 data "azurerm_container_app_environment" "runner_uat" {
-  provider = azurerm.uat
+  provider            = azurerm.uat
   name                = format(local.runner.cae_name, "u")
   resource_group_name = format(local.runner.cae_resource_group_name, "u")
 }
 
 data "azurerm_virtual_network" "common_uat" {
-  provider = azurerm.uat
+  provider            = azurerm.uat
   name                = format(local.vnet.name, "u")
   resource_group_name = format(local.vnet.resource_group_name, "u")
 }
 
 data "azurerm_resource_group" "vnet_uat" {
   provider = azurerm.uat
-  name = format(local.vnet.resource_group_name, "u")
+  name     = format(local.vnet.resource_group_name, "u")
 }
 
 data "azurerm_resource_group" "dashboards_uat" {
   provider = azurerm.uat
-  name = "dashboards"
+  name     = "dashboards"
 }
 
 data "azurerm_resource_group" "common_uat" {
   provider = azurerm.uat
-  name = format(local.common.resource_group_name, "u")
+  name     = format(local.common.resource_group_name, "u")
 }
 
 data "azuread_group" "admins_uat" {
@@ -84,5 +84,5 @@ module "uat" {
 
   tags = merge(local.tags, { Environment = "Uat" })
 
-  depends_on = [ module.dev ]
+  depends_on = [module.dev]
 }
