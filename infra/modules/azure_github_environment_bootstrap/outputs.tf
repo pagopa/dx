@@ -8,8 +8,8 @@ output "resource_group" {
 
 output "repository" {
   value = {
-    id   = github_repository.this.id
-    name = github_repository.this.name
+    id   = try(module.github_repository[var.repository.name].id, null)
+    name = local.repository_name
   }
 }
 

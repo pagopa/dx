@@ -9,7 +9,7 @@ provider "github" {
 
 run "setup_tests" {
   module {
-    source = "./tests/setup"
+    source = "./tests/setup_env"
   }
 }
 
@@ -56,6 +56,7 @@ run "validate_github_id_app" {
       topics             = run.setup_tests.repository.topics
       reviewers_teams    = run.setup_tests.repository.reviewers_teams
       app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+      configure          = false
     }
 
     github_private_runner = {
