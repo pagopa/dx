@@ -11,8 +11,12 @@ import { context as otelContext, propagation } from "@opentelemetry/api";
  * to add the [azure-functions-nodejs-opentelemetry](https://github.com/Azure/azure-functions-nodejs-opentelemetry/tree/main)
  * to the instrumentation package and remove this workaround.
  *
- * @param {Object} options - An object containing the Azure Functions `hook` object.
- * @param {Function} options.hook - The Azure Functions `hook` object from the `app` module.
+ * @example
+ * In your application, where you add the Azure Functions hooks (like `app.http() and so on), you
+ * can add the following code:
+ *
+ * registerAzureFunctionHooks(app);
+ *
  */
 export const registerAzureFunctionHooks = ({ hook }: typeof app) => {
   hook.preInvocation((context) => {
