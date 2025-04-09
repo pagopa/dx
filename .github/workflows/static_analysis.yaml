@@ -93,11 +93,11 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
-        
+
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
         id: pre_commit_specific_folders
-        env: 
+        env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu
@@ -107,7 +107,7 @@ jobs:
           find "${{ inputs.folder }}" -type f | xargs pre-commit run \
             --color=always \
             ${{ inputs.check_to_run }} \
-            --files
+            --files 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
@@ -126,7 +126,7 @@ jobs:
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
@@ -141,4 +141,44 @@ jobs:
           pre-commit run \
             --color=always \
             --all-files \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+
+      - name: Summarize pre-commit results
+        if: always()
+        run: |
+          echo "## Pre-commit Results Summary" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "/tmp/pre-commit-output.log" ]; then
+            # Add execution context
+            if [ "${{ inputs.folder }}" != "" ]; then
+              echo "### 📁 Executed on folder: ${{ inputs.folder }}" >> "$GITHUB_STEP_SUMMARY"
+            elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
+              echo "### 🔄 Executed on modified files only" >> "$GITHUB_STEP_SUMMARY"
+              echo "- From: \`origin/${{ github.event.pull_request.base.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+              echo "- To: \`origin/${{ github.event.pull_request.head.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "### 🔍 Executed on all files" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            # Add hook information
+            if [ "${{ inputs.check_to_run }}" != "" ]; then
+              echo "### 🪝 Running specific check: \`${{ inputs.check_to_run }}\`" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "### 🪝 Running all configured checks" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            # Format and add log output
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### 📋 Output Log" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            # Clean up ANSI color codes for better markdown rendering
+            cat /tmp/pre-commit-output.log | sed 's/\x1b\[[0-9;]*m//g' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ No pre-commit output found. Check if pre-commit was executed." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Add exit status summary
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "📝 _Summary generated at $(date)_" >> "$GITHUB_STEP_SUMMARY"
