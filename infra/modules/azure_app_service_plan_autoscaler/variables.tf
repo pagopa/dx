@@ -10,7 +10,7 @@ variable "resource_group_name" {
 
 variable "location" {
   type        = string
-  description = "The location of the app service plan"
+  description = "The location of the app service plan. Allowed values are \"italynorth\", \"westeurope\", and \"germanywestcentral\"."
 
   validation {
     condition     = contains(["italynorth", "westeurope", "germanywestcentral"], lower(var.location))
@@ -20,7 +20,7 @@ variable "location" {
 
 variable "autoscale_name" {
   type        = string
-  description = "(Optional) Override auto generated name for the autoscaler resource"
+  description = "Override auto generated name for the autoscaler resource"
   default     = null
 }
 
@@ -41,7 +41,7 @@ variable "target_service" {
     }))
   })
 
-  description = "The target service to autoscale. You can specify either an app service or a function app, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
+  description = "The target service to autoscale. You can specify either an `app service` or a `function app`, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
 
   validation {
     condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null]) && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null]) ||
@@ -183,7 +183,7 @@ variable "scale_metrics" {
     }), null)
   })
 
-  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
+  description = "Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
 
   default = {
     requests = null
