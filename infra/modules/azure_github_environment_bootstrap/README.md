@@ -1,5 +1,7 @@
 # DX - Azure GitHub Environment Bootstrap
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-github-environment-bootstrap/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-github-environment-bootstrap%2Fazurerm%2Flatest)
+
 The Azure GitHub Environment Bootstrap module is designed for users who have just created a new GitHub repository and want to quickly focus on their goals without spending hours on setup. It is particularly useful for mono repositories.
 
 The module performs the following actions:

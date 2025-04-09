@@ -1,5 +1,7 @@
 # DX - Azure Federated Identity with Github Module
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-federated-identity-with-github/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-federated-identity-with-github%2Fazurerm%2Flatest)
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

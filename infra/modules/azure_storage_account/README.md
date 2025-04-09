@@ -1,5 +1,7 @@
 # DX - Azure Storage Account
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-storage-account/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-storage-account%2Fazurerm%2Flatest)
+
 This Terraform module provisions an Azure Storage Account with optional configurations for advanced features, networking, and monitoring.
 
 ## Features

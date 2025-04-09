@@ -1,5 +1,7 @@
 # DX - Azure App Service Plan Internal Module
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service-plan/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service-plan%2Fazurerm%2Flatest)
+
 ## This module is for internal use only
 
 <!-- markdownlint-disable -->

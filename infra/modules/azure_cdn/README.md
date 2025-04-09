@@ -1,5 +1,7 @@
 # DX - Azure CDN (Front Door)
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-cdn/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-cdn%2Fazurerm%2Flatest)
+
 This Terraform module provisions an Azure CDN Front Door profile with endpoints, origins, and routing rules.
 
 ## Features

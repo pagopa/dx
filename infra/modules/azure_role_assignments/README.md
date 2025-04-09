@@ -1,5 +1,7 @@
 # DX - Azure Role Assignments
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-role-assignments/azurerm?label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-role-assignments%2Fazurerm%2Flatest&logo=terraform)
+
 This module abstract the complexity of Azure IAM roles.
 
 ## Usage Example
