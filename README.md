@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/pagopa-logo.jpg" width="100" alt="PagoPA icon">
+<img src="./assets/pagopa-logo.png" width="100" alt="PagoPA logo">
 
 
 # DevEx Initiative
