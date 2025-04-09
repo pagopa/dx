@@ -43,7 +43,7 @@ jobs:
           for FILE in $NEW_FILES; do
             FILE_NAME=$(basename "$FILE")
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
-              # If the workflow is a callable template (don't start starts with '_'), ensure '-vN' is present
+              # If is a reusable workflow (don't start starts with '_'), ensure '-vN' is present
               if ! [[ "$FILE_NAME" =~ -v[0-9]+\.yaml$ ]]; then
                 echo "Error: Internal workflow file '$FILE_NAME' must include '-vN' at the end."
                 echo "Example: validate-azure-example-v1.yaml"
@@ -58,7 +58,7 @@ jobs:
               echo "  - <scope> must be one of: cron, build, validate, release"
               echo "  - <type> must be one of: docker, typescript, terraform, changesets, docusaurus, bash, azure, aws"
               echo "  - <description> must be lowercase divided by hyphens (-)"
-              echo "  - <vN> where N is a major version (required if is a callable workflow)"
+              echo "  - <vN> where N is a major version (required if is a reusable workflow)"
               echo "  - file extension must be .yaml"
               echo "Example: validate-bash-script-checks.yaml or _cron-azure-backup-v1.yaml"
               exit 1
