@@ -14,7 +14,7 @@ variable "environment" {
     instance_number = string
   })
 
-  description = "Environment-specific values for naming and location. 'Domain' is optional for shared resources."
+  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
 variable "resource_group_name" {
@@ -25,7 +25,7 @@ variable "resource_group_name" {
 # ------------ STORAGE ACCOUNT ------------ #
 variable "tier" {
   type        = string
-  description = "Storage account tier. Allowed values: 's', 'l'."
+  description = "Storage account tier depending on demanding workload. Allowed values: 's', 'l'."
 
   validation {
     condition     = contains(["s", "l"], var.tier)
@@ -69,7 +69,7 @@ variable "subservices_enabled" {
     queue = optional(bool, false)
     table = optional(bool, false)
   })
-  description = "Enables subservices (blob, file, queue, table). Defaults to 'blob' only."
+  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only."
 }
 
 variable "blob_features" {
@@ -105,12 +105,12 @@ variable "blob_features" {
 
   validation {
     condition     = var.blob_features.delete_retention_days == 0 || (var.blob_features.delete_retention_days >= 1 && var.blob_features.delete_retention_days <= 365)
-    error_message = "Delete retention days must be 0 or between 1 and 365."
+    error_message = "Delete retention days must be 0 to disable the policy or between 1 and 365."
   }
 
   validation {
     condition     = var.blob_features.restore_policy_days == 0 || (var.blob_features.restore_policy_days >= 1 && var.blob_features.restore_policy_days <= 365)
-    error_message = "Restore policy days must be 0 or between 1 and 365."
+    error_message = "Restore policy days must be 0 to disable the policy or between 1 and 365."
   }
 }
 
