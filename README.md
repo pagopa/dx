@@ -1,159 +1,78 @@
-# DX
+<div align="center">
 
-DevEx repository for shared tools and pipelines.
+<img src="./assets/pagopa-logo.png" width="100" alt="PagoPA logo">
 
-- [DX](#dx)
-  - [GitHub Action Templates](#github-action-templates)
-    - [infra_plan.yaml](#infra_planyaml)
-      - [What it does](#what-it-does)
-      - [Example](#example)
-      - [Requirements](#requirements)
-    - [infra_apply.yaml](#infra_applyyaml)
-      - [What it does](#what-it-does-1)
-      - [Requirements](#requirements-1)
-  - [Terraform Modules](#terraform-modules)
-    - [GitHub SelfHosted Runner on Container App job](#github-selfhosted-runner-on-container-app-job)
 
-## GitHub Action Templates
+# DevEx Initiative
 
-### infra_plan.yaml
+<p align="center">
+  <i align="center">Transforming the Development Experience 🚀</i>
+</p>
 
-As a `workflow_call`, this action should be invoked and used as template by other GitHub Actions to validate Pull Requests containing Terraform code changes. It provides all job steps that must be run to validate a Terraform configuration, and includes the job properties configuration as well.
+</div>
 
-#### What it does
+<a name="readme-top"></a>
 
-This template is useful to validate Pull Requests with Terraform code changes. It is also suggested to run the workflow everytime the PR code changes only if the PR status is ready (no drafts).
+<h4 align="center">
 
-The workflow template authenticates with Azure and performs a `terraform plan` command to validate the changes.
+DevEx initiative consists in a set of tools, patterns, and best practices aimed to innovate the Developer Experience (DevEx) and productivity.
 
-Ultimately, it prints out a comment in the PR view with the plan output. In case of multiple executions, it updates the previous comment with the latest changes.
+<!-- ![DX Documentation](https://img.shields.io/badge/getting%20started-blue?logo=docusaurus&label=doc&cacheSeconds=5000&link=https%3A%2F%2Fpagopa.github.io%2Fdx%2Fdocs%2F&style=flat-square)
+[![Project Contributions](https://img.shields.io/badge/contributions-welcome-red?style=flat-square)](#Contributing)
+![DX Blog](https://img.shields.io/badge/latest%20news-blue?logo=docusaurus&label=blog&cacheSeconds=5000&link=https%3A%2F%2Fpagopa.github.io%2Fdx%2Fblog%2F&style=flat-square) -->
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/pagopa/dx?style=flat-square&logo=github&label=commits&cacheSeconds=60)
 
-It supports optional input with the agent it should run on (GitHub managed or not), or custom environment variables.
+**&searr;&nbsp;&nbsp;The DevEx resources&nbsp;&nbsp;&swarr;**
 
-#### Example
+[Documentation][docs_url] · [Blog][blog_url]
 
-An example of its use can be found [here](https://github.com/pagopa/dx-typescript/blob/main/.github/workflows/pr_infra.yaml).
-It is recommended to stick to the same naming conventions shown in the example.
+</h4>
 
-#### Requirements
+## ⚡️ Quick Start
 
-This workflow template leverages on managed identities to authenticate with Azure. Managed identities can be easily created through the module `azure_federated_identity_with_github` available in this repository.
+To start using DX tooling, conventions and best practices, refer to the [getting started](https://pagopa.github.io/dx/docs/getting-started) on the DX website.
 
-Terraform definitions are intended to work for an environment in a specific region. Each pair environment/region is a Terraform project on its own and they will be located in the `<env>/<region>` subfolder. Every automation will expect resources to be in such folders.
+<div align="right">
 
-### infra_apply.yaml
+[&nwarr; Back to top](#readme-top)
 
-As a `workflow_call`, this action should be invoked and used as template by other GitHub Actions to deploy infrastructure changes after a PR have been merged. It provides all job steps that must be run to apply a Terraform configuration, and includes the job properties configuration as well.
+</div>
 
-#### What it does
+## 💻 Contributing
 
-This template is useful to deploy Terraform code changes. It is also suggested to run the workflow everytime a PR is merged in the `main` branch.
+If you want to contribute to the project, please read the [contributing guide](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md) first.
 
-The workflow authenticates with Azure and perform a `terraform plan` to inform the user about the next changes. If there aren't any unexpected change, the user can approve the second step of the workflow and apply them.
+<div align="right">
 
-**Note**: the deployment approval step must be configured at GitHub repositiory level, by changing settings of the `<env>-cd` environment. Otherwise, the deployment is done automatically.
+[&nwarr; Back to top](#readme-top)
 
-This workflow is set to be run once per time, abolishing concurrent runs.
+</div>
 
-#### Requirements
+## 🤓 Contributors
 
-This workflow template leverages on managed identities to authenticate with Azure. Managed identities can be easily created through the module `azure_federated_identity_with_github` available in this repository.
+<a href="https://github.com/pagopa/dx/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=pagopa/dx" />
+</a>
 
-Terraform definitions are intended to work for an environment in a specific region. Each pair environment/region is a Terraform project on its own and they will be located in the `<env>/<region>` subfolder. Every automation will expect resources to be in such folders.
+Made with [contrib.rocks](https://contrib.rocks).
 
-## Terraform Modules
+<div align="right">
 
-### GitHub SelfHosted Runner on Container App job
+[&nwarr; Back to top](#readme-top)
 
-This module helps to create the necessary infrastructure to run GitHub Actions on a self-hosted agent. Generally, this scenario pertains to infrastructure pipelines requiring access to private resources such as AKS and Storage Accounts. If there aren't private resources, please use GitHub managed runners.
+</div>
 
-This module creates a Container App Job on an existing Container App Environment. It requires your repository name as input, in order to create a trigger on the GitHub Actions status of that repository. Moreover, it has a dependencies on a KeyVault where it creates a read-only access policy to access secrets.
+## 💪 Motivation to Create
 
-N.B. If you are adding a new Container App Job, it is likely that your repository must be added to GITHUB PAT access scope. Ask for this one-time operation to `engineering-team-cloud-eng` team.
+Imagine being able to release the first API for a new digital service into production in minutes instead of weeks, having fewer decisions to make, less code to interpret and maintain, onboarding new team members with zero downtime: this is the goal we set for ourselves.
 
-## NPM packages
+<div align="right">
 
-This project requires specific versions of the following tools. To make sure your development setup matches with production follow the recommended installation methods.
+[&nwarr; Back to top](#readme-top)
 
-- **Node.js**
+</div>
 
-  Use [nodenv](https://github.com/nodenv/nodenv) to install the [required version](.node-version) of `Node.js`.
+<!-- Docs links -->
 
-  ```sh
-  nodenv install
-  node --version
-  ```
-
-- **Yarn**
-
-  Yarn must be installed using [Corepack](https://yarnpkg.com/getting-started/install), included by default in `Node.js`.
-
-  ```sh
-  corepack enable
-  yarn --version
-  ```
-
-- **Terraform**
-
-  Use [tfenv](https://github.com/tfutils/tfenv) to install the [required version](.terraform-version) of `terraform`.
-
-  ```sh
-  tfenv install
-  terraform version
-  ```
-
-- **pre-commit**
-
-  [Follow the official documentation](https://pre-commit.com/) to install `pre-commit` in your machine.
-
-  ```sh
-  pre-commit install
-  ```
-
-## Tasks
-
-Tasks are defined in the `turbo.json` and `package.json` files. To execute a task, just run the command at the project root:
-
-```sh
-yarn <cmd>
-```
-
-`Turborepo` will execute the task for all the workspaces that declare the same command in their `package.json` file; it also applies caching policies to the command according to the rules defined in `turbo.json`.
-
-To define a new task:
-
-- add the definition to `turbo.json` under `pipeline`;
-- add a script with the same name in `package.json` as `turbo <cmd name>`.
-
-To see the defined task run `yarn run`
-
-## Dependencies
-
-> [!IMPORTANT]  
-> This project uses Yarn Plug'n'Play as installation strategy for dependencies. [Check out](https://yarnpkg.com/features/pnp) the official Yarn documentation to lean about pnp and its difference from the classic `node_modules` approach.
-
-```sh
-# install all dependencies for the project
-yarn
-
-# install a dependency to a workspace
-#   (workspace name is the name in the package.json file)
-yarn workspace <workspace name> add <package name>
-yarn workspace <workspace name> add -D <package name>
-
-# install a dependency for the monorepo
-#   (ideally a shared dev dependency)
-yarn add -D <package name>
-```
-
-To add a dependency to a local workspace, manually edit the target workspace's `package.json` file adding the dependency as
-
-```json
-"dependencies": {
-    "my-dependency-workspace": "workspace:*"
-}
-```
-
-### Yarn SDKS (.yarn/sdks)
-
-Smart IDEs (such as VSCode or IntelliJ) require special configuration for TypeScript to work when using Plug'n'Play installs. That configuration is generated automatically by `yarn` (via `yarn dlx @yarnpkg/sdks vscode vim [other-editor...]`) and commited to `.yarn/sdks`.
+[docs_url]: https://pagopa.github.io/dx/docs/
+[blog_url]: https://pagopa.github.io/dx/blog/

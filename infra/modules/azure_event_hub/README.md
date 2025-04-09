@@ -1,5 +1,7 @@
 # DX - Azure Event Hub
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-event-hub/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-event-hub%2Fazurerm%2Flatest)
+
 This Terraform module provisions an Azure Event Hub namespace, event hubs, consumer groups, authorization rules, private endpoints, and monitoring configurations.
 
 ## Features

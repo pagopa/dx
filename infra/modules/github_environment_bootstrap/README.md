@@ -1,4 +1,7 @@
-# github_environment_bootstrap
+# DX - GitHub Environment Bootstrap
+
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/github-environment-bootstrap/github?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fgithub-environment-bootstrap%2Fgithub%2Flatest)
+
 ## Overview
 
 The `github_environment_bootstrap` module simplifies the process of creating and configuring GitHub repositories. It ensures consistency and compliance with organizational standards.

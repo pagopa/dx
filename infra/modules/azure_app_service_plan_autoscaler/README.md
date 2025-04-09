@@ -14,6 +14,8 @@ This Terraform module provisions an Azure App Service Plan Autoscaler with confi
 
 A complete example of how to use this module can be found in the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-plan-autoscaler/tree/main/examples/complete) directory.
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service-plan-autoscaler/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service-plan-autoscaler%2Fazurerm%2Flatest)
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

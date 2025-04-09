@@ -1,5 +1,7 @@
 # DX - Azure App Service Module
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service%2Fazurerm%2Flatest)
+
 This module deploys an AppService with a strong opinionated configuration in terms of networking and deployment strategy. This module is ideal when you need your AppService to remain inaccessible from the public internet.
 
 ## Features
