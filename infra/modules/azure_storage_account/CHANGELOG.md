@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.13
+
+### Patch Changes
+
+- 66c32b9: Update README.md and variables descriptions
+
 ## 0.0.12
 
 ### Patch Changes

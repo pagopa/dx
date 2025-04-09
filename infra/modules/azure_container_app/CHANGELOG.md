@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 0.1.4
+
+### Patch Changes
+
+- b911497: Add principal_id property to outputs
+
 ## 0.1.3
 
 ### Patch Changes
