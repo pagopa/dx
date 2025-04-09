@@ -3,24 +3,24 @@ data "azurerm_subscription" "current_dev" {
 }
 
 data "azurerm_client_config" "current_dev" {
-    provider = azurerm.dev
+  provider = azurerm.dev
 }
 
 data "azurerm_container_app_environment" "runner_dev" {
-  provider = azurerm.dev
+  provider            = azurerm.dev
   name                = format(local.runner.cae_name, "d")
   resource_group_name = format(local.runner.cae_resource_group_name, "d")
 }
 
 data "azurerm_virtual_network" "common_dev" {
-  provider = azurerm.dev
+  provider            = azurerm.dev
   name                = format(local.vnet.name, "d")
   resource_group_name = format(local.vnet.resource_group_name, "d")
 }
 
 data "azurerm_resource_group" "vnet_dev" {
   provider = azurerm.dev
-  name = format(local.vnet.resource_group_name, "d")
+  name     = format(local.vnet.resource_group_name, "d")
 }
 
 data "azurerm_resource_group" "dashboards_dev" {
@@ -29,7 +29,7 @@ data "azurerm_resource_group" "dashboards_dev" {
 
 data "azurerm_resource_group" "common_dev" {
   provider = azurerm.dev
-  name = format(local.common.resource_group_name, "d")
+  name     = format(local.common.resource_group_name, "d")
 }
 
 data "azuread_group" "admins_dev" {

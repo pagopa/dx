@@ -98,10 +98,10 @@ variable "repository" {
     opex_cd_policy_tags      = optional(set(string), [])
     app_cd_policy_tags       = optional(set(string), [])
     jira_boards_ids          = optional(list(string), [])
-    configure                = optional(bool, true) # Disable this option only if you already setup the repository for another cloud service provider in the same project
+    configure                = optional(bool, true)
   })
 
-  description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies."
+  description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project."
 }
 
 variable "github_private_runner" {
