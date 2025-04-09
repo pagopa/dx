@@ -31,33 +31,21 @@ Then, follow these steps to complete the configuration.
 
 ### Ensure an Appropriate Repository Access Control
 
-To manage the access control for your repository, follow:
+To ensure proper access control, follow these steps:
 
 - [Grant access](https://pagopa.atlassian.net/wiki/search?text=github%20gestione%20utenze)
   to your peers who need it.
-- Always provide `Admin` access to:
-  - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
-    DX tooling.
-  - The
-    [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
+- Provide `Admin` access to the
+  [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
+- Optionally: provide `Admin` access to `@engineering-team-devex` to ensure
+  future support for DX tooling.
 
 ### Define CODEOWNERS
 
-Define a `CODEOWNERS` file to manage repository ownership. A common setup is:
+Define a `CODEOWNERS` file to manage repository ownership.
 
-- Your team has control over the entire repository (`*`).
-- Both your team and cloud engineers have control over the `infra` and `.github`
-  paths.
-
-Example `CODEOWNERS` file:
-
-```md
-# See https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
-
-- <your-team>
-  /infra/ <your-team> @engineering-team-devex 
-  .github/ <your-team> @engineering-team-devex
-```
+See
+https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
 
 ### Create Dot Files
 
@@ -146,5 +134,5 @@ Terraform module.
    for detailed instructions.
 
 For more information, see the
-[availability blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
+[related blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
 and the [IAM Framework documentation](./azure/azure-iam.md).

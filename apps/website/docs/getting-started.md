@@ -15,9 +15,9 @@ core concepts and start using DX tools effectively.
 ## Key Concepts to Know
 
 We know you're eager to dive in and start coding, but spending a few minutes on
-this section will save you from getting stuck later 🫷.
+this section may save you from getting stuck later 🫷.
 
-### Mono Repositories: yes please!
+### Mono Repositories: Yes Please!
 
 Using a mono repository is mandatory to adopt DX tooling, as several components
 are designed on that assumption.
@@ -50,7 +50,7 @@ to improve them.
 
 DX tools are designed to make teams
 [autonomous in their daily work](index.md#how-this-differs-from-technology-standards-initiative)
-by providing golden paths and best practices. They don't need to understand how
+by providing golden paths and best practices. Users don't need to understand how
 the tools work internally—though everything is open source and
 [contributions are welcome](https://pagopa.github.io/dx/docs/conventions/pull-requests/acceptance-criteria).
 Instead, they can focus on delivering value.
@@ -95,6 +95,6 @@ Stay up to date with DX [blog](https://pagopa.github.io/dx/blog/).
 ### Contributing
 
 If excited about DX work, contribute by following the
-[contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTE.md),
+[contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md),
 but remember to follow the
 [Code of Conduct](https://github.com/pagopa/dx/blob/main/CODE_OF_CONDUCT.md).
