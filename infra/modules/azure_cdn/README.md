@@ -1,69 +1,18 @@
-# Azure CDN (Front Door) Terraform Module
+# DX - Azure CDN (Front Door)
 
-This module creates an Azure CDN Front Door profile with endpoints, origins, and routing rules.
+This Terraform module provisions an Azure CDN Front Door profile with endpoints, origins, and routing rules.
 
 ## Features
 
-- Azure Front Door CDN profile with Standard Microsoft SKU
-- Origin configuration with health probes
-- Custom routing rules and URL rewriting/redirects
-- Consistent naming convention based on environment parameters
+- **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile.
+- **Origin Configuration**: Supports health probes and priority-based routing.
+- **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
+- **Routing Rules**: Enables custom routing rules, URL rewriting, and redirects.
+- **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
 
-## Usage
+## Usage Example
 
-```hcl
-module "azure_cdn" {
-  source = "path/to/module"
-  
-  resource_group_name = azurerm_resource_group.example.name
-
-  environment = local.environment
-
-  origins = {
-    primary = {
-      host_name = module.storage_account.primary_web_host
-    }
-  }
-
-  custom_domains = [
-    {
-      host_name = "bar.com",
-      dns = {
-        # A record with name @ will be created at the apex of bar.com zone
-        zone_name                = "bar.com",
-        zone_resource_group_name = azurerm_resource_group.example.name
-      }
-    },
-    {
-      # A record with name foo will be created in bar.com zone
-      host_name = "foo.bar.com",
-      dns = {
-        zone_name                = "bar.com",
-        zone_resource_group_name = azurerm_resource_group.example.name
-      }
-    },
-    {
-      # No DNS record will be created for this domain
-      host_name = "test.bar.com",
-    }
-  ]
-
-  tags = local.tags
-}
-```
-
-## Examples
-
-- [Basic example](./examples/basic) - Simple CDN configuration with a single origin
-
-## Testing
-
-This module includes test files in the `tests` directory. You can run these tests using the Terraform test framework:
-
-```
-cd path/to/module
-terraform test
-```
+A complete example of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) directory.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
