@@ -1,5 +1,7 @@
 # DX - Azure Naming Convention
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-naming-convention/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-naming-convention%2Fazurerm%2Flatest)
+
 This Terraform module provides a standardized naming convention for Azure resources. It ensures consistency and compliance with organizational naming standards.
 
 ## Features

@@ -1,5 +1,7 @@
 # DX - Azure Container App Environment
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-container-app-environment/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-container-app-environment%2Fazurerm%2Flatest)
+
 This Terraform module deploys an Azure Container App Environment along with necessary networking components.
 
 ## Features

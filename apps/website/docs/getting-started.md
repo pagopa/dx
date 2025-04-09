@@ -92,7 +92,7 @@ If DX tooling is appreciated, there's much more to discover on this website:
 
 Stay up to date with DX [blog](https://pagopa.github.io/dx/blog/).
 
-### Contributing
+## Contributing
 
 If excited about DX work, contribute by following the
 [contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md),

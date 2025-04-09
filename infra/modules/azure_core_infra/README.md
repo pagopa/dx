@@ -1,5 +1,7 @@
 # DX - Azure Core Infrastructure
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-core-infra/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-core-infra%2Fazurerm%2Flatest)
+
 This Terraform module provisions the core infrastructure required for the initial configuration of an Azure subscription.
 
 ## Features

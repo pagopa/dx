@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.0.5
+
+### Patch Changes
+
+- 599f50a: Update README documentation
+
 ## 0.0.4
 
 ### Patch Changes
