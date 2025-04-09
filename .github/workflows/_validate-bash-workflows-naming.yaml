@@ -22,12 +22,15 @@ jobs:
           fetch-depth: 0
 
       - name: Validate workflow file naming convention
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           set -eu
 
           echo "Checking naming convention for new workflow files in .github/workflows directory"
-          BASE_BRANCH="origin/${{ github.event.pull_request.base.ref }}"
-          HEAD_BRANCH="origin/${{ github.event.pull_request.head.ref }}"
+          BASE_BRANCH="origin/$BASE_REF"
+          HEAD_BRANCH="origin/$HEAD_REF"
 
           echo "- FROM  Base ref: $BASE_BRANCH"
           echo "- TO    Head ref: $HEAD_BRANCH"
@@ -42,6 +45,7 @@ jobs:
           # Check each new file
           for FILE in $NEW_FILES; do
             FILE_NAME=$(basename "$FILE")
+            
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
               # If is a reusable workflow (don't start starts with '_'), ensure '-vN' is present
               if ! [[ "$FILE_NAME" =~ -v[0-9]+\.yaml$ ]]; then
