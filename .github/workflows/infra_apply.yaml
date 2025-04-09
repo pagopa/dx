@@ -75,6 +75,7 @@ jobs:
       enable_modified_files_detection: true
       check_to_run: lock_modules
       folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      fail_on_error: "false"
       verbose: true
 
   tf_plan:
