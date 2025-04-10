@@ -1,5 +1,6 @@
 ---
 sidebar_label: Azure
+sidebar_position: 5
 ---
 
 # Infrastructure
