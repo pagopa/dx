@@ -30,6 +30,26 @@ locals {
       resource_type = "resource_group"
     }))
   }
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    domain          = "modules"
+    app_name        = "test"
+    instance_number = "01"
+  }
+
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create Container App for test"
+  }
 }
 
 data "azurerm_resource_group" "rg" {
@@ -69,4 +89,12 @@ output "pep_snet_id" {
 
 output "log_analytics_id" {
   value = data.azurerm_log_analytics_workspace.logs.id
+}
+
+output "tags" {
+  value = local.tags
+}
+
+output "environment" {
+  value = local.environment
 }
