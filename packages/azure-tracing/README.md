@@ -1,53 +1,65 @@
 # @pagopa/azure-tracing
 
-This package provides a set of tools to integrate Azure Application Insights with OpenTelemetry for tracing and telemetry in Node.js applications.
+This package provides utilities to seamlessly integrate [Azure Monitor's Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
+with OpenTelemetry for distributed tracing and telemetry in Node.js applications, especially in Azure Functions environments.
 
-## Usage
+## Installation
 
-### Installation
+Install the package using:
 
-   ```bash
-   yarn add @pagopa/azure-tracing
-   ```
-
-### Instrumentation
-
-#### Azure Functions
-
-Since at the moment the [ECMAScript modules are not yet fully supported in OpenTelemetry](https://github.com/open-telemetry/opentelemetry-js/blob/966ac176af249d86de6cb10feac2306062846768/doc/esm-support.md),
-to enable tracing using Azure Monitor you need to instruct your application to load the instrumentation code when starting the application.
-
-This package is an implementation that allows you to do that by using the `NODE_OPTIONS` environment variable.  
-For more information about the problem faced and the reason behind this implementation: 
-- https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217
-- https://github.com/open-telemetry/opentelemetry-js/issues/4933
-
-To enable tracing in your application, add the following environment variable:
+```bash
+yarn add @pagopa/azure-tracing
 ```
-"NODE_OPTIONS": "--import @pagopa/azure-tracing",
-```
-This will instrument you Azure Function with OpenTelemetry and Application Insights.
 
-The only change required in your code is the use of the `registerAzureFunctionHooks` function.
-Since at the moment the `azure-functions-nodejs-opentelemetry` library has some issues, to make sure Azure will correlate
-the telemetry of the dependencies, just add the following line in your code:
-```typescript
-// main.ts
-import { app } from "@azure/functions"; // Or the equivalent import you have in your code
+## Getting Started
+
+### Instrumenting Azure Functions
+
+Currently, [ECMAScript Modules (ESM) support in OpenTelemetry is still experimental](https://github.com/open-telemetry/opentelemetry-js/blob/966ac176af249d86de6cb10feac2306062846768/doc/esm-support.md),
+which makes direct instrumentation of Azure Functions a bit tricky.
+To work around this, you can preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
+
+This package provides a wrapper that simplifies this setup.
+
+#### Step 1: Enable Tracing via NODE_OPTIONS
+
+Set the following environment variable to preload the instrumentation:
+
+```bash
+NODE_OPTIONS=--import @pagopa/azure-tracing
+```
+
+This will automatically enable OpenTelemetry tracing and route telemetry to Azure Monitor.
+
+For more background on this workaround, see:
+
+- [Issue #4845 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217)
+- [Issue #4933 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4933)
+
+#### Step 2: Register Azure Function Lifecycle Hooks
+
+Due to known limitations with the `azure-functions-nodejs-opentelemetry` library, it's necessary to manually register lifecycle hooks to ensure proper dependency correlation in telemetry.
+
+Add the following snippet to your main entry point (e.g., `main.ts`):
+
+```ts
+import { app } from "@azure/functions"; // Replace with your actual app import
 import { registerAzureFunctionHooks } from "@pagopa/azure-tracing/azure-functions";
-
-....
+...
 registerAzureFunctionHooks(app);
 ...
 ```
 
-### Log a Custom Event
+### Logging Custom Events
 
-To log a custom event, you can use the `emitCustomEvent` function. This function takes an event name and an optional payload object as parameters. The payload object can contain any additional data you want to include with the event.
+You can log custom events for additional observability using the emitCustomEvent function.
+This utility accepts an event name and an optional payload, returning a logger function that also accepts a component or handler name.
 
-```typescript
+```ts
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 ...
 emitCustomEvent("taskCreated", { id: task.id })("CreateTaskHandler");
 ...
 ```
+
+This is especially useful for tracing domain-specific actions (e.g., resource creation, user actions, error tracking).
