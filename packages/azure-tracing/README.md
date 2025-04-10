@@ -17,7 +17,7 @@ yarn add @pagopa/azure-tracing
 
 Currently, [ECMAScript Modules (ESM) support in OpenTelemetry is still experimental](https://github.com/open-telemetry/opentelemetry-js/blob/966ac176af249d86de6cb10feac2306062846768/doc/esm-support.md),
 which makes direct instrumentation of Azure Functions a bit tricky.
-To work around this, you can preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
+To work around this, you have to preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
 
 This package provides a wrapper that simplifies this setup.
 
