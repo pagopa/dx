@@ -7,7 +7,7 @@ sidebar_position: 3
 
 This document provides guidelines on how to create and manage changesets, which
 are used to document and track changes in the codebase. Proper use of changesets
-ensures that all modifications are recorded systematically, facilitating easier
+ensures that all modifications are recorded systematically, facilitating the
 tracking and auditing of changes over time.
 
 ## Create a Changeset

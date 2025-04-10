@@ -204,7 +204,7 @@ logs.getLogger("ApplicationInsightsLogger").emit({
 });
 ```
 
-When evalutating to chose between the AI SDK and the Azure Monitor package,
+When evaluating to choose between the AI SDK and the Azure Monitor package,
 consider that the AI SDK may fall behind new versions of
 `@azure/monitor-opentelemetry`, so going with the latter may be more
 future-proof. The AI SDK is still advantageous if you need to use legacy AI
@@ -500,7 +500,7 @@ This setup will ensure that only critical logs are recorded in Application
 Insights, while the AI SDK can be used for _custom events_ and to trace
 _exceptions_ and _warnings_.
 
-Moreover we keep the `Host.Results` and `Host.Aggregator` categories at
+Moreover, we keep the `Host.Results` and `Host.Aggregator` categories at
 `Information` to capture HTTP requests, function execution results and counters,
 useful for monitoring and alerting.
 

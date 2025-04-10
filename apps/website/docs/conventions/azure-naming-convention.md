@@ -5,7 +5,7 @@ sidebar_label: Azure Naming Convention
 
 # Azure Naming Convention
 
-Having a naming convention for your Azure resources is critical to quickly
+Having a naming convention for your Azure resources is critical for quickly
 identifying the resource type, associated workload, environment, and Azure
 region it is located in. By following a consistent format, you can include all
 the information needed to identify specific resource instances.

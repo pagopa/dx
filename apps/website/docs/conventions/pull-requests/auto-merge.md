@@ -17,7 +17,7 @@ delays.
 ## Benefits of Auto Merge
 
 - **Time Saving**: eliminates the need for manual intervention once the PR meets
-  the conditions.
+  its conditions.
 - **Consistency**: ensures that only code passing all tests and reviews gets
   merged, maintaining high quality.
 - **Faster Time to Production**: automates the merge process, enabling faster
