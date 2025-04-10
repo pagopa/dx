@@ -40,7 +40,7 @@ jobs:
 
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
-          NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|azure|aws)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'
+          NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|go|azure|aws)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'
 
           # Check each new file
           for FILE in $NEW_FILES; do
@@ -60,7 +60,7 @@ jobs:
               echo "Required format: [_]<scope>-<type>-<description>[-vN].yaml"
               echo "  - <_> only if is an internal workflow"
               echo "  - <scope> must be one of: cron, build, validate, release"
-              echo "  - <type> must be one of: docker, typescript, terraform, changesets, docusaurus, bash, azure, aws"
+              echo "  - <type> must be one of: docker, typescript, terraform, changesets, docusaurus, bash, go, azure, aws"
               echo "  - <description> must be lowercase divided by hyphens (-)"
               echo "  - <vN> where N is a major version (required if is a reusable workflow)"
               echo "  - file extension must be .yaml"
