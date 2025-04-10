@@ -45,7 +45,13 @@ In order to enable tracing, you also need to set the following environment varia
 
 #### Step 2: Register Azure Function Lifecycle Hooks
 
-Due to known limitations with the `azure-functions-nodejs-opentelemetry` library, it's necessary to manually register lifecycle hooks to ensure proper dependency correlation in telemetry.
+Due to known limitations with the `azure-functions-nodejs-opentelemetry` library,
+it's necessary to manually register lifecycle hooks to ensure proper dependency correlation in telemetry.
+
+For more background on this workaround, see:
+
+- [Issue #8 - azure-functions-nodejs-opentelemetry](https://github.com/Azure/azure-functions-nodejs-opentelemetry/issues/8)
+- [Issue #33242 - azure-sdk-for-js](https://github.com/Azure/azure-sdk-for-js/issues/33242)
 
 Add the following snippet to your main entry point (e.g., `main.ts`):
 
