@@ -3964,12 +3964,14 @@ __metadata:
     "@opentelemetry/instrumentation": "npm:^0.200.0"
     "@opentelemetry/instrumentation-undici": "npm:^0.11.0"
     "@pagopa/eslint-config": "workspace:^"
+    "@t3-oss/env-core": "npm:^0.12.0"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
     eslint: "npm:8.57.0"
     import-in-the-middle: "npm:^1.13.1"
     shx: "npm:^0.4.0"
     typescript: "npm:~5.2.2"
+    zod: "npm:^3.24.2"
   languageName: unknown
   linkType: soft
 
@@ -4341,6 +4343,24 @@ __metadata:
   dependencies:
     defer-to-connect: "npm:^2.0.1"
   checksum: 10c0/4629d2fbb2ea67c2e9dc03af235c0991c79ebdddcbc19aed5d5732fb29ce01c13331e9b1a491584b9069bd6ecde6581dcbf871f11b7eefdebbab34de6cf2197e
+  languageName: node
+  linkType: hard
+
+"@t3-oss/env-core@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@t3-oss/env-core@npm:0.12.0"
+  peerDependencies:
+    typescript: ">=5.0.0"
+    valibot: ^1.0.0-beta.7 || ^1.0.0
+    zod: ^3.24.0
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+    valibot:
+      optional: true
+    zod:
+      optional: true
+  checksum: 10c0/b79d2c291b8996b008ef77fa9b3afb8fd7c4c59e271b65039a52a504a9cdb7492ec88b414e6b5691dc4c2c93077abfac85a5cea00dcfdd083ad94912efc5464b
   languageName: node
   linkType: hard
 
@@ -15562,6 +15582,13 @@ __metadata:
   version: 1.2.1
   resolution: "yocto-queue@npm:1.2.1"
   checksum: 10c0/5762caa3d0b421f4bdb7a1926b2ae2189fc6e4a14469258f183600028eb16db3e9e0306f46e8ebf5a52ff4b81a881f22637afefbef5399d6ad440824e9b27f9f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.24.2":
+  version: 3.24.2
+  resolution: "zod@npm:3.24.2"
+  checksum: 10c0/c638c7220150847f13ad90635b3e7d0321b36cce36f3fc6050ed960689594c949c326dfe2c6fa87c14b126ee5d370ccdebd6efb304f41ef5557a4aaca2824565
   languageName: node
   linkType: hard
 

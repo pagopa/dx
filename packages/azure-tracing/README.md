@@ -36,6 +36,13 @@ For more background on this workaround, see:
 - [Issue #4845 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217)
 - [Issue #4933 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4933)
 
+In order to enable tracing, you also need to set the following environment variable:
+
+| **Name**                   | **Required** | **Default** |
+| -------------------------- | ------------ | ----------- |
+| **AI_SAMPLING_PERCENTAGE** | false        | 5           |
+| **AI_CONNECTION_STRING**   | true         | -           |
+
 #### Step 2: Register Azure Function Lifecycle Hooks
 
 Due to known limitations with the `azure-functions-nodejs-opentelemetry` library, it's necessary to manually register lifecycle hooks to ensure proper dependency correlation in telemetry.
