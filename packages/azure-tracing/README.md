@@ -36,7 +36,7 @@ For more background on this workaround, see:
 - [Issue #4845 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217)
 - [Issue #4933 - OpenTelemetry JS](https://github.com/open-telemetry/opentelemetry-js/issues/4933)
 
-In order to enable tracing, you also need to set the following environment variable:
+In order to enable tracing, you also need to set the following environment variables:
 
 | **Name**                   | **Required** | **Default** |
 | -------------------------- | ------------ | ----------- |
@@ -59,7 +59,7 @@ registerAzureFunctionHooks(app);
 
 ### Logging Custom Events
 
-You can log custom events for additional observability using the emitCustomEvent function.
+You can log custom events for additional observability using the `emitCustomEvent` function.
 This utility accepts an event name and an optional payload, returning a logger function that also accepts a component or handler name.
 
 ```ts
