@@ -23,7 +23,7 @@ readonly PRE_COMMIT_VERBOSE="${PRE_COMMIT_VERBOSE:-0}"  # Default to non-verbose
 
 function debug() {
     # Only print debug messages if both PRECOMMIT_DEBUG and VERBOSE are enabled
-    if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 && "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
+    if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 && "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
         echo "DEBUG: $*" >&2
     fi
 }
@@ -34,13 +34,13 @@ function error() {
 }
 
 function warn() {
-    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
+    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
         echo "WARN: $*" >&2
     fi
 }
 
 function info() {
-    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
+    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
         echo "INFO: $*" >&2
     fi
 }
