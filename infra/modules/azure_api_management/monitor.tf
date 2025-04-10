@@ -58,25 +58,6 @@ resource "azurerm_monitor_diagnostic_setting" "apim" {
   }
 }
 
-resource "azurerm_api_management_diagnostic" "azuremonitor" {
-  count = var.monitoring.enabled ? 1 : 0
-
-  identifier          = "azuremonitor"
-  api_management_name = azurerm_api_management.this.name
-  resource_group_name = azurerm_api_management.this.resource_group_name
-
-  // https://github.com/hashicorp/terraform-provider-azurerm/issues/29050
-  // At the moment, this is the only working value we know
-  // Also, an example on the official docs uses `/loggers/azuremonitor`
-  // (ref: https://learn.microsoft.com/en-us/rest/api/apimanagement/diagnostic/create-or-update?view=rest-apimanagement-2024-05-01&tabs=HTTP)
-  api_management_logger_id = "${azurerm_api_management.this.id}/loggers/azuremonitor"
-
-  always_log_errors = true
-
-  verbosity           = var.monitoring.verbosity
-  sampling_percentage = var.monitoring.sampling_percentage
-}
-
 resource "azurerm_monitor_metric_alert" "this" {
   for_each = var.tier != "s" ? var.metric_alerts : {}
 
