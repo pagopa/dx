@@ -1,5 +1,6 @@
 import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
 
+// instrument native node fetch
 export const registerUndiciInstrumentation = () =>
   new UndiciInstrumentation({
     requestHook: (span, requestInfo) => {

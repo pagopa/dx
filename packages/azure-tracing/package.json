@@ -11,19 +11,19 @@
   "files": [
     "dist"
   ],
-  "main": "./dist/azure-functions.mjs",
+  "main": "./dist/functions/index.js",
   "exports": {
     ".": {
-      "import": "./dist/azure-functions.mjs"
+      "import": "./dist/functions/index.js"
     },
     "./logger": {
-      "import": "./dist/logger.js"
+      "import": "./dist/opentelemetry/logger.js"
     },
     "./azure-monitor": {
-      "import": "./dist/azure-monitor.js"
+      "import": "./dist/monitor/index.js"
     },
     "./azure-functions": {
-      "import": "./dist/azure-functions-hooks.js"
+      "import": "./dist/functions/hooks.js"
     }
   },
   "dependencies": {
@@ -44,11 +44,12 @@
     "@types/node": "^20.12.2",
     "eslint": "8.57.0",
     "shx": "^0.4.0",
+    "tsup": "^8.4.0",
     "typescript": "~5.2.2"
   },
   "scripts": {
     "clean": "shx rm -rf dist",
-    "build": "tsc",
+    "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
