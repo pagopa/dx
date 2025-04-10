@@ -4,7 +4,8 @@
 
 This Terraform module provisions an Azure App Service Plan with configurable tiers and zone redundancy.
 
-> **NOTE**: This module is for internal use only.
+[!IMPORTANT]
+This module is not intended for direct use, but solely as a dependency of other DX modules. Use [azure-function-app](https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest) or [azure-app-service](https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/latest) modules instead.
 
 ## Features
 
