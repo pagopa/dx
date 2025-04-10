@@ -104,6 +104,7 @@ jobs:
         id: pre_commit_specific_folders
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set +e  # Continue execution even if pre-commit fails
 
@@ -127,6 +128,7 @@ jobs:
         id: pre_commit_modified_files
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set +e  # Continue execution even if pre-commit fails
 
@@ -153,6 +155,7 @@ jobs:
         id: pre_commit
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set +e  # Continue execution even if pre-commit fails
 
@@ -175,6 +178,41 @@ jobs:
         if: always()
         run: |
           echo "## Pre-commit Results Summary" >> "$GITHUB_STEP_SUMMARY"
+
+          # Display Terraform module lock information if available
+          if [ -f "lock_output.json" ]; then
+            echo "### 🔒 Terraform Module Lock Summary" >> "$GITHUB_STEP_SUMMARY"
+
+            # Extract summary information
+            TOTAL_MODULES=$(jq -r '.summary.total_modules' lock_output.json)
+            EXIT_CODE=$(jq -r '.summary.exit_code' lock_output.json)
+
+            echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Status**: $([ "$EXIT_CODE" == "0" ] && echo "✅ No changes detected" || echo "⚠️ Changes detected")" >> "$GITHUB_STEP_SUMMARY"
+
+            # Count modules by status
+            if [ "$TOTAL_MODULES" -gt 0 ]; then
+              NEW_MODULES=$(jq -r '[.results[] | select(.status == "new")] | length' lock_output.json)
+              CHANGED_MODULES=$(jq -r '[.results[] | select(.status == "changed")] | length' lock_output.json)
+              REMOVED_MODULES=$(jq -r '[.results[] | select(.status == "removed")] | length' lock_output.json)
+
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+
+              # Display module details in a table if any changes
+              if [ "$NEW_MODULES" -gt 0 ] || [ "$CHANGED_MODULES" -gt 0 ] || [ "$REMOVED_MODULES" -gt 0 ]; then
+                echo "" >> "$GITHUB_STEP_SUMMARY"
+                echo "#### Module Details" >> "$GITHUB_STEP_SUMMARY"
+                echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
+                echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
+
+                jq -r '.results[] | "| \(.module) | \(.status) | \(.version) | \(.path // \"N/A\") |"' lock_output.json >> "$GITHUB_STEP_SUMMARY"
+              fi
+            fi
+
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           if [ -f "/tmp/pre-commit-output.log" ]; then
             # Add execution context
