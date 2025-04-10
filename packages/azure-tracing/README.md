@@ -38,10 +38,10 @@ For more background on this workaround, see:
 
 In order to enable tracing, you also need to set the following environment variables:
 
-| **Name**                   | **Required** | **Default** |
-| -------------------------- | ------------ | ----------- |
-| **AI_SAMPLING_PERCENTAGE** | false        | 5           |
-| **AI_CONNECTION_STRING**   | true         | -           |
+| **Name**                            | **Required** | **Default** |
+| ----------------------------------- | ------------ | ----------- |
+| **APPINSIGHTS_SAMPLING_PERCENTAGE** | false        | 5           |
+| **AI_CONNECTION_STRING**            | true         | -           |
 
 #### Step 2: Register Azure Function Lifecycle Hooks
 

@@ -26,7 +26,7 @@ const env = createEnv({
     AI_CONNECTION_STRING: z
       .string()
       .describe("The connection string for Application Insights."),
-    AI_SAMPLING_PERCENTAGE: z
+    APPINSIGHTS_SAMPLING_PERCENTAGE: z
       .optional(
         z.coerce
           .number()
@@ -50,7 +50,7 @@ useAzureMonitor({
     connectionString: env.AI_CONNECTION_STRING,
   },
   enableLiveMetrics: true,
-  samplingRatio: env.AI_SAMPLING_PERCENTAGE,
+  samplingRatio: env.APPINSIGHTS_SAMPLING_PERCENTAGE,
 });
 
 registerInstrumentations({
