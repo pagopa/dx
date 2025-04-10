@@ -4,7 +4,7 @@
 
 The author of a Pull Request (PR) is responsible for finding the optimal
 solution and implementing it. The author is responsible for verifying its
-correct functionality before and after release.  
+correct functionality both before and after release.  
 Before requesting a review, the author must ensure that:
 
 - the issue has been fully resolved

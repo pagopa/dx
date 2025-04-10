@@ -13,7 +13,7 @@ for, improving collaboration.
 
 ## Why Use Conventional Comments?
 
-- **Clarity**: they provide a clear structure for comments, making it easier for
+- **Clarity**: They provide a clear structure for comments, making it easier for
   others to understand your feedback
 - **Consistency**: using a standard format helps maintain consistency across
   different code reviews
