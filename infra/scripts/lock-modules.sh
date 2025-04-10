@@ -7,7 +7,6 @@ readonly HASHES_FILE="tfmodules.lock.json"        # File to store module hashes
 readonly MODULES_METADATA=".terraform/modules/modules.json"  # Terraform's module metadata file
 readonly REGISTRY_URL="registry.terraform.io"      # Default Terraform registry URL
 readonly SCRIPT_NAME=$(basename "$0")              # Get the script name for logging
-readonly OUTPUT_FORMAT="${LOCK_MODULES_OUTPUT_FORMAT:-text}"    # Output format: 'text' (default) or 'json'
 readonly JSON_OUTPUT_FILE="${LOCK_MODULES_JSON_OUTPUT_FILE:-}"    # Optional file path for JSON output
 
 # Enable debug mode if PRECOMMIT_DEBUG environment variable is set to 1
@@ -26,26 +25,24 @@ readonly PRE_COMMIT_VERBOSE="${PRE_COMMIT_VERBOSE:-0}"  # Default to non-verbose
 
 function debug() {
     # Only print debug messages if both PRECOMMIT_DEBUG and VERBOSE are enabled
-    if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 && "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
+    if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 && "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
         echo "DEBUG: $*" >&2
     fi
 }
 
 function error() {
     # Always show errors regardless of verbose mode
-    if [[ "${OUTPUT_FORMAT}" != "json" ]]; then
         echo "ERROR: $*" >&2
-    fi
 }
 
 function warn() {
-    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
+    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
         echo "WARN: $*" >&2
     fi
 }
 
 function info() {
-    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 && "${OUTPUT_FORMAT}" != "json" ]]; then
+    if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
         echo "INFO: $*" >&2
     fi
 }
@@ -85,10 +82,8 @@ function add_module_result() {
         }')
 
     # Add to stdout JSON output
-    if [[ "${OUTPUT_FORMAT}" == "json" ]]; then
-        json_results+=("$json_entry")
-        echo "$json_entry" >> "$JSON_OUTPUT_FILE"
-    fi
+    json_results+=("$json_entry")
+    echo "$json_entry" >> "$JSON_OUTPUT_FILE"
 }
 
 # Write JSON results to file if requested
@@ -109,17 +104,9 @@ function write_json_results() {
         # Create and write the final JSON structure to the specified file
         printf '{"summary":%s,"results":%s}' \
             "$summary_data" \
-            "$(IFS=,; echo "${module_results}")" > "$JSON_OUTPUT_FILE"
+            "$module_results" | jq . > "$JSON_OUTPUT_FILE"
 
         info "JSON output written to $JSON_OUTPUT_FILE"
-    fi
-}
-
-# Output final JSON results
-function output_json_results() {
-    if [[ "${OUTPUT_FORMAT}" == "json" && "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
-        # Combine all JSON entries and output as a single JSON array
-        printf '{"results":[%s]}' "$(IFS=,; echo "${json_results[*]}")"
     fi
 }
 
@@ -365,9 +352,6 @@ function main() {
     if [[ $exit_code -eq 1 ]]; then
         warn "Changes detected in one or more modules"
     fi
-
-    # Output JSON results if in JSON mode
-    output_json_results
 
     # Write JSON results to file if requested
     write_json_results "$exit_code"
