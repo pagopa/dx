@@ -63,6 +63,35 @@ registerAzureFunctionHooks(app);
 ...
 ```
 
+### Enabling Azure Monitor Telemetry
+
+If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
+
+```ts
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+import { AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
+import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
+...
+const config: AzureMonitorOpenTelemetryOptions = {} // A valid AzureMonitorOpenTelemetryOptions object
+const instrumentations = [new ExpressInstrumentation()] // A list of custom OpenTelemetry instrumentations
+initAzureMonitor(instrumentations, config);
+...
+```
+
+::: note
+
+the use of `ExpressInstrumentation` is just for example, you can use any other OpenTelemetry instrumentation you want.
+
+:::
+
+or, if you want to use the default configuration:
+
+```ts
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+...
+initAzureMonitor();
+```
+
 ### Logging Custom Events
 
 You can log custom events for additional observability using the `emitCustomEvent` function.
