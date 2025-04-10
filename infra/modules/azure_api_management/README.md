@@ -17,12 +17,18 @@ This module deploys an Azure API Management instance with optional configuration
 
 ## Tiers and Configurations
 
-| Tier  | Description                                              | SLA  | Scalability         | Autoscaling | Zones Configured | Metric Alerts |
-|-------|----------------------------------------------------------|------|---------------------|-------------|------------------|---------------|
-| `s`   | Developer Tier, for development and testing.             | None | Limited             | No          | No               | Disabled      |
-| `m`   | Standard Tier, for production workloads.                 | Yes  | Moderate            | No          | No               | Enabled       |
-| `l`   | Premium Tier, designed for large-scale production workloads. | Yes  | High (Autoscale)    | Yes         | `["1", "2"]`     | Enabled       |
-| `xl`  | Premium Tier, optimized for large-scale production workloads requiring maximum scalability, resilience, and multi-zone redundancy. | Yes  | High (Autoscale)    | Yes         | `["1", "2", "3"]`| Enabled       |
+| Tier | Description                                                                                                                        | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
+| `s`  | Developer Tier, for development and testing.                                                                                       | None | Limited          | No          | No                | Disabled      |
+| `m`  | Standard Tier, for production workloads.                                                                                           | Yes  | Moderate         | No          | No                | Enabled       |
+| `l`  | Premium Tier, designed for large-scale production workloads.                                                                       | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
+| `xl` | Premium Tier, optimized for large-scale production workloads requiring maximum scalability, resilience, and multi-zone redundancy. | Yes  | High (Autoscale) | Yes         | `["1", "2", "3"]` | Enabled       |
+
+## Monitoring
+
+Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
+Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
+Since Azure can take some time to create those resources, you may not see the logs immediately after the deployment.
 
 ## Usage Example
 
@@ -48,7 +54,6 @@ No modules.
 | [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management) | resource |
 | [azurerm_api_management_certificate.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_certificate) | resource |
 | [azurerm_api_management_diagnostic.applicationinsights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_diagnostic) | resource |
-| [azurerm_api_management_diagnostic.azuremonitor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_diagnostic) | resource |
 | [azurerm_api_management_logger.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_logger) | resource |
 | [azurerm_api_management_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_policy) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
