@@ -1,5 +1,21 @@
 # azure_container_app_environment
 
+## 0.2.0
+
+### Minor Changes
+
+- 52dfa04: Features:
+
+  - Add NoDelete locks for Container App Environment and the user-assigned managed identity
+
+  Bug Fixes:
+
+  - Fix the user-assigned managed identity name
+
+### Patch Changes
+
+- 5ceca52: Fix the potential collision with other resource names of the user-assigned managed identity
+
 ## 0.1.0
 
 ### Minor Changes
