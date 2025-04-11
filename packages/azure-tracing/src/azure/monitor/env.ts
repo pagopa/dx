@@ -16,7 +16,7 @@ export const loadEnv = () =>
     },
     runtimeEnv: process.env,
     server: {
-      AI_CONNECTION_STRING: z
+      APPINSIGHTS_CONNECTION_STRING: z
         .string()
         .describe("The connection string for Application Insights."),
       APPINSIGHTS_SAMPLING_PERCENTAGE: z
