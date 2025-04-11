@@ -184,44 +184,43 @@ jobs:
 
           # Display Terraform module lock information if available
           if [ -f "lock_output.json" ]; then
-            TOTAL_MODULES=$(jq -r '.summary.total_modules' lock_output.json)
-            EXIT_CODE=$(jq -r '.summary.exit_code' lock_output.json)
+            # Use default values with error handling around jq calls
+            TOTAL_MODULES=$(jq -r '.summary.total_modules // 0' lock_output.json 2>/dev/null || echo "0")
+            EXIT_CODE=$(jq -r '.summary.exit_code // 0' lock_output.json 2>/dev/null || echo "0")
 
-            # Count modules by status
+            # Count modules by status with error handling
+            NEW_MODULES=0
+            CHANGED_MODULES=0
+            REMOVED_MODULES=0
+
+            # Safely parse JSON with fallbacks
             if [ "$TOTAL_MODULES" -gt 0 ]; then
-              NEW_MODULES=$(jq -r '[.results[] | select(.status == "new")] | length' lock_output.json)
-              CHANGED_MODULES=$(jq -r '[.results[] | select(.status == "changed")] | length' lock_output.json)
-              REMOVED_MODULES=$(jq -r '[.results[] | select(.status == "removed")] | length' lock_output.json)
+              NEW_MODULES=$(jq -r '[.results[]? | select(.status == "new")] | length' lock_output.json 2>/dev/null || echo "0")
+              CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
+              REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
 
-              # Check if any changes were detected
-              if [ "$EXIT_CODE" != "0" ]; then
-                # Create a highly visible warning section
-                echo "## ⚠️ TERRAFORM MODULE CHANGES DETECTED - CAUTION REQUIRED ⚠️" >> "$GITHUB_STEP_SUMMARY"
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-                echo "### 🛑 **WARNING: Proceeding with these changes is NOT RECOMMENDED** 🛑" >> "$GITHUB_STEP_SUMMARY"
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-                echo "#### 📊 Change Summary:" >> "$GITHUB_STEP_SUMMARY"
-                echo "- 🆕 **${NEW_MODULES}** new modules added" >> "$GITHUB_STEP_SUMMARY"
-                echo "- 🔄 **${CHANGED_MODULES}** modules changed" >> "$GITHUB_STEP_SUMMARY"
-                echo "- 🗑️ **${REMOVED_MODULES}** modules removed" >> "$GITHUB_STEP_SUMMARY"
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-                echo "#### ⚡ Potential Impact:" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Module changes may introduce breaking changes" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Downstream dependencies might be affected" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Environment consistency could be compromised" >> "$GITHUB_STEP_SUMMARY"
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-                echo "#### 👉 Recommended Actions:" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Review the changes carefully" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Test in a non-production environment first" >> "$GITHUB_STEP_SUMMARY"
-                echo "- Coordinate with team members before proceeding" >> "$GITHUB_STEP_SUMMARY"
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-              fi
+              # Always show the warning when any modules are detected (total_modules > 0)
+              echo "## ⚠️ Terraform modules locks changed - Action Required ⚠️" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "### 🛑 Module changes detected!" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "#### Please open a dedicated Pull Request with updated module locks:" >> "$GITHUB_STEP_SUMMARY"
+              echo "Run \`pre-commit run -a lock_modules\` locally and commit the resulting changes to the lock files." >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
-            # Standard module lock summary
-            echo "### 🔒 Terraform Module Lock Details" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **Status**: $([ "$EXIT_CODE" == "0" ] && echo "✅ No changes detected" || echo "🔴 Changes detected")" >> "$GITHUB_STEP_SUMMARY"
+            # Changes summary - safely add to summary
+            {
+              echo "### 🔒 Terraform modules changes summary"
+              echo "- **Total modules**: ${TOTAL_MODULES}"
+
+              # Different status message based on the type of changes, but always indicate action required when modules are detected
+              if [ "$TOTAL_MODULES" -gt 0 ]; then
+                echo "- **Status**: 🔴 **Modules detected** - action required"
+              else
+                echo "- **Status**: ✅ No changes detected"
+              fi
+            } >> "$GITHUB_STEP_SUMMARY" || true  # Continue even if writing to summary fails
 
             if [ "$TOTAL_MODULES" -gt 0 ]; then
               echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
