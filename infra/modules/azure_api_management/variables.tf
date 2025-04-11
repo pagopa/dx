@@ -292,17 +292,17 @@ variable "monitoring" {
   # Validate logs.groups values
   validation {
     condition = var.monitoring.logs.enabled == false || alltrue([
-      for group in var.monitoring.logs.groups : contains(data.azurerm_monitor_diagnostic_categories.apim.log_category_groups, group)
+      for group in var.monitoring.logs.groups : contains(local.apim.log_category_groups, group)
     ])
-    error_message = format("Invalid value in 'logs.groups'. Allowed values are: %#v", join(", ", data.azurerm_monitor_diagnostic_categories.apim.log_category_groups))
+    error_message = format("Invalid value in 'logs.groups'. Allowed values are: %#v", join(", ", local.apim.log_category_groups))
   }
 
   # Validate logs.categories values
   validation {
     condition = var.monitoring.enabled == false || alltrue([
-      for category in var.monitoring.logs.categories : contains(data.azurerm_monitor_diagnostic_categories.apim.log_category_types, category)
+      for category in var.monitoring.logs.categories : contains(local.apim.log_category_types, category)
     ])
-    error_message = format("Invalid value in 'logs.categories'. Allowed values are: %#v", join(", ", data.azurerm_monitor_diagnostic_categories.apim.log_category_types))
+    error_message = format("Invalid value in 'logs.categories'. Allowed values are: %#v", join(", ", local.apim.log_category_types))
   }
 
 }
