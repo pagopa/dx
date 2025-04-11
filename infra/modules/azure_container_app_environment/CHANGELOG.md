@@ -1,5 +1,11 @@
 # azure_container_app_environment
 
+## 0.1.0
+
+### Minor Changes
+
+- fbec2b1: Create a user-assigned managed identity to be shared among all container apps of this environment
+
 ## 0.0.5
 
 ### Patch Changes

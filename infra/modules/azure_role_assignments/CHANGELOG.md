@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.0.2
+
+### Patch Changes
+
+- 3c31efb: Add Documentation inside README.md
+
 ## 1.0.1
 
 ### Patch Changes
