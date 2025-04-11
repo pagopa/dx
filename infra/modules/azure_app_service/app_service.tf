@@ -46,6 +46,8 @@ resource "azurerm_linux_web_app" "this" {
     local.application_insights.enable ? {
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#applicationinsights_connection_string
       APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
+      # Add environment variable used by the `@pagopa/azure-tracing` package
+      APPINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = var.application_insights_sampling_percentage
     } : {}
