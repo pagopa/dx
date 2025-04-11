@@ -1,5 +1,11 @@
 # azure_federated_identity_with_github
 
+## 1.0.2
+
+### Patch Changes
+
+- 82510c9: Update Documentation README and for naming used provider function instead of naming_convention module
+
 ## 1.0.1
 
 ### Patch Changes
