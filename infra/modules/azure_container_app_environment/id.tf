@@ -1,7 +1,6 @@
 resource "azurerm_user_assigned_identity" "cae_identity" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = var.environment.domain,
-    name          = "cae",
+    name          = "${var.environment.app_name}-cae",
     resource_type = "managed_identity"
   }))
   location            = var.environment.location
