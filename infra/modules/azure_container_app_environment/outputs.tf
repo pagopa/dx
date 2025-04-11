@@ -11,5 +11,5 @@ output "resource_group_name" {
 }
 
 output "user_assigned_identity" {
-  value = try(azurerm_user_assigned_identity.cae_identity.client_id, null)
+  value = azurerm_user_assigned_identity.cae_identity.client_id
 }
