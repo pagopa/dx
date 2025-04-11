@@ -213,13 +213,9 @@ jobs:
                 CHECK_INFO="all checks"
               fi
 
-              # Combine into a single summary line with small text
-              echo "<sub>Run $CHECK_INFO on $EXECUTION_SCOPE</sub>" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-
               # Use GitHub alert syntax for the "what should be done next" section
               echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
-              echo "> ## ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
+              echo "> ### ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
               echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
               echo ">" >> "$GITHUB_STEP_SUMMARY"
