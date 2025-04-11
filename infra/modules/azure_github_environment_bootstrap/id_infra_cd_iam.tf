@@ -165,6 +165,6 @@ resource "azurerm_role_assignment" "infra_cd_rgs_ca_contributor" {
 
   scope                = each.value
   role_definition_name = "Container Apps Contributor"
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to write Container App configuration at monorepository resource group scope"
 }
