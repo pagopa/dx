@@ -152,7 +152,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	// Check required keys
 	for _, key := range requiredKeys {
 		if _, exists := configuration[key]; !exists {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map.", key))
+			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map", key))
 			return
 		}
 	}
@@ -160,7 +160,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	// Validate keys
 	for key := range configuration {
 		if !contains(allowedKeys, key) {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed.", key))
+			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed", key))
 			return
 		}
 	}
