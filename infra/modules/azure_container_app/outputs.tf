@@ -24,6 +24,6 @@ output "principal_id" {
 }
 
 output "user_assigned_managed_identity_id" {
-  value       = azurerm_container_app.this.identity[0].identity_ids[*].principal_id
+  value       = azurerm_container_app.this.identity[0].identity_ids
   description = "Client Id of the user-assigned managed identity of the Container App Environment"
 }
