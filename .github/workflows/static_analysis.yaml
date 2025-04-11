@@ -211,6 +211,14 @@ jobs:
               fi
               echo "" >> "$GITHUB_STEP_SUMMARY"
 
+              # Module stats section - moved before what should be done next
+              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+
               # What should be done section with integrated copyable command
               echo "### What should be done next:" >> "$GITHUB_STEP_SUMMARY"
               echo "Please open a dedicated Pull Request with updated module locks." >> "$GITHUB_STEP_SUMMARY"
@@ -219,18 +227,6 @@ jobs:
               echo '```bash' >> "$GITHUB_STEP_SUMMARY"
               echo 'pre-commit run -a lock_modules' >> "$GITHUB_STEP_SUMMARY"
               echo '```' >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-
-              # Module stats section
-              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-            else
-              # No modules detected
-              echo "## ✅ No Terraform module changes detected" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
@@ -257,28 +253,33 @@ jobs:
           fi
 
           if [ -f "/tmp/pre-commit-output.log" ]; then
-            # Add execution context
+            # Make execution context info more compact by combining it all
+            echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+            echo "<summary>📄 Execution Context</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+
+            # Add execution context in a smaller, less prominent way
+            echo "##### Execution Scope:" >> "$GITHUB_STEP_SUMMARY"
             if [ "${{ inputs.folder }}" != "" ]; then
-              echo "### 📁 Executed on folder: ${{ inputs.folder }}" >> "$GITHUB_STEP_SUMMARY"
+              echo "Folder: \`${{ inputs.folder }}\`" >> "$GITHUB_STEP_SUMMARY"
             elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
-              echo "### 🔄 Executed on modified files only" >> "$GITHUB_STEP_SUMMARY"
-              echo "- From: \`origin/${{ github.event.pull_request.base.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
-              echo "- To: \`origin/${{ github.event.pull_request.head.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+              echo "Modified files between \`origin/${{ github.event.pull_request.base.ref }}\` and \`origin/${{ github.event.pull_request.head.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "### 🔍 Executed on all files" >> "$GITHUB_STEP_SUMMARY"
+              echo "All files" >> "$GITHUB_STEP_SUMMARY"
             fi
 
-            # Add hook information
+            # Add hook information in a more compact way
             if [ "${{ inputs.check_to_run }}" != "" ]; then
-              echo "### 🪝 Running specific check: \`${{ inputs.check_to_run }}\`" >> "$GITHUB_STEP_SUMMARY"
+              echo "Check: \`${{ inputs.check_to_run }}\`" >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "### 🪝 Running all configured checks" >> "$GITHUB_STEP_SUMMARY"
+              echo "All configured checks" >> "$GITHUB_STEP_SUMMARY"
             fi
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
 
             # Format and add log output in a collapsible section
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "<details>" >> "$GITHUB_STEP_SUMMARY"
-            echo "<summary>📋 Pre-commit Output Log (Click to expand)</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "<summary>📋 Pre-commit Output Log</summary>" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             # Clean up ANSI color codes for better markdown rendering
