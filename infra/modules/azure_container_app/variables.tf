@@ -93,6 +93,7 @@ variable "container_app_templates" {
         value = string
       }))
       interval_seconds        = optional(number, 10)
+      initial_delay           = optional(number, 30)
       path                    = string
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
