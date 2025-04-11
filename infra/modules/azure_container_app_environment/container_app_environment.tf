@@ -29,3 +29,11 @@ resource "azurerm_container_app_environment" "this" {
 
   tags = var.tags
 }
+
+resource "azurerm_management_lock" "cae_lock" {
+  name       = azurerm_container_app_environment.this.name
+  scope      = azurerm_container_app_environment.this.id
+  lock_level = "CanNotDelete"
+
+  notes = "Lock for the Container App Environment"
+}

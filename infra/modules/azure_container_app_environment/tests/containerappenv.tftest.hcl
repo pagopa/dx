@@ -120,7 +120,7 @@ run "user_assigned_identity" {
   }
 
   assert {
-    condition     = azurerm_user_assigned_identity.cae_identity.name == "dx-d-itn-modules-test-id-01"
+    condition     = azurerm_user_assigned_identity.cae_identity.name == "dx-d-itn-modules-cae-id-01"
     error_message = "The user assigned identity name is not correct"
   }
 
