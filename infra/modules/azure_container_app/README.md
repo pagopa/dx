@@ -70,5 +70,4 @@ No modules.
 | <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | Client Id of the system-assigned managed identity of this Container App |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Resource Group of the Container App |
 | <a name="output_url"></a> [url](#output\_url) | URL of the Container App |
-| <a name="output_user_assigned_managed_identity_ids"></a> [user\_assigned\_managed\_identity\_ids](#output\_user\_assigned\_managed\_identity\_ids) | Client Id of the user-assigned managed identity of the Container App Environment |
 <!-- END_TF_DOCS -->
