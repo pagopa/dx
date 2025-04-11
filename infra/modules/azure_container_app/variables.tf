@@ -147,5 +147,5 @@ variable "user_assigned_identity_id" {
 variable "acr_registry" {
   type        = string
   default     = null
-  description = "(Optional) Indicates the Azure Container Registry to use for the container app. If not provided, the container app will use the registry specified in the image name."
+  description = "(Optional) Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
 }
