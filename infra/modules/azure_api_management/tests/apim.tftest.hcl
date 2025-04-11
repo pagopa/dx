@@ -72,6 +72,11 @@ run "apim_is_correct_plan" {
     condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
     error_message = "The APIM zones are incorrect, they should be ['1', '2']"
   }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 0
+    error_message = "No diagnostic setting should be created when monitoring is disabled"
+  }
 }
 
 run "plan_with_invalid_parameters" {

@@ -29,6 +29,35 @@ resource "azurerm_api_management_diagnostic" "applicationinsights" {
   sampling_percentage = var.application_insights.sampling_percentage
 }
 
+// Collect diagnostic logs and metrics to a Log Analytics workspace
+resource "azurerm_monitor_diagnostic_setting" "apim" {
+  count = var.monitoring.enabled ? 1 : 0
+
+  name               = "${local.apim.name}-diagnostic"
+  target_resource_id = azurerm_api_management.this.id
+
+  log_analytics_workspace_id     = var.monitoring.log_analytics_workspace_id
+  log_analytics_destination_type = "AzureDiagnostics"
+
+  # Add logs only if enabled
+  dynamic "enabled_log" {
+    for_each = var.monitoring.logs.enabled ? (
+      length(var.monitoring.logs.groups) > 0 ? var.monitoring.logs.groups : var.monitoring.logs.categories
+    ) : []
+
+    content {
+      category_group = length(var.monitoring.logs.groups) > 0 ? enabled_log.value : null
+      category       = length(var.monitoring.logs.categories) > 0 ? enabled_log.value : null
+    }
+  }
+
+  # Add metrics if enabled
+  metric {
+    category = "AllMetrics"
+    enabled  = var.monitoring.metrics.enabled
+  }
+}
+
 resource "azurerm_monitor_metric_alert" "this" {
   for_each = var.tier != "s" ? var.metric_alerts : {}
 

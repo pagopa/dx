@@ -8,7 +8,7 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  # Defines the naming convention for APIM, dynamically handling cases where app_name 
+  # Defines the naming convention for APIM, dynamically handling cases where app_name
   # is not "apim" or a domain is specified, to avoid redundant naming logic.
   apim = {
     name           = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management" })), "-apim-apim-", "-apim-")
@@ -24,6 +24,9 @@ locals {
       var.tier,
       "Premium_1" # Default
     )
+
+    log_category_groups = ["allLogs", "audit"]
+    log_category_types  = ["DeveloperPortalAuditLogs", "GatewayLogs", "WebSocketConnectionLogs"]
   }
 
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
