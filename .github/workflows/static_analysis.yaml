@@ -210,7 +210,13 @@ jobs:
                 echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
                 echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
 
-                jq -r '.results[] | "| \(.module) | \(.status) | \(.version) | \(.path // \"N/A\") |"' lock_output.json >> "$GITHUB_STEP_SUMMARY"
+                # Fix the jq syntax error by using a simpler concatenation approach
+                jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
+                  echo "Error processing JSON file. Raw content:" >> "$GITHUB_STEP_SUMMARY"
+                  echo '```json' >> "$GITHUB_STEP_SUMMARY"
+                  cat lock_output.json >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+                }
               fi
             fi
 
