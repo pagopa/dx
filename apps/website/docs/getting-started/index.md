@@ -27,7 +27,7 @@ and DX tools are designed with them in mind.
 
 To start adopting DX tools, define boundaries for team services and plan how to
 split team projects. Once ready, ensure you have a mono-repository on GitHub and
-start [configuring it using DX tools](./infrastructure/monorepository-setup.md).
+start [configuring it using DX tools](./monorepository-setup.md).
 
 ### Supported Platforms
 
@@ -55,10 +55,11 @@ support for AWS and Java as well.
 DX provides guidance to help teams adopt shared conventions during their
 journey:
 
-- [Optimize Git usage](./conventions/git/index.md) usage.
-- [Create effective Pull Requests](./conventions/pull-requests/index.md).
-- [Name Azure resources](./conventions/azure-naming-convention.md) consistently.
-- [Organize repository folders](./conventions/infra-folder-structure.md) for
+- [Optimize Git usage](../conventions/git/index.md) usage.
+- [Create effective Pull Requests](../conventions/pull-requests/index.md).
+- [Name Azure resources](../conventions/azure-naming-convention.md)
+  consistently.
+- [Organize repository folders](../conventions/infra-folder-structure.md) for
   Infrastructure as Code (IaC) sources.
 
 We expect teams to adhere to these conventions to ensure a consistent experience
@@ -85,7 +86,7 @@ to improve them.
 
 The DX repository provides several
 [GitHub reusable workflows](https://github.com/pagopa/dx/tree/main/.github)
-documented in the [pipelines section](./pipelines/index.md) of this website.
+documented in the [pipelines section](../pipelines/index.md) of this website.
 
 We encourage teams to use these templates as a starting point for their GitHub
 Actions workflows. They are designed to speed up continuous integration and
