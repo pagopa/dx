@@ -1,5 +1,15 @@
 # azure_container_app_environment
 
+## 1.0.0
+
+### Major Changes
+
+- 5c2fe13: Export all details of the user-assigned managed identity
+
+  **Migration guide**:
+
+  Replace the occurrences of the exported property `user_assigned_identity` with `user_assigned_identity.client_id`
+
 ## 0.2.0
 
 ### Minor Changes
