@@ -209,39 +209,45 @@ jobs:
               echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
-            # Changes summary - safely add to summary
-            {
-              echo "### 🔒 Terraform modules changes summary"
-              echo "- **Total modules**: ${TOTAL_MODULES}"
-
-              # Different status message based on the type of changes, but always indicate action required when modules are detected
-              if [ "$TOTAL_MODULES" -gt 0 ]; then
-                echo "- **Status**: 🔴 **Modules detected** - action required"
-              else
-                echo "- **Status**: ✅ No changes detected"
-              fi
-            } >> "$GITHUB_STEP_SUMMARY" || true  # Continue even if writing to summary fails
-
+            # Changes summary with status in the title
             if [ "$TOTAL_MODULES" -gt 0 ]; then
-              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "### 🔴 Terraform modules changes detected (${TOTAL_MODULES} modules)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "### ✅ No Terraform module changes detected" >> "$GITHUB_STEP_SUMMARY"
+            fi
 
-              # Display module details in a table if any changes
-              if [ "$NEW_MODULES" -gt 0 ] || [ "$CHANGED_MODULES" -gt 0 ] || [ "$REMOVED_MODULES" -gt 0 ]; then
-                echo "" >> "$GITHUB_STEP_SUMMARY"
-                echo "#### Module Details" >> "$GITHUB_STEP_SUMMARY"
-                echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
-                echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
 
-                # Fix the jq syntax error by using a simpler concatenation approach
-                jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
-                  echo "Error processing JSON file. Raw content:" >> "$GITHUB_STEP_SUMMARY"
-                  echo '```json' >> "$GITHUB_STEP_SUMMARY"
-                  cat lock_output.json >> "$GITHUB_STEP_SUMMARY"
-                  echo '```' >> "$GITHUB_STEP_SUMMARY"
-                }
-              fi
+            # Add copyable command for running pre-commit
+            if [ "$TOTAL_MODULES" -gt 0 ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "#### Run this command locally to update locks:" >> "$GITHUB_STEP_SUMMARY"
+              echo '```bash' >> "$GITHUB_STEP_SUMMARY"
+              echo 'pre-commit run -a lock_modules' >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            # Display module details in a collapsible table if any changes
+            if [ "$NEW_MODULES" -gt 0 ] || [ "$CHANGED_MODULES" -gt 0 ] || [ "$REMOVED_MODULES" -gt 0 ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+              echo "<summary>📊 Module Details Table (Click to expand)</summary>" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
+
+              # Fix the jq syntax error by using a simpler concatenation approach
+              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
+                echo "Error processing JSON file. Raw content:" >> "$GITHUB_STEP_SUMMARY"
+                echo '```json' >> "$GITHUB_STEP_SUMMARY"
+                cat lock_output.json >> "$GITHUB_STEP_SUMMARY"
+                echo '```' >> "$GITHUB_STEP_SUMMARY"
+              }
+              echo "</details>" >> "$GITHUB_STEP_SUMMARY"
             fi
 
             echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -266,9 +272,11 @@ jobs:
               echo "### 🪝 Running all configured checks" >> "$GITHUB_STEP_SUMMARY"
             fi
 
-            # Format and add log output
+            # Format and add log output in a collapsible section
             echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "### 📋 Output Log" >> "$GITHUB_STEP_SUMMARY"
+            echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+            echo "<summary>📋 Pre-commit Output Log (Click to expand)</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             # Clean up ANSI color codes for better markdown rendering
             cat /tmp/pre-commit-output.log | sed 's/\x1b\[[0-9;]*m//g' >> "$GITHUB_STEP_SUMMARY"
