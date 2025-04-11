@@ -46,8 +46,8 @@ run "container_app_env_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
 
-    log_analytics_workspace_id       = run.setup_tests.log_analytics_id
-  
+    log_analytics_workspace_id = run.setup_tests.log_analytics_id
+
     virtual_network = {
       name                = "dx-d-itn-common-vnet-01"
       resource_group_name = "dx-d-itn-network-rg-01"
@@ -90,5 +90,47 @@ run "container_app_env_is_correct_plan" {
   assert {
     condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == false
     error_message = "The container app environment zone redundancy enabled is not correct"
+  }
+}
+
+run "user_assigned_identity" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_user_assigned_identity.cae_identity
+    ]
+  }
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    log_analytics_workspace_id = run.setup_tests.log_analytics_id
+
+    virtual_network = {
+      name                = "dx-d-itn-common-vnet-01"
+      resource_group_name = "dx-d-itn-network-rg-01"
+    }
+    subnet_pep_id = run.setup_tests.pep_snet_id
+    subnet_cidr   = "10.50.100.0/24"
+  }
+
+  assert {
+    condition     = azurerm_user_assigned_identity.cae_identity.name == "dx-d-itn-modules-test-cae-id-01"
+    error_message = "The user assigned identity name is not correct"
+  }
+
+  assert {
+    condition     = azurerm_user_assigned_identity.cae_identity.location == "italynorth"
+    error_message = "The container app environment location is not correct"
+  }
+
+  assert {
+    condition     = azurerm_user_assigned_identity.cae_identity.resource_group_name == run.setup_tests.resource_group_name
+    error_message = "The container app environment resource group is not correct"
   }
 }
