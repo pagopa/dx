@@ -5,12 +5,6 @@ on:
     paths:
       - '.github/workflows/_validate-go-test-provider.yaml'
       - 'infra/provider/**'
-  push: # FOR TESTING
-    branches:
-      - 'feats/improve-provider-testing'
-    paths:
-      - '.github/workflows/_validate-go-test-provider.yaml'
-      - 'infra/provider/**'
 
 permissions:
   contents: read
@@ -29,7 +23,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
+      - name: Setup Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           go-version-file: '${{ env.GO_MOD_PATH }}'
 
@@ -37,5 +32,6 @@ jobs:
         id: set-terraform-version
         uses: pagopa/dx/.github/actions/terraform-setup@main
 
-      - run: make testacc
+      - run: Run Tests
+        run: make testacc
         working-directory: '${{ env.WORKSPACE }}'
