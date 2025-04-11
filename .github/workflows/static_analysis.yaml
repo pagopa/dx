@@ -196,22 +196,6 @@ jobs:
               NEW_MODULES=$(jq -r '[.results[]? | select(.status == "new")] | length' lock_output.json 2>/dev/null || echo "0")
               CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
               REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
-              # Create a compact execution context description
-              EXECUTION_SCOPE=""
-              if [ "${{ inputs.folder }}" != "" ]; then
-                EXECUTION_SCOPE="folder: \`${{ inputs.folder }}\`"
-              elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
-                EXECUTION_SCOPE="modified files"
-              else
-                EXECUTION_SCOPE="all files"
-              fi
-
-              # Add check information
-              if [ "${{ inputs.check_to_run }}" != "" ]; then
-                CHECK_INFO="\`${{ inputs.check_to_run }}\`"
-              else
-                CHECK_INFO="all checks"
-              fi
 
               # Use GitHub alert syntax for the "what should be done next" section
               echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
@@ -258,6 +242,23 @@ jobs:
           fi
 
           if [ -f "/tmp/pre-commit-output.log" ]; then
+            # Create a compact execution context description
+            EXECUTION_SCOPE=""
+            if [ "${{ inputs.folder }}" != "" ]; then
+              EXECUTION_SCOPE="folder: \`${{ inputs.folder }}\`"
+            elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
+              EXECUTION_SCOPE="modified files"
+            else
+              EXECUTION_SCOPE="all files"
+            fi
+
+            # Add check information
+            if [ "${{ inputs.check_to_run }}" != "" ]; then
+              CHECK_INFO="\`${{ inputs.check_to_run }}\`"
+            else
+              CHECK_INFO="all checks"
+            fi
+
             # Combine into a single summary line with small text
             echo "<details>" >> "$GITHUB_STEP_SUMMARY"
             echo "<summary>📋 Pre-commit Output Log</summary>" >> "$GITHUB_STEP_SUMMARY"
