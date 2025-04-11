@@ -46,6 +46,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  get-terraform-version:
+    name: Get Terraform Version
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        with:
+          default_version: "1.10.4"
+
+
+  tf-modules-check:
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    name: Check terraform registry modules hashes
+    needs: ["get-terraform-version"]
+    secrets: inherit
+    with:
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      # Pre-commit Terraform TAG to use,
+      # is release tag + package digest (Ref. Digest https://github.com/antonbabenko/pre-commit-terraform/pkgs/container/pre-commit-terraform)
+      # Example: vX.Y.Z@sha256:000...N
+      enable_modified_files_detection: true
+      check_to_run: lock_modules
+      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      fail_on_error: false
+      verbose: true
 
   tf_plan:
     name: 'Terraform Plan'
@@ -61,7 +92,7 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
-      terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
     steps:
 
@@ -112,6 +143,14 @@ jobs:
         run: |
           terraform init
 
+      - name: Check terraform registry modules hashes
+        uses: ./.github/workflows/static_analysis.yaml
+        with:
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+          pre_commit_tf_tag: "v1.96.2@sha256:01f870b7689b5a09c1a370914fcddcac42c4b6478c9d369e1d2590dd0a66ffd0"
+          enable_modified_files_detection: true
+          check_to_run: lock_modules
+
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
@@ -132,7 +171,7 @@ jobs:
   tf_apply:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [tf_plan]
+    needs: ["get-terraform-version", "tf-modules-check", "tf_plan"]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
@@ -162,7 +201,7 @@ jobs:
           key: terraform-${{ needs.tf_plan.outputs.working_dir }}-${{ github.sha }}
           restore-keys: |
             terraform-${{ needs.tf_plan.outputs.working_dir }}
-        
+
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
