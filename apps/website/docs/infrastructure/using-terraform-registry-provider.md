@@ -257,6 +257,19 @@ You can now test your changes locally. Once you are satisfied with the results,
 push your changes to the subrepository and follow the release process described
 above.
 
+### Step 6: Run Acceptance Tests
+
+To verify that your changes work correctly with the provider's acceptance tests,
+run the following command from the main directory of the provider:
+
+```bash
+make testacc
+```
+
+This will execute all the Go acceptance tests, validating that your changes
+function properly in various scenarios. It's important to run these tests before
+submitting any changes to ensure compatibility and functionality.
+
 :::note
 
 Remember to remove or comment out the `.terraformrc` override and restore the
