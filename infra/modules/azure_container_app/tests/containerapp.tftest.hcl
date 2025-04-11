@@ -33,6 +33,7 @@ run "container_app_is_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
 
     container_app_environment_id = run.setup_tests.container_app_environment_id
+    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
 
     container_app_templates = [
       {
@@ -187,6 +188,7 @@ run "container_app_correct_container_name" {
     resource_group_name = run.setup_tests.resource_group_name
 
     container_app_environment_id = run.setup_tests.container_app_environment_id
+    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
 
     container_app_templates = [
       {
@@ -223,6 +225,7 @@ run "container_app_correct_custom_container_name" {
     resource_group_name = run.setup_tests.resource_group_name
 
     container_app_environment_id = run.setup_tests.container_app_environment_id
+    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
 
     container_app_templates = [
       {

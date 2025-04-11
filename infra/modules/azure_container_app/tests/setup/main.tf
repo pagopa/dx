@@ -47,6 +47,11 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
+data "azurerm_user_assigned_identity" "identity" {
+  name                = "dx-d-github-ci-identity"
+  resource_group_name = "dx-d-identity-rg"
+}
+
 data "azurerm_container_app_environment" "cae" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "github-runner",
@@ -113,4 +118,8 @@ output "tags" {
 
 output "environment" {
   value = local.environment
+}
+
+output "user_assigned_identity_id" {
+  value = data.azurerm_user_assigned_identity.identity.id
 }
