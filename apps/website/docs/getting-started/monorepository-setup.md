@@ -143,4 +143,4 @@ Terraform module.
 
 For more information, see the
 [related blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
-and the [IAM Framework documentation](./azure/azure-iam.md).
+and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).
