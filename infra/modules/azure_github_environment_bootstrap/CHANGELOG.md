@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.5.1
+
+### Patch Changes
+
+- 7895612: Fix Container Apps Contributor role assignment to Infra CD identity
+
 ## 1.5.0
 
 ### Minor Changes
