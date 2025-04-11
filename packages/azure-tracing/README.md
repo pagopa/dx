@@ -19,6 +19,11 @@ Currently, [ECMAScript Modules (ESM) support in OpenTelemetry is still experimen
 which makes direct instrumentation of Azure Functions a bit tricky.
 So, if you have a Node.js project ESM based (`"type": "module"` in the `package.json`), to work around this, you have to preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
 
+> [!NOTE]
+> In case you have a CJS project (`"type": "commonjs"` in the `package.json`), you could use the [`opentelemetry-js` library](https://github.com/open-telemetry/opentelemetry-js?tab=readme-ov-file#quick-start)
+> to instrument the application, making sure the OpenTelemetry SDK is initialized before the Azure Functions runtime starts.  
+> This package is useful for ESM projects only, where the instrumentation logic needs to be preloaded.
+
 This package provides a wrapper that simplifies this setup.
 
 #### Step 1: Enable Tracing via NODE_OPTIONS
@@ -78,11 +83,8 @@ initAzureMonitor(instrumentations, config);
 ...
 ```
 
-::: note
-
-the use of `ExpressInstrumentation` is just for example, you can use any other OpenTelemetry instrumentation you want.
-
-:::
+> [!NOTE]
+> the use of `ExpressInstrumentation` is just for example, you can use any other OpenTelemetry instrumentation you want.
 
 or, if you want to use the default configuration:
 
