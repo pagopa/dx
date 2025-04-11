@@ -180,8 +180,6 @@ jobs:
           ENABLE_MODIFIED_FILES_DETECTION: ${{ inputs.enable_modified_files_detection }}
           CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
-          echo "## Pre-commit Results Summary" >> "$GITHUB_STEP_SUMMARY"
-
           # Display Terraform module lock information if available
           if [ -f "lock_output.json" ]; then
             # Use default values with error handling around jq calls
@@ -199,34 +197,23 @@ jobs:
               CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
               REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
 
-              # Start with status at the very top
-              if [ "$CHANGED_MODULES" -gt 0 ]; then
-                echo "## 🔴 Terraform modules changed - Action Required" >> "$GITHUB_STEP_SUMMARY"
-              elif [ "$NEW_MODULES" -gt 0 ]; then
-                echo "## 🟡 Terraform modules added - Action Required" >> "$GITHUB_STEP_SUMMARY"
-              elif [ "$REMOVED_MODULES" -gt 0 ]; then
-                echo "## 🟢 Terraform modules removed - Action Required" >> "$GITHUB_STEP_SUMMARY"
-              else
-                echo "## ⚠️ Terraform modules locks changed - Action Required" >> "$GITHUB_STEP_SUMMARY"
-              fi
+              echo "## ⚠️ Terraform modules hashes do not match the lockfile - Action Required" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
 
-              # Module stats section - moved before what should be done next
-              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-
-              # What should be done section with integrated copyable command
               echo "### What should be done next:" >> "$GITHUB_STEP_SUMMARY"
-              echo "Please open a dedicated Pull Request with updated module locks." >> "$GITHUB_STEP_SUMMARY"
               echo "Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo '```bash' >> "$GITHUB_STEP_SUMMARY"
               echo 'pre-commit run -a lock_modules' >> "$GITHUB_STEP_SUMMARY"
               echo '```' >> "$GITHUB_STEP_SUMMARY"
+              echo "Then open a dedicated Pull Request with updated module locks." >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+
+              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
@@ -253,33 +240,25 @@ jobs:
           fi
 
           if [ -f "/tmp/pre-commit-output.log" ]; then
-            # Make execution context info more compact by combining it all
-            echo "<details>" >> "$GITHUB_STEP_SUMMARY"
-            echo "<summary>📄 Execution Context</summary>" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-
-            # Add execution context in a smaller, less prominent way
-            echo "##### Execution Scope:" >> "$GITHUB_STEP_SUMMARY"
+            # Create a compact execution context description
+            EXECUTION_SCOPE=""
             if [ "${{ inputs.folder }}" != "" ]; then
-              echo "Folder: \`${{ inputs.folder }}\`" >> "$GITHUB_STEP_SUMMARY"
+              EXECUTION_SCOPE="folder: \`${{ inputs.folder }}\`"
             elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
-              echo "Modified files between \`origin/${{ github.event.pull_request.base.ref }}\` and \`origin/${{ github.event.pull_request.head.ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+              EXECUTION_SCOPE="modified files"
             else
-              echo "All files" >> "$GITHUB_STEP_SUMMARY"
+              EXECUTION_SCOPE="all files"
             fi
 
-            # Add hook information in a more compact way
+            # Add check information
+            CHECK_INFO=""
             if [ "${{ inputs.check_to_run }}" != "" ]; then
-              echo "Check: \`${{ inputs.check_to_run }}\`" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "All configured checks" >> "$GITHUB_STEP_SUMMARY"
+              CHECK_INFO="check: \`${{ inputs.check_to_run }}\`"
             fi
-            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
 
-            # Format and add log output in a collapsible section
-            echo "" >> "$GITHUB_STEP_SUMMARY"
+            # Combine into a single summary line with small text
             echo "<details>" >> "$GITHUB_STEP_SUMMARY"
-            echo "<summary>📋 Pre-commit Output Log</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "<summary>📋 Pre-commit Output Log <sup><i>$EXECUTION_SCOPE $CHECK_INFO</i></sup></summary>" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             # Clean up ANSI color codes for better markdown rendering
