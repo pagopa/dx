@@ -81,7 +81,7 @@ development workflow, we've implemented an automated system that:
    - Example: `terraform-azurerm-azure-api-management`
 
 This process is handled by the
-[`Push modules to subrepo`](https://github.com/pagopa/dx/blob/main/.github/workflows/push_modules_to_subrepo.yml)
+[`Push modules to subrepo`](https://github.com/pagopa/dx/blob/main/.github/workflows/_release-bash-modules-to-subrepo.yaml)
 GitHub Action, which:
 
 - Identifies modified modules in the monorepo

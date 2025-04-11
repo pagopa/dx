@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/devcontainer_publish_features.yaml"
+      - ".github/workflows/_release-docker-devcontainer-features.yaml"
       - ".devcontainer/features/**"
 
 jobs:

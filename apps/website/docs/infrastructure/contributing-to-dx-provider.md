@@ -18,7 +18,7 @@ Registry using GitHub Actions workflows.
 
 ### Subrepository Push Workflow
 
-The `push_provider_to_subrepo.yaml` workflow ensures that changes to the
+The `_release-bash-provider-to-subrepo.yaml` workflow ensures that changes to the
 provider in the `infra/provider` directory of the main repository (`dx`) are
 pushed to its dedicated subrepository (e.g.,
 [terraform-provider-azure](https://github.com/pagopa-dx/terraform-provider-azure)).
