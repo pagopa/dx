@@ -31,7 +31,7 @@ Making these decisions can be complex and time-consuming. The
 [Developer Experience Initiative](https://github.com/pagopa/dx) (DX) is here to
 help you with _golden paths_ and best practices.
 
-### How this differs from Technology Standards iniative?
+### How this differs from Technology Standards initiative?
 
 While Technology Standards aim is to define best practices and guidelines for
 well architected solutions, leaving every choice to the teams, the DX initiative
@@ -85,12 +85,13 @@ We're working on the following:
 - [ ] Documentation for all the above items
 
 If you wonder why we're working with these specific technologies, check out our
-[Achitecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
+[Architecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
 
 We're going to update this list as we progress and - eventually - consider other
 languages (e.g., JAVA), and platforms (e.g., AWS).
 
-Aside, we experiment with *new* technologies and tools to improve our daily work.
+Aside, we experiment with _new_ technologies and tools to improve our daily
+work.
 
 ## How to stay updated
 

@@ -1,6 +1,6 @@
 ---
 sidebar_label: Contributing to DX Terraform Modules
-sidebar_position: 2
+sidebar_position: 4
 ---
 
 # Contributing to DX Terraform Modules

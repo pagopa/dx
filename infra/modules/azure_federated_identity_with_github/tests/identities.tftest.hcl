@@ -123,6 +123,26 @@ run "ids_default" {
     condition     = azurerm_role_assignment.cd_rg[0].role_definition_name == "Storage Blob Data Contributor"
     error_message = "CD identity must have Storage Blob Data Contributor role at terraform-state-rg resource group scope"
   }
+
+  assert {
+    condition     = azurerm_user_assigned_identity.ci[0].name == "dx-d-itn-modules-infra-github-ci-id-01"
+    error_message = "CI identity name must be dx-d-itn-modules-infra-github-ci-id-01"
+  }
+
+  assert {
+    condition     = azurerm_user_assigned_identity.cd[0].name == "dx-d-itn-modules-infra-github-cd-id-01"
+    error_message = "CD identity name must be dx-d-itn-modules-infra-github-cd-id-01"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.ci_github[0].name == "dx-environment-infra-dev-ci"
+    error_message = "CI identity credential name must be dx-environment-infra-dev-ci"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.cd_github[0].name == "dx-environment-infra-dev-cd"
+    error_message = "CD identity credential name must be dx-environment-infra-dev-cd"
+  }
 }
 
 run "ids_custom_roles" {

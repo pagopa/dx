@@ -70,8 +70,8 @@ the Azure Portal), end-to-end correlation does not function as expected.
 
 [Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental)
 and may not be as seamless as transpiling TypeScript to CommonJS modules.  
-[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217),
-there is an alternative method to instrument the `@azure/monitor-opentelemetry`
+[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217), there
+is an alternative method to instrument the `@azure/monitor-opentelemetry`
 package.
 
 ### Steps to Instrument an ESM Application
@@ -204,7 +204,7 @@ logs.getLogger("ApplicationInsightsLogger").emit({
 });
 ```
 
-When evalutating to chose between the AI SDK and the Azure Monitor package,
+When evaluating to choose between the AI SDK and the Azure Monitor package,
 consider that the AI SDK may fall behind new versions of
 `@azure/monitor-opentelemetry`, so going with the latter may be more
 future-proof. The AI SDK is still advantageous if you need to use legacy AI
@@ -355,6 +355,33 @@ before anything else:
 
 https://nextjs.org/docs/app/building-your-application/optimizing/open-telemetry#manual-opentelemetry-configuration
 
+It is possible to use the `@azure/monitor-opentelemetry` package to instrument a
+Next.js application. However, in order to track the HTTP calls made by the
+application, you need to use the `undici` instrumentation. This instrumentation
+is not included in the `@azure/monitor-opentelemetry` package, so you need to
+add it manually.  
+Here is a snippet to enable tracing in a Next.js application that uses the App
+router:
+
+```javascript
+// apps/instrumentation.ts
+
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import { metrics, trace } from "@opentelemetry/api";
+import { registerInstrumentations } from "@opentelemetry/instrumentation";
+import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
+
+export async function register() {
+  useAzureMonitor();
+
+  registerInstrumentations({
+    instrumentations: [new UndiciInstrumentation()],
+    meterProvider: metrics.getMeterProvider(),
+    tracerProvider: trace.getTracerProvider(),
+  });
+}
+```
+
 ## Integration with Azure Functions
 
 **Azure Functions** are a bit more complex to integrate with **OpenTelemetry**
@@ -500,7 +527,7 @@ This setup will ensure that only critical logs are recorded in Application
 Insights, while the AI SDK can be used for _custom events_ and to trace
 _exceptions_ and _warnings_.
 
-Moreover we keep the `Host.Results` and `Host.Aggregator` categories at
+Moreover, we keep the `Host.Results` and `Host.Aggregator` categories at
 `Information` to capture HTTP requests, function execution results and counters,
 useful for monitoring and alerting.
 

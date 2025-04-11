@@ -1,5 +1,7 @@
 # DX Typescript - GitHub SelfHosted Runner on Azure Container App Job
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fgithub-selfhosted-runner-on-container-app-jobs%2Fazurerm%2Flatest)
+
 This module creates a Container App Job to be used as a GitHub self-hosted runner. Using a self-hosted runner is essential when you need to reach private resources in terms of networking from a GitHub workflow.
 
 ## Features

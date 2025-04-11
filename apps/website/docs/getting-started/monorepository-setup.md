@@ -1,5 +1,6 @@
 ---
 sidebar_label: Creating a Brand-New Mono-Repository on GitHub Using DX Tools
+sidebar_position: 1
 ---
 
 # Creating a Brand-New Mono-Repository on GitHub Using DX Tools
@@ -31,33 +32,21 @@ Then, follow these steps to complete the configuration.
 
 ### Ensure an Appropriate Repository Access Control
 
-To manage the access control for your repository, follow:
+To ensure proper access control, follow these steps:
 
 - [Grant access](https://pagopa.atlassian.net/wiki/search?text=github%20gestione%20utenze)
   to your peers who need it.
-- Always provide `Admin` access to:
-  - Cloud engineers (`engineering-team-cloud-eng`) to ensure future support for
-    DX tooling.
-  - The
-    [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
+- Provide `Admin` access to the
+  [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
+- Optionally: provide `Admin` access to `@engineering-team-devex` to ensure
+  future support for DX tooling.
 
 ### Define CODEOWNERS
 
-Define a `CODEOWNERS` file to manage repository ownership. A common setup is:
+Define a `CODEOWNERS` file to manage repository ownership.
 
-- Your team has control over the entire repository (`*`).
-- Both your team and cloud engineers have control over the `infra` and `.github`
-  paths.
-
-Example `CODEOWNERS` file:
-
-```md
-# See https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
-
-- <your-team>
-  /infra/ <your-team> @engineering-team-devex 
-  .github/ <your-team> @engineering-team-devex
-```
+See
+https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
 
 ### Create Dot Files
 
@@ -73,11 +62,18 @@ Create the following dotfiles at the root of your repository:
 
 ### Authenticating with GitHub for Terraform Operations
 
-To apply changes to your repository via Terraform, you need to have the
-[right permissions](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
-as well as your local CLI authenticate within GitHub. The latter is achievable
-by using either [gh cli](https://cli.github.com/) or a PAT token. Using the GH
-CLI is recommended over a PAT token.
+Changes to your repository via Terraform are applied from your local machine
+using the `terraform apply` command. This requires authentication with GitHub to
+ensure that the changes are applied correctly.
+
+Before proceeding, ensure that you and your team have the
+[required permissions](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+to make changes to the repository.
+
+Then, use one of the following methods to authenticate with GitHub:
+
+1. Using the [GitHub CLI](https://cli.github.com/) (recommended)
+2. Using a Personal Access Token (PAT)
 
 #### Authenticate with GH CLI (recommended)
 
@@ -93,8 +89,8 @@ Follow the instructions on screen and you are ready to go.
 
 #### Authenticate with PAT token
 
-To apply changes to your repository via Terraform, you need a Personal Access
-Token (PAT) for authentication. A single PAT with the following permissions is
+To apply changes to your repository via Terraform, you can authenticate using a
+Personal Access Token (PAT). A single PAT with the following permissions is
 required for all repositories managed through Terraform:
 
 - `read`: `metadata`
@@ -115,10 +111,10 @@ If you do not already have a Personal Access Token (PAT), follow these steps:
    - Select `Only select repositories` and add the new repository.
    - Add a meaningful description like "PAT to manage GitHub locally via
      Terraform."
-2. Set in your local environment the variable `GITHUB_TOKEN` with the generated
-   PAT value in your CLI profile.
+2. In your local environment, set the `GITHUB_TOKEN` variable to the value of
+   the generated PAT.
 
-##### Update the GitHub PAT
+##### Add a new repository to the GitHub PAT
 
 If you already have the PAT in both your GitHub account and your CLI profile,
 ensure that the new repository is accessible from that PAT.
@@ -146,5 +142,5 @@ Terraform module.
    for detailed instructions.
 
 For more information, see the
-[availability blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
-and the [IAM Framework documentation](./azure/azure-iam.md).
+[related blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
+and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).

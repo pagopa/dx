@@ -1,5 +1,7 @@
 # DX - Azure API Management
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-api-management/azurerm?label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-api-management%2Fazurerm%2Flatest&logo=terraform)
+
 This module deploys an Azure API Management instance with optional configurations for networking, monitoring, autoscaling, and custom domains.
 
 ## Features

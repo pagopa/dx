@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.9
+
+### Patch Changes
+
+- 49f2b9b: fixed consumers name generation
+
 ## 0.0.8
 
 ### Patch Changes

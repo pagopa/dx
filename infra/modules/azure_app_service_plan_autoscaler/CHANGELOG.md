@@ -1,5 +1,11 @@
 # azure_app_service_plan_autoscaler
 
+## 1.1.1
+
+### Patch Changes
+
+- b1ef565: Update README with documentation and some variables description
+
 ## 1.1.0
 
 ### Minor Changes

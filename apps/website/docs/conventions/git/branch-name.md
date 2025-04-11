@@ -51,4 +51,4 @@ integrated into the development process.
 - `update` _(lacks scope)_
 - `v1.2.0-release` _(versioning should be handled via tags)_
 - `ui-redesign` _(should be `refactors/ui-design`)_
-- `feats/authentication_page` _(should use use hyphens instead of underscores)_
+- `feats/authentication_page` _(should use hyphens instead of underscores)_

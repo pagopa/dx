@@ -1,6 +1,6 @@
 ---
 sidebar_label: Using DX Terraform Modules
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 # Using DX Terraform Modules
