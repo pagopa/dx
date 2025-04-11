@@ -214,6 +214,7 @@ jobs:
               fi
 
               # Combine into a single summary line with small text
+              echo "<div style="border: 2px solid orange; border-radius: 6px; padding: 16px; background-color: #fff8e1;">" >> "$GITHUB_STEP_SUMMARY"
               echo "## ⚠️ Terraform modules hashes do not match the lockfile - Action Required" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo "<sub>Run $CHECK_INFO on $EXECUTION_SCOPE</sub>" >> "$GITHUB_STEP_SUMMARY"
@@ -224,7 +225,9 @@ jobs:
               echo '```bash' >> "$GITHUB_STEP_SUMMARY"
               echo 'pre-commit run -a lock_modules' >> "$GITHUB_STEP_SUMMARY"
               echo '```' >> "$GITHUB_STEP_SUMMARY"
+              echo "<div style=\"border: 2px solid orange; border-radius: 6px; padding: 16px; background-color: #fff8e1;\">" >> "$GITHUB_STEP_SUMMARY"
               echo "Then open a dedicated Pull Request with updated module locks." >> "$GITHUB_STEP_SUMMARY"
+              echo "</div>" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
 
               echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
