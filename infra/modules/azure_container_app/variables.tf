@@ -93,6 +93,7 @@ variable "container_app_templates" {
         value = string
       }))
       interval_seconds        = optional(number, 10)
+      initial_delay           = optional(number, 30)
       path                    = string
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
@@ -136,4 +137,15 @@ variable "container_app_templates" {
     ])
     error_message = "Valid values for startup_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
+}
+
+variable "user_assigned_identity_id" {
+  type        = string
+  description = "Id of the user-assigned managed identity created along with the Container App Environment. This is necessary to give identity roles (e.g. KeyVault access) to the Container App."
+}
+
+variable "acr_registry" {
+  type        = string
+  default     = null
+  description = "(Optional) Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
 }

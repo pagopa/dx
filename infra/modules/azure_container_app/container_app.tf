@@ -6,7 +6,10 @@ resource "azurerm_container_app" "this" {
   workload_profile_name        = "Consumption"
 
   identity {
-    type = "SystemAssigned"
+    type = "SystemAssigned, UserAssigned"
+    identity_ids = [
+      var.user_assigned_identity_id
+    ]
   }
 
   ingress {
@@ -19,12 +22,20 @@ resource "azurerm_container_app" "this" {
     }
   }
 
+  dynamic "registry" {
+    for_each = var.acr_registry == null ? [] : [var.acr_registry]
+    content {
+      server   = registry.value
+      identity = var.user_assigned_identity_id
+    }
+  }
+
   dynamic "secret" {
     for_each = var.secrets
     content {
       name                = replace(lower(secret.value.name), "_", "-")
       key_vault_secret_id = secret.value.key_vault_secret_id
-      identity            = "System"
+      identity            = var.user_assigned_identity_id
     }
   }
 
@@ -90,6 +101,7 @@ resource "azurerm_container_app" "this" {
             transport               = readiness_probe.value.transport
             failure_count_threshold = readiness_probe.value.failure_count_threshold
             interval_seconds        = readiness_probe.value.interval_seconds
+            initial_delay           = readiness_probe.value.initial_delay
             path                    = readiness_probe.value.path
             success_count_threshold = readiness_probe.value.success_count_threshold
             timeout                 = readiness_probe.value.timeout
