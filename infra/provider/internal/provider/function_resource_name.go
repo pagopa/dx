@@ -208,13 +208,13 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	} else {
 		// Create a more dynamic error message listing allowed values
 		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
-		resp.Error = function.NewFuncError(fmt.Sprintf("Location must be one of: %s", strings.Join(allowedLocations, ", ")))
+		resp.Error = function.NewFuncError("InvalidLocation: Location must be one of: " + strings.Join(allowedLocations, ", "))
 		return
 	}
 
 	// Validate instance number
 	if instance < 1 || instance > 99 {
-		resp.Error = function.NewFuncError("Instance must be between 1 and 99")
+		resp.Error = function.NewFuncError("InvalidInstance: Instance must be between 1 and 99")
 		return
 	}
 
@@ -225,13 +225,13 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		for key := range resourceAbbreviations {
 			validKeys = append(validKeys, key)
 		}
-		resp.Error = function.NewFuncError(fmt.Sprintf("resource '%s' not found. Accepted values are: %s", resourceType, strings.Join(validKeys, ", ")))
+		resp.Error = function.NewFuncError("InvalidResourceType: resource '" + resourceType + "' not found")
 		return
 	}
 
 	// Validate resource name
 	if name == "" {
-		resp.Error = function.NewFuncError("Resource name cannot be empty")
+		resp.Error = function.ConcatFuncErrors(function.NewFuncError("Resource name cannot be empty"))
 		return
 	}
 
