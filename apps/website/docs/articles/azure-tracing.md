@@ -145,6 +145,24 @@ data in Azure Monitor with service correlation:
 
 ![AI ESM E2E Tracing](./azure-tracing/ai-e2e-correlation.png)
 
+### Use the `@pagopa/azure-tracing` Package
+
+To simplify the setup and avoid repetitive boilerplate, you can use the
+`@pagopa/azure-tracing` package.  
+It provides a convenient wrapper around the `@azure/monitor-opentelemetry`
+library, making instrumentation easier and more consistent.
+
+For usage details and examples, refer to the
+[official documentation on npm](https://www.npmjs.com/package/@pagopa/azure-tracing).
+
+:::warning
+
+Please note: until the package reaches a stable `1.x` release, it is considered
+in beta.  
+While we aim to keep the API stable, changes may occur as the package evolves.
+
+:::
+
 ## Using the Application Insights SDK
 
 The latest version of the Application Insights SDK (3.x) is essentially a
