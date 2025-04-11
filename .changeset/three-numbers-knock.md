@@ -7,4 +7,4 @@
 
 Add `APPINSIGHTS_CONNECTION_STRING` as an environment variable when application insights is enabled.
 
-The `APPINSIGHTS_CONNECTION_STRING` is used by the `@pagopa/azure-tracing`.
+The `APPINSIGHTS_CONNECTION_STRING` is used by the `@pagopa/azure-tracing` package.
