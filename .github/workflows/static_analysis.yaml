@@ -219,8 +219,8 @@ jobs:
 
               # Use GitHub alert syntax for the "what should be done next" section
               echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
-              echo "## ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "> ## ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
+              echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
               echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> 1. Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
