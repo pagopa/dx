@@ -32,6 +32,6 @@ jobs:
         id: set-terraform-version
         uses: pagopa/dx/.github/actions/terraform-setup@main
 
-      - run: Run Tests
+      - name: Run Tests
         run: make testacc
         working-directory: '${{ env.WORKSPACE }}'
