@@ -4,7 +4,7 @@
 
 <hr>
 
-# terraform-provider-azure
+# DX - Terraform Provider Azure
 
 The **azure** Terraform provider is for Developer Experience, simplifies the creation and management of Azure resources following standardized naming conventions. This provider is maintained by the [PagoPA organization](https://github.com/pagopa) and is available at [terraform-provider-azure](https://github.com/pagopa-dx/terraform-provider-azure).
 
