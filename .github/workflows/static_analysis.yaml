@@ -220,7 +220,7 @@ jobs:
               echo "" >> "$GITHUB_STEP_SUMMARY"
 
               # Use GitHub alert syntax for the "what should be done next" section
-              echo "> [!IMPORTANT]" >> "$GITHUB_STEP_SUMMARY"
+              echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
               echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
               echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> 1. Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
@@ -231,20 +231,19 @@ jobs:
               echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> 2. Then open a dedicated Pull Request with the updated module locks" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
-
-              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
             # Display module details in a collapsible table if any changes
             if [ "$NEW_MODULES" -gt 0 ] || [ "$CHANGED_MODULES" -gt 0 ] || [ "$REMOVED_MODULES" -gt 0 ]; then
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo "<details>" >> "$GITHUB_STEP_SUMMARY"
-              echo "<summary>📊 Module Details Table</summary>" >> "$GITHUB_STEP_SUMMARY"
+              echo "<summary>📊 What has changed</summary>" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
               echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
