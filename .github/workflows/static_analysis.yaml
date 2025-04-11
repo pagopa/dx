@@ -207,15 +207,16 @@ jobs:
               fi
 
               # Add check information
-              CHECK_INFO=""
               if [ "${{ inputs.check_to_run }}" != "" ]; then
-                CHECK_INFO="check: \`${{ inputs.check_to_run }}\`"
+                CHECK_INFO="\`${{ inputs.check_to_run }}\`"
+              else
+                CHECK_INFO="all checks"
               fi
 
               # Combine into a single summary line with small text
               echo "## ⚠️ Terraform modules hashes do not match the lockfile - Action Required" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "<small>Summary of pre-commit run on $EXECUTION_SCOPE. Enabled checks: $CHECK_INFO</small>" >> "$GITHUB_STEP_SUMMARY"
+              echo "<sub>Run $CHECK_INFO on $EXECUTION_SCOPE</sub>" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo "### What should be done next:" >> "$GITHUB_STEP_SUMMARY"
               echo "Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
