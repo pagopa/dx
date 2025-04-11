@@ -30,7 +30,9 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 | <a name="output_log_analytics_id"></a> [log\_analytics\_id](#output\_log\_analytics\_id) | n/a |
 | <a name="output_pep_snet_id"></a> [pep\_snet\_id](#output\_pep\_snet\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 <!-- END_TF_DOCS -->
