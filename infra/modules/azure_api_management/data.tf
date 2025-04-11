@@ -20,10 +20,3 @@ data "azurerm_private_dns_zone" "scm_azure_api_net" {
   name                = "scm.azure-api.net"
   resource_group_name = local.private_dns_zone_resource_group_name
 }
-
-#-------------------#
-#   API Management  #
-#-------------------#
-data "azurerm_monitor_diagnostic_categories" "apim" {
-  resource_id = azurerm_api_management.this.id
-}
