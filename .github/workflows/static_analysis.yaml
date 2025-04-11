@@ -199,36 +199,39 @@ jobs:
               CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
               REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
 
-              # Always show the warning when any modules are detected (total_modules > 0)
-              echo "## ⚠️ Terraform modules locks changed - Action Required ⚠️" >> "$GITHUB_STEP_SUMMARY"
+              # Start with status at the very top
+              if [ "$CHANGED_MODULES" -gt 0 ]; then
+                echo "## 🔴 Terraform modules changed - Action Required" >> "$GITHUB_STEP_SUMMARY"
+              elif [ "$NEW_MODULES" -gt 0 ]; then
+                echo "## 🟡 Terraform modules added - Action Required" >> "$GITHUB_STEP_SUMMARY"
+              elif [ "$REMOVED_MODULES" -gt 0 ]; then
+                echo "## 🟢 Terraform modules removed - Action Required" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "## ⚠️ Terraform modules locks changed - Action Required" >> "$GITHUB_STEP_SUMMARY"
+              fi
               echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "### What should be done next" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "#### Please open a dedicated Pull Request with updated module locks:" >> "$GITHUB_STEP_SUMMARY"
-              echo "Run \`pre-commit run -a lock_modules\` locally and commit the resulting changes to the lock files." >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
-            fi
 
-            # Changes summary with status in the title
-            if [ "$TOTAL_MODULES" -gt 0 ]; then
-              echo "### 🔴 Terraform modules changes detected (${TOTAL_MODULES} modules)" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "### ✅ No Terraform module changes detected" >> "$GITHUB_STEP_SUMMARY"
-            fi
-
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "#### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-            echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
-
-            # Add copyable command for running pre-commit
-            if [ "$TOTAL_MODULES" -gt 0 ]; then
+              # What should be done section with integrated copyable command
+              echo "### What should be done next:" >> "$GITHUB_STEP_SUMMARY"
+              echo "Please open a dedicated Pull Request with updated module locks." >> "$GITHUB_STEP_SUMMARY"
+              echo "Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "#### Run this command locally to update locks:" >> "$GITHUB_STEP_SUMMARY"
               echo '```bash' >> "$GITHUB_STEP_SUMMARY"
               echo 'pre-commit run -a lock_modules' >> "$GITHUB_STEP_SUMMARY"
               echo '```' >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+
+              # Module stats section
+              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+            else
+              # No modules detected
+              echo "## ✅ No Terraform module changes detected" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
             fi
 
             # Display module details in a collapsible table if any changes
