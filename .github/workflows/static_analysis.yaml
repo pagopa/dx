@@ -202,7 +202,7 @@ jobs:
               # Always show the warning when any modules are detected (total_modules > 0)
               echo "## ⚠️ Terraform modules locks changed - Action Required ⚠️" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
-              echo "### 🛑 Module changes detected!" >> "$GITHUB_STEP_SUMMARY"
+              echo "### What should be done next" >> "$GITHUB_STEP_SUMMARY"
               echo "" >> "$GITHUB_STEP_SUMMARY"
               echo "#### Please open a dedicated Pull Request with updated module locks:" >> "$GITHUB_STEP_SUMMARY"
               echo "Run \`pre-commit run -a lock_modules\` locally and commit the resulting changes to the lock files." >> "$GITHUB_STEP_SUMMARY"
