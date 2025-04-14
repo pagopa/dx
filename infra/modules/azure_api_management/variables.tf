@@ -189,17 +189,15 @@ variable "certificate_names" {
   description = "List of key vault certificate name"
 }
 
-
 variable "lock_enable" {
   type        = bool
   default     = false
   description = "Apply lock to block accidental deletions."
 }
 
-
-#------------#
-# Monitoring #
-#------------#
+#------------------------#
+# Tracing and Monitoring #
+#------------------------#
 
 variable "application_insights" {
   type = object({
@@ -225,16 +223,75 @@ variable "application_insights" {
 
   validation {
     condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
-    error_message = "Invalid `sampling_percentage` value provided. Valid values are between 0 and 100"
+    error_message = "Invalid \"sampling_percentage\" value provided. Valid values are between 0 and 100"
   }
 
   validation {
     condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
-    error_message = "Invalid `verbosity` value provided. Valid values are 'verbose', 'information', 'error'"
+    error_message = "Invalid \"verbosity\" value provided. Valid values are \"verbose\", \"information\", \"error\""
   }
 }
 
+variable "monitoring" {
+  type = object({
+    enabled                    = bool
+    log_analytics_workspace_id = string
 
+    logs = optional(object({
+      enabled    = bool
+      groups     = optional(list(string), [])
+      categories = optional(list(string), [])
+    }), { enabled = false, groups = [], categories = [] })
+
+    metrics = optional(object({
+      enabled = bool
+    }), { enabled = false })
+
+  })
+  default = {
+    enabled                    = false
+    log_analytics_workspace_id = null
+  }
+  description = "Enable collecting resources to send to Azure Monitor into AzureDiagnostics table"
+
+  # At least one between logs and metrics must be enabled
+  validation {
+    condition = (
+      # If monitoring is not enabled, no validation needed
+      !var.monitoring.enabled ||
+      # At least one of logs or metrics must be enabled
+      var.monitoring.logs.enabled ||
+      var.monitoring.metrics.enabled
+    )
+    error_message = "At least one between \"logs\" and \"metrics\" must be enabled when monitoring is enabled."
+  }
+
+  # Exactly one of logs.groups or logs.categories must be provided, but not both
+  validation {
+    condition = (
+      !var.monitoring.logs.enabled ||
+      (length(var.monitoring.logs.groups) == 0) != (length(var.monitoring.logs.categories) == 0)
+    )
+    error_message = "If logs are enabled, exactly one of \"logs.groups\" or \"logs.categories\" must be provided, but not both."
+  }
+
+  # Validate logs.groups values
+  validation {
+    condition = var.monitoring.logs.enabled == false || alltrue([
+      for group in var.monitoring.logs.groups : contains(local.apim.log_category_groups, group)
+    ])
+    error_message = format("Invalid value in \"logs.groups\". Allowed values are: %#v", join(", ", local.apim.log_category_groups))
+  }
+
+  # Validate logs.categories values
+  validation {
+    condition = var.monitoring.enabled == false || alltrue([
+      for category in var.monitoring.logs.categories : contains(local.apim.log_category_types, category)
+    ])
+    error_message = format("Invalid value in \"logs.categories\". Allowed values are: %#v", join(", ", local.apim.log_category_types))
+  }
+
+}
 
 variable "metric_alerts" {
   default = {}
@@ -303,8 +360,6 @@ variable "action_group_id" {
   type        = string
   default     = null
 }
-
-
 
 variable "management_logger_application_insight_enabled" {
   type        = bool
