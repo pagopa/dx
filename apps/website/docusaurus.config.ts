@@ -69,12 +69,12 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     // Replace with your project's social card
-    image: "img/pagopa-logo.jpg",
+    image: "img/pagopa-logo.png",
     navbar: {
       title: "DX",
       logo: {
         alt: "DX Logo",
-        src: "img/pagopa-logo.jpg",
+        src: "img/pagopa-logo.png",
       },
       items: [
         // {
