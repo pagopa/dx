@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.1.2
+
+### Patch Changes
+
+- 4efcf04: Create APIM diagnostic setting resource, to forward logs to Log Analytics workspace
+
 ## 1.1.1
 
 ### Patch Changes
