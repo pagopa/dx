@@ -26,3 +26,14 @@ resource "azurerm_resource_group" "plan_test" {
 
   tags = local.tags
 }
+
+output "environment" {
+  value = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = azurerm_resource_group.plan_test.location
+    domain          = "test"
+    app_name        = "aasp"
+    instance_number = "01"
+  }
+}

@@ -25,6 +25,7 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 | <a name="output_rg_location"></a> [rg\_location](#output\_rg\_location) | n/a |
 | <a name="output_rg_name"></a> [rg\_name](#output\_rg\_name) | n/a |
 | <a name="output_tags"></a> [tags](#output\_tags) | n/a |
