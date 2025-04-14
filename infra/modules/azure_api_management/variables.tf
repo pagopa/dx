@@ -236,8 +236,6 @@ variable "monitoring" {
   type = object({
     enabled                    = bool
     log_analytics_workspace_id = string
-    sampling_percentage        = number
-    verbosity                  = string
 
     logs = optional(object({
       enabled    = bool
@@ -253,20 +251,8 @@ variable "monitoring" {
   default = {
     enabled                    = false
     log_analytics_workspace_id = null
-    sampling_percentage        = 0
-    verbosity                  = "error"
   }
   description = "Enable collecting resources to send to Azure Monitor into AzureDiagnostics table"
-
-  validation {
-    condition     = var.monitoring.sampling_percentage >= 0 && var.monitoring.sampling_percentage <= 100
-    error_message = "Invalid 'sampling_percentage' value provided. Valid values are between 0 and 100"
-  }
-
-  validation {
-    condition     = contains(["verbose", "information", "error"], var.monitoring.verbosity)
-    error_message = "Invalid 'verbosity' value provided. Valid values are 'verbose', 'information', 'error'"
-  }
 
   # At least one between logs and metrics must be enabled
   validation {
