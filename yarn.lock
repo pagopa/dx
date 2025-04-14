@@ -216,7 +216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-auth@npm:^1.3.0, @azure/core-auth@npm:^1.4.0, @azure/core-auth@npm:^1.8.0, @azure/core-auth@npm:^1.9.0":
+"@azure/core-auth@npm:^1.4.0, @azure/core-auth@npm:^1.8.0, @azure/core-auth@npm:^1.9.0":
   version: 1.9.0
   resolution: "@azure/core-auth@npm:1.9.0"
   dependencies:
@@ -227,7 +227,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-client@npm:^1.0.0, @azure/core-client@npm:^1.9.2":
+"@azure/core-client@npm:^1.9.2":
   version: 1.9.3
   resolution: "@azure/core-client@npm:1.9.3"
   dependencies:
@@ -242,7 +242,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-rest-pipeline@npm:^1.1.0, @azure/core-rest-pipeline@npm:^1.19.0, @azure/core-rest-pipeline@npm:^1.9.1":
+"@azure/core-rest-pipeline@npm:^1.18.2, @azure/core-rest-pipeline@npm:^1.19.0, @azure/core-rest-pipeline@npm:^1.9.1":
   version: 1.19.1
   resolution: "@azure/core-rest-pipeline@npm:1.19.1"
   dependencies:
@@ -288,7 +288,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/logger@npm:^1.0.0":
+"@azure/logger@npm:^1.0.0, @azure/logger@npm:^1.1.4":
   version: 1.1.4
   resolution: "@azure/logger@npm:1.1.4"
   dependencies:
@@ -297,9 +297,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.29, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.29":
-  version: 1.0.0-beta.29
-  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.29"
+"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.30, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.30":
+  version: 1.0.0-beta.30
+  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.30"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
     "@azure/core-client": "npm:^1.9.2"
@@ -313,19 +313,19 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^1.30.1"
     "@opentelemetry/semantic-conventions": "npm:^1.30.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/082521a996d207247b2503466c6e918b1851f2b37f461131a7c4719f905d19873c9640a4ea1f707bcc9ecfdd32c8e46f1b234bb5cd790d8a94840bcae95083be
+  checksum: 10c0/dc4d037daadfec7b84438e1670b4e4a3288656d946b8e3c7da2a7f6038ea9144f0e814062d0893b0247409e773b31e2167980d56d8fae04a8c77253da30ee0d7
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry@npm:^1.9.0":
-  version: 1.9.0
-  resolution: "@azure/monitor-opentelemetry@npm:1.9.0"
+"@azure/monitor-opentelemetry@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "@azure/monitor-opentelemetry@npm:1.10.0"
   dependencies:
-    "@azure/core-auth": "npm:^1.3.0"
-    "@azure/core-client": "npm:^1.0.0"
-    "@azure/core-rest-pipeline": "npm:^1.1.0"
-    "@azure/logger": "npm:^1.0.0"
-    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.29"
+    "@azure/core-auth": "npm:^1.9.0"
+    "@azure/core-client": "npm:^1.9.2"
+    "@azure/core-rest-pipeline": "npm:^1.18.2"
+    "@azure/logger": "npm:^1.1.4"
+    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.30"
     "@azure/opentelemetry-instrumentation-azure-sdk": "npm:^1.0.0-beta.7"
     "@microsoft/applicationinsights-web-snippet": "npm:^1.2.1"
     "@opentelemetry/api": "npm:^1.9.0"
@@ -350,7 +350,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": "npm:^1.30.0"
     "@opentelemetry/winston-transport": "npm:^0.10.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/e579a0fbd084e04c9953cabea69ac2a7cc5b801e99281a2765018c48920d079b8ec12b6fb6728e28f751827c02fd23d4e35c3c38b78e2e006a5a1c24b4a52a50
+  checksum: 10c0/125f051b27e891f233fcecc6afc4f25d251652fb9d51a8878cc7c8cf2b2c1330f1e4d3e64115a4f0e63d01c88c75ea2deaa3e0c9dca1fd4d2d048c0a26ec8a86
   languageName: node
   linkType: hard
 
@@ -4132,8 +4132,8 @@ __metadata:
   resolution: "@pagopa/azure-tracing@workspace:packages/azure-tracing"
   dependencies:
     "@azure/functions": "npm:^4.7.0"
-    "@azure/monitor-opentelemetry": "npm:^1.9.0"
-    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.29"
+    "@azure/monitor-opentelemetry": "npm:^1.10.0"
+    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.30"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/api-logs": "npm:^0.200.0"
     "@opentelemetry/instrumentation": "npm:^0.200.0"
