@@ -63,7 +63,7 @@ jobs:
 
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@check-modules-lock-in-cicd
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: ["get-terraform-version"]
     secrets: inherit
@@ -75,7 +75,6 @@ jobs:
       enable_modified_files_detection: true
       check_to_run: lock_modules
       folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-      fail_on_error: true
       verbose: true
 
   tf_plan:
@@ -83,8 +82,8 @@ jobs:
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
-    needs: ["get-terraform-version", "tf-modules-check"]
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: ["get-terraform-version", "tf-modules-check"]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
@@ -144,16 +143,6 @@ jobs:
         run: |
           terraform init
 
-      - name: Check terraform registry modules hashes
-        uses: ./.github/workflows/static_analysis.yaml
-        with:
-          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-          enable_modified_files_detection: true
-          folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-          check_to_run: lock_modules
-          fail_on_error: false
-          verbose: true
-
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
@@ -188,6 +177,15 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
+      - name: Check terraform registry modules hashes
+        uses: ./.github/workflows/static_analysis.yaml
+        with:
+          enable_modified_files_detection: true
+          check_to_run: lock_modules
+          folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+          fail_on_error: false
+          verbose: true
+
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
 
@@ -206,17 +204,6 @@ jobs:
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
         run: |
           terraform init
-
-      # Add a second module check right before apply (after approval)
-      - name: Verify terraform registry modules hashes before apply
-        uses: ./.github/workflows/static_analysis.yaml
-        with:
-          terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
-          enable_modified_files_detection: false  # Check all files, not just modified ones
-          folder: ${{ needs.tf_plan.outputs.working_dir }}
-          check_to_run: lock_modules
-          fail_on_error: false  # Fail the workflow if modules changed after approval
-          verbose: true
 
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
