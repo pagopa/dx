@@ -208,7 +208,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	} else {
 		// Create a more dynamic error message listing allowed values
 		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
-		resp.Error = function.NewFuncError("InvalidLocation: Location must be one of: " + strings.Join(allowedLocations, ", "))
+		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidLocation: Location must be one of: %s", strings.Join(allowedLocations, ", ")))
 		return
 	}
 
@@ -225,7 +225,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		for key := range resourceAbbreviations {
 			validKeys = append(validKeys, key)
 		}
-		resp.Error = function.NewFuncError("InvalidResourceType: resource '" + resourceType + "' not found")
+		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidResourceType: resource '%s' not found", resourceType))
 		return
 	}
 
