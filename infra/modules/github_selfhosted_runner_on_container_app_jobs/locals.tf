@@ -3,7 +3,7 @@ locals {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
     location        = var.environment.location
-    name            = length(var.repository.name) > 16 ? substr(var.repository.name, 0, 16) : var.repository.name,
+    name            = length(var.repository.name) > 16 ? substr(var.repository.name, 15, 1) == "-" ? substr(var.repository.name, 0, 15) : substr(var.repository.name, 0, 16) : var.repository.name,
     instance_number = tonumber(var.environment.instance_number),
   }
   env = {
