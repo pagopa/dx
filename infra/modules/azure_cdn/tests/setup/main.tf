@@ -32,15 +32,13 @@ locals {
   }
 }
 
-resource "azurerm_subnet" "snet" {
+data "azurerm_subnet" "snet" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = var.environment.domain,
-    name          = "sa",
+    name          = "test",
     resource_type = "subnet"
   }))
   virtual_network_name = local.virtual_network.name
   resource_group_name  = local.virtual_network.resource_group_name
-  address_prefixes     = ["10.50.200.0/24"]
 }
 
 data "azurerm_subnet" "pep" {
@@ -99,7 +97,7 @@ output "pep_id" {
 }
 
 output "subnet_id" {
-  value = azurerm_subnet.snet.id
+  value = data.azurerm_subnet.snet.id
 }
 
 output "resource_group_name" {
