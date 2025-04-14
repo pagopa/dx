@@ -144,7 +144,7 @@ jobs:
           terraform init
 
       - name: Check terraform registry modules hashes
-        uses: pagopa/dx/.github/workflows/static_analysis.yaml@check-modules-lock-in-cicd
+        uses: ./.github/workflows/static_analysis.yaml
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
           enable_modified_files_detection: true
