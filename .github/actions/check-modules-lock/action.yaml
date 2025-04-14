@@ -43,13 +43,35 @@ runs:
       with:
         terraform_version: ${{ inputs.terraform_version || steps.get-terraform-version.outputs.terraform_version }}
 
+    - name: Setup Python
+      uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
     - name: Setup Pre-commit environment
       shell: bash
       run: |
-        pip install pre-commit
+        # Ensure pip is available and up to date
+        python -m ensurepip --upgrade || true
+        python -m pip install --upgrade pip
 
-        # Install dependencies required for lock_modules hook
-        pip install jq
+        # Install pre-commit
+        python -m pip install pre-commit
+
+        # Install jq via the system package manager if needed
+        if ! command -v jq &> /dev/null; then
+          if command -v apt-get &> /dev/null; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+          elif command -v apk &> /dev/null; then
+            apk add --no-cache jq
+          elif command -v yum &> /dev/null; then
+            yum install -y jq
+          else
+            echo "::warning::Could not install jq automatically. Please make sure it's available in the PATH."
+          fi
+        fi
 
     - name: Run lock_modules check
       id: lock-check
