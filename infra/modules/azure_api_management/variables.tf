@@ -223,12 +223,12 @@ variable "application_insights" {
 
   validation {
     condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
-    error_message = "Invalid 'sampling_percentage' value provided. Valid values are between 0 and 100"
+    error_message = "Invalid \"sampling_percentage\" value provided. Valid values are between 0 and 100"
   }
 
   validation {
     condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
-    error_message = "Invalid 'verbosity' value provided. Valid values are 'verbose', 'information', 'error'"
+    error_message = "Invalid \"verbosity\" value provided. Valid values are \"verbose\", \"information\", \"error\""
   }
 }
 
@@ -263,7 +263,7 @@ variable "monitoring" {
       var.monitoring.logs.enabled ||
       var.monitoring.metrics.enabled
     )
-    error_message = "At least one between 'logs' and 'metrics' must be enabled when monitoring is enabled."
+    error_message = "At least one between \"logs\" and \"metrics\" must be enabled when monitoring is enabled."
   }
 
   # Exactly one of logs.groups or logs.categories must be provided, but not both
@@ -272,7 +272,7 @@ variable "monitoring" {
       !var.monitoring.logs.enabled ||
       (length(var.monitoring.logs.groups) == 0) != (length(var.monitoring.logs.categories) == 0)
     )
-    error_message = "If logs are enabled, exactly one of 'logs.groups' or 'logs.categories' must be provided, but not both."
+    error_message = "If logs are enabled, exactly one of \"logs.groups\" or \"logs.categories\" must be provided, but not both."
   }
 
   # Validate logs.groups values
@@ -280,7 +280,7 @@ variable "monitoring" {
     condition = var.monitoring.logs.enabled == false || alltrue([
       for group in var.monitoring.logs.groups : contains(local.apim.log_category_groups, group)
     ])
-    error_message = format("Invalid value in 'logs.groups'. Allowed values are: %#v", join(", ", local.apim.log_category_groups))
+    error_message = format("Invalid value in \"logs.groups\". Allowed values are: %#v", join(", ", local.apim.log_category_groups))
   }
 
   # Validate logs.categories values
@@ -288,7 +288,7 @@ variable "monitoring" {
     condition = var.monitoring.enabled == false || alltrue([
       for category in var.monitoring.logs.categories : contains(local.apim.log_category_types, category)
     ])
-    error_message = format("Invalid value in 'logs.categories'. Allowed values are: %#v", join(", ", local.apim.log_category_types))
+    error_message = format("Invalid value in \"logs.categories\". Allowed values are: %#v", join(", ", local.apim.log_category_types))
   }
 
 }
