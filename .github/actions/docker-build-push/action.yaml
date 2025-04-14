@@ -84,13 +84,18 @@ runs:
     - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
       if: ${{ inputs.push_to_registry }}
+      env:
+        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
+        BUILD_ARGS: ${{ inputs.build_args }}
+        BUILD_PLATFORMS: ${{ inputs.build_platforms }}
       with:
-        context: ${{ inputs.dockerfile_context }}
-        file: ${{ inputs.dockerfile_path }}
+        context: ${{ env.DOCKERFILE_CONTEXT }}
+        file: ${{ env.DOCKERFILE_PATH }}
         push: ${{ inputs.push_to_registry }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=min
-        build-args: ${{ inputs.build_args }}
-        platforms: ${{ inputs.build_platforms }}
+        build-args: ${{ env.BUILD_ARGS }}
+        platforms: ${{ env.BUILD_PLATFORMS }}
