@@ -1,5 +1,12 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.7
+
+### Patch Changes
+
+- f37f3f0: Improved code syntax
+- 350d4f6: This patch ensures that repository names longer than 16 characters have trailing hyphens (`-`) removed as considered invalid by the CSP.
+
 ## 1.0.6
 
 ### Patch Changes

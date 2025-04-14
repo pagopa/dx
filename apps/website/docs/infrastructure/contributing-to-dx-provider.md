@@ -18,7 +18,7 @@ Registry using GitHub Actions workflows.
 
 ### Subrepository Push Workflow
 
-The `push_provider_to_subrepo.yaml` workflow ensures that changes to the
+The `_release-bash-provider-to-subrepo.yaml` workflow ensures that changes to the
 provider in the `infra/provider` directory of the main repository (`dx`) are
 pushed to its dedicated subrepository (e.g.,
 [terraform-provider-azure](https://github.com/pagopa-dx/terraform-provider-azure)).
@@ -141,6 +141,19 @@ terraform plan
 You can now test your changes locally. Once you are satisfied with the results,
 push your changes to the subrepository and follow the release process described
 above.
+
+### Step 6: Run Acceptance Tests
+
+To verify that your changes work correctly with the provider's acceptance tests,
+run the following command from the main directory of the provider:
+
+```bash
+make testacc
+```
+
+This will execute all the Go acceptance tests, validating that your changes
+function properly in various scenarios. It's important to run these tests before
+submitting any changes to ensure compatibility and functionality.
 
 :::note
 

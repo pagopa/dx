@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/devcontainer_publish_templates.yaml"
+      - ".github/workflows/_release-docker-devcontainer-templates.yaml"
       - ".devcontainer/templates/**"
 
 jobs:
