@@ -83,6 +83,7 @@ jobs:
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
+    needs: ["get-terraform-version", "tf-modules-check"]
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
@@ -208,7 +209,7 @@ jobs:
 
       # Add a second module check right before apply (after approval)
       - name: Verify terraform registry modules hashes before apply
-        uses: pagopa/dx/.github/workflows/static_analysis.yaml@check-modules-lock-in-cicd
+        uses: ./.github/workflows/static_analysis.yaml
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
           enable_modified_files_detection: false  # Check all files, not just modified ones
