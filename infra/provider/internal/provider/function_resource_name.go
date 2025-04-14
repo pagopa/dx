@@ -152,7 +152,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	// Check required keys
 	for _, key := range requiredKeys {
 		if _, exists := configuration[key]; !exists {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map.", key))
+			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map", key))
 			return
 		}
 	}
@@ -160,7 +160,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	// Validate keys
 	for key := range configuration {
 		if !contains(allowedKeys, key) {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed.", key))
+			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed", key))
 			return
 		}
 	}
@@ -208,13 +208,13 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	} else {
 		// Create a more dynamic error message listing allowed values
 		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
-		resp.Error = function.NewFuncError(fmt.Sprintf("Location must be one of: %s", strings.Join(allowedLocations, ", ")))
+		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidLocation: Location must be one of: %s", strings.Join(allowedLocations, ", ")))
 		return
 	}
 
 	// Validate instance number
 	if instance < 1 || instance > 99 {
-		resp.Error = function.NewFuncError("Instance must be between 1 and 99")
+		resp.Error = function.NewFuncError("InvalidInstance: Instance must be between 1 and 99")
 		return
 	}
 
@@ -225,13 +225,13 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		for key := range resourceAbbreviations {
 			validKeys = append(validKeys, key)
 		}
-		resp.Error = function.NewFuncError(fmt.Sprintf("resource '%s' not found. Accepted values are: %s", resourceType, strings.Join(validKeys, ", ")))
+		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidResourceType: resource '%s' not found", resourceType))
 		return
 	}
 
 	// Validate resource name
 	if name == "" {
-		resp.Error = function.NewFuncError("Resource name cannot be empty")
+		resp.Error = function.ConcatFuncErrors(function.NewFuncError("Resource name cannot be empty"))
 		return
 	}
 
