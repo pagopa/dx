@@ -37,8 +37,8 @@ on:
 
 jobs:
 
-  release:
-    name: Build and Push to Registry
+  build:
+    name: Build Docker Image
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -59,3 +59,5 @@ jobs:
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
