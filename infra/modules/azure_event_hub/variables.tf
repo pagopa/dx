@@ -53,7 +53,7 @@ variable "eventhubs" {
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "The name of the resource group containing the private DNS zone for private endpoints. If not provided will be used resource_group_name."
+  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
   default     = null
 }
 
