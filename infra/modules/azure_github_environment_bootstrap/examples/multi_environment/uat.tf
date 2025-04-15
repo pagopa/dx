@@ -18,11 +18,6 @@ data "azurerm_virtual_network" "common_uat" {
   resource_group_name = format(local.vnet.resource_group_name, "u")
 }
 
-data "azurerm_resource_group" "vnet_uat" {
-  provider = azurerm.uat
-  name     = format(local.vnet.resource_group_name, "u")
-}
-
 data "azurerm_resource_group" "dashboards_uat" {
   provider = azurerm.uat
   name     = "dashboards"
