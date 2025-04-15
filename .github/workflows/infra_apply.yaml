@@ -61,13 +61,29 @@ jobs:
         with:
           default_version: "1.10.4"
 
+  tf-modules-check:
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@check-modules-lock-in-cicd
+    name: Check terraform registry modules hashes
+    needs: ["get-terraform-version"]
+    secrets: inherit
+    with:
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      # Pre-commit Terraform TAG to use,
+      # is release tag + package digest (Ref. Digest https://github.com/antonbabenko/pre-commit-terraform/pkgs/container/pre-commit-terraform)
+      # Example: vX.Y.Z@sha256:000...N
+      enable_modified_files_detection: true
+      check_to_run: lock_modules
+      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      verbose: true
+      fail_on_error: true
+
   tf_plan:
     name: 'Terraform Plan'
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: ["get-terraform-version"]
+    needs: ["get-terraform-version", "tf-modules-check"]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
@@ -156,7 +172,7 @@ jobs:
   tf_apply:
     name: 'Terraform Apply'
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && inputs.environment || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: ["get-terraform-version", "tf_plan"]
+    needs: ["get-terraform-version", "tf-modules-check", "tf_plan"]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
