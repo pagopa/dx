@@ -49,7 +49,7 @@ jobs:
         name: Checkout
 
       - name: Docker Build
-        uses: pagopa/dx/.github/actions/docker-build-push@CES-957-definire-pipeline-di-ci-per-le-immagini-docker
+        uses: pagopa/dx/.github/actions/docker-build-push@main
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
