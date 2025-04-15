@@ -4,7 +4,7 @@
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -27,7 +27,7 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where the resources will be deployed."
 }
 
 variable "tier" {
@@ -72,7 +72,7 @@ variable "autoscale" {
     scale_in_value                = "1"
     scale_in_cooldown             = "PT30M"
   }
-  description = "Configure Apim autoscale rule on capacity metric"
+  description = "Configuration for autoscaling rules on capacity metrics."
 }
 
 #------------#
@@ -84,36 +84,36 @@ variable "virtual_network" {
     name                = string
     resource_group_name = string
   })
-  description = "Virtual network in which to create the subnet"
+  description = "Virtual network in which to create the subnet."
 }
 
 variable "subnet_id" {
   type        = string
   default     = null
-  description = "The id of the subnet that will be used for the API Management."
+  description = "The ID of the subnet that will be used for the API Management."
 }
 
 variable "virtual_network_type_internal" {
   type        = bool
-  description = "The type of virtual network you want to use, if true it will be Internal and you need to specify a subnet_id, otherwise it will be None"
+  description = "Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet_id; otherwise, it will be None."
   default     = true
 }
 
 variable "enable_public_network_access" {
   type        = bool
-  description = "Enable public network access"
+  description = "Specifies whether public network access is enabled."
   default     = false
 }
 
 variable "public_ip_address_id" {
   type        = string
-  description = "(Optional) The id of the public ip address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
+  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
   default     = null
 }
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "(Optional) The resource group name of the private DNS zone. This is only required when resource group name is different from the VNet resource group."
+  description = "The resource group name of the private DNS zone. This is only required when the resource group name differs from the VNet resource group."
   default     = null
 }
 
@@ -123,24 +123,24 @@ variable "private_dns_zone_resource_group_name" {
 
 variable "publisher_name" {
   type        = string
-  description = "The name of publisher/company."
+  description = "The name of the publisher or company."
 }
 
 variable "publisher_email" {
   type        = string
-  description = "The email of publisher/company."
+  description = "The email address of the publisher or company."
 }
 
 variable "notification_sender_email" {
   type        = string
-  description = "Email address from which the notification will be sent."
+  description = "The email address from which notifications will be sent."
   default     = null
 }
 
 variable "xml_content" {
   type        = string
   default     = null
-  description = "Xml content for all api policy"
+  description = "XML content for all API policies."
 }
 
 variable "hostname_configuration" {
@@ -170,7 +170,7 @@ variable "hostname_configuration" {
 
   })
   default     = null
-  description = "Custom domains"
+  description = "Configuration for custom domains."
 }
 
 #---------------#
@@ -180,19 +180,19 @@ variable "hostname_configuration" {
 variable "key_vault_id" {
   type        = string
   default     = null
-  description = "Key vault id."
+  description = "The ID of the Key Vault."
 }
 
 variable "certificate_names" {
   type        = list(string)
   default     = []
-  description = "List of key vault certificate name"
+  description = "A list of Key Vault certificate names."
 }
 
 variable "lock_enable" {
   type        = bool
   default     = false
-  description = "Apply lock to block accidental deletions."
+  description = "Specifies whether to apply a lock to prevent accidental deletions."
 }
 
 #------------------------#
@@ -218,17 +218,17 @@ variable "application_insights" {
 
   validation {
     condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
-    error_message = "You must provide a connection string when enabling Application Insights integration"
+    error_message = "You must provide a connection string when enabling Application Insights integration."
   }
 
   validation {
     condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
-    error_message = "Invalid \"sampling_percentage\" value provided. Valid values are between 0 and 100"
+    error_message = "Invalid \"sampling_percentage\" value provided. Valid values are between 0 and 100."
   }
 
   validation {
     condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
-    error_message = "Invalid \"verbosity\" value provided. Valid values are \"verbose\", \"information\", \"error\""
+    error_message = "Invalid \"verbosity\" value provided. Valid values are \"verbose\", \"information\", \"error\"."
   }
 }
 
@@ -356,13 +356,13 @@ EOD
 }
 
 variable "action_group_id" {
-  description = "The ID of the Action Group of custom string properties to include with the post webhook operation."
+  description = "The ID of the custom string properties Action Group to include with the post webhook operation."
   type        = string
   default     = null
 }
 
 variable "management_logger_application_insight_enabled" {
   type        = bool
-  description = "(Optional) if false, disables management logger application insight block"
+  description = "Specifies whether to enable the management logger application insight block."
   default     = true
 }
