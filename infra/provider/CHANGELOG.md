@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.0.8
+
+### Patch Changes
+
+- 4c64142: Improve resource_name function tests
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.0.6
+
+### Patch Changes
+
+- 9ce888c: Update Test to avoid conflict resources
+
 ## 0.0.5
 
 ### Patch Changes

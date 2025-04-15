@@ -1,5 +1,11 @@
 # azure_app_service_plan_autoscaler
 
+## 1.1.2
+
+### Patch Changes
+
+- 9ce888c: Update Test to avoid conflict resources
+
 ## 1.1.1
 
 ### Patch Changes

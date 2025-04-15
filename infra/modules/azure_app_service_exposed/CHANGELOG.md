@@ -1,5 +1,13 @@
 # azure_app_service_exposed
 
+## 0.0.14
+
+### Patch Changes
+
+- 66efe11: Add `APPINSIGHTS_CONNECTION_STRING` as an environment variable when application insights is enabled.
+
+  The `APPINSIGHTS_CONNECTION_STRING` is used by the `@pagopa/azure-tracing` package.
+
 ## 0.0.13
 
 ### Patch Changes
