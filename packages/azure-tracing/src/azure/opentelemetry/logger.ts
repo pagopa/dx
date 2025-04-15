@@ -8,7 +8,7 @@ import { logs } from "@opentelemetry/api-logs";
  * @param attributes the attributes to include with the event
  */
 export const emitCustomEvent =
-  (eventName: string, attributes: Record<string, string>) =>
+  (eventName: string, attributes: Record<string, string> = {}) =>
   (loggerName = "ApplicationInsightsLogger") => {
     logs.getLogger(loggerName).emit({
       attributes: {
