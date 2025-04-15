@@ -1,6 +1,6 @@
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "Map of tags to apply to all created resources."
 }
 
 variable "environment" {
@@ -18,36 +18,36 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "Name of the resource group where resources will be deployed."
 }
 
 variable "app_service_plan_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the AppService Id where you want to host the Function App"
+  description = "ID of the AppService plan where the application will be hosted."
 }
 
 variable "subnet_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the subnet id where you want to host the Function App"
+  description = "ID of the subnet where the application will be hosted."
 }
 
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
   default     = null
-  description = "(Optional) Application Insights connection string"
+  description = "Application Insights connection string."
 }
 
 variable "health_check_path" {
   type        = string
-  description = "Endpoint where health probe is exposed"
+  description = "Path of the endpoint where health probe is exposed."
 }
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
+  description = "Resource tier based on workload. Allowed values: 's', 'm', 'l', 'xl'. Legacy values: 'premium', 'standard', 'test'."
 
   default = "l"
 
@@ -61,6 +61,8 @@ variable "stack" {
   type    = string
   default = "node"
 
+  description = "Technology stack to use. Allowed values: 'node', 'java'."
+
   validation {
     condition     = contains(["node", "java"], var.stack)
     error_message = "Allowed values for \"stack\" are \"node\", \"java\". Note, you can select the version using \"node_version\" and \"java_version\" variables."
@@ -70,42 +72,42 @@ variable "stack" {
 variable "node_version" {
   type        = number
   default     = 20
-  description = "Node version to use"
+  description = "Node.js version to use."
 }
 
 variable "java_version" {
   type        = string
   default     = 17
-  description = "Java version to use"
+  description = "Java version to use."
 }
 
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
-  description = "(Optional) The sampling percentage of Application Insights. Default is 5"
+  description = "Sampling percentage for Application Insights. Default is 5."
 }
 
 variable "app_settings" {
   type        = map(string)
-  description = "Application settings"
+  description = "Application settings as a map of key-value pairs."
 }
 
 variable "slot_app_settings" {
   type        = map(string)
-  description = "Staging slot application settings"
+  description = "Application settings for the staging slot."
   default     = {}
 }
 
 variable "sticky_app_setting_names" {
   type        = list(string)
-  description = "(Optional) A list of application setting names that are not swapped between slots"
+  description = "List of application setting names that are not swapped between slots."
   default     = []
 }
 
 variable "subnet_cidr" {
   type        = string
   default     = null
-  description = "(Optional) CIDR block to use for the subnet the AppService uses for outbound connectivity. Mandatory if subnet_id is not set"
+  description = "CIDR block for the subnet used by the AppService for outbound connectivity. Mandatory if 'subnet_id' is not set."
 
   validation {
     condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
@@ -115,7 +117,7 @@ variable "subnet_cidr" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "ID of the subnet hosting private endpoints."
 }
 
 variable "virtual_network" {
@@ -123,13 +125,13 @@ variable "virtual_network" {
     name                = string
     resource_group_name = string
   })
-  description = "Virtual network in which to create the subnet"
+  description = "Virtual network where the subnet will be created."
 }
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
   default     = null
-  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
+  description = "Name of the resource group containing the private DNS zone for private endpoints. Default is the resource group of the virtual network."
 }
 
 variable "subnet_service_endpoints" {
@@ -138,6 +140,6 @@ variable "subnet_service_endpoints" {
     storage = optional(bool, false)
     web     = optional(bool, false)
   })
-  description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
+  description = "Enable service endpoints for the underlying subnet. Should only be set if dependencies do not use private endpoints."
   default     = null
 }
