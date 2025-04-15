@@ -36,7 +36,12 @@ jobs:
           echo "- TO    Head ref: $HEAD_BRANCH"
 
           # Find all new files in the .github/workflows directory that are added in the pull request
-          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/')
+          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/' || true)
+
+          if [ -z "$NEW_FILES" ]; then
+            echo "No new workflow files detected. Skipping validation."
+            exit 0
+          fi
 
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
