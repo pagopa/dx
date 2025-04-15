@@ -1,3 +1,9 @@
+/*
+This file is required to instrument ESM application to use OpenTelemetry.
+This file must be pre-loaded through the `NODE_OPTIONS` environment variable to
+have a fully instrumented application.
+ */
+
 import { createAddHookMessageChannel } from "import-in-the-middle";
 import { register } from "module";
 
