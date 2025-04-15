@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.0.14
+
+### Patch Changes
+
+- 9ce888c: Update Test to avoid conflict resources
+
 ## 0.0.13
 
 ### Patch Changes
