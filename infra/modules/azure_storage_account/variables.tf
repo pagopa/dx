@@ -1,7 +1,7 @@
 # ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
-  description = "Tags to assign to all resources."
+  description = "A map of tags to assign to all resources created by this module."
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Name of the resource group for deployment."
+  description = "The name of the resource group where the storage account and related resources will be deployed."
 }
 
 # ------------ STORAGE ACCOUNT ------------ #
@@ -35,7 +35,13 @@ variable "tier" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "ID of the subnet for private endpoints."
+  description = "The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false."
+  default     = null
+
+  validation {
+    condition     = var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+    error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
+  }
 }
 
 variable "customer_managed_key" {
@@ -69,7 +75,8 @@ variable "subservices_enabled" {
     queue = optional(bool, false)
     table = optional(bool, false)
   })
-  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only."
+  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force_public_network_access_enabled is false."
+  default     = {}
 }
 
 variable "blob_features" {

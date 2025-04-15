@@ -28,6 +28,13 @@ locals {
   tier_features = local.tiers[var.tier]
 
   peps = {
+    create_subservices = var.force_public_network_access_enabled ? {
+      blob  = false
+      file  = false
+      queue = false
+      table = false
+    } : var.subservices_enabled
+
     blob = {
       name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "blob_private_endpoint" }))
       dns_zone = "privatelink.blob.core.windows.net"
