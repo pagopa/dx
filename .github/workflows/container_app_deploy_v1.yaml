@@ -252,10 +252,10 @@ jobs:
               exit 1
             fi
 
-          echo "No errors detected, continuing traffic shift"
-            done
+            echo "No errors detected, continuing traffic shift"
+          done
 
-            echo "Successfully shifted 100% traffic to new revision"
+          echo "Successfully shifted 100% traffic to new revision"
 
       - name: Deactivate old revision
         run: |
