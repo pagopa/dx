@@ -16,11 +16,11 @@ on:
         required: false
         default: ${{ github.repository }}
         description: Docker image name, defaults to repository name
-      image_description:
+      docker_image_description:
         type: string
         required: true
         description: A description to use as image label
-      image_authors:
+      docker_image_authors:
         type: string
         required: false
         default: PagoPA
@@ -42,7 +42,12 @@ on:
         type: string
         required: true
         description: Name of the resource group of the container app
-      # override_github_environment:
+      apply_github_tags_to_image_tags:
+          type: boolean
+          required: false
+          default: false
+          description: Use GitHub tags for image tagging
+        # override_github_environment:
       #   description: Set a value if GitHub Environment name is different than the TF environment folder
       #   type: string
       #   required: false
@@ -56,7 +61,9 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    if: ${{ false }} # ${{ !github.event.act }}
+    if: ${{ !github.event.act }}
+    permissions:
+      packages: write
 
     steps:
 
@@ -64,24 +71,26 @@ jobs:
         name: Checkout
 
       - name: Docker Build and Push
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/.github/actions/docker-build-push@CES-958-definire-una-pipeline-di-cd-per-le-container-app
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
           docker_image_name: ${{ inputs.docker_image_name }}
-          image_description: ${{ inputs.image_description }}
-          image_authors: ${{ inputs.image_authors }}
+          docker_image_description: ${{ inputs.docker_image_description }}
+          docker_image_authors: ${{ inputs.docker_image_authors }}
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: true
+          apply_github_tags_to_image_tags: ${{ inputs.apply_github_tags_to_image_tags}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release:
     name: Deploy To Container App
     runs-on: ubuntu-latest
+    if: ${{ false }}
     # environment: ${{ inputs.override_github_environment == '' && 'prod' || inputs.override_github_environment}}-cd
-    # needs: build
+    needs: build
     permissions:
       id-token: write
       contents: read
@@ -123,14 +132,12 @@ jobs:
             --query "id" \
             --output tsv)
 
-          echo "Container App resource Id: $ca_id"
-
           echo "container_app_id=$ca_id" >> $GITHUB_OUTPUT
 
+      # this step is also useful to ensure new revisions will not have 100% of the traffic (default behavior)
       - name: Ensure Latest Revision Captures All Traffic
         id: ensure_latest_revision
         run: |
-          # this step is also useful to ensure new revisions will not have 100% of the traffic (default behavior)
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
