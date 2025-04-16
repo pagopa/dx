@@ -7,17 +7,17 @@ variable "environment" {
     app_name        = string
     instance_number = string
   })
-  description = "Values used to generate resource name"
+  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
 variable "resource_group_name" {
   type        = string
-  description = "Name of the resource group where the App Service Plan will be created"
+  description = "The name of the resource group where the App Service Plan will be created."
 }
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "tier" {
@@ -26,6 +26,6 @@ variable "tier" {
 
   validation {
     condition     = contains(["s", "m", "l", "xl"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", \"xl\""
+    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", or \"xl\"."
   }
 }
