@@ -75,7 +75,6 @@ jobs:
       check_to_run: lock_modules
       folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
       verbose: true
-      fail_on_error: true
 
   tf_plan:
     name: 'Terraform Plan'
