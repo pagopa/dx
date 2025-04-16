@@ -59,12 +59,12 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_repository"></a> [repository](#input\_repository) | Information about this repository | <pre>object({<br/>    name                = string<br/>    description         = string<br/>    topics              = list(string)<br/>    default_branch_name = optional(string, "main")<br/>    jira_boards_ids     = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs. | <pre>object({<br/>    name                = string<br/>    description         = string<br/>    topics              = list(string)<br/>    default_branch_name = optional(string, "main")<br/>    jira_boards_ids     = optional(list(string), [])<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_id"></a> [id](#output\_id) | n/a |
-| <a name="output_name"></a> [name](#output\_name) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the GitHub repository. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the GitHub repository. |
 <!-- END_TF_DOCS -->
