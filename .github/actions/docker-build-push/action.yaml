@@ -65,20 +65,19 @@ runs:
       id: meta
       uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
       env:
-        TITLE: ${{ inputs.docker_image_name }}
+        IMAGE_NAME: ${{ inputs.docker_image_name }}
         DESCRIPTION: ${{ inputs.docker_image_description }}
         AUTHORS: ${{ inputs.docker_image_authors }}
         REPOSITORY: ${{ github.repository }}
-        IMAGE_NAME: ${{ inputs.docker_image_name }}
       with:
-        images: ghcr.io/${{ env.TITLE }}
+        images: ghcr.io/${{ env.IMAGE_NAME }}
         tags: |
           type=raw,value=latest,enable={{is_default_branch}}
           type=semver,pattern={{version}},enable=${{ inputs.apply_github_tags_to_image_tags }}
           type=ref,event=branch
           type=sha
         labels:
-          org.opencontainers.image.title=${{ env.TITLE }}
+          org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description=${{ env.DESCRIPTION }}
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
@@ -106,7 +105,9 @@ runs:
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
       if: ${{ inputs.push_to_registry }}
+      env:
+        IMAGE_NAME: ${{ inputs.docker_image_name }}
       with:
-        subject-name: ghcr.io/${{ env.TITLE }}
+        subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
         push-to-registry: true
