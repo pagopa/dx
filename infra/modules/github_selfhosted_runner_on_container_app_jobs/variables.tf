@@ -1,11 +1,11 @@
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group for the Container App Job"
+  description = "The name of the resource group where the Container App Job will be deployed. Defaults to null."
   default     = null
 }
 
@@ -25,6 +25,8 @@ variable "repository" {
     owner = optional(string, "pagopa")
     name  = string
   })
+
+  description = "Details of the GitHub repository, including the owner and repository name."
 }
 
 variable "container_app_environment" {
@@ -40,7 +42,8 @@ variable "container_app_environment" {
     cpu                         = optional(number, 0.5)
     memory                      = optional(string, "1Gi")
   })
-  description = "Name and resource group of the Container App Environment to use as host"
+
+  description = "Configuration for the Container App Environment."
 }
 
 variable "key_vault" {
@@ -50,5 +53,6 @@ variable "key_vault" {
     use_rbac            = optional(bool, false)
     secret_name         = optional(string, "github-runner-pat")
   })
-  description = "Details of the KeyVault holding secrets for this job"
+
+  description = "Details of the Key Vault used to store secrets for the Container App Job."
 }
