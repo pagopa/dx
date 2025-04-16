@@ -86,7 +86,7 @@ runs:
 
     - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
-      if: ${{ inputs.push_to_registry }}
+      id: push_registry
       env:
         DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
@@ -102,3 +102,11 @@ runs:
         cache-to: type=gha,mode=min
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
+
+    - name: Generate artifact attestation
+      uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+      if: ${{ inputs.push_to_registry }}
+      with:
+        subject-name: ghcr.io/${{ env.TITLE }}
+        subject-digest: ${{ steps.push_registry.outputs.digest }}
+        push-to-registry: true
