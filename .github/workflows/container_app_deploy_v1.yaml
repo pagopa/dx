@@ -42,6 +42,11 @@ on:
         type: string
         required: true
         description: Name of the resource group of the container app
+      # override_github_environment:
+      #   description: Set a value if GitHub Environment name is different than the TF environment folder
+      #   type: string
+      #   required: false
+      #   default: ''
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -75,6 +80,7 @@ jobs:
   release:
     name: Deploy To Container App
     runs-on: ubuntu-latest
+    # environment: ${{ inputs.override_github_environment == '' && 'prod' || inputs.override_github_environment}}-cd
     # needs: build
     permissions:
       id-token: write
@@ -99,7 +105,7 @@ jobs:
 
           echo "Found SHA: $sha"
 
-          echo "short_sha=$sha" >> $GITHUB_ENV
+          echo "short_sha=$sha" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
@@ -119,7 +125,7 @@ jobs:
 
           echo "Container App resource Id: $ca_id"
 
-          echo "container_app_id=$ca_id" >> $GITHUB_ENV
+          echo "container_app_id=$ca_id" >> $GITHUB_OUTPUT
 
       - name: Ensure Latest Revision Captures All Traffic
         id: ensure_latest_revision
@@ -136,7 +142,7 @@ jobs:
             --ids "${{ steps.get_container_app_id.outputs.container_app_id }}" \
             --revision-weight $current_revision=100
 
-          echo "current_revision_name=$current_revision" >> $GITHUB_ENV
+          echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
 
       - name: Create New Revision
         id: create_new_revision
@@ -153,7 +159,7 @@ jobs:
 
           echo "New revision: $new_revision"
 
-          echo "new_revision_name=$new_revision" >> $GITHUB_ENV
+          echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
 
       - name: Wait for New Revision to Become Ready
         run: |
