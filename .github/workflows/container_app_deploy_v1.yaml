@@ -64,6 +64,7 @@ jobs:
     if: ${{ !github.event.act }}
     permissions:
       contents: read
+      attestations: write
       packages: write
       id-token: write
 

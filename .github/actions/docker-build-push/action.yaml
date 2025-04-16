@@ -103,7 +103,7 @@ runs:
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
 
-    - name: Generate artifact attestation
+    - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
       if: ${{ inputs.push_to_registry }}
       with:
