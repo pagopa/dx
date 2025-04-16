@@ -124,7 +124,6 @@ jobs:
           enable_modified_files_detection: true
           check_to_run: lock_modules
           folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-          fail_on_error: false
           verbose: true
 
       - name: Set Environment Variables
@@ -184,15 +183,6 @@ jobs:
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
-
-      - name: Check terraform registry modules hashes
-        uses: ./.github/workflows/static_analysis.yaml
-        with:
-          enable_modified_files_detection: true
-          check_to_run: lock_modules
-          folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-          fail_on_error: false
-          verbose: true
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main

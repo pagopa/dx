@@ -64,9 +64,6 @@ jobs:
     secrets: inherit
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      # Pre-commit Terraform TAG to use,
-      # is release tag + package digest (Ref. Digest https://github.com/antonbabenko/pre-commit-terraform/pkgs/container/pre-commit-terraform)
-      # Example: vX.Y.Z@sha256:000...N
       enable_modified_files_detection: true
       check_to_run: lock_modules
       folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
