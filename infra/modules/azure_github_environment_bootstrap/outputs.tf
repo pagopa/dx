@@ -1,4 +1,5 @@
 output "resource_group" {
+  description = "Details of the main resource group, including ID, name, and location."
   value = {
     id       = azurerm_resource_group.main.id
     name     = azurerm_resource_group.main.name
@@ -7,6 +8,7 @@ output "resource_group" {
 }
 
 output "repository" {
+  description = "Details of the GitHub repository, including ID and name."
   value = {
     id   = github_repository.this.id
     name = github_repository.this.name
@@ -14,6 +16,7 @@ output "repository" {
 }
 
 output "github_private_runner" {
+  description = "Details of the GitHub private runner, including ID, name, and resource group name."
   value = {
     id                  = module.github_runner.container_app_job.id
     name                = module.github_runner.container_app_job.name
@@ -22,6 +25,7 @@ output "github_private_runner" {
 }
 
 output "identities" {
+  description = "Details of the user-assigned identities for app, infra, and opex, including IDs and names."
   value = {
     app = {
       cd = {

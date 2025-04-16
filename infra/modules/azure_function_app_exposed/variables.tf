@@ -1,6 +1,6 @@
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -23,25 +23,25 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where resources will be deployed."
 }
 
 variable "app_service_plan_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the AppService Id where you want to host the Function App"
+  description = "The ID of the App Service Plan where the Function App will be hosted. Leave null to create a new plan."
 }
 
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
   default     = null
-  description = "(Optional) Application Insights connection string"
+  description = "The connection string for Application Insights to enable monitoring and diagnostics."
 }
 
 variable "health_check_path" {
   type        = string
-  description = "Endpoint where health probe is exposed"
+  description = "The endpoint path where the health probe is exposed for the Function App."
 }
 
 variable "tier" {
@@ -57,8 +57,9 @@ variable "tier" {
 }
 
 variable "stack" {
-  type    = string
-  default = "node"
+  type        = string
+  default     = "node"
+  description = "The runtime stack for the Function App. Allowed values are 'node' and 'java'."
 
   validation {
     condition     = contains(["node", "java"], var.stack)
@@ -69,24 +70,24 @@ variable "stack" {
 variable "node_version" {
   type        = number
   default     = 20
-  description = "Node version to use"
+  description = "The version of Node.js to use for the Function App runtime."
 }
 
 variable "java_version" {
   type        = string
   default     = 17
-  description = "Java version to use"
+  description = "The version of Java to use for the Function App runtime."
 }
 
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
-  description = "(Optional) The sampling percentage of Application Insights. Default is 5"
+  description = "The sampling percentage for Application Insights telemetry. Default is 5."
 }
 
 variable "app_settings" {
   type        = map(string)
-  description = "Application settings"
+  description = "A map of application settings for the Function App."
 
   validation {
     condition = (
@@ -102,7 +103,7 @@ variable "app_settings" {
 
 variable "slot_app_settings" {
   type        = map(string)
-  description = "Staging slot application settings"
+  description = "A map of application settings specific to the staging slot of the Function App."
   default     = {}
 
   validation {
@@ -119,12 +120,12 @@ variable "slot_app_settings" {
 
 variable "sticky_app_setting_names" {
   type        = list(string)
-  description = "(Optional) A list of application setting names that are not swapped between slots"
+  description = "A list of application setting names that should remain constant and not be swapped between slots."
   default     = []
 }
 
 variable "has_durable_functions" {
   type        = bool
-  description = "(Optional) Enable if the Function App hosts Durable Functions"
+  description = "Set to true if the Function App hosts Durable Functions."
   default     = false
 }

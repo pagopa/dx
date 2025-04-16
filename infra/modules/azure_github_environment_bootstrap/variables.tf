@@ -1,6 +1,6 @@
 variable "tags" {
   type        = map(string)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -22,7 +22,7 @@ variable "entraid_groups" {
     externals_object_id = optional(string, null)
   })
 
-  description = "Azure Entra Id groups to give role to"
+  description = "The Azure Entra ID groups to give role to."
 }
 
 variable "terraform_storage_account" {
@@ -31,56 +31,56 @@ variable "terraform_storage_account" {
     name                = string
   })
 
-  description = "Name and resource group name of the Storage Account hosting the Terraform state file"
+  description = "Details of the Storage Account (name and resource group) hosting the Terraform state file."
 }
 
 variable "pep_vnet_id" {
   type        = string
-  description = "ID of the VNet holding Private Endpoint-dedicated subnet"
+  description = "The ID of the Virtual Network (VNet) containing the subnet dedicated to Private Endpoints."
 }
 
 variable "apim_id" {
   type        = string
-  description = "(Optional) ID of the APIM instance"
+  description = "The ID of the Azure API Management (APIM) instance."
   default     = null
 }
 
 variable "log_analytics_workspace_id" {
   type        = string
-  description = "(Optional) ID of the Log Analytics Workspace"
+  description = "The ID of the Log Analytics Workspace for monitoring and diagnostics."
   default     = null
 }
 
 variable "private_dns_zone_resource_group_id" {
   type        = string
-  description = "Id of the resource group holding private DNS zones"
+  description = "The ID of the resource group containing private DNS zones."
 }
 
 variable "nat_gateway_resource_group_id" {
   type        = string
   default     = null
-  description = "(Optional) Id of the resource group hosting NAT Gateways"
+  description = "The ID of the resource group hosting NAT Gateways."
 }
 
 variable "opex_resource_group_id" {
   type        = string
-  description = "Id of the resource group containing Opex dashboards"
+  description = "The ID of the resource group containing Opex dashboards."
 }
 
 variable "keyvault_common_ids" {
   type        = list(string)
   default     = []
-  description = "Id of the KeyVault containing common secrets"
+  description = "A list of IDs for Key Vaults containing common secrets."
 }
 
 variable "subscription_id" {
   type        = string
-  description = "The subscription ID where resources are created"
+  description = "The Azure subscription ID where resources will be created."
 }
 
 variable "tenant_id" {
   type        = string
-  description = "The tenant ID where resources are created"
+  description = "The Azure tenant ID where resources will be created."
 }
 
 variable "repository" {
@@ -100,7 +100,7 @@ variable "repository" {
     jira_boards_ids          = optional(list(string), [])
   })
 
-  description = "Information about this repository"
+  description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies."
 }
 
 variable "github_private_runner" {
@@ -121,17 +121,19 @@ variable "github_private_runner" {
     cpu    = optional(number, 0.5)
     memory = optional(string, "1Gi")
   })
+
+  description = "Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration."
 }
 
 variable "additional_resource_group_ids" {
   type        = set(string)
   default     = []
-  description = "(Optional) List of existing resource groups of which the domain team is the owner."
+  description = "A set of IDs for existing resource groups owned by the domain team."
 
   validation {
     condition = alltrue([
       for id in var.additional_resource_group_ids : provider::azurerm::parse_resource_id(id)["resource_type"] == "resourceGroups"
     ])
-    error_message = "This variable accepts resource group IDs only"
+    error_message = "Only resource group IDs are allowed."
   }
 }

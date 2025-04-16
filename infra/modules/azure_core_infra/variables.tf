@@ -4,7 +4,7 @@
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -22,7 +22,7 @@ variable "environment" {
 
 variable "test_enabled" {
   type        = bool
-  description = "Flag to enable testing resources"
+  description = "A boolean flag to enable or disable the creation of testing resources."
   default     = false
 }
 
@@ -30,13 +30,13 @@ variable "test_enabled" {
 
 variable "virtual_network_cidr" {
   type        = string
-  description = "CIDR block for the virtual network"
+  description = "The CIDR block defining the IP address range for the virtual network."
   default     = "10.0.0.0/16"
 }
 
 variable "pep_subnet_cidr" {
   type        = string
-  description = "CIDR block for the private endpoint subnet"
+  description = "The CIDR block defining the IP address range for the private endpoint subnet."
   default     = "10.0.2.0/23"
 }
 
@@ -50,19 +50,18 @@ variable "vpn" {
 
   validation {
     condition     = (var.vpn.cidr_subnet == "" && var.vpn.dnsforwarder_cidr_subnet == "") || (var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "")
-    error_message = "You must specify both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' together, or leave both empty."
+    error_message = "Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together, or both must be left empty."
   }
 }
 
 variable "nat_enabled" {
   type        = bool
-  description = "Flag to enable nat gateway creation"
+  description = "A boolean flag to enable or disable the creation of a NAT gateway."
   default     = false
 }
-
 
 variable "gh_runner_snet" {
   type        = string
   default     = "10.0.242.0/23"
-  description = "GitHub runner subnet cidr"
+  description = "The CIDR block defining the IP address range for the GitHub runner subnet."
 }

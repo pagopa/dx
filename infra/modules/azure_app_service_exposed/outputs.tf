@@ -1,4 +1,5 @@
 output "app_service" {
+  description = "Details of the App Service, including its resource group, plan, and slot information."
   value = {
     resource_group_name = azurerm_linux_web_app.this.resource_group_name
     plan = {

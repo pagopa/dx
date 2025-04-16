@@ -59,9 +59,9 @@ No resources.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_domain"></a> [domain](#output\_domain) | n/a |
-| <a name="output_env_name"></a> [env\_name](#output\_env\_name) | n/a |
-| <a name="output_prefix"></a> [prefix](#output\_prefix) | n/a |
-| <a name="output_project"></a> [project](#output\_project) | n/a |
-| <a name="output_suffix"></a> [suffix](#output\_suffix) | n/a |
+| <a name="output_domain"></a> [domain](#output\_domain) | The domain segment used in the naming convention, derived from the environment's domain value or a default placeholder if not provided. |
+| <a name="output_env_name"></a> [env\_name](#output\_env\_name) | The full name of the environment, derived from the short name provided in the environment configuration. Example: 'dev' for 'd'. |
+| <a name="output_prefix"></a> [prefix](#output\_prefix) | The full prefix used in the naming convention for resources. It is composed of the environment prefix, environment short name, location short name, optionally the domain and app name. Example: 'dx-d-itn-[DOMAIN]-name'. |
+| <a name="output_project"></a> [project](#output\_project) | The project identifier used in the naming convention, combining the environment prefix, environment short name, and location short name. Example: 'dx-d-itn'. |
+| <a name="output_suffix"></a> [suffix](#output\_suffix) | The suffix used in the naming convention for resources, representing the instance number of the resource. Example: '01'. |
 <!-- END_TF_DOCS -->

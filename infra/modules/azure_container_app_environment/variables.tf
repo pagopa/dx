@@ -1,7 +1,7 @@
 # ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the Azure Resource Group where the resources will be deployed."
 }
 # ------------ CONTAINER ENVIRONMENT ------------ #
 
@@ -33,23 +33,23 @@ variable "log_analytics_workspace_id" {
 variable "subnet_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the subnet id where you want to host the Container App Environment. Mandatory if subnet_cidr is not set"
+  description = "The ID of the subnet where the Container App Environment will be hosted. This is required if 'subnet_cidr' is not specified."
 }
 
 variable "subnet_cidr" {
   type        = string
   default     = null
-  description = "(Optional) CIDR block to use for the subnet used for Container App Environment connectivity. Mandatory if subnet_id is not set"
+  description = "The CIDR block for the subnet used for Container App Environment connectivity. This is required if 'subnet_id' is not specified."
 
   validation {
     condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
-    error_message = "Please specify the subnet_cidr or the subnet_id, not both"
+    error_message = "Specify either 'subnet_cidr' or 'subnet_id', but not both."
   }
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "The ID of the subnet designated for hosting private endpoints."
 }
 
 variable "virtual_network" {
@@ -61,16 +61,16 @@ variable "virtual_network" {
     name                = null
     resource_group_name = null
   }
-  description = "(Optional) Virtual network in which to create the subnet"
+  description = "An object defining the virtual network where the subnet will be created."
 
   validation {
     condition     = (var.subnet_id != null) != (var.virtual_network.name != null && var.virtual_network.resource_group_name != null)
-    error_message = "Please specify the subnet_id or the virtual_network.name and virtual_network.resource_group_name, not both"
+    error_message = "Specify the subnet_id or the virtual_network.name and virtual_network.resource_group_name, not both"
   }
 }
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
   default     = null
-  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
+  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the resource group of the Virtual Network if not specified."
 }

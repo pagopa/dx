@@ -1,16 +1,16 @@
 output "id" {
   value       = azurerm_container_app_environment.this.id
-  description = "Container App Environment Resource Id"
+  description = "The ID of the Container App Environment resource."
 }
 
 output "name" {
   value       = azurerm_container_app_environment.this.name
-  description = "Container App Environment name"
+  description = "The name of the Container App Environment resource."
 }
 
 output "resource_group_name" {
   value       = azurerm_container_app_environment.this.resource_group_name
-  description = "Container App Environment resource group"
+  description = "The name of the Azure Resource Group where the Container App Environment is deployed."
 }
 
 output "user_assigned_identity" {

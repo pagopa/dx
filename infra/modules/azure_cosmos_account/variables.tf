@@ -1,7 +1,7 @@
 # ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -19,13 +19,13 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where resources will be deployed."
 }
 
 # ------------ COSMOS ------------ #
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "The ID of the subnet designated for private endpoints."
 }
 
 variable "tier" {
@@ -42,7 +42,7 @@ variable "tier" {
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
+  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
   default     = null
 }
 
@@ -51,7 +51,7 @@ variable "primary_geo_location" {
     location       = optional(string, null)
     zone_redundant = optional(bool, true)
   })
-  description = "Primary geo location for Cosmos DB account. Set location if you want to deploy the cosmos account in a different region than the default."
+  description = "The primary geo-location for the Cosmos DB account. Specify 'location' to deploy the account in a region other than the default."
 
   default = {
     location       = null
@@ -65,7 +65,7 @@ variable "secondary_geo_locations" {
     failover_priority = optional(number, null)
     zone_redundant    = optional(bool, true)
   }))
-  description = "(Optional) Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used."
+  description = "Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used."
   default     = []
 }
 
@@ -75,7 +75,7 @@ variable "customer_managed_key" {
     user_assigned_identity_id = optional(string, null)
     key_vault_key_id          = optional(string, null)
   })
-  description = "(Optional) Customer managed key to use for encryption"
+  description = "Customer managed key to use for encryption"
   default     = { enabled = false }
 
   validation {
@@ -89,7 +89,7 @@ variable "customer_managed_key" {
 
 variable "force_public_network_access_enabled" {
   type        = bool
-  description = "(Optional) Whether the Storage Account permits public network access or not. Defaults to false."
+  description = "Specifies whether public network access is allowed for the Cosmos DB account. Defaults to false."
   default     = false
 }
 
@@ -137,7 +137,7 @@ variable "alerts" {
       provisioned_throughput_exceeded = optional(number, null)
     }), {})
   })
-  description = "(Optional) Alerts configuration for Cosmos DB account."
+  description = "Alerts configuration for Cosmos DB account."
   default     = { enabled = true }
 
   validation {

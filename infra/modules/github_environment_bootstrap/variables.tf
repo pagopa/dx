@@ -7,5 +7,5 @@ variable "repository" {
     jira_boards_ids     = optional(list(string), [])
   })
 
-  description = "Information about this repository"
+  description = "Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs."
 }

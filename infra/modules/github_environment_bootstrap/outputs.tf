@@ -1,7 +1,9 @@
 output "id" {
-  value = github_repository.this.id
+  description = "The ID of the GitHub repository."
+  value       = github_repository.this.id
 }
 
 output "name" {
-  value = github_repository.this.name
+  description = "The name of the GitHub repository."
+  value       = github_repository.this.name
 }

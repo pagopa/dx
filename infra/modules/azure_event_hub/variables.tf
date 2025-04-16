@@ -4,7 +4,7 @@
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -27,9 +27,8 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where resources will be deployed."
 }
-
 
 variable "eventhubs" {
   description = "A list of event hubs to add to namespace."
@@ -54,13 +53,13 @@ variable "eventhubs" {
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "Resource group of the private DNS zone"
+  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
   default     = null
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "The ID of the subnet designated for private endpoints."
 }
 
 variable "allowed_sources" {
@@ -69,7 +68,7 @@ variable "allowed_sources" {
     ips        = optional(list(string), [])
   })
   default     = {}
-  description = "Lists of allowed sources (subnets and ip masks)"
+  description = "Lists of allowed sources for accessing the Event Hub, including subnet IDs and IP address ranges."
 }
 
 #----------------#
@@ -93,7 +92,7 @@ variable "tier" {
 
 variable "action_group_id" {
   type        = string
-  description = "Set the Action Group Id to invoke when the Function App alert triggers"
+  description = "The ID of the Action Group to invoke when an alert is triggered for the Event Hub."
   default     = null
 }
 

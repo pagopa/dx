@@ -1,7 +1,7 @@
 # ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -19,13 +19,13 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the Azure Resource Group where the resources will be deployed."
 }
 # ------------ CONTAINER ENVIRONMENT ------------ #
 
 variable "container_app_environment_id" {
   type        = string
-  description = "The container app environemnt id."
+  description = "The ID of the Azure Container App Environment where the container app will be deployed."
 }
 
 # ------------ CONTAINER APP ------------ #
@@ -54,7 +54,7 @@ variable "revision_mode" {
 
 variable "target_port" {
   type        = number
-  description = "The target port for the Container App."
+  description = "The port on which the container app will listen for incoming traffic."
   default     = 8080
 }
 
@@ -64,7 +64,7 @@ variable "secrets" {
     key_vault_secret_id = string
   }))
   default     = []
-  description = "Key Vault secret references to be used in all the containers of this Container App."
+  description = "A list of Key Vault secret references to be used as environment variables in the container app."
 }
 
 variable "container_app_templates" {
@@ -129,7 +129,6 @@ variable "container_app_templates" {
     error_message = "Valid values for readiness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
-  # ditto
   validation {
     condition = alltrue([
       for template in var.container_app_templates :
@@ -147,5 +146,5 @@ variable "user_assigned_identity_id" {
 variable "acr_registry" {
   type        = string
   default     = null
-  description = "(Optional) Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
+  description = "Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
 }
