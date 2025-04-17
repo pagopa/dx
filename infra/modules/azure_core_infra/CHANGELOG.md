@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.5
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.0.4
 
 ### Patch Changes

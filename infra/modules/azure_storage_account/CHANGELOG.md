@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.1.0
+
+### Minor Changes
+
+- f2e75a6: Make subnet pep id optional if force public access is true
+
 ## 0.0.14
 
 ### Patch Changes

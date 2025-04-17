@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.8
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.0.7
 
 ### Patch Changes

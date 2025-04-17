@@ -1,5 +1,11 @@
 # azure_container_app_environment
 
+## 1.0.1
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.0.0
 
 ### Major Changes

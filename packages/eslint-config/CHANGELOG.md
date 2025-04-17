@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 4.0.3
+
+### Patch Changes
+
+- cfd31cf: Fix peerDependencies semver requirement
+
 ## 4.0.2
 
 ### Patch Changes

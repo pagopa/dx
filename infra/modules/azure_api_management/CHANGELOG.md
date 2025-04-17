@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.1.3
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.1.2
 
 ### Patch Changes
