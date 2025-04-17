@@ -79,7 +79,7 @@ jobs:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
           docker_image_name: ${{ inputs.docker_image_name }}
-          docker_image_description: ${{ inputs.docker_image_description }}
+          docker_image_description: "${{ inputs.docker_image_description }}"
           docker_image_authors: ${{ inputs.docker_image_authors }}
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
