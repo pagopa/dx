@@ -66,7 +66,7 @@ runs:
       uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
       env:
         IMAGE_NAME: ${{ inputs.docker_image_name }}
-        DESCRIPTION: ${{ inputs.docker_image_description }}
+        DESCRIPTION: "${{ inputs.docker_image_description }}"
         AUTHORS: ${{ inputs.docker_image_authors }}
         REPOSITORY: ${{ github.repository }}
       with:
@@ -78,7 +78,7 @@ runs:
           type=sha
         labels:
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-          org.opencontainers.image.description=${{ env.DESCRIPTION }}
+          org.opencontainers.image.description="${{ env.DESCRIPTION }}"
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
