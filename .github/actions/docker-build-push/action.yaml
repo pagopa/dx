@@ -91,19 +91,23 @@ runs:
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         BUILD_ARGS: ${{ inputs.build_args }}
         BUILD_PLATFORMS: ${{ inputs.build_platforms }}
+        SOURCE_DATE_EPOCH: 0
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
         file: ${{ env.DOCKERFILE_PATH }}
         push: ${{ inputs.push_to_registry }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        annotations: ${{ steps.meta.outputs.annotations }}
         cache-from: type=gha
         cache-to: type=gha,mode=min
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
         provenance: false
-        annotations: ${{ steps.meta.outputs.annotations }}
 
+    # Create an entry in github.com/org/repo/attestations
+    # to verify the provenence of the image through
+    # gh attestation verify --owner org <filename-or-url>
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
       if: ${{ inputs.push_to_registry }}
