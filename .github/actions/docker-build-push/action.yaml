@@ -46,6 +46,14 @@ inputs:
     default: true
     description: Push the image to the registry
 
+outputs:
+  image_id:
+    description: The ID of the built image
+    value: ${{ steps.push_registry.outputs.imageid }}
+  image_tags:
+    description: The tags of the built image
+    value: ${{ fromJSON(steps.meta.outputs.json).tags }}
+
 runs:
   using: composite
   steps:
@@ -117,3 +125,8 @@ runs:
         subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
         push-to-registry: false
+
+    - name: Debug Image Id
+      run: |
+        echo "--- Image ID: ${{ steps.push_registry.outputs.imageid }}"
+        echo "--- Image Tags: ${{ fromJSON(steps.meta.outputs.json).tags }}"

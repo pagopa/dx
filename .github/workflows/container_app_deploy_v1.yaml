@@ -63,6 +63,9 @@ jobs:
       id-token: write
       attestations: write
       packages: write
+    outputs:
+      image_id: ${{ steps.docker_build.outputs.image_id }}
+      image_tags: ${{ steps.docker_build.outputs.image_tags }}
 
     steps:
 
@@ -70,6 +73,7 @@ jobs:
         name: Checkout
 
       - name: Docker Build and Push
+        id: docker_build
         uses: pagopa/dx/.github/actions/docker-build-push@CES-958-definire-una-pipeline-di-cd-per-le-container-app
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
@@ -87,7 +91,7 @@ jobs:
   release:
     name: Deploy To Container App
     runs-on: ubuntu-latest
-    needs: build
+    # needs: build
     permissions:
       contents: read
       id-token: write
