@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 0.2.8
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 0.2.7
 
 ### Patch Changes

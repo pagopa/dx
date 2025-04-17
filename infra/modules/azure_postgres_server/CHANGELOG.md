@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.4
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.0.3
 
 ### Patch Changes

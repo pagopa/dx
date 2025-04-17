@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 1.5.2
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 1.5.1
 
 ### Patch Changes

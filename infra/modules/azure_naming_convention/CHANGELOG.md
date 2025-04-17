@@ -1,5 +1,11 @@
 # azure_naming_convention
 
+## 0.0.7
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 0.0.6
 
 ### Patch Changes

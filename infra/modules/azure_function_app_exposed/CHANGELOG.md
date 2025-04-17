@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.1.7
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 0.1.6
 
 ### Patch Changes

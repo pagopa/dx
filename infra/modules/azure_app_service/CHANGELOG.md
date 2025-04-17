@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.1.9
+
+### Patch Changes
+
+- 4fb5b12: Improve the descriptions of variables and outputs. Add missing descriptions where not provided.
+
 ## 0.1.8
 
 ### Patch Changes
