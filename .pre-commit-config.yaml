@@ -7,7 +7,7 @@ repos:
         entry: infra/scripts/lock-modules.sh
         language: script
         files: '\.tf$'
-        exclude: ^.*\/modules\/.*
+        exclude: ^.*/(provider|modules)(/.*)?$
         pass_filenames: true
         require_serial: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform

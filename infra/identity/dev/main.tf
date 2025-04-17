@@ -72,13 +72,15 @@ module "federated_identities" {
 }
 
 module "roles_ci" {
-  source       = "../../modules/azure_role_assignments"
-  principal_id = module.federated_identities.federated_ci_identity.id
+  source          = "../../modules/azure_role_assignments"
+  principal_id    = module.federated_identities.federated_ci_identity.id
+  subscription_id = data.azurerm_subscription.current.id
 
   key_vault = [
     {
-      id          = data.azurerm_key_vault.common.id
-      description = "Allow dx repo CI to read secrets"
+      name                = data.azurerm_key_vault.common.name
+      resource_group_name = data.azurerm_key_vault.common.resource_group_name
+      description         = "Allow dx repo CI to read secrets"
       roles = {
         secrets = "reader"
       }
@@ -87,13 +89,15 @@ module "roles_ci" {
 }
 
 module "roles_cd" {
-  source       = "../../modules/azure_role_assignments"
-  principal_id = module.federated_identities.federated_cd_identity.id
+  source          = "../../modules/azure_role_assignments"
+  principal_id    = module.federated_identities.federated_cd_identity.id
+  subscription_id = data.azurerm_subscription.current.id
 
   key_vault = [
     {
-      id          = data.azurerm_key_vault.common.id
-      description = "Allow dx repo CD to read secrets"
+      name                = data.azurerm_key_vault.common.name
+      resource_group_name = data.azurerm_key_vault.common.resource_group_name
+      description         = "Allow dx repo CD to read secrets"
       roles = {
         secrets = "reader"
       }
