@@ -91,6 +91,7 @@ runs:
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         BUILD_ARGS: ${{ inputs.build_args }}
         BUILD_PLATFORMS: ${{ inputs.build_platforms }}
+        BUILDX_NO_DEFAULT_ATTESTATIONS: 1
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
         file: ${{ env.DOCKERFILE_PATH }}
