@@ -76,7 +76,7 @@ runs:
           type=semver,pattern={{version}},enable=${{ inputs.apply_github_tags_to_image_tags }}
           type=ref,event=branch
           type=sha
-        labels:
+        labels: |
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description="${{ env.DESCRIPTION }}"
           org.opencontainers.image.authors=${{ env.AUTHORS }}
