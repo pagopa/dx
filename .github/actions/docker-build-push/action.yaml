@@ -91,7 +91,7 @@ runs:
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         BUILD_ARGS: ${{ inputs.build_args }}
         BUILD_PLATFORMS: ${{ inputs.build_platforms }}
-        SOURCE_DATE_EPOCH: 0
+        SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
         file: ${{ env.DOCKERFILE_PATH }}
@@ -116,4 +116,4 @@ runs:
       with:
         subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
-        push-to-registry: false
+        push-to-registry: true
