@@ -48,25 +48,23 @@ on:
           default: false
           description: Use GitHub tags for image tagging
         # override_github_environment:
-      #   description: Set a value if GitHub Environment name is different than the TF environment folder
-      #   type: string
-      #   required: false
-      #   default: ''
 
 concurrency:
   group: ${{ github.workflow }}-cd
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    if: ${{ !github.event.act }}
+    # if: ${{ false }}
     permissions:
-      contents: read
       attestations: write
       packages: write
-      id-token: write
 
     steps:
 
@@ -91,12 +89,7 @@ jobs:
   release:
     name: Deploy To Container App
     runs-on: ubuntu-latest
-    if: ${{ false }}
-    # environment: ${{ inputs.override_github_environment == '' && 'prod' || inputs.override_github_environment}}-cd
     needs: build
-    permissions:
-      id-token: write
-      contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
