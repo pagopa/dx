@@ -53,6 +53,9 @@ concurrency:
   group: ${{ github.workflow }}-cd
   cancel-in-progress: true
 
+env:
+  IMAGE_NAME: ${{ inputs.docker_image_name }}
+
 jobs:
   build:
     name: Build Docker Image
@@ -65,7 +68,6 @@ jobs:
       packages: write
     outputs:
       image_id: ${{ steps.docker_build.outputs.image_id }}
-      image_tags: ${{ steps.docker_build.outputs.image_tags }}
 
     steps:
 
@@ -78,7 +80,7 @@ jobs:
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
-          docker_image_name: ${{ inputs.docker_image_name }}
+          docker_image_name: ${{ env.IMAGE_NAME }}
           docker_image_description: "${{ inputs.docker_image_description }}"
           docker_image_authors: ${{ inputs.docker_image_authors }}
           build_args: ${{ inputs.build_args }}
