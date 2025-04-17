@@ -116,4 +116,4 @@ runs:
       with:
         subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
-        push-to-registry: true
+        push-to-registry: false
