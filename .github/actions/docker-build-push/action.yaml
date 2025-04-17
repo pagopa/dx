@@ -127,6 +127,7 @@ runs:
         push-to-registry: false
 
     - name: Debug Image Id
+      shell: bash
       run: |
         echo "--- Image ID: ${{ steps.push_registry.outputs.imageid }}"
         echo "--- Image Tags: ${{ fromJSON(steps.meta.outputs.json).tags }}"
