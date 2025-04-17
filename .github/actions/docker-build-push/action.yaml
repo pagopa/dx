@@ -102,6 +102,7 @@ runs:
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
         provenance: false
+        annotations: ${{ steps.meta.outputs.annotations }}
 
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
@@ -111,4 +112,4 @@ runs:
       with:
         subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
-        push-to-registry: true
+        push-to-registry: false
