@@ -91,7 +91,7 @@ runs:
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         BUILD_ARGS: ${{ inputs.build_args }}
         BUILD_PLATFORMS: ${{ inputs.build_platforms }}
-        BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+        # BUILDX_NO_DEFAULT_ATTESTATIONS: 1
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
         file: ${{ env.DOCKERFILE_PATH }}
@@ -102,13 +102,14 @@ runs:
         cache-to: type=gha,mode=min
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
+        provenance: false
 
-    - name: Generate Artifact Attestation
-      uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
-      if: ${{ inputs.push_to_registry }}
-      env:
-        IMAGE_NAME: ${{ inputs.docker_image_name }}
-      with:
-        subject-name: ghcr.io/${{ env.IMAGE_NAME }}
-        subject-digest: ${{ steps.push_registry.outputs.digest }}
-        push-to-registry: true
+    # - name: Generate Artifact Attestation
+    #   uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+    #   if: ${{ inputs.push_to_registry }}
+    #   env:
+    #     IMAGE_NAME: ${{ inputs.docker_image_name }}
+    #   with:
+    #     subject-name: ghcr.io/${{ env.IMAGE_NAME }}
+    #     subject-digest: ${{ steps.push_registry.outputs.digest }}
+    #     push-to-registry: true
