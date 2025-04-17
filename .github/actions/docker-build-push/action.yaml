@@ -131,3 +131,5 @@ runs:
         echo "--- Image Tags 0: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
         echo "--- Image Tags 1: ${{ fromJSON(steps.meta.outputs.json).tags[1] }}"
         echo "--- Image Tags: ${{ steps.meta.outputs.json }}"
+
+        echo "--- Image Metadata: ${{ steps.push_registry.outputs.metadata }}"
