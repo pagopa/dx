@@ -152,14 +152,14 @@ jobs:
           echo "Current revision: ${{ env.CURRENT_REVISION }}"
           echo "New revision: $new_revision"
 
-          # if [[ "${{ env.CURRENT_REVISION }}" == "${{ env.NEW_REVISION }}" ]]; then
-          #   echo "::warning::No deployment needed - current revision is already using the latest image"
-          #   echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
-          #   exit 0
-          # fi
+          if [[ "${{ env.CURRENT_REVISION }}" == "$new_revision" ]]; then
+            echo "::warning::No deployment needed - current revision is already using the latest image"
+            echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
-          # echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
+          echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
 
           az containerapp ingress traffic set \
             --name ${{ env.CONTAINER_APP_NAME }} \
