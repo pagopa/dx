@@ -127,12 +127,11 @@ jobs:
       - name: Ensure Latest Revision Captures All Traffic
         id: ensure_latest_revision
         run: |
+
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
-
-          echo "Current revision: $current_revision"
 
           az containerapp ingress traffic set \
             --name ${{ env.CONTAINER_APP_NAME }} \
@@ -144,23 +143,22 @@ jobs:
       - name: Create New Revision
         id: create_new_revision
         env:
-          DOCKER_IMAGE_NAME: "${{ env.DOCKER_IMAGE_NAME }}:${{ steps.get_commit_sha.outputs.short_sha }}"
           CURRENT_REVISION: ${{ steps.ensure_latest_revision.outputs.current_revision_name }}
         run: |
-          echo "::notice Current revision: ${{ env.CURRENT_REVISION}}"
+          echo "::notice::Current revision: ${{ env.CURRENT_REVISION}}"
 
           new_revision=$(az containerapp revision copy \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --from-revision ${{ env.CURRENT_REVISION }} \
-            --image ${{ env.DOCKER_IMAGE_NAME }} \
+            --image "${{ env.IMAGE_NAME }}:${{ steps.get_commit_sha.outputs.short_sha }}" \
             --query "properties.latestRevisionName" \
             --output tsv)
 
-          echo "::notice New revision: $new_revision"
+          echo "::notice:: New revision: $new_revision"
 
           if [ "$new_revision" == "${{ env.CURRENT_REVISION }}" ]; then
-            echo "::notice No deployment needed - current revision is already using the latest image"
+            echo "::notice:: No deployment needed - current revision is already using the latest image"
             echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
             exit 0
           else
@@ -186,10 +184,10 @@ jobs:
               --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
               --query "[?contains(name, '$new_revision_name')].{Health:properties.healthState}|[0].Health" -o tsv)
 
-            echo "::notice Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
+            echo "::notice:: Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
 
             if [ "$health_state" == "Healthy" ]; then
-              echo "::notice New revision is now healthy!"
+              echo "::notice:: New revision is now healthy!"
               break
             fi
 
