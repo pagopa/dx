@@ -149,8 +149,8 @@ jobs:
             --query "properties.latestRevisionName" \
             --output tsv)
 
-          echo "::debug::Current revision: ${{ env.CURRENT_REVISION }}"
-          echo "::debug::New revision: $new_revision"
+          echo "Current revision: ${{ env.CURRENT_REVISION }}"
+          echo "New revision: $new_revision"
 
           # if [[ "${{ env.CURRENT_REVISION }}" == "${{ env.NEW_REVISION }}" ]]; then
           #   echo "::warning::No deployment needed - current revision is already using the latest image"
