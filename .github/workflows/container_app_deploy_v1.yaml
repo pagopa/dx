@@ -145,7 +145,6 @@ jobs:
             --name ${{ env.CONTAINER_APP_NAME }} \
             --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
             --from-revision ${{ env.CURRENT_REVISION }} \
-            --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }} \
             --query "properties.latestRevisionName" \
             --output tsv)
 
