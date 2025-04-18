@@ -123,6 +123,7 @@ jobs:
       - name: Install containerapp AZ CLI Extension
         run: |
           az extension add -n containerapp --yes --allow-preview
+          az configure --defaults group=${{ env.RESOURCE_GROUP_NAME }}
 
       - name: Ensure Latest Revision Captures All Traffic
         id: ensure_latest_revision
@@ -130,12 +131,10 @@ jobs:
 
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
 
           az containerapp ingress traffic set \
             --name ${{ env.CONTAINER_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --revision-weight $current_revision=100
 
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
@@ -151,7 +150,7 @@ jobs:
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --from-revision ${{ env.CURRENT_REVISION }} \
-            --image "${{ env.IMAGE_NAME }}:${{ steps.get_commit_sha.outputs.short_sha }}" \
+            --image "ghcr.io/${{ env.IMAGE_NAME }}:${{ steps.get_commit_sha.outputs.short_sha }}" \
             --query "properties.latestRevisionName" \
             --output tsv)
 
