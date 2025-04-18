@@ -1,5 +1,13 @@
 # azure_function_app
 
+## 0.2.9
+
+### Patch Changes
+
+- b3254c7: Rename `APPINSIGHTS_CONNECTION_STRING` environment variable.
+
+  This was previously introduced to let the `@pagopa/azure-tracing` package work.
+
 ## 0.2.8
 
 ### Patch Changes

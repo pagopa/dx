@@ -1,5 +1,0 @@
----
-"@pagopa/azure-tracing": patch
----
-
-Rename `APPINSIGHTS_CONNECTION_STRING` to `APPLICATIONINSIGHTS_CONNECTION_STRING`

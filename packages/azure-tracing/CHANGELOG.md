@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.3.1
+
+### Patch Changes
+
+- b3254c7: Rename `APPINSIGHTS_CONNECTION_STRING` to `APPLICATIONINSIGHTS_CONNECTION_STRING`
+
 ## 0.3.0
 
 ### Minor Changes
