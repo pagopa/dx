@@ -139,39 +139,33 @@ jobs:
         id: create_new_revision
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
-          NEW_REVISION: "${{ env.CONTAINER_APP_NAME }}--${{ steps.get_commit_sha.outputs.short_sha }}"
         run: |
-          echo "::notice::Current revision: ${{ env.CURRENT_REVISION }}"
-          echo "::notice::New revision: ${{ env.NEW_REVISION }}"
 
-          if [[ "${{ env.CURRENT_REVISION }}" == "${{ env.NEW_REVISION }}" ]]; then
-            echo "::notice:: No deployment needed - current revision is already using the latest image"
-            echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          az containerapp revision copy \
+          new_revision=$(az containerapp revision copy \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
             --from-revision ${{ env.CURRENT_REVISION }} \
-            --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }}
+            --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }} \
+            --query "properties.latestRevisionName" \
+            --output tsv)
 
-          # new_revision=$(az containerapp revision copy \
-          #   --name ${{ env.CONTAINER_APP_NAME }} \
-          #   --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
-          #   --from-revision ${{ env.CURRENT_REVISION }} \
-          #   --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }} \
-          #   --query "properties.latestRevisionName" \
-          #   --output tsv)
+          echo "::debug::Current revision: ${{ env.CURRENT_REVISION }}"
+          echo "::debug::New revision: $new_revision"
 
-          echo "new_revision_name=${{ env.NEW_REVISION }}" >> $GITHUB_OUTPUT
-          echo "current_revision_name=${{ env.CURRENT_REVISION }}" >> $GITHUB_OUTPUT
-          echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
+          # if [[ "${{ env.CURRENT_REVISION }}" == "${{ env.NEW_REVISION }}" ]]; then
+          #   echo "::warning::No deployment needed - current revision is already using the latest image"
+          #   echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
+          #   exit 0
+          # fi
+
+          echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
+          # echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
 
           az containerapp ingress traffic set \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --revision-weight ${{ env.CURRENT_REVISION }}=100 \
-            --revision-weight ${{ env.NEW_REVISION }}=0
+            --revision-weight $new_revision=0 \
+            --output table
 
       - name: Wait for New Revision to Become Ready
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
@@ -197,7 +191,7 @@ jobs:
             fi
 
             attempt=$((attempt+1))
-            sleep 1
+            sleep 3
           done
 
           if [ "$health_state" != "Healthy" ]; then
@@ -205,7 +199,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check for errors and increment traffic
+      - name: Check for Errors and Increment Traffic
         if: ${{ false }} # if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           new_revision_name=${{ steps.create_new_revision.outputs.new_revision_name }}
@@ -216,8 +210,8 @@ jobs:
 
             az containerapp ingress traffic set \
               --name ${{ env.CONTAINER_APP_NAME }} \
-              --revision-weight ${{ steps.create_new_revision.outputs.current_revision_name }}=$(100-$percentage) \
-              --revision-weight "$new_revision_name=$percentage"
+              --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=$(100-$percentage) \
+              --revision-weight $new_revision_name=$percentage
 
             echo "Waiting 90 seconds before checking health and increasing traffic..."
             sleep 90
@@ -234,7 +228,7 @@ jobs:
 
             # Check HTTP errors rate (5xx)
             http_errors=$(az monitor metrics list \
-              --resource "$CONTAINER_APP_ID" \
+              --resource ${{ env.CONTAINER_APP_NAME }} \
               --metric "HttpResponseStatus5xx" \
               --interval 1m \
               --aggregation Total \
@@ -243,7 +237,7 @@ jobs:
 
             # Check revision health state
             health_state=$(az containerapp revision list \
-              --ids "$CONTAINER_APP_ID" \
+              --name ${{ env.CONTAINER_APP_NAME }}  \
               --query "[?name=='$blue_revision'].properties.healthState" -o tsv)
 
             echo "Health check results:"
@@ -253,11 +247,12 @@ jobs:
 
             # If any errors or unhealthy state, rollback and exit
             if [ "$error_count" -gt 0 ] || [ "$http_errors" -gt 0 ] || [ "$health_state" != "Healthy" ]; then
-              echo "Errors detected in revision '$new_revision_name', rolling back to previous revision"
+              echo "::error::Errors detected in revision '$new_revision_name', rolling back to previous revision"
 
               az containerapp ingress traffic set \
                 --name ${{ env.CONTAINER_APP_NAME }} \
-                --label-revision latest=100"
+                --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=100 \
+                --revision-weight $new_revision_name=0
 
               exit 1
             fi
@@ -272,4 +267,4 @@ jobs:
         run: |
           az containerapp revision deactivate \
             --name ${{ env.CONTAINER_APP_NAME }} \
-            --revision ${{ steps.create_new_revision.outputs.current_revision_name }}
+            --revision ${{ steps.get_current_revision.outputs.current_revision_name }}
