@@ -63,3 +63,21 @@ run "validate_github_repository" {
     error_message = "The main branch is allowing force pushes"
   }
 }
+
+run "validate_github_default_branch_override" {
+  command = plan
+
+  variables {
+    repository = {
+      name                = "dx-test-monorepo-starter-pack"
+      description         = "Devex repository for shared tools and pipelines."
+      topics              = ["developer-experience"]
+      default_branch_name = "master"
+    }
+  }
+
+  assert {
+    condition     = github_branch_protection.main.pattern == "master"
+    error_message = "The repository branch protection on master is not set"
+  }
+}

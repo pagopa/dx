@@ -53,7 +53,7 @@ state:
 ```hcl
 import {
   id = "<repository-name>"
-  to = module.repo.github_repository.this
+  to = module.repo.module.github_repository.github_repository.this
 }
 ```
 
@@ -112,6 +112,7 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_github_repository"></a> [github\_repository](#module\_github\_repository) | pagopa-dx/github-environment-bootstrap/github | ~> 0.0 |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 1.0 |
 
 ## Resources
@@ -185,10 +186,6 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 | [github_actions_environment_secret.opex_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.opex_prod_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_secret.repo_secrets](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
-| [github_branch_default.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_default) | resource |
-| [github_branch_protection.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection) | resource |
-| [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository) | resource |
-| [github_repository_autolink_reference.jira_board](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_autolink_reference) | resource |
 | [github_repository_environment.app_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_prod_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
@@ -217,7 +214,7 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
 | <a name="input_pep_vnet_id"></a> [pep\_vnet\_id](#input\_pep\_vnet\_id) | The ID of the Virtual Network (VNet) containing the subnet dedicated to Private Endpoints. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
-| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. | <pre>object({<br/>    owner                    = optional(string, "pagopa")<br/>    name                     = string<br/>    description              = string<br/>    topics                   = list(string)<br/>    reviewers_teams          = list(string)<br/>    default_branch_name      = optional(string, "main")<br/>    infra_cd_policy_branches = optional(set(string), ["main"])<br/>    opex_cd_policy_branches  = optional(set(string), ["main"])<br/>    app_cd_policy_branches   = optional(set(string), ["main"])<br/>    infra_cd_policy_tags     = optional(set(string), [])<br/>    opex_cd_policy_tags      = optional(set(string), [])<br/>    app_cd_policy_tags       = optional(set(string), [])<br/>    jira_boards_ids          = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project. | <pre>object({<br/>    owner                    = optional(string, "pagopa")<br/>    name                     = string<br/>    description              = string<br/>    topics                   = list(string)<br/>    reviewers_teams          = list(string)<br/>    default_branch_name      = optional(string, "main")<br/>    infra_cd_policy_branches = optional(set(string), ["main"])<br/>    opex_cd_policy_branches  = optional(set(string), ["main"])<br/>    app_cd_policy_branches   = optional(set(string), ["main"])<br/>    infra_cd_policy_tags     = optional(set(string), [])<br/>    opex_cd_policy_tags      = optional(set(string), [])<br/>    app_cd_policy_tags       = optional(set(string), [])<br/>    jira_boards_ids          = optional(list(string), [])<br/>    configure                = optional(bool, true)<br/>  })</pre> | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription ID where resources will be created. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
 | <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | The Azure tenant ID where resources will be created. | `string` | n/a | yes |
