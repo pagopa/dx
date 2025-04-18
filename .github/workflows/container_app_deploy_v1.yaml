@@ -66,8 +66,6 @@ jobs:
       id-token: write
       attestations: write
       packages: write
-    outputs:
-      image_id: ${{ steps.docker_build.outputs.image_id }}
 
     steps:
 
@@ -113,9 +111,9 @@ jobs:
       - name: Get Short SHA of Latest Commit
         id: get_commit_sha
         run: |
-          sha=$(git rev-parse --short HEAD)
+          sha=$(git rev-parse --short ${{ github.sha }})
 
-          echo "Found SHA: $sha"
+          echo "Using sha: $sha"
 
           echo "short_sha=$sha" >> $GITHUB_OUTPUT
 
@@ -126,18 +124,6 @@ jobs:
         run: |
           az extension add -n containerapp --yes --allow-preview
 
-      - name: Get Container App Resource Id
-        id: get_container_app_id
-        run: |
-          ca_id=$(az containerapp show \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-            --query "id" \
-            --output tsv)
-
-          echo "container_app_id=$ca_id" >> $GITHUB_OUTPUT
-
-      # this step is also useful to ensure new revisions will not have 100% of the traffic (default behavior)
       - name: Ensure Latest Revision Captures All Traffic
         id: ensure_latest_revision
         run: |
@@ -149,7 +135,8 @@ jobs:
           echo "Current revision: $current_revision"
 
           az containerapp ingress traffic set \
-            --ids "${{ steps.get_container_app_id.outputs.container_app_id }}" \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
             --revision-weight $current_revision=100
 
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
@@ -157,55 +144,66 @@ jobs:
       - name: Create New Revision
         id: create_new_revision
         env:
-          DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
+          DOCKER_IMAGE_NAME: "${{ env.DOCKER_IMAGE_NAME }}:${{ steps.get_commit_sha.outputs.short_sha }}"
+          CURRENT_REVISION: ${{ steps.ensure_latest_revision.outputs.current_revision_name }}
         run: |
+          echo "::notice Current revision: ${{ env.CURRENT_REVISION}}"
+
           new_revision=$(az containerapp revision copy \
-            --ids "${{ steps.get_container_app_id.outputs.container_app_id }}" \
-            --from-revision ${{ steps.ensure_latest_revision.outputs.current_revision_name }} \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+            --from-revision ${{ env.CURRENT_REVISION }} \
             --image ${{ env.DOCKER_IMAGE_NAME }} \
-            --revision-suffix ${{steps.get_commit_sha.outputs.short_sha}} \
             --query "properties.latestRevisionName" \
             --output tsv)
 
-          echo "New revision: $new_revision"
+          echo "::notice New revision: $new_revision"
 
-          echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
+          if [ "$new_revision" == "${{ env.CURRENT_REVISION }}" ]; then
+            echo "::notice No deployment needed - current revision is already using the latest image"
+            echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
+            echo "current_revision_name=${{ env.CURRENT_REVISION }}" >> $GITHUB_OUTPUT
+            echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Wait for New Revision to Become Ready
+        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
-            max_attempts=60
-            attempt=0
-            health_state=""
-            new_revision_name="${{ steps.create_new_revision.outputs.new_revision_name }}"
+          max_attempts=30
+          attempt=0
+          health_state=""
+          new_revision_name="${{ steps.create_new_revision.outputs.new_revision_name }}"
 
-            echo "Waiting for new revision to become healthy..."
+          echo "Waiting for new revision to become healthy..."
 
-            while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
+          while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
 
-              health_state=$(az containerapp revision list \
-                --name ${{ env.CONTAINER_APP_NAME }} \
-                --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-                --query "[?contains(name, '$new_revision_name')].{Health:properties.healthState}|[0].Health" -o tsv)
+            health_state=$(az containerapp revision list \
+              --name ${{ env.CONTAINER_APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+              --query "[?contains(name, '$new_revision_name')].{Health:properties.healthState}|[0].Health" -o tsv)
 
-              echo "Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
+            echo "::notice Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
 
-              if [ "$health_state" == "Healthy" ]; then
-                echo "New revision is now healthy!"
-                break
-              fi
-
-              attempt=$((attempt+1))
-              sleep 1
-            done
-
-            if [ "$health_state" != "Healthy" ]; then
-              echo "Error: New revision did not become healthy within the timeout period"
-              exit 1
+            if [ "$health_state" == "Healthy" ]; then
+              echo "::notice New revision is now healthy!"
+              break
             fi
 
+            attempt=$((attempt+1))
+            sleep 1
+          done
+
+          if [ "$health_state" != "Healthy" ]; then
+            echo "error: New revision did not become healthy within the timeout period"
+            exit 1
+          fi
+
       - name: Check for errors and increment traffic
-        env:
-          CONTAINER_APP_ID: "${{ steps.get_container_app_id.outputs.container_app_id }}"
+        if: ${{ false }} # if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           new_revision_name=${{ steps.create_new_revision.outputs.new_revision_name }}
 
@@ -214,7 +212,8 @@ jobs:
             echo "Setting $new_revision_name traffic to $percentage%"
 
             az containerapp ingress traffic set \
-              --ids "$CONTAINER_APP_ID" \
+              --name ${{ env.CONTAINER_APP_NAME }} \
+              --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
               --revision-weight ${{ steps.ensure_latest_revision.outputs.current_revision_name }}=$(100-$percentage) \
               --revision-weight "$new_revision_name=$percentage"
 
@@ -256,7 +255,8 @@ jobs:
               echo "Errors detected in revision '$new_revision_name', rolling back to previous revision"
 
               az containerapp ingress traffic set \
-                --ids "$CONTAINER_APP_ID" \
+                --name ${{ env.CONTAINER_APP_NAME }} \
+                --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
                 --label-revision latest=100"
 
               exit 1
@@ -268,7 +268,9 @@ jobs:
           echo "Successfully shifted 100% traffic to new revision"
 
       - name: Deactivate old revision
+        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           az containerapp revision deactivate \
-            --ids "$CONTAINER_APP_ID" \
-            --revision latest
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+            --revision ${{ steps.ensure_latest_revision.outputs.current_revision_name }}

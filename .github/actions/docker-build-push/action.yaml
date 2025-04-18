@@ -46,11 +46,6 @@ inputs:
     default: true
     description: Push the image to the registry
 
-outputs:
-  image_tag:
-    description: The tags of the built image
-    value: ${{ steps.push_registry.outputs.imageid }}
-
 runs:
   using: composite
   steps:
@@ -83,7 +78,7 @@ runs:
           type=sha
         labels: |
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-          org.opencontainers.image.description="${{ env.DESCRIPTION }}"
+          org.opencontainers.image.description=${{ env.DESCRIPTION }}
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
@@ -122,14 +117,3 @@ runs:
         subject-name: ghcr.io/${{ env.IMAGE_NAME }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
         push-to-registry: false
-
-    - name: Debug Image Id
-      shell: bash
-      run: |
-        echo "--- Image ID: ${{ steps.push_registry.outputs.imageid }}"
-        echo "--- Image Tag: ${{ fromJSON(steps.meta.outputs.json).tags['sha'] }}"
-        echo "--- Image Tags 0: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
-        echo "--- Image Tags 1: ${{ fromJSON(steps.meta.outputs.json).tags[1] }}"
-        echo "--- Image Tags: ${{ steps.meta.outputs.json }}"
-
-        echo "--- Image Metadata: ${{ steps.push_registry.outputs.metadata }}"
