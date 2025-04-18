@@ -53,8 +53,6 @@ resource "azurerm_linux_function_app_slot" "this" {
       # AI SDK Sampling, to be used programmatically
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
       APPINSIGHTS_SAMPLING_PERCENTAGE = "100",
-      # Add environment variable used by the `@pagopa/azure-tracing` package
-      APPINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string,
 
       # Azure Function Host (runtime) AI Sampling
       # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
