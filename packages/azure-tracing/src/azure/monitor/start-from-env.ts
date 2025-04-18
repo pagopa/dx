@@ -7,7 +7,7 @@ export const initFromEnv = () => {
 
   return useAzureMonitor({
     azureMonitorExporterOptions: {
-      connectionString: env.APPINSIGHTS_CONNECTION_STRING,
+      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
     enableLiveMetrics: true,
     samplingRatio: env.APPINSIGHTS_SAMPLING_PERCENTAGE,
