@@ -125,45 +125,53 @@ jobs:
           az extension add -n containerapp --yes --allow-preview
           az configure --defaults group=${{ env.RESOURCE_GROUP_NAME }}
 
-      - name: Ensure Latest Revision Captures All Traffic
-        id: ensure_latest_revision
+      - name: Get Current Revision
+        id: get_current_revision
         run: |
 
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
 
-          az containerapp ingress traffic set \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --revision-weight $current_revision=100
-
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
 
       - name: Create New Revision
         id: create_new_revision
         env:
-          CURRENT_REVISION: ${{ steps.ensure_latest_revision.outputs.current_revision_name }}
+          CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          NEW_REVISION: "${{ env.CONTAINER_APP_NAME }}--${{ steps.get_commit_sha.outputs.short_sha }}"
         run: |
-          echo "::notice::Current revision: ${{ env.CURRENT_REVISION}}"
+          echo "::notice::Current revision: ${{ env.CURRENT_REVISION }}"
+          echo "::notice::New revision: ${{ env.NEW_REVISION }}"
 
-          new_revision=$(az containerapp revision copy \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --from-revision ${{ env.CURRENT_REVISION }} \
-            --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
-            --query "properties.latestRevisionName" \
-            --output tsv)
-
-          echo "::notice:: New revision: $new_revision"
-
-          if [ "$new_revision" == "${{ env.CURRENT_REVISION }}" ]; then
+          if [[ "${{ env.CURRENT_REVISION }}" == "${{ env.NEW_REVISION }}" ]]; then
             echo "::notice:: No deployment needed - current revision is already using the latest image"
             echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
             exit 0
-          else
-            echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
-            echo "current_revision_name=${{ env.CURRENT_REVISION }}" >> $GITHUB_OUTPUT
-            echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
           fi
+
+          az containerapp revision copy \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
+            --from-revision ${{ env.CURRENT_REVISION }} \
+            --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }}
+
+          # new_revision=$(az containerapp revision copy \
+          #   --name ${{ env.CONTAINER_APP_NAME }} \
+          #   --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
+          #   --from-revision ${{ env.CURRENT_REVISION }} \
+          #   --revision-suffix ${{ steps.get_commit_sha.outputs.short_sha }} \
+          #   --query "properties.latestRevisionName" \
+          #   --output tsv)
+
+          echo "new_revision_name=${{ env.NEW_REVISION }}" >> $GITHUB_OUTPUT
+          echo "current_revision_name=${{ env.CURRENT_REVISION }}" >> $GITHUB_OUTPUT
+          echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
+
+          az containerapp ingress traffic set \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --revision-weight ${{ env.CURRENT_REVISION }}=100 \
+            --revision-weight ${{ env.NEW_REVISION }}=0
 
       - name: Wait for New Revision to Become Ready
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
@@ -208,7 +216,7 @@ jobs:
 
             az containerapp ingress traffic set \
               --name ${{ env.CONTAINER_APP_NAME }} \
-              --revision-weight ${{ steps.ensure_latest_revision.outputs.current_revision_name }}=$(100-$percentage) \
+              --revision-weight ${{ steps.create_new_revision.outputs.current_revision_name }}=$(100-$percentage) \
               --revision-weight "$new_revision_name=$percentage"
 
             echo "Waiting 90 seconds before checking health and increasing traffic..."
@@ -264,4 +272,4 @@ jobs:
         run: |
           az containerapp revision deactivate \
             --name ${{ env.CONTAINER_APP_NAME }} \
-            --revision ${{ steps.ensure_latest_revision.outputs.current_revision_name }}
+            --revision ${{ steps.create_new_revision.outputs.current_revision_name }}
