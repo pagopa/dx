@@ -48,6 +48,10 @@ on:
           default: false
           description: Use GitHub tags for image tagging
         # override_github_environment:
+      npm_script:
+        type: string
+        required: false
+        description: NPM script to run to check for errors
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -55,12 +59,12 @@ concurrency:
 
 env:
   IMAGE_NAME: ${{ inputs.docker_image_name }}
+  NPM_SCRIPT: ${{ inputs.npm_script }}
 
 jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    # if: ${{ false }}
     permissions:
       contents: read
       id-token: write
@@ -113,34 +117,48 @@ jobs:
         run: |
           sha=$(git rev-parse --short ${{ github.sha }})
 
-          echo "Using sha: $sha"
+          echo "Latest commit sha: $sha"
 
           echo "short_sha=$sha" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
 
-      - name: Install containerapp AZ CLI Extension
+      - name: Allow AZ CLI Extensions
         run: |
-          az extension add -n containerapp --yes --allow-preview
+          az config set extension.use_dynamic_install=yes_without_prompt
+
+      - name: Set Default Resource Group
+        run: |
           az configure --defaults group=${{ env.RESOURCE_GROUP_NAME }}
 
-      - name: Get Current Revision
+      - name: Get Log Analytics Workspace ID
+        id: get_log_analytics_workspace_id
+        run: |
+          cae_id=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --query "properties.environmentId")
+
+          workspace_id=$(az containerapp env show \
+            --ids $cae_id \
+            --query "properties.appLogsConfiguration.logAnalyticsConfiguration.customerId")
+
+          echo "log_analytics_workspace_id=$workspace_id" >> $GITHUB_OUTPUT
+
+      - name: Get Container App Current Revision
         id: get_current_revision
         run: |
-
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
 
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
 
-      - name: Create New Revision
+      - name: Create New Container App Revision
         id: create_new_revision
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
-
           new_revision=$(az containerapp revision copy \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
@@ -198,8 +216,8 @@ jobs:
             exit 1
           fi
 
-      - name: Check for Errors and Increment Traffic
-        if: ${{ false }} # if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+      - name: Check for New Revision Errors and Increment Traffic
+        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           new_revision_name=${{ steps.create_new_revision.outputs.new_revision_name }}
 
@@ -215,37 +233,29 @@ jobs:
             echo "Waiting 90 seconds before checking health and increasing traffic..."
             sleep 90
 
-            # Check for error logs
-            error_count=$(az containerapp logs show \
-              --name ${{ env.CONTAINER_APP_NAME }} \
-              --revision $new_revision_name \
-              --tail 100 \
-              # --only-show-errors \
-              --format json \
-              --query "length([?contains(log, 'error') || contains(log, 'Error') || contains(log, 'ERROR') || contains(log, 'exception') || contains(log, 'Exception')])" \
-              --output tsv)
+            last_check=$(date +'%Y-%m-%dT%H:%M:%S')"
 
-            # Check HTTP errors rate (5xx)
-            http_errors=$(az monitor metrics list \
-              --resource ${{ env.CONTAINER_APP_NAME }} \
-              --metric "HttpResponseStatus5xx" \
-              --interval 1m \
-              --aggregation Total \
-              --output tsv \
-              --query 'value[0].timeseries[0].data[0].total' 2>/dev/null || echo "0")
+            # Check for error logs
+            if ([[ -z "${{ env.NPM_SCRIPT }}" ]]); then
+              error_count=$(az monitor log-analytics query \
+                --workspace ${{ steps.get_log_analytics_workspace_id.outputs.log_analytics_workspace_id}}) \
+                --analytics-query "ContainerAppLog_CL | where TimeGenerated between (datetime(2025-01-01T) .. datetime(2025-05-30)) and RevisionName_s == '$new_revision_name' | where Log_s contains 'error' or Log_s contains 'Error' or Log_s contains 'ERROR' or Log_s contains 'exception' or Log_s contains 'Exception'" \
+            else
+              echo "Running NPM script to check for errors..."
+              error_count=$(npm run ${{ env.NPM_SCRIPT }})
+            fi
 
             # Check revision health state
             health_state=$(az containerapp revision list \
               --name ${{ env.CONTAINER_APP_NAME }}  \
-              --query "[?name=='$blue_revision'].properties.healthState" -o tsv)
+              --query "[?name=='$new_revision_name'].properties.healthState" -o tsv)
 
             echo "Health check results:"
             echo "- Error logs: $error_count"
-            echo "- HTTP 5xx errors: $http_errors"
             echo "- Health state: $health_state"
 
             # If any errors or unhealthy state, rollback and exit
-            if [ "$error_count" -gt 0 ] || [ "$http_errors" -gt 0 ] || [ "$health_state" != "Healthy" ]; then
+            if [ "$error_count" -gt 0 ] || [ "$health_state" != "Healthy" ]; then
               echo "::error::Errors detected in revision '$new_revision_name', rolling back to previous revision"
 
               az containerapp ingress traffic set \
@@ -259,7 +269,7 @@ jobs:
             echo "No errors detected, continuing traffic shift"
           done
 
-          echo "Successfully shifted 100% traffic to new revision"
+          echo "::notice::Successfully shifted 100% traffic to new revision"
 
       - name: Deactivate old revision
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
