@@ -1,6 +1,6 @@
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -15,7 +15,7 @@ variable "environment" {
 
   validation {
     condition     = length("${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : replace(var.environment.domain, "-", "")}${var.environment.app_name}stfn${var.environment.instance_number}") <= 24
-    error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}st${var.environment.instance_number}\""
+    error_message = "Storage Account name must have less than 25 characters. Current value is \"${var.environment.prefix}${var.environment.env_short}reg${var.environment.domain == null ? "" : var.environment.domain}${var.environment.app_name}stfn${var.environment.instance_number}\""
   }
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
@@ -23,25 +23,31 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where resources will be deployed."
 }
 
 variable "app_service_plan_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the AppService Id where you want to host the Function App"
+  description = "The ID of the App Service Plan where the Function App will be hosted. Leave null to create a new plan."
+}
+
+variable "subnet_id" {
+  type        = string
+  default     = null
+  description = "The ID of the subnet where the Function App will be hosted. Leave null to create a new subnet."
 }
 
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
   default     = null
-  description = "(Optional) Application Insights connection string"
+  description = "The connection string for Application Insights to enable monitoring and diagnostics."
 }
 
 variable "health_check_path" {
   type        = string
-  description = "Endpoint where health probe is exposed"
+  description = "The endpoint path where the health probe is exposed for the Function App."
 }
 
 variable "tier" {
@@ -57,8 +63,9 @@ variable "tier" {
 }
 
 variable "stack" {
-  type    = string
-  default = "node"
+  type        = string
+  default     = "node"
+  description = "The runtime stack for the Function App. Allowed values are 'node' and 'java'."
 
   validation {
     condition     = contains(["node", "java"], var.stack)
@@ -69,24 +76,24 @@ variable "stack" {
 variable "node_version" {
   type        = number
   default     = 20
-  description = "Node version to use"
+  description = "The version of Node.js to use for the Function App runtime."
 }
 
 variable "java_version" {
   type        = string
   default     = 17
-  description = "Java version to use"
+  description = "The version of Java to use for the Function App runtime."
 }
 
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
-  description = "(Optional) The sampling percentage of Application Insights. Default is 5"
+  description = "The sampling percentage for Application Insights telemetry. Default is 5."
 }
 
 variable "app_settings" {
   type        = map(string)
-  description = "Application settings"
+  description = "A map of application settings for the Function App."
 
   validation {
     condition = (
@@ -102,7 +109,7 @@ variable "app_settings" {
 
 variable "slot_app_settings" {
   type        = map(string)
-  description = "Staging slot application settings"
+  description = "A map of application settings specific to the staging slot of the Function App."
   default     = {}
 
   validation {
@@ -119,18 +126,24 @@ variable "slot_app_settings" {
 
 variable "sticky_app_setting_names" {
   type        = list(string)
-  description = "(Optional) A list of application setting names that are not swapped between slots"
+  description = "A list of application setting names that should remain constant and not be swapped between slots."
   default     = []
 }
 
 variable "subnet_cidr" {
   type        = string
-  description = "CIDR block to use for the subnet the Function App uses for outbound connectivity"
+  default     = null
+  description = "The CIDR block for the subnet used by the Function App for outbound connectivity. Mandatory if 'subnet_id' is not set."
+
+  validation {
+    condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
+    error_message = "Please specify the subnet_cidr or the subnet_id, not both"
+  }
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "The ID of the subnet designated for private endpoints."
 }
 
 variable "virtual_network" {
@@ -138,13 +151,13 @@ variable "virtual_network" {
     name                = string
     resource_group_name = string
   })
-  description = "Virtual network in which to create the subnet"
+  description = "Details of the virtual network where the subnet for the Function App will be created."
 }
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
   default     = null
-  description = "(Optional) The name of the resource group holding private DNS zone to use for private endpoints. Default is Virtual Network resource group"
+  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
 }
 
 variable "subnet_service_endpoints" {
@@ -153,19 +166,25 @@ variable "subnet_service_endpoints" {
     storage = optional(bool, false)
     web     = optional(bool, false)
   })
-  description = "(Optional) Enable service endpoints for the underlying subnet. This variable should be set only if function dependencies do not use private endpoints"
+  description = "Enable service endpoints for the subnet used by the Function App. Set this only if dependencies do not use private endpoints."
   default     = null
 }
 
 variable "action_group_id" {
   type        = string
-  description = "Set the Action Group Id to invoke when the Function App alert triggers"
+  description = "The ID of the Action Group to invoke when an alert is triggered for the Function App."
   default     = null
 }
 
 variable "application_insights_key" {
   type        = string
-  description = "(Optional) Application Insights key"
+  description = "The instrumentation key for Application Insights to enable monitoring and diagnostics."
   sensitive   = true
   default     = null
+}
+
+variable "has_durable_functions" {
+  type        = bool
+  description = "Set to true if the Function App hosts Durable Functions."
+  default     = false
 }

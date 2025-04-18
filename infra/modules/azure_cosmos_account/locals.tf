@@ -1,4 +1,13 @@
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   primary_location = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
 
   consistency_presets = {
@@ -32,4 +41,5 @@ locals {
     max_staleness_prefix    = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
   } : local.consistency_presets[local.selected_preset]
 
+  private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
 }

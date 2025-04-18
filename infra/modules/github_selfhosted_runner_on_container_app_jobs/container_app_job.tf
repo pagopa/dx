@@ -8,7 +8,7 @@ resource "azurerm_container_app_job" "github_runner" {
     type = "SystemAssigned"
   }
 
-  replica_timeout_in_seconds = 1800
+  replica_timeout_in_seconds = var.container_app_environment.replica_timeout_in_seconds
   replica_retry_limit        = 1
 
   event_trigger_config {
@@ -31,7 +31,7 @@ resource "azurerm_container_app_job" "github_runner" {
           repos                     = var.repository.name
           targetWorkflowQueueLength = "1"
           github-runner             = "https://api.github.com"
-        }, var.container_app_environment.use_labels ? { labels = [local.env[var.environment.env_short]] } : {})
+        }, var.container_app_environment.use_labels ? { labels = local.labels } : {})
 
         authentication {
           secret_name       = var.key_vault.secret_name
@@ -59,7 +59,7 @@ resource "azurerm_container_app_job" "github_runner" {
         for_each = var.container_app_environment.use_labels ? [1] : []
         content {
           name  = "LABELS"
-          value = [local.env[var.environment.env_short]]
+          value = local.labels
         }
       }
 

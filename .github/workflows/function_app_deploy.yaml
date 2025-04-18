@@ -17,10 +17,6 @@ on:
         description: Function App name.
         type: string
         required: true
-      health_check_path:
-        description: The health probe path exposed by the Function App.
-        type: string
-        required: true
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -31,6 +27,16 @@ on:
         type: boolean
         required: false
         default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -40,21 +46,35 @@ env:
   BUNDLE_NAME: bundle
 
 jobs:
-
   build:
     name: Build Artifact
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
       TURBO_CACHE_DIR: .turbo-cache
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
+      - name: Detect turbo version
+        id: turbo-version
+        run: |
+          TURBO_VERSION=$(jq -r '.devDependencies.turbo | sub("^[\\^~]";"") | split(".") | .[0]' package.json)
+          echo "version=$TURBO_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prune (turbo 1.x)
+        if: steps.turbo-version.outputs.version == '1'
+        run: |
+          npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+          echo "::warning::Turbo 1.x is deprecated. Please upgrade to the latest version."
+
       - name: Prune
-        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+        if: steps.turbo-version.outputs.version != '1'
+        run: npx turbo prune --scope ${{ env.WORKSPACE }}
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Setup Node.js
         uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
@@ -63,12 +83,16 @@ jobs:
           cache: "yarn"
           cache-dependency-path: "./out/yarn.lock"
 
+      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          yarn config set nodeLinker node-modules
+          yarn config set nmHoistingLimits workspaces
+          yarn install --immutable
         working-directory: ./out
 
       - name: Restore turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
         with:
           path: ./out/${{ env.TURBO_CACHE_DIR }}
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -90,18 +114,19 @@ jobs:
         working-directory: ./out/apps/${{ env.WORKSPACE }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
-          if-no-files-found: error
-          retention-days: 7
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
 
   deploy:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-20.04' }}
+    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
+    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
+    # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -111,56 +136,59 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_USE_OIDC: true
-      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-      FUNCTION_APP_NAME: ${{ inputs.function_app_name}}
-      HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
-      USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
 
     steps:
-
       - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          name: ${{ env.BUNDLE_NAME }}
-
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          
       - name: Azure Login
-        uses: azure/login@v2 # v2.0.0
-        with:
-          client-id: ${{ env.ARM_CLIENT_ID }}
-          tenant-id: ${{ env.ARM_TENANT_ID }}
-          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+        uses: pagopa/dx/.github/actions/azure-login@main
 
-      - name: Deploy
-        uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == 'false' }}
-        with:
-          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
-          app-name: ${{ env.FUNCTION_APP_NAME }}
-          package: ${{ env.BUNDLE_NAME }}.zip
+      - name: Check if the custom warm-up is configured
+        run: |
+          WARMUP_SETTINGS=$(az webapp config appsettings list \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
+            --query "[?name=='WEBSITE_SWAP_WARMUP_PING_STATUSES'||name=='WEBSITE_SWAP_WARMUP_PING_PATH']")
+          if [ $(echo "$WARMUP_SETTINGS" | jq 'length') -ne 2 ]; then
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
+            exit 1
+          fi
+
+      - name: Clear the routing rules
+        run: |
+          az webapp traffic-routing clear \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }}
+
+      - name: Deploy to Production
+        if: ${{ inputs.use_staging_slot == false }}
+        run: |
+          az webapp deploy \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
+            --src-path  ${{ env.BUNDLE_NAME }}.zip \
+            --type zip \
+            --async false
 
       - name: Deploy to Staging Slot
-        uses: azure/webapps-deploy@v2
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
-        with:
-          resource-group-name: ${{ env.RESOURCE_GROUP_NAME }}
-          app-name: ${{ env.FUNCTION_APP_NAME }}
-          slot-name: staging
-          package: ${{ env.BUNDLE_NAME }}.zip
-
-      - name: Ping Staging Health
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
+        if: ${{ inputs.use_staging_slot == true }}
         run: |
-          curl \
-            --retry 5 \
-            --retry-max-time 120 \
-            --retry-all-errors \
-            -f 'https://${{ env.FUNCTION_APP_NAME }}-staging.azurewebsites.net${{ env.HEALTH_CHECK_PATH }}'
+          az webapp deploy \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
+            --slot staging \
+            --src-path  ${{ env.BUNDLE_NAME }}.zip \
+            --type zip \
+            --async false
 
       - name: Swap Staging and Production Slots
-        if: ${{ env.USE_STAGING_SLOT == 'true' }}
+        if: ${{ inputs.use_staging_slot == true }}
         run: |
           az webapp deployment slot swap \
-            -g ${{ env.RESOURCE_GROUP_NAME }} \
-            -n ${{ env.FUNCTION_APP_NAME }} \
+            --resource-group ${{ inputs.resource_group_name }} \
+            --name ${{ inputs.function_app_name }} \
             --slot staging \
             --target-slot production

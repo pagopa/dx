@@ -1,38 +1,42 @@
+variable "environment" {
+  type = object({
+    prefix          = string
+    env_short       = string
+    location        = string
+    domain          = string
+    instance_number = string
+  })
+
+  description = "Environment-specific values used to generate resource names and location short names."
+}
+
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "Resources tags."
 }
 
-variable "env_short" {
+variable "identity_type" {
   type        = string
-  description = "Environment short name"
+  default     = "infra"
+  description = "Specifies the scope of the identities to create. Supported values are 'infra', 'opex', and 'app'."
+
+  validation {
+    condition     = contains(["infra", "opex", "app"], var.identity_type)
+    error_message = "Supported values are 'infra', 'opex', and 'app'."
+  }
 }
 
-variable "env" {
+variable "resource_group_name" {
   type        = string
-  description = "Environment name"
+  description = "The name of the resource group where resources will be deployed."
 }
 
-variable "prefix" {
-  type        = string
-  description = "Project prefix"
-}
-
-variable "location" {
-  type        = string
-  description = "Azure region for the Managed Identity"
-  default     = "italynorth"
-}
-
-variable "domain" {
-  type        = string
-  default     = ""
-  description = "(Optional) Domain of the project"
-}
-
-variable "repositories" {
-  type        = list(string)
-  description = "List of repositories to federate"
+variable "repository" {
+  type = object({
+    owner = optional(string, "pagopa")
+    name  = string
+  })
+  description = "Details of the GitHub repository to federate with. 'owner' defaults to 'pagopa' if not specified."
 }
 
 variable "continuos_integration" {
@@ -51,7 +55,8 @@ variable "continuos_integration" {
         "Reader",
         "Reader and Data Access",
         "PagoPA IaC Reader",
-        "DocumentDB Account Contributor"
+        "DocumentDB Account Contributor",
+        "PagoPA API Management Service List Secrets"
       ]
       resource_groups = {
         terraform-state-rg = [
@@ -61,7 +66,7 @@ variable "continuos_integration" {
     }
   }
 
-  description = "Continuos Integration identity properties, such as repositories to federated with and RBAC roles"
+  description = "Continuos Integration (CI) identity properties, such as repositories to federated with and RBAC roles at the subscription and resource group levels."
 }
 
 variable "continuos_delivery" {
@@ -85,5 +90,10 @@ variable "continuos_delivery" {
     }
   }
 
-  description = "Continuos Delivery identity properties, such as repositories to federated with and RBAC roles"
+  description = "Continuos Delivery (CD) identity properties, such as repositories to federated with and RBAC roles at the subscription and resource group levels."
+}
+
+variable "subscription_id" {
+  type        = string
+  description = "The ID of the Azure subscription where resources will be deployed."
 }

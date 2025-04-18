@@ -7,7 +7,7 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {}
 }
 
@@ -16,8 +16,8 @@ run "core_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,15 +25,16 @@ run "core_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
-      CreatedBy   = "Terraform"
-      Environment = "Dev"
-      Owner       = "DevEx"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
-      Test        = "true"
-      TestName    = "Create DEV environment for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create DEV environment for test"
     }
-    
+
     virtual_network_cidr = "10.50.0.0/16"
     pep_subnet_cidr      = "10.50.2.0/23"
 
@@ -57,12 +58,12 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["io-p-itn-common-vnet-01", "io-p-itn-pep-snet-01", "io-p-itn-ng-01"]
+    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["dx-d-itn-common-vnet-01", "dx-d-itn-pep-snet-01", "dx-d-itn-ng-01"]
     error_message = "The VNET names configuration must be correct"
   }
 
   assert {
-    condition     = [module.network.vnet.address_space[0], module.network.pep_snet.address_prefixes[0]] == ["10.50.0.0/16", "10.50.2.0/23"]
+    condition     = [tolist(module.network.vnet.address_space)[0], module.network.pep_snet.address_prefixes[0]] == ["10.50.0.0/16", "10.50.2.0/23"]
     error_message = "The VNET address space and PEP subnet configuration must be correct"
   }
 

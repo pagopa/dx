@@ -1,110 +1,127 @@
 #!/bin/bash
 
+# Define color codes
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+NC="\033[0m" # No color
+
 # Function to display usage instructions
 usage() {
-  echo "Usage: ./add-module.sh --name <module-name> [--gh-org <organization>] [--provider <provider>]"
+  echo -e "${YELLOW}Usage:${NC} ./add-module.sh --name <module-name> --description <brief-module-description> [--provider <provider>]"
   exit 1
 }
 
-# Default provider if not provided
-PROVIDER="azurerm" # we may support different providers such as aws, awscc, etc.
+# Default provider and GH organization if not provided
+ORG_NAME="pagopa-dx"
+PROVIDER="azurerm"
 
 # Parse named arguments
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --name) MODULE_NAME="$2"; shift ;;
-    --gh-org) ORG_NAME="$2"; shift ;;
+    --description) DESCRIPTION="$2"; shift ;;
     --provider) PROVIDER="$2"; shift ;;
-    *) echo "Unknown parameter passed: $1"; usage ;;
+    *) echo -e "${RED}Unknown parameter passed: $1${NC}"; usage ;;
   esac
   shift
 done
 
 # Check if the module name was provided
-if [ -z "$MODULE_NAME" ]; then
-  echo "Error: No module name provided."
+if [ -z "${MODULE_NAME}" ]; then
+  echo -e "${RED}Error: No module name provided.${NC}"
   usage
 fi
 
-DX_PREFIX="dx"
-SUBREPO_NAME="terraform-$PROVIDER-${DX_PREFIX}_${MODULE_NAME}"
-MODULE_DIR="infra/modules/$MODULE_NAME"
-
-# Check if the module directory already exists
-if [ -d "$MODULE_DIR" ]; then
-  echo "Module '$MODULE_NAME' already exists in the 'modules' folder. Skipping folder creation."
-else
-  # Create the module directory
-  mkdir -p "$MODULE_DIR"
+# Check if the description was provided
+if [ -z "${DESCRIPTION}" ]; then
+  echo -e "${RED}Error: No description provided.${NC}"
+  usage
 fi
 
-# Create package.json file in the module directory
-PACKAGE_JSON="$MODULE_DIR/package.json"
-cat <<EOL > "$PACKAGE_JSON"
+SUBREPO_NAME="terraform-${PROVIDER}-${MODULE_NAME}"
+SUBREPO_NAME=${SUBREPO_NAME//_/\-}
+MODULE_DIR="infra/modules/${MODULE_NAME}"
+
+# Create the module directory if it doesn't exist
+if [ ! -d "${MODULE_DIR}" ]; then
+  mkdir -p "${MODULE_DIR}"
+  echo -e "${GREEN}Module directory '${MODULE_DIR}' created.${NC}"
+else
+  echo -e "${YELLOW}Module '${MODULE_NAME}' already exists in the 'modules' folder. Skipping folder creation.${NC}"
+fi
+
+# Create package.json if it doesn't exist
+PACKAGE_JSON="${MODULE_DIR}/package.json"
+if [ ! -f "${PACKAGE_JSON}" ]; then
+  cat <<EOL > "${PACKAGE_JSON}"
 {
-  "name": "$MODULE_NAME",
-  "version": "0.0.1",
+  "name": "${MODULE_NAME}",
+  "version": "0.0.0",
   "private": true,
-  "provider": "$PROVIDER"
+  "provider": "${PROVIDER}",
+  "description": "${DESCRIPTION}"
 }
 EOL
+  echo -e "${GREEN}package.json created in '${MODULE_DIR}'. Running yarn install to update the lock.${NC}"
+  yarn install
+else
+  echo -e "${YELLOW}package.json already exists in '${MODULE_DIR}'. Skipping file creation.${NC}"
+fi
 
-# Provide feedback
-echo "Module '$MODULE_NAME' has been created in the 'modules'."
+# Handle GitHub repository creation or update
+echo -e "${YELLOW}Checking GitHub repository status.${NC}"
 
-# Provide feedback
-echo "Module directory '$MODULE_DIR' exists. Proceeding with repository initialization."
+# Check if GitHub CLI is installed
+if ! command -v gh &> /dev/null; then
+  echo -e "${RED}Error: GitHub CLI (gh) is not installed. Please install it first.${NC}"
+  exit 1
+fi
 
-# If --gh-org was passed, ask for confirmation to create the GitHub repository
-if [ -n "$ORG_NAME" ]; then
-  echo "--gh-org parameter detected. Assuming you want to create a GitHub repository."
-  read -p "Do you want to create the GitHub repository for this module? (y/n): " CREATE_REPO
-  if [[ "$CREATE_REPO" != "y" && "$CREATE_REPO" != "Y" ]]; then
-    echo "GitHub repository creation canceled."
+# Check if the repository already exists
+if gh repo view "${ORG_NAME}/${SUBREPO_NAME}" &> /dev/null; then
+  echo -e "${GREEN}Repository '${ORG_NAME}/${SUBREPO_NAME}' already exists on GitHub. Updating description...${NC}"
+  gh repo edit "${ORG_NAME}/${SUBREPO_NAME}" --description "${DESCRIPTION}"
+  echo -e "${GREEN}Description updated to: ${DESCRIPTION}${NC}"
+else
+  # Confirm before creating the GitHub repository
+  read -p "$(echo -e "${YELLOW}Do you want to create the GitHub repository '${SUBREPO_NAME}' in organization '${ORG_NAME}'? (y/n): ${NC}")" CONFIRM
+  if [[ "${CONFIRM}" != "y" && "${CONFIRM}" != "Y" ]]; then
+    echo -e "${YELLOW}Repository creation canceled.${NC}"
     exit 0
   fi
-
-  # Check if GitHub CLI is installed
-  if ! command -v gh &> /dev/null; then
-    echo "Error: GitHub CLI (gh) is not installed. Please install it first."
-    exit 1
-  fi
-
-  # Create the GitHub repository under the specified organization
-  echo "Creating GitHub repository '$SUBREPO_NAME' in organization '$ORG_NAME'..."
-  gh repo create "$ORG_NAME/$SUBREPO_NAME" --public --confirm
+  echo -e "${YELLOW}Creating GitHub repository '${SUBREPO_NAME}' in organization '${ORG_NAME}'...${NC}"
+  gh repo create "${ORG_NAME}/${SUBREPO_NAME}" --public --confirm --description "${DESCRIPTION}"
 
   if [ $? -eq 0 ]; then
-    echo "GitHub repository created successfully: https://github.com/$ORG_NAME/$SUBREPO_NAME"
-    echo "Please, ask the DevEx members to edit the dx-pagopa-bot PAT adding the new repository"
-    
-    # Add dx-pagopa-bot as a collaborator with write permissions
-    gh api -X PUT /repos/$ORG_NAME/$SUBREPO_NAME/collaborators/dx-pagopa-bot -f permission=admin
+    echo -e "${GREEN}GitHub repository created successfully: https://github.com/${ORG_NAME}/${SUBREPO_NAME}${NC}"
 
-    # Initialize Git in the module directory and push to the new repository
-    cd "$MODULE_DIR"
-    git init
-    git remote add origin https://github.com/$ORG_NAME/$SUBREPO_NAME.git
-    # Create .gitignore to exclude .terraform and other unnecessary files
-    cat <<EOL > .gitignore
-    .terraform/
-    .terraform.lock.hcl
-    *.tfstate
-    *.tfstate.backup
-EOL
-
-    # Add files to Git, but ignore .terraform directory
-    git add .gitignore
-    git add .
-    git commit -m "Initial commit for module $MODULE_NAME"
-    git branch -M main
-    git push -u origin main
-    rm -rf .git
-    rm .gitignore
+    # Add dx-pagopa-bot as a collaborator with admin permissions
+    gh api -X PUT /repos/${ORG_NAME}/${SUBREPO_NAME}/collaborators/dx-pagopa-bot -f permission=admin
   else
-    echo "Error: Failed to create GitHub repository."
+    echo -e "${RED}Error: Failed to create GitHub repository.${NC}"
     exit 1
   fi
-else
-  echo "No --gh-org parameter passed. Skipping GitHub repository creation."
+  # Push the module to the repository
+  cd "${MODULE_DIR}"
+  if [ ! -d ".git" ]; then
+    git init
+    git remote add origin https://github.com/${ORG_NAME}/${SUBREPO_NAME}.git
+    cat <<EOL > .gitignore
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+EOL
+    git add .gitignore
+    git add .
+    git commit -m "Initial commit for module ${MODULE_NAME}"
+    git branch -M main
+    git push -u origin main
+    rm .gitignore
+    echo -e "${GREEN}Module '${MODULE_NAME}' pushed to GitHub repository.${NC}"
+    echo -e "${YELLOW}The creation of a changeset is required to produce the first release. Please run yarn changeset from the root of the repo.${NC}"
+  else
+    echo -e "${YELLOW}Module '${MODULE_NAME}' already has a Git repository. Skipping initialization.${NC}"
+  fi
 fi

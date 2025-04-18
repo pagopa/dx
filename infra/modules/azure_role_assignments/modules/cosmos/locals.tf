@@ -9,6 +9,7 @@ locals {
       for entry in var.cosmos : [
         for collection in entry.collections : {
           account_name        = entry.account_name
+          account_id          = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}")
           resource_group_name = entry.resource_group_name
           role                = entry.role
           database            = entry.database
@@ -18,6 +19,4 @@ locals {
       ]
     ]) : "${assignment.account_name}|${assignment.database}|${assignment.collection}|${assignment.role}" => assignment
   }
-
-  accounts = distinct([for assignment in var.cosmos : { account_name = assignment.account_name, resource_group_name = assignment.resource_group_name }])
 }

@@ -1,0 +1,24 @@
+name: "Upload Artifact"
+description: "Upload an artifact to the workflow run"
+
+inputs:
+  file_path:
+    description: "Path of the file to upload (Example: ./build/bundle.zip)"
+    type: string
+    required: true
+  bundle_name:
+    description: "Name of the bundle to upload"
+    type: string
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Upload Artifact
+      uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+      with:
+        name: ${{ inputs.bundle_name }}
+        path: ${{ inputs.file_path }}
+        if-no-files-found: error
+        retention-days: 7

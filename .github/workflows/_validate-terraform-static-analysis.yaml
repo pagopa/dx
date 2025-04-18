@@ -1,0 +1,21 @@
+name: Terraform Validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - infra/**
+      - .terraform-version
+      - .pre-commit-config.yaml
+      - .trivyignore
+
+jobs:
+  tf_analysis:
+    # Don't run in Changeset PRs
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    uses: ./.github/workflows/static_analysis.yaml
+    name: Terraform Validation
+    secrets: inherit
+    with:
+      enable_modified_files_detection: true

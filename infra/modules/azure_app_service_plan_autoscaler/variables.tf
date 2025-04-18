@@ -8,33 +8,80 @@ variable "resource_group_name" {
   description = "Resource group to deploy resources to"
 }
 
+variable "location" {
+  type        = string
+  description = "The location of the app service plan. Allowed values are \"italynorth\", \"westeurope\", and \"germanywestcentral\"."
+
+  validation {
+    condition     = contains(["italynorth", "westeurope", "germanywestcentral"], lower(var.location))
+    error_message = "The location must be one of \"italynorth\", \"westeurope\", \"germanywestcentral\"."
+  }
+}
+
 variable "autoscale_name" {
   type        = string
-  description = "(Optional) Override auto generated name for the autoscaler resource"
+  description = "Override auto generated name for the autoscaler resource"
   default     = null
+}
+
+variable "app_service_plan_id" {
+  type        = string
+  description = "The id of the app service plan containing the service to autoscale."
 }
 
 variable "target_services" {
   type = object({
-    app_service_name  = optional(list(string))
-    function_app_name = optional(list(string))
+    app_service = optional(list(object({
+      id   = optional(string, null)
+      name = optional(string, null)
+    })))
+    function_app = optional(list(object({
+      id   = optional(string, null)
+      name = optional(string, null)
+    })))
   })
+
+  description = "The target service to autoscale. You can specify either an `app service` or a `function app`, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
 
   validation {
     condition = (
-      (var.target_services.app_service_name != null && length(var.target_services.app_service_name) > 0) !=
-      (var.target_services.function_app_name != null && length(var.target_services.function_app_name) > 0)
+      (var.target_services.app_service != null && var.target_services.function_app == null) ||
+      (var.target_services.app_service == null && var.target_services.function_app != null)
     )
-    error_message = "You must provide either a list of \"app_service_name\" or a list of \"function_app_name\", but not both or neither."
+    error_message = "You must specify exactly one target service: either 'app_service' or 'function_app', but not both."
   }
 
-  description = "An object containing two optional lists: one for App Service names and one for Function App names."
-}
-
-locals {
-  # App Service Plan Validation
-  # tflint-ignore: terraform_unused_declarations
-  app_service_plan_ids_validation = length(distinct([for service in local.app_service_details : service.app_service_plan_id])) <= 1 ? true : tobool(throw("All target services must be associated with the same App Service Plan."))
+  validation {
+    condition = (
+      # Validazione per app_service quando è presente
+      (var.target_services.app_service != null
+        ? can(
+          [for app in var.target_services.app_service : 
+            (app.id != null && app.name == null) || (app.id == null && app.name != null)
+          ]
+        ) && length(
+          [for app in var.target_services.app_service : 
+            true if (app.id != null && app.name == null) || (app.id == null && app.name != null)
+          ]
+        ) == length(var.target_services.app_service)
+        : true
+      ) && 
+      # Validazione per function_app quando è presente
+      (var.target_services.function_app != null
+        ? can(
+          [for func in var.target_services.function_app : 
+            (func.id != null && func.name == null) || (func.id == null && func.name != null)
+          ]
+        ) && length(
+          [for func in var.target_services.function_app : 
+            true if (func.id != null && func.name == null) || (func.id == null && func.name != null)
+          ]
+        ) == length(var.target_services.function_app)
+        : true
+      )
+    )
+    error_message = "Each object in the selected service type must specify either 'id' or 'name', but not both or neither."
+  }
 }
 
 variable "scheduler" {
@@ -162,7 +209,7 @@ variable "scale_metrics" {
     }), null)
   })
 
-  description = "(Optional) Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
+  description = "Set the metrics to monitor. CPU is mandatory, Memory and Requests are not. Each attribute has a default value that can be overridden"
 
   default = {
     requests = null

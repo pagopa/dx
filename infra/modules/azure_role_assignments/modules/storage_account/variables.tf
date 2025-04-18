@@ -3,6 +3,11 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "storage_table" {
   description = "A list of storage table role assignments"
   type = list(object({
@@ -10,6 +15,7 @@ variable "storage_table" {
     resource_group_name  = string
     table_name           = optional(string, "*")
     role                 = string
+    description          = string
   }))
 
   validation {
@@ -34,6 +40,7 @@ variable "storage_blob" {
     resource_group_name  = string
     container_name       = optional(string, "*")
     role                 = string
+    description          = string
   }))
 
   validation {
@@ -58,6 +65,7 @@ variable "storage_queue" {
     resource_group_name  = string
     queue_name           = optional(string, "*")
     role                 = string
+    description          = string
   }))
 
   validation {

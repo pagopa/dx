@@ -1,7 +1,11 @@
 data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = "",
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 data "azurerm_monitor_action_group" "example" {

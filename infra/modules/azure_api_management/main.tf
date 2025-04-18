@@ -2,21 +2,12 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0"
+      version = ">= 4.1.0, < 5.0"
     }
-  }
-}
-
-module "naming_convention" {
-  source = "../azure_naming_convention"
-
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
+    }
   }
 }
 
@@ -32,8 +23,11 @@ resource "azurerm_api_management" "this" {
   publisher_email               = var.publisher_email
   notification_sender_email     = var.notification_sender_email
   sku_name                      = local.apim.sku_name
-  zones                         = var.tier == "l" ? ["1", "2", "3"] : null
+  zones                         = contains(["l", "xl"], var.tier) ? local.apim.zones : null
   public_network_access_enabled = var.enable_public_network_access
+  public_ip_address_id          = var.tier != "m" && var.virtual_network_type_internal ? var.public_ip_address_id : null
+
+  min_api_version = "2021-08-01"
 
   # Managed identity type: System
   identity {
@@ -91,7 +85,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = var.tier == "l" && var.autoscale != null && var.autoscale.enabled ? 1 : 0
+  count               = contains(["l", "xl"], var.tier) && var.autoscale != null && var.autoscale.enabled ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location

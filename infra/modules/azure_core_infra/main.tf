@@ -2,21 +2,12 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 4.10.0"
+      version = "~>4"
     }
-  }
-}
-
-module "naming_convention" {
-  source = "../azure_naming_convention"
-
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
+    }
   }
 }
 
@@ -24,14 +15,41 @@ module "naming_convention" {
 # COMMON RESOURCE GROUPS #
 #------------------------#
 resource "azurerm_resource_group" "common" {
-  name     = "${local.project}-common-rg-01"
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "common",
+      domain        = "",
+      resource_type = "resource_group",
+  }))
   location = var.environment.location
 
   tags = var.tags
 }
 
 resource "azurerm_resource_group" "network" {
-  name     = "${local.project}-network-rg-01"
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "network",
+      domain        = "",
+      resource_type = "resource_group",
+    })
+  )
+  location = var.environment.location
+
+  tags = var.tags
+}
+
+resource "azurerm_resource_group" "gh_runner" {
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "github-runner",
+      domain        = "",
+      resource_type = "resource_group",
+    })
+  )
   location = var.environment.location
 
   tags = var.tags
@@ -40,7 +58,14 @@ resource "azurerm_resource_group" "network" {
 resource "azurerm_resource_group" "test" {
   count = var.test_enabled ? 1 : 0
 
-  name     = "${local.project}-test-rg-01"
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "test",
+      domain        = "",
+      resource_type = "resource_group",
+    })
+  )
   location = var.environment.location
 
   tags = var.tags
@@ -53,7 +78,7 @@ resource "azurerm_resource_group" "test" {
 module "network" {
   source = "./_modules/networking"
 
-  project             = local.project
+  naming_config       = local.naming_config
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
@@ -104,9 +129,7 @@ module "vpn" {
 module "key_vault" {
   source = "./_modules/key_vault"
 
-  project = local.project
-  prefix  = local.prefix
-  suffix  = local.suffix
+  naming_config = merge(local.naming_config, { name = var.environment.app_name })
 
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.common.name
@@ -135,6 +158,44 @@ module "dns" {
     id   = module.network.vnet.id
     name = module.network.vnet.name
   }
+
+  tags = var.tags
+}
+
+#------#
+# LOGS #
+#------#
+
+module "common_log_analytics" {
+  source = "./_modules/log_analytics"
+
+  naming_config = local.naming_config
+
+  resource_group_name = azurerm_resource_group.common.name
+  location            = var.environment.location
+
+  tags = var.tags
+}
+
+#---------------#
+# GITHUB RUNNER #
+#---------------#
+
+module "github_runner" {
+  source = "./_modules/github_runner"
+
+  naming_config = local.naming_config
+
+  resource_group_name = azurerm_resource_group.gh_runner.name
+  location            = var.environment.location
+  virtual_network = {
+    id                  = module.network.vnet.id
+    name                = module.network.vnet.name
+    resource_group_name = azurerm_resource_group.network.name
+  }
+  subnet_cidr = var.gh_runner_snet
+
+  log_analytics_workspace_id = module.common_log_analytics.id
 
   tags = var.tags
 }

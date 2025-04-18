@@ -1,5 +1,60 @@
 # azure_storage_account
 
+## 0.0.14
+
+### Patch Changes
+
+- 9ce888c: Update Test to avoid conflict resources
+
+## 0.0.13
+
+### Patch Changes
+
+- 66c32b9: Update README.md and variables descriptions
+
+## 0.0.12
+
+### Patch Changes
+
+- 6ab08ed: Update provider dx version to support null domain, update test and example
+
+## 0.0.11
+
+### Patch Changes
+
+- f0d352b: Replace naming convention module with DX provider functions
+
+## 0.0.10
+
+### Patch Changes
+
+- 7d552d4: Update reference to Azure Naming Convention Module
+
+## 0.0.9
+
+### Patch Changes
+
+- 16ecc30: Using a common resource group in terraform tests
+
+## 0.0.8
+
+### Patch Changes
+
+- e7a44b0: Allowing key vault based customer managed key to be automatically created and used by the storage account's system assigned managed identity
+- 4eb8f9f: Removed provider definition and test updated
+
+## 0.0.7
+
+### Patch Changes
+
+- 8dda982: Add a description in the package.json file
+
+## 0.0.6
+
+### Patch Changes
+
+- 1d56ff3: Relative module referencing substituted with terraform registry referencing
+
 ## 0.0.5
 
 ### Patch Changes

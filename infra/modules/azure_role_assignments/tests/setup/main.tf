@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.116.0"
+      version = ">= 3.114, < 5.0"
     }
   }
 }
@@ -24,26 +24,39 @@ module "naming_convention" {
 
 data "azurerm_virtual_network" "vnet" {
   name                = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name = "${module.naming_convention.project}-common-rg-01"
+  resource_group_name = "${module.naming_convention.project}-network-rg-01"
 }
 
 data "azurerm_subnet" "pep" {
   name                 = "${module.naming_convention.project}-pep-snet-01"
   virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-common-rg-01"
+  resource_group_name  = "${module.naming_convention.project}-network-rg-01"
 }
+
+data "azurerm_subscription" "current" {}
 
 # RESOURCES
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-role-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_resource_group" "rg" {
+  name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
+
 }
 
 resource "azurerm_user_assigned_identity" "id" {
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
   name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
+
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create role assignments for test"
+  }
 }
 
 # OUTPUTS
@@ -53,7 +66,7 @@ output "pep_id" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }
 
 output "vnet" {
@@ -69,4 +82,8 @@ output "identity_name" {
 
 output "principal_id" {
   value = azurerm_user_assigned_identity.id.principal_id
+}
+
+output "subscription_id" {
+  value = data.azurerm_subscription.current.subscription_id
 }

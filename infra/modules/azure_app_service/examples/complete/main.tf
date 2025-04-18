@@ -1,17 +1,17 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-common-rg-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network_name
+  resource_group_name  = local.network_rg_name
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "modules",
+    resource_type = "resource_group"
+  }))
   location = local.environment.location
 }
 
@@ -22,23 +22,21 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "azure_app_service" {
-  source = "../../"
-
+  source              = "../../"
   environment         = local.environment
   tier                = "l"
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-common-rg-01"
+    name                = local.virtual_network_name
+    resource_group_name = local.network_rg_name
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.0.1.0/24"
+  subnet_cidr   = "10.50.250.0/24"
 
   app_settings      = {}
   slot_app_settings = {}
 
   health_check_path = "/health"
-
-  tags = local.tags
+  tags              = local.tags
 }

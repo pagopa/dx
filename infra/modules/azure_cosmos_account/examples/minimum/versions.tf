@@ -1,16 +1,20 @@
 terraform {
 
   backend "azurerm" {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "iopitntfst001"
+    resource_group_name  = "dx-d-itn-common-rg-01"
+    storage_account_name = "dxditntfexamplesst01"
     container_name       = "terraform-state"
-    key                  = "dx.modules.prod.tfstate" # Don't use this
+    key                  = "dx.cosmos.example.minimum.tfstate"
   }
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.116.0"
+      version = "<= 4.10.0"
+    }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
     }
   }
 }

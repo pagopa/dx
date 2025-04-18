@@ -7,11 +7,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -25,8 +25,8 @@ run "app_service_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -34,13 +34,14 @@ run "app_service_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
-      CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
-      Test        = "true"
-      TestName    = "Create app service for test"
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create app service for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
@@ -50,10 +51,10 @@ run "app_service_is_correct_plan" {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
-  
-    subnet_pep_id = run.setup_tests.pep_id
-    subnet_cidr   = "10.20.50.0/24"
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    subnet_cidr                          = "10.20.50.0/24"
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     app_settings      = {}
     slot_app_settings = {}
@@ -74,12 +75,65 @@ run "app_service_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version ==  "20-lts"
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "20-lts"
     error_message = "The App Service must use Node version 20 LTS"
   }
 
   assert {
     condition     = azurerm_linux_web_app.this.site_config[0].always_on == true
     error_message = "The App Service should have Always On enabled"
+  }
+
+  assert {
+    condition     = length(azurerm_subnet.this) == 1
+    error_message = "Subnet should be created"
+  }
+}
+
+run "app_service_custom_subnet" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_app_service/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create app service for test"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+    tier                = "m"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    subnet_id                            = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    app_settings      = {}
+    slot_app_settings = {}
+
+    health_check_path = "/health"
+  }
+
+  assert {
+    condition     = azurerm_subnet.this == []
+    error_message = "Subnet should not be created"
   }
 }

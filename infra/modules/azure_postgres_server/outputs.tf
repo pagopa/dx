@@ -1,27 +1,26 @@
-
 output "private_endpoint" {
+  description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server."
   value       = azurerm_private_endpoint.postgre_pep.id
-  description = "Private Endpoint resource ID for the PostgreSQL Flexible Server"
 }
 
 output "postgres" {
+  description = "Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name."
   value = {
     name                = azurerm_postgresql_flexible_server.this.name
     id                  = azurerm_postgresql_flexible_server.this.id
     resource_group_name = azurerm_postgresql_flexible_server.this.resource_group_name
   }
-  description = "PostgreSQL Flexible Server"
 }
 
 output "private_endpoint_replica" {
+  description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server Replica. Returns null if the tier is not 'l'."
   value       = var.tier == "l" ? azurerm_private_endpoint.replica_postgre_pep[0].id : null
-  description = "Private Endpoint resource ID for the PostgreSQL Flexible Server Replica"
 }
 
 output "postgres_replica" {
+  description = "Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'."
   value = var.tier == "l" ? {
     name = azurerm_postgresql_flexible_server.replica[0].name
     id   = azurerm_postgresql_flexible_server.replica[0].id
   } : {}
-  description = "PostgreSQL Flexible Server Replica"
 }

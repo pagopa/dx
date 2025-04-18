@@ -10,7 +10,7 @@ resource "azurerm_linux_function_app_slot" "this" {
 
   https_only                    = true
   public_network_access_enabled = false
-  virtual_network_subnet_id     = azurerm_subnet.this.id
+  virtual_network_subnet_id     = local.function_app.has_existing_subnet ? var.subnet_id : azurerm_subnet.this[0].id
 
   identity {
     type = "SystemAssigned"
@@ -44,14 +44,33 @@ resource "azurerm_linux_function_app_slot" "this" {
       SLOT_TASK_HUBNAME = "StagingTaskHub",
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
       FUNCTIONS_WORKER_PROCESS_COUNT = local.function_app.worker_process_count,
+      # https://learn.microsoft.com/en-us/azure/app-service/deploy-staging-slots?tabs=portal#specify-custom-warm-up
+      WEBSITE_SWAP_WARMUP_PING_PATH     = var.health_check_path
+      WEBSITE_SWAP_WARMUP_PING_STATUSES = "200,204"
+      WEBSITE_WARMUP_PATH               = var.health_check_path
     },
     local.application_insights.enable ? {
+      # AI SDK Sampling, to be used programmatically
       # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
-      APPINSIGHTS_SAMPLING_PERCENTAGE = "100"
+      APPINSIGHTS_SAMPLING_PERCENTAGE = "100",
+      # Add environment variable used by the `@pagopa/azure-tracing` package
+      APPINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string,
+
+      # Azure Function Host (runtime) AI Sampling
+      # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = "100",
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = "100",
+      AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = "100"
     } : {},
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
-    var.slot_app_settings
+    var.slot_app_settings,
+    local.function_app.has_durable == 1 ? {
+      #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration
+      DfStorageConnectionName__accountname                                                  = azurerm_storage_account.durable_function[0].name,
+      AzureFunctionsJobHost__extensions__durableTask__hubName                               = "StagingTaskHub",
+      AzureFunctionsJobHost__extensions__durableTask__storageProvider__connectionStringName = "DfStorageConnectionName"
+    } : {},
   )
 
   lifecycle {

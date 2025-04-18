@@ -1,14 +1,15 @@
 locals {
-  prefix         = "dx"
-  env_short      = "d"
-  location       = "italynorth"
-  location_short = "itn"
+  prefix    = "dx"
+  env_short = "d"
+  location  = "italynorth"
+  project   = "${local.prefix}-${local.env_short}"
 
   tags = {
-    CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/blob/main/infra/resources/dev"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/resources/dev"
+    ManagementTeam = "Developer Experience"
   }
 }

@@ -1,8 +1,8 @@
 resource "azurerm_monitor_autoscale_setting" "this" {
   name                = local.autoscale_name
-  resource_group_name = local.resource_group_name
-  location            = local.location
-  target_resource_id  = local.app_service_details[0].app_service_plan_id
+  resource_group_name = var.resource_group_name
+  location            = var.location
+  target_resource_id  = var.app_service_plan_id
 
   # start high load
   dynamic "profile" {
@@ -228,23 +228,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_increase.metric_trigger.time_grain
+            statistic                = local.requests_rules_increase.metric_trigger.statistic
+            time_window              = local.requests_rules_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_increase.metric_trigger.operator
+            threshold                = local.requests_rules_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_increase.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = local.requests_rules_increase.scale_action.cooldown
+            direction = local.requests_rules_increase.scale_action.direction
+            type      = local.requests_rules_increase.scale_action.type
+            value     = local.requests_rules_increase.scale_action.value
           }
         }
       }
@@ -255,23 +255,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rules_decrease.metric_trigger.statistic
+            time_window              = local.requests_rules_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_decrease.metric_trigger.operator
+            threshold                = local.requests_rules_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_decrease.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = local.requests_rules_decrease.scale_action.cooldown
+            direction = local.requests_rules_decrease.scale_action.direction
+            type      = local.requests_rules_decrease.scale_action.type
+            value     = local.requests_rules_decrease.scale_action.value
           }
         }
       }
@@ -412,23 +412,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_increase.metric_trigger.time_grain
+            statistic                = local.requests_rules_increase.metric_trigger.statistic
+            time_window              = local.requests_rules_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_increase.metric_trigger.operator
+            threshold                = local.requests_rules_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_increase.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = local.requests_rules_increase.scale_action.cooldown
+            direction = local.requests_rules_increase.scale_action.direction
+            type      = local.requests_rules_increase.scale_action.type
+            value     = local.requests_rules_increase.scale_action.value
           }
         }
       }
@@ -439,23 +439,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rules_decrease.metric_trigger.statistic
+            time_window              = local.requests_rules_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_decrease.metric_trigger.operator
+            threshold                = local.requests_rules_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_decrease.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = local.requests_rules_decrease.scale_action.cooldown
+            direction = local.requests_rules_decrease.scale_action.direction
+            type      = local.requests_rules_decrease.scale_action.type
+            value     = local.requests_rules_decrease.scale_action.value
           }
         }
       }
@@ -596,23 +596,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_increase.metric_trigger.time_grain
+            statistic                = local.requests_rules_increase.metric_trigger.statistic
+            time_window              = local.requests_rules_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_increase.metric_trigger.operator
+            threshold                = local.requests_rules_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_increase.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = local.requests_rules_increase.scale_action.cooldown
+            direction = local.requests_rules_increase.scale_action.direction
+            type      = local.requests_rules_increase.scale_action.type
+            value     = local.requests_rules_increase.scale_action.value
           }
         }
       }
@@ -623,23 +623,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rules_decrease.metric_trigger.statistic
+            time_window              = local.requests_rules_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_decrease.metric_trigger.operator
+            threshold                = local.requests_rules_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_decrease.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = local.requests_rules_decrease.scale_action.cooldown
+            direction = local.requests_rules_decrease.scale_action.direction
+            type      = local.requests_rules_decrease.scale_action.type
+            value     = local.requests_rules_decrease.scale_action.value
           }
         }
       }
@@ -765,23 +765,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_increase.metric_trigger.time_grain
+            statistic                = local.requests_rules_increase.metric_trigger.statistic
+            time_window              = local.requests_rules_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_increase.metric_trigger.operator
+            threshold                = local.requests_rules_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_increase.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = local.requests_rules_increase.scale_action.cooldown
+            direction = local.requests_rules_increase.scale_action.direction
+            type      = local.requests_rules_increase.scale_action.type
+            value     = local.requests_rules_increase.scale_action.value
           }
         }
       }
@@ -792,23 +792,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rules_decrease.metric_trigger.statistic
+            time_window              = local.requests_rules_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_decrease.metric_trigger.operator
+            threshold                = local.requests_rules_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_decrease.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = local.requests_rules_decrease.scale_action.cooldown
+            direction = local.requests_rules_decrease.scale_action.direction
+            type      = local.requests_rules_decrease.scale_action.type
+            value     = local.requests_rules_decrease.scale_action.value
           }
         }
       }
@@ -940,23 +940,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_increase.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_increase.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_increase.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_increase.metric_trigger.time_grain
+            statistic                = local.requests_rules_increase.metric_trigger.statistic
+            time_window              = local.requests_rules_increase.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_increase.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_increase.metric_trigger.operator
+            threshold                = local.requests_rules_increase.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_increase.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = local.requests_rules_increase.scale_action.cooldown
+            direction = local.requests_rules_increase.scale_action.direction
+            type      = local.requests_rules_increase.scale_action.type
+            value     = local.requests_rules_increase.scale_action.value
           }
         }
       }
@@ -967,23 +967,23 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = local.requests_rules_decrease.metric_trigger.metric_name
+            metric_resource_id       = local.requests_rules_decrease.metric_trigger.metric_resource_id
+            metric_namespace         = local.requests_rules_decrease.metric_trigger.metric_namespace
+            time_grain               = local.requests_rules_decrease.metric_trigger.time_grain
+            statistic                = local.requests_rules_decrease.metric_trigger.statistic
+            time_window              = local.requests_rules_decrease.metric_trigger.time_window
+            time_aggregation         = local.requests_rules_decrease.metric_trigger.time_aggregation
+            operator                 = local.requests_rules_decrease.metric_trigger.operator
+            threshold                = local.requests_rules_decrease.metric_trigger.threshold
+            divide_by_instance_count = local.requests_rules_decrease.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = local.requests_rules_decrease.scale_action.cooldown
+            direction = local.requests_rules_decrease.scale_action.direction
+            type      = local.requests_rules_decrease.scale_action.type
+            value     = local.requests_rules_decrease.scale_action.value
           }
         }
       }

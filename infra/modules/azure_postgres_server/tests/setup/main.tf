@@ -2,33 +2,50 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "<= 3.116.0"
+      version = ">= 3.116, < 5.0"
+    }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = ">= 0.0.6, < 1.0.0"
     }
   }
 }
 
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
+locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
     location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
+  virtual_network = {
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = "common",
+      resource_type = "virtual_network"
+    }))
+    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = "network",
+      resource_type = "resource_group"
+    }))
   }
 }
 
-data "azurerm_subnet" "pep" {
-  name                 = "${module.naming_convention.project}-pep-snet-01"
-  virtual_network_name = "${module.naming_convention.project}-common-vnet-01"
-  resource_group_name  = "${module.naming_convention.project}-common-rg-01"
+data "azurerm_resource_group" "rg" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "resource_group"
+  }))
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "${module.naming_convention.prefix}-rg-psql-${module.naming_convention.suffix}"
-  location = var.environment.location
+data "azurerm_subnet" "pep" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
 }
 
 output "pep_id" {
@@ -36,5 +53,5 @@ output "pep_id" {
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.rg.name
+  value = data.azurerm_resource_group.rg.name
 }

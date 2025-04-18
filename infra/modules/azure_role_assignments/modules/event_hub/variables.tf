@@ -3,6 +3,11 @@ variable "principal_id" {
   type        = string
 }
 
+variable "subscription_id" {
+  description = "The ID of the subscription where the target resources are located"
+  type        = string
+}
+
 variable "event_hub" {
   description = "A list of event hub role assignments"
   type = list(object({
@@ -10,6 +15,7 @@ variable "event_hub" {
     resource_group_name = string
     event_hub_names     = optional(list(string), ["*"])
     role                = string
+    description         = string
   }))
 
   validation {
@@ -24,10 +30,9 @@ variable "event_hub" {
       for assignment in flatten([
         for entry in var.event_hub : [
           for event_hub_name in entry.event_hub_names : {
-            namespace_name      = entry.namespace_name
-            resource_group_name = entry.resource_group_name
-            role                = entry.role
-            event_hub_name      = event_hub_name
+            namespace_id   = entry.namespace_id
+            role           = entry.role
+            event_hub_name = event_hub_name
           }
         ]
       ]) : assignment
@@ -35,10 +40,9 @@ variable "event_hub" {
         for assignment in flatten([
           for entry in var.event_hub : [
             for event_hub_name in entry.event_hub_names : {
-              namespace_name      = entry.namespace_name
-              resource_group_name = entry.resource_group_name
-              role                = entry.role
-              event_hub_name      = event_hub_name
+              namespace_id   = entry.namespace_id
+              role           = entry.role
+              event_hub_name = event_hub_name
             }
           ]
         ]) : assignment

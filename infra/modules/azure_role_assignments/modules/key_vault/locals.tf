@@ -1,5 +1,12 @@
 locals {
-  vaults = distinct([for assignment in var.key_vault : { name = assignment.name, resource_group_name = assignment.resource_group_name }])
+  norm_vaults = [
+    for vault in var.key_vault :
+    merge(vault, {
+      name                = vault.name
+      id                  = provider::azurerm::normalise_resource_id("/subscriptions/${var.subscription_id}/resourceGroups/${vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${vault.name}")
+      resource_group_name = vault.resource_group_name
+    })
+  ]
 
   permissions = {
     secrets = {

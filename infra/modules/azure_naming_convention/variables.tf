@@ -10,7 +10,7 @@ variable "environment" {
 
   validation {
     condition     = length(var.environment.prefix) == 2
-    error_message = "The variable \"prefix\" must contain 2 characters"
+    error_message = "The variable \"prefix\" must contain exactly 2 characters."
   }
 
   validation {
@@ -20,17 +20,17 @@ variable "environment" {
 
   validation {
     condition     = contains(["italynorth", "westeurope", "germanywestcentral", "spaincentral", "northeurope"], var.environment.location)
-    error_message = "Allowed values for \"location\" are \"italynorth\" \"westeurope\", \"germanywestcentral\", \"spaincentral\", \"northeurope\"."
+    error_message = "Allowed values for \"location\" are \"italynorth\", \"westeurope\", \"germanywestcentral\", \"spaincentral\", or \"northeurope\"."
   }
 
   validation {
     condition     = var.environment.domain == null ? true : length(replace(var.environment.domain, "-", "")) >= 2
-    error_message = "\"domain\" variable must be null or a value of at least 2 characters"
+    error_message = "\"domain\" variable must be null or a value of at least 2 characters."
   }
 
   validation {
     condition     = length(var.environment.app_name) > 1
-    error_message = "The variable \"app_name\" must contain at least 2 characters"
+    error_message = "The variable \"app_name\" must contain at least 2 characters."
   }
 
   validation {

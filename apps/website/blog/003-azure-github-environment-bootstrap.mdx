@@ -1,0 +1,101 @@
+---
+title:
+  "Introducing the 'Azure GitHub Environment Bootstrap' Terraform Module to
+  Enhance New Project Startup"
+description: Boosting Brand New Repository Setup
+slug: devex-azure-bootstrap-0.1-alpha
+hide_table_of_contents: false
+date: 2025-03-28T17:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+---
+
+# Introducing the 'Azure GitHub Environment Bootstrap' Terraform Module to Enhance New Project Startup
+
+The new Terraform module
+[`Azure GitHub Environment Bootstrap`](https://github.com/pagopa/dx/blob/main/infra/modules/azure_github_environment_bootstrap)
+developed by the DevEx team, has finally left the beta status by reaching its
+first major version release!
+
+This module is useful for anybody that has just created a new repository and
+wants to focus quickly on their goals rather than spending hours in setting up
+everything around the new repository. The module focuses on projects which
+leverage Azure, GitHub, and a single environment (production). After applying
+this module, the repository will have:
+
+- completed the setup needed to launch **GitHub Actions** workflows
+- a dedicated private **GitHub Runner** to connect to private Azure resources
+  from GitHub pipelines
+- an Azure **resource group** to deploy resources generally contained in
+  `infra/resources`
+- the **required permissions** to operate on domain resources
+- a secure and smooth configuration
+
+<!-- truncate -->
+
+To accomplish the setup, the module provisions:
+
+- an Azure Container App Job to run workflows in a private **GitHub Runner**
+  integrated with an Azure VNet
+- a federation between the GitHub repository and Azure user-assigned **managed
+  identities** to allow workflows to connect with Azure tenant
+- the creation of a project-specific Azure resource group which will contain the
+  infrastructure of the entire repository as it will share the same lifecycle
+  and IAM setup
+- the IAM setup of both team and Azure user-assigned managed identities
+  following the [latest DevEx framework](/docs/infrastructure/azure/azure-iam)
+- the GitHub repository settings according to the best practices found by the DX
+  team
+
+As the `Azure GitHub Environment Bootstrap` module is designed to support teams
+in new project development, it is particularly indicated for mono repositories
+which traditionally require more time to be properly prepared: in just a few
+minutes, the repository will be ready to be used.
+
+On the other hand, the new module may be a bit overwhelming for small
+repositories, where you may have only one application. For this reason, the
+module
+[`azure_federated_identity_with_github`](https://github.com/pagopa/dx/blob/main/infra/modules/azure_federated_identity_with_github)
+is still maintained and available, and is suggested for those cases. However,
+please note that this design is not advisable, and instead, the use of mono
+repositories is recommended.
+
+## Getting Started
+
+We recommend to reference the module via the Terraform Registry, and pin the
+version to the latest stable release:
+
+```hcl
+module "repo" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~>1.0"
+}
+```
+
+Despite the `Azure GitHub Environment Bootstrap` module requiring a lot of
+inputs, its usage remains easy. In fact, a lot of values are the same for
+different projects under the same product's umbrella, and moreover are
+well-known by our user base. The following data is requested:
+
+- the Azure subscription and tenant IDs
+- the IDs of team-specific Entra ID groups as expected by
+  [DevEx IAM framework](/docs/infrastructure/azure/azure-iam)
+- the ID of an existing Azure Container App Environment
+- the details of the Storage Account holding the Terraform state file
+- the details of the current repository (name, description, topics, optionally
+  reviewers, etc.)
+- the IDs of the product-shared cloud resources, if any (API Management, Private
+  Endpoints, VNet, etc.)
+
+More details about the usage can be found in the documentation, which is
+available in the
+[module entry in the Terraform Registry](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest).
+
+### Examples
+
+Explore these repositories, which have successfully adopted the
+`Azure GitHub Environment Bootstrap` module from its early stages:
+
+- [IO Messages](https://github.com/pagopa/io-messages/tree/main/infra/repository)
+- [IO Wallet](https://github.com/pagopa/io-wallet/tree/main/infra/repository)
+- [IO Services CMS](https://github.com/pagopa/io-services-cms/tree/main/infra/repository)

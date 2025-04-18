@@ -1,0 +1,18 @@
+name: "Get All Modules"
+description: "Lists all Terraform modules in the repository"
+
+outputs:
+  modules:
+    description: "List of all modules in the format [\"name1\", \"name2\"]"
+    value: ${{ steps.get-all-modules.outputs.modules }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get all modules
+      id: get-all-modules
+      shell: bash
+      run: |
+        folders_list=$(find infra/modules -mindepth 1 -maxdepth 1 -type d | sed 's#infra/modules/##' | jq -R -c . | jq -s -c .)
+        echo "All modules: $folders_list"
+        echo "modules=$folders_list" >> $GITHUB_OUTPUT

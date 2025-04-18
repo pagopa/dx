@@ -1,17 +1,61 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.enabled && var.tier != "s" ? 1 : 0
+  count = var.application_insights.enabled ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
+  resource_id         = var.application_insights.id
 
   dynamic "application_insights" {
     for_each = var.management_logger_application_insight_enabled ? [1] : []
     content {
-      instrumentation_key = var.application_insights.instrumentation_key
+      connection_string = var.application_insights.connection_string
+    }
+  }
+}
+
+resource "azurerm_api_management_diagnostic" "applicationinsights" {
+  count = var.application_insights.enabled ? 1 : 0
+
+  identifier               = "applicationinsights"
+  api_management_name      = azurerm_api_management.this.name
+  resource_group_name      = azurerm_api_management.this.resource_group_name
+  api_management_logger_id = azurerm_api_management_logger.this[0].id
+
+  always_log_errors         = true
+  http_correlation_protocol = "W3C"
+
+  verbosity           = var.application_insights.verbosity
+  sampling_percentage = var.application_insights.sampling_percentage
+}
+
+// Collect diagnostic logs and metrics to a Log Analytics workspace
+resource "azurerm_monitor_diagnostic_setting" "apim" {
+  count = var.monitoring.enabled ? 1 : 0
+
+  name               = "${local.apim.name}-diagnostic"
+  target_resource_id = azurerm_api_management.this.id
+
+  log_analytics_workspace_id     = var.monitoring.log_analytics_workspace_id
+  log_analytics_destination_type = "AzureDiagnostics"
+
+  # Add logs only if enabled
+  dynamic "enabled_log" {
+    for_each = var.monitoring.logs.enabled ? (
+      length(var.monitoring.logs.groups) > 0 ? var.monitoring.logs.groups : var.monitoring.logs.categories
+    ) : []
+
+    content {
+      category_group = length(var.monitoring.logs.groups) > 0 ? enabled_log.value : null
+      category       = length(var.monitoring.logs.categories) > 0 ? enabled_log.value : null
     }
   }
 
+  # Add metrics if enabled
+  metric {
+    category = "AllMetrics"
+    enabled  = var.monitoring.metrics.enabled
+  }
 }
 
 resource "azurerm_monitor_metric_alert" "this" {

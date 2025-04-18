@@ -38,7 +38,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
 
@@ -47,14 +47,12 @@ jobs:
         name: Checkout
 
       - name: Prune
-        run: npx turbo@1.13.3 prune --scope ${{ env.WORKSPACE }}
+        run: npx turbo@2 prune --scope ${{ env.WORKSPACE }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
         with:
-          node-version-file: ".node-version"
-          cache: "yarn"
-          cache-dependency-path: "./out/yarn.lock"
+          working_dir: ./out
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -73,6 +71,18 @@ jobs:
         run: |
           set -e
 
+          # generate node_modules folder excluding devDependencies
+          yarn workspaces focus --production
+
+          if [ -e "next.config.js" ] && grep -q 'output: "standalone"' "next.config.js"; then
+            echo "::debug:: the workspace contains a Next.js standalone app"
+            mv .next/static .next/standalone/apps/${{ inputs.workspace_name }}/.next/
+            cd .next/standalone/apps/${{ inputs.workspace_name }}
+            zip -r $BUNDLE_NAME.zip .
+            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # determine the entry point file name from package.json main property
           ENTRY_POINT=$(jq -r '.main' package.json)
 
@@ -81,23 +91,20 @@ jobs:
             exit 1
           fi
 
-          # generate node_modules folder excluding devDependencies
-          yarn workspaces focus --production
-
           FORMAT=$(jq -r 'if .type == "module" then "esm" else "cjs" end' package.json)
           SHORT_SHA=$(git rev-parse --short ${{ github.sha }})
 
           mkdir ${{ github.run_id }}
 
-          # bundle compiled code, excluding node_modules 
+          # bundle compiled code, excluding node_modules
           curl -fsSL https://esbuild.github.io/dl/v0.21.5 | sh
           ./esbuild index=$ENTRY_POINT --bundle --format=$FORMAT --platform=node --target=node20 --packages=external --outdir=${{ github.run_id }} --allow-overwrite
 
           # create a new package.json file, with the updated entry point
           jq --arg sha "+$SHORT_SHA" '{"name": .name, "version": (.version + $sha), "main": "index.js", "type": (if has("type") then .type else "commonjs" end), "dependencies": .dependencies}' package.json > ${{ github.run_id }}/package.json
 
-          DEFAULT_FILES='"host.json"'
-          FILES=$(jq -r --arg default "$DEFAULT_FILES" 'if has("files") then .files else [$default] end | join(" ")' package.json)
+          DEFAULT_FILES="host.json"
+          FILES=$(jq -r --arg default "$DEFAULT_FILES" '(.files // [$default]) | join(" ")' package.json)
 
           # create the artifact (zip) with node_modules, index.js and package.json
           zip -r $BUNDLE_NAME.zip node_modules $FILES
@@ -107,18 +114,16 @@ jobs:
         working-directory: ./out/apps/${{ inputs.workspace_name }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          name: ${{ env.BUNDLE_NAME }}
-          path: ${{ steps.make-artifact.outputs.artifact-path }}
-          if-no-files-found: error
-          retention-days: 7
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: ${{ steps.make-artifact.outputs.artifact-path }}
 
   deploy:
     name: Deploy
     if: ${{ !github.event.act }}
     needs: [build]
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-22.04' }}
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -126,18 +131,17 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          name: ${{ env.BUNDLE_NAME }}
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Azure Login
-        uses: azure/login@v2 # v2.0.0
+        uses: pagopa/dx/.github/actions/azure-login@main
         env:
           ARM_USE_OIDC: true
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}

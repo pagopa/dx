@@ -8,11 +8,11 @@ run "setup_tests" {
   module {
     source = "./tests/setup"
   }
-  
+
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -26,8 +26,8 @@ run "postgres_is_correct_plan" {
 
   variables {
     environment = {
-      prefix          = "io"
-      env_short       = "p"
+      prefix          = "dx"
+      env_short       = "d"
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
@@ -35,10 +35,10 @@ run "postgres_is_correct_plan" {
     }
 
     tags = {
-      CostCenter  = "TS310 - PAGAMENTI & SERVIZI"
+      CostCenter  = "TS700 - ENGINEERING"
       CreatedBy   = "Terraform"
-      Environment = "Prod"
-      Owner       = "IO"
+      Environment = "Dev"
+      Owner       = "DevEx"
       Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
       Test        = "true"
       TestName    = "Create PostgreSQL for test"
@@ -46,9 +46,9 @@ run "postgres_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
-  
-    subnet_pep_id = run.setup_tests.pep_id
-    private_dns_zone_resource_group_name = "io-p-rg-common"
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
     administrator_credentials = {
       name     = "psql_admin"
@@ -59,8 +59,8 @@ run "postgres_is_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_postgresql_flexible_server.this.sku_name == "GP_Standard_D2ds_v5"
-    error_message = "The PostgreSQL Flexible Server must use the correct SKU (GP_Standard_D2ds_v5)"
+    condition     = azurerm_postgresql_flexible_server.this.sku_name == "GP_Standard_D4ds_v5"
+    error_message = "The PostgreSQL Flexible Server must use the correct SKU (GP_Standard_D4ds_v5)"
   }
 
   assert {

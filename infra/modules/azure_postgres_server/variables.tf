@@ -4,7 +4,7 @@
 
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "A map of tags to assign to the resources."
 }
 
 variable "environment" {
@@ -27,12 +27,12 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "The name of the resource group where resources will be deployed."
 }
 
 variable "db_version" {
   type        = string
-  description = "The version of PostgreSQL Flexible Server to use. Possible values are 11, 12, 13, 14, 15 and 16"
+  description = "Specifies the PostgreSQL version to use. Supported versions are 11, 12, 13, 14, 15, and 16. Defaults to 16."
   default     = "16"
 }
 
@@ -41,12 +41,12 @@ variable "db_version" {
 #------------#
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "Resource group of the private DNS zone"
+  description = "The name of the resource group containing the private DNS zone."
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "Id of the subnet which holds private endpoints"
+  description = "The ID of the subnet used for private endpoints."
 }
 
 #----------------#
@@ -60,7 +60,7 @@ variable "tier" {
 
   validation {
     condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
+    error_message = "Allowed values are 's', 'm', or 'l'."
   }
 }
 
@@ -76,7 +76,7 @@ variable "administrator_credentials" {
     password = string
   })
   sensitive   = true
-  description = "Flexible PostgreSql server administrator credentials"
+  description = "Administrator credentials for the PostgreSQL Flexible Server, including username and password."
 }
 
 #--------#
@@ -85,19 +85,19 @@ variable "administrator_credentials" {
 
 variable "backup_retention_days" {
   type        = number
-  description = "(Optional) The backup retention days for the PostgreSQL Flexible Server. Possible values are between 7 and 35 days."
+  description = "Number of days to retain backups. Valid values range from 7 to 35. Defaults to 7."
   default     = 7
 }
 
 variable "zone" {
   type        = string
-  description = "(Optional) Specifies the Availability Zone in which the PostgreSQL Flexible Server should be located."
+  description = "Specifies the Availability Zone in which the PostgreSQL Flexible Server should be located."
   default     = null
 }
 
 variable "replica_zone" {
   type        = string
-  description = "(Optional) Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
+  description = "Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
   default     = null
 }
 
@@ -108,7 +108,7 @@ variable "replica_zone" {
 variable "pgbouncer_enabled" {
   type        = bool
   default     = true
-  description = "Is PgBouncer enabled into configurations?"
+  description = "Indicates whether PgBouncer, a connection pooling tool, is enabled. Defaults to true."
 }
 
 #------------#
@@ -261,4 +261,16 @@ variable "diagnostic_settings" {
     )
     error_message = "log_analytics_workspace_id and diagnostic_setting_destination_storage_id are mandatory if diagnostic is enabled."
   }
+}
+
+variable "enable_lock" {
+  type        = bool
+  default     = true
+  description = "Define if lock should be enabled."
+}
+
+variable "high_availability_override" {
+  type        = bool
+  default     = false
+  description = "Override if high availability should be enabled."
 }

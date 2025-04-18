@@ -1,7 +1,7 @@
 # ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
-  description = "Resources tags"
+  description = "Map of tags to apply to all created resources."
 }
 
 variable "environment" {
@@ -19,7 +19,7 @@ variable "environment" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Resource group to deploy resources to"
+  description = "Name of the resource group where resources will be deployed."
 }
 
 # ------------ APP SERVICE ------------ #
@@ -27,24 +27,24 @@ variable "resource_group_name" {
 variable "app_service_plan_id" {
   type        = string
   default     = null
-  description = "(Optional) Set the AppService Id where you want to host the Function App"
+  description = "ID of the AppService plan where the application will be hosted."
 }
 
 variable "application_insights_connection_string" {
   type        = string
   sensitive   = true
   default     = null
-  description = "(Optional) Application Insights connection string"
+  description = "Application Insights connection string."
 }
 
 variable "health_check_path" {
   type        = string
-  description = "Endpoint where health probe is exposed"
+  description = "Path of the endpoint where health probe is exposed."
 }
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on workload. Allowed values are 'xs', 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
+  description = "Resource tier based on workload. Allowed values: 'xs', 's', 'm', 'l', 'xl'. Legacy values: 'premium', 'standard', 'test'."
 
   default = "l"
 
@@ -58,6 +58,8 @@ variable "stack" {
   type    = string
   default = "node"
 
+  description = "Technology stack to use. Allowed values: 'node', 'java'."
+
   validation {
     condition     = contains(["node", "java"], var.stack)
     error_message = "Allowed values for \"stack\" are \"node\", \"java\". Note, you can select the version using \"node_version\" and \"java_version\" variables."
@@ -67,34 +69,34 @@ variable "stack" {
 variable "node_version" {
   type        = number
   default     = 20
-  description = "Node version to use"
+  description = "Node.js version to use."
 }
 
 variable "java_version" {
   type        = string
   default     = 17
-  description = "Java version to use"
+  description = "Java version to use."
 }
 
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
-  description = "(Optional) The sampling percentage of Application Insights. Default is 5"
+  description = "Sampling percentage for Application Insights. Default is 5."
 }
 
 variable "app_settings" {
   type        = map(string)
-  description = "Application settings"
+  description = "Application settings as a map of key-value pairs."
 }
 
 variable "slot_app_settings" {
   type        = map(string)
-  description = "Staging slot application settings"
+  description = "Application settings for the staging slot."
   default     = {}
 }
 
 variable "sticky_app_setting_names" {
   type        = list(string)
-  description = "(Optional) A list of application setting names that are not swapped between slots"
+  description = "List of application setting names that are not swapped between slots."
   default     = []
 }

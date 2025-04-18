@@ -5,7 +5,7 @@ on:
 
 jobs:
   js_code_review:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     env:
       TURBO_CACHE_DIR: .turbo-cache
@@ -14,26 +14,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
-      # Corepack is an official tool by Node.js that manages package managers versions
-      - name: Setup yarn
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
-        with:
-          node-version-file: ".node-version"
-          cache: "yarn"
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Install dependencies
         run: yarn install --immutable
-
-      - name: Setup turbo cache
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 #v4.0.2
-        with:
-          path: ${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
 
       # The code-review script must be defined in the root workspace
       # Example: "turbo run typecheck format:check lint:check //#test:coverage"

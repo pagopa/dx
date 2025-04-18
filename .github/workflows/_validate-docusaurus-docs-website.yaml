@@ -1,0 +1,39 @@
+name: Validate GitHub Pages Website
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+
+# env:
+#   WORKING_DIR: ./website
+
+# defaults:
+#   run:
+#     working-directory: ./website
+
+jobs:
+  test-deploy:
+    # Don't run in Changeset PRs
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    name: Test deployment
+    runs-on: ubuntu-latest
+    env:
+      TURBO_CACHE_DIR: .turbo-cache
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-depth: 0
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Test build website
+        run: yarn run build

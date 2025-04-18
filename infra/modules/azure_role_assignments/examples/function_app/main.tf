@@ -11,7 +11,7 @@ module "function" {
   health_check_path   = "/api/v1/info"
   node_version        = 18
 
-  subnet_cidr                          = "10.20.6.0/24"
+  subnet_cidr                          = "10.50.246.0/24"
   subnet_pep_id                        = data.azurerm_subnet.private_endpoints_subnet.id
   private_dns_zone_resource_group_name = data.azurerm_resource_group.weu_common.name
   virtual_network = {
@@ -28,20 +28,22 @@ module "function" {
 }
 
 module "roles" {
-  source       = "../../"
-  principal_id = module.function.function_app.function_app.principal_id
-
+  source          = "../../"
+  principal_id    = module.function.function_app.function_app.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
   cosmos = [
     {
-      account_name        = "io-p-cosmos-example-cms"
-      resource_group_name = "io-p-example-cms-rg"
+      account_name        = "<THE_COSMOS_ACCOUNT_NAME>"
+      resource_group_name = "<THE_COSMOS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
       role                = "writer"
       database            = "a"
       collections         = ["x", "y"]
     },
     {
-      account_name        = "io-p-cosmos-example-cms"
-      resource_group_name = "io-p-example-cms-rg"
+      account_name        = "<THE_COSMOS_ACCOUNT_NAME>"
+      resource_group_name = "<THE_COSMOS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
       role                = "reader"
       database            = "b"
     }
@@ -49,8 +51,9 @@ module "roles" {
 
   redis = [
     {
-      cache_name          = "io-p-itn-example-redis-01"
-      resource_group_name = "io-p-itn-example-rg-01"
+      cache_name          = "<THE_REDIS_CACHE_NAME>"
+      resource_group_name = "<THE_REDIS_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
       role                = "reader"
       username            = "pippo"
     }
@@ -58,8 +61,9 @@ module "roles" {
 
   key_vault = [
     {
-      name                = "io-p-example-kv"
-      resource_group_name = "io-p-example-rg"
+      name                = "<THE_KEY_VAULT_NAME>"
+      resource_group_name = "<THE_KEY_VAULT_RESOURCE_GROUP_NAME>"
+      description         = "Why this role is assigned"
       roles = {
         secrets = "reader"
       }

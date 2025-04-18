@@ -1,6 +1,14 @@
 locals {
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
   eventhub = {
-    name = "${module.naming_convention.prefix}-evhns-${module.naming_convention.suffix}"
+    name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "eventhub_namespace" }))
     sku_name = lookup(
       {
         "s" = "Standard",
@@ -16,17 +24,17 @@ locals {
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
     [for c in h.consumers : {
-      hub  = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
+      hub  = replace(local.eventhub.name, "${var.environment.app_name}-evhns", h.name)
       name = c
   }]]) : "${hc.hub}.${hc.name}" => hc }
 
   keys = { for hk in flatten([for h in var.eventhubs :
     [for k in h.keys : {
-      hub = "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}"
+      hub = replace(local.eventhub.name, "-evhns-", "-${h.name}-")
       key = k
   }]]) : "${hk.hub}.${hk.key.name}" => hk }
 
-  hubs = { for h in var.eventhubs : "${module.naming_convention.prefix}-${h.name}-${module.naming_convention.suffix}" => h }
+  hubs = { for h in var.eventhubs : replace(local.eventhub.name, "-evhns-", "-${h.name}-") => h }
 
   # Network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name

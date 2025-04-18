@@ -1,0 +1,9 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["src/**", "docs/**", "blog/**"],
+      "outputs": ["build/**", ".docusaurus/**"]
+    }
+  }
+}

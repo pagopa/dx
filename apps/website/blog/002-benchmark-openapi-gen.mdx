@@ -1,0 +1,200 @@
+---
+title: "Benchmark for Typescript Code Generators from OpenAPI"
+description: Generating TypeScript Code from OpenAPI Specification
+slug: typescript-openapi-generators-0.1-alpha
+hide_table_of_contents: false
+date: 2024-09-24T17:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+---
+
+# Benchmark for Typescript Code Generators from OpenAPI
+
+The digital services we provide interact through REST APIs that are documented
+using OpenAPI specifications.
+
+Using API clients requires the code that handles HTTP requests and responses to
+strictly adhere to the OpenAPI specifications. This is crucial to ensure that
+the exchanged data is valid and consistent with the defined schemas. Similarly,
+when providing APIs through NodeJS services, such as Express or similar
+frameworks, it is important to follow the same standards. This ensures that the
+APIs are reliable, scalable, and easy to maintain.
+
+<!-- truncate -->
+
+The purpose of this document is to evaluate and compare various TypeScript
+OpenAPI generators for both frontend and backend development. The evaluation
+will focus on critical features and help determine whether to invest in a custom
+tool (make) or adopt an existing tool.
+
+## Guiding Principles
+
+### Main Requirements
+
+1. **Runtime Payload Control** The generators must provide runtime controls on
+   the payloads to ensure data integrity and adherence to defined schemas. We
+   believe runtime control is necessary to guarantee that the Typescript type
+   matches the actual structure of the payload. Without this, there's a higher
+   chance of runtime errors due to discrepancies in the data format.
+
+2. **Generation of Isomorphic Types** The ability to generate types usable both
+   on the client and server sides (e.g., in Express route handlers).
+
+3. **Support for String Patterns (Regex)** Generators must support string
+   patterns using regular expressions to enforce constraints on string values.
+
+4. **Support for JSON Schema Constraints** For example, the handling of
+   constraints such as minimum, maximum, exclusiveMinimum, and exclusiveMaximum
+   is essential for validating numeric data.
+
+5. **Community and Maintainability** A strong community and/or easily
+   maintainable codebase are crucial for the long-term viability and support of
+   the generator.
+
+### Additional Features (Nice to Have)
+
+1. **Support for Security Headers** Generators should support security headers
+   to enhance API security.
+
+2. **Support for File Uploads** The ability to handle file uploads seamlessly
+   within the API.
+
+3. **Support for File Downloads (Octet Stream)** There must be support for file
+   downloads, specifically as an octet stream.
+
+4. **Minimal Footprint** Generators should aim for minimal footprint, e.g.,
+   generating one type per file with tree-shaking capabilities to optimize
+   performance.
+
+5. **Developer Experience** High performance during code generation is
+   important. The generator should be fast and not slow down the IDE, even
+   during type inference.
+
+## Comparison
+
+- **typed-openapi**: Converts to Typescript before converting to runtime types
+  (typebox-codegen → zod), losing information on constraints.
+- **openapi-generator**: Runtime checks are limited to verifying if the value is
+  defined.
+- **swagger-codegen**: An older version of openapi-generator.
+- **autorest**: Seems promising on paper, but couldn't get it to start (freezes
+  on startup).
+- **openapi-io-ts**: Inexistent community, doesn't work with our specs, not
+  maintained.
+- **orval**: Primarily targets React; generates code that works on our specs.
+
+| Generator         | Server Types | Community | Supports Regex (Pattern String) | Supports Min/Max (Number) | Supports HTTP Headers |
+| ----------------- | ------------ | --------- | ------------------------------- | ------------------------- | --------------------- |
+| typed-openapi     | Yes          | Yes       | No                              | No                        | Yes                   |
+| openapi-generator | Yes          | Yes       | No                              | No                        | Yes                   |
+| swagger-codegen   | Yes          | Yes       | No                              | No                        | Yes                   |
+| autorest          | ???          | Yes       | ???                             | ???                       | ???                   |
+| openapi-io-ts     | ???          | No        | ???                             | ???                       | ???                   |
+| orval             | No           | Yes       | Yes                             | Yes                       | Yes                   |
+
+## Exclusion Criteria
+
+Some tools are excluded from this benchmark due to lack of runtime controls (at
+least, as of the writing of this document):
+
+- heyapi
+- oazapfts
+- openapi-backend
+- openapi-typescript
+- swagger-typescript-api
+
+Although it is possible to translate the generated Typescript types into
+structures (e.g., zod/typebox) that allow runtime controls, this kind of
+conversion results in a loss of information on constraints (e.g., maximum,
+minimum, maxLength, pattern, etc.).
+
+## Generated Code Repository
+
+A repository is available to compare the code of different generators:
+[GitHub - gunzip/openapi-generator-benchmark](https://github.com/gunzip/openapi-generator-benchmark)
+
+## Issues with openapi-zod-client
+
+1. Inaccurate type generation.
+2. Poor performance in the IDE due to type inference from the single object
+   passed to the zodios `makeApi` method.
+3. Dependency on `@zodios/core` for HTTP calls (via Axios), parameter
+   validation, and query string handling.
+4. Does not support multiple successful values (2xx codes).
+5. Both the client and types are contained in a single file, making it hard to
+   optimize the bundle (important for frontend clients).
+6. The maintainer of zodios has been inactive for a while.
+
+### Example of Inaccurate Type Generation
+
+```typescript
+const MessageSubject = z.string();
+const MessageBodyMarkdown = z.string();
+const MessageContent = z
+  .object({
+    subject: MessageSubject.min(10).max(120).optional(),
+    markdown: MessageBodyMarkdown.min(80).max(10000),
+  })
+  .passthrough();
+```
+
+Generated from the foloowing OpenAPI schema:
+
+```yaml
+MessageSubject:
+      type: string
+      minLength: 10
+      maxLength: 120
+    MessageBodyMarkdown:
+      type: string
+      minLength: 80
+      maxLength: 10000
+          MessageContent:
+      type: object
+    MessageContent:
+      properties:
+        subject:
+          $ref: "#/components/schemas/MessageSubject"
+        markdown:
+          $ref: "#/components/schemas/MessageBodyMarkdown"
+      required:
+        - markdown
+```
+
+## Issues with swagger-typescript-api + ts-to-zod
+
+Unlike other Typescript type generators, `swagger-typescript-api` retains
+information on constraints (minimum, maximum, maxLength, pattern, etc.) in JSDoc
+comments associated with type definitions. This allows for the reconstruction of
+runtime schemas, for example, using tools like `ts-to-zod`. However:
+
+1. The generated runtime schemas are separate from the client code, so the
+   “plumbing” to connect the runtime validation (ts-to-zod) to the generated
+   types (`swagger-typescript-api`) must be implemented manually.
+2. Types are not always accurate due to discrepancies between the annotations
+   generated by swagger-typescript-api and those expected by ts-to-zod (e.g.,
+   `@min` vs `@minimum`).
+3. Some inaccuracies in type generation produce invalid Typescript code.
+
+Nevertheless, the zod schemas are more faithful than those generated by
+openapi-zod-client.
+
+### Example of Accurate Type Generation
+
+```typescript
+export const messageSubjectSchema = z.string().min(10).max(120);
+export const messageBodyMarkdownSchema = z.string().min(80).max(10000);
+export const messageContentSchema = z.object({
+  subject: messageSubjectSchema.optional(),
+  markdown: messageBodyMarkdownSchema,
+});
+```
+
+## Conclusion
+
+As of Jun 2024, no OpenAPI generator fully meets our guiding principles. While
+`openapi-zod-client` seems to cover most of the desired features, it still
+appears to be an immature project, not always accurate in type generation.
+
+It is appropriate to invest in the development of a Typescript code generator
+from OpenAPI that performs correct and complete runtime checks.

@@ -8,7 +8,8 @@ resource "azurerm_storage_account_network_rules" "network_rules" {
 }
 
 resource "azurerm_private_endpoint" "this" {
-  for_each            = { for subservice, status in var.subservices_enabled : subservice => status if status }
+  for_each = { for subservice, status in local.peps.create_subservices : subservice => status if status }
+
   name                = local.peps[each.key].name
   location            = var.environment.location
   resource_group_name = var.resource_group_name

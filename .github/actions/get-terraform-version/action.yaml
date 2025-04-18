@@ -1,0 +1,51 @@
+name: Get Terraform Version
+description: Retrieve the Terraform version from the `.terraform-version` file or return a default version.
+
+inputs:
+  override_version:
+    description: "Specify the Terraform version. If omitted, the version will be read from the .terraform-version file. This value takes precedence over default_version if the file is absent."
+    type: string
+    required: false
+  default_version:
+    description: "Default Terraform version to use if the `.terraform-version` file is not found and override_version is not provided."
+    required: false
+    default: "1.10.4"
+
+outputs:
+  terraform_version:
+    description: "The Terraform version retrieved or the default."
+    value: ${{ steps.get-terraform-version-action.outputs.terraform_version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get Terraform Version
+      id: get-terraform-version-action
+      shell: bash
+      run: |
+        # Default version provided via input
+        DEFAULT_VERSION="${{ inputs.default_version }}"
+        TERRAFORM_VERSION="${{ inputs.default_version }}"
+
+        if [ "${{ inputs.override_version }}" == "" ]; then
+          # Check for the .terraform-version file
+          if [ -f ".terraform-version" ]; then
+              TERRAFORM_VERSION=$(cat .terraform-version)
+              
+              # Validate the version format
+              if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                  echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"
+              else
+                  echo "Error: Invalid Terraform version format: ${TERRAFORM_VERSION}"
+                  exit 1
+              fi
+          else
+              TERRAFORM_VERSION="$DEFAULT_VERSION"
+              echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
+          fi
+        else
+          TERRAFORM_VERSION=${{ inputs.override_version }}
+        fi
+
+        # Output the Terraform version
+        echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
