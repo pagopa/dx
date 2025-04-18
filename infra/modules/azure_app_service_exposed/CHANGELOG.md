@@ -1,5 +1,13 @@
 # azure_app_service_exposed
 
+## 0.0.16
+
+### Patch Changes
+
+- b3254c7: Rename `APPINSIGHTS_CONNECTION_STRING` environment variable.
+
+  This was previously introduced to let the `@pagopa/azure-tracing` package work.
+
 ## 0.0.15
 
 ### Patch Changes
