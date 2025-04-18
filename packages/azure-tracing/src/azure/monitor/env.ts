@@ -16,9 +16,6 @@ export const loadEnv = () =>
     },
     runtimeEnv: process.env,
     server: {
-      APPINSIGHTS_CONNECTION_STRING: z
-        .string()
-        .describe("The connection string for Application Insights."),
       APPINSIGHTS_SAMPLING_PERCENTAGE: z
         .optional(
           z.coerce
@@ -35,5 +32,8 @@ export const loadEnv = () =>
           return isNaN(percentage) ? 5 : percentage;
         })
         .transform((value) => value / 100),
+      APPLICATIONINSIGHTS_CONNECTION_STRING: z
+        .string()
+        .describe("The connection string for Application Insights."),
     },
   });

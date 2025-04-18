@@ -46,7 +46,7 @@ In order to enable tracing, you also need to set the following environment varia
 | **Name**                            | **Required** | **Default** |
 | ----------------------------------- | ------------ | ----------- |
 | **APPINSIGHTS_SAMPLING_PERCENTAGE** | false        | 5           |
-| **APPINSIGHTS_CONNECTION_STRING**   | true         | -           |
+| **APPLICATIONINSIGHTS_CONNECTION_STRING**   | true         | -           |
 
 #### Step 2: Register Azure Function Lifecycle Hooks
 
