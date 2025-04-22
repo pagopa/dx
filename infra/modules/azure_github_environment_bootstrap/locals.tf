@@ -20,7 +20,7 @@ locals {
     location = var.environment.location
   }
 
-  repository_name = var.repository.configure ? module.github_repository[0].name : var.repository.name
+  repository_name = var.repository.configure ? module.github_repository["repo"].name : var.repository.name
 
   resource_group_ids = merge(
     {
