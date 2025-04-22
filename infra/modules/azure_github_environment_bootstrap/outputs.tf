@@ -10,7 +10,7 @@ output "resource_group" {
 output "repository" {
   description = "Details of the GitHub repository, including ID and name."
   value = {
-    id   = try(module.github_repository[var.repository.name].id, null)
+    id   = try(module.github_repository[0].id, null)
     name = local.repository_name
   }
 }
