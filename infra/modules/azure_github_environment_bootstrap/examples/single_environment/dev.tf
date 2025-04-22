@@ -19,7 +19,7 @@ data "azurerm_resource_group" "dashboards_dev" {
 }
 
 data "azurerm_resource_group" "common_dev" {
-  name     = format(local.common.resource_group_name, "d")
+  name = format(local.common.resource_group_name, "d")
 }
 
 data "azuread_group" "admins_dev" {
