@@ -2,4 +2,4 @@ test:
 	go test -v ./...
 
 testacc:
-	go test -v ./... -tags=acceptance
+	TF_ACC=1 go test -v ./... -tags=acceptance

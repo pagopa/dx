@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -82,36 +81,6 @@ func (p *dxProvider) Configure(ctx context.Context, req provider.ConfigureReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if config.Prefix.IsNull() || config.Environment.IsNull() || config.Location.IsNull() {
-		resp.Diagnostics.AddError(
-			"Missing configuration",
-			"The configuration is not provided or is null.",
-		)
-	}
-
-	if len(config.Prefix.ValueString()) != 2 {
-		resp.Diagnostics.AddError(
-			"Prefix length error",
-			"The 'prefix' configuration must be 2 characters long.",
-		)
-	}
-
-	if strings.ToLower(config.Environment.ValueString()) != "d" && strings.ToLower(config.Environment.ValueString()) != "u" && strings.ToLower(config.Environment.ValueString()) != "p" {
-		resp.Diagnostics.AddError(
-			"Environment value error",
-			"The 'environment' configuration must be 'd', 'u' or 'p'.",
-		)
-	}
-
-	validLocations := []string{"weu", "itn", "westeurope", "italynorth"}
-	location := strings.ToLower(config.Location.ValueString())
-	if !contains(validLocations, location) {
-		resp.Diagnostics.AddError(
-			"Location value error",
-			"The 'location' configuration must be one of: 'weu', 'itn', 'westeurope', or 'italynorth'.",
-		)
-	}
 }
 
 // Resources
@@ -122,7 +91,9 @@ func (p *dxProvider) Resources(ctx context.Context) []func() resource.Resource {
 
 // DataSources
 func (p *dxProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewAvailableSubnetCidrDataSource,
+	}
 }
 
 // Functions
