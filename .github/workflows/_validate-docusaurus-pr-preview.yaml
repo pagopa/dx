@@ -1,0 +1,45 @@
+name: Deploy PR Preview for Docusaurus Website
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+
+# Set default working directory for all run steps
+defaults:
+  run:
+    working-directory: ./apps/website
+
+jobs:
+  build-and-preview:
+    # Don't run in Changeset PRs
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    name: Build and Deploy PR Preview
+    runs-on: ubuntu-latest
+    env:
+      TURBO_CACHE_DIR: .turbo-cache
+      
+    steps:
+      - name: Check out code
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-depth: 0
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build website
+        run: yarn run build
+
+      - name: Deploy PR Preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./apps/website/build
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
