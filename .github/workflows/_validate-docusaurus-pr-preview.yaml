@@ -1,6 +1,13 @@
 name: Deploy PR Preview for Docusaurus Website
 
 on:
+  workflow_dispatch:
+    inputs:
+      comment:
+        description: 'Commento per l'esecuzione manuale'
+        required: false
+        type: string
+        default: 'Test manuale della preview del sito Docusaurus'
   pull_request:
     branches:
       - main
@@ -15,7 +22,7 @@ defaults:
 jobs:
   build-and-preview:
     # Don't run in Changeset PRs
-    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    if: ${{ github.actor != 'dx-pagopa-bot' || github.event_name == 'workflow_dispatch' }}
     name: Build and Deploy PR Preview
     runs-on: ubuntu-latest
     env:
