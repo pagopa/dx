@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-sidebar_label: Static Analysis for Terraform
+sidebar_label: Validate Terraform Code with Static Analysis
 ---
 
 # Static Analysis for Terraform
