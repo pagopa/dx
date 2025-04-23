@@ -21,6 +21,9 @@ jobs:
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     name: Build and Deploy PR Preview
     runs-on: ubuntu-latest
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
     env:
       TURBO_CACHE_DIR: .turbo-cache
 
