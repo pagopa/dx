@@ -86,7 +86,9 @@ func (p *dxProvider) Configure(ctx context.Context, req provider.ConfigureReques
 // Resources
 
 func (p *dxProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewAvailableSubnetCidrResource,
+	}
 }
 
 // DataSources
