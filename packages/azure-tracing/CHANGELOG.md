@@ -1,5 +1,13 @@
 # @pagopa/azure-tracing
 
+## 0.3.2
+
+### Patch Changes
+
+- ef10785: Upgrade OpenTelemetry dependencies
+
+  Fixes the issue https://github.com/microsoft/ApplicationInsights-node.js/issues/1423
+
 ## 0.3.1
 
 ### Patch Changes
