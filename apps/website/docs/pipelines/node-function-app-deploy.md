@@ -12,7 +12,7 @@ is a reusable GitHub Actions workflow designed for building and deploying
 
 ## How It Works
 
-The workflow consists of two main jobs: `build` and `deploy`.
+The workflow consists of two main jobs:
 
 **Build Job (`build`)**:
 
@@ -73,7 +73,7 @@ jobs:
 ## Notes
 
 - This workflow assumes your project is structured as a Turborepo monorepo.
-- The workspace being deployed must have a build script in its package.json.
+- The workspace being deployed must have a build script in its `package.json`.
 - The target Azure Function App must have the `WEBSITE_SWAP_WARMUP_PING_PATH`
   and `WEBSITE_SWAP_WARMUP_PING_STATUSES` application settings configured if
   using the staging slot (`use_staging_slot`: true). The workflow will fail if
