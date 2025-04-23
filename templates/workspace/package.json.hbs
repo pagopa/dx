@@ -1,0 +1,25 @@
+{
+  "name": "{{name}}",
+  "type": "module",
+  "main": "./dist/index.js",
+  {{#if library}}
+  "files": [
+    "dist"
+  ],
+  {{/if}}
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node20": "^20.1.5",
+    "@types/node": "^20.12.2",
+    "eslint": "8.57.0",
+    "tsup": "^8.4.0",
+    "typescript": "~5.2.2"
+  },
+  "scripts": {
+    "start": "node .",
+    "build": "tsup",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "typecheck": "tsc --noEmit"
+  }
+}
