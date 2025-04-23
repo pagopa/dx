@@ -21,9 +21,13 @@ jobs:
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     name: Build and Deploy PR Preview
     runs-on: ubuntu-latest
-    # Deploy to the github-pages environment
-    environment:
-      name: github-pages
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+      contents: write # to write the repository contents
+
     env:
       TURBO_CACHE_DIR: .turbo-cache
 
