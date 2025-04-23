@@ -1,6 +1,7 @@
 name: Deploy PR Preview for Docusaurus Website
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -18,7 +19,7 @@ env:
 jobs:
   build-and-preview:
     # Don't run in Changeset PRs
-    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    if: ${{ github.actor != 'dx-pagopa-bot' || github.event_name == 'workflow_dispatch' }}
     name: Build and Deploy PR Preview
     runs-on: ubuntu-latest
 
@@ -30,6 +31,8 @@ jobs:
 
     env:
       TURBO_CACHE_DIR: .turbo-cache
+      PR_PREVIEW: 'true'
+      PR_NUMBER: ${{ github.event.number }}
 
     steps:
       - name: Check out code

@@ -2,6 +2,16 @@ import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
+// Determine if we're in a PR preview environment
+// When deployed to PR preview, the URL pattern will be /dx/pr-preview/pr-{number}/
+const isPRPreview = process.env.PR_PREVIEW === 'true' ||
+  (typeof window !== 'undefined' && window.location.pathname.includes('/pr-preview/'));
+
+// Set the appropriate baseUrl based on environment
+const baseUrl = isPRPreview
+  ? '/dx/pr-preview/pr-' + (process.env.PR_NUMBER || '{PR_NUMBER}') + '/'
+  : '/dx/';
+
 const config: Config = {
   title: "DX",
   tagline: "Welcome to the DX documentation!",
@@ -9,9 +19,8 @@ const config: Config = {
 
   // Set the production url of your site here
   url: "https://pagopa.github.io",
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/dx/",
+  // Set the baseUrl dynamically based on deployment context
+  baseUrl,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
