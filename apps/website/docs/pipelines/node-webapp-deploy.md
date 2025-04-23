@@ -11,7 +11,7 @@ is a template for workflows designed for building and deploying **Node.js** web 
 
 ## How It Works
 
-The workflow consists of two main jobs: `build` and `deploy`.
+The workflow consists of two main jobs:
 
 **Build Job (`build`)**:
 
@@ -62,6 +62,6 @@ jobs:
 ## Notes
 
 - This workflow assumes your project is structured as a Turborepo monorepo.
-- The workspace being deployed must have a build script in its package.json.
+- The workspace being deployed must have a build script in its `package.json`.
 - For Next.js apps, configure output: "standalone" in next.config.js for optimal deployment packaging.
 - For non-Next.js apps, ensure a main entry point is defined in the workspace's package.json.
