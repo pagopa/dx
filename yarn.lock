@@ -297,9 +297,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.30, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.30":
-  version: 1.0.0-beta.30
-  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.30"
+"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.31, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.31":
+  version: 1.0.0-beta.31
+  resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.31"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
     "@azure/core-client": "npm:^1.9.2"
@@ -313,19 +313,19 @@ __metadata:
     "@opentelemetry/sdk-trace-base": "npm:^1.30.1"
     "@opentelemetry/semantic-conventions": "npm:^1.30.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/dc4d037daadfec7b84438e1670b4e4a3288656d946b8e3c7da2a7f6038ea9144f0e814062d0893b0247409e773b31e2167980d56d8fae04a8c77253da30ee0d7
+  checksum: 10c0/8c00d851518d57f695e78e42542a2f1c971015d2e6a05045742d83c1c806119179d2b44ee05bdd12e1e36be016064e00f728a1c3ddb11a18408b2f18be177064
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "@azure/monitor-opentelemetry@npm:1.10.0"
+"@azure/monitor-opentelemetry@npm:^1.11.0":
+  version: 1.11.0
+  resolution: "@azure/monitor-opentelemetry@npm:1.11.0"
   dependencies:
     "@azure/core-auth": "npm:^1.9.0"
     "@azure/core-client": "npm:^1.9.2"
     "@azure/core-rest-pipeline": "npm:^1.18.2"
     "@azure/logger": "npm:^1.1.4"
-    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.30"
+    "@azure/monitor-opentelemetry-exporter": "npm:1.0.0-beta.31"
     "@azure/opentelemetry-instrumentation-azure-sdk": "npm:^1.0.0-beta.7"
     "@microsoft/applicationinsights-web-snippet": "npm:^1.2.1"
     "@opentelemetry/api": "npm:^1.9.0"
@@ -350,7 +350,7 @@ __metadata:
     "@opentelemetry/semantic-conventions": "npm:^1.30.0"
     "@opentelemetry/winston-transport": "npm:^0.10.1"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/125f051b27e891f233fcecc6afc4f25d251652fb9d51a8878cc7c8cf2b2c1330f1e4d3e64115a4f0e63d01c88c75ea2deaa3e0c9dca1fd4d2d048c0a26ec8a86
+  checksum: 10c0/670bee028ce5a6a0216b1e7df3795b414981c5fb640c651b68c7a46dc717c51437ae8958ff97308e4b09536161c7e9f2bbc3982a12eb85a1bc59b47c80e993aa
   languageName: node
   linkType: hard
 
@@ -4132,8 +4132,8 @@ __metadata:
   resolution: "@pagopa/azure-tracing@workspace:packages/azure-tracing"
   dependencies:
     "@azure/functions": "npm:^4.7.0"
-    "@azure/monitor-opentelemetry": "npm:^1.10.0"
-    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.30"
+    "@azure/monitor-opentelemetry": "npm:^1.11.0"
+    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.31"
     "@opentelemetry/api": "npm:^1.9.0"
     "@opentelemetry/api-logs": "npm:^0.200.0"
     "@opentelemetry/instrumentation": "npm:^0.200.0"
