@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # API Management Best Practices
 
-This documentation outlines few best practices for software engineers using
+This documentation outlines a few best practices for software engineers using
 APIM.
 
 The goal is to:
@@ -20,7 +20,7 @@ The goal is to:
 APIM provides built-in capabilities for API versioning and revisions, offering a
 structured way to manage API changes without disrupting active services.
 
-Thus, leveraging on versioning and revisions is reccommended for:
+Thus, leveraging versioning and revisions is recommended for:
 
 - Testing in production
   - Modify policies and configurations safely before publishing changes
@@ -40,8 +40,8 @@ request a specific version through:
 - Header parameter
 - Query string parameter
 
-If client does not specify a version, APIM fallbacks to the version chosen as
-default.
+If the client does not specify a version, APIM falls back to the version chosen
+as default.
 
 ### Revisions
 
@@ -59,8 +59,8 @@ can have multiple revisions with the following states:
 2. Define a new API version
 3. Create revisions for incremental modifications (e.g. `rev 2`) and policy
    updates, and set as `Online`
-4. Test the revision, by invoking the API under test specifying its revision
-   name in URL (e.g. `/api/v1/resource;rev=2`)
+4. Test the revision by invoking the API under test and specifying its revision
+   name in the URL (e.g. `/api/v1/resource;rev=2`)
 5. Finalize changes and promote a revision to current when ready
 6. Document modifications using changelogs available through APIM
 
@@ -86,8 +86,9 @@ included as a header in their API requests.
 APIM's built-in features facilitate this setup. You would create two products:
 one for the free API and another for the paid API. The paid product requires a
 subscription as proof of payment. Consequently, you must generate a unique
-subscription key for each paying user, managed by the users themselves. These
-subscriptions are then linked to the paid product to enforce access control.
+subscription key for each paying user. These keys are managed by the users
+themselves. These subscriptions are then linked to the paid product to enforce
+access control.
 
 Even if you aren't implementing a paywall, the underlying concept remains
 applicable. Define logical boundaries for your APIs and group them using
@@ -96,6 +97,10 @@ other relevant criteria. Subsequently, if you are exposing an internal API,
 create a subscription for each consumer of your APIs, whether it's a specific
 service, another team within your domain, or a team from a different product
 area.
+
+[Official documentation](https://learn.microsoft.com/en-us/azure/api-management/api-management-subscriptions)
+provides deep knowledge in how APIM handles requests with or without
+subscription keys.
 
 ### Implementing a Rate Limit Policy
 
