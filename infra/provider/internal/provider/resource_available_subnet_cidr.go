@@ -215,7 +215,6 @@ func (r *availableSubnetCidrResource) ModifyPlan(ctx context.Context, req resour
 }
 
 // Helper function to find an available CIDR block
-// This reuses most of the data source logic but returns diagnostics
 func findAvailableCidrBlock(ctx context.Context, vnetID string, prefixLength int) (string, diag.Diagnostics) {
 	var diagnostics diag.Diagnostics
 
@@ -414,4 +413,33 @@ func (m *prefixLengthRequiresReplaceModifier) PlanModifyInt64(ctx context.Contex
 
 	// If we get here, the value has changed and we require recreation of the resource
 	resp.RequiresReplace = true
+}
+
+// parseVNetID extracts the relevant parts from an Azure VNet ID
+type parsedVNetID struct {
+	subscriptionID    string
+	resourceGroupName string
+	vnetName          string
+}
+
+func parseVNetID(id string) (*parsedVNetID, error) {
+	// Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}
+	parts := strings.Split(strings.ToLower(id), "/")
+
+	// Verify that the ID has the correct format
+	if len(parts) != 9 || parts[0] != "" || parts[1] != "subscriptions" || parts[3] != "resourcegroups" ||
+		parts[5] != "providers" || parts[6] != "microsoft.network" || parts[7] != "virtualnetworks" {
+		return nil, fmt.Errorf("invalid VNet ID format. Expected '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}'")
+	}
+
+	return &parsedVNetID{
+		subscriptionID:    parts[2],
+		resourceGroupName: parts[4],
+		vnetName:          parts[8],
+	}, nil
+}
+
+// cidrOverlaps checks if two CIDRs overlap
+func cidrOverlaps(a, b *net.IPNet) bool {
+	return a.Contains(b.IP) || b.Contains(a.IP)
 }

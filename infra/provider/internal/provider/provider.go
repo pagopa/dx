@@ -93,9 +93,7 @@ func (p *dxProvider) Resources(ctx context.Context) []func() resource.Resource {
 
 // DataSources
 func (p *dxProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		NewAvailableSubnetCidrDataSource,
-	}
+	return nil
 }
 
 // Functions

@@ -61,40 +61,11 @@ provider "dx" {
 |location|String|No|Deployment location (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional domain for naming.|
 
-## Data Sources
-
-### available_subnet_cidr
-
-Find an available CIDR block for a new subnet within a specified Azure Virtual Network.
-
-**Inputs:**
-
-|Name|Type|Required|Description|
-|:---|:---:|:---:|:---|
-|virtual_network_id|String|Yes|The ID of the Azure Virtual Network resource where to search for an available CIDR block.|
-|prefix_length|Integer|Yes|The desired prefix length for the new CIDR block.|
-
-**Example:**
-
-```hcl
-data "dx_available_subnet_cidr" "next_cidr" {
-  virtual_network_id = azurerm_virtual_network.this.id
-  prefix_length      = 24  # For a /24 subnet
-}
-
-resource "azurerm_subnet" "new_subnet" {
-  name                 = "my-new-subnet"
-  resource_group_name  = azurerm_resource_group.main.name
-  virtual_network_name = azurerm_virtual_network.main.name
-  address_prefixes     = [data.dx_available_subnet_cidr.next_cidr.cidr_block]
-}
-```
-
 ## Resources
 
-### available_subnet_cidr
+### dx_available_subnet_cidr
 
-Find an available CIDR block for a new subnet within a specified Azure Virtual Network. Unlike the data source version, the resource version persists the allocated CIDR block in the Terraform state to ensure consistent plans.
+Find an available CIDR block for a new subnet within a specified Azure Virtual Network.
 
 **Inputs:**
 
