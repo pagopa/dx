@@ -33,6 +33,7 @@ repos:
           - --args=--disable-rule terraform_required_version
           - --args=--disable-rule terraform_required_providers
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+        exclude: ^infra/provider/.*
       - id: terraform_validate
         args:
           - --args=-json

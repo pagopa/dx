@@ -61,6 +61,75 @@ provider "dx" {
 |location|String|No|Deployment location (itn/italynorth or weu/westeurope).|
 |domain|String|No|Optional domain for naming.|
 
+## Resources
+
+### dx_available_subnet_cidr
+
+Find an available CIDR block for a new subnet within a specified Azure Virtual Network.
+
+**Inputs:**
+
+|Name|Type|Required|Description|
+|:---|:---:|:---:|:---|
+|virtual_network_id|String|Yes|The ID of the Azure Virtual Network resource where to allocate a CIDR block.|
+|prefix_length|Integer|Yes|The desired prefix length for the new CIDR block (e.g., 24 for a /24 subnet).|
+
+**Attributes:**
+
+|Name|Type|Description|
+|:---|:---:|:---|
+|id|String|Unique identifier for the allocated CIDR block.|
+|cidr_block|String|The allocated CIDR block that can be used for subnet creation.|
+
+**Example:**
+
+```hcl
+resource "dx_available_subnet_cidr" "next_cidr" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 24  # For a /24 subnet
+}
+
+resource "azurerm_subnet" "new_subnet" {
+  name                 = "my-new-subnet"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr.cidr_block]
+}
+```
+
+When creating multiple subnets, it is necessary to use `depends_on` to prevent CIDR block overlaps:
+
+```hcl
+resource "dx_available_subnet_cidr" "next_cidr_1" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 24
+}
+
+resource "azurerm_subnet" "new_subnet_1" {
+  name                 = "my-new-subnet"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr_1.cidr_block]
+}
+
+resource "dx_available_subnet_cidr" "next_cidr_2" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 29
+
+  # Ensures the first CIDR block is allocated before finding the next one
+  depends_on = [
+    azurerm_subnet.new_subnet_1
+  ]
+}
+
+resource "azurerm_subnet" "new_subnet_2" {
+  name                 = "my-new-subnet"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr_2.cidr_block]
+}
+```
+
 ## Functions
 
 ### resource_name
