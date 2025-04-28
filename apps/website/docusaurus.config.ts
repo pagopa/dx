@@ -38,6 +38,17 @@ const config: Config = {
         ],
       },
     ],
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: true,
+        language: ["en"],
+        indexDocs: true,
+        indexBlog: true,
+        docsRouteBasePath: "/docs",
+        blogRouteBasePath: "/blog",
+      },
+    ],
   ],
   presets: [
     [
