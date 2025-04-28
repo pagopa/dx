@@ -17,7 +17,7 @@ using breakpoints, from the local environment. In fact, VS Code can:
 
 ## Using VS Code to Debug APIs
 
-This section shows a guide through VS Code policy-debugging capabilities.
+To leverage VS Code policy-debugging capabilities:
 
 1. Install the `API Management`
    [extension for VS Code](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-apimanagement)
