@@ -59,7 +59,7 @@ jobs:
       override_labels: ''
 ```
 
-## Special Cases
+## Special configurations (multi environment/multi cloud)
 
 When working with complex infrastructure setups across multiple environments, you may need to customize how the workflow runs:
 
