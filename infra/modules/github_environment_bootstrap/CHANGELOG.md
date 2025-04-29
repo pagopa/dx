@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 0.0.5
+
+### Patch Changes
+
+- d6f3537: Moved branch protection tests from the azure cloud specific bootstrap module
+
 ## 0.0.4
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.1.0
+
+### Minor Changes
+
+- c735a02: Added new resource to retrieve the first available subnet CIDR within a specified Azure Virtual Network
+
 ## 0.0.8
 
 ### Patch Changes

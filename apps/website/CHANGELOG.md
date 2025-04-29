@@ -1,5 +1,11 @@
 # docs
 
+## 0.2.4
+
+### Patch Changes
+
+- 737c0a3: Add static analysis pipeline documentation
+
 ## 0.2.3
 
 ### Patch Changes
