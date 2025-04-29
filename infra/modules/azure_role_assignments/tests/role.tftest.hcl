@@ -25,7 +25,7 @@ run "rbac_role_assignment_is_correct" {
   command = plan
 
   variables {
-    principal_id = run.setup_tests.principal_id
+    principal_id    = run.setup_tests.principal_id
     subscription_id = run.setup_tests.subscription_id
 
     key_vault = [
