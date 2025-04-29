@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-sidebar_label: Deployment of a Node.js Function App
+sidebar_label: Deploying a Node.js Application to Azure Function App
 ---
 
 # Deployment of a Node.js Function App
