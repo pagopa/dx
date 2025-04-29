@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.0.3
+
+### Patch Changes
+
+- 53374ed: Fix variable validations for submodules still using ids instead of resource names
+
 ## 1.0.2
 
 ### Patch Changes
