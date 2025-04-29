@@ -6,7 +6,7 @@
 
 The `github_environment_bootstrap` module simplifies the process of creating and configuring GitHub repositories. It ensures consistency and compliance with organizational standards.
 
-For more information on setting up and managing infrastructure in a monorepository, refer to the [DX Monorepository Setup Guide](https://pagopa.github.io/dx/docs/infrastructure/monorepository-setup).
+For more information on setting up and managing infrastructure in a monorepository, refer to the [DX Monorepository Setup Guide](https://pagopa.github.io/dx/docs/getting-started/monorepository-setup).
 
 ### Features
 

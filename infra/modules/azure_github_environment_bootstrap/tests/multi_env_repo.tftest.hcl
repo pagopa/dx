@@ -9,7 +9,7 @@ provider "github" {
 
 run "setup_tests" {
   module {
-    source = "./tests/setup"
+    source = "./tests/setup_env"
   }
 }
 
@@ -56,6 +56,7 @@ run "validate_github_id_app" {
       topics             = run.setup_tests.repository.topics
       reviewers_teams    = run.setup_tests.repository.reviewers_teams
       app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
+      configure          = false
     }
 
     github_private_runner = {
@@ -121,7 +122,6 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_rgs_st_queue_reader,
       azurerm_role_assignment.infra_ci_rgs_st_table_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
-      azurerm_role_assignment.infra_ci_rgs_ca_operator,
       azurerm_role_assignment.infra_cd_subscription_reader,
       azurerm_role_assignment.infra_cd_subscription_rbac_admin,
       azurerm_role_assignment.infra_cd_rgs_contributor,
@@ -140,7 +140,6 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_rg_network_contributor,
       azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
-      azurerm_role_assignment.infra_cd_rgs_ca_contributor,
     ]
   }
 
@@ -274,11 +273,6 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_ca_operator != null
-    error_message = "The Infra CI managed identity can't read Container Apps secrets at resource group scope"
-  }
-
-  assert {
     condition     = azurerm_role_assignment.infra_cd_subscription_reader != null
     error_message = "The Infra CD managed identity can't read resources at subscription scope"
   }
@@ -356,11 +350,6 @@ run "validate_github_id_infra" {
   assert {
     condition     = length(azurerm_key_vault_access_policy.infra_cd_kv_common) == 0
     error_message = "The Infra CD managed identity is not allowed to write to common Key Vaults"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rgs_ca_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to Container Apps at resource group scope"
   }
 }
 
