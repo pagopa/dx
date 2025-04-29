@@ -63,4 +63,4 @@ To leverage VS Code policy-debugging capabilities:
 6. Set a breakpoint in policy body
 7. Invoke the API under test
 
-![APIM Policy in Debug Mode](./usage-patterns/apim-debugging.png)
+![APIM Policy in Debug Mode](./debugging/apim-debugging.png)
