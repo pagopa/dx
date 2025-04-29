@@ -60,7 +60,7 @@ Within our monorepo, we organize modules in the [`infra/modules`](https://github
 
 #### 2. Automated Push to Sub-repositories
 
-The heart of our solution is an automated [GitHub Action workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/_release-bash-modules-to-subrepo.yaml) that handles synchronization between our monorepo and individual repositories. When changes are made to a module in our monorepo, the workflow detects these changes and pushes them to a dedicated sub-repository following the Terraform Registry naming convention.
+The heart of our solution is an automated [GitHub Action workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/_release-bash-modules-to-subrepo.yaml) that handles synchronization between our monorepo and individual repositories. When changes are made to a module in our monorepo, the workflow detects these changes and pushes them to a dedicated sub-repository following the Terraform Registry naming convention. **Crucially, before pushing, automated tests are run against the modules to ensure quality and prevent regressions.**
 
 For instance, our Azure API Management module in the monorepo is pushed to a repository named [`terraform-azurerm-azure-api-management`](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management), making it ready for Registry distribution while preserving our centralized development model.
 
@@ -198,8 +198,6 @@ Perhaps most interestingly, we found that the Registry's requirements for struct
 ## Future Directions
 
 As we continue to evolve our approach, we're now exploring several exciting directions. We plan to expand our module catalog to cover more infrastructure patterns common across our organization. Our team is also enhancing the provider with additional functions to address more use cases.
-
-We're investing in improved testing and validation workflows to ensure the highest quality modules possible. And finally, we're developing more complete usage examples to help teams get started quickly with the right patterns.
 
 ## Conclusion
 
