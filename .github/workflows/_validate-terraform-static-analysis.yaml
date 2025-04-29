@@ -17,5 +17,7 @@ jobs:
     uses: ./.github/workflows/static_analysis.yaml
     name: Terraform Validation
     secrets: inherit
+    permissions:
+      contents: read
     with:
       enable_modified_files_detection: true

@@ -9,6 +9,8 @@ jobs:
   drift_detection:
     uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection
+    permissions:
+      contents: read
     secrets: inherit
     with:
       environment: 'dev'

@@ -20,6 +20,8 @@ jobs:
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     name: Test deployment
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       TURBO_CACHE_DIR: .turbo-cache
 

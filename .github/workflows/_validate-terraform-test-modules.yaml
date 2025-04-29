@@ -24,6 +24,8 @@ jobs:
   detect-modules:
     runs-on: ubuntu-latest
     name: Detect Modules to Test
+    permissions:
+      contents: read
     outputs:
       modules: ${{ steps.get-all-modules.outputs.modules || steps.get-modified-modules.outputs.modules }}
     steps:

@@ -93,11 +93,11 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
-        
+
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
         id: pre_commit_specific_folders
-        env: 
+        env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
         run: |
           set -eu

@@ -15,3 +15,5 @@ jobs:
     uses: ./.github/workflows/js_code_review.yaml
     name: Code Review
     secrets: inherit
+    permissions:
+      contents: read
