@@ -1,9 +1,9 @@
 ---
-sidebar_label: Best Practices
+sidebar_label: Manage API Access and Policies
 sidebar_position: 1
 ---
 
-# API Management Best Practices
+# Manage API Access and Policies
 
 This documentation outlines a few best practices for software engineers using
 APIM.
