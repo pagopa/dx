@@ -38,7 +38,7 @@ runs:
 
     # Reference: https://github.com/slackapi/slack-github-action
     - name: Slack Notification
-      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # pin@v1.26.0
+      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
       with:
         payload: |
           {
