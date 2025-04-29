@@ -15,6 +15,8 @@ concurrency:
 jobs:
   detect-modules:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     name: Detect Modules to Push
     outputs:
       modules: ${{ steps.get-all-modules.outputs.modules || steps.get-modified-modules.outputs.modules }}
@@ -35,10 +37,12 @@ jobs:
         uses: pagopa/dx/.github/actions/get-modified-modules@main
         with:
           current_ref: ${{ github.event.before }}
-          
+
   push-modified-modules:
     runs-on: ubuntu-latest
     needs: [detect-modules]
+    permissions:
+      contents: read
     if: always()
     strategy:
       fail-fast: false

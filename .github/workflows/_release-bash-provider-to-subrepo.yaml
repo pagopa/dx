@@ -17,6 +17,8 @@ jobs:
   push-provider:
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
     steps:
@@ -24,7 +26,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
-          
+
       - name: Push provider to subrepository
         id: push-to-subrepository
         uses: ./.github/actions/push-to-subrepo
