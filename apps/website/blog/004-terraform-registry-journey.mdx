@@ -16,7 +16,7 @@ import TabItem from "@theme/TabItem";
 At PagoPA, we heavily rely on Infrastructure as Code (IaC) practices to deliver our cloud solutions. Terraform has become a fundamental tool in our engineering toolkit, allowing us to manage our infrastructure efficiently and ensure consistency across environments.
 
 As our projects grew in number and complexity, we faced a common challenge: how to effectively share and reuse Terraform code while maintaining quality and consistency.
-This led us to explore publishing our modules and provider to the Terraform Registry, all while preserving our monorepo development workflow.
+This led us to explore publishing our modules and provider to the Terraform Registry, all while preserving our internal development process based on a monorepo structure.
 
 In this post, we'll share our journey, the challenges we faced, and the technical solutions we implemented to bridge the gap between developing Terraform modules in a single repository and meeting the Terraform Registry requirements.
 
@@ -26,7 +26,7 @@ In this post, we'll share our journey, the challenges we faced, and the technica
 
 Before diving into our solution, let's outline the main challenges we were trying to overcome:
 
-1. **Code Duplication**: Teams were copying and pasting Terraform code across projects, leading to inconsistencies and maintenance overhead.
+1.  **Encouraging Module Reuse**: Publishing modules to the registry provides a central, versioned source, encouraging teams to reuse the canonical module instead of duplicating code or reinventing the wheel.
 
 2. **Inefficient Module Downloads**: Referencing modules directly from GitHub meant Terraform downloaded the entire repository for each module, causing slow `terraform init` times and inefficient storage space management.
 
@@ -37,8 +37,6 @@ Before diving into our solution, let's outline the main challenges we were tryin
 5. **Registry Requirements**: The Terraform Registry has specific requirements for modules and providers, particularly around repository structure (one module per repository).
 
 6. **Development Workflow**: We enjoy the benefits of a monorepo approach for code reviews, issue tracking, and shared CI/CD pipelines.
-
-The core challenge was to reconcile our monorepo development workflow with the Terraform Registry's requirement for individual repositories.
 
 ## Our Solution: Bridging Monorepo and Terraform Registry
 
