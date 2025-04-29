@@ -31,10 +31,11 @@ variable "cosmos" {
       for assignment in flatten([
         for entry in var.cosmos : [
           for collection in entry.collections : {
-            account_id = entry.account_id
-            role       = entry.role
-            database   = entry.database
-            collection = collection
+            account_name        = entry.account_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            database            = entry.database
+            collection          = collection
           }
         ]
       ]) : assignment
@@ -42,10 +43,11 @@ variable "cosmos" {
         for assignment in flatten([
           for entry in var.cosmos : [
             for collection in entry.collections : {
-              account_id = entry.account_id
-              role       = entry.role
-              database   = entry.database
-              collection = collection
+              account_name        = entry.account_name
+              resource_group_name = entry.resource_group_name
+              role                = entry.role
+              database            = entry.database
+              collection          = collection
             }
           ]
         ]) : assignment
