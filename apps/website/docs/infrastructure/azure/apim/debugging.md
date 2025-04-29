@@ -1,9 +1,43 @@
 ---
-sidebar_label: Debugging APIM Policies
+sidebar_label: Testing APIs in Production
 sidebar_position: 2
 ---
 
-# Debugging APIM Policies
+# Testing APIs in Production
+
+APIM provides built-in capabilities for testing in production, offering a
+structured way to manage API changes without disrupting active services.
+Specifically, revisions enable fine-grained control over API modifications. Each
+API version can have multiple revisions with the following states:
+
+- Current: The active revision used for API invocations
+- Online: Available for invocation, but only with explicit revision selection
+  (e.g. `/api/v1/resource;rev=2`).
+- Offline: Inactive but can be promoted to online or current status
+
+This mechanism allows to:
+
+- Modify policies and configurations safely before publishing changes
+- Conduct tests in production without impacting existing API consumers
+- Align versioning with downstream staging services (e.g. AppService and
+  Function App staging slots)
+
+To use revisions, follows these steps:
+
+1. Choose an existing API group
+2. Define a new API version
+3. Create revisions for incremental modifications (e.g. `rev 2`) and policy
+   updates, and set as `Online`
+4. Test the revision by invoking the API under test and specifying its revision
+   name in the URL (e.g. `/api/v1/resource;rev=2`)
+5. Finalize changes and promote a revision to current when ready
+6. Document modifications using changelogs available through APIM
+
+As showed in the next chapter,
+[VS Code can help you in debugging policies](#debugging-apim-policies-via-vs-code)
+via its built-in debugger.
+
+## Debugging APIM Policies via VS Code
 
 Visual Studio Code can connect to an online APIM instance, and provide debugging
 capabilities to developers. For example, it is possible to debug a policy by
@@ -14,8 +48,6 @@ using breakpoints, from the local environment. In fact, VS Code can:
 - Associate APIs with products
 - Switch between revisions
 - Execute API tests
-
-## Using VS Code to Debug APIs
 
 To leverage VS Code policy-debugging capabilities:
 
@@ -31,4 +63,4 @@ To leverage VS Code policy-debugging capabilities:
 6. Set a breakpoint in policy body
 7. Invoke the API under test
 
-![APIM Policy in Debug Mode](./apim-usage-patterns/apim-debugging.png)
+![APIM Policy in Debug Mode](./usage-patterns/apim-debugging.png)

@@ -10,28 +10,11 @@ APIM.
 
 The goal is to:
 
-- Enhance security and confidence in API modifications by enabling testing in
-  production
 - Improve operational simplicity
-- Increase developer autonomy
+- Increase domain separation and autonomy
+- Improve security
 
-## Leveraging Versioning and Revisions for Safe Testing
-
-APIM provides built-in capabilities for API versioning and revisions, offering a
-structured way to manage API changes without disrupting active services.
-
-Thus, leveraging versioning and revisions is recommended for:
-
-- Testing in production
-  - Modify policies and configurations safely before publishing changes
-  - Conduct tests in production without impacting existing API consumers
-  - Align versioning with downstream staging services (e.g. AppService and
-    Function App staging slots)
-- Keeping track of changes:
-  - Maintain a clear changelog for tracking revisions
-- Introducing breaking changes by maintaining previous API versions
-
-### Versioning
+## Introducing Breaking Changes via Versioning
 
 Versioning allows multiple versions of an API Group to coexist. Clients can
 request a specific version through:
@@ -43,29 +26,11 @@ request a specific version through:
 If the client does not specify a version, APIM falls back to the version chosen
 as default.
 
-### Revisions
+Therefore, it is compelling to leverage versioning to introduce breaking changes
+in the REST APIs contracts, giving clients the appropriate time to migrate.
 
-Revisions enable fine-grained control over API modifications. Each API version
-can have multiple revisions with the following states:
-
-- Current: The active revision used for API invocations
-- Online: Available for invocation, but only with explicit revision selection
-  (e.g. `/api/v1/resource;rev=2`).
-- Offline: Inactive but can be promoted to online or current status
-
-### Testing APIs in Production Using Revisions
-
-1. Choose an existing API group
-2. Define a new API version
-3. Create revisions for incremental modifications (e.g. `rev 2`) and policy
-   updates, and set as `Online`
-4. Test the revision by invoking the API under test and specifying its revision
-   name in the URL (e.g. `/api/v1/resource;rev=2`)
-5. Finalize changes and promote a revision to current when ready
-6. Document modifications using changelogs available through APIM
-
-[VS Code can help you in debugging policies](debugging.md) via its built-in
-debugger.
+Although it is not mandatory, we suggest specifying the version in the request
+path.
 
 ## Managing Subscriptions and Products
 
