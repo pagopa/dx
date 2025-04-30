@@ -149,8 +149,30 @@ jobs:
 
       #     echo "log_analytics_workspace_id=$workspace_id" >> $GITHUB_OUTPUT
 
+      - name: Get Container App Revision Mode
+        id: get_revision_mode
+        run: |
+          revision_mode=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --query "properties.configuration.activeRevisionsMode" \
+            --output tsv)
+
+          echo "Revision mode: $revision_mode"
+
+          echo "ca_revision_mode=$revision_mode" >> $GITHUB_OUTPUT
+
+          echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
+
+      - name: Deploy New Image
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}"
+
       - name: Get Container App Current Revision
         id: get_current_revision
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         run: |
           current_revision=$(az containerapp revision list \
             --name ${{ env.CONTAINER_APP_NAME }} \
@@ -160,6 +182,7 @@ jobs:
 
       - name: Create New Container App Revision
         id: create_new_revision
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
@@ -189,7 +212,7 @@ jobs:
             --output table
 
       - name: Wait for New Revision to Become Ready
-        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           max_attempts=30
           attempt=0
@@ -221,7 +244,7 @@ jobs:
           fi
 
       - name: Check for New Revision Errors and Increment Traffic
-        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           new_revision_name=${{ steps.create_new_revision.outputs.new_revision_name }}
 
@@ -276,7 +299,7 @@ jobs:
           echo "::notice::Successfully shifted 100% traffic to new revision"
 
       - name: Deactivate old revision
-        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           az containerapp revision deactivate \
             --name ${{ env.CONTAINER_APP_NAME }} \
