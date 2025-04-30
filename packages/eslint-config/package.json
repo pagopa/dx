@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "main": "index.js",
   "scripts": {
     "format": "prettier --write .",

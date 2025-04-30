@@ -1,5 +1,12 @@
 # docs
 
+## 0.2.5
+
+### Patch Changes
+
+- b83403f: Added blog post about terraform registry adoption
+- 1667bf1: Upgrade dependencies
+
 ## 0.2.4
 
 ### Patch Changes
