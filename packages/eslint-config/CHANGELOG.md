@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 4.0.4
+
+### Patch Changes
+
+- 1667bf1: Upgrade dependencies
+
 ## 4.0.3
 
 ### Patch Changes
