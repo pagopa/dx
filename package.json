@@ -9,7 +9,7 @@
     "infra/scripts"
   ],
   "devDependencies": {
-    "@changesets/cli": "^2.28.1",
+    "@changesets/cli": "^2.29.2",
     "@devcontainers/cli": "^0.75.0",
     "prettier": "3.2.5",
     "turbo": "^2.5.0",
@@ -20,8 +20,5 @@
     "code-review": "turbo run typecheck format:check lint:check",
     "version": "yarn changeset version && yarn --mode update-lockfile",
     "release": "yarn build && changeset publish"
-  },
-  "dependencies": {
-    "@changesets/cli": "^2.27.1"
   }
 }
