@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.6
+
+### Patch Changes
+
+- 80e7bd3: Add azure monitor private link service private dns zones
+
 ## 1.0.5
 
 ### Patch Changes
