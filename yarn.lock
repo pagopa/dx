@@ -1618,13 +1618,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/apply-release-plan@npm:^7.0.10":
-  version: 7.0.10
-  resolution: "@changesets/apply-release-plan@npm:7.0.10"
+"@changesets/apply-release-plan@npm:^7.0.12":
+  version: 7.0.12
+  resolution: "@changesets/apply-release-plan@npm:7.0.12"
   dependencies:
     "@changesets/config": "npm:^3.1.1"
     "@changesets/get-version-range-type": "npm:^0.4.0"
-    "@changesets/git": "npm:^3.0.2"
+    "@changesets/git": "npm:^3.0.4"
     "@changesets/should-skip-package": "npm:^0.1.2"
     "@changesets/types": "npm:^6.1.0"
     "@manypkg/get-packages": "npm:^1.1.3"
@@ -1635,7 +1635,7 @@ __metadata:
     prettier: "npm:^2.7.1"
     resolve-from: "npm:^5.0.0"
     semver: "npm:^7.5.3"
-  checksum: 10c0/4ee5951448c26bbf73fac5c9a0785d5bb0cc3f2e6c1ffc9337766b446fe79a7b018834be2a4723938faec0d331aa30f1d6c7ea47db48d7a7babe37862645dd57
+  checksum: 10c0/3211e6e75fc50275647fa023ca2187a23b6b2406788f7ef39b38c3486ccf1d068a78b026ec488e46a2e3d135084ba8c152323e8df314cdd6ffbe188bf73bd238
   languageName: node
   linkType: hard
 
@@ -1662,21 +1662,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/cli@npm:^2.28.1":
-  version: 2.29.0
-  resolution: "@changesets/cli@npm:2.29.0"
+"@changesets/cli@npm:^2.29.2":
+  version: 2.29.2
+  resolution: "@changesets/cli@npm:2.29.2"
   dependencies:
-    "@changesets/apply-release-plan": "npm:^7.0.10"
+    "@changesets/apply-release-plan": "npm:^7.0.12"
     "@changesets/assemble-release-plan": "npm:^6.0.6"
     "@changesets/changelog-git": "npm:^0.2.1"
     "@changesets/config": "npm:^3.1.1"
     "@changesets/errors": "npm:^0.2.0"
     "@changesets/get-dependents-graph": "npm:^2.1.3"
-    "@changesets/get-release-plan": "npm:^4.0.8"
-    "@changesets/git": "npm:^3.0.2"
+    "@changesets/get-release-plan": "npm:^4.0.10"
+    "@changesets/git": "npm:^3.0.4"
     "@changesets/logger": "npm:^0.1.1"
     "@changesets/pre": "npm:^2.0.2"
-    "@changesets/read": "npm:^0.6.3"
+    "@changesets/read": "npm:^0.6.5"
     "@changesets/should-skip-package": "npm:^0.1.2"
     "@changesets/types": "npm:^6.1.0"
     "@changesets/write": "npm:^0.4.0"
@@ -1696,7 +1696,7 @@ __metadata:
     term-size: "npm:^2.1.0"
   bin:
     changeset: bin.js
-  checksum: 10c0/2e70b6300788d5a413def95cfcc3c3914da1f094211c5c302a5150f84eb05e316631f43335602aedb435230f1a4480c17f57d0350dc5e92053811d42136c05e9
+  checksum: 10c0/e13907dfd372752b3a4a9396ce31e7d4990fa03cc48cb5a797a8f6f96591c86a6b7954536d85b79073301a2fd86b9af758c29f1a65bcd34d6bb52b87c17f6019
   languageName: node
   linkType: hard
 
@@ -1736,17 +1736,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/get-release-plan@npm:^4.0.8":
-  version: 4.0.8
-  resolution: "@changesets/get-release-plan@npm:4.0.8"
+"@changesets/get-release-plan@npm:^4.0.10":
+  version: 4.0.10
+  resolution: "@changesets/get-release-plan@npm:4.0.10"
   dependencies:
     "@changesets/assemble-release-plan": "npm:^6.0.6"
     "@changesets/config": "npm:^3.1.1"
     "@changesets/pre": "npm:^2.0.2"
-    "@changesets/read": "npm:^0.6.3"
+    "@changesets/read": "npm:^0.6.5"
     "@changesets/types": "npm:^6.1.0"
     "@manypkg/get-packages": "npm:^1.1.3"
-  checksum: 10c0/b638f83683264818ea6cb729a3fd10f9edf29c61c7acee15ce321287cacbe03700706a20c0b531fdb3bbb23bda8967f4c6cbef08db207189fb7289313f473a1a
+  checksum: 10c0/1f2165e8e04368ce06109d080103aae112878d2d341ca4d861d9d0591c31ec8e7165af5968a99ab7fd90276c5409c50d33a88ce00a4b716ea834402930743c64
   languageName: node
   linkType: hard
 
@@ -1757,16 +1757,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/git@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@changesets/git@npm:3.0.2"
+"@changesets/git@npm:^3.0.4":
+  version: 3.0.4
+  resolution: "@changesets/git@npm:3.0.4"
   dependencies:
     "@changesets/errors": "npm:^0.2.0"
     "@manypkg/get-packages": "npm:^1.1.3"
     is-subdir: "npm:^1.1.1"
     micromatch: "npm:^4.0.8"
     spawndamnit: "npm:^3.0.1"
-  checksum: 10c0/a3a9c9ab71e3cd8ecd804e2965790efa40bdcd29804bdf873c5d38f7cfd8cd6ae1c23a6eb5a16796a3e05c4dbfeb0eb04f4be988049f31173adbbeac9e7cf566
+  checksum: 10c0/4abbdc1dec6ddc50b6ad927d9eba4f23acd775fdff615415813099befb0cecd1b0f56ceea5e18a5a3cbbb919d68179366074b02a954fbf4016501e5fd125d2b5
   languageName: node
   linkType: hard
 
@@ -1801,18 +1801,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@changesets/read@npm:^0.6.3":
-  version: 0.6.3
-  resolution: "@changesets/read@npm:0.6.3"
+"@changesets/read@npm:^0.6.5":
+  version: 0.6.5
+  resolution: "@changesets/read@npm:0.6.5"
   dependencies:
-    "@changesets/git": "npm:^3.0.2"
+    "@changesets/git": "npm:^3.0.4"
     "@changesets/logger": "npm:^0.1.1"
     "@changesets/parse": "npm:^0.4.1"
     "@changesets/types": "npm:^6.1.0"
     fs-extra: "npm:^7.0.1"
     p-filter: "npm:^2.1.0"
     picocolors: "npm:^1.1.0"
-  checksum: 10c0/4c2eac60aab0a6b14ad5a2ed2f57427019fe567dd6d2c6e122bd3cbf7f69903dcec6c864a67c39544ed011369223c838e498212303404a7f884428f4366f10da
+  checksum: 10c0/0f32c7eb8fd58db09f02236f3f45290d995f93ea73fbbe889d4c0407975bf6b9f43389def0af93c86f18adc202f91bc2a79d05da2d7dde7c6f9fe916afc692af
   languageName: node
   linkType: hard
 
@@ -4368,14 +4368,14 @@ __metadata:
     "@opentelemetry/instrumentation": "npm:^0.200.0"
     "@opentelemetry/instrumentation-undici": "npm:^0.11.0"
     "@pagopa/eslint-config": "workspace:^"
-    "@t3-oss/env-core": "npm:^0.12.0"
+    "@t3-oss/env-core": "npm:^0.13.0"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
     eslint: "npm:8.57.0"
     import-in-the-middle: "npm:^1.13.1"
     tsup: "npm:^8.4.0"
-    typescript: "npm:~5.2.2"
-    zod: "npm:^3.24.2"
+    typescript: "npm:~5.8.3"
+    zod: "npm:^3.24.3"
   languageName: unknown
   linkType: soft
 
@@ -4383,11 +4383,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@pagopa/dx@workspace:."
   dependencies:
-    "@changesets/cli": "npm:^2.28.1"
+    "@changesets/cli": "npm:^2.29.2"
     "@devcontainers/cli": "npm:^0.75.0"
     prettier: "npm:3.2.5"
-    turbo: "npm:^2.5.0"
-    typescript: "npm:~5.2.2"
+    turbo: "npm:^2.5.2"
+    typescript: "npm:~5.8.3"
   languageName: unknown
   linkType: soft
 
@@ -4402,7 +4402,7 @@ __metadata:
     eslint-plugin-prettier: "npm:^5.1.3"
     eslint-plugin-vitest: "npm:^0.5.3"
     prettier: "npm:3.2.5"
-    typescript: "npm:~5.2.2"
+    typescript: "npm:~5.8.3"
     typescript-eslint: "npm:^7.6.0"
   peerDependencies:
     eslint: ^8.57.0
@@ -4890,13 +4890,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@t3-oss/env-core@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@t3-oss/env-core@npm:0.12.0"
+"@t3-oss/env-core@npm:^0.13.0":
+  version: 0.13.0
+  resolution: "@t3-oss/env-core@npm:0.13.0"
   peerDependencies:
+    arktype: ^2.1.0
     typescript: ">=5.0.0"
     valibot: ^1.0.0-beta.7 || ^1.0.0
-    zod: ^3.24.0
+    zod: ^3.24.0 || ^4.0.0-beta.0
   peerDependenciesMeta:
     typescript:
       optional: true
@@ -4904,7 +4905,7 @@ __metadata:
       optional: true
     zod:
       optional: true
-  checksum: 10c0/b79d2c291b8996b008ef77fa9b3afb8fd7c4c59e271b65039a52a504a9cdb7492ec88b414e6b5691dc4c2c93077abfac85a5cea00dcfdd083ad94912efc5464b
+  checksum: 10c0/4e5c23fe256f10826d737dad83e82e9969204a7c23c860fa8e1158b26967f5539c627853c4a4daefb2b38b4296ae8d07536d31ed9276df1d8ef2baa61affd6e7
   languageName: node
   linkType: hard
 
@@ -7632,7 +7633,7 @@ __metadata:
     prism-react-renderer: "npm:^2.3.0"
     react: "npm:^18.0.0"
     react-dom: "npm:^18.0.0"
-    typescript: "npm:~5.2.2"
+    typescript: "npm:~5.8.3"
   languageName: unknown
   linkType: soft
 
@@ -15568,58 +15569,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"turbo-darwin-64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-darwin-64@npm:2.5.0"
+"turbo-darwin-64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-darwin-64@npm:2.5.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-darwin-arm64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-darwin-arm64@npm:2.5.0"
+"turbo-darwin-arm64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-darwin-arm64@npm:2.5.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-linux-64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-linux-64@npm:2.5.0"
+"turbo-linux-64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-linux-64@npm:2.5.2"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-linux-arm64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-linux-arm64@npm:2.5.0"
+"turbo-linux-arm64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-linux-arm64@npm:2.5.2"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo-windows-64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-windows-64@npm:2.5.0"
+"turbo-windows-64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-windows-64@npm:2.5.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"turbo-windows-arm64@npm:2.5.0":
-  version: 2.5.0
-  resolution: "turbo-windows-arm64@npm:2.5.0"
+"turbo-windows-arm64@npm:2.5.2":
+  version: 2.5.2
+  resolution: "turbo-windows-arm64@npm:2.5.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"turbo@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "turbo@npm:2.5.0"
+"turbo@npm:^2.5.2":
+  version: 2.5.2
+  resolution: "turbo@npm:2.5.2"
   dependencies:
-    turbo-darwin-64: "npm:2.5.0"
-    turbo-darwin-arm64: "npm:2.5.0"
-    turbo-linux-64: "npm:2.5.0"
-    turbo-linux-arm64: "npm:2.5.0"
-    turbo-windows-64: "npm:2.5.0"
-    turbo-windows-arm64: "npm:2.5.0"
+    turbo-darwin-64: "npm:2.5.2"
+    turbo-darwin-arm64: "npm:2.5.2"
+    turbo-linux-64: "npm:2.5.2"
+    turbo-linux-arm64: "npm:2.5.2"
+    turbo-windows-64: "npm:2.5.2"
+    turbo-windows-arm64: "npm:2.5.2"
   dependenciesMeta:
     turbo-darwin-64:
       optional: true
@@ -15635,7 +15636,7 @@ __metadata:
       optional: true
   bin:
     turbo: bin/turbo
-  checksum: 10c0/df4ca3e8fd1121702b8f3a2f64a4a02ab886e01236a72fe54ebd1b4e33368a9dd3cec393d7eb143a6173f96c70f4dba4f7abfff84a0b5535076fc662a746e0ac
+  checksum: 10c0/3eed6eba8bace18ed767785c83cd572985214e79d267f3eb631b2c147e941203746b241869fe629776704d3e69c37da90c5356c3b9506e08c468c9cab52f120c
   languageName: node
   linkType: hard
 
@@ -15711,23 +15712,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:~5.2.2":
-  version: 5.2.2
-  resolution: "typescript@npm:5.2.2"
+"typescript@npm:~5.8.3":
+  version: 5.8.3
+  resolution: "typescript@npm:5.8.3"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/91ae3e6193d0ddb8656d4c418a033f0f75dec5e077ebbc2bd6d76439b93f35683936ee1bdc0e9cf94ec76863aa49f27159b5788219b50e1cd0cd6d110aa34b07
+  checksum: 10c0/5f8bb01196e542e64d44db3d16ee0e4063ce4f3e3966df6005f2588e86d91c03e1fb131c2581baf0fb65ee79669eea6e161cd448178986587e9f6844446dbb48
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A~5.2.2#optional!builtin<compat/typescript>":
-  version: 5.2.2
-  resolution: "typescript@patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"
+"typescript@patch:typescript@npm%3A~5.8.3#optional!builtin<compat/typescript>":
+  version: 5.8.3
+  resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10c0/062c1cee1990e6b9419ce8a55162b8dc917eb87f807e4de0327dbc1c2fa4e5f61bc0dd4e034d38ff541d1ed0479b53bcee8e4de3a4075c51a1724eb6216cb6f5
+  checksum: 10c0/39117e346ff8ebd87ae1510b3a77d5d92dae5a89bde588c747d25da5c146603a99c8ee588c7ef80faaf123d89ed46f6dbd918d534d641083177d5fac38b8a1cb
   languageName: node
   linkType: hard
 
@@ -16541,10 +16542,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.24.2":
-  version: 3.24.2
-  resolution: "zod@npm:3.24.2"
-  checksum: 10c0/c638c7220150847f13ad90635b3e7d0321b36cce36f3fc6050ed960689594c949c326dfe2c6fa87c14b126ee5d370ccdebd6efb304f41ef5557a4aaca2824565
+"zod@npm:^3.24.3":
+  version: 3.24.3
+  resolution: "zod@npm:3.24.3"
+  checksum: 10c0/ab0369810968d0329a1a141e9418e01e5c9c2a4905cbb7cb7f5a131d6e9487596e1400e21eeff24c4a8ee28dacfa5bd6103893765c055b7a98c2006a5a4fc68d
   languageName: node
   linkType: hard
 
