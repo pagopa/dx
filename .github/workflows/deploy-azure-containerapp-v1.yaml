@@ -33,7 +33,7 @@ on:
         type: string
         required: false
         default: linux/amd64
-        description: Image runtime platform, supports multiple values
+        description: Image runtime platform, supports multiple comma-separated values
       container_app:
         type: string
         required: true
