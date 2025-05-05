@@ -57,6 +57,12 @@ variable "vpc" {
   description = "The VPC used to deploy the resources"
 }
 
+variable "name" {
+  type        = string
+  description = "The name of the codebuild project. If not set, the name will be generated using the environment variable. This is useful when you want to customize the runner label."
+  default     = null
+}
+
 variable "codeconnection_arn" {
   type        = string
   description = "The ARN of the CodeConnection connection. One of personal_access_token or codeconnection_arn must be set. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html)."
