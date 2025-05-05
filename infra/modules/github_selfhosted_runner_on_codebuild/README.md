@@ -36,7 +36,7 @@ module "vpc" {
 
 module "runner" {
   source      = "pagopa-dx/github-selfhosted-runner-on-codebuild/aws"
-  version     = "~> 1.0"
+  version     = "~> 0.0"
   environment = local.environment
 
   tier = "m"
@@ -241,6 +241,7 @@ No modules.
 | <a name="input_codeconnection_arn"></a> [codeconnection\_arn](#input\_codeconnection\_arn) | The ARN of the CodeConnection connection. One of personal\_access\_token or codeconnection\_arn must be set. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html). | `string` | `null` | no |
 | <a name="input_env_variables"></a> [env\_variables](#input\_env\_variables) | Build environment variables. These are intended as an addition to the ones specified in the GitHub environment. | `map(string)` | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | The name of the codebuild project. If not set, the name will be generated using the environment variable. This is useful when you want to customize the runner label. | `string` | `null` | no |
 | <a name="input_personal_access_token"></a> [personal\_access\_token](#input\_personal\_access\_token) | GitHub personal access token used to authenticate. One of personal\_access\_token or codeconnection\_arn must be set. | <pre>object({<br/>    ssm_parameter_name = optional(string, null)<br/>    value              = optional(string, null)<br/>  })</pre> | `null` | no |
 | <a name="input_repository"></a> [repository](#input\_repository) | Source repository information | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | Secrets to be used in the build environment. The key is the name of the environment variable, and the value is the name of the SSM parameter or Secrets Manager secret. These are intended as an addition to the ones specified in the GitHub environment. | <pre>map(object({<br/>    ssm_parameter_name   = optional(string, null)<br/>    secrets_manager_name = optional(string, null)<br/>  }))</pre> | `{}` | no |
