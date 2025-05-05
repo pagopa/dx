@@ -84,10 +84,12 @@ run "function_app_is_correct_plan" {
     condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "20"
     error_message = "The Function App must use Node version 20"
   }
+
   assert {
     condition     = azurerm_linux_function_app.this.site_config[0].minimum_tls_version == "1.3"
     error_message = "The Function App must use TLS version 1.3"
   }
+
   assert {
     condition     = azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].node_version == "20"
     error_message = "The Function App staging slot must use Node version 20"
