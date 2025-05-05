@@ -85,6 +85,11 @@ run "cosmos_is_correct_plan" {
   }
 
   assert {
+    condition     = azurerm_cosmosdb_account.this.local_authentication_disabled == true
+    error_message = "The Cosmos DB account must have local authentication disabled"
+  }
+
+  assert {
     condition     = azurerm_cosmosdb_account.this.consistency_policy[0].consistency_level == "BoundedStaleness"
     error_message = "The Cosmos DB consistency level must be Bounded Staleness"
   }
@@ -102,6 +107,14 @@ run "cosmos_is_correct_plan" {
   assert {
     condition     = [ for value in azurerm_cosmosdb_account.this.capabilities : value.name ][0] == "EnableServerless"
     error_message = "The Cosmos DB account must have serverless enabled"
+  }
+
+  assert {
+    condition = length(setintersection(
+      [for value in azurerm_cosmosdb_account.this.capabilities : value.name],
+      ["EnableMongo", "EnableCassandra", "EnableTable", "EnableGremlin"]
+    )) == 0
+    error_message = "The Cosmos DB account must not have capabilities EnableMongo, EnableCassandra, EnableTable, or EnableGremlin"
   }
 
   assert {
