@@ -1,13 +1,13 @@
 ---
-sidebar_label: Integrating Tracing in Azure NodeJS Applications
+sidebar_label: Integrate Tracing in Azure NodeJS Applications
 ---
 
-# Integrating Tracing in Azure NodeJS Applications
+# Integrate Tracing in Azure NodeJS Applications
 
 This guide covers the integration of Azure services with OpenTelemetry (OT) for
 tracing NodeJS applications, along with benchmarking and performance insights.
 
-## Azure and OpenTelemetry
+## What is the OpenTelemetry status in Azure
 
 Microsoft is rapidly adopting **OpenTelemetry (OT)** as the standard for
 tracing, migrating from older custom solutions (e.g., vendor protocols for
@@ -36,7 +36,7 @@ calls. Therefore, you need to import the necessary libraries
 (`@azure/monitor-opentelemetry`) and call the `useAzureMonitor` method before
 including any other package in the codebase.
 
-## Patching native NodeJS fetch
+## Patch native NodeJS fetch
 
 The `@azure/monitor-opentelemetry` package does not patch the native fetch
 method by default, which is commonly used in modern NodeJS applications.
@@ -70,8 +70,8 @@ the Azure Portal), end-to-end correlation does not function as expected.
 
 [Instrumentation of ESM modules is still experimental](https://github.com/open-telemetry/opentelemetry-js/tree/main/experimental/packages/opentelemetry-instrumentation#instrumentation-for-ecmascript-modules-esm-in-nodejs-experimental)
 and may not be as seamless as transpiling TypeScript to CommonJS modules.  
-[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217), there
-is an alternative method to instrument the `@azure/monitor-opentelemetry`
+[Inspired by a GitHub issue addressing a similar problem](https://github.com/open-telemetry/opentelemetry-js/issues/4845#issuecomment-2253556217),
+there is an alternative method to instrument the `@azure/monitor-opentelemetry`
 package.
 
 ### Steps to Instrument an ESM Application
@@ -127,7 +127,7 @@ By following these steps, you can configure the `@azure/monitor-opentelemetry`
 or `applicationinsights` package along with other instrumentations in an ESM
 application.
 
-### Running the Instrumented Application
+### Run the Instrumented Application
 
 To ensure the instrumentation works correctly, you need to import the
 `instrumentation.mjs` file when running the application by using the
@@ -163,7 +163,7 @@ While we aim to keep the API stable, changes may occur as the package evolves.
 
 :::
 
-## Using the Application Insights SDK
+## Use the Application Insights SDK
 
 The latest version of the Application Insights SDK (3.x) is essentially a
 wrapper around OT functionalities provided by the `@azure/monitor-opentelemetry`
@@ -228,7 +228,7 @@ consider that the AI SDK may fall behind new versions of
 future-proof. The AI SDK is still advantageous if you need to use legacy AI
 methods.
 
-## Enabling HTTP KeepAlive
+## Enable HTTP KeepAlive
 
 :::note
 
@@ -239,14 +239,14 @@ Azure SDKs, and there is no longer a need to set up a custom agent.
 
 :::
 
-## Setting Sample Rate in AI SDK
+## Set Sample Rate in AI SDK
 
 When using the AI SDK, it's a good practice to limit the number of traces sent
 to **Application Insights** by setting the sample rate.
 
 The sample rate can be set in different ways.
 
-### Using the `applicationinsights.json` configuration file
+### Use the `applicationinsights.json` configuration file
 
 See
 https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#configuration
@@ -257,7 +257,7 @@ https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#conf
 }
 ```
 
-### Using the `APPLICATIONINSIGHTS_CONFIGURATION_CONTENT` environment variable
+### Use the `APPLICATIONINSIGHTS_CONFIGURATION_CONTENT` environment variable
 
 This environment variable takes precedence over the `applicationinsights.json`
 and has the same format as the JSON file.
@@ -318,7 +318,7 @@ always be forwarded at a 100% sample rate.
 To check if sampling is enabled, you can use the following query in **Log
 Analytics**:
 
-```
+```kql
 union requests,dependencies,pageViews,browserTimings,exceptions,traces,customEvents
 | where timestamp > ago(1h)
 | summarize RetainedPercentage = 100/avg(itemCount) by bin(timestamp, 1m), itemType, sdkVersion
@@ -329,7 +329,7 @@ instance you are interested in.
 
 If you see values < 100 then sampling is enabled for that item type.
 
-## Integration with App Services
+## Integrate with App Services
 
 Both **Azure Functions** and **App Services (NodeJS)** allow integration with
 **Application Insights** without using the SDK. This integration is active in
@@ -363,7 +363,7 @@ At the time of writing, the default integration (agent) does not support
 end-to-end tracing which can be achieved only by using the AI SDK 3.x
 programmatically.
 
-### Integration with Next.js Deployed on Azure App Service
+### Integrate with Next.js Deployed on Azure App Service
 
 For `Next.js` applications deployed on **App Service**, similar considerations
 apply. However, since there is no single entry point as with other frameworks,
@@ -487,7 +487,7 @@ Beware that the runtime also relies on the
 variable to limit the number of traces sent, so perfect alignment cannot be
 guaranteed.
 
-### Configuring log levels for the Azure Functions runtime
+### Configure log levels for the Azure Functions runtime
 
 The Azure Functions runtime (host) allows you to configure log levels for
 different categories of logs. This configuration can be set in `host.json` or
@@ -607,7 +607,7 @@ scenario, you need to incorporate a wrapper around the Functions' handlers that
 Benchmarks have shown that this wrapper does not introduce any significant
 performance penalties, so you can safely use it in production.
 
-## Setting Cloud Role Name
+## Set Cloud Role Name
 
 When using the AI SDK, the `cloudRoleName` is set by default to the name of the
 **App Service** or **Azure Function**. This value is used to identify the

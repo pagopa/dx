@@ -1,8 +1,8 @@
 ---
-sidebar_label: Setting up Development Containers
+sidebar_label: Set up Development Containers
 ---
 
-# Setting up Development Containers
+# Set up Development Containers
 
 ## What are Development Containers?
 
@@ -83,8 +83,7 @@ on the `mcr.microsoft.com/devcontainers/base:debian` image.
 
 ##### Visual Studio Code
 
-1. Open the command palette (`Cmd + Shift + P` on macOS or `Ctrl + Shift + P` on
-   Windows/Linux).
+1. Open the command palette (`F1`).
 2. Search for `Dev Containers: Reopen in Container`.
 
 Visual Studio Code will build the development container and open a new window
@@ -105,7 +104,7 @@ devcontainer exec --workspace-folder . /bin/bash
 The `--workspace-folder` flag is used to specify the path to the folder that
 contains the `.devcontainer` directory.
 
-### Adding the Node.js Feature
+### Add Node.js Feature
 
 Once you have created the development container, you can add features to it.
 Features are pre-built configurations that can be added to a development
