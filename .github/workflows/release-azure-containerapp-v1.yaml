@@ -81,7 +81,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/.github/actions/docker-build-push@CES-958-definire-una-pipeline-di-cd-per-le-container-app
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
@@ -118,8 +118,10 @@ jobs:
 
       - name: Get Short SHA of Latest Commit
         id: get_commit_sha
+        env:
+          GIT_SHA: ${{ github.sha }}
         run: |
-          sha=$(git rev-parse --short ${{ github.sha }})
+          sha=$(git rev-parse --short "$GIT_SHA")
 
           echo "Latest commit sha: $sha"
 
@@ -134,13 +136,13 @@ jobs:
 
       - name: Set Default Resource Group
         run: |
-          az configure --defaults group=${{ env.RESOURCE_GROUP_NAME }}
+          az configure --defaults group="$RESOURCE_GROUP_NAME"
 
       # - name: Get Log Analytics Workspace ID
       #   id: get_log_analytics_workspace_id
       #   run: |
       #     cae_id=$(az containerapp show \
-      #       --name ${{ env.CONTAINER_APP_NAME }} \
+      #       --name "$CONTAINER_APP_NAME" \
       #       --query "properties.environmentId")
 
       #     workspace_id=$(az containerapp env show \
@@ -153,7 +155,7 @@ jobs:
         id: get_revision_mode
         run: |
           revision_mode=$(az containerapp show \
-            --name ${{ env.CONTAINER_APP_NAME }} \
+            --name "$CONTAINER_APP_NAME" \
             --query "properties.configuration.activeRevisionsMode" \
             --output tsv)
 
@@ -167,15 +169,15 @@ jobs:
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
         run: |
           az containerapp update \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}"
+            --name "$CONTAINER_APP_NAME" \
+            --image "ghcr.io/$IMAGE_NAME:sha-${{ steps.get_commit_sha.outputs.short_sha }}"
 
       - name: Get Container App Current Revision
         id: get_current_revision
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         run: |
           current_revision=$(az containerapp revision list \
-            --name ${{ env.CONTAINER_APP_NAME }} \
+            --name "$CONTAINER_APP_NAME" \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
 
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
@@ -187,16 +189,16 @@ jobs:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
           new_revision=$(az containerapp revision copy \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --image "ghcr.io/${{ env.IMAGE_NAME }}:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
-            --from-revision ${{ env.CURRENT_REVISION }} \
+            --name "$CONTAINER_APP_NAME" \
+            --image "ghcr.io/$IMAGE_NAME:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
+            --from-revision "$CURRENT_REVISION" \
             --query "properties.latestRevisionName" \
             --output tsv)
 
-          echo "Current revision: ${{ env.CURRENT_REVISION }}"
+          echo "Current revision: $CURRENT_REVISION"
           echo "New revision: $new_revision"
 
-          if [[ "${{ env.CURRENT_REVISION }}" == "$new_revision" ]]; then
+          if [[ "$CURRENT_REVISION" == "$new_revision" ]]; then
             echo "::warning::No deployment needed - current revision is already using the latest image"
             echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
             exit 0
@@ -206,8 +208,8 @@ jobs:
           echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
 
           az containerapp ingress traffic set \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --revision-weight ${{ env.CURRENT_REVISION }}=100 \
+            --name "$CONTAINER_APP_NAME" \
+            --revision-weight "$CURRENT_REVISION"=100 \
             --revision-weight $new_revision=0 \
             --output table
 
@@ -224,7 +226,7 @@ jobs:
           while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
 
             health_state=$(az containerapp revision list \
-              --name ${{ env.CONTAINER_APP_NAME }} \
+              --name "$CONTAINER_APP_NAME" \
               --query "[?contains(name, '$new_revision_name')].{Health:properties.healthState}|[0].Health" -o tsv)
 
             echo "::notice:: Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
@@ -253,7 +255,7 @@ jobs:
             echo "Setting $new_revision_name traffic to $percentage%"
 
             az containerapp ingress traffic set \
-              --name ${{ env.CONTAINER_APP_NAME }} \
+              --name "$CONTAINER_APP_NAME" \
               --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=$(100-$percentage) \
               --revision-weight $new_revision_name=$percentage
 
@@ -274,7 +276,7 @@ jobs:
 
             # Check revision health state
             # health_state=$(az containerapp revision list \
-            #   --name ${{ env.CONTAINER_APP_NAME }}  \
+            #   --name "$CONTAINER_APP_NAME" \
             #   --query "[?name=='$new_revision_name'].properties.healthState" -o tsv)
 
             # echo "Health check results:"
@@ -286,7 +288,7 @@ jobs:
             #   echo "::error::Errors detected in revision '$new_revision_name', rolling back to previous revision"
 
             #   az containerapp ingress traffic set \
-            #     --name ${{ env.CONTAINER_APP_NAME }} \
+            #     --name "$CONTAINER_APP_NAME" \
             #     --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=100 \
             #     --revision-weight $new_revision_name=0
 
@@ -302,5 +304,5 @@ jobs:
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           az containerapp revision deactivate \
-            --name ${{ env.CONTAINER_APP_NAME }} \
+            --name "$CONTAINER_APP_NAME" \
             --revision ${{ steps.get_current_revision.outputs.current_revision_name }}
