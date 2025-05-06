@@ -17,11 +17,6 @@ inputs:
     required: false
     default: ${{ github.repository }}
     description: Docker image name, defaults to repository name
-  apply_github_tags_to_image_tags:
-    type: boolean
-    required: false
-    default: false
-    description: Use GitHub tags for image tagging
   docker_image_description:
     type: string
     required: true
