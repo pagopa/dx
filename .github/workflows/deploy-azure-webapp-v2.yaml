@@ -72,7 +72,10 @@ jobs:
             jq '.[] | select(.environment.name == "prod-cd" and .current_user_can_approve==true)')
 
           if [ -z "$is_matching" ]; then
-            echo "::error:: No pending deployments found"
+            echo "::warning::$deployments"
+            echo ""
+            echo "::warning::$is_matching"
+            echo "::error::No pending deployments found"
             exit 1
           fi
 
