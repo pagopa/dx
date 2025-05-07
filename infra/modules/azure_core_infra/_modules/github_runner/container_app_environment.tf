@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { DXModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), DXModuleName = try(jsondecode(file("${path.module}/package.json")).name) })
+  tags = merge(var.tags, { DXModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), DXModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
   cae_name = provider::dx::resource_name(merge(var.naming_config, {
     resource_type = "container_app_environment",
   }))
