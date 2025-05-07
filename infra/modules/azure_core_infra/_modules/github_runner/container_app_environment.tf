@@ -1,4 +1,5 @@
 locals {
+  tags = merge(var.tags, { module_version = try(jsondecode(file("${path.module}/package.json")).version, "unknown") })
   cae_name = provider::dx::resource_name(merge(var.naming_config, {
     resource_type = "container_app_environment",
   }))
@@ -15,7 +16,7 @@ resource "azurerm_container_app_environment" "cae" {
   zone_redundancy_enabled        = false
   internal_load_balancer_enabled = false
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_management_lock" "lock_cae" {

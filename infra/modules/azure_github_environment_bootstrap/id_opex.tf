@@ -3,7 +3,7 @@ resource "azurerm_user_assigned_identity" "opex_ci" {
   location            = local.ids.location
   name                = format(local.ids.opex_name, "ci")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_user_assigned_identity" "opex_cd" {
@@ -11,7 +11,7 @@ resource "azurerm_user_assigned_identity" "opex_cd" {
   location            = local.ids.location
   name                = format(local.ids.opex_name, "cd")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_federated_identity_credential" "github_opex_ci" {

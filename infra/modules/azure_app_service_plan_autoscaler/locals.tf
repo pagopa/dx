@@ -1,4 +1,5 @@
 locals {
+  tags              = merge(var.tags, { module_version = try(jsondecode(file("${path.module}/package.json")).version, "unknown") })
   target_type       = var.target_service.app_service != null ? "app_service" : "function_app"
   is_app_service    = local.target_type == "app_service"
   is_function_app   = local.target_type == "function_app"

@@ -1,4 +1,5 @@
 locals {
+  tags = merge(var.tags, { module_version = try(jsondecode(file("${path.module}/package.json")).version, "unknown") })
 
   naming_config = {
     prefix          = var.environment.prefix,

@@ -16,7 +16,7 @@ resource "azurerm_private_endpoint" "app_service_sites" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.app_service.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "staging_app_service_sites" {
@@ -39,5 +39,5 @@ resource "azurerm_private_endpoint" "staging_app_service_sites" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.app_service.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

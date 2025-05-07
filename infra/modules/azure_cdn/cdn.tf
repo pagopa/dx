@@ -3,14 +3,14 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_cdn_frontdoor_endpoint" "this" {
   name                     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" }))
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_cdn_frontdoor_origin_group" "this" {

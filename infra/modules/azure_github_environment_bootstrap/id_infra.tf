@@ -3,7 +3,7 @@ resource "azurerm_user_assigned_identity" "infra_ci" {
   location            = local.ids.location
   name                = format(local.ids.infra_name, "ci")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_user_assigned_identity" "infra_cd" {
@@ -11,7 +11,7 @@ resource "azurerm_user_assigned_identity" "infra_cd" {
   location            = local.ids.location
   name                = format(local.ids.infra_name, "cd")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_federated_identity_credential" "github_infra_ci" {

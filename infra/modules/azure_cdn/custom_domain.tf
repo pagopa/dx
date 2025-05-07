@@ -25,7 +25,7 @@ resource "azurerm_dns_a_record" "this" {
   resource_group_name = each.value.dns.zone_resource_group_name
   ttl                 = 3600
   target_resource_id  = azurerm_cdn_frontdoor_endpoint.this.id
-  tags                = var.tags
+  tags                = local.tags
 }
 
 # Create a DNS TXT record for each custom domain publicly exposed via DNS.
@@ -39,7 +39,7 @@ resource "azurerm_dns_txt_record" "validation" {
   record {
     value = azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token
   }
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     origin = each.value.host_name
     cdn    = azurerm_cdn_frontdoor_profile.this.name
   })
