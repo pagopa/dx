@@ -79,7 +79,7 @@ jobs:
             exit 1
           fi
 
-          env_id=$(echo "$deployments" | jq -r '.environment.id')
+          env_id=$(echo "$deployments" | jq -r '.[0].environment.id')
 
           gh api \
             --method POST \
