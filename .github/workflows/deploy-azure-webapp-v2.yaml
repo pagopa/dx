@@ -69,7 +69,7 @@ jobs:
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
 
           is_matching=$(echo "$deployments" |
-            jq '.[] | select(.environment.name == "prod-cd" and .current_user_can_approve==true)')
+            jq '.[] | select(.environment.name == "prod-cd")')
 
           if [ -z "$is_matching" ]; then
             echo "::warning::$deployments"
