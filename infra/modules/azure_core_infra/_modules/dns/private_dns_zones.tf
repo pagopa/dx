@@ -3,7 +3,7 @@ resource "azurerm_private_dns_zone" "private_dns_zones" {
   name                = each.value
   resource_group_name = var.resource_group_name
 
-  tags = local.tags
+  tags = var.tags
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_links" {

@@ -2,7 +2,6 @@
 # Centralized mapping for legacy and new tiers
 
 locals {
-  tags = merge(var.tags, { module_version = try(jsondecode(file("${path.module}/package.json")).version, "unknown") })
   # Tier mappings for better scalability and readability
   tier_map = {
     "test"     = "s"
