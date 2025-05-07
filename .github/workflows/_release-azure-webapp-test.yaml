@@ -10,6 +10,11 @@ jobs:
   release:
     uses: ./.github/workflows/deploy-azure-webapp-v2.yaml
     name: Test Release Azure WebApp
+    permissions:
+      deployments: write
+      contents: read
+      actions: read
+    secrets: inherit
     with:
       workspace_name: 'fake-azure-webapp'
       environment: 'staging'
