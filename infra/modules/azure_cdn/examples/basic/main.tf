@@ -25,13 +25,16 @@ module "storage_account" {
   resource_group_name = azurerm_resource_group.example.name
   tier                = "s"
   subnet_pep_id       = data.azurerm_subnet.pep.id
+
+  force_public_network_access_enabled = true
+
   static_website = {
     enabled        = true
     index_document = "index.html"
   }
 
   subservices_enabled = {
-    blob = true
+    blob = false
   }
 
   tags = local.tags
