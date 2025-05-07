@@ -55,8 +55,6 @@ jobs:
       contents: read
       deployments: write
     steps:
-      - name: Sleep for 5 seconds
-        run: sleep 5
 
       - name: Approve Next Step
         run: |
@@ -67,7 +65,7 @@ jobs:
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
 
           is_environment_matching=$(echo "$deployments" |
-            jq '.[] | select(.environment.name == "$REQUIRED_ENVIRONMENT")')
+            jq --arg GH_ENV "$REQUIRED_ENVIRONMENT" '.[] | select(.environment.name == $GH_ENV)')
 
           if [ -z "$is_environment_matching" ]; then
             echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
