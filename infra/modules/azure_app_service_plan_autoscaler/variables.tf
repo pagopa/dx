@@ -31,30 +31,41 @@ variable "app_service_plan_id" {
 
 variable "target_service" {
   type = object({
-    app_service = optional(object({
+    app_services = optional(list(object({
       id   = optional(string, null)
       name = optional(string, null)
-    }))
-    function_app = optional(object({
+    })), [])
+    function_apps = optional(list(object({
       id   = optional(string, null)
       name = optional(string, null)
-    }))
+    })), [])
   })
 
-  description = "The target service to autoscale. You can specify either an `app service` or a `function app`, but not both. The id and name attributes are optional, but at least one of them must be provided for the selected service type. Use id if the target service is being created in the same plan."
+  description = "The target services to autoscale. You can specify multiple app services and/or function apps that share the same plan. For each service, the id and name attributes are optional, but at least one of them must be provided. Use id if the target service is being created in the same plan."
 
   validation {
-    condition = (var.target_service.app_service != null && !alltrue([try(var.target_service.app_service.id, null) == null, try(var.target_service.app_service.name, null) == null]) && !alltrue([try(var.target_service.app_service.id, null) != null, try(var.target_service.app_service.name, null) != null]) ||
-    var.target_service.function_app != null && !alltrue([try(var.target_service.function_app.id, null) == null, try(var.target_service.function_app.name, null) == null]) && !alltrue([try(var.target_service.function_app.id, null) != null, try(var.target_service.function_app.name, null) != null]))
-    error_message = "You must specify either 'id' or 'name' (but not both)."
+    condition = alltrue(flatten([
+      for app_service in var.target_service.app_services : [
+        (app_service.id != null && app_service.name == null) ||
+        (app_service.id == null && app_service.name != null)
+      ]
+    ]))
+    error_message = "For each app service, you must specify either 'id' or 'name' (but not both)."
   }
 
   validation {
-    condition = (
-      (var.target_service.app_service != null && var.target_service.function_app == null) ||
-      (var.target_service.app_service == null && var.target_service.function_app != null)
-    )
-    error_message = "You must specify exactly one target service: either 'app_service' or 'function_app', but not both."
+    condition = alltrue(flatten([
+      for function_app in var.target_service.function_apps : [
+        (function_app.id != null && function_app.name == null) ||
+        (function_app.id == null && function_app.name != null)
+      ]
+    ]))
+    error_message = "For each function app, you must specify either 'id' or 'name' (but not both)."
+  }
+
+  validation {
+    condition     = length(var.target_service.app_services) > 0 || length(var.target_service.function_apps) > 0
+    error_message = "You must specify at least one app service or function app."
   }
 }
 

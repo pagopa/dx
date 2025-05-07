@@ -1,62 +1,85 @@
 locals {
-  target_type       = var.target_service.app_service != null ? "app_service" : "function_app"
-  is_app_service    = local.target_type == "app_service"
-  is_function_app   = local.target_type == "function_app"
-  is_name_provided  = try(var.target_service[local.target_type].name, null) != null
-  target_service_id = coalesce(var.target_service[local.target_type].id, local.is_app_service ? try(data.azurerm_linux_web_app.this[0].id, null) : try(data.azurerm_linux_function_app.this[0].id, null))
+  # Extract all configured services
+  target_services = {
+    app_services = [
+      for app_service in var.target_service.app_services : {
+        id   = coalesce(app_service.id, try(data.azurerm_linux_web_app.app_services[app_service.name].id, null))
+        name = coalesce(app_service.name, try(reverse(split("/", app_service.id))[0], null))
+        type = "app_service"
+      }
+    ]
+    function_apps = [
+      for function_app in var.target_service.function_apps : {
+        id   = coalesce(function_app.id, try(data.azurerm_linux_function_app.function_apps[function_app.name].id, null))
+        name = coalesce(function_app.name, try(reverse(split("/", function_app.id))[0], null))
+        type = "function_app"
+      }
+    ]
+  }
 
-  base_name = local.is_name_provided ? var.target_service[local.target_type].name : reverse(split("/", var.target_service[local.target_type].id))[0]
+  # Merge all services into a single array
+  all_services = concat(local.target_services.app_services, local.target_services.function_apps)
 
-  # Generates an autoscaler name by replacing "fn", "func", or "app" with "as".
+  # Determine the autoscaler name
+  primary_service_name = length(local.all_services) > 0 ? local.all_services[0].name : "unknown"
+  base_name            = local.primary_service_name
+
+  # Generate a name for the autoscaler by replacing "fn", "func", or "app" with "as"
   # Example:
   #   Input:  "dx-d-itn-test-fn-01"
   #   Output: "dx-d-itn-test-as-01"
   autoscale_name = var.autoscale_name == null ? replace(replace(replace(local.base_name, "fn", "as"), "func", "as"), "app", "as") : var.autoscale_name
 
-  requests_rule_increase = {
-    metric_trigger = {
-      metric_name              = "Requests"
-      metric_resource_id       = local.target_service_id
-      metric_namespace         = "microsoft.web/sites"
-      time_grain               = "PT1M"
-      statistic                = try(var.scale_metrics.requests.statistic_increase, "Average")
-      time_window              = try("PT${var.scale_metrics.requests.time_window_increase}M", "PT1M")
-      time_aggregation         = try(var.scale_metrics.requests.time_aggregation_increase, "Average")
-      operator                 = "GreaterThan"
-      threshold                = try(var.scale_metrics.requests.upper_threshold, null)
-      divide_by_instance_count = true
-    }
+  # Definition of request rules for each service
+  requests_rules_increase = flatten([
+    for service in local.all_services : {
+      metric_trigger = {
+        metric_name              = "Requests"
+        metric_resource_id       = service.id
+        metric_namespace         = "microsoft.web/sites"
+        time_grain               = "PT1M"
+        statistic                = try(var.scale_metrics.requests.statistic_increase, "Average")
+        time_window              = try("PT${var.scale_metrics.requests.time_window_increase}M", "PT1M")
+        time_aggregation         = try(var.scale_metrics.requests.time_aggregation_increase, "Average")
+        operator                 = "GreaterThan"
+        threshold                = try(var.scale_metrics.requests.upper_threshold, null)
+        divide_by_instance_count = true
+      }
 
-    scale_action = {
-      direction = "Increase"
-      type      = "ChangeCount"
-      value     = try(var.scale_metrics.requests.increase_by, null)
-      cooldown  = try("PT${var.scale_metrics.requests.cooldown_increase}M", "PT1M")
+      scale_action = {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = try(var.scale_metrics.requests.increase_by, null)
+        cooldown  = try("PT${var.scale_metrics.requests.cooldown_increase}M", "PT1M")
+      }
     }
-  }
+  ])
 
-  requests_rule_decrease = {
-    metric_trigger = {
-      metric_name              = "Requests"
-      metric_resource_id       = local.target_service_id
-      metric_namespace         = "microsoft.web/sites"
-      time_grain               = "PT1M"
-      statistic                = try(var.scale_metrics.requests.statistic_decrease, "Average")
-      time_window              = try("PT${var.scale_metrics.requests.time_window_decrease}M", "PT1M")
-      time_aggregation         = try(var.scale_metrics.requests.time_aggregation_decrease, "Average")
-      operator                 = "LessThan"
-      threshold                = try(var.scale_metrics.requests.lower_threshold, null)
-      divide_by_instance_count = true
+  requests_rules_decrease = flatten([
+    for service in local.all_services : {
+      metric_trigger = {
+        metric_name              = "Requests"
+        metric_resource_id       = service.id
+        metric_namespace         = "microsoft.web/sites"
+        time_grain               = "PT1M"
+        statistic                = try(var.scale_metrics.requests.statistic_decrease, "Average")
+        time_window              = try("PT${var.scale_metrics.requests.time_window_decrease}M", "PT1M")
+        time_aggregation         = try(var.scale_metrics.requests.time_aggregation_decrease, "Average")
+        operator                 = "LessThan"
+        threshold                = try(var.scale_metrics.requests.lower_threshold, null)
+        divide_by_instance_count = true
+      }
+
+      scale_action = {
+        direction = "Decrease"
+        type      = "ChangeCount"
+        value     = try(var.scale_metrics.requests.decrease_by, null)
+        cooldown  = try("PT${var.scale_metrics.requests.cooldown_decrease}M", "PT10M")
+      }
     }
+  ])
 
-    scale_action = {
-      direction = "Decrease"
-      type      = "ChangeCount"
-      value     = try(var.scale_metrics.requests.decrease_by, null)
-      cooldown  = try("PT${var.scale_metrics.requests.cooldown_decrease}M", "PT10M")
-    }
-  }
-
+  # CPU rules - these are at the service plan level, so they don't change
   cpu_rule_increase = {
     metric_trigger = {
       metric_name              = "CpuPercentage"
@@ -101,6 +124,7 @@ locals {
     }
   }
 
+  # Memory rules - these are at the service plan level, so they don't change
   memory_rule_increase = {
     metric_trigger = {
       metric_name              = "MemoryPercentage"

@@ -15,7 +15,7 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
-module "azure_function_app" {
+module "azure_function_app_1" {
   source = "../../../azure_function_app"
 
   environment         = local.environment
@@ -37,19 +37,75 @@ module "azure_function_app" {
   tags = local.tags
 }
 
+module "azure_function_app_2" {
+  source = "../../../azure_function_app"
+
+  environment         = merge(local.environment, { instance_number = "02" })
+  tier                = "m"
+  resource_group_name = azurerm_resource_group.example.name
+
+  app_service_plan_id = module.azure_function_app_1.function_app.plan.id
+
+  virtual_network = {
+    name                = "${local.project}-common-vnet-01"
+    resource_group_name = "${local.project}-network-rg-01"
+  }
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_cidr   = "10.50.249.0/24"
+
+  app_settings      = {}
+  slot_app_settings = {}
+
+  health_check_path = "/health"
+
+  tags = local.tags
+}
+
+module "azure_app_service_1" {
+  source = "../../../azure_app_service"
+
+  environment         = local.environment
+  tier                = "m"
+  resource_group_name = azurerm_resource_group.example.name
+
+  app_service_plan_id = module.azure_function_app_1.function_app.plan.id
+
+  virtual_network = {
+    name                = "${local.project}-common-vnet-01"
+    resource_group_name = "${local.project}-network-rg-01"
+  }
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_cidr   = "10.50.249.0/24"
+
+  app_settings      = {}
+  slot_app_settings = {}
+
+  health_check_path = "/health"
+
+  tags = local.tags
+}
+
 
 module "func_autoscaler" {
   source = "../../"
 
-  resource_group_name = module.azure_function_app.function_app.resource_group_name
+  resource_group_name = azurerm_resource_group.example.name
   location            = local.environment.location
 
-  app_service_plan_id = module.azure_function_app.function_app.plan.id
+  app_service_plan_id = module.azure_function_app_1.function_app.plan.id
 
   target_service = {
+    app_services = [
+      {
+        id = module.azure_app_service_1.app_service.app_service.id
+      }
+    ]
     function_apps = [
       {
-        id = module.azure_function_app.function_app.function_app.id
+        id = module.azure_function_app_1.function_app.function_app.id
+      },
+      {
+        id = module.azure_function_app_2.function_app.function_app.id
       }
     ]
   }

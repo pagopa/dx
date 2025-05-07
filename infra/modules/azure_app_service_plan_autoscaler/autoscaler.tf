@@ -32,56 +32,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         ]
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
@@ -216,56 +216,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         ]
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
@@ -400,56 +400,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         ]
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
@@ -584,56 +584,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         ]
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
@@ -753,56 +753,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         maximum = var.scheduler.maximum
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
@@ -928,56 +928,56 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         end      = var.scheduler.spot_load.end_date
       }
 
-      # Requests - increase
+      # Requests - increase (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_increase
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_increase.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_increase.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_increase.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_increase.metric_trigger.time_grain
-            statistic                = local.requests_rule_increase.metric_trigger.statistic
-            time_window              = local.requests_rule_increase.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_increase.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_increase.metric_trigger.operator
-            threshold                = local.requests_rule_increase.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_increase.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_increase.scale_action.cooldown
-            direction = local.requests_rule_increase.scale_action.direction
-            type      = local.requests_rule_increase.scale_action.type
-            value     = local.requests_rule_increase.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
 
-      # Requests - decrease
+      # Requests - decrease (for each service)
       dynamic "rule" {
-        for_each = var.scale_metrics.requests == null ? [] : [1]
+        for_each = var.scale_metrics.requests == null ? [] : local.requests_rules_decrease
 
         content {
           metric_trigger {
-            metric_name              = local.requests_rule_decrease.metric_trigger.metric_name
-            metric_resource_id       = local.requests_rule_decrease.metric_trigger.metric_resource_id
-            metric_namespace         = local.requests_rule_decrease.metric_trigger.metric_namespace
-            time_grain               = local.requests_rule_decrease.metric_trigger.time_grain
-            statistic                = local.requests_rule_decrease.metric_trigger.statistic
-            time_window              = local.requests_rule_decrease.metric_trigger.time_window
-            time_aggregation         = local.requests_rule_decrease.metric_trigger.time_aggregation
-            operator                 = local.requests_rule_decrease.metric_trigger.operator
-            threshold                = local.requests_rule_decrease.metric_trigger.threshold
-            divide_by_instance_count = local.requests_rule_decrease.metric_trigger.divide_by_instance_count
+            metric_name              = rule.value.metric_trigger.metric_name
+            metric_resource_id       = rule.value.metric_trigger.metric_resource_id
+            metric_namespace         = rule.value.metric_trigger.metric_namespace
+            time_grain               = rule.value.metric_trigger.time_grain
+            statistic                = rule.value.metric_trigger.statistic
+            time_window              = rule.value.metric_trigger.time_window
+            time_aggregation         = rule.value.metric_trigger.time_aggregation
+            operator                 = rule.value.metric_trigger.operator
+            threshold                = rule.value.metric_trigger.threshold
+            divide_by_instance_count = rule.value.metric_trigger.divide_by_instance_count
           }
 
           scale_action {
-            cooldown  = local.requests_rule_decrease.scale_action.cooldown
-            direction = local.requests_rule_decrease.scale_action.direction
-            type      = local.requests_rule_decrease.scale_action.type
-            value     = local.requests_rule_decrease.scale_action.value
+            cooldown  = rule.value.scale_action.cooldown
+            direction = rule.value.scale_action.direction
+            type      = rule.value.scale_action.type
+            value     = rule.value.scale_action.value
           }
         }
       }
