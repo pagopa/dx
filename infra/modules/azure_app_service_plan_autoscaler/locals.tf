@@ -1,5 +1,5 @@
 locals {
-  tags              = merge(var.tags, { DXModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), DXModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
+  tags              = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
   target_type       = var.target_service.app_service != null ? "app_service" : "function_app"
   is_app_service    = local.target_type == "app_service"
   is_function_app   = local.target_type == "function_app"
