@@ -40,7 +40,7 @@ resource "azurerm_dns_txt_record" "validation" {
     value = azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token
   }
   tags = merge(local.tags, {
-    origin = each.value.host_name
-    cdn    = azurerm_cdn_frontdoor_profile.this.name
+    Origin = each.value.host_name
+    Cdn    = azurerm_cdn_frontdoor_profile.this.name
   })
 }

@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { module_version = try(jsondecode(file("${path.module}/package.json")).version, "unknown") })
+  tags = merge(var.tags, { DXModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), DXModuleName = try(jsondecode(file("${path.module}/package.json")).name) })
   location_short = tomap({
     "italynorth" = "itn",
     "westeurope" = "weu"
