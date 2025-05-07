@@ -2,9 +2,9 @@ provider "azurerm" {
   features {}
 }
 
-run "setup_app_service" {
+run "setup_tests" {
   module {
-    source = "./tests/setup_app_service"
+    source = "./tests/setup"
   }
 
   variables {
@@ -27,6 +27,21 @@ run "setup_app_service" {
       Test           = "true"
       TestName       = "Create autoscaler for test"
     }
+  }
+}
+
+run "setup_app_service" {
+  module {
+    source = "./tests/setup_app_service"
+  }
+
+  variables {
+    environment         = run.setup_tests.environment
+    tags                = run.setup_tests.tags
+    subnet_id           = run.setup_tests.snet_id
+    subnet_pep_id       = run.setup_tests.pep_id
+    virtual_network     = run.setup_tests.virtual_network
+    resource_group_name = run.setup_tests.resource_group_name
   }
 }
 
@@ -37,25 +52,12 @@ run "setup_function_app" {
 
   variables {
     app_service_plan_id = run.setup_app_service.app_service_plan_id
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
-
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_autoscaler/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create autoscaler for test"
-    }
+    environment         = run.setup_tests.environment
+    tags                = run.setup_tests.tags
+    subnet_id           = run.setup_tests.snet_id
+    subnet_pep_id       = run.setup_tests.pep_id
+    virtual_network     = run.setup_tests.virtual_network
+    resource_group_name = run.setup_tests.resource_group_name
   }
 }
 
@@ -63,34 +65,18 @@ run "autoscaler_with_existing_app_service" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
+    environment = run.setup_tests.environment
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_autoscaler/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create autoscaler for test"
-    }
+    tags = run.setup_tests.tags
 
-    location = "italynorth"
-    resource_group_name = run.setup_app_service.resource_group_name
+    location            = "italynorth"
+    resource_group_name = run.setup_tests.resource_group_name
     app_service_plan_id = run.setup_app_service.app_service_plan_id
 
     target_service = {
       app_services = [
         {
-          id     = run.setup_app_service.app_service.id
+          id = run.setup_app_service.app_service.id
         }
       ]
     }
@@ -135,28 +121,12 @@ run "autoscaler_with_shared_plan" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
+    environment = run.setup_tests.environment
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_autoscaler/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create shared plan autoscaler"
-    }
+    tags = run.setup_tests.tags
 
-    location = "italynorth"
-    resource_group_name = run.setup_app_service.resource_group_name
+    location            = "italynorth"
+    resource_group_name = run.setup_tests.resource_group_name
     app_service_plan_id = run.setup_app_service.app_service_plan_id
 
     target_service = {
@@ -219,7 +189,7 @@ run "autoscaler_with_shared_plan" {
   }
 
   assert {
-    condition     = contains([for r in azurerm_monitor_autoscale_setting.this.profile[0].rule : r.metric_trigger[0].metric_resource_id], run.setup_app_service.function_app.id)
+    condition     = contains([for r in azurerm_monitor_autoscale_setting.this.profile[0].rule : r.metric_trigger[0].metric_resource_id], run.setup_function_app.function_app.id)
     error_message = "The autoscaler doesn't have rules for the function app."
   }
 }
