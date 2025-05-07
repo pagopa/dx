@@ -1,0 +1,19 @@
+name: Release fake Azure Webapp
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - automatic-staging-deployment
+
+jobs:
+  release:
+    uses: ./.github/workflows/deploy-azure-webapp-v2.yaml
+    name: Test Release Azure WebApp
+    with:
+      workspace_name: 'fake-azure-webapp'
+      environment: 'staging'
+      resource_group_name: 'fake-azure-webapp-staging-rg'
+      web_app_name: 'fake-azure-webapp-staging'
+      use_staging_slot: false
+      use_private_agent: false
