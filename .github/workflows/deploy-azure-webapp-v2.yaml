@@ -62,23 +62,28 @@ jobs:
 
       - name: Approve Next Step
         run: |
-          ok=$(gh api \
+
+          deployments=$(gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
-            | jq '.[] | select(.environment.id == "prod-cd" and .current_user_can_approve==true)')
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
 
-          if [-z "$ok"]; then
+          is_matching=$(echo "$deployments" |
+            jq '.[] | select(.environment.name == "prod-cd" and .current_user_can_approve==true)')
+
+          if [ -z "$is_matching" ]; then
             echo "::error:: No pending deployments found"
             exit 1
           fi
+
+          env_id=$(echo "$deployments" | jq -r '.environment.id')
 
           gh api \
             --method POST \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
-            -F "environment_ids[]=prod-cd" \
+            -F "environment_ids[]=$env_id" \
             -f "state=approved" \
             -f "comment=Auto approve for staging slot"
 
