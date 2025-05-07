@@ -63,18 +63,18 @@ jobs:
       - name: Approve Next Step
         run: |
 
+          echo "::warning:: ${{github.actor}}"
+
           deployments=$(gh api \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
 
           is_matching=$(echo "$deployments" |
-            jq '.[] | select(.environment.name == "prod-cd")')
+            jq '.[] | select(.environment.name == "prod-cd" and .current_user_can_approve == true)')
 
           if [ -z "$is_matching" ]; then
             echo "::warning::$deployments"
-            echo ""
-            echo "::warning::$is_matching"
             echo "::error::No pending deployments found"
             exit 1
           fi
