@@ -54,6 +54,8 @@ jobs:
       deployments: write
       contents: read
       actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       # - name: Sleep for 5 seconds
       #   run: sleep 5
