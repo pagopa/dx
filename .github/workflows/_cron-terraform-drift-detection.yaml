@@ -11,6 +11,8 @@ jobs:
     name: Drift Detection
     permissions:
       contents: read
+      actions: read
+      id-token: write
     secrets: inherit
     with:
       environment: 'dev'
