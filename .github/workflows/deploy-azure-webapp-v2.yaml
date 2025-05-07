@@ -32,6 +32,10 @@ on:
         type: boolean
         required: false
         default: true
+      GH_TOKEN_DEPLOYMENT_APPROVAL:
+        description: A fine-grained token with access to your repository deployments. Mandatory if deployment to staging slot is enabled
+        type: string
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -177,7 +181,7 @@ jobs:
             -f "state=approved" \
             -f "comment=Auto approve for staging slot"
         env:
-          GH_TOKEN: ${{ secrets.GH_APPROVE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }}
           REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
 
   deploy_staging:
