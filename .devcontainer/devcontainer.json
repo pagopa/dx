@@ -21,7 +21,7 @@
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-    "install-yarn-and-deps": "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 yarn install"
+    "install-yarn-and-deps": "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 pnpm install"
   },
   "customizations": {
     "vscode": {
