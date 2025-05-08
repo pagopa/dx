@@ -1,30 +1,31 @@
 ---
 sidebar_position: 1
-sidebar_label: Docker Image Build
+sidebar_label: Build Docker Images
 ---
 
-# Docker Image Build
+# Build Docker Images
 
-The [Docker Image Build](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
-is a workflow that builds a OCI image and verifies that the Dockerfile is functional.
+The
+[Docker Image Build](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
+is a workflow that builds a OCI image and verifies that the Dockerfile is
+functional.
 
-
-:::note
-This workflow does not publish the OCI image to any registry
-:::
+:::note This workflow does not publish the OCI image to any registry :::
 
 ## How It Works
 
 The workflow performs the following steps:
 
 1. Checks out the code from the repository.
-2. Build the OCI image using the Dockerfile
+2. Builds the OCI image using the Dockerfile.
 
 ## Usage
 
-To use the **Docker Image Build** workflow, invoke it as a reusable workflow in your repository. Below is an example configuration:
+To use the **Docker Image Build** workflow, invoke it as a reusable workflow in
+your repository. Below is an example configuration:
 
-##### With Dockerfile in the root of the repository and no custom parameters
+### With Dockerfile in the root of the repository and no custom parameters
+
 ```yaml
 name: Docker Image Build
 
@@ -44,7 +45,8 @@ jobs:
       build_platforms: "linux/amd64,linux/arm64"
 ```
 
-##### With a custom Context and Dockerfile
+### With a custom Context and Dockerfile
+
 ```yaml
 name: Docker Image Build
 on:
@@ -53,7 +55,7 @@ on:
       - Dockerfile.custom
       - custom-context/
 
-jobs: 
+jobs:
   docker_image_build:
     uses: pagopa/dx/.github/workflows/docker_image_build.yaml@main
     name: Docker Image Build
