@@ -1,5 +1,15 @@
 # azure_app_service_exposed
 
+## 0.1.0
+
+### Minor Changes
+
+- fd023c1: TLS 1.3 Upgrade for Azure App Services
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.0.16
 
 ### Patch Changes

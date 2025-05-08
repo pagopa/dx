@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.1.4
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.1.3
 
 ### Patch Changes

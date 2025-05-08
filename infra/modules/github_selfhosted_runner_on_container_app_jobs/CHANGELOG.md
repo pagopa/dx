@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.9
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.8
 
 ### Patch Changes

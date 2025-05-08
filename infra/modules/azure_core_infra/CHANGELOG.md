@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.7
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.6
 
 ### Patch Changes

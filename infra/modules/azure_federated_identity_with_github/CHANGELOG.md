@@ -1,5 +1,11 @@
 # azure_federated_identity_with_github
 
+## 1.0.3
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.2
 
 ### Patch Changes

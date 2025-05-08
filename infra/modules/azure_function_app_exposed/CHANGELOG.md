@@ -1,5 +1,15 @@
 # azure_function_app_exposed
 
+## 0.2.0
+
+### Minor Changes
+
+- aae0dc5: TLS 1.3 Upgrade for Azure Function Apps
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.1.8
 
 ### Patch Changes

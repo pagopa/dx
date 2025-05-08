@@ -1,5 +1,11 @@
 # azure_app_service_plan
 
+## 0.0.4
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.0.3
 
 ### Patch Changes
