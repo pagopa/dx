@@ -34,8 +34,11 @@ path.
 
 ## Managing Subscriptions and Products
 
-Let's illustrate how subscriptions and products function in APIM with an
-example.
+APIM **subscriptions** secure API access, while **products** group APIs with
+policies for specific audiences, used to manage access, quotas, and tailored API
+offerings.
+
+Let's illustrate how to leverage these concepts with an example.
 
 Imagine you've developed an application exposing REST APIs for weather
 forecasts:
