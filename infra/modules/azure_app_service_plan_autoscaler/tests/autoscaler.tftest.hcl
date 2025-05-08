@@ -1,6 +1,5 @@
 provider "azurerm" {
   features {}
-  storage_use_azuread = true
 }
 
 run "setup_tests" {
