@@ -11,7 +11,7 @@ resource "azurerm_storage_account" "this" {
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_storage_account" "durable_function" {
@@ -29,7 +29,7 @@ resource "azurerm_storage_account" "durable_function" {
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_storage_account_network_rules" "st_network_rules" {

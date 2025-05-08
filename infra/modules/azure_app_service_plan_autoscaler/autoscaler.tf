@@ -1084,5 +1084,5 @@ resource "azurerm_monitor_autoscale_setting" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.0.1
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 2.0.0
 
 ### Major Changes

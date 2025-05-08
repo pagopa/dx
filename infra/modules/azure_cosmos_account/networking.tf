@@ -19,5 +19,5 @@ resource "azurerm_private_endpoint" "sql" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.cosmos.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

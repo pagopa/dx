@@ -27,5 +27,5 @@ resource "azurerm_private_endpoint" "this" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account[each.key].id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

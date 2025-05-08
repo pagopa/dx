@@ -5,7 +5,7 @@ resource "azurerm_user_assigned_identity" "ci" {
   location            = var.environment.location
   name                = format(local.identity_name, var.identity_type, "ci")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_user_assigned_identity" "cd" {
@@ -15,7 +15,7 @@ resource "azurerm_user_assigned_identity" "cd" {
   location            = var.environment.location
   name                = format(local.identity_name, var.identity_type, "cd")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_federated_identity_credential" "ci_github" {

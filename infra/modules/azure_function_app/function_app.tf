@@ -97,7 +97,7 @@ resource "azurerm_linux_function_app" "this" {
     ]
   }
 
-  tags = var.tags
+  tags = local.tags
 
   depends_on = [
     azurerm_private_endpoint.st_blob,

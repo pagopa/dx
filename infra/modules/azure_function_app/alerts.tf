@@ -25,7 +25,7 @@ resource "azurerm_monitor_metric_alert" "function_app_health_check" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
@@ -58,5 +58,5 @@ resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

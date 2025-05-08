@@ -142,5 +142,5 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

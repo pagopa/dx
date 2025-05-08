@@ -1,5 +1,11 @@
 # azure_container_app_environment
 
+## 1.0.2
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.1
 
 ### Patch Changes

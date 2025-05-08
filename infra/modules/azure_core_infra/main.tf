@@ -24,7 +24,7 @@ resource "azurerm_resource_group" "common" {
   }))
   location = var.environment.location
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_resource_group" "network" {
@@ -38,7 +38,7 @@ resource "azurerm_resource_group" "network" {
   )
   location = var.environment.location
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_resource_group" "gh_runner" {
@@ -52,7 +52,7 @@ resource "azurerm_resource_group" "gh_runner" {
   )
   location = var.environment.location
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_resource_group" "test" {
@@ -68,7 +68,7 @@ resource "azurerm_resource_group" "test" {
   )
   location = var.environment.location
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #------------#
@@ -84,7 +84,7 @@ module "network" {
   vnet_cidr           = var.virtual_network_cidr
   pep_snet_cidr       = var.pep_subnet_cidr
 
-  tags = var.tags
+  tags = local.tags
 }
 
 module "nat_gateway" {
@@ -95,7 +95,7 @@ module "nat_gateway" {
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
 
-  tags = var.tags
+  tags = local.tags
 
   depends_on = [module.network]
 }
@@ -119,7 +119,7 @@ module "vpn" {
     name = module.network.vnet.name
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #-----------#
@@ -142,7 +142,7 @@ module "key_vault" {
     resource_group_name = azurerm_resource_group.network.name
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #-----------#
@@ -159,7 +159,7 @@ module "dns" {
     name = module.network.vnet.name
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #------#
@@ -174,7 +174,7 @@ module "common_log_analytics" {
   resource_group_name = azurerm_resource_group.common.name
   location            = var.environment.location
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #---------------#
@@ -197,5 +197,5 @@ module "github_runner" {
 
   log_analytics_workspace_id = module.common_log_analytics.id
 
-  tags = var.tags
+  tags = local.tags
 }

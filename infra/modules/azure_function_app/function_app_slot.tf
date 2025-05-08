@@ -81,5 +81,5 @@ resource "azurerm_linux_function_app_slot" "this" {
     ]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
