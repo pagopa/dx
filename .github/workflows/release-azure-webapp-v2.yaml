@@ -131,8 +131,8 @@ jobs:
   approve_staging:
     name: Auto-Approve Staging Slot deployment
     runs-on: ubuntu-latest
-    needs: build
-    if: ${{ inputs.use_staging_slot == false }}
+    needs: [build]
+    if: ${{ inputs.use_staging_slot == true }}
 
     steps:
 
@@ -188,7 +188,7 @@ jobs:
     name: Deploy to Staging
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
-    if: ${{ inputs.use_staging_slot == false }}
+    if: ${{ inputs.use_staging_slot == true }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
