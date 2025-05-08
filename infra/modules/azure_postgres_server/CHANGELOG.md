@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.5
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.4
 
 ### Patch Changes

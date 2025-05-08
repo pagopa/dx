@@ -1,6 +1,6 @@
 {
   "name": "azure_cosmos_account",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "private": true,
   "provider": "azurerm",
   "description": "Provisions an Azure Cosmos DB account with monitoring and network settings"
