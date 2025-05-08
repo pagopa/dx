@@ -17,20 +17,20 @@ variable "app_service_plan_id" {
   type = string
 }
 
-variable "subnet_pep_id" {
-  type = string
-}
+# variable "subnet_pep_id" {
+#   type = string
+# }
 
-variable "subnet_id" {
-  type = string
-}
+# variable "subnet_id" {
+#   type = string
+# }
 
 variable "resource_group_name" {
   type = string
 }
-variable "virtual_network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-}
+# variable "virtual_network" {
+#   type = object({
+#     name                = string
+#     resource_group_name = string
+#   })
+# }

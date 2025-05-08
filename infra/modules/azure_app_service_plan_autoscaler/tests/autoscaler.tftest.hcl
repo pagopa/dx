@@ -1,5 +1,6 @@
 provider "azurerm" {
   features {}
+  storage_use_azuread = true
 }
 
 run "setup_tests" {
@@ -54,9 +55,9 @@ run "setup_function_app" {
     app_service_plan_id = run.setup_app_service.app_service_plan_id
     environment         = run.setup_tests.environment
     tags                = run.setup_tests.tags
-    subnet_id           = run.setup_tests.snet_id
-    subnet_pep_id       = run.setup_tests.pep_id
-    virtual_network     = run.setup_tests.virtual_network
+    # subnet_id           = run.setup_tests.snet_id
+    # subnet_pep_id       = run.setup_tests.pep_id
+    # virtual_network     = run.setup_tests.virtual_network
     resource_group_name = run.setup_tests.resource_group_name
   }
 }
