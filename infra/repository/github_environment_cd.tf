@@ -1,5 +1,5 @@
 resource "github_repository_environment" "github_repository_environment_dev_cd" {
-  environment = "dev-cd"
+  environment = "infra-dev-cd"
   repository  = github_repository.this.name
 
   deployment_branch_policy {

@@ -16,4 +16,5 @@ jobs:
     secrets: inherit
     with:
       environment: 'dev'
+      override_github_environment: 'infra-dev'
       base_path: 'infra/resources/'
