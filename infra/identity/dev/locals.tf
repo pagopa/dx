@@ -4,7 +4,7 @@ locals {
   env_short       = "d"
   location        = "italynorth"
   location_short  = "itn"
-  domain          = "playground"
+  domain          = "common"
   project         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.domain}"
   instance_number = "01"
 

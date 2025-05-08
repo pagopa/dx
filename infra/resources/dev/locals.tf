@@ -1,8 +1,9 @@
 locals {
-  prefix    = "dx"
-  env_short = "d"
-  location  = "italynorth"
-  project   = "${local.prefix}-${local.env_short}"
+  prefix         = "dx"
+  env_short      = "d"
+  location       = "italynorth"
+  location_short = "itn"
+  project        = "${local.prefix}-${local.env_short}-${local.location_short}"
 
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"

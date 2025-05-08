@@ -1,9 +1,9 @@
 data "azurerm_user_assigned_identity" "infra_dev_ci" {
-  name                = "${local.project}-github-ci-identity"
-  resource_group_name = "${local.project}-identity-rg"
+  name                = "${local.project}-common-infra-github-ci-id-01"
+  resource_group_name = "${local.project}-common-identity-rg-01"
 }
 
 data "azurerm_user_assigned_identity" "infra_dev_cd" {
-  name                = "${local.project}-github-cd-identity"
-  resource_group_name = "${local.project}-identity-rg"
+  name                = "${local.project}-common-infra-github-cd-id-01"
+  resource_group_name = "${local.project}-common-identity-rg-01"
 }
