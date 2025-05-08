@@ -8,19 +8,19 @@ terraform {
 }
 
 module "azure_function_app" {
-  source = "../../../azure_function_app_exposed"
+  source = "../../../azure_function_app"
 
   environment         = var.environment
   tier                = "s"
   resource_group_name = var.resource_group_name
   app_service_plan_id = var.app_service_plan_id
 
-  # virtual_network = {
-  #   name                = var.virtual_network.name
-  #   resource_group_name = var.virtual_network.resource_group_name
-  # }
-  # subnet_pep_id = var.subnet_pep_id
-  # subnet_id     = var.subnet_id
+  virtual_network = {
+    name                = var.virtual_network.name
+    resource_group_name = var.virtual_network.resource_group_name
+  }
+  subnet_pep_id = var.subnet_pep_id
+  subnet_id     = var.subnet_id
 
   app_settings      = {}
   slot_app_settings = {}
