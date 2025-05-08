@@ -1,9 +1,9 @@
 ---
-sidebar_label: Testing APIs in Production
+sidebar_label: Test APIs in Production
 sidebar_position: 2
 ---
 
-# Testing APIs in Production
+# Test APIs in Production
 
 APIM provides built-in capabilities for testing in production, offering a
 structured way to manage API changes without disrupting active services.
@@ -15,14 +15,14 @@ API version can have multiple revisions with the following states:
   (e.g. `/api/v1/resource;rev=2`).
 - Offline: Inactive but can be promoted to online or current status
 
-This mechanism allows to:
+This mechanism allows you to:
 
 - Modify policies and configurations safely before publishing changes
 - Conduct tests in production without impacting existing API consumers
 - Align versioning with downstream staging services (e.g. AppService and
   Function App staging slots)
 
-To use revisions, follows these steps:
+To use revisions, follow these steps:
 
 1. Choose an existing API group
 2. Define a new API version
@@ -34,10 +34,10 @@ To use revisions, follows these steps:
 6. Document modifications using changelogs available through APIM
 
 As showed in the next chapter,
-[VS Code can help you in debugging policies](#debugging-apim-policies-via-vs-code)
+[VS Code can help you in debugging policies](#debug-apim-policies-via-vs-code)
 via its built-in debugger.
 
-## Debugging APIM Policies via VS Code
+## Debug APIM Policies via VS Code
 
 Visual Studio Code can connect to an online APIM instance, and provide debugging
 capabilities to developers. For example, it is possible to debug a policy by
