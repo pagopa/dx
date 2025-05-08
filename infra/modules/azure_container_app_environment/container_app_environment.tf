@@ -27,7 +27,7 @@ resource "azurerm_container_app_environment" "this" {
     create = "60m"
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_management_lock" "cae_lock" {

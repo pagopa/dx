@@ -25,5 +25,5 @@ resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
     threshold        = each.value.threshold
   }
 
-  tags = var.tags
+  tags = local.tags
 }

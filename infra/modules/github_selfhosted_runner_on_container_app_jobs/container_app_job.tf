@@ -80,5 +80,5 @@ resource "azurerm_container_app_job" "github_runner" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

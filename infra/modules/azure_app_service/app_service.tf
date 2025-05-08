@@ -68,5 +68,5 @@ resource "azurerm_linux_web_app" "this" {
     ]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

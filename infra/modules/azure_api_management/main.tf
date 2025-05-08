@@ -67,7 +67,7 @@ resource "azurerm_api_management" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #--------#

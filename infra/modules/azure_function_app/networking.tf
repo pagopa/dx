@@ -18,7 +18,7 @@ resource "azurerm_private_endpoint" "st_blob" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_blob.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "st_file" {
@@ -39,7 +39,7 @@ resource "azurerm_private_endpoint" "st_file" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "st_queue" {
@@ -60,7 +60,7 @@ resource "azurerm_private_endpoint" "st_queue" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_queue.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # Durable Function Storage
@@ -85,7 +85,7 @@ resource "azurerm_private_endpoint" "std_blob" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_blob.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "std_file" {
@@ -108,7 +108,7 @@ resource "azurerm_private_endpoint" "std_file" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "std_queue" {
@@ -131,7 +131,7 @@ resource "azurerm_private_endpoint" "std_queue" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_queue.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "std_table" {
@@ -154,7 +154,7 @@ resource "azurerm_private_endpoint" "std_table" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_table[0].id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # Function App
@@ -176,7 +176,7 @@ resource "azurerm_private_endpoint" "function_sites" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_endpoint" "staging_function_sites" {
@@ -199,5 +199,5 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

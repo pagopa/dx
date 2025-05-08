@@ -51,5 +51,5 @@ resource "azurerm_monitor_metric_alert" "cosmos_db_provisioned_throughput_exceed
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }

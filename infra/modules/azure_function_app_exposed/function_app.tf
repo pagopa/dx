@@ -93,5 +93,5 @@ resource "azurerm_linux_function_app" "this" {
     ]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
