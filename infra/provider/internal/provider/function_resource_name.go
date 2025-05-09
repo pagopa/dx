@@ -89,7 +89,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"eventhub_private_endpoint":        "evhns-pep",
 		"container_app_private_endpoint":   "cae-pep",
 		"key_vault_private_endpoint":       "kv-pep",
-    "servicebus_private_endpoint":      "sbns-pep",
+		"servicebus_private_endpoint":      "sbns-pep",
 
 		// Public IPs
 		"public_ip": "pip",
@@ -111,7 +111,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 
 		// Integration
 		"eventhub_namespace":   "evhns",
-    "servicebus_namespace": "sbns",
+		"servicebus_namespace": "sbns",
 		"function_app":         "func",
 		"app_service":          "app",
 		"app_service_plan":     "asp",
