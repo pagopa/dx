@@ -147,3 +147,9 @@ variable "alerts" {
     error_message = "When alerts are enabled, all thresholds must be set."
   }
 }
+
+variable "authorized_principal_ids" {
+  type        = list(string)
+  description = "A list of principal IDs (users, groups, or managed identities) to be granted specific permissions on the Cosmos DB account."
+  default     = []
+}

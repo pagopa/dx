@@ -44,6 +44,10 @@ module "cosmos_db" {
     key_vault_key_id          = "https://${local.environment.prefix}-${local.environment.env_short}-kv.vault.azure.net/keys/my-kv-key"
   }
 
+  authorized_principal_ids = [
+    azurerm_user_assigned_identity.example.principal_id
+  ]
+
   force_public_network_access_enabled = false
 
   consistency_policy = {
