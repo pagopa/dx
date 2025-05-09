@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Deploying Assets to CDN
+sidebar_position: 50
 ---
 
-# CDN Code Deploy
+# Deploying Assets to a CDN
 
 The
 [CDN Code Deploy action](https://github.com/pagopa/dx/tree/main/.github/actions/cdn-code-deploy)

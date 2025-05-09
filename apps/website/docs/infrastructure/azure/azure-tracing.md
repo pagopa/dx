@@ -1,8 +1,4 @@
----
-sidebar_label: Integrate Tracing in Azure NodeJS Applications
----
-
-# Integrate Tracing in Azure NodeJS Applications
+# Integrating Tracing in Azure NodeJS Applications
 
 This guide covers the integration of Azure services with OpenTelemetry (OT) for
 tracing NodeJS applications, along with benchmarking and performance insights.

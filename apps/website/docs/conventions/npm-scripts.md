@@ -1,6 +1,5 @@
 ---
 sidebar_position: 3
-sidebar_label: Naming Convention for npm Scripts
 ---
 
 # Naming Convention for npm Scripts

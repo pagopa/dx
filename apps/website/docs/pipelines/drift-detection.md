@@ -1,6 +1,5 @@
 ---
-sidebar_position: 1
-sidebar_label: Detecting Drift in Infrastructure as Code
+sidebar_position: 50
 ---
 
 # Detecting Drift in Infrastructure as Code

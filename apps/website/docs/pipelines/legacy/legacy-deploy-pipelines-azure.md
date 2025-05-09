@@ -1,8 +1,8 @@
 ---
-sidebar_position: 1
+sidebar_position: 50
 ---
 
-# Deploying an Azure Web App (legacy)
+# Deploying a legacy Node.js Application to Azure (deprecated)
 
 The
 [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml)

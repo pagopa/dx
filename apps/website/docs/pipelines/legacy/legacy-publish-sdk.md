@@ -1,8 +1,8 @@
 ---
-sidebar_position: 1
+sidebar_position: 51
 ---
 
-# Publishing an SDK to npm (legacy)
+# Publishing an SDK to npm (deprecated)
 
 The
 [Publish SDK - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_publish_sdk.yaml)

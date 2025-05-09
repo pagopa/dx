@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Code Review
+sidebar_position: 50
 ---
 
-# Code Review
+# Using the Code Review Workflow
 
 The
 [Code Review workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/js_code_review.yaml)
