@@ -9,7 +9,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.111.0, < 5.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | > 0.1.0 |
 
 ## Modules
 
@@ -37,5 +37,9 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Service Bus namespace. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the Service Bus namespace. |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the Azure Resource Group where the Service Bus namespace is deployed. |
 <!-- END_TF_DOCS -->
