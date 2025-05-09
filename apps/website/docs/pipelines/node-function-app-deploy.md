@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Deploy a Node.js Application to Azure Function App
+sidebar_position: 50
 ---
 
-# Deploy a Node.js Application to Azure Function App
+# Deploying a Node.js Application to an Azure Function App (legacy)
 
 The
 [Node.js FunctionApp Deployment](https://github.com/pagopa/dx/blob/main/.github/workflows/function_app_deploy.yaml)

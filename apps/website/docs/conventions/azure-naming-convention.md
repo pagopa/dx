@@ -1,6 +1,5 @@
 ---
 sidebar_position: 1
-sidebar_label: Azure Naming Convention
 ---
 
 # Azure Naming Convention

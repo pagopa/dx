@@ -1,7 +1,3 @@
----
-sidebar_label: Using Secrets in AppService Environment Variables
----
-
 # Using Secrets in AppService Environment Variables
 
 ## Overview

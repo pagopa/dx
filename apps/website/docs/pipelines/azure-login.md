@@ -1,6 +1,5 @@
 ---
-sidebar_position: 1
-sidebar_label: Configuring Azure Login for GitHub Actions
+sidebar_position: 50
 ---
 
 # Configuring Azure Login for GitHub Actions

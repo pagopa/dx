@@ -1,7 +1,3 @@
----
-sidebar_label: Verifying Online Service Reachability from an App Service Plan
----
-
 # Verifying Online Service Reachability from an App Service Plan
 
 When updating connection configurations for an App Service or Function App in

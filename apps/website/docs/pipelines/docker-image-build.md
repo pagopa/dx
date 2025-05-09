@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Build Docker Images
+sidebar_position: 50
 ---
 
-# Build Docker Images
+# Building Docker Images
 
 The
 [Docker Image Build](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)

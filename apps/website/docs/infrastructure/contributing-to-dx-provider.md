@@ -1,9 +1,8 @@
 ---
-sidebar_label: Contributing to DX Azure Provider
 sidebar_position: 4
 ---
 
-# Contributing to DX Azure Provider
+# Contributing to the DX Azure Provider
 
 We appreciate your interest in contributing to the DX Azure provider! This
 document provides guidelines for contributing to the provider, including
@@ -18,8 +17,8 @@ Registry using GitHub Actions workflows.
 
 ### Subrepository Push Workflow
 
-The `_release-bash-provider-to-subrepo.yaml` workflow ensures that changes to the
-provider in the `infra/provider` directory of the main repository (`dx`) are
+The `_release-bash-provider-to-subrepo.yaml` workflow ensures that changes to
+the provider in the `infra/provider` directory of the main repository (`dx`) are
 pushed to its dedicated subrepository (e.g.,
 [terraform-provider-azure](https://github.com/pagopa-dx/terraform-provider-azure)).
 This workflow is triggered on changes to the `main` branch.

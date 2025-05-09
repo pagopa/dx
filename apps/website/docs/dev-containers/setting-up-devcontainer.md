@@ -1,8 +1,4 @@
----
-sidebar_label: Set up Development Containers
----
-
-# Set up Development Containers
+# Setting up Development Containers
 
 ## What are Development Containers?
 

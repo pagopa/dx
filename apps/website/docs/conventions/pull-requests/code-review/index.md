@@ -63,9 +63,9 @@ They must also ensure that technical debt is kept under control, carefully
 evaluating when it makes sense to create follow-up tasks to address any
 documented debt introduced by the PR.
 
-# Best Practices
+## Best Practices
 
-## Everyone
+### Everyone
 
 - Be kind
 - Accept that many programming decisions are opinions; discuss tradeoffs and
@@ -83,7 +83,7 @@ documented debt introduced by the PR.
   mentioning them; this ensures they see it if their notification level is set
   to “mentioned” and other people understand they don’t have to respond
 
-## PR Author
+### PR Author
 
 Keep in mind that code review is a process that can take multiple iterations,
 and reviewers may spot things later that they may not have seen the first time.
@@ -91,8 +91,7 @@ and reviewers may spot things later that they may not have seen the first time.
 - The first reviewer of your code is you. Before requesting the review, read
   through the entire `diff`. Does it make sense? Did you include something
   unrelated to the overall purpose of the changes?
-- Follow the
-  [guidelines to compile PR's title and description](../format.md#format-for-pull-requests)
+- Follow the [guidelines to compile PR's title and description](../format.md)
 - Don’t take it personally: the review is of the code, not of you
 - Extract unrelated changes and refactorings into future PRs
 - Seek to understand the reviewer’s perspective
@@ -108,7 +107,7 @@ and reviewers may spot things later that they may not have seen the first time.
 - If you make a change after a reviewer has approved it, you can ask them to
   review the PR again
 
-## PR Reviewer
+### PR Reviewer
 
 - Be as clear as possible to minimize unnecessary review iterations
 - Communicate which ideas you feel strongly about and those you don’t; you may

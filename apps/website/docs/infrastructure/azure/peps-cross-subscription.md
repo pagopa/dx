@@ -1,8 +1,3 @@
----
-sidebar_label:
-  Connecting Resources Across Azure Subscription via Private Endpoints
----
-
 # Connecting resources across Azure Subscription via Private Endpoints
 
 ## Overview

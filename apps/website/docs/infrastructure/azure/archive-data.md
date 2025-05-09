@@ -1,7 +1,3 @@
----
-sidebar_label: Archiving Data for Decommissioned Projects
----
-
 # Archiving Data for Decommissioned Projects
 
 ## Best practices for data archiving
