@@ -6185,6 +6185,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace":
+  version: 0.0.0-use.local
+  resolution: "azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace"
+  languageName: unknown
+  linkType: soft
+
 "azure_storage_account@workspace:infra/modules/azure_storage_account":
   version: 0.0.0-use.local
   resolution: "azure_storage_account@workspace:infra/modules/azure_storage_account"
