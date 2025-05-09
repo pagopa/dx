@@ -27,11 +27,11 @@ on:
         type: boolean
         required: false
         default: true
-      fail_on_auto_approval_failure:
-        description: Auto-Approval job quits with non-zero code when auto approval fails. In any case, manual approval remains available
+      force_approval_exit_code:
+        description: If you do not have an approval step for deployments in the chosen environment, set this option to true to force a successful exit code for staging deployment auto-approval job. It is useful to set a green mark in the GitHub Action tab to indicate apparent completion
         type: boolean
         required: false
-        default: true
+        default: false
       GH_TOKEN_DEPLOYMENT_APPROVAL:
         description: A fine-grained token with access to your repository deployments. Mandatory if deployment to staging slot is enabled
         type: string
@@ -128,6 +128,7 @@ jobs:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
 
+  # Automatically approve deployment to staging slot
   approve_staging:
     name: Auto-Approve Staging Slot deployment
     runs-on: ubuntu-latest
@@ -148,12 +149,12 @@ jobs:
             jq --arg GH_ENV "$REQUIRED_ENVIRONMENT" '.[] | select(.environment.name == $GH_ENV)')
 
           if [ -z "$is_environment_matching" ]; then
-            if [ "${{ inputs.fail_on_auto_approval_failure }}" ]; then
+            if [ "${{ inputs.force_approval_exit_code }}" ]; then
+              exit 0
+            else
               echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
               echo "::warning::Check if the deployment was already approved by one of the reviewers."
               exit 1
-            else
-              exit 0
             fi
           fi
 
@@ -161,12 +162,12 @@ jobs:
             jq '.[] | select(.current_user_can_approve == true)')
 
           if [ -z "$can_user_approve" ]; then
-            if [ "${{ inputs.fail_on_auto_approval_failure }}" ]; then
+            if [ "${{ inputs.force_approval_exit_code }}" ]; then
+              exit 0
+            else
               echo "::error::${{ github.actor }} is not a reviewer"
               echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
               exit 1
-            else
-              exit 0
             fi
           fi
 
