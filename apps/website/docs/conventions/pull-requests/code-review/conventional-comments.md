@@ -49,8 +49,8 @@ To see the full list of available labels, take a look at the
 
 ## Best Practices
 
-In addition to the [Code Review Best Practices](index.md#best-practices),
-consider the following best practices when using conventional comments:
+In addition to the [Code Review Best Practices](./index.md#best-practices) and
+the, consider the following best practices when using conventional comments:
 
 - leave actionable comments: make sure the author knows what to do next
 - use "could" instead of "should" (e.g. “You could consider using a map instead

@@ -76,6 +76,6 @@ jobs:
 Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and
 `ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication. For
 detailed instructions, refer to:
-[Configuring Azure Login for GitHub Actions](./azure-login.md).
+[Configuring Azure Login for GitHub Actions](../azure-login.md).
 
 :::
