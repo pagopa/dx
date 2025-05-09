@@ -30,11 +30,6 @@ variable "terraform_bucket_name" {
   description = "The name of the Storage Bucket hosting the Terraform state file."
 }
 
-variable "account_id" {
-  type        = string
-  description = "The AWS account ID where resources will be created."
-}
-
 variable "repository" {
   type = object({
     owner                    = optional(string, "pagopa")
@@ -52,7 +47,7 @@ variable "repository" {
     create_environments      = optional(bool, true)
   })
 
-  description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project. Set the create_environments option to false if you don't want to create the environments."
+  description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project. Set the create_environments option to false if you're configuring a multi cloud repository."
 }
 
 # variable "github_private_runner" {
