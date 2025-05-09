@@ -149,7 +149,13 @@ variable "alerts" {
 }
 
 variable "authorized_principal_ids" {
-  type        = list(string)
-  description = "A list of principal IDs (users, groups, or managed identities) to be granted specific permissions on the Cosmos DB account."
-  default     = []
+  type = object({
+    writers = optional(list(string), []),
+    readers = optional(list(string), [])
+  })
+  description = "Object containing lists of principal IDs (users, groups, or managed identities) to be granted read or write permissions on the Cosmos DB account."
+  default = {
+    writers = []
+    readers = []
+  }
 }
