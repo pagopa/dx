@@ -1,4 +1,6 @@
 resource "azurerm_private_endpoint" "service_bus_pep" {
+  count = local.sku_name == "Premium" ? 1 : 0
+
   name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "servicebus_private_endpoint" }))
   location            = var.environment.location
   resource_group_name = var.resource_group_name

@@ -1,11 +1,8 @@
 resource "azurerm_servicebus_namespace" "this" {
-  name                = local.namespace.name
+  name                = local.name
   location            = var.environment.location
   resource_group_name = var.resource_group_name
-  sku                 = local.namespace.sku_name
-
-  capacity                     = var.capacity
-  premium_messaging_partitions = 1
+  sku                 = local.sku_name
 
   local_auth_enabled = false
 
