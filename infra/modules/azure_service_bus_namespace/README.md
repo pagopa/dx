@@ -45,6 +45,8 @@ module "service_bus_01" {
 }
 ```
 
+- A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-services-bus-namespace/tree/main/examples/complete) demonstrating all features.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
