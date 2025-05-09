@@ -10,27 +10,27 @@
   },
   "github.copilot.chat.codeGeneration.instructions": [
     {
-      "file": ".github/copilot/code-instructions.md"
+      "file": ".github/instructions/code.instructions.md"
     }
   ],
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "file": ".github/copilot/commit-instructions.md"
+      "file": ".github/instructions/commit-message.instructions.md"
     }
   ],
   "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
     {
-      "file": ".github/copilot/pull-request-instructions.md"
+      "file": ".github/instructions/pull-request-description.instructions.md"
     }
   ],
   "github.copilot.chat.reviewSelection.instructions": [
     {
-      "file": ".github/review-instructions.md"
+      "file": ".github/instructions/review.instructions.md"
     }
   ],
   "github.copilot.chat.testGeneration.instructions": [
     {
-      "file": ".github/copilot/test-instructions.md"
+      "file": ".github/instructions/test.instructions.md"
     }
   ],
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
