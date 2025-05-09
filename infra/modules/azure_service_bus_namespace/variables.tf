@@ -28,28 +28,28 @@ variable "resource_group_name" {
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
+  description = "The name of the resource group containing the private DNS zone for private endpoints."
   default     = null
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet designated for private endpoints."
+  description = "The ID of the subnet designated for private endpoints. Mandatory if \"sku_name\" is \"Premium\"."
+  default     = null
+
+  validation {
+    condition     = var.sku_name == "Premium" ? length(var.subnet_pep_id) > 0 : true
+    error_message = "The \"subnet_pep_id\" variable is mandatory if \"sku_name\" is \"Premium\"."
+  }
 }
 
 variable "tier" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
+  description = "Resource tiers depending on demanding workload and security considerations. Allowed values are 'm', 'l'."
   default     = "l"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
+    condition     = contains(["m", "l"], var.tier)
+    error_message = "Allowed values for \"tier\" are \"m\", or \"l\"."
   }
-}
-
-variable "capacity" {
-  type        = number
-  description = "value"
-  default     = 1
 }
