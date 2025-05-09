@@ -63,40 +63,31 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
-
-module "azure_app_service" {
-  source = "../../../azure_app_service"
-
-  environment         = var.environment
-  tier                = "s"
-  resource_group_name = data.azurerm_resource_group.rg.name
-
-  virtual_network = {
-    name                = local.virtual_network.name
-    resource_group_name = local.virtual_network.resource_group_name
-  }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_id     = data.azurerm_subnet.snet.id
-
-  app_settings      = {}
-  slot_app_settings = {}
-
-  health_check_path = "/health"
-
-  tags = var.tags
-}
-
-output "app_service_plan_id" {
-  value = module.azure_app_service.app_service.plan.id
-}
-
-output "app_service" {
-  value = {
-    name = module.azure_app_service.app_service.app_service.name
-    id   = module.azure_app_service.app_service.app_service.id
-  }
-}
+# Outputs
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
+}
+
+output "pep_id" {
+  value = data.azurerm_subnet.pep.id
+}
+
+output "snet_id" {
+  value = data.azurerm_subnet.snet.id
+}
+
+output "virtual_network" {
+  value = {
+    name                = local.virtual_network.name
+    resource_group_name = local.virtual_network.resource_group_name
+  }
+}
+
+output "environment" {
+  value = var.environment
+}
+
+output "tags" {
+  value = var.tags
 }

@@ -10,9 +10,7 @@
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_azure_app_service"></a> [azure\_app\_service](#module\_azure\_app\_service) | ../../../azure_app_service | n/a |
+No modules.
 
 ## Resources
 
@@ -33,7 +31,10 @@
 
 | Name | Description |
 |------|-------------|
-| <a name="output_app_service"></a> [app\_service](#output\_app\_service) | n/a |
-| <a name="output_app_service_plan_id"></a> [app\_service\_plan\_id](#output\_app\_service\_plan\_id) | n/a |
+| <a name="output_environment"></a> [environment](#output\_environment) | n/a |
+| <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_snet_id"></a> [snet\_id](#output\_snet\_id) | n/a |
+| <a name="output_tags"></a> [tags](#output\_tags) | n/a |
+| <a name="output_virtual_network"></a> [virtual\_network](#output\_virtual\_network) | n/a |
 <!-- END_TF_DOCS -->
