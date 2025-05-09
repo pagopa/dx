@@ -43,4 +43,12 @@ locals {
   } : local.consistency_presets[local.selected_preset]
 
   private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
+
+  # "Cosmos DB Built-in Data Reader/Cotributor" IDs
+  cosmos_db_data_reader_role_id      = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000001"
+  cosmos_db_data_contributor_role_id = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+
+  # Convert the list of authorized principal IDs into a map with static keys
+  reader_principal_ids_map = { for i, pid in var.authorized_principal_ids.readers : i => pid }
+  writer_principal_ids_map = { for i, pid in var.authorized_principal_ids.writers : i => pid }
 }

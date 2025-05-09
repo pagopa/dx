@@ -147,3 +147,15 @@ variable "alerts" {
     error_message = "When alerts are enabled, all thresholds must be set."
   }
 }
+
+variable "authorized_principal_ids" {
+  type = object({
+    writers = optional(list(string), []),
+    readers = optional(list(string), [])
+  })
+  description = "Object containing lists of principal IDs (users, groups, or managed identities) to be granted read or write permissions on the Cosmos DB account."
+  default = {
+    writers = []
+    readers = []
+  }
+}
