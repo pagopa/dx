@@ -8,7 +8,7 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  name = provider::dx::resource_name(merge(local.naming_config, { reosurce_type = "servicebus_namespace" }))
+  name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "servicebus_namespace" }))
 
   sku_name = lookup(
     {
@@ -18,6 +18,10 @@ locals {
     var.tier,
     "Premium"
   )
+
+  capacity       = local.sku_name == "Premium" ? 1 : 0
+  partitions     = local.sku_name == "Premium" ? 1 : 0
+  default_action = local.sku_name == "Premium" ? "Allow" : "Deny" # Using "Deny" for Premium SKU breaks the provider validation
 
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
 
