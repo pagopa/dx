@@ -25,13 +25,12 @@ This mechanism allows you to:
 To use revisions, follow these steps:
 
 1. Choose an existing API group
-2. Define a new API version
-3. Create revisions for incremental modifications (e.g. `rev 2`) and policy
+2. Create revisions for incremental modifications (e.g. `rev 2`) and policy
    updates, and set as `Online`
-4. Test the revision by invoking the API under test and specifying its revision
+3. Test the revision by invoking the API under test and specifying its revision
    name in the URL (e.g. `/api/v1/resource;rev=2`)
-5. Finalize changes and promote a revision to current when ready
-6. Document modifications using changelogs available through APIM
+4. Finalize changes and promote a revision to current when ready
+5. Document modifications using changelogs available through APIM
 
 As showed in the next chapter,
 [VS Code can help you in debugging policies](#debug-apim-policies-via-vs-code)
