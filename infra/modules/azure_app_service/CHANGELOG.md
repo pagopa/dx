@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 0.2.1
+
+### Patch Changes
+
+- beac2dc: Revert "TLS 1.3 Upgrade for Azure App Services modules"
+
 ## 0.2.0
 
 ### Minor Changes

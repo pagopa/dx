@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 0.1.1
+
+### Patch Changes
+
+- beac2dc: Revert "TLS 1.3 Upgrade for Azure App Services modules"
+
 ## 0.1.0
 
 ### Minor Changes
