@@ -15,21 +15,6 @@ variable "environment" {
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
-variable "entraid_groups" {
-  type = object({
-    admins_object_id    = string
-    devs_object_id      = string
-    externals_object_id = optional(string, null)
-  })
-
-  description = "The Azure Entra ID groups to give role to."
-}
-
-variable "terraform_bucket_name" {
-  type = string
-  description = "The name of the Storage Bucket hosting the Terraform state file."
-}
-
 variable "repository" {
   type = object({
     owner                    = optional(string, "pagopa")
@@ -49,9 +34,3 @@ variable "repository" {
 
   description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project. Set the create_environments option to false if you're configuring a multi cloud repository."
 }
-
-# variable "github_private_runner" {
-#   type = object({})
-
-#   description = "Configuration for GitHub private runners, including environment details."
-# }
