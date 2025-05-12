@@ -25,7 +25,6 @@ resource "azurerm_linux_function_app_slot" "this" {
     health_check_eviction_time_in_min      = 2
     ip_restriction_default_action          = "Deny"
     application_insights_key               = var.application_insights_key
-    minimum_tls_version                    = 1.3
 
     application_stack {
       node_version = var.stack == "node" ? var.node_version : null
