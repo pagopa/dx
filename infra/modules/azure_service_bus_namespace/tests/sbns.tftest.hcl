@@ -113,6 +113,11 @@ run "sbns_premium_is_correct_plan" {
     condition     = azurerm_servicebus_namespace.this.network_rule_set[0].ip_rules == null
     error_message = "Service Bus Namespace IP rules should be empty"
   }
+
+  assert {
+    condition = azurerm_monitor_autoscale_setting.this[0] != null
+    error_message = "Autoscaler should be created"
+  }
 }
 
 run "sbns_standard_is_correct_plan" {

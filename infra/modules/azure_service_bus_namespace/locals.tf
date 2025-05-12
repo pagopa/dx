@@ -8,7 +8,8 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "servicebus_namespace" }))
+  name            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "servicebus_namespace" }))
+  autoscaler_name = replace(local.name, "sbns", "sbns-as")
 
   sku_name = lookup(
     {
