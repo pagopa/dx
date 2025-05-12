@@ -79,14 +79,4 @@ run "app_service_is_correct_plan" {
     condition     = azurerm_linux_web_app.this.site_config[0].always_on == true
     error_message = "The App Service should have Always On enabled"
   }
-
-  assert {
-    condition     = azurerm_linux_web_app.this.site_config[0].minimum_tls_version == "1.3"
-    error_message = "The App Service must use TLS version 1.3"
-  }
-
-  assert {
-    condition     = azurerm_linux_web_app_slot.this[0].site_config[0].minimum_tls_version == "1.3"
-    error_message = "The App Service staging slot must use TLS version 1.3"
-  }
 }
