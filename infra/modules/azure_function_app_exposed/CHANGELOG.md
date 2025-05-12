@@ -1,5 +1,11 @@
 # azure_function_app_exposed
 
+## 0.2.1
+
+### Patch Changes
+
+- 8e6bfa6: Revert "TLS 1.3 Upgrade for Azure Function Apps modules"
+
 ## 0.2.0
 
 ### Minor Changes
