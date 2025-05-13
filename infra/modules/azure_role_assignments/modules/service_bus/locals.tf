@@ -14,6 +14,21 @@ locals {
     ]) : "${"/subscriptions/${var.subscription_id}/resourceGroups/${assignment.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${assignment.namespace_name}"}|${assignment.queue_name}|${assignment.role}" => assignment
   }
 
+  topic_assignments = {
+    for assignment in flatten([
+      for entry in var.service_bus : [
+        for topic_name in entry.topic_names : {
+          namespace_name      = entry.namespace_name
+          resource_group_name = entry.resource_group_name
+          role                = entry.role
+          topic_name          = topic_name
+          topic_id            = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${entry.namespace_name}/topics/${topic_name}"
+          description         = entry.description
+        }
+      ]
+    ]) : "${"/subscriptions/${var.subscription_id}/resourceGroups/${assignment.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${assignment.namespace_name}"}|${assignment.topic_name}|${assignment.role}" => assignment
+  }
+
   subscription_assignments = {
     for assignment in flatten([
       for entry in var.service_bus : [

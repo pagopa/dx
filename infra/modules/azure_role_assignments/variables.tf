@@ -130,11 +130,21 @@ variable "apim" {
 }
 
 variable "service_bus" {
-  description = "A list of role assignments for Azure Service Bus, specifying the namespace, resource group, role, and queue names or subscriptions with their topics."
+  description = <<EOT
+  A list of role assignments for Azure Service Bus, specifying the namespace, resource group, and role.
+  For queues and topics, list the names. For subscriptions, pair the related topic and the subscription in a map object.
+
+  Example for `subscriptions` map object:
+  {
+    topic1 = "subscription1",
+    topic2 = "subscription2"
+  }
+  EOT
   type = list(object({
     namespace_name      = string
     resource_group_name = string
     queue_names         = optional(list(string), [])
+    topic_names         = optional(list(string), [])
     subscriptions       = optional(map(string), {})
     role                = string
     description         = string

@@ -14,7 +14,8 @@ variable "service_bus" {
     namespace_name      = string
     resource_group_name = string
     queue_names         = optional(list(string), [])
-    subscriptions       = optional(map(string), {})
+    topic_names         = optional(list(string), [])
+    subscriptions       = optional(map(string), {}) # Terraform processes map literals with duplicate keys by taking the last defined instance.
     role                = string
     description         = string
   }))
@@ -57,19 +58,27 @@ variable "service_bus" {
     condition = length([
       for assignment in flatten([
         for entry in var.service_bus : [
-          for topic_name, subscription_name in entry.subscriptions :
-          "${entry.namespace_name}:${entry.resource_group_name}:${entry.role}:${topic_name}:${subscription_name}"
+          for topic_name in entry.topic_names : {
+            namespace_name      = entry.namespace_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            topic_name          = topic_name
+          }
         ]
       ]) : assignment
       ]) == length(distinct([
         for assignment in flatten([
           for entry in var.service_bus : [
-            for topic_name, subscription_name in entry.subscriptions :
-            "${entry.namespace_name}:${entry.resource_group_name}:${entry.role}:${topic_name}:${subscription_name}"
+            for topic_name in entry.topic_names : {
+              namespace_name      = entry.namespace_name
+              resource_group_name = entry.resource_group_name
+              role                = entry.role
+              topic_name          = topic_name
+            }
           ]
         ]) : assignment
     ]))
-    error_message = "Each subscription assignment must be unique."
+    error_message = "Each topic assignment must be unique."
   }
 
   default = []

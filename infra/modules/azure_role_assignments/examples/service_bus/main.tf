@@ -30,8 +30,9 @@ module "roles" {
       role                = "reader"
       description         = "This is a reader"
       queue_names         = ["test-queue"]
+      topic_names         = ["test-topic2"]
       subscriptions = {
-        test-topic = "test-sub"
+        test-topic = "test-sub",
       }
     }
   ]
