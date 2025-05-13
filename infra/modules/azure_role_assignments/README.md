@@ -8,6 +8,7 @@ This module abstracts the complexity of Azure IAM roles by providing a streamlin
 
 - **Resource-Specific Role Assignments**: Supports role assignments for CosmosDB, Event Hubs, Key Vaults, Redis, Storage Accounts, and APIM.
 - **Customizable Roles**: Allows fine-grained control over roles and permissions for each resource type.
+- **Abstracted Roles**: Simplifies role assignment by providing standardized roles ("owner", "writer", "reader") for all supported services.
 - **Multi-Resource Support**: Handles multiple resources and role assignments in a single configuration.
 - **RBAC Integration**: Simplifies the integration with Azure Role-Based Access Control (RBAC).
 - **Scalability**: Designed to handle complex role assignment scenarios across multiple Azure services.
