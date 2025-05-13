@@ -1,6 +1,6 @@
 {
   "name": "azure_service_bus_namespace",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "provider": "azurerm",
   "description": "Provisions an Azure Service Bus Namespace with a given configuration"
