@@ -32,15 +32,17 @@ locals {
   subscription_assignments = {
     for assignment in flatten([
       for entry in var.service_bus : [
-        for topic_name, subscription_name in entry.subscriptions : {
-          namespace_name      = entry.namespace_name
-          resource_group_name = entry.resource_group_name
-          role                = entry.role
-          topic_name          = topic_name
-          subscription_name   = subscription_name
-          subscription_id     = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${entry.namespace_name}/topics/${topic_name}/subscriptions/${subscription_name}"
-          description         = entry.description
-        }
+        for topic_name, subscription_names in entry.subscriptions : [
+          for subscription_name in subscription_names : {
+            namespace_name      = entry.namespace_name
+            resource_group_name = entry.resource_group_name
+            role                = entry.role
+            topic_name          = topic_name
+            subscription_name   = subscription_name
+            subscription_id     = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${entry.namespace_name}/topics/${topic_name}/subscriptions/${subscription_name}"
+            description         = entry.description
+          }
+        ]
       ]
     ]) : "${"/subscriptions/${var.subscription_id}/resourceGroups/${assignment.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/${assignment.namespace_name}"}|${assignment.topic_name}|${assignment.subscription_name}|${assignment.role}" => assignment
   }

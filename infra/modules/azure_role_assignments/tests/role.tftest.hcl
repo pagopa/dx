@@ -153,7 +153,7 @@ run "service_bus_role_assignments" {
         role                = "reader"
         description         = "This is a reader"
         subscriptions = {
-          topic1 = "subscription1"
+          topic1 = ["subscription1"]
         }
       },
       {
@@ -162,7 +162,7 @@ run "service_bus_role_assignments" {
         role                = "writer"
         description         = "This is a writer"
         subscriptions = {
-          topic2 = "subscription2"
+          topic2 = ["subscription2"]
         }
       },
       {
@@ -171,7 +171,7 @@ run "service_bus_role_assignments" {
         role                = "owner"
         description         = "This is an owner"
         subscriptions = {
-          topic3 = "subscription3"
+          topic3 = ["subscription3"]
         }
       },
     ]

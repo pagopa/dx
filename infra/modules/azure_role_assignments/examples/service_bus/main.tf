@@ -51,6 +51,12 @@ resource "azurerm_servicebus_subscription" "example" {
   max_delivery_count = 1
 }
 
+resource "azurerm_servicebus_subscription" "example2" {
+  name               = "example-sub2"
+  topic_id           = azurerm_servicebus_topic.example2.id
+  max_delivery_count = 1
+}
+
 module "roles" {
   source          = "../../"
   principal_id    = module.app_service_exposed.app_service.app_service.principal_id
@@ -65,7 +71,7 @@ module "roles" {
       queue_names         = [azurerm_servicebus_queue.example.name]
       topic_names         = [azurerm_servicebus_topic.example.name]
       subscriptions = {
-        example-topic2 = azurerm_servicebus_subscription.example.name,
+        example-topic2 = [azurerm_servicebus_subscription.example.name, azurerm_servicebus_subscription.example2.name],
       }
     }
   ]

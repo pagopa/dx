@@ -145,7 +145,7 @@ variable "service_bus" {
     resource_group_name = string
     queue_names         = optional(list(string), [])
     topic_names         = optional(list(string), [])
-    subscriptions       = optional(map(string), {})
+    subscriptions       = optional(map(list(string)), {})
     role                = string
     description         = string
   }))

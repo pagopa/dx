@@ -15,7 +15,7 @@ variable "service_bus" {
     resource_group_name = string
     queue_names         = optional(list(string), [])
     topic_names         = optional(list(string), [])
-    subscriptions       = optional(map(string), {}) # Terraform processes map literals with duplicate keys by taking the last defined instance.
+    subscriptions       = optional(map(list(string)), {}) # Terraform processes map literals with duplicate keys by taking the last defined instance.
     role                = string
     description         = string
   }))
