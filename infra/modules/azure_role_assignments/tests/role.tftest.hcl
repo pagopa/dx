@@ -61,19 +61,7 @@ run "apim_role_assignments" {
 
     apim = [
       {
-        name                = "dx-d-itn-playground-pg-apim-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
-        role                = "owner"
-        description         = "This is an owner"
-      },
-      {
-        name                = "dx-d-itn-playground-pg-apim-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
-        role                = "writer"
-        description         = "This is a writer"
-      },
-      {
-        name                = "dx-d-itn-playground-pg-apim-01"
+        namespace_name      = "dx-d-itn-playground-sb-01"
         resource_group_name = "dx-d-itn-test-rg-01"
         role                = "reader"
         description         = "This is a reader"
