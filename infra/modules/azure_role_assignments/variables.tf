@@ -128,3 +128,17 @@ variable "apim" {
 
   default = []
 }
+
+variable "service_bus" {
+  description = "A list of role assignments for Azure Service Bus, specifying the namespace, resource group, role, and queue names or subscriptions with their topics."
+  type = list(object({
+    namespace_name      = string
+    resource_group_name = string
+    queue_names         = optional(list(string), [])
+    subscriptions       = optional(map(string), {})
+    role                = string
+    description         = string
+  }))
+
+  default = []
+}
