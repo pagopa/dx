@@ -17,7 +17,7 @@ This Terraform module deploys an Azure Service Bus namespace. It supports `Stand
 | m    | Low-load production environments and basic features usage    | Despite a firewall, it is publicly available on internet. No VNet integration |
 | l    | High-load production environments and all features available | Access via Private Endpoints only                                             |
 
-**WARNING**: It is strongly encouraged to use `Premium` SKU (default) due to security concerns of `Standard` SKU.
+**WARNING**: It is strongly encouraged to use the `Premium` SKU (default) due to the mentioned security concerns of the `Standard` SKU.
 
 ## Usage Example
 
