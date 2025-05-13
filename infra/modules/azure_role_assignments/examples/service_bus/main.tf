@@ -18,6 +18,18 @@ module "app_service_exposed" {
   tags = local.tags
 }
 
+module "service_bus" {
+  source              = "../../../azure_service_bus_namespace"
+  environment         = local.environment
+  resource_group_name = azurerm_resource_group.example.name
+
+  tier = "m"
+
+  allowed_ips = ["127.0.0.1/31"]
+
+  tags = local.tags
+}
+
 module "roles" {
   source          = "../../"
   principal_id    = module.app_service_exposed.app_service.app_service.principal_id

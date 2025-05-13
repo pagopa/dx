@@ -106,50 +106,50 @@ run "service_bus_role_assignments" {
 
     service_bus = [
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "reader"
         description         = "This is a reader"
         queue_names         = ["queue1"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "writer"
         description         = "This is a writer"
         queue_names         = ["queue2"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "owner"
         description         = "This is an owner"
         queue_names         = ["queue3"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "reader"
         description         = "This is a reader"
         topic_names         = ["topic1"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "writer"
         description         = "This is a writer"
         topic_names         = ["topic2"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "owner"
         description         = "This is an owner"
         topic_names         = ["topic3"]
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "reader"
         description         = "This is a reader"
         subscriptions = {
@@ -157,8 +157,8 @@ run "service_bus_role_assignments" {
         }
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "writer"
         description         = "This is a writer"
         subscriptions = {
@@ -166,8 +166,8 @@ run "service_bus_role_assignments" {
         }
       },
       {
-        namespace_name      = "dx-d-itn-playground-sb-01"
-        resource_group_name = run.setup_tests.resource_group_name
+        namespace_name      = run.setup_tests.sb_namespace.name
+        resource_group_name = run.setup_tests.sb_namespace.resource_group_name
         role                = "owner"
         description         = "This is an owner"
         subscriptions = {
@@ -178,47 +178,47 @@ run "service_bus_role_assignments" {
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.queues["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|queue1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
+    condition     = module.service_bus.azurerm_role_assignment.queues["${run.setup_tests.sb_namespace.id}|queue1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
     error_message = "The role assigned must be Azure Service Bus Data Receiver"
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.queues["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|queue2|writer"].role_definition_name == "Azure Service Bus Data Sender"
+    condition     = module.service_bus.azurerm_role_assignment.queues["${run.setup_tests.sb_namespace.id}|queue2|writer"].role_definition_name == "Azure Service Bus Data Sender"
     error_message = "The role assigned must be Azure Service Bus Data Sender"
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.queues["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|queue3|owner"].role_definition_name == "Azure Service Bus Data Owner"
-    error_message = "The role assigned must be Azure Service Bus Data Owner"
-  }
-
-assert {
-    condition     = module.service_bus.azurerm_role_assignment.topics["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
-    error_message = "The role assigned must be Azure Service Bus Data Receiver"
-  }
-
-  assert {
-    condition     = module.service_bus.azurerm_role_assignment.topics["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic2|writer"].role_definition_name == "Azure Service Bus Data Sender"
-    error_message = "The role assigned must be Azure Service Bus Data Sender"
-  }
-
-  assert {
-    condition     = module.service_bus.azurerm_role_assignment.topics["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic3|owner"].role_definition_name == "Azure Service Bus Data Owner"
+    condition     = module.service_bus.azurerm_role_assignment.queues["${run.setup_tests.sb_namespace.id}|queue3|owner"].role_definition_name == "Azure Service Bus Data Owner"
     error_message = "The role assigned must be Azure Service Bus Data Owner"
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic1|subscription1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
+    condition     = module.service_bus.azurerm_role_assignment.topics["${run.setup_tests.sb_namespace.id}|topic1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
     error_message = "The role assigned must be Azure Service Bus Data Receiver"
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic2|subscription2|writer"].role_definition_name == "Azure Service Bus Data Sender"
+    condition     = module.service_bus.azurerm_role_assignment.topics["${run.setup_tests.sb_namespace.id}|topic2|writer"].role_definition_name == "Azure Service Bus Data Sender"
     error_message = "The role assigned must be Azure Service Bus Data Sender"
   }
 
   assert {
-    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${"/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/${run.setup_tests.resource_group_name}/providers/Microsoft.ServiceBus/namespaces/dx-d-itn-playground-sb-01"}|topic3|subscription3|owner"].role_definition_name == "Azure Service Bus Data Owner"
+    condition     = module.service_bus.azurerm_role_assignment.topics["${run.setup_tests.sb_namespace.id}|topic3|owner"].role_definition_name == "Azure Service Bus Data Owner"
+    error_message = "The role assigned must be Azure Service Bus Data Owner"
+  }
+
+  assert {
+    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${run.setup_tests.sb_namespace.id}|topic1|subscription1|reader"].role_definition_name == "Azure Service Bus Data Receiver"
+    error_message = "The role assigned must be Azure Service Bus Data Receiver"
+  }
+
+  assert {
+    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${run.setup_tests.sb_namespace.id}|topic2|subscription2|writer"].role_definition_name == "Azure Service Bus Data Sender"
+    error_message = "The role assigned must be Azure Service Bus Data Sender"
+  }
+
+  assert {
+    condition     = module.service_bus.azurerm_role_assignment.subscriptions["${run.setup_tests.sb_namespace.id}|topic3|subscription3|owner"].role_definition_name == "Azure Service Bus Data Owner"
     error_message = "The role assigned must be Azure Service Bus Data Owner"
   }
 }

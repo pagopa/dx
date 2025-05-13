@@ -13,6 +13,7 @@
 |------|--------|---------|
 | <a name="module_app_service_exposed"></a> [app\_service\_exposed](#module\_app\_service\_exposed) | ../../../azure_app_service_exposed | n/a |
 | <a name="module_roles"></a> [roles](#module\_roles) | ../../ | n/a |
+| <a name="module_service_bus"></a> [service\_bus](#module\_service\_bus) | ../../../azure_service_bus_namespace | n/a |
 
 ## Resources
 
