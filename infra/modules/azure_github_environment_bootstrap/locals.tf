@@ -33,6 +33,7 @@ locals {
   )
 
   has_apim                    = var.apim_id != null ? 1 : 0
+  has_sbns                    = var.sbns_id != null ? 1 : 0
   has_log_analytics_workspace = var.log_analytics_workspace_id != null ? 1 : 0
 
   # %s is replaced by `ci` or `cd`
