@@ -30,6 +30,27 @@ module "service_bus" {
   tags = local.tags
 }
 
+resource "azurerm_servicebus_queue" "example" {
+  name         = "example-queue"
+  namespace_id = module.service_bus.id
+}
+
+resource "azurerm_servicebus_topic" "example" {
+  name         = "example-topic"
+  namespace_id = module.service_bus.id
+}
+
+resource "azurerm_servicebus_topic" "example2" {
+  name         = "example-topic2"
+  namespace_id = module.service_bus.id
+}
+
+resource "azurerm_servicebus_subscription" "example" {
+  name               = "example-sub"
+  topic_id           = azurerm_servicebus_topic.example2.id
+  max_delivery_count = 1
+}
+
 module "roles" {
   source          = "../../"
   principal_id    = module.app_service_exposed.app_service.app_service.principal_id
@@ -41,10 +62,10 @@ module "roles" {
       resource_group_name = "dx-d-itn-test-rg-01"
       role                = "reader"
       description         = "This is a reader"
-      queue_names         = ["test-queue"]
-      topic_names         = ["test-topic2"]
+      queue_names         = [azurerm_servicebus_queue.example.name]
+      topic_names         = [azurerm_servicebus_topic.example.name]
       subscriptions = {
-        test-topic = "test-sub",
+        example-topic2 = azurerm_servicebus_subscription.example.name,
       }
     }
   ]
