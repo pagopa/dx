@@ -147,13 +147,12 @@ variable "alerts" {
     error_message = "When alerts are enabled, all thresholds must be set."
   }
 }
-
-variable "authorized_principal_ids" {
+variable "authorized_teams" {
   type = object({
     writers = optional(list(string), []),
     readers = optional(list(string), [])
   })
-  description = "Object containing lists of principal IDs (users, groups, or managed identities) to be granted read or write permissions on the Cosmos DB account."
+  description = "Object containing lists of principal IDs (Azure AD object IDs) of product teams to be granted read or write permissions on the Cosmos DB account. These represent the teams within the organization that need access to this resource."
   default = {
     writers = []
     readers = []

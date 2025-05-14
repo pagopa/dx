@@ -49,6 +49,6 @@ locals {
   cosmos_db_data_contributor_role_id = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
 
   # Convert the list of authorized principal IDs into a map with static keys
-  reader_principal_ids_map = { for i, pid in var.authorized_principal_ids.readers : i => pid }
-  writer_principal_ids_map = { for i, pid in var.authorized_principal_ids.writers : i => pid }
+  reader_principal_ids_map = { for i, pid in var.authorized_teams.readers : i => pid }
+  writer_principal_ids_map = { for i, pid in var.authorized_teams.writers : i => pid }
 }
