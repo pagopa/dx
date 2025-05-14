@@ -1,0 +1,22 @@
+terraform {
+
+  backend "azurerm" {
+    resource_group_name  = "dx-d-itn-network-rg-01"
+    storage_account_name = "dxditntfexamplesst01"
+    container_name       = "terraform-state"
+    key                  = "dx.rbac.example.service_bus.tfstate"
+    use_azuread_auth     = true
+  }
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+}

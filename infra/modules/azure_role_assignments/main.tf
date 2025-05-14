@@ -47,3 +47,11 @@ module "apim" {
   subscription_id = var.subscription_id
   apim            = var.apim
 }
+
+module "service_bus" {
+  source = "./modules/service_bus"
+
+  principal_id    = var.principal_id
+  subscription_id = var.subscription_id
+  service_bus     = var.service_bus
+}
