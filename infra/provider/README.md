@@ -233,6 +233,8 @@ The following table lists the resource types and their abbreviations used in the
 |queue_storage|queue|
 |redis_cache|redis|
 |resource_group|rg|
+|servicebus_namespace|sbns|
+|servicebus_private_endpoint|sbns-pep|
 |static_web_app|stapp|
 |storage_account|st|
 |subnet|snet|
