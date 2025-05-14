@@ -80,4 +80,3 @@ This resource cannot be imported as it is a virtual resource that doesn't corres
 - This is a virtual resource that doesn't create an actual resource in Azure. It only calculates and reserves a CIDR block in your Terraform state.
 - The allocated CIDR is determined by analyzing the existing subnets in the VNet and finding an available block that doesn't overlap.
 - Changing either `virtual_network_id` or `prefix_length` after creation requires recreating the resource.
-- The resource provides a preview of the CIDR block during the plan phase, allowing you to see what will be allocated before applying.
