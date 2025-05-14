@@ -127,6 +127,7 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_cd_rgs_contributor,
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
       azurerm_role_assignment.infra_cd_apim_service_contributor,
+      azurerm_role_assignment.infra_cd_sbns_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
       azurerm_role_assignment.infra_cd_rgs_user_access_admin,
       azurerm_role_assignment.infra_cd_rgs_kv_secr,
@@ -301,6 +302,11 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_cd_apim_service_contributor == []
     error_message = "The Infra CD managed identity can't apply changes to API Management service configurations at resource group scope"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_cd_sbns_contributor == []
+    error_message = "The Infra CD managed identity can't apply changes to Service Bus Namespace configurations at resource group scope"
   }
 
   assert {
