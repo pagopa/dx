@@ -1,21 +1,24 @@
-# Managing Azure Service Bus Across Domains using Terraform
-
-Managing Access Management (IAM) across multiple domains of the same product can
-be tough. This guide provides a strategy to define resources and role
-assignments using Terraform, ensuring a clear separation of concerns and
-resource ownership.
+# Managing Azure Service Bus using Terraform
 
 ## Overview
 
-To grant permissions for a resource to send or receive events from Azure Service
-Bus, you need to create a `Role Assignment` resource that assigns specific roles
-to the target subscription/queue. However, managing this code across separate
-Git repositories for each product domain could be challenging.
+Azure Service Bus is an enterprise service broker with message queues and
+publish-subscribe topics. It is used to decouple applications, transferring data
+between services using messages.
+
+The monthly cost of premium instances is quite high, so it may be tempting to
+create a single instance for all domains that are part of the same product.
+Luckily, sharing a single instance among teams is not an issue, as the Service
+Bus offers fine granularity of permissions.
+
+This documents offers and overview on how to provision a new Namespace, but also
+go deep in explaining the best practices in permissions separation and how and
+where write Terraform code. Therefore, the document could be useful for anybody
+interested in using Service Bus, even if not shared among domain teams.
 
 ## Creating a Service Bus Namespace
 
-The Service Bus Namespace could be provisioned by using the new DX Terraform
-module
+The Service Bus Namespace could be provisioned by using the DX Terraform module
 [`Azure Service Bus Namespace`](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-namespace/azurerm/latest),
 which hides complexity such as networking, authentication and scaling.
 
@@ -42,35 +45,66 @@ module "service_bus_01" {
 }
 ```
 
-The module disables access via access keys, meaning that authentication is
-managed via Entra ID only.
+The module disables access keys, so the authentication is handled only by Entra
+ID.
 
-## Managing Service Bus IAM Step-by-Step
+If you have a common Service Bus Namespace instance shared among teams, you can
+use the
+[azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
+module to set required role to apply changes to the GitHub workflow of your
+monorepository, via the `sbns_id` variable.
 
-### Requirements
+For your own access, declare a
+[`azurerm_role_assignment`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment)
+next to the Service Bus Namespace definition setting the
+`Contributor` role to your team's Principal ID. For example:
 
-To implement a cross-domain role assignment, you will need the Principal ID of
-the resource that needs to access the Service Bus; this could be either a
-Managed Identity associated with your resource or an Entra ID group.
+```hcl
+data "azuread_group" "adgroup_domain_devs" {
+  display_name = "<your-team>"
+}
 
-### Creating Entities and Managing their Access
+resource "azurerm_role_assignment" "example" {
+  scope                = module.service_bus_01.id
+  role_definition_name = "Contributor"
+  principal_id         = data.azuread_group.adgroup_domain_devs.object_id
+  description          = "This role allows my team to explore messages and manage entities"
+}
+```
 
-Service Bus entities (queues, topics and subscriptions) can be created by using
-Terraform resources. However, you can use the DX Terraform module
+## Creating Entities and Managing their Access
+
+Service Bus entities can be created using Terraform resources for
+[queues](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_queue),
+[topics](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_topic)
+and
+[subscriptions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_subscription).
+
+However, the DX Terraform module
 [dx-azure-role-assignments](https://registry.terraform.io/modules/pagopa/dx-azure-role-assignments/azurerm/latest)
-to create roles within the entities. The module allows you to give more roles at
-a time to the same principal and abstracts away the complexity of the role
-choice.
+is helpful to assign roles within those entities, abstracting the complexity of
+the role choice. It only requires the Principal ID of the resource that needs to
+access the Service Bus; this could be either a Managed Identity associated with
+your resource or an Entra ID group.
 
 The following sections shows guidance and examples for each entity type.
 
-#### Queues
+### Queues
 
-The team who owns the Queue should create it and then managing its access. The
-reason lies in the nature of queues. All consumers of the queue compete for the
-same message; multiple teams could therefore decide to read events from the same
-queue on their own, giving rise to concurrency problems that are difficult to
-detect.
+> Queues offer First In, First Out (FIFO) message delivery to one or more
+> competing consumers. That is, receivers typically receive and process messages
+> in the order in which they were added to the queue. And, only one message
+> consumer receives and processes each message.
+> [Source](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#queues)
+
+As consumers compete for the same message, it is recommended to manage queue
+access in a single Terraform codebase, so that there is always a clear overview
+of which is consuming messages in a given queue. Therefore, the team owner of
+the queue should create it and then managing its access in the same
+configuration, even if the consumer is in another domain or
+[cross-subscription](https://pagopa.github.io/dx/docs/infrastructure/azure/iam-cross-subscription/)
+scenario. If multiple teams read events from the same from the same queue
+without being aware of them, hard-to-detect concurrency problems would occur.
 
 The following example does:
 
@@ -141,17 +175,26 @@ module "queue_consumer" {
 }
 ```
 
-#### Topics
+### Topics and Subscriptions
 
-The team who owns the Topic should create it and then managing its access for
-their own resources only.
+> In contrast to queues, topics and subscriptions provide a one-to-many form of
+> communication in a publish and subscribe pattern. It's useful for scaling to
+> large numbers of recipients. Each published message is made available to each
+> subscription registered with the topic. Publisher sends a message to a topic
+> and one or more subscribers receive a copy of the message.
+> [Source](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-queues-topics-subscriptions#topics-and-subscriptions)
+
+Since topics replicate messages to each subscriber, the team owner of the entity
+will only need to define the topic itself and assign the `writer` role in order to
+post messages. Consumers, on the other hand, will be managed by the individual
+subscription owners, assigning the `reader` role to consumers.
 
 The following example does:
 
 - create a topic
 - assign the `Owner` role to a Entra ID team (mandatory if you need to explore
   and modify the topic e.g. from Azure Portal)
-- assign the `Writer` role to the app which sends events
+- assign the `Writer` role to the app which sends events to the topic
 
 ```hcl
 resource "azurerm_servicebus_topic" "example" {
@@ -196,30 +239,25 @@ module "topic_producer" {
 }
 ```
 
-#### Subscriptions
-
-The team who owns the Subscription should create it and then managing its access
-for it. Subscriptions should not be shared among services. each subscription is
-an entity in itself, with business logics strongly linked to the event consumer.
-The production team has no need to know the consumers, the message is sent in
-broadcast
+As mentioned, subscriptions can be managed by consumers themselves. In
+cross-domain or cross-subscription scenarios, the Terraform code can be written
+in consumer's repository.
 
 The following example does:
 
-- create a topic
 - create a subscription
 - assign the `Owner` role to a Entra ID team (mandatory if you need to explore
   and modify the subscription e.g. from Azure Portal)
 - assign the `Reader` role to the app which receive events
 
 ```hcl
-# if you are owner of the topic:
+# if you are owner of the topic, you should already have this code:
 resource "azurerm_servicebus_topic" "example" {
   name         = "example-topic"
   namespace_id = module.service_bus_01.id
 }
 
-# if you are consuming events of a another team's topic:
+# instead, if you are consuming events of a another team's topic:
 data "azurerm_servicebus_topic" "example" {
   name         = "example-topic"
   namespace_id = module.service_bus_01.id
