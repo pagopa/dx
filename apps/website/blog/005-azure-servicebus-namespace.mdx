@@ -14,24 +14,24 @@ toc_max_heading_level: 2
 
 The new Terraform module
 [`Azure Service Bus Namespace`](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-namespace/azurerm/latest)
-has been released by the DevEx team to enable customer in easy and
-straightforward Service Bus setup!
+has been released by the DevEx team to enable customers to easily and
+straightforwardly set up Service Bus!
 
-This module abstracts inner complexity such as networking, authentication and
-scaling. In fact, by choosing `l` tier (which matches `Premium` SKU) the module
+This module abstracts inner complexities such as networking, authentication, and
+scaling. By choosing the `l` tier (which matches the `Premium` SKU), the module
 provides private communication via private endpoints and also includes an
 autoscaler resource to dynamically change the number of instances depending on
-CPU and Memory metrics.
+CPU and memory metrics.
 
 <!-- truncate -->
 
-The module also support `m` tier (`Standard` SKU), but it is reccomended to use
-this tier only in test environments as the resource cannot be isolated in terms
-of networking, and remains on public internet.
+The module also supports the `m` tier (`Standard` SKU), but it is recommended to
+use this tier only in test environments as the resource cannot be isolated in
+terms of networking and remains on the public internet.
 
 ## Getting Started
 
-We recommend to reference the module via the Terraform Registry, and pin the
+We recommend referencing the module via the Terraform Registry and pinning the
 version to the latest stable release:
 
 ```hcl
@@ -43,8 +43,8 @@ module "sbns" {
 
 Roles can be managed through the traditional
 [role assignment module](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest),
-you should already be familiar with. By passing names of queues, topics and
-subscriptions, the IAM complexity is taken away.
+which you should already be familiar with. By passing names of queues, topics,
+and subscriptions, the IAM complexity is taken away.
 
 ```hcl
 module "roles" {
@@ -70,10 +70,10 @@ module "roles" {
 }
 ```
 
-Also, the
+Additionally, the
 [Azure Bootstrap module](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-has been updated to add needed roles to apply Terraform code to a centralized
-Service Bus instance, if you have one.
+has been updated to add the needed roles to apply Terraform code to a
+centralized Service Bus instance, if you have one.
 
 More details can be found in the documentation, which is available in the
 [module entry in the Terraform Registry](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-namespace/azurerm/latest).
@@ -87,4 +87,4 @@ Explore
 [module examples](https://github.com/pagopa-dx/terraform-azurerm-azure-service-bus-namespace/tree/main/examples/complete)
 to create the Service Bus namespace.
 [Other examples](https://github.com/pagopa/dx/tree/main/infra/modules/azure_role_assignments/examples/service_bus)
-are also available to show queue, topic and subscription definitions.
+are also available to show queue, topic, and subscription definitions.
