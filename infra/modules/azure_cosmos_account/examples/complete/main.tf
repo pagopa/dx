@@ -44,7 +44,7 @@ module "cosmos_db" {
     key_vault_key_id          = "https://${local.environment.prefix}-${local.environment.env_short}-kv.vault.azure.net/keys/my-kv-key"
   }
 
-  authorized_principal_ids = {
+  authorized_teams = {
     writers = [
       azurerm_user_assigned_identity.example.principal_id
     ]
