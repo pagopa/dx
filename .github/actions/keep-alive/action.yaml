@@ -1,6 +1,9 @@
 name: Keep Alive
 description: An action to keep the repository alive.
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_BOT_PAT }}
+
 runs:
   using: composite
   steps:
@@ -18,11 +21,9 @@ runs:
         
         if [ $COMMIT_STATUS -eq 0 ]; then
           echo "Commit created successfully, attempting to push..."
-          git push
+          git push --force
         else
           echo "Could not create commit. The repository might be inactive but cannot be kept alive through this method."
           echo "Make sure that workflows have write permissions on the repository."
           exit 0
         fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_BOT_PAT }}
