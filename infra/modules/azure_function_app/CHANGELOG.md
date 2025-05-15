@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 1.0.0
+
+### Major Changes
+
+- 50c15f2: TLS 1.3 Upgrade for Azure Function Apps. This change requires azurerm provider version 4.8.0 or higher.
+
 ## 0.3.1
 
 ### Patch Changes
