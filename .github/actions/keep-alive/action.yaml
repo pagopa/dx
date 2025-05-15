@@ -13,16 +13,12 @@ runs:
         git config --local user.email "dx-pagopa-github-bot@pagopa.it"
         git config --local user.name "dx-pagopa-bot"
         
-        # Set token for authentication
-        REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
-        git remote set-url origin "$REPO_URL"
-        
         git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
         COMMIT_STATUS=$?
         
         if [ $COMMIT_STATUS -eq 0 ]; then
           echo "Commit created successfully, attempting to push..."
-          git push --force origin HEAD
+          git push
         else
           echo "Could not create commit. The repository might be inactive but cannot be kept alive through this method."
           echo "Make sure that workflows have write permissions on the repository."
