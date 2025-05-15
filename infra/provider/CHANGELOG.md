@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.2.1
+
+### Patch Changes
+
+- e676023: Update README and docs with new resource_name for function and minor fix for cidr resource
+
 ## 0.2.0
 
 ### Minor Changes

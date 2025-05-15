@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.1.0
+
+### Minor Changes
+
+- 4f9dbdf: Add optional variable to set roles to a common Service Bus Namespace
+
 ## 2.0.1
 
 ### Patch Changes
