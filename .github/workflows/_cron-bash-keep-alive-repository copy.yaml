@@ -8,6 +8,12 @@ name: Keep Alive
 
 on:
   workflow_dispatch:
+    inputs:
+      bypass:
+        description: "Bypass the 55 days check"
+        type: boolean
+        default: false
+        required: false
   schedule:
     - cron: '0 0 * * *' # Run at 00:00 every day
 
@@ -15,14 +21,12 @@ jobs:
   keep_alive:
     runs-on: 'ubuntu-latest'
     permissions:
-      contents: write
+      contents: read
       actions: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
-        with:
-          token: ${{ secrets.BOT_GH_TOKEN }}
 
       - name: Calculate days since last commit
         id: commit_date
@@ -41,5 +45,7 @@ jobs:
 
       - name: Keep Alive
         # If 55 days have passed then execute the action which makes an empty push
-        if: steps.commit_date.outputs.days_since_commit >= '55'
+        if: steps.commit_date.outputs.days_since_commit >= '55' || inputs.bypass
         uses: pagopa/dx/.github/actions/keep-alive@main
+        with:
+          bot_token: ${{ secrets.BOT_GH_TOKEN }}
