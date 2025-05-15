@@ -1,9 +1,22 @@
 name: Keep Alive
 description: An action to keep the repository alive.
 
+inputs:
+  bot_token:
+    description: 'GitHub token to use for bot authentication'
+    type: string
+    required: false
+    default: ${{ github.token }}
+
+
 runs:
   using: composite
   steps:
+    - name: Checkout
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        token: ${{ inputs.bot_token }}
+
     - name: keep-alive
       shell: bash
       run: |
