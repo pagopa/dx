@@ -4,15 +4,8 @@ description: An action to keep the repository alive.
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      with:
-        token: ${{ github.token }}
-
     - name: keep-alive
       shell: bash
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
       run: |
         git config --local user.email "dx-pagopa-github-bot@pagopa.it"
         git config --local user.name "dx-pagopa-bot"
