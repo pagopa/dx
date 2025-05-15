@@ -24,4 +24,4 @@ runs:
           exit 0
         fi
 
-        git push
+        git push --force
