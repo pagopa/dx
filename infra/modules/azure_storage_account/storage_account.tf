@@ -8,7 +8,7 @@ resource "azurerm_storage_account" "this" {
   account_replication_type        = local.tier_features.replication_type
   access_tier                     = var.access_tier
   public_network_access_enabled   = var.force_public_network_access_enabled
-  allow_nested_items_to_be_public = false
+  allow_nested_items_to_be_public = var.force_public_network_access_enabled
 
   blob_properties {
     versioning_enabled            = var.blob_features.versioning
