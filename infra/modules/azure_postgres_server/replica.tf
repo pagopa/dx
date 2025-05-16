@@ -27,7 +27,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
     start_minute = 0
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {

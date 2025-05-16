@@ -1,6 +1,5 @@
 ---
-sidebar_position: 1
-sidebar_label: Setting Up Pipeline Triggers
+sidebar_position: 2
 ---
 
 # Setting Up Pipeline Triggers

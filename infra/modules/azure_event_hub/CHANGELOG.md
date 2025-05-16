@@ -1,5 +1,11 @@
 # azure_event_hub
 
+## 0.0.11
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.0.10
 
 ### Patch Changes

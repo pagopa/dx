@@ -7,7 +7,7 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
@@ -17,7 +17,7 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
@@ -27,7 +27,7 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   ttl                 = 3600
   records             = azurerm_api_management.this.private_ip_addresses
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # Define security group
@@ -48,7 +48,7 @@ resource "azurerm_network_security_group" "nsg_apim" {
     destination_address_prefix = "VirtualNetwork"
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_subnet_network_security_group_association" "snet_nsg" {

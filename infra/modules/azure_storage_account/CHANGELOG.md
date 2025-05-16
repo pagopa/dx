@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 0.1.1
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.1.0
 
 ### Minor Changes

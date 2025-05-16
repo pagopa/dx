@@ -47,9 +47,11 @@ module "func_autoscaler" {
   app_service_plan_id = module.azure_function_app.function_app.plan.id
 
   target_service = {
-    function_app = {
-      id = module.azure_function_app.function_app.function_app.id
-    }
+    function_apps = [
+      {
+        id = module.azure_function_app.function_app.function_app.id
+      }
+    ]
   }
 
   scale_metrics = {

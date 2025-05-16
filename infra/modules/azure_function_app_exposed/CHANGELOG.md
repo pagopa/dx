@@ -1,5 +1,27 @@
 # azure_function_app_exposed
 
+## 1.0.0
+
+### Major Changes
+
+- 50c15f2: TLS 1.3 Upgrade for Azure Function Apps. This change requires azurerm provider version 4.8.0 or higher.
+
+## 0.2.1
+
+### Patch Changes
+
+- 8e6bfa6: Revert "TLS 1.3 Upgrade for Azure Function Apps modules"
+
+## 0.2.0
+
+### Minor Changes
+
+- aae0dc5: TLS 1.3 Upgrade for Azure Function Apps
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 0.1.8
 
 ### Patch Changes

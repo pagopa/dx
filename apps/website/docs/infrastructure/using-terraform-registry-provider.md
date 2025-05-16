@@ -1,5 +1,4 @@
 ---
-sidebar_label: Using DX Azure Terraform Provider
 sidebar_position: 3
 ---
 

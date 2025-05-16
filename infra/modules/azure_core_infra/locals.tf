@@ -1,4 +1,5 @@
 locals {
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
   location_short = tomap({
     "italynorth" = "itn",
     "westeurope" = "weu"
@@ -33,9 +34,5 @@ locals {
     "management_azure_api_net" = "management.azure-api.net"
     "scm_azure_api_net"        = "scm.azure-api.net"
     "container_app"            = "privatelink.italynorth.azurecontainerapps.io"
-    "monitor"                  = "privatelink.monitor.azure.com"
-    "monitor_oms"              = "privatelink.oms.opinsights.azure.com"
-    "monitor_ods"              = "privatelink.ods.opinsights.azure.com"
-    "monitor_agents"           = "privatelink.agentsvc.azure-automation.net"
   }
 }

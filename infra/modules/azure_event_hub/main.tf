@@ -48,7 +48,7 @@ resource "azurerm_eventhub_namespace" "this" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #-------------------------------#

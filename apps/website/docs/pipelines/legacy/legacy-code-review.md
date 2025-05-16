@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Code Review - Legacy
+sidebar_position: 50
 ---
 
-# Code Review - Legacy
+# Using the Code Review Workflow (deprecated)
 
 The
 [Code Review - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_code_review.yaml)

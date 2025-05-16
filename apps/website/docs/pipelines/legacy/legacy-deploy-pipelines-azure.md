@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Deploy Azure Web App - Legacy
+sidebar_position: 50
 ---
 
-# Deploy Azure Web App - Legacy
+# Deploying a legacy Node.js Application to Azure (deprecated)
 
 The
 [Deploy Pipelines - Legacy workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/legacy_deploy_pipelines.yaml)
@@ -77,6 +76,6 @@ jobs:
 Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and
 `ARM_CLIENT_ID` in your GitHub repository secrets for secure authentication. For
 detailed instructions, refer to:
-[Configuring Azure Login for GitHub Actions](./azure-login.md).
+[Configuring Azure Login for GitHub Actions](../azure-login.md).
 
 :::

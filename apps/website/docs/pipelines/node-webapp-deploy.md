@@ -1,9 +1,8 @@
 ---
-sidebar_position: 1
-sidebar_label: Deploying a Node.js Application to Azure App Service
+sidebar_position: 50
 ---
 
-# Deploying a Node.js Application to Azure App Service
+# Deploying a Node.js Application to Azure
 
 The
 [Node.js WebApp Deployment](https://github.com/pagopa/dx/blob/main/.github/workflows/web_app_deploy.yaml)

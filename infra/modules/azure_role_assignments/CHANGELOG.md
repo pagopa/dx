@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.1.0
+
+### Minor Changes
+
+- 63bdf08: Add Service Bus support to manage queues, topics and subscriptions
+
 ## 1.0.3
 
 ### Patch Changes

@@ -35,18 +35,14 @@ data "azurerm_subnet" "pep" {
 
 data "azurerm_subscription" "current" {}
 
-# RESOURCES
-
 data "azurerm_resource_group" "rg" {
   name = "${var.environment.prefix}-${var.environment.env_short}-itn-test-rg-${module.naming_convention.suffix}"
 
 }
 
-resource "azurerm_user_assigned_identity" "id" {
-  location            = data.azurerm_resource_group.rg.location
-  resource_group_name = data.azurerm_resource_group.rg.name
-  name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
+# RESOURCES
 
+locals {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
@@ -57,6 +53,23 @@ resource "azurerm_user_assigned_identity" "id" {
     Test           = "true"
     TestName       = "Create role assignments for test"
   }
+}
+
+resource "azurerm_user_assigned_identity" "id" {
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+  name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
+
+  tags = local.tags
+}
+
+resource "azurerm_servicebus_namespace" "this" {
+  name                = "dx-d-itn-playground-sb-01"
+  location            = data.azurerm_resource_group.rg.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+  sku                 = "Standard"
+
+  tags = local.tags
 }
 
 # OUTPUTS
@@ -86,4 +99,12 @@ output "principal_id" {
 
 output "subscription_id" {
   value = data.azurerm_subscription.current.subscription_id
+}
+
+output "sb_namespace" {
+  value = {
+    name                = azurerm_servicebus_namespace.this.name
+    resource_group_name = azurerm_servicebus_namespace.this.resource_group_name
+    id                  = azurerm_servicebus_namespace.this.id
+  }
 }

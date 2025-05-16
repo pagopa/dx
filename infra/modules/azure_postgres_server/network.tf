@@ -16,7 +16,7 @@ resource "azurerm_private_endpoint" "postgre_pep" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.postgre_dns_zone.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 #--------------------------#
@@ -43,5 +43,5 @@ resource "azurerm_private_endpoint" "replica_postgre_pep" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.postgre_dns_zone.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

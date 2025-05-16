@@ -1,5 +1,12 @@
 # azure_cdn
 
+## 0.0.7
+
+### Patch Changes
+
+- e73a238: Add module version tag
+- 835b9ee: Basic example updated making storage account public
+
 ## 0.0.6
 
 ### Patch Changes

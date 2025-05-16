@@ -11,7 +11,10 @@ jobs:
     name: Drift Detection
     permissions:
       contents: read
+      actions: read
+      id-token: write
     secrets: inherit
     with:
       environment: 'dev'
+      override_github_environment: 'infra-dev'
       base_path: 'infra/resources/'

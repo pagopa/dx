@@ -16,5 +16,5 @@ resource "azurerm_private_endpoint" "event_hub_pep" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.this.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

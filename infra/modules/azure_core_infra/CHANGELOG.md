@@ -1,5 +1,17 @@
 # azure_core_infra
 
+## 1.0.8
+
+### Patch Changes
+
+- dd9a39d: Remove Application Insights private DNS zones. The simple addition of these dns zones makes public application insights unreachable.
+
+## 1.0.7
+
+### Patch Changes
+
+- e73a238: Add module version tag
+
 ## 1.0.6
 
 ### Patch Changes

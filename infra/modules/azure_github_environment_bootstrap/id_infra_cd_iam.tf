@@ -75,6 +75,16 @@ resource "azurerm_role_assignment" "infra_cd_apim_service_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to manage configuration at APIM scope"
 }
 
+# Service Bus
+resource "azurerm_role_assignment" "infra_cd_sbns_contributor" {
+  count = local.has_sbns
+
+  scope                = var.sbns_id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
+  description          = "Allow ${var.repository.name} Infra CD identity to manage configuration at Service Bus Namespace scope"
+}
+
 # Log Analytics Workspace
 resource "azurerm_role_assignment" "infra_cd_log_analytics_workspace_contributor" {
   count = local.has_log_analytics_workspace

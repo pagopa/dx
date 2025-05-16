@@ -3,7 +3,7 @@ resource "azurerm_user_assigned_identity" "app_cd" {
   location            = local.ids.location
   name                = format(local.ids.app_name, "cd")
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "azurerm_federated_identity_credential" "github_app_cd" {

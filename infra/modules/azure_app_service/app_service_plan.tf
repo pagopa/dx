@@ -8,5 +8,5 @@ resource "azurerm_service_plan" "this" {
   sku_name               = local.app_service.sku_name
   zone_balancing_enabled = local.app_service.zone_balancing_enabled
 
-  tags = var.tags
+  tags = local.tags
 }

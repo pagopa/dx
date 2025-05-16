@@ -15,11 +15,8 @@ terraform {
 }
 
 provider "azurerm" {
-  features {
-  }
+  features {}
 }
-
-data "azurerm_subscription" "current" {}
 
 resource "azurerm_resource_group" "rg_identity" {
   name     = "${local.project}-identity-rg-${local.instance_number}"
@@ -60,6 +57,9 @@ module "federated_identities" {
         terraform-state-rg = [
           "Storage Blob Data Contributor"
         ]
+        dx-d-itn-test-rg-01 = [
+          "User Access Administrator",
+        ]
       }
     }
   }
@@ -73,8 +73,8 @@ module "federated_identities" {
 
 module "roles_ci" {
   source          = "../../modules/azure_role_assignments"
-  principal_id    = module.federated_identities.federated_ci_identity.id
-  subscription_id = data.azurerm_subscription.current.id
+  principal_id    = module.federated_identities.federated_ci_identity.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
 
   key_vault = [
     {
@@ -90,8 +90,8 @@ module "roles_ci" {
 
 module "roles_cd" {
   source          = "../../modules/azure_role_assignments"
-  principal_id    = module.federated_identities.federated_cd_identity.id
-  subscription_id = data.azurerm_subscription.current.id
+  principal_id    = module.federated_identities.federated_cd_identity.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
 
   key_vault = [
     {

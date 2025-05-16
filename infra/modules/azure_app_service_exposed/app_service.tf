@@ -18,6 +18,7 @@ resource "azurerm_linux_web_app" "this" {
     vnet_route_all_enabled            = true
     health_check_path                 = var.health_check_path
     health_check_eviction_time_in_min = 2
+    minimum_tls_version               = 1.3
 
     application_stack {
       node_version        = var.stack == "node" ? "${var.node_version}-lts" : null
@@ -65,5 +66,5 @@ resource "azurerm_linux_web_app" "this" {
     ]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

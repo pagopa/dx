@@ -1,5 +1,4 @@
 ---
-sidebar_label: Contribution Acceptance Criteria
 sidebar_position: 4
 ---
 
