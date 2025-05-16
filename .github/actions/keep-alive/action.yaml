@@ -30,6 +30,6 @@ runs:
           git push
         else
           echo "Could not create commit. The repository might be inactive but cannot be kept alive through this method."
-          echo "Make sure that workflows have write permissions on the repository."
+          echo "Make sure that the token has write permissions on the repository."
           exit 0
         fi
