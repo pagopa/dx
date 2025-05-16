@@ -19,6 +19,10 @@ This Terraform module deploys an Azure Service Bus namespace. It supports `Stand
 
 **WARNING**: It is strongly encouraged to use the `Premium` SKU (default) due to the mentioned security concerns of the `Standard` SKU.
 
+## Best Practices
+
+Patterns and advices on how use Service Bus can be found in [DX documentation](https://pagopa.github.io/dx/docs/infrastructure/azure/using-service-bus).
+
 ## Usage Example
 
 Below is an example of how to use this module:
@@ -45,7 +49,7 @@ module "service_bus_01" {
 }
 ```
 
-- A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-services-bus-namespace/tree/main/examples/complete) demonstrating all features.
+- A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-services-bus-namespace/tree/main/examples/complete) demonstrates all features.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
