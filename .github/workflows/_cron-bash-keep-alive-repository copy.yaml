@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       bypass:
-        description: "Bypass the 55 days check"
+        description: "Perform the action even if the last commit was less than 55 days ago."
         type: boolean
         default: false
         required: false
