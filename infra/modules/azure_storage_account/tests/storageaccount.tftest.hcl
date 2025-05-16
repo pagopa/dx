@@ -147,6 +147,11 @@ run "storage_account_is_correct_plan" {
     condition     = local.peps.create_subservices.blob == true
     error_message = "The Storage Account must have blob private endpoint disabled"
   }
+
+  assert {
+    condition     = azurerm_storage_account.this.allow_nested_items_to_be_public == false
+    error_message = "The Storage Account must not allow Blob public access"
+  }
 }
 
 run "public_storage_account_is_correct_plan" {

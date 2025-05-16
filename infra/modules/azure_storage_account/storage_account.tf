@@ -1,13 +1,14 @@
 #tfsec:ignore:azure-storage-queue-services-logging-enabled
 resource "azurerm_storage_account" "this" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
-  resource_group_name           = var.resource_group_name
-  location                      = var.environment.location
-  account_kind                  = "StorageV2"
-  account_tier                  = local.tier_features.account_tier
-  account_replication_type      = local.tier_features.replication_type
-  access_tier                   = var.access_tier
-  public_network_access_enabled = var.force_public_network_access_enabled
+  name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
+  resource_group_name             = var.resource_group_name
+  location                        = var.environment.location
+  account_kind                    = "StorageV2"
+  account_tier                    = local.tier_features.account_tier
+  account_replication_type        = local.tier_features.replication_type
+  access_tier                     = var.access_tier
+  public_network_access_enabled   = var.force_public_network_access_enabled
+  allow_nested_items_to_be_public = var.force_public_network_access_enabled
 
   blob_properties {
     versioning_enabled            = var.blob_features.versioning
