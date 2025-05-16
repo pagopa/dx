@@ -1,0 +1,23 @@
+name: Terraform Apply Prod
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/resources/prod/**"
+
+jobs:
+  infra_release:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: Release Infrastructure
+    secrets: inherit
+    with:
+      environment: prod
+      base_path: infra/resources/prod
+      use_private_agent: false
+      override_github_environment: infra-prod

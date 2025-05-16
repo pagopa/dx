@@ -1,0 +1,27 @@
+name: Terraform Plan Prod
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - ".github/workflows/_**-terraform-resources-prod.yaml"
+      - "infra/resources/prod/**"
+
+jobs:
+  infra_review:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: Validate Infrastructure
+    secrets: inherit
+    with:
+      environment: prod
+      base_path: infra/resources/prod
+      use_private_agent: false
+      override_github_environment: infra-prod
