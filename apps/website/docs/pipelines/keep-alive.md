@@ -67,6 +67,8 @@ jobs:
       - name: Keep Alive
         if: env.days_since_commit >= '55'
         uses: pagopa/dx/.github/actions/keep-alive@main
+        with:
+          bot_token: ${{ secrets.GITHUB_BOT_TOKEN }}
 ```
 
 ### Adapting This Workflow
@@ -76,7 +78,26 @@ When implementing this pattern in your own repositories:
 1. **Adjust the threshold** - The 55-day threshold can be modified based on your
    specific needs
 2. **Consider the schedule** - The daily check frequency can be adjusted
-3. **Ensure proper permissions**:
+3. **Configure the secret** - Create a personal access token with repository
+   write permissions and store it as a repository secret (e.g.,
+   `GITHUB_BOT_TOKEN`), then pass it to the `bot_token` input
+4. **Ensure proper permissions**:
    - The workflow requires `contents: write` to push commits
    - Enable `Read and Write permissions` for workflows inside repository
      settings
+   - If your repository uses branch protection with required pull requests,
+     configure _"Allow specified actors to bypass required pull requests"_ by
+     adding the GitHub account that corresponds to the token passed to the
+     action
+
+:::note
+
+The action uses `bot_token` to make empty commits to the repository. It's
+recommended to create a Personal Access Token (PAT) using a bot account (such as
+`dx-pagopa-bot`) and add it as a secret to pass to the action. Note that the
+chosen bot account must be added to the list of pull request bypassers
+![GitHub Branch Protection](./branch-protection.png) otherwise, it won't be able
+If the bot account is not visible in the list of bypasses, ensure it has been
+added as a collaborator to the repository.
+
+:::

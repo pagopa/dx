@@ -1,16 +1,35 @@
 name: Keep Alive
 description: An action to keep the repository alive.
 
+inputs:
+  bot_token:
+    description: 'GitHub token to use for bot authentication'
+    type: string
+    required: false
+    default: ${{ github.token }}
+
 runs:
   using: composite
   steps:
     - name: Checkout
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      with:
+        token: ${{ inputs.bot_token }}
 
     - name: keep-alive
       shell: bash
       run: |
-        git config --local user.email "cron@github.com"
-        git config --local user.name "Keepalive"
+        git config --local user.email "dx-pagopa-github-bot@pagopa.it"
+        git config --local user.name "dx-pagopa-bot"
+        
         git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
-        git push
+        COMMIT_STATUS=$?
+        
+        if [ $COMMIT_STATUS -eq 0 ]; then
+          echo "Commit created successfully, attempting to push..."
+          git push
+        else
+          echo "Could not create commit. The repository might be inactive but cannot be kept alive through this method."
+          echo "Make sure that the token has write permissions on the repository."
+          exit 0
+        fi
