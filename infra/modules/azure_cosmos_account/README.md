@@ -12,6 +12,7 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 - **Zone Redundancy**: Supports zone redundancy for high availability in primary and secondary regions.
 - **Backup Policy**: Implements a Continuous 30-day backup policy for data protection.
 - **Serverless Mode**: Enables serverless mode for cost-efficient, on-demand scaling.
+- **Role Assignment**: Assigns SQL role permissions (Reader or Contributor) to specified principal IDs, enabling fine-grained access control.
 
 ## Tiers and Configurations
 
@@ -44,6 +45,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) | resource |
+| [azurerm_cosmosdb_sql_role_assignment.principal_role_assignments](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_role_assignment) | resource |
 | [azurerm_monitor_metric_alert.cosmos_db_provisioned_throughput_exceeded](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_private_endpoint.sql](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_private_dns_zone.cosmos](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
@@ -53,6 +55,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alerts"></a> [alerts](#input\_alerts) | Alerts configuration for Cosmos DB account. | <pre>object({<br/>    enabled         = bool<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      provisioned_throughput_exceeded = optional(number, null)<br/>    }), {})<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
+| <a name="input_authorized_teams"></a> [authorized\_teams](#input\_authorized\_teams) | Object containing lists of principal IDs (Azure AD object IDs) of product teams to be granted read or write permissions on the Cosmos DB account. These represent the teams within the organization that need access to this resource. | <pre>object({<br/>    writers = optional(list(string), []),<br/>    readers = optional(list(string), [])<br/>  })</pre> | <pre>{<br/>  "readers": [],<br/>  "writers": []<br/>}</pre> | no |
 | <a name="input_consistency_policy"></a> [consistency\_policy](#input\_consistency\_policy) | Defines the consistency policy for CosmosDB. Use 'consistency\_preset' for predefined configurations, or set it to 'custom' for manual configuration. Presets include: 'default' (Session consistency), 'high\_consistency' (Strong), 'high\_performance' (Eventual), and 'balanced\_staleness' (BoundedStaleness). For custom configuration, specify 'consistency\_level' and, if using BoundedStaleness, 'max\_interval\_in\_seconds' and 'max\_staleness\_prefix'. Refer to https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels for more details. | <pre>object({<br/>    consistency_preset      = optional(string)<br/>    consistency_level       = optional(string, "Preset")<br/>    max_interval_in_seconds = optional(number, 0)<br/>    max_staleness_prefix    = optional(number, 0)<br/>  })</pre> | n/a | yes |
 | <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key) | Customer managed key to use for encryption | <pre>object({<br/>    enabled                   = optional(bool, false)<br/>    user_assigned_identity_id = optional(string, null)<br/>    key_vault_key_id          = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
