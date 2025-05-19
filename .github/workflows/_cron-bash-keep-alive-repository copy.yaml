@@ -8,6 +8,12 @@ name: Keep Alive
 
 on:
   workflow_dispatch:
+    inputs:
+      bypass:
+        description: "Perform the action even if the last commit was less than 55 days ago."
+        type: boolean
+        default: false
+        required: false
   schedule:
     - cron: '0 0 * * *' # Run at 00:00 every day
 
@@ -39,5 +45,7 @@ jobs:
 
       - name: Keep Alive
         # If 55 days have passed then execute the action which makes an empty push
-        if: steps.commit_date.outputs.days_since_commit >= '55'
+        if: steps.commit_date.outputs.days_since_commit >= '55' || inputs.bypass
         uses: pagopa/dx/.github/actions/keep-alive@main
+        with:
+          bot_token: ${{ secrets.BOT_GH_TOKEN }}
