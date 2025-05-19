@@ -37,7 +37,7 @@ resource "azurerm_network_security_group" "nsg_apim" {
   location            = var.environment.location
 
   security_rule {
-    name                       = "managementapim"
+    name                       = "apim-management"
     priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
