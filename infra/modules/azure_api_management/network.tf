@@ -38,7 +38,7 @@ resource "azurerm_network_security_group" "nsg_apim" {
 
   security_rule {
     name                       = "managementapim"
-    priority                   = 100
+    priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -46,6 +46,66 @@ resource "azurerm_network_security_group" "nsg_apim" {
     destination_port_range     = "3443"
     source_address_prefix      = "ApiManagement"
     destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "azure-load-balancer"
+    priority                   = 201
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6390"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "VirtualNetwork"
+  }
+
+  security_rule {
+    name                       = "storage"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Storage"
+  }
+
+  security_rule {
+    name                       = "sql"
+    priority                   = 201
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "SQL"
+  }
+
+  security_rule {
+    name                       = "azure-keyvault"
+    priority                   = 202
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureKeyVault"
+  }
+
+  security_rule {
+    name                       = "azure-monitor"
+    priority                   = 203
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1886, 443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureMonitor"
   }
 
   tags = local.tags
