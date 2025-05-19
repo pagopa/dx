@@ -37,8 +37,8 @@ resource "azurerm_network_security_group" "nsg_apim" {
   location            = var.environment.location
 
   security_rule {
-    name                       = "managementapim"
-    priority                   = 100
+    name                       = "apim-management"
+    priority                   = 200
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -46,6 +46,72 @@ resource "azurerm_network_security_group" "nsg_apim" {
     destination_port_range     = "3443"
     source_address_prefix      = "ApiManagement"
     destination_address_prefix = "VirtualNetwork"
+    description                = "Management endpoint for Azure portal and PowerShell"
+  }
+
+  security_rule {
+    name                       = "azure-load-balancer"
+    priority                   = 201
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6390"
+    source_address_prefix      = "AzureLoadBalancer"
+    destination_address_prefix = "VirtualNetwork"
+    description                = "Azure Infrastructure Load Balancer"
+  }
+
+  security_rule {
+    name                       = "storage"
+    priority                   = 200
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "Storage"
+    description                = "Dependency on Azure Storage for core service functionality"
+  }
+
+  security_rule {
+    name                       = "sql"
+    priority                   = 201
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "SQL"
+    description                = "Access to Azure SQL endpoints for core service functionality"
+  }
+
+  security_rule {
+    name                       = "azure-keyvault"
+    priority                   = 202
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureKeyVault"
+    description                = "Access to Azure Key Vault for core service functionality"
+  }
+
+  security_rule {
+    name                       = "azure-monitor"
+    priority                   = 203
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1886, 443"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "AzureMonitor"
+    description                = "Publish Diagnostics Logs and Metrics, Resource Health, and Application Insights"
   }
 
   tags = local.tags
