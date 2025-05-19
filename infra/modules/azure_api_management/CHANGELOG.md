@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.2.0
+
+### Minor Changes
+
+- 53f3c6e: Add recommended rules to APIM NSG
+
 ## 1.1.4
 
 ### Patch Changes
