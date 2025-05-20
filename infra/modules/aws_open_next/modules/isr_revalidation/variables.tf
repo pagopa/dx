@@ -32,16 +32,6 @@ variable "node_major_version" {
   }
 }
 
-variable "vpc" {
-  type = object({
-    id              = string
-    private_subnets = list(string)
-  })
-
-  description = "The VPC used to deploy the lambda function in. Configure this only when you want the lambda to access private resources contained in the VPC."
-  default     = null
-}
-
 variable "handler" {
   type        = string
   description = "The function entrypoint in your code. The format is <filename>.<function_name>. For example, if your code is in a file called index.js and the function name is handler, the value should be index.handler."
@@ -55,8 +45,8 @@ variable "handler" {
 
 variable "memory_size" {
   type        = number
-  description = "The amount of memory available to the function at runtime in MB. The default is 512 MB. The maximum is 10240 MB."
-  default     = 512
+  description = "The amount of memory available to the function at runtime in MB. The default is 128 MB. The maximum is 10240 MB."
+  default     = 128
 
   validation {
     condition     = var.memory_size >= 128 && var.memory_size <= 10240
@@ -73,12 +63,6 @@ variable "timeout" {
     condition     = var.timeout >= 1 && var.timeout <= 900
     error_message = "The timeout must be between 1 and 900 seconds."
   }
-}
-
-variable "is_at_edge" {
-  type        = bool
-  description = "Whether the lambda function is at the edge. The default is false."
-  default     = false
 }
 
 variable "environment_variables" {

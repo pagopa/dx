@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_event_rule" "scheduled_lambda_event_rule" {
-  name                = "${local.app_prefix}-server-lambda-warmer-${local.app_suffix}"
+  name                = "${local.app_prefix}-lambda-warmer-${local.app_suffix}"
   schedule_expression = "rate(5 minutes)"
 
   description         = "Scheduled event rule to warm the OpenNext server lambda ${aws_lambda_function.function.function_name}"
