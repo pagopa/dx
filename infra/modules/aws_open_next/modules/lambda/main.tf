@@ -52,3 +52,18 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
   # kms_key_id        = var.log_group.kms_key_id
   tags              = var.tags
 }
+
+resource "aws_lambda_function_url" "function_url" {
+  function_name      = aws_lambda_function.function.function_name
+  authorization_type = "AWS_IAM"
+  # Change to RESPONSE_STREAM once the feature is production ready
+  # https://opennext.js.org/aws/v2/inner_workings/streaming
+  invoke_mode        = "BUFFERED"
+}
+
+resource "aws_lambda_permission" "function_url_permission" {
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.function.function_name
+  principal              = "cloudfront.amazonaws.com"
+  function_url_auth_type = "AWS_IAM"
+}
