@@ -24,6 +24,7 @@ jobs:
   delete-resources:
     name: Test Mark and Delete Resources (WhatIf Mode)
     runs-on: ubuntu-latest
+    environment: dev-ci
     permissions:
       contents: read
       actions: read
