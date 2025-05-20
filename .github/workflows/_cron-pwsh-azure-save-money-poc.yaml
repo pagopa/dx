@@ -37,19 +37,35 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
       - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+          
+      - name: Verify Azure Connection
+        shell: pwsh
+        run: |
+          # Verify Azure connection is working
+          $context = Get-AzContext
+          Write-Host "Azure Context: $($context | ConvertTo-Json -Depth 2)"
+          Write-Host "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
+          Write-Host "Tenant: $($context.Tenant.Id)"
       
       - name: Install Az PowerShell modules
         shell: pwsh
         run: |
-          Install-Module -Name Az.Accounts -Force -AllowClobber
+          # The azure/login@v1 action already sets up Az PowerShell modules, but we need to install additional ones
+          Write-Host "Installing additional Az modules..."
           Install-Module -Name Az.Batch -Force -AllowClobber
           Install-Module -Name Az.DataProtection -Force -AllowClobber
           Install-Module -Name Az.Monitor -Force -AllowClobber
           Install-Module -Name Az.ResourceGraph -Force -AllowClobber
-          Install-Module -Name Az.Resources -Force -AllowClobber
           Install-Module -Name Az.ServiceBus -Force -AllowClobber
           Install-Module -Name PowerShellGet -Force -AllowClobber
+          
+          Write-Host "Az module installation complete"
       
       - name: Create Defaults.json file
         shell: pwsh
@@ -89,7 +105,12 @@ jobs:
             New-Item -Path "./reports" -ItemType Directory
           }
           
+          # Verify we're still connected before running the script
+          $context = Get-AzContext
+          Write-Host "Current Azure context: $($context.Name)"
+          
           # Run the script in WhatIf mode and capture output
+          Write-Host "Running script in WhatIf mode..."
           $scriptOutput = ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -WhatIf
           
           # Save the script output to a file
