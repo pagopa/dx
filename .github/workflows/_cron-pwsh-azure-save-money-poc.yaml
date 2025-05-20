@@ -1,9 +1,9 @@
 name: PoC Azure Save Money - Test Mode
 
 on:
-  push:
-    branches:
-      - feat/azsavemoney-poc # for testing purposes
+  # push:
+  #   branches:
+  #     - feat/azsavemoney-poc # for testing purposes
   schedule:
     - cron: '0 2 * * 4'  # Every Thursday at 2:00 UTC (is a random date for testing)
   workflow_dispatch:
@@ -18,7 +18,10 @@ jobs:
   delete-resources:
     name: Test Mark and Delete Resources (WhatIf Mode)
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      actions: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
