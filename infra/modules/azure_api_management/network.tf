@@ -108,7 +108,7 @@ resource "azurerm_network_security_group" "nsg_apim" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "1886, 443"
+    destination_port_ranges    = ["1886", "443"]
     source_address_prefix      = "VirtualNetwork"
     destination_address_prefix = "AzureMonitor"
     description                = "Publish Diagnostics Logs and Metrics, Resource Health, and Application Insights"
