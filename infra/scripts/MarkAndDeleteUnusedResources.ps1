@@ -1867,32 +1867,54 @@ if (!((Get-AzEnvironment).Name -contains $AzEnvironment)) {
 
 Write-HostOrOutput "Signing-in to Azure..."
 
-$loggedIn = $false
-$null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
-$useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
-$useDeviceAuth = $UseDeviceAuthentication.IsPresent
-$warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
-if ($useSystemIdentity -eq $true) {
-    # Use system-assigned identity
-    Write-HostOrOutput "Using system-assigned identity..."
-    $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
-}
-elseif ($null -eq $ServicePrincipalCredential) {
-    # Use user authentication (interactive or device)
-    Write-HostOrOutput "Using user authentication..."
-    if (![string]::IsNullOrWhiteSpace($TenantId)) {
-        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
+# Check if we're already authenticated in GitHub Actions or similar CI/CD environment
+if ($null -eq $global:alreadyAzAuthenticated) {
+    # Try to get the existing context first
+    $existingContext = Get-AzContext
+    if ($null -ne $existingContext) {
+        Write-HostOrOutput "Using existing authenticated context from CI/CD environment"
+        Write-HostOrOutput "Current context: $($existingContext.Name)"
+        Write-HostOrOutput "Account: $($existingContext.Account.Id)"
+        Write-HostOrOutput "Tenant: $($existingContext.Tenant.Id)"
+        Write-HostOrOutput "Subscription: $($existingContext.Subscription.Id)"
+        $global:alreadyAzAuthenticated = $true
+        $loggedIn = $true
     }
     else {
-        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
-        $TenantId = (Get-AzContext).Tenant.Id
+        # Standard authentication flow if no existing context is found
+        $loggedIn = $false
+        $null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
+        $useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
+        $useDeviceAuth = $UseDeviceAuthentication.IsPresent
+        $warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
+        if ($useSystemIdentity -eq $true) {
+            # Use system-assigned identity
+            Write-HostOrOutput "Using system-assigned identity..."
+            $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
+        }
+        elseif ($null -eq $ServicePrincipalCredential) {
+            # Use user authentication (interactive or device)
+            Write-HostOrOutput "Using user authentication..."
+            if (![string]::IsNullOrWhiteSpace($TenantId)) {
+                $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
+            }
+            else {
+                $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
+                $TenantId = (Get-AzContext).Tenant.Id
+            }
+        }
+        else {
+            # Use service principal authentication
+            Write-HostOrOutput "Using service principal authentication..."
+            $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
+        }
     }
 }
 else {
-    # Use service principal authentication
-    Write-HostOrOutput "Using service principal authentication..."
-    $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
+    Write-HostOrOutput "Already authenticated in previous execution"
+    $loggedIn = $true
 }
+
 if (!$loggedIn) {
     throw [System.ApplicationException]::new("Sign-in failed")
     return
