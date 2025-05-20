@@ -14,6 +14,12 @@ on:
         default: ''
         type: string
 
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+
 jobs:
   delete-resources:
     name: Test Mark and Delete Resources (WhatIf Mode)
@@ -21,6 +27,8 @@ jobs:
     permissions:
       contents: read
       actions: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
     steps:
       - name: Checkout
@@ -45,7 +53,7 @@ jobs:
         shell: pwsh
         run: |
           $defaultsJson = @{
-            TenantId = "${{ secrets.ARM_TENANT_ID }}"
+            TenantId = "${{ env.ARM_TENANT_ID }}"
             AlwaysOnlyMarkForDeletion = $true
             MinimumResourceAgeInDaysForChecking = 7
             DeleteSuspectedResourcesAndGroupsAfterDays = 30
@@ -54,7 +62,7 @@ jobs:
             ResetOfRejectedStatePeriodInDays = 180
             DontDeleteEmptyResourceGroups = $true
             "SubscriptionIdsToProcess": [
-              "${{ secrets.ARM_SUBSCRIPTION_ID }}",
+              "${{ env.ARM_SUBSCRIPTION_ID }}",
             ]
           }
           
