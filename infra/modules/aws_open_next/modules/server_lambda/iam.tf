@@ -23,6 +23,12 @@ data "aws_iam_policy_document" "lambda_policy" {
     actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["arn:aws:logs:*:*:*"]
   }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = [var.assets_bucket.arn, "${var.assets_bucket.arn}/*"]
+  }
 }
 
 resource "aws_iam_policy" "lambda_policy" {
