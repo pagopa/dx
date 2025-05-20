@@ -28,6 +28,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      id-token: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
