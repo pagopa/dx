@@ -63,7 +63,7 @@ jobs:
             EnableRegularResetOfRejectedState = $true
             ResetOfRejectedStatePeriodInDays = 180
             DontDeleteEmptyResourceGroups = $true
-            "SubscriptionIdsToProcess": [
+            SubscriptionIdsToProcess = [
               "${{ env.ARM_SUBSCRIPTION_ID }}",
             ]
           }
