@@ -36,6 +36,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
 
+      - name: Install Az PowerShell modules (preparatory step)
+        shell: pwsh
+        run: |
+          # Install all required Az modules in a single step
+          Write-Host "Installing required Az modules..."
+          
+          # Install modules with AllowClobber to ensure we get the latest versions
+          Install-Module -Name Az.Accounts -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.Resources -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.Batch -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.DataProtection -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.Monitor -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.ResourceGraph -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.ServiceBus -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser
+          
+          # Import all modules
+          Write-Host "Importing Az modules..."
+          Import-Module Az.Accounts -Force
+          Import-Module Az.Resources -Force
+          Import-Module Az.Batch -Force
+          Import-Module Az.DataProtection -Force
+          Import-Module Az.Monitor -Force
+          Import-Module Az.ResourceGraph -Force
+          Import-Module Az.ServiceBus -Force
+          
+          Write-Host "All Az modules installed and imported successfully"
+      
       - name: Azure Login
         uses: azure/login@a65d910e8af852a8061c627c456678983e180302
         with:
@@ -47,25 +75,19 @@ jobs:
       - name: Verify Azure Connection
         shell: pwsh
         run: |
-          # Verify Azure connection is working
+          # Verify that the Azure connection is working properly
+          Write-Host "Verifying Azure connection..."
           $context = Get-AzContext
-          Write-Host "Azure Context: $($context | ConvertTo-Json -Depth 2)"
-          Write-Host "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
-          Write-Host "Tenant: $($context.Tenant.Id)"
-      
-      - name: Install Az PowerShell modules
-        shell: pwsh
-        run: |
-          # The azure/login@v1 action already sets up Az PowerShell modules, but we need to install additional ones
-          Write-Host "Installing additional Az modules..."
-          Install-Module -Name Az.Batch -Force -AllowClobber
-          Install-Module -Name Az.DataProtection -Force -AllowClobber
-          Install-Module -Name Az.Monitor -Force -AllowClobber
-          Install-Module -Name Az.ResourceGraph -Force -AllowClobber
-          Install-Module -Name Az.ServiceBus -Force -AllowClobber
-          Install-Module -Name PowerShellGet -Force -AllowClobber
           
-          Write-Host "Az module installation complete"
+          if ($context) {
+            Write-Host "Successfully connected to Azure"
+            Write-Host "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
+            Write-Host "Tenant: $($context.Tenant.Id)"
+            Write-Host "Account: $($context.Account.Id)"
+          } else {
+            Write-Host "No Azure context found. Authentication may have failed." 
+            exit 1
+          }
       
       - name: Create Defaults.json file
         shell: pwsh
@@ -105,13 +127,13 @@ jobs:
             New-Item -Path "./reports" -ItemType Directory
           }
           
-          # Verify we're still connected before running the script
+          # Double-check connection is still valid
           $context = Get-AzContext
           Write-Host "Current Azure context: $($context.Name)"
           
           # Run the script in WhatIf mode and capture output
           Write-Host "Running script in WhatIf mode..."
-          $scriptOutput = ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -WhatIf
+          $scriptOutput = ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -TenantId "${{ env.ARM_TENANT_ID }}" -WhatIf
           
           # Save the script output to a file
           $scriptOutput | Out-File -FilePath "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log"
@@ -125,9 +147,11 @@ jobs:
           # Instead, we'll create a report from script output and resource information
           
           # Get all resources that would potentially be assessed by the script
+          Write-Host "Retrieving Azure resources..."
           $resources = Search-AzGraph -Query "resources | project resourceId, name, resourceGroup, type, kind, tags, location | order by resourceGroup asc"
+          Write-Host "Found $($resources.Count) resources"
           
-          # Extract information about used resources from the script output
+          # Read the script output
           $outputLog = Get-Content -Path "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log" -Raw
           
           # Create a report with the resources and the script output
