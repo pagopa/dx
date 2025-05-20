@@ -109,11 +109,10 @@ jobs:
           $report | ConvertTo-Json -Depth 4 | Out-File -FilePath "./reports/whatif-report-$(Get-Date -Format "yyyy-MM-dd").json"
           
           Write-Host "Test report generated for $($resources.Count) resources"
-      
-      - name: Upload test report as artifact
-        uses: actions/upload-artifact@v3
+
+
+      - name: Upload Artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          name: whatif-report
-          path: |
-            ./reports/whatif-output-*.log
-            ./reports/whatif-report-*.json
+          bundle_name: whatif-report
+          file_path: "${{ github.workspace }}/reports/whatif-*"
