@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.2.1
+
+### Patch Changes
+
+- fc534e7: Fix destination port declaration for Azure Monitor NSG security rule
+
 ## 1.2.0
 
 ### Minor Changes
