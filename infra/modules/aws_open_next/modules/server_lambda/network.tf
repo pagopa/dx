@@ -17,5 +17,5 @@ resource "aws_security_group_rule" "lambda_egress" {
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
   description       = "Allow all outbound traffic for ${aws_lambda_function.function.function_name} lambda function"
-  security_group_id = aws_security_group.lambda.id
+  security_group_id = aws_security_group.lambda[0].id
 }

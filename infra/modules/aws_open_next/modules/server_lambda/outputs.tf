@@ -7,16 +7,17 @@ output "iam_role" {
 
 output "lambda_function" {
   value = {
-    arn  = aws_lambda_function.lambda_function.arn
-    name = aws_lambda_function.lambda_function.function_name
-    url  = aws_lambda_function_url.function_url.function_url
+    arn  = aws_lambda_function.function.arn
+    name = aws_lambda_function.function.function_name
+    url  = trimsuffix(trimprefix(aws_lambda_function_url.function_url.function_url, "https://"), "/")
+    full_url = aws_lambda_function_url.function_url.function_url
   }
 }
 
 output "security_group" {
   value = {
-    id   = aws_security_group.lambda[0].id
-    name = aws_security_group.lambda[0].name
+    id   = try(aws_security_group.lambda[0].id, null)
+    name = try(aws_security_group.lambda[0].name, null)
   }
 }
 
