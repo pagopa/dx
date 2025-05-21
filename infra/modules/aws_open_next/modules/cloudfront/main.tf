@@ -275,24 +275,6 @@ resource "aws_cloudfront_distribution" "distribution" {
     viewer_protocol_policy = "redirect-to-https"
   }
 
-  dynamic "ordered_cache_behavior" {
-    for_each = toset(var.assets_paths)
-
-    content {
-      path_pattern     = ordered_cache_behavior.value
-      allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-      cached_methods   = ["GET", "HEAD", "OPTIONS"]
-      target_origin_id = local.assets_origin_id
-
-      response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-      cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
-      origin_request_policy_id = aws_cloudfront_origin_request_policy.origin_request_policy.id
-
-      compress               = true
-      viewer_protocol_policy = "redirect-to-https"
-    }
-  }
-
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
