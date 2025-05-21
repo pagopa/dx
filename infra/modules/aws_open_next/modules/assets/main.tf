@@ -45,6 +45,11 @@ resource "aws_s3_bucket_lifecycle_configuration" "assets" {
     id     = "abort-failed-uploads"
     status = "Enabled"
 
+    filter {
+      prefix = ""
+    }
+
+
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
     }
@@ -54,7 +59,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "assets" {
     id     = "clear-versioned-assets"
     status = "Enabled"
 
-    filter {}
+    filter {
+      prefix = ""
+    }
+
 
     noncurrent_version_expiration {
       noncurrent_days = 90
