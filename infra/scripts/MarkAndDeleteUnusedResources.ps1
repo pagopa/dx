@@ -1866,7 +1866,12 @@ if (!((Get-AzEnvironment).Name -contains $AzEnvironment)) {
 }
 
 Write-HostOrOutput "Signing-in to Azure..."
+
+# TESTING
 Connect-AzAccount -Identity
+$useSystemIdentity = $true
+# TESTING
+
 # $loggedIn = $false
 # $null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
 # $useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
