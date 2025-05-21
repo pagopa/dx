@@ -1866,37 +1866,37 @@ if (!((Get-AzEnvironment).Name -contains $AzEnvironment)) {
 }
 
 Write-HostOrOutput "Signing-in to Azure..."
-
-$loggedIn = $false
-$null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
-$useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
-$useDeviceAuth = $UseDeviceAuthentication.IsPresent
-$warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
-if ($useSystemIdentity -eq $true) {
-    # Use system-assigned identity
-    Write-HostOrOutput "Using system-assigned identity..."
-    $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
-}
-elseif ($null -eq $ServicePrincipalCredential) {
-    # Use user authentication (interactive or device)
-    Write-HostOrOutput "Using user authentication..."
-    if (![string]::IsNullOrWhiteSpace($TenantId)) {
-        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
-    }
-    else {
-        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
-        $TenantId = (Get-AzContext).Tenant.Id
-    }
-}
-else {
-    # Use service principal authentication
-    Write-HostOrOutput "Using service principal authentication..."
-    $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
-}
-if (!$loggedIn) {
-    throw [System.ApplicationException]::new("Sign-in failed")
-    return
-}
+Connect-AzAccount -Identity
+# $loggedIn = $false
+# $null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
+# $useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
+# $useDeviceAuth = $UseDeviceAuthentication.IsPresent
+# $warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
+# if ($useSystemIdentity -eq $true) {
+#     # Use system-assigned identity
+#     Write-HostOrOutput "Using system-assigned identity..."
+#     $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
+# }
+# elseif ($null -eq $ServicePrincipalCredential) {
+#     # Use user authentication (interactive or device)
+#     Write-HostOrOutput "Using user authentication..."
+#     if (![string]::IsNullOrWhiteSpace($TenantId)) {
+#         $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
+#     }
+#     else {
+#         $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
+#         $TenantId = (Get-AzContext).Tenant.Id
+#     }
+# }
+# else {
+#     # Use service principal authentication
+#     Write-HostOrOutput "Using service principal authentication..."
+#     $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
+# }
+# if (!$loggedIn) {
+#     throw [System.ApplicationException]::new("Sign-in failed")
+#     return
+# }
 Write-HostOrOutput "Signed in successfully."
 
 # Measure runtime

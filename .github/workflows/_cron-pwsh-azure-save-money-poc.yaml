@@ -72,100 +72,88 @@ jobs:
           subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
           
-      - name: Verify Azure Connection
-        shell: pwsh
-        run: |
-          # Verify that the Azure connection is working properly
-          Write-Host "Verifying Azure connection..."
-          $context = Get-AzContext
-          
-          if ($context) {
-            Write-Host "Successfully connected to Azure"
-            Write-Host "Subscription: $($context.Subscription.Name) ($($context.Subscription.Id))"
-            Write-Host "Tenant: $($context.Tenant.Id)"
-            Write-Host "Account: $($context.Account.Id)"
-          } else {
-            Write-Host "No Azure context found. Authentication may have failed." 
-            exit 1
-          }
-      
-      - name: Create Defaults.json file
-        shell: pwsh
-        run: |
-          $defaultsJson = @{
-            TenantId = "${{ env.ARM_TENANT_ID }}"
-            AlwaysOnlyMarkForDeletion = $true
-            MinimumResourceAgeInDaysForChecking = 7
-            DeleteSuspectedResourcesAndGroupsAfterDays = 30
-            DontDeleteEmptyResourceGroups = $true
-            EnableRegularResetOfRejectedState = $true
-            ResetOfRejectedStatePeriodInDays = 180
-            SubscriptionIdsToProcess = @(
-              "${{ env.ARM_SUBSCRIPTION_ID }}"
-            )
-          }
-          
-          # Add Log Analytics Workspace ID if provided
-          if (-not [string]::IsNullOrWhiteSpace("${{ inputs.log_analytics_workspace_id }}")) {
-            $defaultsJson.Add("CentralAuditLogAnalyticsWorkspaceId", "${{ inputs.log_analytics_workspace_id }}")
-          }
-          
-          # Ensure the scripts directory exists
-          $scriptDir = Join-Path (Get-Location) "infra/scripts"
-          
-          # Convert to JSON and save to file
-          $defaultsJson | ConvertTo-Json -Depth 3 | Out-File -FilePath (Join-Path $scriptDir "Defaults.json")
-          
-          Write-Host "Created Defaults.json file with the following content:"
-          Get-Content (Join-Path $scriptDir "Defaults.json")
-      
       - name: Run script to mark resources (WhatIf mode)
         shell: pwsh
         run: |
-          # Create reports directory if it doesn't exist
-          if (-not (Test-Path -Path "./reports")) {
-            New-Item -Path "./reports" -ItemType Directory
-          }
-          
-          # Double-check connection is still valid
-          $context = Get-AzContext
-          Write-Host "Current Azure context: $($context.Name)"
-          
-          # Run the script in WhatIf mode and capture output
-          Write-Host "Running script in WhatIf mode..."
-          $scriptOutput = ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -TenantId "${{ env.ARM_TENANT_ID }}" -WhatIf
-          
-          # Save the script output to a file
-          $scriptOutput | Out-File -FilePath "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log"
-          
-          Write-Host "Script executed in WhatIf mode, output saved to report file"
+          ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -TenantId "${{ env.ARM_TENANT_ID }}" -WhatIf -EnableRegularResetOfRejectedState -AlwaysOnlyMarkForDeletion -DontDeleteEmptyResourceGroups -MinimumResourceAgeInDaysForChecking 7 -DeleteSuspectedResourcesAndGroupsAfterDays 30 -ResetOfRejectedStatePeriodInDays 180 -SubscriptionIdsToProcess @("${{ env.ARM_SUBSCRIPTION_ID }}")
       
-      - name: Generate test report
-        shell: pwsh
-        run: |
-          # In WhatIf mode, the script doesn't actually apply tags
-          # Instead, we'll create a report from script output and resource information
+      # - name: Create Defaults.json file
+      #   shell: pwsh
+      #   run: |
+      #     $defaultsJson = @{
+      #       TenantId = "${{ env.ARM_TENANT_ID }}"
+      #       AlwaysOnlyMarkForDeletion = $true
+      #       MinimumResourceAgeInDaysForChecking = 7
+      #       DeleteSuspectedResourcesAndGroupsAfterDays = 30
+      #       DontDeleteEmptyResourceGroups = $true
+      #       EnableRegularResetOfRejectedState = $true
+      #       ResetOfRejectedStatePeriodInDays = 180
+      #       SubscriptionIdsToProcess = @(
+      #         "${{ env.ARM_SUBSCRIPTION_ID }}"
+      #       )
+      #     }
           
-          # Get all resources that would potentially be assessed by the script
-          Write-Host "Retrieving Azure resources..."
-          $resources = Search-AzGraph -Query "resources | project resourceId, name, resourceGroup, type, kind, tags, location | order by resourceGroup asc"
-          Write-Host "Found $($resources.Count) resources"
+      #     # Add Log Analytics Workspace ID if provided
+      #     if (-not [string]::IsNullOrWhiteSpace("${{ inputs.log_analytics_workspace_id }}")) {
+      #       $defaultsJson.Add("CentralAuditLogAnalyticsWorkspaceId", "${{ inputs.log_analytics_workspace_id }}")
+      #     }
           
-          # Read the script output
-          $outputLog = Get-Content -Path "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log" -Raw
+      #     # Ensure the scripts directory exists
+      #     $scriptDir = Join-Path (Get-Location) "infra/scripts"
           
-          # Create a report with the resources and the script output
-          $report = @{
-            "scriptOutput" = $outputLog
-            "resourcesAssessed" = $resources.Count
-            "executionDate" = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
-            "resources" = $resources
-          }
+      #     # Convert to JSON and save to file
+      #     $defaultsJson | ConvertTo-Json -Depth 3 | Out-File -FilePath (Join-Path $scriptDir "Defaults.json")
           
-          # Save the report
-          $report | ConvertTo-Json -Depth 4 | Out-File -FilePath "./reports/whatif-report-$(Get-Date -Format "yyyy-MM-dd").json"
+      #     Write-Host "Created Defaults.json file with the following content:"
+      #     Get-Content (Join-Path $scriptDir "Defaults.json")
+      
+      # - name: Run script to mark resources (WhatIf mode)
+      #   shell: pwsh
+      #   run: |
+      #     # Create reports directory if it doesn't exist
+      #     if (-not (Test-Path -Path "./reports")) {
+      #       New-Item -Path "./reports" -ItemType Directory
+      #     }
           
-          Write-Host "Test report generated for $($resources.Count) resources"
+      #     # Double-check connection is still valid
+      #     $context = Get-AzContext
+      #     Write-Host "Current Azure context: $($context.Name)"
+          
+      #     # Run the script in WhatIf mode and capture output
+      #     Write-Host "Running script in WhatIf mode..."
+      #     $scriptOutput = ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -TenantId "${{ env.ARM_TENANT_ID }}" -WhatIf
+          
+      #     # Save the script output to a file
+      #     $scriptOutput | Out-File -FilePath "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log"
+          
+      #     Write-Host "Script executed in WhatIf mode, output saved to report file"
+      
+      # - name: Generate test report
+      #   shell: pwsh
+      #   run: |
+      #     # In WhatIf mode, the script doesn't actually apply tags
+      #     # Instead, we'll create a report from script output and resource information
+          
+      #     # Get all resources that would potentially be assessed by the script
+      #     Write-Host "Retrieving Azure resources..."
+      #     $resources = Search-AzGraph -Query "resources | project resourceId, name, resourceGroup, type, kind, tags, location | order by resourceGroup asc"
+      #     Write-Host "Found $($resources.Count) resources"
+          
+      #     # Read the script output
+      #     $outputLog = Get-Content -Path "./reports/whatif-output-$(Get-Date -Format "yyyy-MM-dd").log" -Raw
+          
+      #     # Create a report with the resources and the script output
+      #     $report = @{
+      #       "scriptOutput" = $outputLog
+      #       "resourcesAssessed" = $resources.Count
+      #       "executionDate" = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+      #       "resources" = $resources
+      #     }
+          
+      #     # Save the report
+      #     $report | ConvertTo-Json -Depth 4 | Out-File -FilePath "./reports/whatif-report-$(Get-Date -Format "yyyy-MM-dd").json"
+          
+      #     Write-Host "Test report generated for $($resources.Count) resources"
 
 
       - name: Upload Artifact
