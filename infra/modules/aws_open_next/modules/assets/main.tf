@@ -67,7 +67,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "assets" {
   }
 }
 
-resource "aws_cloudfront_origin_access_identity" "assets" {
-  comment = "CloudFront OAI for Assets S3 Bucket"
+resource "aws_cloudfront_origin_access_control" "assets" {
+  name                              = "${local.app_prefix}-oac-${local.app_suffix}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+  description                       = "Origin access control for CloudFront to access S3 Assets bucket for project ${local.project}"
 }
-

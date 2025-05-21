@@ -42,3 +42,11 @@ resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
+
+resource "aws_cloudfront_origin_access_control" "lambda" {
+  name                              = "${local.app_prefix}-oac-${local.app_suffix}"
+  description                       = "Origin Access Control for Server Lambda URL for project ${local.project}"
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
