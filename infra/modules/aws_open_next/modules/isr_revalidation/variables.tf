@@ -35,7 +35,7 @@ variable "node_major_version" {
 variable "handler" {
   type        = string
   description = "The function entrypoint in your code. The format is <filename>.<function_name>. For example, if your code is in a file called index.js and the function name is handler, the value should be index.handler."
-  default = "index.handler"
+  default     = "index.handler"
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9_]+\\.[a-zA-Z0-9_]+$", var.handler))
