@@ -1869,7 +1869,6 @@ Write-HostOrOutput "Signing-in to Azure..."
 
 # TESTING
 Connect-AzAccount -Identity
-$useSystemIdentity = $true
 # TESTING
 
 # $loggedIn = $false
@@ -1928,20 +1927,20 @@ else {
 # Filled during processing and reported at the end
 $usedResourceTypesWithoutHook = @{}
 
-$signedInIdentity = $null
-if ($useSystemIdentity) {
-    Write-HostOrOutput "Getting system-managed identity of the automation account..."
-    $signedInIdentity = Get-AzSystemAssignedIdentity -Scope $AutomationAccountResourceId
-}
-elseif ($null -ne $ServicePrincipalCredential) {
-    Write-HostOrOutput "Getting signed-in service principal..."
-    $signedInIdentity = Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id
-}
-else {
-    Write-HostOrOutput "Getting signed-in user identity..."
-    $signedInIdentity = Get-AzADUser -SignedIn
-}
-Write-HostOrOutput "Identity Object ID: $($signedInIdentity.Id)"
+# $signedInIdentity = $null
+# if ($useSystemIdentity) {
+#     Write-HostOrOutput "Getting system-managed identity of the automation account..."
+#     $signedInIdentity = Get-AzSystemAssignedIdentity -Scope $AutomationAccountResourceId
+# }
+# elseif ($null -ne $ServicePrincipalCredential) {
+#     Write-HostOrOutput "Getting signed-in service principal..."
+#     $signedInIdentity = Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id
+# }
+# else {
+#     Write-HostOrOutput "Getting signed-in user identity..."
+#     $signedInIdentity = Get-AzADUser -SignedIn
+# }
+# Write-HostOrOutput "Identity Object ID: $($signedInIdentity.Id)"
 
 foreach ($sub in $allSubscriptions) {
     if ($null -ne $SubscriptionIdsToProcess -and $SubscriptionIdsToProcess.Count -gt 0 -and !$SubscriptionIdsToProcess.Contains($sub.Id)) {
@@ -1953,6 +1952,9 @@ foreach ($sub in $allSubscriptions) {
     # Get all resources in current subscription
     Select-AzSubscription -SubscriptionName $sub.Name -TenantId $TenantId -WhatIf:$false | Out-Null
 
+    # TESTING
+    $signedInIdentity = Get-AzUserAssignedIdentity -SubscriptionId $sub.Id -ResourceGroupName "dx-d-itn-common-identity-rg-01" -Name "dx-d-itn-common-infra-github-ci-id-01"
+    # TESTING
     $tempRoleAssignment = $null
     if ($TryMakingUserContributorTemporarily) {
         if ($null -ne $signedInIdentity) {
