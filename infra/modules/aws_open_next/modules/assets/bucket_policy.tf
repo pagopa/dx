@@ -5,8 +5,14 @@ data "aws_iam_policy_document" "read_assets_bucket" {
     resources = ["${aws_s3_bucket.assets.arn}/*"]
 
     principals {
-      type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.assets.iam_arn]
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:distribution/*"]
     }
   }
 
