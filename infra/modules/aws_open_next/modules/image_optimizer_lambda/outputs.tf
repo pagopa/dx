@@ -12,13 +12,6 @@ output "lambda_function" {
   }
 }
 
-output "security_group" {
-  value = {
-    id   = aws_security_group.lambda[0].id
-    name = aws_security_group.lambda[0].name
-  }
-}
-
 output "cloudfront_origin_access_control" {
   value = {
     id = aws_cloudfront_origin_access_control.lambda.id

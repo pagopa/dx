@@ -5,7 +5,7 @@ output "bucket" {
   }
 }
 
-output "cloudfront_origin_access_identity" {
+output "cloudfront_origin_access_control" {
   value = {
     id = aws_cloudfront_origin_access_identity.assets.id
     arn = aws_cloudfront_origin_access_identity.assets.arn
