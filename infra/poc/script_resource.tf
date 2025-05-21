@@ -69,9 +69,9 @@ $parametersToPass = @{
     "MinimumResourceAgeInDaysForChecking" = $MinimumResourceAgeInDaysForChecking
     "DeleteSuspectedResourcesAndGroupsAfterDays" = $DeleteSuspectedResourcesAndGroupsAfterDays
     "ResetOfRejectedStatePeriodInDays" = $ResetOfRejectedStatePeriodInDays
-    "DontDeleteEmptyResourceGroups" = ""
-    "AlwaysOnlyMarkForDeletion" = ""
-    "EnableRegularResetOfRejectedState" = ""
+    "DontDeleteEmptyResourceGroups" = $true
+    "AlwaysOnlyMarkForDeletion" = $true
+    "EnableRegularResetOfRejectedState" = $true
 }
 
 # Avvia il runbook secondario passando i parametri

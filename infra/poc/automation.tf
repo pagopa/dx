@@ -23,6 +23,12 @@ resource "azurerm_role_assignment" "reader_role" {
   principal_id         = azurerm_automation_account.save_money.identity[0].principal_id
 }
 
+resource "azurerm_role_assignment" "automation_role" {
+  scope                = azurerm_automation_account.save_money.id
+  role_definition_name = "Automation Operator"
+  principal_id         = azurerm_automation_account.save_money.identity[0].principal_id
+}
+
 # --------------------------------------
 # Variables
 # --------------------------------------
