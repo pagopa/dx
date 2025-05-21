@@ -9,6 +9,7 @@ output "lambda_function" {
   value = {
     arn  = aws_lambda_function.lambda_function.arn
     name = aws_lambda_function.lambda_function.function_name
+    url = aws_lambda_function_url.function_url.function_url
   }
 }
 
