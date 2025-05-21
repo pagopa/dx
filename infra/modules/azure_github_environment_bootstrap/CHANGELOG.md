@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.3.0
+
+### Minor Changes
+
+- fad5db7: App CD Identity is now CDN Profile Contributor in team resource groups
+
 ## 2.2.0
 
 ### Minor Changes
