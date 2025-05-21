@@ -1847,7 +1847,7 @@ function Get-UserConfirmationWithTimeout(
 ################################################################################
 # Execution
 ################################################################################
-
+$WhatIfPreference = $true # REMOVE AFTER POC
 $WarningPreference = 'SilentlyContinue'  # to suppress upcoming breaking changes warnings
 
 $IsWhatIfMode = !$PSCmdlet.ShouldProcess("mode is enabled (no changes will be made)", $null, $null)
@@ -1867,54 +1867,32 @@ if (!((Get-AzEnvironment).Name -contains $AzEnvironment)) {
 
 Write-HostOrOutput "Signing-in to Azure..."
 
-# Check if we're already authenticated in GitHub Actions or similar CI/CD environment
-if ($null -eq $global:alreadyAzAuthenticated) {
-    # Try to get the existing context first
-    $existingContext = Get-AzContext
-    if ($null -ne $existingContext) {
-        Write-HostOrOutput "Using existing authenticated context from CI/CD environment"
-        Write-HostOrOutput "Current context: $($existingContext.Name)"
-        Write-HostOrOutput "Account: $($existingContext.Account.Id)"
-        Write-HostOrOutput "Tenant: $($existingContext.Tenant.Id)"
-        Write-HostOrOutput "Subscription: $($existingContext.Subscription.Id)"
-        $global:alreadyAzAuthenticated = $true
-        $loggedIn = $true
+$loggedIn = $false
+$null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
+$useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
+$useDeviceAuth = $UseDeviceAuthentication.IsPresent
+$warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
+if ($useSystemIdentity -eq $true) {
+    # Use system-assigned identity
+    Write-HostOrOutput "Using system-assigned identity..."
+    $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
+}
+elseif ($null -eq $ServicePrincipalCredential) {
+    # Use user authentication (interactive or device)
+    Write-HostOrOutput "Using user authentication..."
+    if (![string]::IsNullOrWhiteSpace($TenantId)) {
+        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
     }
     else {
-        # Standard authentication flow if no existing context is found
-        $loggedIn = $false
-        $null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
-        $useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
-        $useDeviceAuth = $UseDeviceAuthentication.IsPresent
-        $warnAction = $useDeviceAuth ? 'Continue' : 'SilentlyContinue'
-        if ($useSystemIdentity -eq $true) {
-            # Use system-assigned identity
-            Write-HostOrOutput "Using system-assigned identity..."
-            $loggedIn = Connect-AzAccount -Identity -WarningAction $warnAction -WhatIf:$false
-        }
-        elseif ($null -eq $ServicePrincipalCredential) {
-            # Use user authentication (interactive or device)
-            Write-HostOrOutput "Using user authentication..."
-            if (![string]::IsNullOrWhiteSpace($TenantId)) {
-                $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -TenantId $TenantId -WarningAction $warnAction -WhatIf:$false
-            }
-            else {
-                $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
-                $TenantId = (Get-AzContext).Tenant.Id
-            }
-        }
-        else {
-            # Use service principal authentication
-            Write-HostOrOutput "Using service principal authentication..."
-            $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
-        }
+        $loggedIn = Connect-AzAccount -Environment $AzEnvironment -UseDeviceAuthentication:$useDeviceAuth -WarningAction $warnAction -WhatIf:$false
+        $TenantId = (Get-AzContext).Tenant.Id
     }
 }
 else {
-    Write-HostOrOutput "Already authenticated in previous execution"
-    $loggedIn = $true
+    # Use service principal authentication
+    Write-HostOrOutput "Using service principal authentication..."
+    $loggedIn = Connect-AzAccount -Environment $AzEnvironment -TenantId $TenantId -ServicePrincipal -Credential $ServicePrincipalCredential -WhatIf:$false
 }
-
 if (!$loggedIn) {
     throw [System.ApplicationException]::new("Sign-in failed")
     return
