@@ -22,9 +22,9 @@ variable "environment" {
 
 variable "custom_domain" {
   type = object({
-    domain_name       = string
-    hosted_zone_id    = string
-    acm_certificate_arn   = string
+    domain_name         = string
+    hosted_zone_id      = string
+    acm_certificate_arn = string
   })
 
   description = "Custom domain information."
@@ -32,7 +32,7 @@ variable "custom_domain" {
 }
 
 variable "custom_headers" {
-  type        = list(object({
+  type = list(object({
     header   = string
     value    = string
     override = optional(bool)
@@ -45,7 +45,7 @@ variable "origins" {
   type = object({
     assets_bucket = object({
       domain_name = string
-      oai  = string
+      oai         = string
     })
     server_function = object({
       url = string

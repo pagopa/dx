@@ -22,9 +22,9 @@ variable "environment" {
 
 variable "custom_domain" {
   type = object({
-    domain_name = string
+    domain_name         = string
     acm_certificate_arn = string
-    hosted_zone_id = optional(string, null)
+    hosted_zone_id      = optional(string, null)
   })
 
   description = "Custom domain configuration. If not provided, the cloudfront default domain will be used. If the DNS zone is managed by AWS, the hosted_zone_id must be provided to create the Route53 record."
@@ -55,34 +55,34 @@ variable "vpc" {
 
 variable "server" {
   type = object({
-    timeout              = optional(number, 30)
-    memory_size          = optional(number, 512)
-    handler              = optional(string, "index.handler")
+    timeout               = optional(number, 30)
+    memory_size           = optional(number, 512)
+    handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
   })
 
   description = "The server lambda function configuration."
-  default     = {
-    timeout              = 30
-    memory_size          = 512
-    handler              = "index.handler"
+  default = {
+    timeout               = 30
+    memory_size           = 512
+    handler               = "index.handler"
     environment_variables = {}
   }
 }
 
 variable "image_optimizer" {
   type = object({
-    timeout              = optional(number, 30)
-    memory_size          = optional(number, 512)
-    handler              = optional(string, "index.handler")
+    timeout               = optional(number, 30)
+    memory_size           = optional(number, 512)
+    handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
   })
 
   description = "The image optimizer lambda function configuration."
-  default     = {
-    timeout              = 30
-    memory_size          = 512
-    handler              = "index.handler"
+  default = {
+    timeout               = 30
+    memory_size           = 512
+    handler               = "index.handler"
     environment_variables = {}
   }
 }
@@ -94,7 +94,7 @@ variable "enable_waf" {
 }
 
 variable "custom_headers" {
-  type        = list(object({
+  type = list(object({
     header   = string
     value    = string
     override = optional(bool)
