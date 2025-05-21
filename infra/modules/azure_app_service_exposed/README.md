@@ -63,6 +63,7 @@ No modules.
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | List of application setting names that are not swapped between slots. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to apply to all created resources. | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | Resource tier based on workload. Allowed values: 'xs', 's', 'm', 'l', 'xl'. Legacy values: 'premium', 'standard', 'test'. | `string` | `"l"` | no |
+| <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
 
 ## Outputs
 
