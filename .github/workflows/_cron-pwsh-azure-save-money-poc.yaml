@@ -51,7 +51,7 @@ jobs:
           Install-Module -Name Az.ResourceGraph -Force -AllowClobber -Scope CurrentUser
           Install-Module -Name Az.ServiceBus -Force -AllowClobber -Scope CurrentUser
           Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser
-          Install-Module -Name Az.ManagedServiceIdentityh -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name Az.ManagedServiceIdentity -Force -AllowClobber -Scope CurrentUser
           
           # Import all modules
           Write-Host "Importing Az modules..."
@@ -62,7 +62,7 @@ jobs:
           Import-Module Az.Monitor -Force
           Import-Module Az.ResourceGraph -Force
           Import-Module Az.ServiceBus -Force
-          Import-Module Az.ManagedServiceIdentityh -Force
+          Import-Module Az.ManagedServiceIdentity -Force
           
           Write-Host "All Az modules installed and imported successfully"
       
