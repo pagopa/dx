@@ -45,7 +45,7 @@ variable "origins" {
   type = object({
     assets_bucket = object({
       domain_name = string
-      oai         = string
+      oac         = string
     })
     server_function = object({
       url = string

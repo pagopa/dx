@@ -159,7 +159,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     domain_name              = var.origins.assets_bucket.domain_name
     origin_id                = "${local.app_prefix}-assets-origin-${local.app_suffix}"
     origin_path              = "/assets"
-    origin_access_control_id = var.origins.assets_bucket.oai
+    origin_access_control_id = var.origins.assets_bucket.oac
   }
 
   # Server Function Origin
