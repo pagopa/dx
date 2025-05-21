@@ -7,7 +7,7 @@ output "bucket" {
 
 output "cloudfront_origin_access_control" {
   value = {
-    id = aws_cloudfront_origin_access_control.assets.id
+    id  = aws_cloudfront_origin_access_control.assets.id
     arn = aws_cloudfront_origin_access_control.assets.arn
   }
 }

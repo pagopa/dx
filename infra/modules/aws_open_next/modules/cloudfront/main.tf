@@ -12,12 +12,8 @@ function handler(event) {
 EOF
 }
 
-data "aws_cloudfront_origin_request_policy" "origin_request_policy" {
-  name  = "Managed-AllViewerExceptHostHeader"
-}
-
 resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
-  name  = "${local.app_prefix}-origin-request-policy-${local.app_suffix}"
+  name    = "${local.app_prefix}-origin-request-policy-${local.app_suffix}"
   comment = "${local.app_prefix} Origin Request Policy for Next.js Application"
 
   cookies_config {
@@ -44,7 +40,7 @@ resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
 }
 
 resource "aws_cloudfront_cache_policy" "cache_policy" {
-  name = "${local.app_prefix}-cache-policy-${local.app_suffix}"
+  name    = "${local.app_prefix}-cache-policy-${local.app_suffix}"
   comment = "${local.app_prefix} Cache Policy for Next.js Application"
 
   default_ttl = 0
@@ -160,16 +156,16 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   # S3 Bucket Origin
   origin {
-    domain_name = var.origins.assets_bucket.domain_name
-    origin_id   = "${local.app_prefix}-assets-origin-${local.app_suffix}"
-    origin_path = "/assets"
+    domain_name              = var.origins.assets_bucket.domain_name
+    origin_id                = "${local.app_prefix}-assets-origin-${local.app_suffix}"
+    origin_path              = "/assets"
     origin_access_control_id = var.origins.assets_bucket.oai
   }
 
   # Server Function Origin
   origin {
-    domain_name = var.origins.server_function.url
-    origin_id = "${local.app_prefix}-server-origin-${local.app_suffix}"
+    domain_name              = var.origins.server_function.url
+    origin_id                = "${local.app_prefix}-server-origin-${local.app_suffix}"
     origin_access_control_id = var.origins.server_function.oac
 
     custom_origin_config {
@@ -182,8 +178,8 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   # Image Optimization Function Origin
   origin {
-    domain_name = var.origins.image_optimization_function.url
-    origin_id   = "${local.app_prefix}-image-optimization-origin-${local.app_suffix}"
+    domain_name              = var.origins.image_optimization_function.url
+    origin_id                = "${local.app_prefix}-image-optimization-origin-${local.app_suffix}"
     origin_access_control_id = var.origins.image_optimization_function.oac
 
     custom_origin_config {
@@ -282,7 +278,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
     cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.origin_request_policy.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
@@ -292,4 +288,6 @@ resource "aws_cloudfront_distribution" "distribution" {
       function_arn = aws_cloudfront_function.host_header_function.arn
     }
   }
+
+  tags = var.tags
 }

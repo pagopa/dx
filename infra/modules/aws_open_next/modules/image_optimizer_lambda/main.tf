@@ -25,7 +25,7 @@ resource "aws_lambda_function" "function" {
     variables = merge({
       BUCKET_NAME       = var.assets_bucket.name,
       BUCKET_KEY_PREFIX = "assets"
-    },
+      },
     var.environment_variables)
   }
 
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
   skip_destroy      = true
   retention_in_days = 30
   # kms_key_id        = var.log_group.kms_key_id
-  tags              = var.tags
+  tags = var.tags
 }
 
 resource "aws_lambda_function_url" "function_url" {
@@ -53,7 +53,7 @@ resource "aws_lambda_function_url" "function_url" {
   authorization_type = "AWS_IAM"
   # Change to RESPONSE_STREAM once the feature is production ready
   # https://opennext.js.org/aws/v2/inner_workings/streaming
-  invoke_mode        = "BUFFERED"
+  invoke_mode = "BUFFERED"
 }
 
 resource "aws_lambda_permission" "function_url_permission" {
