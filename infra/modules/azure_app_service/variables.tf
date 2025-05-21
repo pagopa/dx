@@ -143,3 +143,9 @@ variable "subnet_service_endpoints" {
   description = "Enable service endpoints for the underlying subnet. Should only be set if dependencies do not use private endpoints."
   default     = null
 }
+
+variable "tls_version" {
+  type        = number
+  default     = 1.2
+  description = "Minimum TLS version for the App Service."
+}
