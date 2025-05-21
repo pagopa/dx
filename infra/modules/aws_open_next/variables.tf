@@ -48,6 +48,7 @@ variable "vpc" {
     id              = string
     private_subnets = list(string)
   })
+  default = null
 
   description = "The VPC used to deploy the lambda functions in. Configure this only when you want the lambda to access private resources contained in the VPC."
 }

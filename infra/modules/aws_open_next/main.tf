@@ -56,16 +56,13 @@ module "cloudfront" {
 
   enable_waf = var.enable_waf
 
-  custom_domain = {
-    domain_name         = var.custom_domain != null ? var.custom_domain.domain_name : null
-    acm_certificate_arn = var.custom_domain != null ? var.custom_domain.acm_certificate_arn : null
-  }
+  custom_domain = var.custom_domain
 
   custom_headers = var.custom_headers
 
   origins = {
     assets_bucket = {
-      domain_name = module.assets.bucket.bucket_regional_domain_name
+      domain_name = module.assets.bucket.regional_domain_name
       oac         = module.assets.cloudfront_origin_access_control.id
     }
     server_function = {
