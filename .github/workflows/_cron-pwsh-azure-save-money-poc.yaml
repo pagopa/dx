@@ -77,7 +77,15 @@ jobs:
       - name: Run script to mark resources (WhatIf mode)
         shell: pwsh
         run: |
-          ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -TenantId "${{ env.ARM_TENANT_ID }}" -WhatIf -EnableRegularResetOfRejectedState -AlwaysOnlyMarkForDeletion -DontDeleteEmptyResourceGroups -MinimumResourceAgeInDaysForChecking 7 -DeleteSuspectedResourcesAndGroupsAfterDays 30 -ResetOfRejectedStatePeriodInDays 180 -SubscriptionIdsToProcess @("${{ env.ARM_SUBSCRIPTION_ID }}")
+          ./infra/scripts/MarkAndDeleteUnusedResources.ps1 -WhatIf `
+            -TenantId "${{ env.ARM_TENANT_ID }}" `
+            -EnableRegularResetOfRejectedState `
+            -AlwaysOnlyMarkForDeletion `
+            -DontDeleteEmptyResourceGroups `
+            -MinimumResourceAgeInDaysForChecking 7 `
+            -DeleteSuspectedResourcesAndGroupsAfterDays 30 `
+            -ResetOfRejectedStatePeriodInDays 180 `
+            -SubscriptionIdsToProcess @("${{ env.ARM_SUBSCRIPTION_ID }}")
       
       # - name: Create Defaults.json file
       #   shell: pwsh
@@ -157,9 +165,8 @@ jobs:
           
       #     Write-Host "Test report generated for $($resources.Count) resources"
 
-
-      - name: Upload Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
-        with:
-          bundle_name: whatif-report
-          file_path: "${{ github.workspace }}/reports/whatif-*"
+      # - name: Upload Artifact
+      #   uses: pagopa/dx/.github/actions/upload-artifact@main
+      #   with:
+      #     bundle_name: whatif-report
+      #     file_path: "${{ github.workspace }}/reports/whatif-*"
