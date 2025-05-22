@@ -46,8 +46,8 @@ variable "handler" {
 
 variable "memory_size" {
   type        = number
-  description = "The amount of memory available to the function at runtime in MB. The default is 512 MB. The maximum is 10240 MB."
-  default     = 512
+  description = "The amount of memory available to the function at runtime in MB. The default is 1024 MB. The maximum is 10240 MB."
+  default     = 1024
 
   validation {
     condition     = var.memory_size >= 128 && var.memory_size <= 10240
