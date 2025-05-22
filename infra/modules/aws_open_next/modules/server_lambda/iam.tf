@@ -17,17 +17,65 @@ resource "aws_iam_role" "lambda_role" {
   tags = var.tags
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_execution_role" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "s3_read_only" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
+
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = ["arn:aws:logs:*:*:*"]
+    actions   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+                "dynamodb:UpdateItem",
+                "dynamodb:Scan",
+                "dynamodb:Query",
+                "dynamodb:PutItem",
+                "dynamodb:GetShardIterator",
+                "dynamodb:GetRecords",
+                "dynamodb:GetItem",
+                "dynamodb:DescribeTable",
+                "dynamodb:DeleteItem",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:BatchGetItem"
+            ]
+    resources = [var.isr_tags_ddb.arn, "${var.isr_tags_ddb.arn}/*"]
   }
 
   statement {
     effect    = "Allow"
-    actions   = ["s3:GetObject"]
+    actions   = ["sqs:SendMessage", "sqs:GetQueueUrl", "sqs:GetQueueAttributes"]
+    resources = [var.isr_queue.arn]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
     resources = [var.assets_bucket.arn, "${var.assets_bucket.arn}/*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = [var.assets_bucket.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = ["cloudfront:CreateInvalidation"]
+    resources = ["*"]
   }
 }
 
