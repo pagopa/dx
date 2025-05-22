@@ -94,3 +94,19 @@ variable "assets_bucket" {
   })
   description = "The ARN of the S3 bucket where the OpenNext assets are stored."
 }
+
+variable "isr_tags_ddb" {
+  type = object({
+    name = string
+    arn  = string
+  })
+  description = "The ARN of the DynamoDB table used for ISR revalidation."
+}
+
+variable "isr_queue" {
+  type = object({
+    name = string
+    arn  = string
+  })
+  description = "The ARN of the SQS queue used for ISR revalidation."
+}

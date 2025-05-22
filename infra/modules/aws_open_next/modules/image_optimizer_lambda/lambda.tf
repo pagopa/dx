@@ -3,7 +3,7 @@ resource "aws_lambda_function" "function" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   function_name = "${local.app_prefix}-lambda-${local.app_suffix}"
-  description   = "OpenNext Server Lambda Function for project ${local.project}"
+  description   = "OpenNext Image Optimizer Lambda Function for project ${local.project}"
 
   handler       = var.handler
   runtime       = "nodejs${var.node_major_version}.x"
@@ -15,7 +15,7 @@ resource "aws_lambda_function" "function" {
 
   memory_size = var.memory_size
   timeout     = var.timeout
-  publish     = var.is_at_edge
+  publish     = false
 
   tracing_config {
     mode = "Active"
@@ -29,15 +29,6 @@ resource "aws_lambda_function" "function" {
     var.environment_variables)
   }
 
-  dynamic "vpc_config" {
-    for_each = var.vpc == null ? [] : [1]
-
-    content {
-      security_group_ids = [aws_security_group.lambda[0].id]
-      subnet_ids         = var.vpc.private_subnets
-    }
-  }
-
   # dynamic "dead_letter_config" {
   #   for_each = var.dead_letter_config != null ? [true] : []
 
@@ -47,6 +38,10 @@ resource "aws_lambda_function" "function" {
   # }
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [last_modified, filename, source_code_hash]
+  }
 }
 
 resource "aws_cloudwatch_log_group" "function_log_group" {
