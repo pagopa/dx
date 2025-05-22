@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "assets" {
-  bucket = "${local.app_prefix}-assets-${local.app_suffix}"
+  bucket = "${local.app_prefix}-${local.app_suffix}"
 
   tags = var.tags
 }

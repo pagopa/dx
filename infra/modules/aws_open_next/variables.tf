@@ -57,24 +57,26 @@ variable "vpc" {
 variable "server" {
   type = object({
     timeout               = optional(number, 30)
-    memory_size           = optional(number, 512)
+    memory_size           = optional(number, 1024)
     handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
+    is_streaming_enabled  = optional(bool, false)
   })
 
   description = "The server lambda function configuration."
   default = {
     timeout               = 30
-    memory_size           = 512
+    memory_size           = 1024
     handler               = "index.handler"
     environment_variables = {}
+    is_streaming_enabled  = false
   }
 }
 
 variable "image_optimizer" {
   type = object({
     timeout               = optional(number, 30)
-    memory_size           = optional(number, 512)
+    memory_size           = optional(number, 1024)
     handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
   })
@@ -82,7 +84,7 @@ variable "image_optimizer" {
   description = "The image optimizer lambda function configuration."
   default = {
     timeout               = 30
-    memory_size           = 512
+    memory_size           = 1024
     handler               = "index.handler"
     environment_variables = {}
   }
