@@ -34,6 +34,10 @@ resource "aws_lambda_function" "function" {
   # }
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [last_modified, filename, source_code_hash]
+  }
 }
 
 resource "aws_cloudwatch_log_group" "function_log_group" {
