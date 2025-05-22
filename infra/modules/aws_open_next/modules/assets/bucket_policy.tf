@@ -10,9 +10,9 @@ data "aws_iam_policy_document" "read_assets_bucket" {
     }
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "AWS:SourceArn"
-      values   = ["arn:${data.aws_partition.current.partition}:distribution/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/*"]
     }
   }
 

@@ -152,7 +152,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name              = var.origins.assets_bucket.domain_name
     origin_id                = "${local.app_prefix}-assets-origin-${local.app_suffix}"
-    origin_path              = "/assets"
+    origin_path              = "/_assets"
     origin_access_control_id = var.origins.assets_bucket.oac
   }
 
@@ -187,6 +187,34 @@ resource "aws_cloudfront_distribution" "distribution" {
   # Behaviour - Hashed Static Files (/_next/static/*)
   ordered_cache_behavior {
     path_pattern     = "/_next/static/*"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
+
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  ordered_cache_behavior {
+    path_pattern     = "/icons/*"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
+
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  ordered_cache_behavior {
+    path_pattern     = "/images/*"
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"

@@ -55,8 +55,8 @@ variable "handler" {
 
 variable "memory_size" {
   type        = number
-  description = "The amount of memory available to the function at runtime in MB. The default is 512 MB. The maximum is 10240 MB."
-  default     = 512
+  description = "The amount of memory available to the function at runtime in MB. The default is 1024 MB. The maximum is 10240 MB."
+  default     = 1024
 
   validation {
     condition     = var.memory_size >= 128 && var.memory_size <= 10240
@@ -87,12 +87,19 @@ variable "environment_variables" {
   default     = {}
 }
 
+variable "is_streaming_enabled" {
+  type        = bool
+  description = "Whether to use streaming for the server lambda function. If this is true, the wrapper override must be set to 'aws-lambda-streaming' in the 'open-next.config.ts'. More info at https://opennext.js.org/aws/config/simple_example#streaming-with-lambda. The default is false."
+  default     = false
+}
+
 variable "assets_bucket" {
   type = object({
     name = string
     arn  = string
+    region = string
   })
-  description = "The ARN of the S3 bucket where the OpenNext assets are stored."
+  description = "The information of the S3 bucket where the OpenNext assets are stored."
 }
 
 variable "isr_tags_ddb" {
@@ -100,13 +107,14 @@ variable "isr_tags_ddb" {
     name = string
     arn  = string
   })
-  description = "The ARN of the DynamoDB table used for ISR revalidation."
+  description = "The information of the DynamoDB table used for ISR revalidation."
 }
 
 variable "isr_queue" {
   type = object({
     name = string
     arn  = string
+    url  = string
   })
-  description = "The ARN of the SQS queue used for ISR revalidation."
+  description = "The ARN and URL of the SQS queue used for ISR revalidation."
 }

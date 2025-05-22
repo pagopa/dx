@@ -24,7 +24,8 @@ resource "aws_lambda_function" "function" {
   environment {
     variables = merge({
       BUCKET_NAME       = var.assets_bucket.name,
-      BUCKET_KEY_PREFIX = "assets"
+      BUCKET_KEY_PREFIX = "_assets",
+      OPENNEXT_STATIC_ETAG = "true"
       },
     var.environment_variables)
   }
@@ -55,8 +56,6 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
 resource "aws_lambda_function_url" "function_url" {
   function_name      = aws_lambda_function.function.function_name
   authorization_type = "AWS_IAM"
-  # Change to RESPONSE_STREAM once the feature is production ready
-  # https://opennext.js.org/aws/v2/inner_workings/streaming
   invoke_mode = "BUFFERED"
 }
 
