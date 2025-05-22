@@ -17,6 +17,8 @@ module "server" {
   handler               = var.server.handler
   environment_variables = var.server.environment_variables
   assets_bucket         = module.assets.bucket
+  isr_tags_ddb          = module.isr_revalidation.ddb_tags_table
+  isr_queue             = module.isr_revalidation.sqs_queue
 
   vpc = var.vpc
 }
