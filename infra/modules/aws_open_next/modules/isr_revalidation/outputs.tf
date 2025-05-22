@@ -23,5 +23,6 @@ output "sqs_queue" {
   value = {
     name = aws_sqs_queue.revalidation_queue.name
     arn  = aws_sqs_queue.revalidation_queue.arn
+    url  = aws_sqs_queue.revalidation_queue.url
   }
 }

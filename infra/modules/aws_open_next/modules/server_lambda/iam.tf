@@ -27,7 +27,6 @@ resource "aws_iam_role_policy_attachment" "s3_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
-
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect    = "Allow"
