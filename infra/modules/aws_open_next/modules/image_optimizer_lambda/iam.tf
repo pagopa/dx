@@ -17,11 +17,16 @@ resource "aws_iam_role" "lambda_role" {
   tags = var.tags
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_execution_role" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = ["arn:aws:logs:*:*:*"]
+    actions   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
+    resources = ["*"]
   }
 
   statement {

@@ -11,3 +11,17 @@ output "lambda_function" {
     name = aws_lambda_function.function.function_name
   }
 }
+
+output "ddb_tags_table" {
+  value = {
+    name = aws_dynamodb_table.tags.name
+    arn  = aws_dynamodb_table.tags.arn
+  }
+}
+
+output "sqs_queue" {
+  value = {
+    name = aws_sqs_queue.revalidation_queue.name
+    arn  = aws_sqs_queue.revalidation_queue.arn
+  }
+}
