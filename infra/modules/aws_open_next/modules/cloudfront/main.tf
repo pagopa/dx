@@ -18,9 +18,6 @@ resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
 
   cookies_config {
     cookie_behavior = "all"
-    cookies {
-      items = []
-    }
   }
 
   headers_config {
@@ -33,9 +30,6 @@ resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
 
   query_strings_config {
     query_string_behavior = "all"
-    query_strings {
-      items = []
-    }
   }
 }
 
