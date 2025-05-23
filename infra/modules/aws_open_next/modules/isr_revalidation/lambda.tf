@@ -15,7 +15,7 @@ resource "aws_lambda_function" "function" {
 
   memory_size = var.memory_size
   timeout     = var.timeout
-  publish     = false
+  publish     = true
 
   tracing_config {
     mode = "Active"
@@ -37,6 +37,17 @@ resource "aws_lambda_function" "function" {
 
   lifecycle {
     ignore_changes = [filename, source_code_hash]
+  }
+}
+
+resource "aws_lambda_alias" "production" {
+  name             = "production"
+  description      = "Production alias"
+  function_name    = aws_lambda_function.function.function_name
+  function_version = aws_lambda_function.function.version
+
+  lifecycle {
+    ignore_changes = [function_version]
   }
 }
 

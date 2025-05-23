@@ -15,7 +15,7 @@ resource "aws_lambda_function" "function" {
 
   memory_size = var.memory_size
   timeout     = var.timeout
-  publish     = var.is_at_edge
+  publish     = true
 
   tracing_config {
     mode = "Active"
@@ -60,6 +60,17 @@ resource "aws_lambda_function" "function" {
   }
 }
 
+resource "aws_lambda_alias" "production" {
+  name             = "production"
+  description      = "Production alias"
+  function_name    = aws_lambda_function.function.function_name
+  function_version = aws_lambda_function.function.version
+
+  lifecycle {
+    ignore_changes = [function_version]
+  }
+}
+
 resource "aws_cloudwatch_log_group" "function_log_group" {
   name              = "/aws/lambda/${aws_lambda_function.function.function_name}"
   skip_destroy      = true
@@ -70,6 +81,7 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
 
 resource "aws_lambda_function_url" "function_url" {
   function_name      = aws_lambda_function.function.function_name
+  qualifier          = aws_lambda_alias.production.name
   authorization_type = "AWS_IAM"
   invoke_mode        = var.is_streaming_enabled ? "RESPONSE_STREAM" : "BUFFERED"
 }
@@ -77,6 +89,7 @@ resource "aws_lambda_function_url" "function_url" {
 resource "aws_lambda_permission" "function_url_permission" {
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.function.function_name
+  qualifier              = aws_lambda_alias.production.name
   principal              = "cloudfront.amazonaws.com"
   function_url_auth_type = "AWS_IAM"
 }
