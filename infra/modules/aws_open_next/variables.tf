@@ -90,6 +90,23 @@ variable "image_optimizer" {
   }
 }
 
+variable "initializer" {
+  type = object({
+    timeout               = optional(number, 900)
+    memory_size           = optional(number, 256)
+    handler               = optional(string, "index.handler")
+    environment_variables = optional(map(string), {})
+  })
+
+  description = "The initializer lambda function configuration."
+  default = {
+    timeout               = 900
+    memory_size           = 256
+    handler               = "index.handler"
+    environment_variables = {}
+  }
+}
+
 variable "enable_waf" {
   type        = bool
   description = "Whether to enable WAF for enhanced protection."
@@ -104,4 +121,10 @@ variable "custom_headers" {
   }))
   description = "Custom headers to be added to the CloudFront distribution."
   default     = []
+}
+
+variable "are_previews_enabled" {
+  type        = bool
+  description = "Whether to enable previews."
+  default     = false
 }

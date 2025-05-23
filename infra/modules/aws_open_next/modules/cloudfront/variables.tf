@@ -63,3 +63,9 @@ variable "enable_waf" {
   description = "Enable WAF for CloudFront distribution."
   default     = false
 }
+
+variable "are_previews_enabled" {
+  type        = bool
+  description = "Enable previews for OpenNext application."
+  default     = false
+}

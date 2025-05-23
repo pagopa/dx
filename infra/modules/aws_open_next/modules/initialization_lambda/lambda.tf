@@ -23,9 +23,7 @@ resource "aws_lambda_function" "function" {
 
   environment {
     variables = merge({
-      BUCKET_NAME          = var.assets_bucket.name,
-      BUCKET_KEY_PREFIX    = "_assets",
-      OPENNEXT_STATIC_ETAG = "true"
+      CACHE_DYNAMO_TABLE    = var.isr_tags_ddb.name,
       },
     var.environment_variables)
   }
@@ -62,19 +60,4 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
   retention_in_days = 30
   # kms_key_id        = var.log_group.kms_key_id
   tags = var.tags
-}
-
-resource "aws_lambda_function_url" "function_url" {
-  function_name      = aws_lambda_function.function.function_name
-  qualifier          = aws_lambda_alias.production.name
-  authorization_type = "AWS_IAM"
-  invoke_mode        = "BUFFERED"
-}
-
-resource "aws_lambda_permission" "function_url_permission" {
-  action                 = "lambda:InvokeFunctionUrl"
-  function_name          = aws_lambda_function.function.function_name
-  qualifier              = aws_lambda_alias.production.name
-  principal              = "cloudfront.amazonaws.com"
-  function_url_auth_type = "AWS_IAM"
 }

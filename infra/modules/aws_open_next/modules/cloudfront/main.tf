@@ -1,17 +1,17 @@
-resource "aws_cloudfront_function" "host_header_function" {
-  name    = "${local.app_prefix}-preserve-host-${local.app_suffix}"
-  runtime = "cloudfront-js-1.0"
-  comment = "Next.js Function for Preserving Original Host"
-  publish = true
-  code    = <<EOF
-function handler(event) {
-  var request = event.request;
-  request.headers["x-forwarded-host"] = request.headers.host;
-  return request;
-}
-EOF
+resource "aws_cloudfront_key_value_store" "router" {
+  name    = "${local.app_prefix}-router-kvs"
+  comment = "Key Value Store for OpenNext Router previews"
 }
 
+resource "aws_cloudfront_function" "router_viewer_request_handler" {
+  name    = "${local.app_prefix}-router"
+  runtime = "cloudfront-js-2.0"
+  comment = "Manages the OpenNext router viewer request for project ${local.app_prefix}"
+  # publish this version only if the env is true
+  publish = true
+  code    = templatefile("${path.module}/cloudfront_functions/router/index.js", {kvNamespace = aws_cloudfront_key_value_store.router.name, previewsEnabled = (var.are_previews_enabled ? "true" : "false")})
+  key_value_store_associations = [aws_cloudfront_key_value_store.router.arn]
+}
 resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
   name    = "${local.app_prefix}-origin-request-policy-${local.app_suffix}"
   comment = "${local.app_prefix} Origin Request Policy for Next.js Application"
@@ -61,7 +61,7 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
       header_behavior = "whitelist"
 
       headers {
-        items = ["accept", "rsc", "next-router-prefetch", "next-router-state-tree", "x-prerender-revalidate"]
+        items = ["accept", "rsc", "next-router-prefetch", "next-router-state-tree", "x-prerender-revalidate", "x-forwarded-host"]
       }
     }
 
@@ -131,7 +131,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${local.app_prefix} - CloudFront Distribution for Next.js Application"
-  aliases         = var.custom_domain != null ? [var.custom_domain.domain_name] : []
+  aliases         = var.custom_domain != null ? [var.custom_domain.domain_name, "*.${var.custom_domain.domain_name}"] : []
   web_acl_id      = var.enable_waf ? aws_wafv2_web_acl.cloudfront[0].arn : null
 
   viewer_certificate {
@@ -256,7 +256,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.host_header_function.arn
+      function_arn = aws_cloudfront_function.router_viewer_request_handler.arn
     }
   }
 
@@ -275,7 +275,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.host_header_function.arn
+      function_arn = aws_cloudfront_function.router_viewer_request_handler.arn
     }
   }
 
@@ -307,7 +307,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.host_header_function.arn
+      function_arn = aws_cloudfront_function.router_viewer_request_handler.arn
     }
   }
 
