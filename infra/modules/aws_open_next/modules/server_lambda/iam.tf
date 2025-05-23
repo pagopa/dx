@@ -37,19 +37,19 @@ data "aws_iam_policy_document" "lambda_policy" {
   statement {
     effect = "Allow"
     actions = [
-                "dynamodb:UpdateItem",
-                "dynamodb:Scan",
-                "dynamodb:Query",
-                "dynamodb:PutItem",
-                "dynamodb:GetShardIterator",
-                "dynamodb:GetRecords",
-                "dynamodb:GetItem",
-                "dynamodb:DescribeTable",
-                "dynamodb:DeleteItem",
-                "dynamodb:ConditionCheckItem",
-                "dynamodb:BatchWriteItem",
-                "dynamodb:BatchGetItem"
-            ]
+      "dynamodb:UpdateItem",
+      "dynamodb:Scan",
+      "dynamodb:Query",
+      "dynamodb:PutItem",
+      "dynamodb:GetShardIterator",
+      "dynamodb:GetRecords",
+      "dynamodb:GetItem",
+      "dynamodb:DescribeTable",
+      "dynamodb:DeleteItem",
+      "dynamodb:ConditionCheckItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:BatchGetItem"
+    ]
     resources = [var.isr_tags_ddb.arn, "${var.isr_tags_ddb.arn}/*"]
   }
 
@@ -72,8 +72,8 @@ data "aws_iam_policy_document" "lambda_policy" {
   }
 
   statement {
-    effect = "Allow"
-    actions = ["cloudfront:CreateInvalidation"]
+    effect    = "Allow"
+    actions   = ["cloudfront:CreateInvalidation"]
     resources = ["*"]
   }
 }

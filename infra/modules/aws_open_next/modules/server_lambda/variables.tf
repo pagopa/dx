@@ -95,8 +95,8 @@ variable "is_streaming_enabled" {
 
 variable "assets_bucket" {
   type = object({
-    name = string
-    arn  = string
+    name   = string
+    arn    = string
     region = string
   })
   description = "The information of the S3 bucket where the OpenNext assets are stored."
