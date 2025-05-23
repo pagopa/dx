@@ -7,9 +7,9 @@ output "iam_role" {
 
 output "lambda_function" {
   value = {
-    arn  = aws_lambda_function.function.arn
-    name = aws_lambda_function.function.function_name
-    url  = trimsuffix(trimprefix(aws_lambda_function_url.function_url.function_url, "https://"), "/")
+    arn      = aws_lambda_function.function.arn
+    name     = aws_lambda_function.function.function_name
+    url      = trimsuffix(trimprefix(aws_lambda_function_url.function_url.function_url, "https://"), "/")
     full_url = aws_lambda_function_url.function_url.function_url
   }
 }
