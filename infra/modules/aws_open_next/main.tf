@@ -51,6 +51,21 @@ module "isr_revalidation" {
   environment_variables = var.image_optimizer.environment_variables
 }
 
+module "initializer" {
+  source = "./modules/initialization_lambda"
+
+  environment = var.environment
+  tags = var.tags
+
+  node_major_version    = var.node_major_version
+  timeout               = var.initializer.timeout
+  memory_size           = var.initializer.memory_size
+  handler               = var.initializer.handler
+  environment_variables = var.initializer.environment_variables
+
+  isr_tags_ddb = module.isr_revalidation.ddb_tags_table
+}
+
 module "cloudfront" {
   source = "./modules/cloudfront"
 
@@ -58,6 +73,7 @@ module "cloudfront" {
   tags        = var.tags
 
   enable_waf = var.enable_waf
+  are_previews_enabled = var.are_previews_enabled
 
   custom_domain = var.custom_domain
 
