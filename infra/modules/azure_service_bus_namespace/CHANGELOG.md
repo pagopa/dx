@@ -1,5 +1,11 @@
 # azure_service_bus_namespace
 
+## 0.0.3
+
+### Patch Changes
+
+- 081ce6e: Set public network access property to false to comply with Terarform provider suggestions
+
 ## 0.0.2
 
 ### Patch Changes
