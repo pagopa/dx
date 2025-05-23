@@ -1,5 +1,5 @@
 resource "aws_route53_record" "www_website" {
-  count = var.custom_domain != null && try(var.custom_domain.hosted_zone_id, null) != null ? 1 : 0
+  count   = var.custom_domain != null && try(var.custom_domain.hosted_zone_id, null) != null ? 1 : 0
   zone_id = var.custom_domain.hosted_zone_id
   name    = "www.${var.custom_domain.domain_name}"
   type    = "A"
@@ -12,7 +12,7 @@ resource "aws_route53_record" "www_website" {
 }
 
 resource "aws_route53_record" "website" {
-  count = var.custom_domain != null && try(var.custom_domain.hosted_zone_id, null) != null ? 1 : 0
+  count   = var.custom_domain != null && try(var.custom_domain.hosted_zone_id, null) != null ? 1 : 0
   zone_id = var.custom_domain.hosted_zone_id
   name    = var.custom_domain.domain_name
   type    = "A"

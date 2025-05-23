@@ -30,8 +30,8 @@ data "aws_iam_policy_document" "lambda_policy" {
   }
 
   statement {
-    effect = "Allow"
-    actions = ["dynamodb:PutItem", "dynamodb:DescribeTable", "dynamodb:BatchWriteItem"]
+    effect    = "Allow"
+    actions   = ["dynamodb:PutItem", "dynamodb:DescribeTable", "dynamodb:BatchWriteItem"]
     resources = [aws_dynamodb_table.tags.arn]
   }
 

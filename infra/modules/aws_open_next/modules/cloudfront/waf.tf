@@ -1,8 +1,8 @@
 resource "aws_wafv2_web_acl" "cloudfront" {
   count = var.enable_waf == null ? 1 : 0
 
-  name     = "${local.app_prefix}-waf"
-  scope    = "CLOUDFRONT"
+  name  = "${local.app_prefix}-waf"
+  scope = "CLOUDFRONT"
 
   default_action {
     allow {}
