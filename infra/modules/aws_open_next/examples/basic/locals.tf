@@ -16,4 +16,7 @@ locals {
     Source         = "https://github.com/pagopa/dx/modules/aws_open_next/examples/basic"
     ManagementTeam = "Developer Experience"
   }
+
+  dns_domain_name = "opxt.dx.pagopa.it"
+  hosted_zone_id = "Z02428843GYZP1RTAE2EQ"
 }
