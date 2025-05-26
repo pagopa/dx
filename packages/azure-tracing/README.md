@@ -72,13 +72,7 @@ registerAzureFunctionHooks(app);
 
 For Azure Functions using the v3 programming model, you can use the `withOtelContextFunctionV3` helper function to wrap your handlers and ensure OpenTelemetry context propagation. This function works with the v3 `Context` object structure.
 
-First, import the function:
-
-```ts
-import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/functions/v3";
-```
-
-Then, wrap your v3 function handler with `withOtelContextFunctionV3`:
+To wrap the execution of the Azure function in the Otel context, take inspiration from the following code snippet:
 
 ```ts
 import { AzureFunction, Context as FunctionContext } from "@azure/functions"; // "@azure/functions": "^3"
