@@ -39,7 +39,7 @@ module "runner" {
   version     = "~> 0.0"
   environment = local.environment
 
-  tier = "m"
+  tier       = "m"
   repository = {
     owner = "pagopa"
     name  = "dx"
@@ -164,23 +164,23 @@ The module outputs the CodeBuild security group that can be used to add custom r
 # Allow access to RDS database
 resource "aws_security_group_rule" "database_access" {
   type                     = "egress"
-  from_port               = 5432
-  to_port                 = 5432
-  protocol                = "tcp"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.database.id
-  security_group_id       = module.runner.security_group.id
-  description             = "Allow access to PostgreSQL database"
+  security_group_id        = module.runner.security_group.id
+  description              = "Allow access to PostgreSQL database"
 }
 
 # Allow access to Redis cluster
 resource "aws_security_group_rule" "redis_access" {
   type                     = "egress"
-  from_port               = 6379
-  to_port                 = 6379
-  protocol                = "tcp"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.redis.id
-  security_group_id       = module.runner.security_group.id
-  description             = "Allow access to Redis cluster"
+  security_group_id        = module.runner.security_group.id
+  description              = "Allow access to Redis cluster"
 }
 ```
 
