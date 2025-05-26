@@ -6,8 +6,8 @@ import { context as otelContext, propagation } from "@opentelemetry/api";
  */
 interface FunctionContextV3 {
   traceContext?: {
-    traceparent?: string;
-    tracestate?: string;
+    traceparent?: null | string;
+    tracestate?: null | string;
   };
 }
 
@@ -31,8 +31,5 @@ export const withOtelContextFunctionV3 =
     };
 
     const ctx = propagation.extract(otelContext.active(), headers);
-
-    return otelContext.with(ctx, () => {
-      v3Function(context);
-    });
+    return otelContext.with(ctx, () => v3Function(context));
   };
