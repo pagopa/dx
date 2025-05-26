@@ -8,8 +8,8 @@ resource "aws_cloudfront_function" "router_viewer_request_handler" {
   runtime = "cloudfront-js-2.0"
   comment = "Manages the OpenNext router viewer request for project ${local.app_prefix}"
   # publish this version only if the env is true
-  publish = true
-  code    = templatefile("${path.module}/cloudfront_functions/router/index.js", {kvNamespace = aws_cloudfront_key_value_store.router.name, previewsEnabled = (var.are_previews_enabled ? "true" : "false")})
+  publish                      = true
+  code                         = templatefile("${path.module}/cloudfront_functions/router/index.js", { kvNamespace = aws_cloudfront_key_value_store.router.name, previewsEnabled = (var.are_previews_enabled ? "true" : "false") })
   key_value_store_associations = [aws_cloudfront_key_value_store.router.arn]
 }
 resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {

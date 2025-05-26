@@ -23,7 +23,7 @@ resource "aws_lambda_function" "function" {
 
   environment {
     variables = merge({
-      CACHE_DYNAMO_TABLE    = var.isr_tags_ddb.name,
+      CACHE_DYNAMO_TABLE = var.isr_tags_ddb.name,
       },
     var.environment_variables)
   }
