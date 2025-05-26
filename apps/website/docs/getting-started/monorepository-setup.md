@@ -144,3 +144,29 @@ Terraform module.
 For more information, see the
 [related blog post](https://pagopa.github.io/dx/blog/devex-azure-bootstrap-0.1-alpha)
 and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).
+
+:::info[Azure Permissions for Initial Setup]
+
+The initial `terraform apply` for the Bootstrap module must be executed locally by an Engineering Leader or their delegate.
+To do this, they must have the "**Role Based Access Control Administrator**" role, and the "**Contributor**" role (if not already assigned), on the Azure subscription.
+
+The RBAC role can be obtained by opening a Pull Request on the [pagopa/eng-azure-authorization](https://github.com/pagopa/eng-azure-authorization) repository, adding the user to the `io-p-adgroup-rbac-admins` team. For example:
+
+```terraform
+  ...
+  {
+    name = "io-p-adgroup-rbac-admins"
+    members = [
+      ...
+      "eng.lead.or.delegate@example.com", // Add the user's email here
+      ...
+    ],
+    roles = [
+      "Role Based Access Control Administrator",
+    ],
+  },
+  ...
+```
+
+This step is crucial for the `azure-github-environment-bootstrap` module to correctly set up the necessary resources and permissions in Azure during the first local apply. Subsequent applies can be automated with a GitHub Workflow.
+:::
