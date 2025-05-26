@@ -7,7 +7,7 @@ output "iam_role" {
 
 output "lambda_function" {
   value = {
-    arn      = aws_lambda_function.function.arn
-    name     = aws_lambda_function.function.function_name
+    arn  = aws_lambda_function.function.arn
+    name = aws_lambda_function.function.function_name
   }
 }

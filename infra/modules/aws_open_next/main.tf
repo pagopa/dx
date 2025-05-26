@@ -55,7 +55,7 @@ module "initializer" {
   source = "./modules/initialization_lambda"
 
   environment = var.environment
-  tags = var.tags
+  tags        = var.tags
 
   node_major_version    = var.node_major_version
   timeout               = var.initializer.timeout
@@ -72,7 +72,7 @@ module "cloudfront" {
   environment = var.environment
   tags        = var.tags
 
-  enable_waf = var.enable_waf
+  enable_waf           = var.enable_waf
   are_previews_enabled = var.are_previews_enabled
 
   custom_domain = var.custom_domain

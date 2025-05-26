@@ -29,9 +29,9 @@ data "aws_iam_policy_document" "lambda_policy" {
     resources = ["*"]
   }
 
-    statement {
-    effect    = "Allow"
-    actions   = [
+  statement {
+    effect = "Allow"
+    actions = [
       "dynamodb:PutItem",
       "dynamodb:DescribeTable",
       "dynamodb:BatchWriteItem"

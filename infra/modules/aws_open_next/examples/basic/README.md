@@ -15,7 +15,10 @@
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [aws_acm_certificate.website](https://registry.terraform.io/providers/hashicorp/aws/5.90.1/docs/resources/acm_certificate) | resource |
+| [aws_route53_record.certificate](https://registry.terraform.io/providers/hashicorp/aws/5.90.1/docs/resources/route53_record) | resource |
 
 ## Inputs
 
