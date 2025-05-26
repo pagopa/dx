@@ -68,6 +68,35 @@ registerAzureFunctionHooks(app);
 ...
 ```
 
+### Instrumenting Azure Functions v3 Handlers
+
+For Azure Functions using the v3 programming model, you can use the `withOtelContextFunctionV3` helper function to wrap your handlers and ensure OpenTelemetry context propagation. This function works with the v3 `Context` object structure.
+
+First, import the function:
+
+```ts
+import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/functions/v3";
+```
+
+Then, wrap your v3 function handler with `withOtelContextFunctionV3`:
+
+```ts
+import { AzureFunction, Context as FunctionContext } from "@azure/functions"; // "@azure/functions": "^3"
+import createAzureFunctionHandler from "@pagopa/express-azure-functions/dist/src/createAzureFunctionsHandler.js";
+
+import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/azure-functions/v3"; // from version ^0.4.0
+
+export const expressToAzureFunction =
+  (app: Express): AzureFunction =>
+  (context: FunctionContext): void => {
+    app.set("context", context);
+    withOtelContextFunctionV3(context)(createAzureFunctionHandler(app)); // wrap the function execution in the OpenTelemetry context
+  };
+```
+
+> [!NOTE]
+> The `withOtelContextFunctionV3` function is designed based on the structure of the v3 `Context` object, specifically its `traceContext` property. While this package primarily uses the v4 `@azure/functions` library, this function provides a way to apply the same OpenTelemetry context propagation logic to your existing v3 handlers.
+
 ### Enabling Azure Monitor Telemetry
 
 If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
