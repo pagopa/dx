@@ -18,5 +18,5 @@ locals {
   }
 
   dns_domain_name = "opxt.dx.pagopa.it"
-  hosted_zone_id = "Z02428843GYZP1RTAE2EQ"
+  hosted_zone_id  = "Z02428843GYZP1RTAE2EQ"
 }
