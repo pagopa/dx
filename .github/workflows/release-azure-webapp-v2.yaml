@@ -45,6 +45,7 @@ env:
   BUNDLE_NAME: bundle
   RESORUCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
+  FORCE_APPROVAL_EXIT_CODE: ${{ inputs.force_approval_exit_code }}
 
 jobs:
   build:
@@ -151,7 +152,7 @@ jobs:
             jq --arg GH_ENV "$REQUIRED_ENVIRONMENT" '.[] | select(.environment.name == $GH_ENV)')
 
           if [ -z "$is_environment_matching" ]; then
-            if [ "${{ inputs.force_approval_exit_code }}" ]; then
+            if [ "$FORCE_APPROVAL_EXIT_CODE" ]; then
               exit 0
             else
               echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
@@ -164,7 +165,7 @@ jobs:
             jq '.[] | select(.current_user_can_approve == true)')
 
           if [ -z "$can_user_approve" ]; then
-            if [ "${{ inputs.force_approval_exit_code }}" ]; then
+            if [ "$FORCE_APPROVAL_EXIT_CODE" ]; then
               exit 0
             else
               echo "::error::${{ github.actor }} is not a reviewer"
@@ -256,6 +257,6 @@ jobs:
           az webapp deploy \
             --resource-group "$RESORUCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
-            --src-path  ${{ env.BUNDLE_NAME }}.zip \
+            --src-path "$BUNDLE_NAME.zip" \
             --type zip \
             --async false
