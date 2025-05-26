@@ -35,4 +35,4 @@ export const withOtelContextFunctionV3 =
     return otelContext.with(ctx, () => {
       v3Function(context);
     });
-  }; 
+  };
