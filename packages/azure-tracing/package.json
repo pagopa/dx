@@ -24,6 +24,9 @@
     },
     "./azure-functions": {
       "import": "./dist/functions/hooks.js"
+    },
+    "./azure-functions/v3": {
+      "import": "./dist/functions/v3/index.js"
     }
   },
   "dependencies": {
