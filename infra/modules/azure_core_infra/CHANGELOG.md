@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.9
+
+### Patch Changes
+
+- 2c0cd45: Add log analytics workspace and resource groups ids outputs
+
 ## 1.0.8
 
 ### Patch Changes
