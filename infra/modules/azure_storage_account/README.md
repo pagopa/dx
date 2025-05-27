@@ -21,6 +21,10 @@ This Terraform module provisions an Azure Storage Account with optional configur
 | `s`  | Ideal for lightweight workloads, testing, and development.       | No     | No                         | LRS              | Standard     |
 | `l`  | Suitable for production with moderate to high performance needs. | Yes    | Yes (except in italynorth) | ZRS              | Standard     |
 
+## Important Considerations for CDN Origin
+
+This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
+
 ## Usage Example
 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
@@ -38,7 +42,7 @@ A complete example of how to use this module can be found in the [example/comple
 No modules.
 
 ## Resources
-
+ijo
 | Name | Type |
 |------|------|
 | [azurerm_key_vault_access_policy.keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
