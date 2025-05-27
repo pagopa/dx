@@ -3,14 +3,30 @@ output "common_resource_group_name" {
   value       = azurerm_resource_group.common.name
 }
 
+output "common_resource_group_id" {
+  description = "The ID of the common resource group."
+  value       = azurerm_resource_group.common.id
+}
+
 output "network_resource_group_name" {
   description = "The name of the network resource group."
   value       = azurerm_resource_group.network.name
 }
 
+output "network_resource_group_id" {
+  description = "The ID of the network resource group."
+  value       = azurerm_resource_group.network.id
+}
+
+
 output "test_resource_group_name" {
   description = "The name of the test resource group (null if testing is disabled)."
   value       = var.test_enabled ? azurerm_resource_group.test[0].name : null
+}
+
+output "test_resource_group_id" {
+  description = "The ID of the test resource group (null if testing is disabled)."
+  value       = var.test_enabled ? azurerm_resource_group.test[0].id : null
 }
 
 output "github_runner" {
@@ -60,5 +76,15 @@ output "common_key_vault" {
     name                = module.key_vault.name
     id                  = module.key_vault.id
     resource_group_name = azurerm_resource_group.common.name
+  }
+}
+
+# Log Analytics Workspace
+output "common_log_analytics_workspace" {
+  description = "Details of the common Log Analytics Workspace, including its ID, name, and workspace ID."
+  value = {
+    id           = module.common_log_analytics.id
+    name         = module.common_log_analytics.name
+    workspace_id = module.common_log_analytics.workspace_id
   }
 }
