@@ -1,4 +1,4 @@
-exports.handler = async (event) => {
+export const handler = async(event) => {
   console.log("This is a placeholder Lambda function.");
   return {
     statusCode: 200,
