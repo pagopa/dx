@@ -88,9 +88,6 @@ export const expressToAzureFunction =
   };
 ```
 
-> [!NOTE]
-> The `withOtelContextFunctionV3` function is designed based on the structure of the v3 `Context` object, specifically its `traceContext` property. While this package primarily uses the v4 `@azure/functions` library, this function provides a way to apply the same OpenTelemetry context propagation logic to your existing v3 handlers.
-
 ### Enabling Azure Monitor Telemetry
 
 If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
