@@ -42,7 +42,7 @@ A complete example of how to use this module can be found in the [example/comple
 No modules.
 
 ## Resources
-ijo
+
 | Name | Type |
 |------|------|
 | [azurerm_key_vault_access_policy.keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
