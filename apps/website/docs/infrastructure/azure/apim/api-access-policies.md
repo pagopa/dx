@@ -14,24 +14,6 @@ The goal is to:
 - Increase domain separation and autonomy
 - Improve security
 
-## Introducing Breaking Changes via Versioning
-
-Versioning allows multiple versions of an API Group to coexist. Clients can
-request a specific version through:
-
-- Path parameter (e.g. `/api/v1/resource`)
-- Header parameter
-- Query string parameter
-
-If the client does not specify a version, APIM falls back to the version chosen
-as default.
-
-Therefore, it is compelling to leverage versioning to introduce breaking changes
-in the REST APIs contracts, giving clients the appropriate time to migrate.
-
-Although it is not mandatory, we suggest specifying the version in the request
-path.
-
 ## Managing Subscriptions and Products
 
 APIM **subscriptions** secure API access, while **products** group APIs with
@@ -73,9 +55,8 @@ subscription keys.
 ### Implementing a Rate Limit Policy
 
 Continuing with the weather forecast example, protecting your APIs from
-(unintentional) DDoS attacks is crucial. Since you're using a shared APIM
-instance, you need to prevent a single consumer from overwhelming the system.
-Therefore, implementing rate limits is essential.
+(unintentional) DDoS attacks is crucial. You need to prevent a single consumer
+from overwhelming the system. Therefore, implementing rate limits is essential.
 
 This principle applies even to internally exposed APIs. Leaks or bugs in
 upstream services could inadvertently trigger excessive calls, mimicking a DDoS
@@ -85,3 +66,17 @@ Consider applying the `rate-limit`
 [policy](https://learn.microsoft.com/en-us/azure/api-management/rate-limit-policy)
 at the product level. It's probable that APIs within the same product share
 similar expected invocation rates.
+
+The example below demonstrates where and how to define a rate limit policy:
+
+```xml
+<policies>
+    <inbound>
+        <base />
+        <rate-limit calls="20" renewal-period="90" remaining-calls-variable-name="remainingCallsPerSubscription"/>
+    </inbound>
+    <outbound>
+        <base />
+    </outbound>
+</policies>
+```
