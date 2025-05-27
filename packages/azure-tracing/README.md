@@ -68,6 +68,31 @@ registerAzureFunctionHooks(app);
 ...
 ```
 
+### Instrumenting Azure Functions v3 Handlers
+
+For Azure Functions using the v3 programming model, the recommended way to enable OpenTelemetry tracing is to use the `NODE_OPTIONS` environment variable, just like for v4 functions:
+
+```bash
+NODE_OPTIONS=--import @pagopa/azure-tracing
+```
+
+This will automatically enable OpenTelemetry tracing and route telemetry to Azure Monitor.
+
+Then, wrap the execution of the Azure function in the OpenTelemetry context; take inspiration from the following code snippet:
+
+```ts
+import { AzureFunction, Context as FunctionContext } from "@azure/functions"; // "@azure/functions": "^3"
+import createAzureFunctionHandler from "@pagopa/express-azure-functions/dist/src/createAzureFunctionsHandler.js";
+import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/azure-functions/v3"; // "@pagopa/azure-tracing": "^0.4"
+
+export const expressToAzureFunction =
+  (app: Express): AzureFunction =>
+  (context: FunctionContext): void => {
+    app.set("context", context);
+    withOtelContextFunctionV3(context)(createAzureFunctionHandler(app)); // wrap the function execution in the OpenTelemetry context
+  };
+```
+
 ### Enabling Azure Monitor Telemetry
 
 If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
