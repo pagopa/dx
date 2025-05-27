@@ -1,5 +1,7 @@
 ---
-"azure_storage_account": minor
+"azure_storage_account": major
 ---
 
-Set `allow_nested_items_to_be_public = false` in Azure Storage Account module to disable public access to blobs
+**BREAKING CHANGE:** 
+
+Public access to blobs within containers is now disabled by default in the Azure Storage Account module. If public blob access is explicitly required, this setting must be overridden with variable `force_public_network_access_enabled`.
