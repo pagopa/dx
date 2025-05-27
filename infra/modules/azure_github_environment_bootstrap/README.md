@@ -73,11 +73,12 @@ The default branch name can be changed via the `default_branch_name` property.
 
 ## Extending the module for custom needs
 
-The module provides the basic configuration adhering to DX and Technology
-standards. However, it can be extended according to team needs.
+The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to new needs. In fact, the module export all the ids and names of the resources that creates, so it is straightforward to add further resources.
 
-The module export all the ids and names of the resources that creates, so it is
-straightforward to add further resources. For instance, if you need a `release`
+### Customizing GitHub configuration
+
+If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module.
+For example, if you need a `release`
 GitHub environment with a special deployment policy you can add:
 
 ```hcl
@@ -97,6 +98,47 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
   branch_pattern = "main"
 }
 ```
+
+### Managing multiple resource groups
+
+This module already provides a resource group to deploy Azure resources into. However, if there is a need to create one or more resource groups, you can easily create them and notify the module about their existence: all required roles will be assigned by the module itself.
+
+```hcl
+resource "azurerm_resource_group" "new_rg01" {
+  name     = "dx-d-itn-custom-rg-01"
+  location = "italynorth"
+
+  tags = local.tags
+}
+
+resource "azurerm_resource_group" "new_rg02" {
+  name     = "dx-d-itn-custom-rg-02"
+  location = "italynorth"
+
+  tags = local.tags
+}
+
+module "bootstrapper" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~>x.0"
+
+  additional_resource_group_ids = [
+    azurerm_resource_group.new_rg01.id,
+    azurerm_resource_group.new_rg02.id,
+  ]
+}
+```
+
+### Managing roles to common resources
+
+The module facilitates the role assignment to resources that are generally, by their nature, centralized and shared by the entire product. These are the following ones:
+
+- API Management
+- Service Bus Namespace
+- Log Analytics Workspace
+- NAT Gateway
+
+The module exposes an optional variable of each of these resources, accepting their Ids. By using them, required role to operate on them will be assigned to the Managed Identities used by the workflows of the repository.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
