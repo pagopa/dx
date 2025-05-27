@@ -2,7 +2,7 @@
 sidebar_position: 50
 ---
 
-# Deploying a Node.js Application to Azure
+# Deploying a Node.js Applications to Azure
 
 The
 [Node.js WebApp Deployment](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-webapp-v2.yaml)
@@ -57,7 +57,9 @@ Services.
 
 ### Upgrading from V1 to V2
 
-To upgrade from V1 to V2, follow these steps:
+To upgrade from
+[V1](https://github.com/pagopa/dx/blob/main/.github/workflows/web_app_deploy.yaml)
+to V2, follow these steps:
 
 1. **Update Workflow Reference:** Change your workflow file to use
    `release-azure-webapp-v2.yaml` instead of `web_app_deploy.yaml`.
@@ -120,33 +122,4 @@ jobs:
       # use_private_agent: true # Optional: default is true
       # force_approval_exit_code: false # Optional: see migration guide
       # GH_TOKEN_DEPLOYMENT_APPROVAL: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }} # Required for auto-approval
-```
-
-### (Legacy) V1 Version
-
-The `web_app_deploy.yaml`
-[workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/web_app_deploy.yaml)
-is the legacy template for Node.js web app deployments. It provides the same
-build and deployment logic as v2 but lacks the automated approval step for
-staging deployments.
-
-#### Example Usage
-
-```yaml
-name: Deploy My App Service
-on:
-  push:
-    branches:
-      - main
-jobs:
-  deploy_app:
-    uses: pagopa/dx/.github/workflows/web_app_deploy.yaml@main
-    name: Deploy Web App to Production
-    with:
-      workspace_name: "my-web-app-workspace"
-      environment: "prod"
-      resource_group_name: "my-resource-group"
-      web_app_name: "my-web-app"
-      # use_staging_slot: true # Optional: default is true
-      # use_private_agent: true # Optional: default is true
 ```
