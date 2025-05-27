@@ -12,7 +12,7 @@ For legacy Azure Functions, you can use the wrap the Azure Function within the `
 import { AzureFunction, Context as FunctionContext } from "@azure/functions"; // "@azure/functions": "^3"
 import createAzureFunctionHandler from "@pagopa/express-azure-functions/dist/src/createAzureFunctionsHandler.js";
 
-import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/azure-functions/v3"; // from version ^0.4.0
+import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/azure-functions/v3"; // "@pagopa/azure-tracing": "^0.4"
 
 export const expressToAzureFunction =
   (app: Express): AzureFunction =>
