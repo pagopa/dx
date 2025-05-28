@@ -75,12 +75,6 @@ variable "timeout" {
   }
 }
 
-variable "is_at_edge" {
-  type        = bool
-  description = "Whether the lambda function is at the edge. The default is false."
-  default     = false
-}
-
 variable "environment_variables" {
   type        = map(string)
   description = "The environment variables to set for the lambda function."
