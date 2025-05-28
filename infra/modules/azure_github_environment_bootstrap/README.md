@@ -18,6 +18,10 @@ The module performs the following actions:
 
 ## Gotchas
 
+### Ensure Necessary Azure Permissions
+
+The Azure principal (user or managed identity) executing the `terraform apply` command must have the **Role Based Access Control Administrator** and **Contributor** roles on the target Azure subscription. This is required to create and assign necessary IAM roles.
+
 ### Use Entra Id to Authenticate Connections to Storage Accounts
 
 Entra Id should be used as the authentication method for Storage Accounts, replacing
