@@ -33,23 +33,6 @@ resource "azurerm_resource_group" "opex_prod" {
   tags = merge(local.tags, { Environment = "Prod" })
 }
 
-module "prod_container_app_environment" {
-  source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 1.0"
-
-  providers = {
-    azurerm = azurerm.prod
-  }
-
-  environment = merge(local.environment, { env_short = "p" })
-
-  resource_group_name = module.prod_core.common_resource_group_name
-  subnet_pep_id = module.prod_core.common_pep_snet.id
-  log_analytics_workspace_id = module.prod_core.common_log_analytics_workspace.workspace_id
-
-  tags = merge(local.tags, { Environment = "Prod" })
-}
-
 module "prod_bootstrap" {
   source = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 2.0"
@@ -77,7 +60,7 @@ module "prod_bootstrap" {
   repository = local.repository
 
   github_private_runner = {
-    container_app_environment_id       = module.prod_container_app_environment.id
+    container_app_environment_id       = module.prod_core.github_runner.environment_id
     container_app_environment_location = local.environment.location
     key_vault = {
       name                = module.prod_core.common_key_vault.name
