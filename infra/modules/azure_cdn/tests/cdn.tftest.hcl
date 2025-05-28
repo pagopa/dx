@@ -59,13 +59,6 @@ run "verify_basic_cdn_setup" {
           zone_name = run.setup_tests.devex_pagopa_it_zone_name
           zone_resource_group_name = run.setup_tests.resource_group_name
         }
-      },
-      {
-        host_name = "devex.pagopa.it",
-        dns = {
-          zone_name = run.setup_tests.devex_pagopa_it_zone_name
-          zone_resource_group_name = run.setup_tests.resource_group_name
-        }
       }
     ]
 
@@ -104,10 +97,5 @@ run "verify_basic_cdn_setup" {
   assert {
     condition    = azurerm_dns_txt_record.validation["mywebsite.devex.pagopa.it"].name == "_dnsauth.mywebsite"
     error_message = "DNS TXT record name for mywebsite.devex.pagopa.it custom domain doesn't match expected value"
-  }
-
-  assert {
-    condition    = azurerm_dns_txt_record.validation["devex.pagopa.it"].name == "_dnsauth"
-    error_message = "DNS TXT record name for devex.pagopa.it custom domain doesn't match expected value"
   }
 }

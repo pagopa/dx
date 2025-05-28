@@ -38,6 +38,12 @@ variable "custom_domains" {
     }), { zone_name = null, zone_resource_group_name = null })
   }))
   default = []
+
+  # Validate that no zone_name is equal to host_name, so i dont want to allow a custom domain on the apex of the zone
+  validation {
+    condition     = alltrue([for cd in var.custom_domains : cd.dns.zone_name != null && cd.dns.zone_name != "" ? cd.dns.zone_name != cd.host_name : true])
+    error_message = "This module does not support custom domains on the apex of a DNS zone. Please provide a subdomain or contact the DevEx team for assistance."
+  }
 }
 
 variable "diagnostic_settings" {
