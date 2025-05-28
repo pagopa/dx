@@ -147,13 +147,9 @@ and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).
 
 :::info[Azure Permissions for Initial Setup]
 
-The initial `terraform apply` for the Bootstrap module must be executed locally
-by an Engineering Leader or their delegate. To do this, they must have the
-"**Role Based Access Control Administrator**" role, and the "**Contributor**"
-role (if not already assigned), on the Azure subscription.
+The initial `terraform apply` for the Bootstrap module must be run locally by an Azure account that has the `Role Based Access Control Administrator` and `Contributor` roles assigned at the subscription level.
 
-The RBAC role can be obtained by opening a Pull Request on the
-[pagopa/eng-azure-authorization](https://github.com/pagopa/eng-azure-authorization)
+Within the PagoPA context, you can obtain the necessary RBAC role by opening a Pull Request against the company Azure authorization repository,
 repository, adding the user to the `io-p-adgroup-rbac-admins` team. For example:
 
 ```terraform
