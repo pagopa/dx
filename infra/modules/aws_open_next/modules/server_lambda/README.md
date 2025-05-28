@@ -32,6 +32,7 @@ No modules.
 | [archive_file.lambda_zip](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
 | [aws_iam_policy_document.lambda_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.lambda_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [template_file.t_file](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) | data source |
 
 ## Inputs
 
@@ -41,7 +42,6 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | The environment variables to set for the lambda function. | `map(string)` | `{}` | no |
 | <a name="input_handler"></a> [handler](#input\_handler) | The function entrypoint in your code. The format is <filename>.<function\_name>. For example, if your code is in a file called index.js and the function name is handler, the value should be index.handler. | `string` | `"index.handler"` | no |
-| <a name="input_is_at_edge"></a> [is\_at\_edge](#input\_is\_at\_edge) | Whether the lambda function is at the edge. The default is false. | `bool` | `false` | no |
 | <a name="input_is_streaming_enabled"></a> [is\_streaming\_enabled](#input\_is\_streaming\_enabled) | Whether to use streaming for the server lambda function. If this is true, the wrapper override must be set to 'aws-lambda-streaming' in the 'open-next.config.ts'. More info at https://opennext.js.org/aws/config/simple_example#streaming-with-lambda. The default is false. | `bool` | `false` | no |
 | <a name="input_isr_queue"></a> [isr\_queue](#input\_isr\_queue) | The ARN and URL of the SQS queue used for ISR revalidation. | <pre>object({<br/>    name = string<br/>    arn  = string<br/>    url  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_isr_tags_ddb"></a> [isr\_tags\_ddb](#input\_isr\_tags\_ddb) | The information of the DynamoDB table used for ISR revalidation. | <pre>object({<br/>    name = string<br/>    arn  = string<br/>  })</pre> | n/a | yes |
