@@ -33,23 +33,6 @@ resource "azurerm_resource_group" "opex_dev" {
   tags = merge(local.tags, { Environment = "Dev" })
 }
 
-module "dev_container_app_environment" {
-  source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 1.0"
-
-  providers = {
-    azurerm = azurerm.dev
-  }
-
-  environment = merge(local.environment, { env_short = "d" })
-
-  resource_group_name = module.dev_core.common_resource_group_name
-  subnet_pep_id = module.dev_core.common_pep_snet.id
-  log_analytics_workspace_id = module.dev_core.common_log_analytics_workspace.workspace_id
-
-  tags = merge(local.tags, { Environment = "Dev" })
-}
-
 module "dev_bootstrap" {
   source = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 2.0"
@@ -77,7 +60,7 @@ module "dev_bootstrap" {
   repository = merge(local.repository, { configure = false })
 
   github_private_runner = {
-    container_app_environment_id       = module.dev_container_app_environment.id
+    container_app_environment_id       = module.dev_core.github_runner.environment_id
     container_app_environment_location = local.environment.location
     key_vault = {
       name                = module.dev_core.common_key_vault.name
