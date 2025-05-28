@@ -150,7 +150,7 @@ and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).
 The initial `terraform apply` for the Bootstrap module must be run locally by an Azure account that has the `Role Based Access Control Administrator` and `Contributor` roles assigned at the subscription level.
 
 Within the PagoPA context, you can obtain the necessary RBAC role by opening a Pull Request against the company Azure authorization repository,
-repository, adding the user to the `io-p-adgroup-rbac-admins` team. For example:
+adding this administrative user to the `io-p-adgroup-rbac-admins` team. For example:
 
 ```terraform
   ...
