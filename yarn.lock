@@ -4368,14 +4368,14 @@ __metadata:
     "@opentelemetry/instrumentation": "npm:^0.201.1"
     "@opentelemetry/instrumentation-undici": "npm:^0.12.0"
     "@pagopa/eslint-config": "workspace:^"
-    "@t3-oss/env-core": "npm:^0.13.4"
+    "@t3-oss/env-core": "npm:^0.13.6"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
     eslint: "npm:8.57.0"
-    import-in-the-middle: "npm:^1.13.2"
+    import-in-the-middle: "npm:^1.14.0"
     tsup: "npm:^8.5.0"
     typescript: "npm:~5.8.3"
-    zod: "npm:^3.25.28"
+    zod: "npm:^3.25.32"
   languageName: unknown
   linkType: soft
 
@@ -4890,22 +4890,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@t3-oss/env-core@npm:^0.13.4":
-  version: 0.13.4
-  resolution: "@t3-oss/env-core@npm:0.13.4"
+"@t3-oss/env-core@npm:^0.13.6":
+  version: 0.13.6
+  resolution: "@t3-oss/env-core@npm:0.13.6"
   peerDependencies:
     arktype: ^2.1.0
     typescript: ">=5.0.0"
     valibot: ^1.0.0-beta.7 || ^1.0.0
     zod: ^3.24.0 || ^4.0.0-beta.0
   peerDependenciesMeta:
+    arktype:
+      optional: true
     typescript:
       optional: true
     valibot:
       optional: true
     zod:
       optional: true
-  checksum: 10c0/3598c1582b4cd0aead095a492d60cb7656ffa308c0362744fe32f04ec6563601c04d898c0da7b5efb4dc7ace1d3b18a77f268a15a9e940a6997d9dd84f86a749
+  checksum: 10c0/67fddc0eb36887a2d652caff4ac56bf787d3199dc507b81d6bdb60f1eceb99030a6eec077c1a6ae5a107056915342eec021d2d05a6fb0028dd45c8b19a5f7d03
   languageName: node
   linkType: hard
 
@@ -9778,15 +9780,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"import-in-the-middle@npm:^1.13.2":
-  version: 1.13.2
-  resolution: "import-in-the-middle@npm:1.13.2"
+"import-in-the-middle@npm:^1.14.0":
+  version: 1.14.0
+  resolution: "import-in-the-middle@npm:1.14.0"
   dependencies:
     acorn: "npm:^8.14.0"
     acorn-import-attributes: "npm:^1.9.5"
     cjs-module-lexer: "npm:^1.2.2"
     module-details-from-path: "npm:^1.0.3"
-  checksum: 10c0/485a7d7a1ebffc219064435a9aa041b34e2e66cac3d381957f6a73ad409f128b1f160b8aea6377c1fe2f330c243dc12b3b957d7436e23a51b209933422d6aeb0
+  checksum: 10c0/7df8bff5cf8f3dc98d9e49b6e83b39bc5571d6afbeeaa7f783829e6f4a201329595f51f7c037ee7db395bb3866625d056edcd3f112a93f0e1f31930dbd8ec437
   languageName: node
   linkType: hard
 
@@ -16625,10 +16627,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.28":
-  version: 3.25.28
-  resolution: "zod@npm:3.25.28"
-  checksum: 10c0/557fb621813d128f8090c43de65f9e8661ce9bd8bd29d7adc6b38b0a79e14729a8926e28a2e6eee2fa0ec0ea390cc549363f50235e8f45d2e4771906d1f87b20
+"zod@npm:^3.25.32":
+  version: 3.25.32
+  resolution: "zod@npm:3.25.32"
+  checksum: 10c0/de0bc052a7666578b3d5dd42bc522f02f27e1c798236439c0f6b6bc1b311a221706aebdafb1f58399d5f558b1fab7860c6970e096fe8d6947743bc791d567c4b
   languageName: node
   linkType: hard
 
