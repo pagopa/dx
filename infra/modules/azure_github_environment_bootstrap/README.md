@@ -101,7 +101,7 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 
 ### Managing multiple resource groups
 
-This module already provides a resource group to deploy Azure resources into. However, if there is a need to create one or more resource groups, you can easily create them and notify the module about their existence: all required roles will be assigned by the module itself.
+This module includes a pre-configured resource group for deploying Azure resources. If you need additional resource groups, you can easily create them; the module will automatically assign all necessary roles.```
 
 ```hcl
 resource "azurerm_resource_group" "new_rg01" {
