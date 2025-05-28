@@ -138,7 +138,7 @@ The module facilitates the role assignment to resources that are generally, by t
 - Log Analytics Workspace
 - NAT Gateway
 
-The module exposes an optional variable of each of these resources, accepting their Ids. By using them, required role to operate on them will be assigned to the Managed Identities used by the workflows of the repository.
+For each of these resources, the module provides an optional variable to which their IDs can be passed. Utilizing these IDs ensures that the requisite roles for operating on the resources are assigned to the Managed Identities associated with the repository's workflows.```
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
