@@ -11,15 +11,15 @@ data "azurerm_client_config" "current_dev" {
 }
 
 data "azuread_group" "admins_dev" {
-  display_name = local.adgroups.admins_name
+  display_name = format(local.adgroups.admins_name, "d")
 }
 
 data "azuread_group" "developers_dev" {
-  display_name = local.adgroups.devs_name
+  display_name = format(local.adgroups.devs_name, "d")
 }
 
 data "azuread_group" "externals_dev" {
-  display_name = local.adgroups.external_name
+  display_name = format(local.adgroups.external_name, "d")
 }
 
 #####################
@@ -35,13 +35,13 @@ data "azurerm_client_config" "current_prod" {
 }
 
 data "azuread_group" "admins_prod" {
-  display_name = local.adgroups.admins_name
+  display_name = format(local.adgroups.admins_name, "p")
 }
 
 data "azuread_group" "developers_prod" {
-  display_name = local.adgroups.devs_name
+  display_name = format(local.adgroups.devs_name, "p")
 }
 
 data "azuread_group" "externals_prod" {
-  display_name = local.adgroups.external_name
+  display_name = format(local.adgroups.external_name, "p")
 }

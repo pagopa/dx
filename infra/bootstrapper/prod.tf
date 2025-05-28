@@ -58,7 +58,7 @@ module "prod_bootstrap" {
     azurerm = azurerm.prod
   }
 
-  environment = merge(local.environment, { env_short = "p" })
+  environment = merge(local.environment, { env_short = "p", domain = "bootstrap" })
 
   subscription_id = data.azurerm_subscription.current_prod.id
   tenant_id       = data.azurerm_client_config.current_prod.tenant_id
