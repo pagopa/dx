@@ -37,9 +37,9 @@
     "@opentelemetry/api-logs": "^0.201.1",
     "@opentelemetry/instrumentation": "^0.201.1",
     "@opentelemetry/instrumentation-undici": "^0.12.0",
-    "@t3-oss/env-core": "^0.13.4",
-    "import-in-the-middle": "^1.13.2",
-    "zod": "^3.25.28"
+    "@t3-oss/env-core": "^0.13.6",
+    "import-in-the-middle": "^1.14.0",
+    "zod": "^3.25.32"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
