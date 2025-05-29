@@ -59,7 +59,7 @@ module. By specifying the `sbns_id` variable in the module configuration, you
 can ensure that the necessary roles are automatically assigned to your
 repository's GitHub Actions workflows.
 
-If, for any exceptional reason, you need to configure permissions manually, you
+If, for any exceptional reason you need to configure permissions manually, you
 can use the
 [`azurerm_role_assignment`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment)
 resource to assign the `Contributor` role to a Principal ID. For example:
