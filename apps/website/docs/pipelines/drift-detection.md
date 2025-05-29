@@ -22,9 +22,8 @@ You may find more information in this
 
 ## Usage
 
-To use the Drift Detection workflow,
-[create a new workflow file](https://docs.github.com/en/actions/quickstart#creating-your-first-workflow)
-in your repository. The file should be named `infra_drift_detection.yml`:
+Navigate to your repository and create a new workflow file, and reference the DX
+`infra_drift_detection.yml` job template. Below is an example of how to do it:
 
 ```yaml
 name: Drift Detection
@@ -42,19 +41,20 @@ jobs:
     with:
       environment: "dev"
       base_path: "infra/resources/"
+      override_github_environment: "infra-dev"
 ```
 
 Configuration variables are as follows:
 
 - **environment**: Specifies the environment where the resources will be
-  deployed. The default value is `prod`.
-- **base_path**: Defines the base path where the script will search for the
-  Terraform projects. The default value is `infra/resources/`.
-- **use_private_agent**: Determines whether to use a private agent to run the
-  `terraform plan` command. The default value is `false`.
-
-With this configuration, the workflow runs every day at 8:00 AM and checks for
-any drift in the code under `infra/resources/dev`.
+  deployed. Default value: `prod`.
+- **base_path**: Defines the base path where the script will search for
+  Terraform projects. Default value: `infra/resources/`.
+- **use_private_agent**: Indicates whether to use a private agent to run the
+  `terraform plan` command. Default value: `false`.
+- **override_github_environment**: Optional, use it when the "infra" GitHub
+  environment of your repository is not `dev`, `uat`, nor `prod`, but another
+  value. Always exclude the `cX` suffix.
 
 :::warning
 
@@ -63,22 +63,48 @@ Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and
 
 :::
 
-To receive notifications in Slack when drift is detected, set the GitHub secret
-`SLACK_WEBHOOK_URL`. The webhook URL is provided by Slack when you create a new
-app. For more information, refer to the
-[Slack documentation](https://api.slack.com/messaging/webhooks).
+To receive notifications in Slack when drift is detected:
 
-An example of a Slack notification is shown below:
+- [Create a Slack app and generate a webhook URL](https://api.slack.com/messaging/webhooks#getting_started).
+- Save the webhook URL in your Azure KeyVault as a secret
+- Save the webhook URL as a GitHub secret named `SLACK_WEBHOOK_URL` in your
+  GitHub repository settings. This step can be done easily using Terraform.
+  Below is an example of how to do it:
+
+```hcl
+data "azurerm_key_vault_secret" "slack_webhook_url" {
+  key_vault_id = data.azurerm_key_vault.your_kv.id
+  name         = "slack-webhook-url-terraform-drift"
+}
+
+locals {
+  # you may already have this section in `locals.tf`file. If so, just add the value to the existing `repo_secrets` map.
+  repo_secrets = {
+    "SLACK_WEBHOOK_URL" = data.azurerm_key_vault_secret.slack_webhook_url.value
+  }
+}
+
+# you may already have this
+resource "github_actions_secret" "repo_secrets" {
+  for_each = local.repo_secrets
+
+  repository      = module.repo.repository.name
+  secret_name     = each.key
+  plaintext_value = each.value
+}
+```
+
+When drift is detected, a Slack message similar to the following will be sent:
 
 ```plaintext
-    Drift detected! Drift Detection action has failed
-    Drift Detection results:
-    Owner: [COMMIT OWNER NAME]
-    Commit URL: 12345XY
-    Commit message: [COMMIT MESSAGE]
-    Terraform plan results:
-      + Resource to add: 0
-      ~ Resource to change: 1
-      - Resource to destroy: 0
-    Linked Repo: [REPOSITORY LINK]
+Drift detected! Drift Detection action has failed
+Drift Detection results:
+Owner: [COMMIT OWNER NAME]
+Commit URL: 12345XY
+Commit message: [COMMIT MESSAGE]
+Terraform plan results:
+  + Resource to add: 0
+  ~ Resource to change: 1
+  - Resource to destroy: 0
+Linked Repo: [REPOSITORY LINK]
 ```
