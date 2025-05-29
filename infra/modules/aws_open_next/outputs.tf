@@ -13,6 +13,11 @@ output "isr_revalidation" {
   description = "The ISR revalidation lambda function."
 }
 
+output "initializer" {
+  value       = module.initializer
+  description = "The initializer lambda function."
+}
+
 output "cloudfront" {
   value       = module.cloudfront
   description = "The CloudFront distribution."
