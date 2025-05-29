@@ -51,7 +51,8 @@ To manage the infrastructure of the Service Bus Namespace, you must assign the
 `Contributor` role to the Principal ID of the team or pipeline (such as a GitHub
 Action) responsible for its management.
 
-The recommended approach is to use the
+To let GitHub Actions manage the Service Bus Namespace, the recommended approach
+is to use the
 [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
 module. This ensures that the required roles are granted to the repository's
 GitHub Actions by including the `sbns_id` variable in the module configuration.
