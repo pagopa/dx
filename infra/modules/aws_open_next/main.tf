@@ -5,6 +5,13 @@ module "assets" {
   tags        = var.tags
 }
 
+module "common" {
+  source = "./modules/common"
+
+  environment = var.environment
+  tags        = var.tags
+}
+
 module "server" {
   source = "./modules/server_lambda"
 

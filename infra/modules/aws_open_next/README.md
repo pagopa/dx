@@ -13,6 +13,7 @@
 |------|--------|---------|
 | <a name="module_assets"></a> [assets](#module\_assets) | ./modules/assets | n/a |
 | <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | ./modules/cloudfront | n/a |
+| <a name="module_common"></a> [common](#module\_common) | ./modules/common | n/a |
 | <a name="module_image_optimizer"></a> [image\_optimizer](#module\_image\_optimizer) | ./modules/image_optimizer_lambda | n/a |
 | <a name="module_initializer"></a> [initializer](#module\_initializer) | ./modules/initialization_lambda | n/a |
 | <a name="module_isr_revalidation"></a> [isr\_revalidation](#module\_isr\_revalidation) | ./modules/isr_revalidation | n/a |
