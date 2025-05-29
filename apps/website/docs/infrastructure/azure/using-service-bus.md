@@ -48,8 +48,9 @@ module "service_bus_01" {
 The module disables access keys, so authentication is handled only by Entra ID.
 
 The team or pipeline that manages the Service Bus Namespace must have the
-`Contributor` role assigned to the Namespace. This is necessary to create and
-manage entities such as queues, topics, and subscriptions within the Namespace.
+`Contributor` role assigned on the whole service. This is necessary to create
+and manage entities such as queues, topics, and subscriptions within the
+Namespace.
 
 If you are using GitHub Actions to manage the Service Bus Namespace, it is
 recommended to leverage the
