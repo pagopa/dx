@@ -1,5 +1,12 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.3.1
+
+### Patch Changes
+
+- b4081c8: Improved module documentation. It now contains examples about setup customization
+- 91515f8: Update Readme with some information about required Azure Permissions
+
 ## 2.3.0
 
 ### Minor Changes
