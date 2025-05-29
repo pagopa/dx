@@ -47,16 +47,19 @@ module "service_bus_01" {
 
 The module disables access keys, so authentication is handled only by Entra ID.
 
-If you have a common Service Bus Namespace instance shared among teams, you can
-use the
-[azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-module to set the required role to apply changes to the GitHub workflow of your
-monorepository, via the `sbns_id` variable.
+To manage the infrastructure of the Service Bus Namespace, you must assign the
+`Contributor` role to the Principal ID of the team or pipeline (such as a GitHub
+Action) responsible for its management.
 
-For your own access as writer, declare a
+The recommended approach is to use the
+[azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
+module. This ensures that the required roles are granted to the repository's
+GitHub Actions by including the `sbns_id` variable in the module configuration.
+
+If, for any exceptional reason, you need to configure permissions manually, you
+can use the
 [`azurerm_role_assignment`](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment)
-next to the Service Bus Namespace definition, setting the `Contributor` role to
-your team's Principal ID. For example:
+resource to assign the `Contributor` role to a Principal ID. For example:
 
 ```hcl
 data "azuread_group" "adgroup_domain_devs" {
