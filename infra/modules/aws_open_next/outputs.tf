@@ -22,3 +22,8 @@ output "assets" {
   value       = module.assets
   description = "The assets bucket."
 }
+
+output "common" {
+  value       = module.common
+  description = "The common resources module."
+}
