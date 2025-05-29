@@ -52,8 +52,9 @@ Configuration variables are as follows:
   Terraform projects. Default value: `infra/resources/`.
 - **use_private_agent**: Indicates whether to use a private agent to run the
   `terraform plan` command. Default value: `false`.
-- **override_github_environment**: Optionally matches the "infra" GitHub
-  environment of your repository, excluding the `cX` suffix.
+- **override_github_environment**: Optional, use it when the "infra" GitHub
+  environment of your repository is not `dev`, `uat`, nor `prod`, but another
+  value. Always exclude the `cX` suffix.
 
 :::warning
 
