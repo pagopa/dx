@@ -45,6 +45,7 @@ No resources.
 |------|-------------|
 | <a name="output_assets"></a> [assets](#output\_assets) | The assets bucket. |
 | <a name="output_cloudfront"></a> [cloudfront](#output\_cloudfront) | The CloudFront distribution. |
+| <a name="output_common"></a> [common](#output\_common) | The common resources module. |
 | <a name="output_image_optimizer"></a> [image\_optimizer](#output\_image\_optimizer) | The image optimizer lambda function. |
 | <a name="output_isr_revalidation"></a> [isr\_revalidation](#output\_isr\_revalidation) | The ISR revalidation lambda function. |
 | <a name="output_server"></a> [server](#output\_server) | The server lambda function. |
