@@ -47,15 +47,16 @@ module "service_bus_01" {
 
 The module disables access keys, so authentication is handled only by Entra ID.
 
-To manage the infrastructure of the Service Bus Namespace, you must assign the
-`Contributor` role to the Principal ID of the team or pipeline (such as a GitHub
-Action) responsible for its management.
+The team or pipeline that manages the Service Bus Namespace must have the
+`Contributor` role assigned to the Namespace. This is necessary to create and
+manage entities such as queues, topics, and subscriptions within the Namespace.
 
-To let GitHub Actions manage the Service Bus Namespace, the recommended approach
-is to use the
+If you are using GitHub Actions to manage the Service Bus Namespace, it is
+recommended to leverage the
 [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-module. This ensures that the required roles are granted to the repository's
-GitHub Actions by including the `sbns_id` variable in the module configuration.
+module. By specifying the `sbns_id` variable in the module configuration, you
+can ensure that the necessary roles are automatically assigned to your
+repository's GitHub Actions workflows.
 
 If, for any exceptional reason, you need to configure permissions manually, you
 can use the
