@@ -1,5 +1,13 @@
 # azure_storage_account
 
+## 1.0.0
+
+### Major Changes
+
+- c548567: **BREAKING CHANGE:**
+
+  Public access to blobs within containers is now disabled by default in the Azure Storage Account module. If public blob access is explicitly required, this setting must be overridden with variable `force_public_network_access_enabled`.
+
 ## 0.1.1
 
 ### Patch Changes
