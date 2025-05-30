@@ -61,7 +61,8 @@ module "rbac" {
     description         = "Allow FrontDoor ${azurerm_cdn_frontdoor_endpoint.this.name} to access the certificate in the key vault"
 
     roles = {
-      secrets = "read"
+      secrets      = "read"
+      certificates = "read"
     }
   }]
 }
