@@ -224,7 +224,7 @@ jobs:
             --async false
 
   deploy_prod:
-    name: Swap Staging and Production Slots
+    name: Deploy to Production
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build, deploy_staging]
     if: ${{ always() && !github.event.act && needs.deploy_staging.result == 'skipped' || needs.deploy_staging.result == 'success' }}
@@ -263,6 +263,6 @@ jobs:
           az webapp deploy \
             --resource-group "$RESORUCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
-            --src-path "$BUNDLE_NAME.zip" \
+            --src-path "$BUNDLE_NAME".zip \
             --type zip \
             --async false
