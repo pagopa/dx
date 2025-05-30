@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.1.0
+
+### Minor Changes
+
+- 32aae43: The CDN FrontDoor Profile now has a system-assigned managed identity
+
 ## 0.0.7
 
 ### Patch Changes
