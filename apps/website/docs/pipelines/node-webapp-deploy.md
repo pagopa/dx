@@ -96,3 +96,4 @@ jobs:
       web_app_name: "my-web-app"
       # use_staging_slot: true # Optional: default is true
       # use_private_agent: true # Optional: default is true
+```
