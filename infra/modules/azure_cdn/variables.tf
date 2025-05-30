@@ -35,13 +35,13 @@ variable "custom_domains" {
     dns = optional(object({
       zone_name                = string
       zone_resource_group_name = string
-    }), { zone_name = null, zone_resource_group_name = null})
+    }), { zone_name = null, zone_resource_group_name = null })
 
     custom_certificate = optional(object({
       key_vault_certificate_versionless_id = string
-      key_vault_name = string
-      key_vault_resource_group_name = string
-      key_vault_has_rbac_support = optional(bool, true)
+      key_vault_name                       = string
+      key_vault_resource_group_name        = string
+      key_vault_has_rbac_support           = optional(bool, true)
     }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })
   }))
   default = []
