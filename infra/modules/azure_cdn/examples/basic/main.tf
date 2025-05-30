@@ -40,6 +40,22 @@ module "storage_account" {
   tags = local.tags
 }
 
+data "azurerm_key_vault" "kv" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "key_vault"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "resource_group"
+  }))
+}
+
+data "azurerm_key_vault_certificate" "cert" {
+  name         = "my-secret-certificate"
+  key_vault_id = data.azurerm_key_vault.kv.id
+}
+
 module "azure_cdn" {
   source = "../../"
 
@@ -73,6 +89,20 @@ module "azure_cdn" {
     {
       # No DNS record will be created for this domain
       host_name = "test.bar.com",
+    },
+    {
+      host_name = "apex.foo.com",
+      dns = {
+        # This is an apex domain cause host_name equals to zone_name
+        zone_name                = "apex.foo.com",
+        zone_resource_group_name = azurerm_resource_group.example.name
+      }
+      custom_certificate = {
+        key_vault_certificate_versionless_id = data.azurerm_key_vault_certificate.cert.versionless_id
+        key_vault_name                       = data.azurerm_key_vault.kv.name
+        key_vault_resource_group_name        = data.azurerm_key_vault.kv.resource_group_name
+        key_vault_has_rbac_support           = data.azurerm_key_vault.kv.enable_rbac_authorization
+      }
     }
   ]
 
