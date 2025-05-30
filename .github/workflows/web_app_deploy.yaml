@@ -132,12 +132,67 @@ jobs:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
 
+  deploy:
+    name: Deploy
+    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [build]
+    if: ${{ !github.event.act && !inputs.enable_staging_auto_deployment  }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy
+        if: ${{ !inputs.use_staging_slot }}
+        run: |
+          az webapp deploy \
+            --resource-group "$RESORUCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --src-path "$BUNDLE_NAME".zip \
+            --type zip \
+            --async false
+
+      - name: Deploy to Staging Slot
+        if: ${{ inputs.use_staging_slot }}
+        run: |
+          az webapp deploy \
+            --resource-group "$RESORUCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --slot staging \
+            --src-path "$BUNDLE_NAME".zip \
+            --type zip \
+            --async false
+
+      - name: Swap Staging and Production Slots
+        if: ${{ inputs.use_staging_slot }}
+        run: |
+          az webapp deployment slot swap \
+            --resource-group "$RESORUCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --slot staging \
+            --target-slot production
+
   # Automatically approve deployment to staging slot
   approve_staging:
     name: Auto-Approve Staging Slot Deployment
     runs-on: ubuntu-latest
     needs: [build]
-    if: ${{ inputs.enable_staging_auto_deployment == true && inputs.use_staging_slot == true && needs.build.result == 'success' }}
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment  }}
 
     steps:
 
@@ -193,7 +248,7 @@ jobs:
     name: Deploy to Staging
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
-    if: ${{ inputs.use_staging_slot == true && needs.build.result == 'success' }}
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -226,8 +281,8 @@ jobs:
   deploy_prod:
     name: Deploy to Production
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [build, deploy_staging]
-    if: ${{ always() && !github.event.act && needs.deploy_staging.result == 'skipped' || needs.deploy_staging.result == 'success' }}
+    needs: [deploy_staging]
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment}}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -243,26 +298,10 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Swap Staging and Production Slots
-        if: ${{ inputs.use_staging_slot == true }}
+        if: ${{ inputs.use_staging_slot }}
         run: |
           az webapp deployment slot swap \
             --resource-group "$RESORUCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --slot staging \
             --target-slot production
-
-      - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
-        if: ${{ inputs.use_staging_slot == false }}
-        with:
-          bundle_name: ${{ env.BUNDLE_NAME }}
-
-      - name: Deploy
-        if: ${{ inputs.use_staging_slot == false }}
-        run: |
-          az webapp deploy \
-            --resource-group "$RESORUCE_GROUP_NAME" \
-            --name "$WEB_APP_NAME" \
-            --src-path "$BUNDLE_NAME".zip \
-            --type zip \
-            --async false
