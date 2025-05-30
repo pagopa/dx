@@ -8,4 +8,8 @@ locals {
     name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
+
+  is_apex = {
+    for cd in var.custom_domains : cd.host_name => (cd.host_name == cdn.dns.zone_name)
+  }
 }
