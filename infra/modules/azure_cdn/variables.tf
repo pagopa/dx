@@ -29,17 +29,33 @@ variable "origins" {
 }
 
 variable "custom_domains" {
-  description = "Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created."
+  description = "Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created. If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used. To generate one, please refer to the confluence documentation."
   type = list(object({
     host_name = string
     dns = optional(object({
       zone_name                = string
       zone_resource_group_name = string
     }), { zone_name = null, zone_resource_group_name = null })
+
+    custom_certificate = optional(object({
+      key_vault_certificate_versionless_id = string
+      key_vault_name                       = string
+      key_vault_resource_group_name        = string
+      key_vault_has_rbac_support           = optional(bool, true)
+    }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })
   }))
   default = []
-}
 
+  # Validate that no zone_name is equal to host_name (meaning that the custom domain is a root domain of that zone). In the case of a root domain, the key_vault_certificate_versionless_id must be set.
+  validation {
+    condition = alltrue([
+      for cd in var.custom_domains : (
+        !(cd.dns.zone_name != null && cd.dns.zone_name == cd.host_name) || (cd.custom_certificate.key_vault_certificate_versionless_id != null)
+      )
+    ])
+    error_message = "If a custom domain is a root domain, custom_certificate information must be set. Azure CDN does not support managed certificates for apex domains. To generate one, please refer to the confluence documentation."
+  }
+}
 
 variable "diagnostic_settings" {
   type = object({
@@ -55,7 +71,7 @@ variable "diagnostic_settings" {
   description = <<-EOT
     Define if diagnostic settings should be enabled.
     if it is:
-    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and 
+    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
     the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
   EOT
 
