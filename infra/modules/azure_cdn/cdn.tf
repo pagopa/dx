@@ -3,6 +3,10 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   tags = local.tags
 }
 

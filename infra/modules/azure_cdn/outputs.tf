@@ -22,3 +22,8 @@ output "origin_group_id" {
   description = "The ID of the CDN FrontDoor Origin Group"
   value       = azurerm_cdn_frontdoor_origin_group.this.id
 }
+
+output "principal_id" {
+  description = "The principal ID of the Front Door Profile's system-assigned managed identity."
+  value       = azurerm_cdn_frontdoor_profile.this.identity[0].principal_id
+}
