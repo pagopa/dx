@@ -2,4 +2,4 @@
 "azure_cdn": minor
 ---
 
-Avoid managing apex custom domains
+Support apex domains by using custom certificates
