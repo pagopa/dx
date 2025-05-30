@@ -251,6 +251,12 @@ jobs:
             --slot staging \
             --target-slot production
 
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        if: ${{ inputs.use_staging_slot == false }}
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}
         run: |
