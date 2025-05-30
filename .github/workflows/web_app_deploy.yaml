@@ -28,12 +28,7 @@ on:
         required: false
         default: true
       enable_staging_auto_deployment:
-        description: Enable to deploy to staging slot without an approval
-        type: boolean
-        required: false
-        default: false
-      force_approval_exit_code:
-        description: If "enable_staging_auto_deployment" is enabled and you do not have an approval step for deployments in the chosen environment, set this option to true to force a successful exit code for staging deployment auto-approval job. It is useful to set a green mark in the GitHub Action tab to indicate apparent completion
+        description: Enable to deploy to staging slot without an approval. If enabled, "use_staging_slot" must be true
         type: boolean
         required: false
         default: false
@@ -46,7 +41,6 @@ env:
   BUNDLE_NAME: bundle
   RESORUCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
-  FORCE_APPROVAL_EXIT_CODE: ${{ inputs.force_approval_exit_code }}
 
 jobs:
   build:
@@ -208,26 +202,18 @@ jobs:
             jq --arg GH_ENV "$REQUIRED_ENVIRONMENT" '.[] | select(.environment.name == $GH_ENV)')
 
           if [ -z "$is_environment_matching" ]; then
-            if [ "$FORCE_APPROVAL_EXIT_CODE" ]; then
-              exit 0
-            else
-              echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
-              echo "::warning::Check if the deployment was already approved by one of the reviewers."
-              exit 1
-            fi
+            echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
+            echo "::warning::Check if the deployment was already approved by one of the reviewers."
+            exit 1
           fi
 
           can_user_approve=$(echo "$deployments" |
             jq '.[] | select(.current_user_can_approve == true)')
 
           if [ -z "$can_user_approve" ]; then
-            if [ "$FORCE_APPROVAL_EXIT_CODE" ]; then
-              exit 0
-            else
-              echo "::error::${{ github.actor }} is not a reviewer"
-              echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
-              exit 1
-            fi
+            echo "::error::${{ github.actor }} is not a reviewer"
+            echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
+            exit 1
           fi
 
           env_id=$(echo "$deployments" | jq -r '.[0].environment.id')
