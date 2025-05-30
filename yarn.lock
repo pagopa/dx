@@ -6077,6 +6077,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws_open_next@workspace:infra/modules/aws_open_next":
+  version: 0.0.0-use.local
+  resolution: "aws_open_next@workspace:infra/modules/aws_open_next"
+  languageName: unknown
+  linkType: soft
+
 "azure_api_management@workspace:infra/modules/azure_api_management":
   version: 0.0.0-use.local
   resolution: "azure_api_management@workspace:infra/modules/azure_api_management"
