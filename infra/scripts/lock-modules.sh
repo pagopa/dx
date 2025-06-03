@@ -174,10 +174,13 @@ function process_module() {
     fi
 
     # Get previous hash from hashes file
-    previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name] // "none"' "${HASHES_FILE:-/dev/null}")
+    previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name].hash // "none"' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
-    jq --arg module_name "$module_name" --arg new_hash "$new_hash" '.[$module_name] = $new_hash' \
-        "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+    jq --arg module_name "$module_name" \
+      --arg new_hash "$new_hash" \
+      --arg module_version "$module_version" \
+      '.[$module_name] = {hash: $new_hash, version: $module_version}' \
+      "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
 
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
