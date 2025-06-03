@@ -27,7 +27,7 @@ on:
         type: boolean
         required: false
         default: true
-      enable_staging_auto_deployment:
+      auto_deploy_to_staging:
         description: Enable automatic deployments to the staging slot, bypassing the need for manual approval. If this setting is true, ensure that `use_staging_slot` is also enabled.
         type: boolean
         required: false
