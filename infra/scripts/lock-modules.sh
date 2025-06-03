@@ -55,6 +55,7 @@ function add_module_result() {
     local message="$4"
     local hash="$5"
     local prevhash="$6"
+    local modulefoldername="$7"
 
     # Only filter out unchanged and skipped modules - always include removed ones
     if [[ "$status" == "unchanged" || "$status" == "skipped" ]]; then
@@ -75,8 +76,10 @@ function add_module_result() {
         --arg message "$message" \
         --arg hash "$hash" \
         --arg prevhash "$prevhash" \
+        --arg modulefoldername "$modulefoldername" \
         '{
             "module": $name,
+            "name": $modulefoldername,
             "status": $status,
             "version": $version,
             "message": $message,
@@ -173,10 +176,12 @@ function process_module() {
     local -r new_hash=$(calculate_hash "$module_path")
     local previous_hash
     local module_version="unknown"
+    local module_folder_name="unknown"
 
     # Try to get module version from package.json if it exists
     if [[ -f "$module_path/package.json" ]]; then
         module_version=$(jq -r '.version // "unknown"' "$module_path/package.json")
+        module_folder_name=$(jq -r '.name // "unknown"' "$module_path/package.json")
     fi
 
     # Get previous hash from hashes file
@@ -191,17 +196,18 @@ function process_module() {
     jq --arg module_name "$module_name" \
       --arg new_hash "$new_hash" \
       --arg module_version "$module_version" \
-      '.[$module_name] = {hash: $new_hash, version: $module_version}' \
+      --arg module_folder_name "$module_folder_name" \
+      '.[$module_name] = {hash: $new_hash, version: $module_version, name: $module_folder_name}' \
       "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
 
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
         info "Module $module_name: Initial hash created"
-        add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash" "$previous_hash"
+        add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash" "$previous_hash" "$module_folder_name"
         return 1
     elif [[ "$previous_hash" != "$new_hash" ]]; then
         info "Module $module_name: Changes detected, updating hash"
-        add_module_result "$module_name" "changed" "$module_version" "Changes detected" "$new_hash" "$previous_hash"
+        add_module_result "$module_name" "changed" "$module_version" "Changes detected" "$new_hash" "$previous_hash" "$module_folder_name"
         return 1
     else
         debug "Module $module_name: No changes detected"
@@ -274,7 +280,7 @@ function process_directory() {
                     previous_hash=$(jq -r --arg key "$existing_key" '.[$key]' "$HASHES_FILE")
 
                     # Add to results (will be included in JSON since status is "removed")
-                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash"
+                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash" "unknown"
 
                     # Remove from lock file
                     jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
