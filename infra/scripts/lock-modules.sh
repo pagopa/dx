@@ -7,12 +7,17 @@ readonly HASHES_FILE="tfmodules.lock.json"        # File to store module hashes
 readonly MODULES_METADATA=".terraform/modules/modules.json"  # Terraform's module metadata file
 readonly REGISTRY_URL="registry.terraform.io"      # Default Terraform registry URL
 readonly SCRIPT_NAME=$(basename "$0")              # Get the script name for logging
+readonly JSON_OUTPUT_FILE="${LOCK_MODULES_JSON_OUTPUT_FILE:-}"    # Optional file path for JSON output
 
 # Enable debug mode if PRECOMMIT_DEBUG environment variable is set to 1
 # set -x enables printing of each command before execution
 if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 ]]; then
     set -x
 fi
+
+# Initialize JSON results array
+declare -a json_results=()
+declare  module_results='[]'
 
 # Logging functions for different severity levels
 # All output is sent to stderr (>&2) to keep stdout clean for piping
@@ -27,7 +32,7 @@ function debug() {
 
 function error() {
     # Always show errors regardless of verbose mode
-    echo "ERROR: $*" >&2
+        echo "ERROR: $*" >&2
 }
 
 function warn() {
@@ -39,6 +44,69 @@ function warn() {
 function info() {
     if [[ "${PRE_COMMIT_VERBOSE}" -eq 1 ]]; then
         echo "INFO: $*" >&2
+    fi
+}
+
+# Add module result to JSON output
+function add_module_result() {
+    local module_name="$1"
+    local status="$2"
+    local version="$3"
+    local message="$4"
+    local hash="$5"
+
+    # Only filter out unchanged and skipped modules - always include removed ones
+    if [[ "$status" == "unchanged" || "$status" == "skipped" ]]; then
+        return 0
+    fi
+
+    # Log it in both output formats
+    if [[ "$status" == "removed" ]]; then
+        info "Module $module_name was removed from configuration"
+    fi
+
+    # Create JSON entry
+    local json_entry
+    json_entry=$(jq -n \
+        --arg name "$module_name" \
+        --arg status "$status" \
+        --arg version "$version" \
+        --arg message "$message" \
+        --arg hash "$hash" \
+        '{
+            "module": $name,
+            "status": $status,
+            "version": $version,
+            "message": $message,
+            "hash": $hash
+        }')
+
+    # Add to stdout JSON output
+    json_results+=("$json_entry")
+    echo "$json_entry" >> "$JSON_OUTPUT_FILE"
+}
+
+# Write JSON results to file if requested
+function write_json_results() {
+    local exit_code="${1:-0}"
+
+    if [[ -n "$JSON_OUTPUT_FILE" ]]; then
+        # Create summary data
+        local summary_data
+        summary_data=$(jq -n \
+            --arg total "$(echo "$module_results" | jq 'length')" \
+            --arg exit_code "$exit_code" \
+            '{
+                "total_modules": $total|tonumber,
+                "exit_code": $exit_code|tonumber
+            }')
+
+        # Create and write the final JSON structure to the specified file
+        printf '{"summary":%s,"results":%s}' \
+            "$summary_data" \
+            "$module_results" | jq . > "$JSON_OUTPUT_FILE"
+
+        info "JSON output written to $JSON_OUTPUT_FILE"
     fi
 }
 
@@ -95,6 +163,12 @@ function process_module() {
     local -r module_name=$(basename "$module_path")
     local -r new_hash=$(calculate_hash "$module_path")
     local previous_hash
+    local module_version="unknown"
+
+    # Try to get module version from package.json if it exists
+    if [[ -f "$module_path/package.json" ]]; then
+        module_version=$(jq -r '.version // "unknown"' "$module_path/package.json")
+    fi
 
     # Get previous hash from hashes file
     previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name] // "none"' "${HASHES_FILE:-/dev/null}")
@@ -105,9 +179,11 @@ function process_module() {
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
         info "Module $module_name: Initial hash created"
+        add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash"
         return 1
     elif [[ "$previous_hash" != "$new_hash" ]]; then
         info "Module $module_name: Changes detected, updating hash"
+        add_module_result "$module_name" "changed" "$module_version" "Changes detected" "$new_hash"
         return 1
     else
         debug "Module $module_name: No changes detected"
@@ -164,10 +240,23 @@ function process_directory() {
 
         # Remove any keys from lock file that aren't in current modules
         if [[ -f "$HASHES_FILE" ]]; then
+            debug "Checking for removed modules..."
             jq -r 'keys[]' "$HASHES_FILE" | while read -r existing_key; do
                 if ! grep -q "^${existing_key}$" "$temp_keys_file"; then
+                    # This is an expected change - we're removing a module that's no longer in the config
                     info "Removing old module key: $existing_key"
+
+                    # Get the previous hash before removing it
+                    local previous_hash
+                    previous_hash=$(jq -r --arg key "$existing_key" '.[$key]' "$HASHES_FILE")
+
+                    # Add to results (will be included in JSON since status is "removed")
+                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "$previous_hash"
+
+                    # Remove from lock file
                     jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
+
+                    # This is a legitimate change, not an error
                     changes_found=1
                 fi
             done
@@ -175,7 +264,7 @@ function process_directory() {
 
         # Only proceed if registry modules are found
         if ! has_registry_modules; then
-            info "No registry modules found in $target_dir, skipping"
+            debug "No registry modules found in $target_dir, skipping"
             cd "$base_dir"
             return 0
         fi
@@ -184,14 +273,19 @@ function process_directory() {
         while IFS= read -r module_key; do
             if [[ -n "$module_key" ]]; then
                 local module_path="$MODULES_DIR/$module_key"
+                local module_version="unknown"
+                # Get module version
+                if [[ -f "$module_path/package.json" ]]; then
+                    module_version=$(jq -r '.version // "unknown"' "$module_path/package.json")
+                fi
                 # Process module if directory exists
                 if [[ -d "$module_path" ]]; then
-                    info "Processing module: $module_path with version $(jq -r '.version' ${module_path}/package.json)"
+                    info "Processing module: $module_path with version $module_version"
                     if ! process_module "$module_path"; then
                         changes_found=1
                     fi
                 else
-                    warn "Module path $module_path not found"
+                    debug "Module path $module_path not found"
                 fi
             fi
         # Use jq to extract module keys for modules from the specified registry
@@ -239,16 +333,28 @@ function main() {
 
     # Process each directory
     for target_dir in "${dirs_to_process[@]}"; do
-        info "Processing directory: $target_dir"
-        if ! process_directory "$target_dir" "$base_dir"; then
-            exit_code=1
-        fi
+      info "Processing directory: $target_dir"
+      if ! process_directory "$target_dir" "$base_dir"; then
+        exit_code=1
+        debug "Changes detected in $target_dir, setting exit code to 1"
+      fi
+
+      # Only process JSON_OUTPUT_FILE if it exists
+      if [[ -f "$target_dir/$JSON_OUTPUT_FILE" ]]; then
+        echo "Importing JSON output from $target_dir/$JSON_OUTPUT_FILE"
+        value="$(jq --arg path "$target_dir" -s 'map(. + {path: $path})' "$target_dir/$JSON_OUTPUT_FILE")"
+        module_results="$(jq -n --argjson arr1 "$module_results" --argjson arr2 "$value" '$arr1 + $arr2')"
+        rm -f "$target_dir/$JSON_OUTPUT_FILE" 2>/dev/null || true
+      fi
     done
 
     # Warn if changes were detected
     if [[ $exit_code -eq 1 ]]; then
         warn "Changes detected in one or more modules"
     fi
+
+    # Write JSON results to file if requested
+    write_json_results "$exit_code"
 
     exit $exit_code
 }
