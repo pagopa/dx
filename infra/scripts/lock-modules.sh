@@ -49,13 +49,13 @@ function get_modules_from_tf_files() {
     # Step 2: Extract just the source value using sed
     sed -E 's/.*source[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/' | \
     # Step 3: Sort and remove duplicates
-    sort -u || echo ""
+    LC_ALL=C sort -u || echo ""
 }
 
 # Extract module sources from Terraform's modules.json metadata
 function get_modules_from_metadata() {
     if [[ -f "$MODULES_METADATA" ]]; then
-        jq -r '.Modules[].Source' "$MODULES_METADATA" 2>/dev/null | sort -u || echo ""
+        jq -r '.Modules[].Source' "$MODULES_METADATA" 2>/dev/null | LC_ALL=C sort -u || echo ""
     else
         echo ""
     fi
@@ -77,7 +77,7 @@ function calculate_hash() {
     local -r module_path="$1"
     # Create tar archive excluding hidden files, then calculate SHA256 hash
     # tar --exclude='$module_path/.*' -cf - "$module_path" | sha256sum | awk '{ print $1 }'
-    find "$module_path" -type f -not -path "$module_path/.*" | sort | xargs sha256sum | awk '{print $1}' | sha256sum | awk '{print $1}'
+    find "$module_path" -type f -not -path "$module_path/.*" | LC_ALL=C sort | xargs sha256sum | awk '{print $1}' | sha256sum | awk '{print $1}'
 }
 
 # Initialize or create the hashes file if it doesn't exist
@@ -95,13 +95,13 @@ function process_module() {
     local -r module_name=$(basename "$module_path")
     local -r new_hash=$(calculate_hash "$module_path")
     local previous_hash
-    
+
     # Get previous hash from hashes file
     previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name] // "none"' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
     jq --arg module_name "$module_name" --arg new_hash "$new_hash" '.[$module_name] = $new_hash' \
         "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
-    
+
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
         info "Module $module_name: Initial hash created"
@@ -117,16 +117,16 @@ function process_module() {
 
 function has_registry_modules() {
     local modules
-    
+
     # Get all module sources
     modules=$(get_modules_from_metadata)
-    
+
     # Check if any module contains the registry URL
     if echo "$modules" | grep -q "^$REGISTRY_URL"; then
         debug "Found registry modules"
         return 0
     fi
-    
+
     debug "No registry modules found"
     return 1
 }
@@ -143,25 +143,25 @@ function process_directory() {
     fi
 
     debug "Processing Terraform modules in $target_dir"
-    
+
     # Change to target directory for processing
     cd "$target_dir"
-    
+
     ensure_terraform_get || return 1
 
     # Initialize hashes file if it doesn't exist
     init_hashes_file "$HASHES_FILE"
-    
+
     # Create a temporary file to store current module keys
     local temp_keys_file=$(mktemp)
-    
+
     # Process modules if metadata file exists
     if [[ -f "$MODULES_METADATA" ]]; then
         # Read each module key from the metadata file and store in temp file
         jq -r --arg registry_url "$REGISTRY_URL" \
             '.Modules[] | select(.Source | contains($registry_url)) | .Key' \
             "$MODULES_METADATA" > "$temp_keys_file" 2>/dev/null
-        
+
         # Remove any keys from lock file that aren't in current modules
         if [[ -f "$HASHES_FILE" ]]; then
             jq -r 'keys[]' "$HASHES_FILE" | while read -r existing_key; do
@@ -179,7 +179,7 @@ function process_directory() {
             cd "$base_dir"
             return 0
         fi
-        
+
         # Process current modules
         while IFS= read -r module_key; do
             if [[ -n "$module_key" ]]; then
@@ -213,7 +213,7 @@ function main() {
 
     dirs_to_process=($(for file in "${dirs_to_process[@]}"; do
                     dirname "$file"
-                done | sort -u))
+                done | LC_ALL=C sort -u))
 
     # Verify all required commands are available
     for cmd in jq terraform tar sha256sum; do
@@ -236,7 +236,7 @@ function main() {
     for dir in "${dirs_to_process[@]}"; do
         info "  - $dir"
     done
-    
+
     # Process each directory
     for target_dir in "${dirs_to_process[@]}"; do
         info "Processing directory: $target_dir"
