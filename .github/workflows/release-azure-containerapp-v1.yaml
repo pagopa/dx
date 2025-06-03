@@ -211,7 +211,7 @@ jobs:
           attempt=0
           health_state=""
 
-          echo "Waiting for new revision to become healthy..."
+          echo "Waiting for new revision ("$NEW_REVISION_NAME") to become healthy..."
 
           while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
 
