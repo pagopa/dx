@@ -142,18 +142,23 @@ jobs:
 
           echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
 
-      - name: Deploy New Image
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
-        env:
-          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
-        run: |
-          az containerapp update \
-            --name "$CONTAINER_APP_NAME" \
-            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA"
+      # - name: Deploy New Image
+      #   if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
+      #   env:
+      #     SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
+      #   run: |
+      #     new_revision=$(az containerapp update \
+      #       --name "$CONTAINER_APP_NAME" \
+      #       --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
+      #       --query "properties.latestRevisionName" \
+      #       --output tsv)
+
+      #     echo "New revision: $new_revision"
+
 
       - name: Get Container App Current Revision
         id: get_current_revision
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
+        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         run: |
           current_revision=$(az containerapp revision list \
             --name "$CONTAINER_APP_NAME" \
@@ -163,10 +168,11 @@ jobs:
 
       - name: Create New Container App Revision
         id: create_new_revision
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
+        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
+          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         run: |
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
@@ -187,14 +193,17 @@ jobs:
           echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
           echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
 
-          az containerapp ingress traffic set \
-            --name "$CONTAINER_APP_NAME" \
-            --revision-weight "$CURRENT_REVISION"=100 \
-            --revision-weight $new_revision=0 \
-            --output table
+          if [[ "$REVISION_MODE" == "Multiple" ]]; then
+            az containerapp ingress traffic set \
+              --name "$CONTAINER_APP_NAME" \
+              --revision-weight "$CURRENT_REVISION"=100 \
+              --revision-weight $new_revision=0 \
+              --output table
+          fi
 
       - name: Wait for New Revision to Become Ready
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
@@ -226,7 +235,7 @@ jobs:
             exit 1
           fi
 
-      - name: Node Setup
+      - name: Node Setup for NPM Script
         uses: pagopa/dx/.github/actions/node-setup@main
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
 
