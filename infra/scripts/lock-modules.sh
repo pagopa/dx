@@ -174,7 +174,13 @@ function process_module() {
     fi
 
     # Get previous hash from hashes file
-    previous_hash=$(jq -r --arg module_name "$module_name" '.[$module_name].hash // "none"' "${HASHES_FILE:-/dev/null}")
+    previous_hash=$(jq -r --arg module_name "$module_name" '
+      if (.[$module_name] | type) == "object" then
+        .[$module_name].hash
+      else
+        .[$module_name]
+      end // "none"
+    ' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
     jq --arg module_name "$module_name" \
       --arg new_hash "$new_hash" \
