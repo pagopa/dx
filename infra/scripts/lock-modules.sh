@@ -74,7 +74,7 @@ function add_module_result() {
         --arg version "$version" \
         --arg message "$message" \
         --arg hash "$hash" \
-        --arg prevhash "$prevhash"
+        --arg prevhash "$prevhash" \
         '{
             "module": $name,
             "status": $status,
