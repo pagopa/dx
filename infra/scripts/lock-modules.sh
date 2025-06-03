@@ -344,7 +344,6 @@ function main() {
 
       # Only process JSON_OUTPUT_FILE if it exists
       if [[ -f "$target_dir/$JSON_OUTPUT_FILE" ]]; then
-        echo "Importing JSON output from $target_dir/$JSON_OUTPUT_FILE"
         value="$(jq --arg path "$target_dir" -s 'map(. + {path: $path})' "$target_dir/$JSON_OUTPUT_FILE")"
         module_results="$(jq -n --argjson arr1 "$module_results" --argjson arr2 "$value" '$arr1 + $arr2')"
         rm -f "$target_dir/$JSON_OUTPUT_FILE" 2>/dev/null || true
