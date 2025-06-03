@@ -1,0 +1,14 @@
+name: "Release Candidate"
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - packages/**
+
+jobs:
+  publish_release_candidate:
+    uses: pagopa/dx-playground/.github/workflows/release_candidate.yaml@fixes/rc-workflow-trigger
+    name: Publish Release Candidate
+    secrets:
+      github-token: ${{ secrets.BOT_GH_TOKEN }}
