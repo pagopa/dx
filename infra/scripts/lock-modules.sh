@@ -2,12 +2,12 @@
 # Enable error handling: exit on error (-e) and pipe failures (-o pipefail)
 set -eo pipefail
 
-readonly MODULES_DIR=".terraform/modules"          # Directory where Terraform stores downloaded modules
-readonly HASHES_FILE="tfmodules.lock.json"        # File to store module hashes
-readonly MODULES_METADATA=".terraform/modules/modules.json"  # Terraform's module metadata file
-readonly REGISTRY_URL="registry.terraform.io"      # Default Terraform registry URL
-readonly SCRIPT_NAME=$(basename "$0")              # Get the script name for logging
-readonly JSON_OUTPUT_FILE="${LOCK_MODULES_JSON_OUTPUT_FILE:-}"    # Optional file path for JSON output
+readonly MODULES_DIR=".terraform/modules"                      # Directory where Terraform stores downloaded modules
+readonly HASHES_FILE="tfmodules.lock.json"                     # File to store module hashes
+readonly MODULES_METADATA=".terraform/modules/modules.json"    # Terraform's module metadata file
+readonly REGISTRY_URL="registry.terraform.io"                  # Default Terraform registry URL
+readonly SCRIPT_NAME=$(basename "$0")                          # Get the script name for logging
+readonly JSON_OUTPUT_FILE="${LOCK_MODULES_JSON_OUTPUT_FILE:-}" # Optional file path for JSON output. Set it to the name or path of the JSON file to produce (e.g. lock_output.json)
 
 # Enable debug mode if PRECOMMIT_DEBUG environment variable is set to 1
 # set -x enables printing of each command before execution
@@ -133,6 +133,8 @@ function get_modules_from_metadata() {
 }
 
 # Ensure Terraform modules are initialized
+# This function refreshes the local module cache to ensure we're working with the latest versions
+# and to maintain consistency across environments
 function ensure_terraform_get() {
     warn "Running terraform get in $(pwd)"
     rm -rf "$MODULES_DIR" 2>/dev/null || true
@@ -144,6 +146,8 @@ function ensure_terraform_get() {
 }
 
 # Calculate hash for a module's contents
+# This creates a unique fingerprint of the module to detect changes between runs
+# and ensure consistent module versions across environments
 function calculate_hash() {
     local -r module_path="$1"
     # Create tar archive excluding hidden files, then calculate SHA256 hash
@@ -152,6 +156,8 @@ function calculate_hash() {
 }
 
 # Initialize or create the hashes file if it doesn't exist
+# This file serves as a lock file to track module versions and detect changes
+# between deployments, ensuring infrastructure consistency
 function init_hashes_file() {
     local -r hashes_file="$1"
     if [[ ! -f "$hashes_file" ]]; then
@@ -203,6 +209,9 @@ function process_module() {
     fi
 }
 
+# Check if the current Terraform configuration uses registry modules
+# This helps us skip unnecessary processing when no registry modules are present,
+# improving script performance and avoiding empty lock files
 function has_registry_modules() {
     local modules
 
@@ -220,6 +229,8 @@ function has_registry_modules() {
 }
 
 # Process a single directory containing Terraform configurations
+# This function handles the core workflow of detecting, hashing, and tracking module changes
+# to ensure consistent module versions and alert on unexpected changes
 function process_directory() {
     local -r target_dir="$1"          # Directory to process
     local -r base_dir="$2"            # Original working directory
