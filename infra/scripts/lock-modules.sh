@@ -277,7 +277,13 @@ function process_directory() {
 
                     # Get the previous hash before removing it
                     local previous_hash
-                    previous_hash=$(jq -r --arg key "$existing_key" '.[$key]' "$HASHES_FILE")
+                    previous_hash=$(jq -r --arg key "$existing_key" '
+                      if (.[$key] | type) == "object" then
+                        .[$key].hash
+                      else
+                        .[$key]
+                      end // "none"
+                    ' "${HASHES_FILE:-/dev/null}")
 
                     # Add to results (will be included in JSON since status is "removed")
                     add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash" "unknown"
