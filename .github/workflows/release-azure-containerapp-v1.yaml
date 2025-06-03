@@ -85,8 +85,6 @@ jobs:
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release:
     name: Deploy To Container App
@@ -243,9 +241,9 @@ jobs:
             echo "::notice:: No NPM script provided, skipping canary deployment"
 
             az containerapp ingress traffic set \
-            --name "$CONTAINER_APP_NAME" \
-            --revision-weight "$CURRENT_REVISION_NAME"=0 \
-            --revision-weight "$NEW_REVISION_NAME"=100
+              --name "$CONTAINER_APP_NAME" \
+              --revision-weight "$CURRENT_REVISION_NAME"=0 \
+              --revision-weight "$NEW_REVISION_NAME"=100
 
             exit 0
           fi
