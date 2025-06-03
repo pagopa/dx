@@ -144,10 +144,12 @@ jobs:
 
       - name: Deploy New Image
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
+        env:
+          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
         run: |
           az containerapp update \
             --name "$CONTAINER_APP_NAME" \
-            --image "ghcr.io/$IMAGE_NAME:sha-${{ steps.get_commit_sha.outputs.short_sha }}"
+            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA"
 
       - name: Get Container App Current Revision
         id: get_current_revision
@@ -164,10 +166,11 @@ jobs:
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
         run: |
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
-            --image "ghcr.io/$IMAGE_NAME:sha-${{ steps.get_commit_sha.outputs.short_sha }}" \
+            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
             --from-revision "$CURRENT_REVISION" \
             --query "properties.latestRevisionName" \
             --output tsv)
@@ -192,11 +195,12 @@ jobs:
 
       - name: Wait for New Revision to Become Ready
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
           max_attempts=30
           attempt=0
           health_state=""
-          new_revision_name="${{ steps.create_new_revision.outputs.new_revision_name }}"
 
           echo "Waiting for new revision to become healthy..."
 
@@ -204,7 +208,7 @@ jobs:
 
             health_state=$(az containerapp revision list \
               --name "$CONTAINER_APP_NAME" \
-              --query "[?contains(name, '$new_revision_name')].{Health:properties.healthState}|[0].Health" -o tsv)
+              --query "[?contains(name, '$NEW_REVISION_NAME')].{Health:properties.healthState}|[0].Health" -o tsv)
 
             echo "::notice:: Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
 
@@ -222,22 +226,26 @@ jobs:
             exit 1
           fi
 
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+
       - name: Check for New Revision Errors and Increment Traffic
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
           NPM_SCRIPT: ${{ inputs.npm_script }}
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
           set -euo
-
-          new_revision_name=${{ steps.create_new_revision.outputs.new_revision_name }}
 
           if [ -z "$NPM_SCRIPT" ]; then
             echo "::notice:: No NPM script provided, skipping canary deployment"
 
             az containerapp ingress traffic set \
             --name "$CONTAINER_APP_NAME" \
-            --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=0 \
-            --revision-weight $new_revision_name=100
+            --revision-weight "$CURRENT_REVISION_NAME"=0 \
+            --revision-weight "$NEW_REVISION_NAME"=100
 
             exit 0
           fi
@@ -256,8 +264,8 @@ jobs:
 
               az containerapp ingress traffic set \
                 --name "$CONTAINER_APP_NAME" \
-                --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=100 \
-                --revision-weight $new_revision_name=0
+                --revision-weight "$CURRENT_REVISION_NAME"=100 \
+                --revision-weight "$NEW_REVISION_NAME"=0
               exit 1
             fi
 
@@ -269,8 +277,8 @@ jobs:
 
               az containerapp ingress traffic set \
                 --name "$CONTAINER_APP_NAME" \
-                --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=0 \
-                --revision-weight $new_revision_name=100
+                --revision-weight "$CURRENT_REVISION_NAME"=0 \
+                --revision-weight "$NEW_REVISION_NAME"=100
               break
             fi
 
@@ -284,8 +292,8 @@ jobs:
 
               az containerapp ingress traffic set \
                 --name "$CONTAINER_APP_NAME" \
-                --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=100 \
-                --revision-weight $new_revision_name=0
+                --revision-weight "$CURRENT_REVISION_NAME"=100 \
+                --revision-weight "$NEW_REVISION_NAME"=0
               exit 1
             fi
 
@@ -293,8 +301,8 @@ jobs:
 
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
-              --revision-weight ${{ steps.get_current_revision.outputs.current_revision_name }}=$(100-$nextIncrementPercentage) \
-              --revision-weight $new_revision_name=$nextIncrementPercentage
+              --revision-weight "$CURRENT_REVISION_NAME"=$(100-$nextIncrementPercentage) \
+              --revision-weight "$NEW_REVISION_NAME"=$nextIncrementPercentage
 
             currentPercentage=$nextIncrementPercentage
 
@@ -310,7 +318,9 @@ jobs:
 
       - name: Deactivate Old Revision
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
-            --revision ${{ steps.get_current_revision.outputs.current_revision_name }}
+            --revision "$CURRENT_REVISION_NAME"
