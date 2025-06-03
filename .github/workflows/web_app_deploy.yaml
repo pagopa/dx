@@ -195,7 +195,6 @@ jobs:
 
           deployments=$(gh api \
             -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
 
           is_environment_matching=$(echo "$deployments" |
@@ -221,7 +220,6 @@ jobs:
           gh api \
             --method POST \
             -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
             -F "environment_ids[]=$env_id" \
             -f "state=approved" \
