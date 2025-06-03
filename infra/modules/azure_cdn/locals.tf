@@ -10,6 +10,6 @@ locals {
   }
 
   is_apex = {
-    for cd in var.custom_domains : cd.host_name => (cd.host_name == cdn.dns.zone_name)
+    for cd in var.custom_domains : cd.host_name => (cd.host_name == cd.dns.zone_name)
   }
 }
