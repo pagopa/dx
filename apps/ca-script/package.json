@@ -1,0 +1,12 @@
+{
+  "name": "ca-script",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.5",
+    "typescript": "~5.8.3"
+  }
+}
