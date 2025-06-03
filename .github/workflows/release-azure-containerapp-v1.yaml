@@ -75,7 +75,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/.github/actions/docker-build-push@CES-958-definire-una-pipeline-di-cd-per-le-container-app #main
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
