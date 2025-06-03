@@ -34,6 +34,14 @@ Since Azure can take some time to create those resources, you may not see the lo
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
 
+## Troubleshooting
+
+### ⚠️ Public Network Access Limitation ⚠️
+
+Currently, it is not possible to create a new Azure API Management instance with `enable_public_network_access = false`.  
+If you need to disable public network access, you must first create the APIM with `enable_public_network_access = true`.  
+After that, submit a new _Pull Request_ to update the variable to `false` and apply the changes.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
