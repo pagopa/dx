@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.1-rc.0
+
+### Patch Changes
+
+- 412ec39: Upgrade internal dependencies
+
 ## 0.4.0
 
 ### Minor Changes
