@@ -81,7 +81,7 @@ runs:
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
 
     - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
-      uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
       id: push_registry
       env:
         DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
@@ -106,7 +106,7 @@ runs:
     # to verify the provenence of the image through
     # e.g. gh attestation verify oci://<img-uri> --owner org
     - name: Generate Artifact Attestation
-      uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+      uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
       if: ${{ inputs.push_to_registry }}
       env:
         IMAGE_NAME: ${{ inputs.docker_image_name }}
