@@ -46,14 +46,19 @@ variable "custom_domains" {
   }))
   default = []
 
-  # Validate that no zone_name is equal to host_name (meaning that the custom domain is a root domain of that zone). In the case of a root domain, the key_vault_certificate_versionless_id must be set.
+  # Validate that all cases where zone_name is equal to host_name (meaning that the custom domain is a root domain of that zone), the custom_certificate keys are set.
   validation {
     condition = alltrue([
-      for cd in var.custom_domains : (
-        !(cd.dns.zone_name != null && cd.dns.zone_name == cd.host_name) || (cd.custom_certificate.key_vault_certificate_versionless_id != null)
-      )
+      for domain in var.custom_domains : (
+        domain.custom_certificate.key_vault_certificate_versionless_id != null &&
+        domain.custom_certificate.key_vault_name != null &&
+        domain.custom_certificate.key_vault_resource_group_name != null
+      ) if domain.dns.zone_name == domain.host_name
     ])
-    error_message = "If a custom domain is a root domain, custom_certificate information must be set. Azure CDN does not support managed certificates for apex domains. To generate one, please refer to the confluence documentation."
+    error_message = <<-EOT
+      Azure CDN does not support managed certificates for apex domains. If a custom domain is an apex domain, the information of a custom certificate must be provided. To generate one, please refer to the confluence documentation.
+      Please check the following submitted apex domains: ${join(",", [for domain in var.custom_domains : domain.host_name if domain.dns.zone_name == domain.host_name])}
+    EOT
   }
 }
 
