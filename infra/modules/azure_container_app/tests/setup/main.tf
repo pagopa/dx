@@ -47,11 +47,6 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
-data "azurerm_user_assigned_identity" "identity" {
-  name                = "dx-d-github-ci-identity"
-  resource_group_name = "dx-d-identity-rg"
-}
-
 data "azurerm_container_app_environment" "cae" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "github-runner",
@@ -90,6 +85,14 @@ resource "azurerm_key_vault_secret" "test2" {
   content_type    = "application/text"
 }
 
+resource "azurerm_user_assigned_identity" "cae" {
+  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_identity" }))
+  location            = local.environment.location
+  resource_group_name = data.azurerm_resource_group.rg.name
+
+  tags = local.tags
+}
+
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
 }
@@ -121,5 +124,5 @@ output "environment" {
 }
 
 output "user_assigned_identity_id" {
-  value = data.azurerm_user_assigned_identity.identity.id
+  value = azurerm_user_assigned_identity.cae.id
 }

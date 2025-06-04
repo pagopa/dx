@@ -36,14 +36,6 @@ data "azurerm_log_analytics_workspace" "common" {
   }))
 }
 
-resource "azurerm_user_assigned_identity" "example" {
-  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_identity" }))
-  location            = local.environment.location
-  resource_group_name = azurerm_resource_group.example.name
-
-  tags = local.tags
-}
-
 resource "dx_available_subnet_cidr" "next_cidr" {
   virtual_network_id = data.azurerm_virtual_network.common.id
   prefix_length      = 23
@@ -93,7 +85,7 @@ module "container_app" {
 
   container_app_environment_id = module.container_app_environment.id
 
-  user_assigned_identity_id = azurerm_user_assigned_identity.example.id
+  user_assigned_identity_id = module.container_app_environment.user_assigned_identity.id
 
   tags = local.tags
 }
