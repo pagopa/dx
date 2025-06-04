@@ -54,6 +54,7 @@ function add_module_result() {
     local hash="$5"
     local prevhash="$6"
     local modulefoldername="$7"
+    local modulesource="$8"
 
     # Only filter out unchanged and skipped modules - always include removed ones
     if [[ "$status" == "unchanged" || "$status" == "skipped" ]]; then
@@ -75,6 +76,7 @@ function add_module_result() {
         --arg hash "$hash" \
         --arg prevhash "$prevhash" \
         --arg modulefoldername "$modulefoldername" \
+        --arg modulesource "$modulesource" \
         '{
             "module": $name,
             "name": $modulefoldername,
@@ -82,7 +84,8 @@ function add_module_result() {
             "version": $version,
             "message": $message,
             "hash": $hash,
-            "prevhash": $prevhash
+            "prevhash": $prevhash,
+            "source": $modulesource
         }')
 
     echo "$json_entry" >> "$JSON_OUTPUT_FILE"
@@ -231,11 +234,11 @@ function process_module() {
     # Handle hash changes
     if [[ "$previous_hash" == "none" ]]; then
         info "Module $module_name: Initial hash created"
-        add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash" "$previous_hash" "$module_folder_name"
+        add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash" "$previous_hash" "$module_folder_name" "$module_source"
         return 1
     elif [[ "$previous_hash" != "$new_hash" ]]; then
         info "Module $module_name: Changes detected, updating hash"
-        add_module_result "$module_name" "changed" "$module_version" "Changes detected" "$new_hash" "$previous_hash" "$module_folder_name"
+        add_module_result "$module_name" "changed" "$module_version" "Changes detected" "$new_hash" "$previous_hash" "$module_folder_name" "$module_source"
         return 1
     else
         debug "Module $module_name: No changes detected"
@@ -316,7 +319,7 @@ function process_directory() {
                     ' "${HASHES_FILE:-/dev/null}")
 
                     # Add to results (will be included in JSON since status is "removed")
-                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash" "unknown"
+                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash" "unknown" ""
 
                     # Remove from lock file
                     jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
