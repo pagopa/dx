@@ -362,8 +362,15 @@ jobs:
       - name: Deactivate New Revision
         if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         env:
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
+          az containerapp ingress traffic set \
+            --name "$CONTAINER_APP_NAME" \
+            --revision-weight "$CURRENT_REVISION_NAME"=100 \
+            --revision-weight "$NEW_REVISION_NAME"=0 \
+            --output table
+
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$NEW_REVISION_NAME"
