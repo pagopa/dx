@@ -48,13 +48,13 @@ on:
         required: true
       script_language:
         type: string
-        default: 'typescript (npm run)'
+        default: 'typescript (npm)'
         required: false
-        description: Path to NPM script to check for errors during canary deployment. Available only when Revision Mode is set to Multiple. Supports 'typescript (npm run)' only.
-      script_path:
+        description: Define the language and package manager of the script to run to check for errors during canary deployment. Available only when Revision Mode is set to Multiple. Supports 'typescript (npm)', 'typescript (yarn)' values only.
+      script_name:
         type: string
         required: false
-        description: Path to the script to run during canary deployment. Available only when Revision Mode is set to Multiple
+        description: Script name to execute during canary deployment. When using npm, it refers to the script path; when using yarn, it is used as script name. Available only when Revision Mode is set to Multiple
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -142,16 +142,19 @@ jobs:
             --query "properties.configuration.activeRevisionsMode" \
             --output tsv)
 
-          echo "Revision mode: $revision_mode"
+          echo "::notice::Revision mode: $revision_mode"
 
           echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
 
-      - name: Validate Inputs
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_path != '' }}
+      - name: Validate Script Language Input
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_name != '' }}
         run: |
           case "$SCRIPT_LANGUAGE" in
-            "typescript (npm run)")
-              echo "::notice::Using TypeScript (npm run) script for canary deployment"
+            "typescript (npm)")
+              echo "::notice::Using TypeScript (npm) script for canary deployment"
+              ;;
+            "typescript (yarn)")
+              echo "::notice::Using TypeScript (yarn) script for canary deployment"
               ;;
             *)
               echo "::error::script_language input is required"
@@ -159,23 +162,8 @@ jobs:
               ;;
           esac
 
-      # - name: Deploy New Image
-      #   if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
-      #   env:
-      #     SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
-      #   run: |
-      #     new_revision=$(az containerapp update \
-      #       --name "$CONTAINER_APP_NAME" \
-      #       --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
-      #       --query "properties.latestRevisionName" \
-      #       --output tsv)
-
-      #     echo "New revision: $new_revision"
-
-
       - name: Get Container App Current Revision
         id: get_current_revision
-        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         run: |
           current_revision=$(az containerapp revision list \
             --name "$CONTAINER_APP_NAME" \
@@ -186,7 +174,6 @@ jobs:
 
       - name: Create New Container App Revision
         id: create_new_revision
-        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
@@ -199,8 +186,8 @@ jobs:
             --query "properties.latestRevisionName" \
             --output tsv)
 
-          echo "Current revision: $CURRENT_REVISION"
-          echo "New revision: $new_revision"
+          echo "::notice::Current revision: $CURRENT_REVISION"
+          echo "::notice::New revision: $new_revision"
 
           if [[ "$CURRENT_REVISION" == "$new_revision" ]]; then
             echo "::warning::No deployment needed - current revision is already using the latest image"
@@ -220,7 +207,6 @@ jobs:
           fi
 
       - name: Wait for New Revision to Become Ready
-        # if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
@@ -229,7 +215,7 @@ jobs:
           attempt=0
           health_state=""
 
-          echo "Waiting for new revision ("$NEW_REVISION_NAME") to become healthy..."
+          echo "::notice::Waiting for new revision ("$NEW_REVISION_NAME") to become healthy..."
 
           while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
 
@@ -237,10 +223,10 @@ jobs:
               --name "$CONTAINER_APP_NAME" \
               --query "[?contains(name, '$NEW_REVISION_NAME')].{Health:properties.healthState}|[0].Health" -o tsv)
 
-            echo "::notice:: Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
+            echo "::notice::Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
 
             if [ "$health_state" == "Healthy" ]; then
-              echo "::notice:: New revision is now healthy!"
+              echo "::notice::New revision is now healthy!"
               break
             fi
 
@@ -249,13 +235,9 @@ jobs:
           done
 
           if [ "$health_state" != "Healthy" ]; then
-            echo "error: New revision did not become healthy within the timeout period"
+            echo "::error::New revision did not become healthy within the timeout period"
             exit 1
           fi
-
-      # - name: Node Setup for TypeScript Script
-      #   uses: pagopa/dx/.github/actions/node-setup@main
-      #   if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
 
       - name: (DEBUG) Checkout DX
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -292,7 +274,7 @@ jobs:
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         working-directory: ./dx/apps/ca-script # debug
         env:
-          SCRIPT_PATH: ${{ inputs.script_path }}
+          SCRIPT_NAME: ${{ inputs.script_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
           FUNCTION_APP_NAME: "io-p-itn-auth-lollipop-func-02"
@@ -300,8 +282,8 @@ jobs:
         run: |
           set -euo
 
-          if [ -z "$SCRIPT_PATH" ]; then
-            echo "::notice:: No script provided, skipping canary deployment"
+          if [ -z "$SCRIPT_NAME" ]; then
+            echo "::warning::No script provided, skipping canary deployment"
 
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
@@ -314,8 +296,20 @@ jobs:
           currentPercentage=0
 
           while true; do
-            output="$(yarn "$SCRIPT_PATH" $currentPercentage)"
-            # output="$(npm run -s "$SCRIPT_PATH" $currentPercentage)"
+
+            case "$SCRIPT_LANGUAGE" in
+              "typescript (npm)")
+                output="$(npm run -s "$SCRIPT_NAME" $currentPercentage)"
+                ;;
+              "typescript (yarn)")
+                output="$(yarn "$SCRIPT_NAME" $currentPercentage)"
+                ;;
+              *)
+                echo "::error::script_language input is required"
+                exit 1
+                ;;
+            esac
+
             exit_code=$?
             echo "Script Output: $output"
 
