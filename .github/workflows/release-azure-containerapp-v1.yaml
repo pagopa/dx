@@ -80,7 +80,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/.github/actions/docker-build-push@CES-958-definire-una-pipeline-di-cd-per-le-container-app #main
+        uses: pagopa/dx/.github/actions/docker-build-push@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
