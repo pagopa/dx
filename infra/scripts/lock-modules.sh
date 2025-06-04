@@ -131,6 +131,14 @@ function get_modules_from_metadata() {
     fi
 }
 
+function get_module_info_from_metadata() {
+  local module_name="$1"
+
+  jq -c --arg module_name "$module_name" \
+    '.Modules[] | select(.Key == $module_name)' \
+    "$MODULES_METADATA" 2>/dev/null || echo ""
+}
+
 # Ensure Terraform modules are initialized
 # This function refreshes the local module cache to ensure we're working with the latest versions
 # and to maintain consistency across environments
@@ -173,6 +181,7 @@ function process_module() {
     local previous_hash
     local module_version="unknown"
     local module_folder_name="unknown"
+    local module_source=$(get_module_info_from_metadata "$module_name" | jq -r '.Source // "unknown"')
 
     # Try to get module version from package.json if it exists
     if [[ -f "$module_path/package.json" ]]; then
@@ -195,7 +204,8 @@ function process_module() {
       --arg new_hash "$new_hash" \
       --arg module_version "$module_version" \
       --arg module_folder_name "$module_folder_name" \
-      '.[$module_name] = {hash: $new_hash, version: $module_version, name: $module_folder_name}' \
+      --arg module_source "$module_source" \
+      '.[$module_name] = {hash: $new_hash, version: $module_version, name: $module_folder_name, source: $module_source}' \
       "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
 
     # Handle hash changes
