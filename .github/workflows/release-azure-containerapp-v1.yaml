@@ -144,8 +144,6 @@ jobs:
 
           echo "Revision mode: $revision_mode"
 
-          echo "ca_revision_mode=$revision_mode" >> $GITHUB_OUTPUT
-
           echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
 
       - name: Validate Inputs
@@ -191,7 +189,7 @@ jobs:
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
-          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
+          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode}}
         run: |
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
