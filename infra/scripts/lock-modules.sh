@@ -220,7 +220,7 @@ function process_module() {
         .[$module_name].hash
       else
         .[$module_name]
-      end // "none"
+      end // "unknown"
     ' "${HASHES_FILE:-/dev/null}")
     # Update hash in hashes file
     jq --arg module_name "$module_name" \
@@ -232,7 +232,7 @@ function process_module() {
       "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
 
     # Handle hash changes
-    if [[ "$previous_hash" == "none" ]]; then
+    if [[ "$previous_hash" == "unknown" ]]; then
         info "Module $module_name: Initial hash created"
         add_module_result "$module_name" "new" "$module_version" "Initial hash created" "$new_hash" "$previous_hash" "$module_folder_name" "$module_source"
         return 1
@@ -315,11 +315,11 @@ function process_directory() {
                         .[$key].hash
                       else
                         .[$key]
-                      end // "none"
+                      end // "unknown"
                     ' "${HASHES_FILE:-/dev/null}")
 
                     # Add to results (will be included in JSON since status is "removed")
-                    add_module_result "$existing_key" "removed" "n/a" "Module removed from configuration" "none" "$previous_hash" "unknown" ""
+                    add_module_result "$existing_key" "removed" "unknown" "Module removed from configuration" "unknown" "$previous_hash" "unknown" ""
 
                     # Remove from lock file
                     jq "del(.[\"$existing_key\"])" "$HASHES_FILE" > "tmp.$$.json" && mv "tmp.$$.json" "$HASHES_FILE"
