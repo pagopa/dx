@@ -20,13 +20,14 @@ The workflow performs the following steps:
 4. In **Multiple** mode (canary rollout):
    1. Create a new revision with the updated image
    2. Wait until the new revision reports **Healthy** status
-   3. If a test script is configured, shift traffic incrementally based on its
-      JSON output:
+   3. If a script to verify the application health is configured, shift traffic
+      incrementally based on its JSON output:
       - Use a `swap` flag to cut over immediately (100% traffic to new revision)
       - Use `nextIncrementPercentage` and `afterMs` to schedule gradual rollouts
-   4. If no test script is provided, perform a full switch (100% to new
-      revision)
+   4. If no script is provided, perform a full switch (100% to new revision)
 5. After successful switch, deactivate the old revision
+6. In case of failure, the new revision is deactivated, while the old revision
+   remains active
 
 ### Implementing a Canary Test Script
 
