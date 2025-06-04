@@ -362,7 +362,7 @@ jobs:
 
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
-              --revision-weight "$CURRENT_REVISION_NAME"=$(100-$nextIncrementPercentage) \
+              --revision-weight "$CURRENT_REVISION_NAME"=$((100 - nextIncrementPercentage)) \
               --revision-weight "$NEW_REVISION_NAME"=$nextIncrementPercentage
 
             currentPercentage=$nextIncrementPercentage
