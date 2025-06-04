@@ -273,6 +273,8 @@ jobs:
       - name: (DEBUG) Build yarn
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
+          ls
+          yarn
           yarn workspace ca-script build
         working-directory: ./dx
 
