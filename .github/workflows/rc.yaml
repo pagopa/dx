@@ -12,3 +12,4 @@ jobs:
     name: Publish Release Candidate
     secrets:
       github-token: ${{ secrets.BOT_GH_TOKEN }}
+      npm-token: ${{ secrets.NPM_TOKEN }}
