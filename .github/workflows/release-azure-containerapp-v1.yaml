@@ -122,7 +122,7 @@ jobs:
         run: |
           sha=$(git rev-parse --short "$GIT_SHA")
 
-          echo "Latest commit sha: $sha"
+          echo "::notice::Latest commit: $sha"
 
           echo "short_sha=$sha" >> $GITHUB_OUTPUT
 
@@ -206,7 +206,7 @@ jobs:
               --output table
           fi
 
-      - name: Wait for New Revision to Become Ready
+      - name: Wait for the New Revision to be Ready
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
@@ -215,7 +215,7 @@ jobs:
           attempt=0
           health_state=""
 
-          echo "::notice::Waiting for new revision ("$NEW_REVISION_NAME") to become healthy..."
+          echo "::notice::Waiting for new revision ("$NEW_REVISION_NAME") to be healthy..."
 
           while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
 
@@ -239,26 +239,6 @@ jobs:
             exit 1
           fi
 
-      - name: (DEBUG) Checkout DX
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        with:
-          repository: pagopa/dx
-          ref: CES-958-definire-una-pipeline-di-cd-per-le-container-app
-          path: dx
-
-      - name: (DEBUG) Corepack
-        run: |
-          corepack enable
-        working-directory: ./dx
-
-      - name: (DEBUG) Build yarn
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        run: |
-          yarn
-          yarn workspace ca-script build
-        working-directory: ./dx
-
       - name: Get Container App Id
         id: get_container_app_id
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
@@ -272,7 +252,6 @@ jobs:
 
       - name: Check for New Revision Errors and Increment Traffic
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        working-directory: ./dx/apps/ca-script # debug
         env:
           SCRIPT_NAME: ${{ inputs.script_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
