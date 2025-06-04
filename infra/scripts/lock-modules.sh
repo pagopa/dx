@@ -185,6 +185,8 @@ function process_module() {
     fi
 
     # Get previous hash from hashes file
+    # the if allows to still manage the legacy lock files
+    # containing only the hash instead of an object
     previous_hash=$(jq -r --arg module_name "$module_name" '
       if (.[$module_name] | type) == "object" then
         .[$module_name].hash
@@ -276,6 +278,8 @@ function process_directory() {
                     info "Removing old module key: $existing_key"
 
                     # Get the previous hash before removing it
+                    # the if allows to still manage the legacy lock files
+                    # containing only the hash instead of an object
                     local previous_hash
                     previous_hash=$(jq -r --arg key "$existing_key" '
                       if (.[$key] | type) == "object" then
@@ -376,6 +380,7 @@ function main() {
 
       # Only process JSON_OUTPUT_FILE if it exists
       if [[ -f "$target_dir/$JSON_OUTPUT_FILE" ]]; then
+        # Add the root module's path to the JSON results
         value="$(jq --arg path "$target_dir" -s 'map(. + {path: $path})' "$target_dir/$JSON_OUTPUT_FILE")"
         module_results="$(jq -n --argjson arr1 "$module_results" --argjson arr2 "$value" '$arr1 + $arr2')"
         rm -f "$target_dir/$JSON_OUTPUT_FILE" 2>/dev/null || true
