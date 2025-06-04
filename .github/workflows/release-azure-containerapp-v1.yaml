@@ -295,6 +295,8 @@ jobs:
           SCRIPT_PATH: ${{ inputs.script_path }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          FUNCTION_APP_NAME: "io-p-itn-auth-lollipop-func-02"
+          LOG_ANALITYCS_WORKSPACE_ID: "/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
         run: |
           set -euo
 
@@ -309,12 +311,7 @@ jobs:
             exit 0
           fi
 
-          currentPercentage=10
-
-          FUNCTION_APP_NAME="io-p-itn-auth-lollipop-func-02"
-          LOG_ANALITYCS_WORKSPACE_ID="/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
-
-          yarn start 0
+          currentPercentage=0
 
           while true; do
             output="$(yarn "$SCRIPT_PATH" $currentPercentage)"
