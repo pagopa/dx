@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "start": "node ./dist/canary.mjs"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "^3.0.0",

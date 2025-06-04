@@ -290,7 +290,7 @@ jobs:
 
       - name: Check for New Revision Errors and Increment Traffic
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        working-directory: ./dx # debug
+        working-directory: ./dx/apps/ca-script # debug
         env:
           SCRIPT_PATH: ${{ inputs.script_path }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
@@ -310,13 +310,14 @@ jobs:
           fi
 
           currentPercentage=0
-          ls ./dx/apps/ca-script
+          ls ./apps/ca-script
 
           FUNCTION_APP_NAME="io-p-itn-auth-lollipop-func-02"
           LOG_ANALITYCS_WORKSPACE_ID="/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
 
           while true; do
-            output="$(npm run -s "$SCRIPT_PATH" $currentPercentage)"
+            output="$(yarn --silent "$SCRIPT_PATH" $currentPercentage)"
+            # output="$(npm run -s "$SCRIPT_PATH" $currentPercentage)"
             exit_code=$?
             echo "Script Output: $output"
 
