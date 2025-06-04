@@ -71,14 +71,6 @@ module "azure_cdn" {
 
   custom_domains = [
     {
-      host_name = "bar.com",
-      dns = {
-        # A record with name @ will be created at the apex of bar.com zone
-        zone_name                = "bar.com",
-        zone_resource_group_name = azurerm_resource_group.example.name
-      }
-    },
-    {
       # A record with name foo will be created in bar.com zone
       host_name = "foo.bar.com",
       dns = {
