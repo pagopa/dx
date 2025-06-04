@@ -309,10 +309,12 @@ jobs:
             exit 0
           fi
 
-          currentPercentage=0
+          currentPercentage=10
 
           FUNCTION_APP_NAME="io-p-itn-auth-lollipop-func-02"
           LOG_ANALITYCS_WORKSPACE_ID="/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
+
+          yarn start 0
 
           while true; do
             output="$(yarn "$SCRIPT_PATH" $currentPercentage)"
