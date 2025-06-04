@@ -131,12 +131,32 @@ function get_modules_from_metadata() {
     fi
 }
 
-function get_module_info_from_metadata() {
+function get_module_registry_url() {
   local module_name="$1"
 
-  jq -c --arg module_name "$module_name" \
+  # Extract the module object
+  local module_info=$(jq -c --arg module_name "$module_name" \
     '.Modules[] | select(.Key == $module_name)' \
-    "$MODULES_METADATA" 2>/dev/null || echo ""
+    "$MODULES_METADATA" 2>/dev/null)
+
+  if [[ -z "$module_info" ]]; then
+    echo "Module not found"
+    return 1
+  fi
+
+  # Extract Source and Version
+  local source=$(echo "$module_info" | jq -r '.Source')
+  local version=$(echo "$module_info" | jq -r '.Version // "latest"')
+
+  # Check if it's a registry module
+  if [[ "$source" == registry.terraform.io/* ]]; then
+    # Convert to URL
+    local url="https://registry.terraform.io/modules/${source#registry.terraform.io/}/$version"
+    echo "$url"
+  else
+    echo "Not a registry module: $source"
+    return 1
+  fi
 }
 
 # Ensure Terraform modules are initialized
@@ -181,7 +201,7 @@ function process_module() {
     local previous_hash
     local module_version="unknown"
     local module_folder_name="unknown"
-    local module_source=$(get_module_info_from_metadata "$module_name" | jq -r '.Source // "unknown"')
+    local module_source=$(get_module_registry_url "$module_name")
 
     # Try to get module version from package.json if it exists
     if [[ -f "$module_path/package.json" ]]; then
