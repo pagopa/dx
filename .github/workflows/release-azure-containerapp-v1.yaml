@@ -149,7 +149,7 @@ jobs:
       - name: Validate Inputs
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_path != '' }}
         run: |
-          case "${{ env.SCRIPT_LANGUAGE }}" in
+          case "$SCRIPT_LANGUAGE" in
             "typescript (npm run)")
               echo "::notice::Using TypeScript (npm run) script for canary deployment"
               ;;
@@ -273,7 +273,6 @@ jobs:
       - name: (DEBUG) Build yarn
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
-          ls
           yarn
           yarn workspace ca-script build
         working-directory: ./dx
@@ -291,6 +290,7 @@ jobs:
 
       - name: Check for New Revision Errors and Increment Traffic
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        working-directory: ./dx # debug
         env:
           SCRIPT_PATH: ${{ inputs.script_path }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
@@ -310,8 +310,6 @@ jobs:
           fi
 
           currentPercentage=0
-          ls ./dx
-          ls ./dx/apps/
           ls ./dx/apps/ca-script
 
           FUNCTION_APP_NAME="io-p-itn-auth-lollipop-func-02"
