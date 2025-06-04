@@ -264,9 +264,15 @@ jobs:
           ref: CES-958-definire-una-pipeline-di-cd-per-le-container-app
           path: dx
 
+      - name: (DEBUG) Corepack
+        run: |
+          corepack enable
+        working-directory: ./dx
+
       - name: (DEBUG) Build yarn
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        run: yarn workspace ca-script build
+        run: |
+          yarn workspace ca-script build
         working-directory: ./dx
 
       - name: Get Container App Id
