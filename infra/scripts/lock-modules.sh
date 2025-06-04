@@ -15,8 +15,6 @@ if [[ "${PRECOMMIT_DEBUG:-0}" -eq 1 ]]; then
     set -x
 fi
 
-# Initialize JSON results array
-declare -a json_results=()
 declare  module_results='[]'
 
 # Logging functions for different severity levels
@@ -87,8 +85,6 @@ function add_module_result() {
             "prevhash": $prevhash
         }')
 
-    # Add to stdout JSON output
-    json_results+=("$json_entry")
     echo "$json_entry" >> "$JSON_OUTPUT_FILE"
 }
 
