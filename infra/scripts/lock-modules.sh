@@ -152,10 +152,11 @@ function get_module_registry_url() {
   local version=$(echo "$module_info" | jq -r '.Version // "latest"')
 
   # Check if it's a registry module
-  if [[ "$source" == registry.terraform.io/* ]]; then
-    # Convert to URL
-    local url="https://registry.terraform.io/modules/${source#registry.terraform.io/}/$version"
-    echo "$url"
+  if [[ "$source" == $REGISTRY_URL/* ]]; then
+    # Convert to terraform registry URL
+    local base_url="https://${REGISTRY_URL}/modules"
+    local module_path="${source#${REGISTRY_URL}/}"
+    echo "${base_url}/${module_path}/${version}"
   else
     echo "Not a registry module: $source"
     return 1
