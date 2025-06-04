@@ -46,10 +46,15 @@ on:
         description: Environment where the image will be deployed
         type: string
         required: true
-      npm_script:
+      script_language:
+        type: string
+        default: 'typescript (npm run)'
+        required: false
+        description: Path to NPM script to check for errors during canary deployment. Available only when Revision Mode is set to Multiple. Supports 'typescript (npm run)' only.
+      script_path:
         type: string
         required: false
-        description: Path to NPM script to check for errors during canary deployment. Available only when Revision Mode is set to Multiple
+        description: Path to the script to run during canary deployment. Available only when Revision Mode is set to Multiple
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -103,6 +108,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CONTAINER_APP_NAME: ${{ inputs.container_app }}
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+      SCRIPT_LANGUAGE: ${{ inputs.script_language }}
 
     steps:
 
@@ -141,6 +147,19 @@ jobs:
           echo "ca_revision_mode=$revision_mode" >> $GITHUB_OUTPUT
 
           echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
+
+      - name: Validate Inputs
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_path != '' }}
+        run: |
+          case "${{ env.SCRIPT_LANGUAGE }}" in
+            "typescript (npm run)")
+              echo "::notice::Using TypeScript (npm run) script for canary deployment"
+              ;;
+            *)
+              echo "::error::script_language input is required"
+              exit 1
+              ;;
+          esac
 
       # - name: Deploy New Image
       #   if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Single' }}
@@ -235,21 +254,45 @@ jobs:
             exit 1
           fi
 
-      - name: Node Setup for NPM Script
-        uses: pagopa/dx/.github/actions/node-setup@main
+      # - name: Node Setup for TypeScript Script
+      #   uses: pagopa/dx/.github/actions/node-setup@main
+      #   if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+
+      - name: (DEBUG) Checkout DX
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        with:
+          repository: pagopa/dx
+          ref: CES-958-definire-una-pipeline-di-cd-per-le-container-app
+          path: dx
+
+      - name: (DEBUG) Build yarn
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        run: yarn workspace ca-script build
+        working-directory: ./dx
+
+      - name: Get Container App Id
+        id: get_container_app_id
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        run: |
+          container_app_id=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --query "id" \
+            --output tsv)
+
+          echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
 
       - name: Check for New Revision Errors and Increment Traffic
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
-          NPM_SCRIPT: ${{ inputs.npm_script }}
+          SCRIPT_PATH: ${{ inputs.script_path }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
           set -euo
 
-          if [ -z "$NPM_SCRIPT" ]; then
-            echo "::notice:: No NPM script provided, skipping canary deployment"
+          if [ -z "$SCRIPT_PATH" ]; then
+            echo "::notice:: No script provided, skipping canary deployment"
 
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
@@ -260,10 +303,15 @@ jobs:
           fi
 
           currentPercentage=0
+          ls ./dx
+          ls ./dx/apps/
+          ls ./dx/apps/ca-script
+
+          FUNCTION_APP_NAME="io-p-itn-auth-lollipop-func-02"
+          LOG_ANALITYCS_WORKSPACE_ID="/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
 
           while true; do
-
-            output="$(npm run -s "$NPM_SCRIPT" $currentPercentage)"
+            output="$(npm run -s "$SCRIPT_PATH" $currentPercentage)"
             exit_code=$?
             echo "Script Output: $output"
 
