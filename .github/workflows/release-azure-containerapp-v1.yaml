@@ -315,7 +315,7 @@ jobs:
           LOG_ANALITYCS_WORKSPACE_ID="/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
 
           while true; do
-            output="$(yarn --silent "$SCRIPT_PATH" $currentPercentage)"
+            output="$(yarn "$SCRIPT_PATH" $currentPercentage)"
             # output="$(npm run -s "$SCRIPT_PATH" $currentPercentage)"
             exit_code=$?
             echo "Script Output: $output"
@@ -386,3 +386,6 @@ jobs:
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$CURRENT_REVISION_NAME"
+
+
+## TODO: add step to deactivate new version when an error is thrown
