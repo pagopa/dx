@@ -181,6 +181,7 @@ jobs:
             --name "$CONTAINER_APP_NAME" \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
 
+          echo "::notice::Current revision: $current_revision"
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
 
       - name: Create New Container App Revision
