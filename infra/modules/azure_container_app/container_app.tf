@@ -142,5 +142,11 @@ resource "azurerm_container_app" "this" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      template[0].container[0].image
+    ]
+  }
+
   tags = local.tags
 }
