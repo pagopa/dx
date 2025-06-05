@@ -23,7 +23,7 @@ The workflow performs the following steps:
    3. If a script to verify the application health is configured, shift traffic
       incrementally based on its JSON output:
       - Use a `swap` flag to cut over immediately (100% traffic to new revision)
-      - Use `nextIncrementPercentage` and `afterMs` to schedule gradual rollouts
+      - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
    4. If no script is provided, perform a full switch (100% to new revision)
 5. After successful switch, deactivate the old revision
 6. In case of failure, the new revision is deactivated, while the old revision
@@ -50,13 +50,13 @@ Instead, for gradual rollout use:
 
 ```json
 {
-  "nextIncrementPercentage": 50,
+  "nextPercentage": 50,
   "afterMs": 30000
 }
 ```
 
-- `nextIncrementPercentage`: percentage of traffic for the next increment.
-- `afterMs`: delay in milliseconds before applying the next increment.
+- `nextPercentage`: percentage of traffic for the next iteration.
+- `afterMs`: delay in milliseconds before moving to the next iteration.
 
 ## Usage
 

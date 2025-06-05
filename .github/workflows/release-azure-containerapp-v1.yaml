@@ -256,8 +256,6 @@ jobs:
           SCRIPT_NAME: ${{ inputs.script_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
-          FUNCTION_APP_NAME: "io-p-itn-auth-lollipop-func-02"
-          LOG_ANALITYCS_WORKSPACE_ID: "/subscriptions/ec285037-c673-4f58-b594-d7c480da4e8b/resourcegroups/io-p-rg-common/providers/microsoft.operationalinsights/workspaces/io-p-law-common"
         run: |
           set -euo
 
@@ -316,12 +314,12 @@ jobs:
               break
             fi
 
-            nextIncrementPercentage=$(echo "$output" | jq -r '.nextIncrementPercentage')
+            nextPercentage=$(echo "$output" | jq -r '.nextPercentage')
             afterMs=$(echo "$output" | jq -r '.afterMs')
 
             # Validate that the fields are present
-            if [ -z "$nextIncrementPercentage" ] || [ -z "$afterMs" ]; then
-              echo "::error::Invalid output from script (missing nextIncrementPercentage or afterMs)."
+            if [ -z "$nextPercentage" ] || [ -z "$afterMs" ]; then
+              echo "::error::Invalid output from script (missing nextPercentage or afterMs)."
               echo "::warning::Reverting traffic to previous revision."
 
               az containerapp ingress traffic set \
@@ -331,16 +329,16 @@ jobs:
               exit 1
             fi
 
-            echo "::notice::Next traffic percentage: $nextIncrementPercentage%"
+            echo "::notice::Next traffic percentage: $nextPercentage%"
 
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
-              --revision-weight "$CURRENT_REVISION_NAME"=$((100 - nextIncrementPercentage)) \
-              --revision-weight "$NEW_REVISION_NAME"=$nextIncrementPercentage
+              --revision-weight "$CURRENT_REVISION_NAME"=$((100 - nextPercentage)) \
+              --revision-weight "$NEW_REVISION_NAME"=$nextPercentage
 
-            currentPercentage=$nextIncrementPercentage
+            currentPercentage=$nextPercentage
 
-            if [ "$nextIncrementPercentage" -ge 100 ]; then
+            if [ "$nextPercentage" -ge 100 ]; then
               echo "::notice::Successfully shifted 100% traffic to new revision"
               break
             else
