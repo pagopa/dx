@@ -60,7 +60,7 @@ module "azure_storage_account" {
 
   force_public_network_access_enabled = false
 
-  use_case = "realtime"
+  access_tier = "frequent"
 
   subservices_enabled = {
     blob  = true

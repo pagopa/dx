@@ -1,30 +1,32 @@
 ---
-"azure_storage_account": major
+"azure_storage_account": minor
 ---
 
-# BREAKING CHANGE
+# MINOR CHANGE
 
-The breaking change introduces a new variable `use_case` to define the access tier for the storage account.
+The minor change introduces new values for the variable `access_tier` inside the Storage Account module.
 
-The change was made to improve clarity and flexibility in configuring storage account access tiers. By explicitly setting the use_case variable, consumers can better align their configurations with specific workload requirements.
+The change was made to improve clarity and flexibility in configuring storage account access tiers. In this way consumers can better align their configurations with specific workload requirements.
 
-To update your code, use an higher version and add the `use_case` variable to your module configuration instead of old one `access_tier`. Choose one of the following valid options:
+To update your code, use an higher version and update `access_tier` variable to your module configuration. Choose one of the following valid options:
 
-- realtime → frequent access (Hot)
-- analytics → infrequent access (Cool)
-- archive → rare access, immediate retrieval (Cold)
-- high_performance → SSD-based high-speed access (Premium)
+access_tier | Description | Backed Tier | Example use cases
+-- | -- | -- | --
+frequent | Frequent access | Hot | Data for web/mobile apps, real-time logs, actively used production files.
+infrequent | Infrequent access | Cool | Short-term backups, Disaster Recovery, less frequently accessed logs, compliance data
+rare | Rare access, immediate retrieval | Cold | Long-term backups, historical/audit data, inactive document archives
+performance | SSD-backed, high-speed access | Premium | File shares for high-performance apps, search indexes, latency-critical databases
 
 Example:
 
 ```hcl
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 1.1"
 
   # ...existing configuration...
 
-  use_case = "realtime"
+  access_tier = "frequent"
 
   # ...existing configuration...
 }

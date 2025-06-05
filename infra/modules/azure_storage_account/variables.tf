@@ -62,20 +62,22 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
-variable "use_case" {
+variable "access_tier" {
   type        = string
   description = <<EOT
-Use case for the storage account access tier. Options:
-- 'realtime'         → frequent access (Hot)
-- 'analytics'        → infrequent access (Cool)
-- 'archive'          → rare access, immediate retrieval (Cold)
-- 'high_performance' → SSD-based high-speed access (Premium)
+Use cases for the storage account access tier. Options:
+- 'frequent'    → frequent access (Hot)
+- 'infrequent'  → infrequent access (Cool)
+- 'rare'        → rare access, immediate retrieval (Cold)
+- 'performance' → SSD-based high-speed access (Premium)
+
+Backward compatibility: The old values 'Hot', 'Cool', 'Cold', and 'Premium' are still supported but will be deprecated in future releases.
 EOT
-  default     = "realtime"
+  default     = "frequent"
 
   validation {
-    condition     = contains(["realtime", "analytics", "archive", "high_performance"], var.use_case)
-    error_message = "Valid options: 'realtime', 'analytics', 'archive', 'high_performance'."
+    condition     = contains(["frequent", "infrequent", "rare", "performance", "Hot", "Cool", "Cold", "Premium"], var.access_tier)
+    error_message = "Valid options: 'frequent', 'infrequent', 'rare', 'performance', 'Hot', 'Cool', 'Cold', 'Premium'."
   }
 }
 

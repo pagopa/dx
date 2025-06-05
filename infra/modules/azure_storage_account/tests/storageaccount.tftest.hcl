@@ -88,7 +88,7 @@ run "storage_account_is_correct_plan" {
 
     force_public_network_access_enabled = false
 
-    use_case = "realtime"
+    access_tier = "frequent"
 
     subservices_enabled = {
       blob  = true
