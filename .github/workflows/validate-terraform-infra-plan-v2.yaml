@@ -151,7 +151,7 @@ jobs:
           script: |
             const fs = require('fs');
             const outputDir = process.env.OUTPUT_DIR;
-            const output = fs.readFileSync('${outputDir}/plan_output_multiline.txt', 'utf8');
+            const output = fs.readFileSync(`${outputDir}/plan_output_multiline.txt`, 'utf8');
             const status = process.env.PLAN_STATUS;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -159,9 +159,9 @@ jobs:
               issue_number: context.issue.number
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('${outputDir}')`)
+              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan (${outputDir})`)
             })
-            const commentBody = `#### 📖 Terraform Plan ('${outputDir}') - ${status}
+            const commentBody = `#### 📖 Terraform Plan (${outputDir}) - ${status}
             <details>
             <summary>Terraform Plan</summary>
 
