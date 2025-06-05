@@ -23,7 +23,7 @@ jobs:
     name: PR Test
     secrets: inherit
     with:
-      environment: prod
-      base_path: infra/modules/azure_core_infra/example/develop
+      environment: develop
+      base_path: infra/modules/azure_core_infra/example
       # use_private_agent: true
       override_github_environment: infra-dev
