@@ -77,7 +77,7 @@ jobs:
             exit 1
           else
             # The directory is expected to be in the format
-            #  infra/resources/${{ inputs.environment }}
+            #  infra/resources/$ENVIRONMENT
             # Example: infra/resources/prod
             printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
@@ -144,20 +144,23 @@ jobs:
         name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
+        env:
+          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
+          PLAN_STATUS: ${{ steps.plan.outcome }}
         with:
           script: |
             const fs = require('fs');
-            const output = fs.readFileSync('${{ steps.directory.outputs.dir }}/plan_output_multiline.txt', 'utf8');
-            const status = '${{ steps.plan.outcome }}'
+            const output = fs.readFileSync('$OUTPUT_DIR/plan_output_multiline.txt', 'utf8');
+            const status = '$PLAN_STATUS'
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('${{ steps.directory.outputs.dir }}')`)
+              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('$OUTPUT_DIR')`)
             })
-            const commentBody = `#### 📖 Terraform Plan ('${{ steps.directory.outputs.dir }}') - ${status}
+            const commentBody = `#### 📖 Terraform Plan ('$OUTPUT_DIR') - ${status}
             <details>
             <summary>Terraform Plan</summary>
 
