@@ -52,7 +52,53 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 
 ### Custom domains
 
-The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS. However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. In these cases, you must provide custom certificate information through the custom_certificate object, specifying details for a certificate generated according to the "Azure - TLS Certificati con Let's Encrypt" confluence page.
+The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS. 
+
+However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. 
+
+The following represents an example of an apex domain:
+```
+data "azurerm_key_vault" "kv" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "key_vault"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "resource_group"
+  }))
+}
+
+data "azurerm_key_vault_certificate" "cert" {
+  name         = "my-secret-certificate"
+  key_vault_id = data.azurerm_key_vault.kv.id
+}
+
+module "azure_cdn" {
+  source  = "pagopa-dx/azure-cdn/azurerm"
+  version = "~> 0.0"
+
+  ...
+  custom_domains = [
+    {
+      # This is an apex domain cause host_name equals to zone_name
+      host_name = "apex.foo.com",
+      dns = {
+        zone_name                = "apex.foo.com",
+        zone_resource_group_name = azurerm_resource_group.example.name
+      }
+      custom_certificate = {
+        key_vault_certificate_versionless_id = data.azurerm_key_vault_certificate.cert.versionless_id
+        key_vault_name                       = data.azurerm_key_vault.kv.name
+        key_vault_resource_group_name        = data.azurerm_key_vault.kv.resource_group_name
+        key_vault_has_rbac_support           = data.azurerm_key_vault.kv.enable_rbac_authorization
+      }
+    }
+  ]
+  ...
+}
+```
+In these cases, you must provide custom certificate information through the custom_certificate object, specifying details for a certificate generated according to the "Azure - TLS Certificati con Let's Encrypt" confluence page.
 
 ## Usage Example
 
