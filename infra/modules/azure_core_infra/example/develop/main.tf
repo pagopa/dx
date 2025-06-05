@@ -108,7 +108,7 @@ module "storage_account" {
   tier = "s"
 
   subservices_enabled = {
-    blob  = true
+    blob  = false
     file  = false
     queue = false
     table = false
