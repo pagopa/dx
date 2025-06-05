@@ -40,6 +40,11 @@ variable "custom_domains" {
   default = []
 }
 
+variable "rule_set_ids" {
+  type        = list(string)
+  description = "List of rule set IDs to associate with the CDN endpoint"
+  default     = []
+}
 
 variable "diagnostic_settings" {
   type = object({
@@ -55,7 +60,7 @@ variable "diagnostic_settings" {
   description = <<-EOT
     Define if diagnostic settings should be enabled.
     if it is:
-    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and 
+    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
     the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
   EOT
 

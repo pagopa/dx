@@ -27,3 +27,8 @@ output "principal_id" {
   description = "The principal ID of the Front Door Profile's system-assigned managed identity."
   value       = azurerm_cdn_frontdoor_profile.this.identity[0].principal_id
 }
+
+output "rule_set_id" {
+  description = "The ID of the CDN FrontDoor Rule Set"
+  value       = azurerm_cdn_frontdoor_rule_set.this.id
+}
