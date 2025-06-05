@@ -92,7 +92,7 @@ The workflow automatically generates a detailed report on GitHub with:
 This workflow is commonly used as a prerequisite in infrastructure plan and
 apply workflows to ensure that Terraform modules locks are updated. It can be
 seen in action in the
-[infra_plan.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml)
+[validate-terraform-infra-plan-v2.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-terraform-infra-plan-v2.yaml)
 and
 [infra_apply.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)
 workflows.
