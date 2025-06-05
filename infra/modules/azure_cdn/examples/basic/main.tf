@@ -79,6 +79,8 @@ module "azure_cdn" {
   tags = local.tags
 }
 
+# Optionally add FrontDoor rules to manage redirects
+# https://learn.microsoft.com/en-us/azure/frontdoor/front-door-rules-engine?pivots=front-door-standard-premium
 resource "azurerm_cdn_frontdoor_rule" "example" {
   name                      = "examplerule"
   cdn_frontdoor_rule_set_id = module.azure_cdn.rule_set_id
