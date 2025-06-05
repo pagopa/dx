@@ -40,12 +40,6 @@ variable "custom_domains" {
   default = []
 }
 
-variable "rule_set_ids" {
-  type        = list(string)
-  description = "List of rule set IDs to associate with the CDN endpoint"
-  default     = []
-}
-
 variable "diagnostic_settings" {
   type = object({
     enabled                                   = bool
