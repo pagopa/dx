@@ -1,0 +1,37 @@
+{
+  "mode": "exit",
+  "tag": "beta",
+  "initialVersions": {
+    "docs": "0.2.5",
+    "azure_api_management": "1.2.2-beta.0",
+    "azure_app_service": "1.0.1",
+    "azure_app_service_exposed": "1.0.1",
+    "azure_app_service_plan": "0.0.4",
+    "azure_app_service_plan_autoscaler": "2.0.0",
+    "azure_cdn": "0.1.0",
+    "azure_container_app": "1.0.2",
+    "azure_container_app_environment": "1.0.2",
+    "azure_core_infra": "1.0.9",
+    "azure_cosmos_account": "0.1.0",
+    "azure_event_hub": "0.0.11",
+    "azure_federated_identity_with_github": "1.0.3",
+    "azure_function_app": "1.0.1",
+    "azure_function_app_exposed": "1.0.1",
+    "azure_github_environment_bootstrap": "2.3.1",
+    "azure_naming_convention": "0.0.7",
+    "azure_postgres_server": "1.0.5",
+    "azure_role_assignments": "1.1.0",
+    "azure_service_bus_namespace": "0.0.3",
+    "azure_storage_account": "1.0.0",
+    "github_environment_bootstrap": "0.0.5",
+    "github_selfhosted_runner_on_container_app_jobs": "1.0.9",
+    "provider-azure": "0.2.1",
+    "pre_commit_scripts": "0.0.2",
+    "@pagopa/azure-tracing": "0.4.1-beta.0",
+    "@pagopa/eslint-config": "4.0.4"
+  },
+  "changesets": [
+    "pink-spiders-obey",
+    "ready-dingos-find"
+  ]
+}
