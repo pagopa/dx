@@ -96,23 +96,23 @@ resource "azurerm_cosmosdb_sql_database" "db" {
 # Storage Account #
 #-----------------#
 
-module "storage_account" {
-  source = "../../../azure_storage_account"
+# module "storage_account" {
+#   source = "../../../azure_storage_account"
 
-  environment         = local.environment
-  resource_group_name = module.core.test_resource_group_name
+#   environment         = local.environment
+#   resource_group_name = module.core.test_resource_group_name
 
-  subnet_pep_id                       = module.core.common_pep_snet.id
-  force_public_network_access_enabled = false
+#   subnet_pep_id                       = module.core.common_pep_snet.id
+#   force_public_network_access_enabled = false
 
-  tier = "s"
+#   tier = "s"
 
-  subservices_enabled = {
-    blob  = false
-    file  = false
-    queue = false
-    table = false
-  }
+#   subservices_enabled = {
+#     blob  = true
+#     file  = false
+#     queue = false
+#     table = false
+#   }
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
