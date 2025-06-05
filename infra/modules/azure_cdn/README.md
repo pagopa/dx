@@ -50,6 +50,10 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 }
 ```
 
+### Custom domains
+
+The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS. However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. In these cases, you must provide custom certificate information through the custom_certificate object, specifying details for a certificate generated according to the "Azure - TLS Certificati con Let's Encrypt" confluence page.
+
 ## Usage Example
 
 A complete example of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) directory.
