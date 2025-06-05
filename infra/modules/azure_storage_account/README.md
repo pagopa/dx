@@ -23,12 +23,12 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 ## Access Tier Comparison
 
-| Access Tier       | Description                                               | Retrieval Speed | Cost Efficiency | Use Case            |
-|-------------------|-----------------------------------------------------------|-----------------|-----------------|---------------------|
-| `frequent`        | Frequent access with immediate retrieval.                 | High            | Moderate        | Real-time workloads |
-| `infrequent`      | Infrequent access with slightly delayed retrieval.        | Moderate        | High            | Analytical data     |
-| `rare`            | Rare access with immediate retrieval.                     | Low             | Very High       | Archival storage    |
-| `performance`     | SSD-based high-speed access for demanding workloads.      | Very High       | Low             | High-performance    |
+| Access Tier       | Description                                               | Storage Costs | Access Costs |  Use Case                                                            |
+|-------------------|-----------------------------------------------------------|---------------|--------------|----------------------------------------------------------------------|
+| `frequent`        | Frequent access with immediate retrieval.                 | High          | Low          | Real-time workloads, data for web/mobile apps                        |
+| `infrequent`      | Infrequent access with slightly delayed retrieval.        | Low           | High         | Short-term backups, Disaster Recovery, less frequently accessed logs |
+| `rare`            | Rare access with immediate retrieval.                     | Low           | High         | Long-term backups, historical/audit data, inactive document archives |
+| `performance`     | SSD-based high-speed access for demanding workloads.      | Very High     | Very High    | File shares for high-performance apps, latency-critical databases    |
 
 ### Backward Compatibility
 
