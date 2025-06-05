@@ -79,6 +79,35 @@ module "azure_cdn" {
   tags = local.tags
 }
 
+# Optionally add FrontDoor rules to manage redirects
+# https://learn.microsoft.com/en-us/azure/frontdoor/front-door-rules-engine?pivots=front-door-standard-premium
+resource "azurerm_cdn_frontdoor_rule" "example" {
+  name                      = "examplerule"
+  cdn_frontdoor_rule_set_id = module.azure_cdn.rule_set_id
+  order                     = 1
+  behavior_on_match         = "Continue"
+
+  actions {
+    url_redirect_action {
+      redirect_type        = "PermanentRedirect"
+      redirect_protocol    = "MatchRequest"
+      query_string         = "clientIp={client_ip}"
+      destination_path     = "/exampleredirection"
+      destination_hostname = "contoso.com"
+      destination_fragment = "UrlRedirect"
+    }
+  }
+
+  conditions {
+    host_name_condition {
+      operator         = "Equal"
+      negate_condition = false
+      match_values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
+      transforms       = ["Lowercase", "Trim"]
+    }
+  }
+}
+
 output "cdn_endpoint_url" {
   value = module.azure_cdn.endpoint_hostname
 }
