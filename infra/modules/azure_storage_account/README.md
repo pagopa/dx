@@ -21,6 +21,17 @@ This Terraform module provisions an Azure Storage Account with optional configur
 | `s`  | Ideal for lightweight workloads, testing, and development.       | No     | No                         | LRS              | Standard     |
 | `l`  | Suitable for production with moderate to high performance needs. | Yes    | Yes (except in italynorth) | ZRS              | Standard     |
 
+## Use Cases Comparison
+
+Set the `use_case` variable:
+
+| Access Tier       | Description                                               | Retrieval Speed | Cost Efficiency | Use Case            |
+|-------------------|-----------------------------------------------------------|-----------------|-----------------|---------------------|
+| `realtime`        | Frequent access with immediate retrieval.                 | High            | Moderate        | Real-time workloads |
+| `analytics`       | Infrequent access with slightly delayed retrieval.        | Moderate        | High            | Analytical data     |
+| `archive`         | Rare access with immediate retrieval.                     | Low             | Very High       | Archival storage    |
+| `high_performance`| SSD-based high-speed access for demanding workloads.      | Very High       | Low             | High-performance    |
+
 ## Important Considerations for CDN Origin
 
 This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
@@ -62,7 +73,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'. | `string` | `"Hot"` | no |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | ID of the Action Group for alerts. Required for tier 'l'. | `string` | `null` | no |
 | <a name="input_blob_features"></a> [blob\_features](#input\_blob\_features) | Advanced blob features like versioning, change feed, immutability, and retention policies. | <pre>object({<br/>    restore_policy_days   = optional(number, 0)<br/>    delete_retention_days = optional(number, 0)<br/>    last_access_time      = optional(bool, false)<br/>    versioning            = optional(bool, false)<br/>    change_feed = optional(object({<br/>      enabled           = optional(bool, false)<br/>      retention_in_days = optional(number, 0)<br/>    }), { enabled = false })<br/>    immutability_policy = optional(object({<br/>      enabled                       = optional(bool, false)<br/>      allow_protected_append_writes = optional(bool, false)<br/>      period_since_creation_in_days = optional(number, 730)<br/>    }), { enabled = false })<br/>  })</pre> | <pre>{<br/>  "change_feed": {<br/>    "enabled": false,<br/>    "retention_in_days": 0<br/>  },<br/>  "delete_retention_days": 0,<br/>  "immutability_policy": {<br/>    "enabled": false<br/>  },<br/>  "last_access_time": false,<br/>  "restore_policy_days": 0,<br/>  "versioning": false<br/>}</pre> | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration for the storage account. | <pre>object({<br/>    name          = optional(string, null)<br/>    use_subdomain = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "name": null,<br/>  "use_subdomain": false<br/>}</pre> | no |
@@ -77,6 +87,7 @@ No modules.
 | <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force\_public\_network\_access\_enabled is false. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to all resources created by this module. | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | Storage account tier depending on demanding workload. Allowed values: 's', 'l'. | `string` | n/a | yes |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Use case for the storage account access tier. Options:<br/>- 'realtime'         → frequent access (Hot)<br/>- 'analytics'        → infrequent access (Cool)<br/>- 'archive'          → rare access, immediate retrieval (Cold)<br/>- 'high\_performance' → SSD-based high-speed access (Premium) | `string` | `"realtime"` | no |
 
 ## Outputs
 

@@ -28,6 +28,15 @@ locals {
 
   tier_features = local.tiers[var.tier]
 
+  access_tier_map = {
+    realtime         = "Hot"
+    analytics        = "Cool"
+    archive          = "Cold"
+    high_performance = "Premium"
+  }
+
+  mapped_access_tier = local.access_tier_map[var.use_case]
+
   peps = {
     create_subservices = var.force_public_network_access_enabled ? {
       blob  = false

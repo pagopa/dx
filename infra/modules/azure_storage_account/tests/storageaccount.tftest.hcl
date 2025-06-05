@@ -22,7 +22,7 @@ run "setup_tests" {
       app_name        = "test"
       instance_number = "01"
     }
-    
+
     tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
@@ -55,17 +55,17 @@ run "storage_account_is_correct_plan" {
       Environment    = "Dev"
       BusinessUnit   = "DevEx"
       ManagementTeam = "Developer Experience"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
-      Test        = "true"
-      TestName    ="Create Storage Account for test"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
+      Test           = "true"
+      TestName       = "Create Storage Account for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
 
     customer_managed_key = {
-      enabled = true
-      type    = "kv"
+      enabled      = true
+      type         = "kv"
       key_vault_id = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-common-rg-01/providers/Microsoft.KeyVault/vaults/dx-d-itn-common-kv-01"
     }
 
@@ -88,7 +88,7 @@ run "storage_account_is_correct_plan" {
 
     force_public_network_access_enabled = false
 
-    access_tier = "Hot"
+    use_case = "realtime"
 
     subservices_enabled = {
       blob  = true
@@ -173,17 +173,17 @@ run "public_storage_account_is_correct_plan" {
       Environment    = "Dev"
       BusinessUnit   = "DevEx"
       ManagementTeam = "Developer Experience"
-      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
-      Test        = "true"
-      TestName    ="Create Storage Account for test"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_storage_account/tests"
+      Test           = "true"
+      TestName       = "Create Storage Account for test"
     }
 
     resource_group_name = run.setup_tests.resource_group_name
     tier                = "l"
 
     customer_managed_key = {
-      enabled = true
-      type    = "kv"
+      enabled      = true
+      type         = "kv"
       key_vault_id = "/subscriptions/d7de83e0-0571-40ad-b63a-64c942385eae/resourceGroups/dx-d-itn-common-rg-01/providers/Microsoft.KeyVault/vaults/dx-d-itn-common-kv-01"
     }
 

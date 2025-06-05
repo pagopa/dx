@@ -62,10 +62,21 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
-variable "access_tier" {
+variable "use_case" {
   type        = string
-  description = "Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'."
-  default     = "Hot"
+  description = <<EOT
+Use case for the storage account access tier. Options:
+- 'realtime'         → frequent access (Hot)
+- 'analytics'        → infrequent access (Cool)
+- 'archive'          → rare access, immediate retrieval (Cold)
+- 'high_performance' → SSD-based high-speed access (Premium)
+EOT
+  default     = "realtime"
+
+  validation {
+    condition     = contains(["realtime", "analytics", "archive", "high_performance"], var.use_case)
+    error_message = "Valid options: 'realtime', 'analytics', 'archive', 'high_performance'."
+  }
 }
 
 variable "subservices_enabled" {
