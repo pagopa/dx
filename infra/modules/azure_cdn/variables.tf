@@ -29,7 +29,7 @@ variable "origins" {
 }
 
 variable "custom_domains" {
-  description = "Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created. If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used. To generate one, please refer to the confluence documentation."
+  description = "Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created. If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used. To generate one in PagoPA context, please refer to the Confluence documentation."
   type = list(object({
     host_name = string
     dns = optional(object({
