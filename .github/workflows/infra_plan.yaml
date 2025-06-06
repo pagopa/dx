@@ -77,7 +77,7 @@ jobs:
             exit 1
           else
             # The directory is expected to be in the format
-            #  infra/resources/${{ inputs.environment }}
+            #  infra/resources/$ENVIRONMENT
             # Example: infra/resources/prod
             printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
@@ -117,13 +117,27 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan -lock-timeout=3000s -no-color 2>&1 | grep -v "hidden-link:"  | tee plan_output.txt
+          terraform plan -lock-timeout=3000s -no-color -out=plan.out | grep -v "hidden-link:" | tee tf_plan_stdout.txt
+          terraform show -no-color plan.out > full_plan.txt
+          
+          # Extracts only the diff section from the Plan by skipping everything before the resource changes,
+          # and filters out non-essential log lines like state refreshes and reads.
+          sed -n '/^  #/,$p' full_plan.txt | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt
 
-          OUTPUT=$(grep -Ev "Refreshing state|state lock|Reading|Read" plan_output.txt | tail -c 60000)
+          # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
+          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
+          echo "$SUMMARY_LINE" > plan_summary.txt
 
-          printf "%s" "$OUTPUT" > plan_output_multiline.txt
+          # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
+          if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
+            echo "${SUMMARY_LINE}" > plan_output_multiline.txt
+            echo "" >> plan_output_multiline.txt
+            echo "Full plan output was too long and was omitted. Check the workflow logs for full details." >> plan_output_multiline.txt
+          else
+            cat filtered_plan.txt > plan_output_multiline.txt
+          fi
 
-          if grep -q "::error::Terraform exited with code" plan_output.txt; then
+          if grep -q "::error::Terraform exited with code" tf_plan_stdout.txt; then
             echo "failed"
             exit 1
           fi
@@ -134,20 +148,24 @@ jobs:
         name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
+        env:
+          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
+          PLAN_STATUS: ${{ steps.plan.outcome }}
         with:
           script: |
             const fs = require('fs');
-            const output = fs.readFileSync('${{ steps.directory.outputs.dir }}/plan_output_multiline.txt', 'utf8');
-            const status = '${{ steps.plan.outcome }}'
+            const outputDir = process.env.OUTPUT_DIR;
+            const output = fs.readFileSync(`${outputDir}/plan_output_multiline.txt`, 'utf8');
+            const status = process.env.PLAN_STATUS;
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             })
             const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan ('${{ steps.directory.outputs.dir }}')`)
+              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan (${outputDir})`)
             })
-            const commentBody = `#### 📖 Terraform Plan ('${{ steps.directory.outputs.dir }}') - ${status}
+            const commentBody = `#### 📖 Terraform Plan (${outputDir}) - ${status}
             <details>
             <summary>Terraform Plan</summary>
 
