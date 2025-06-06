@@ -21,7 +21,8 @@ The workflow performs the following steps:
    100% of traffic immediately
 4. In **Multiple** mode (canary rollout):
    1. Create a new revision with the updated image
-   2. Wait until the new revision reports **Healthy** status
+   2. Wait until the new revision reports **Healthy** status for the app
+      (according to configured probes)
    3. To implement a canary deployment, you can set up a custom script within
       your pipeline that guides the deployment process using its output, in JSON
       format (more details below):
