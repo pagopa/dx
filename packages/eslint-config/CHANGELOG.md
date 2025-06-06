@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 4.0.5
+
+### Patch Changes
+
+- e1202f1: Upgrade typescript-eslint to a version compatible with the Typescript version used
+
 ## 4.0.4
 
 ### Patch Changes
