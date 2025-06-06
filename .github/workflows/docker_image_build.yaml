@@ -40,8 +40,6 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
 
     steps:
 
