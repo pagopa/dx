@@ -23,9 +23,10 @@ The workflow performs the following steps:
    1. Create a new revision with the updated image
    2. Wait until the new revision reports **Healthy** status for the app
       (according to configured probes)
-   3. To implement a canary deployment, you can set up a custom script within
-      your pipeline that guides the deployment process using its output, in JSON
-      format (more details below):
+   3. To implement a canary deployment, you can set up
+      [a custom script](#implementing-a-canary-test-script) within your pipeline
+      that guides the deployment process using its output, in JSON format (more
+      details below):
       - Use a `swap` flag to cut over immediately (100% traffic to new revision)
       - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
    4. If no script is provided, perform a full switch (100% to new revision)
@@ -35,10 +36,10 @@ The workflow performs the following steps:
 
 ### Implementing a Canary Test Script
 
-For canary deployments, add an NPM script to test the new version and drive
-workflow behaviour. This script can check the results of integration tests
-and/or monitoring metrics before outputting a payload that influence the
-workflow.
+For canary deployments, add a TypeScript (`npm` or `yarn`) script to test the
+new version and drive workflow behaviour. This script can check the results of
+integration tests and/or monitoring metrics before outputting a payload that
+influence the workflow.
 
 The following schemas for the script output are supported:
 
