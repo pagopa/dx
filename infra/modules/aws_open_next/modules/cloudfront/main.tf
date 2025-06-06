@@ -79,6 +79,32 @@ resource "aws_cloudfront_cache_policy" "cache_policy" {
   }
 }
 
+resource "aws_cloudfront_cache_policy" "static_assets" {
+  name    = "${local.app_prefix}-static-assets-cache-policy-${local.app_suffix}"
+  comment = "Cache policy for static assets"
+
+  default_ttl = 86400
+  min_ttl     = 3600
+  max_ttl     = 31536000
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip   = true
+
+    cookies_config {
+      cookie_behavior = "none"
+    }
+
+    headers_config {
+      header_behavior = "none"
+    }
+
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
+}
+
 resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
   name    = "${local.app_prefix}-response-headers-policy-${local.app_suffix}"
   comment = "${local.app_prefix} Response Headers Policy"
@@ -192,7 +218,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
@@ -206,7 +232,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
@@ -220,7 +246,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
@@ -286,7 +312,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
