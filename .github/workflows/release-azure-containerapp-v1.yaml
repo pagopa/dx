@@ -120,6 +120,8 @@ jobs:
         env:
           GIT_SHA: ${{ github.sha }}
         run: |
+          set -euo
+
           sha=$(git rev-parse --short "$GIT_SHA")
 
           echo "::notice::Latest commit: $sha"
@@ -137,6 +139,8 @@ jobs:
       - name: Get Container App Revision Mode
         id: get_revision_mode
         run: |
+          set -euo
+
           revision_mode=$(az containerapp show \
             --name "$CONTAINER_APP_NAME" \
             --query "properties.configuration.activeRevisionsMode" \
@@ -149,6 +153,8 @@ jobs:
       - name: Validate Script Language Input
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_name != '' }}
         run: |
+          set -euo
+
           case "$SCRIPT_LANGUAGE" in
             "typescript (npm)")
               echo "::notice::Using TypeScript (npm) script for canary deployment"
@@ -165,6 +171,8 @@ jobs:
       - name: Get Container App Current Revision
         id: get_current_revision
         run: |
+          set -euo
+
           current_revision=$(az containerapp revision list \
             --name "$CONTAINER_APP_NAME" \
             --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
@@ -179,6 +187,8 @@ jobs:
           SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
           REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode}}
         run: |
+          set -euo
+
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
             --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
@@ -211,6 +221,8 @@ jobs:
         env:
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
+          set -euo
+
           max_attempts=30
           attempt=0
           health_state=""
@@ -243,6 +255,8 @@ jobs:
         id: get_container_app_id
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
+          set -euo
+
           container_app_id=$(az containerapp show \
             --name "$CONTAINER_APP_NAME" \
             --query "id" \
