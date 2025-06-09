@@ -54,7 +54,7 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 
 The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS. 
 
-However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. 
+However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. An example is `apex.foo.com`, where `apex.foo.com` is the DNS zone name.
 
 The following represents an example of an apex domain:
 ```
