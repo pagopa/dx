@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.3.0
+
+### Minor Changes
+
+- d55068e: Support apex domains by using custom certificates
+
 ## 0.2.0
 
 ### Minor Changes
