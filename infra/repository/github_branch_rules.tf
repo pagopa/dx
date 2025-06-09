@@ -17,7 +17,7 @@ resource "github_branch_protection" "protection_main" {
     required_approving_review_count = 1
     dismissal_restrictions          = []
     pull_request_bypassers = [
-      "dx-pagopa-bot"
+      "/dx-pagopa-bot"
     ]
     restrict_dismissals = false
   }
