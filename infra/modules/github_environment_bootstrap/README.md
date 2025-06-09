@@ -41,7 +41,6 @@ For additional support, refer to the [GitHub Provider Documentation](https://reg
 | Name | Version |
 |------|---------|
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
-| <a name="requirement_shell"></a> [shell](#requirement\_shell) | ~> 1.7.0 |
 
 ## Modules
 
