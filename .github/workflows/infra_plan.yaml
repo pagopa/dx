@@ -44,8 +44,8 @@ env:
 jobs:
   tf_plan:
     name: 'Terraform Plan'
-    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment. 
-    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels. 
+    # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
+    # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
@@ -117,9 +117,9 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan -lock-timeout=3000s -no-color -out=plan.out | grep -v "hidden-link:" | tee tf_plan_stdout.txt
+          terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | grep -v "hidden-link:" | tee tf_plan_stdout.txt
           terraform show -no-color plan.out > full_plan.txt
-          
+
           # Extracts only the diff section from the Plan by skipping everything before the resource changes,
           # and filters out non-essential log lines like state refreshes and reads.
           sed -n '/^  #/,$p' full_plan.txt | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt
