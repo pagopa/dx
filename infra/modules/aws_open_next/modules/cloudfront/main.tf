@@ -260,7 +260,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     target_origin_id = "${local.app_prefix}-image-optimization-origin-${local.app_suffix}"
 
     response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
-    cache_policy_id            = aws_cloudfront_cache_policy.cache_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
 
     compress               = true
