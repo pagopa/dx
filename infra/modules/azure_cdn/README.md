@@ -10,6 +10,7 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
+- **Routing Rules**: Allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
 
 ### Routing rules
 The module returns the id of a FrontDoor rule set via the `rule_set_id` output. The user can then implement ad-hoc rules for the created FrontDoor endpoint as follows:
