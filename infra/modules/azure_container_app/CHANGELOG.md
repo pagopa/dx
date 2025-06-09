@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 2.0.0
+
+### Major Changes
+
+- 5731c31: Container image name is no longer stored in Terraform state file, to allow CD pipelines to update the tag without requiring an update to the Terraform code.
+
 ## 1.0.2
 
 ### Patch Changes
