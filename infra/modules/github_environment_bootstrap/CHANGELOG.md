@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 0.1.0
+
+### Minor Changes
+
+- 2b41393: Add packages write permissions to allow Docker images publishing
+
 ## 0.0.5
 
 ### Patch Changes
