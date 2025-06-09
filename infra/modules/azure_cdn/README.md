@@ -56,7 +56,7 @@ The module supports custom domains, allowing you to expose your Azure CDN throug
 
 However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. An example is `apex.foo.com`, where `apex.foo.com` is the DNS zone name.
 
-The following represents an example of an apex domain:
+In the case of apex domains, it's possible to refer to the following configuration example:
 ```
 data "azurerm_key_vault" "kv" {
   name = provider::dx::resource_name(merge(local.naming_config, {
