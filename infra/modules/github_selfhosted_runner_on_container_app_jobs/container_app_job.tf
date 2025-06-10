@@ -51,7 +51,7 @@ resource "azurerm_container_app_job" "github_runner" {
   template {
     container {
       cpu    = var.container_app_environment.cpu
-      image  = "ghcr.io/pagopa/github-self-hosted-runner-azure:latest"
+      image  = var.container_app_environment.image
       memory = var.container_app_environment.memory
       name   = "github-runner"
 
