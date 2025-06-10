@@ -2,14 +2,14 @@ name: Build GitHub Self-Hosted Runner
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - feat-create-new-docker-image-self-hosted-runner # for testing purposes
+  # push:
+  #   branches:
+  #     - feat-create-new-docker-image-self-hosted-runner # for testing purposes
 
 jobs:
-  drift_detection:
+  github_runner:
     uses: ./.github/workflows/docker_image_build.yaml
-    name: Drift Detection
+    name: GitHub Self-Hosted Runner
     permissions:
       contents: read
       actions: read
