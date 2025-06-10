@@ -47,7 +47,7 @@ jobs:
         name: Checkout
 
       - name: Docker Build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/.github/actions/docker-build-push@feat-create-new-docker-image-self-hosted-runner #main
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
