@@ -117,49 +117,33 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          set -euo pipefail
-
-          # Run terraform plan and capture output
           terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | grep -v "hidden-link:" | tee tf_plan_stdout.txt
 
-          # Check if plan succeeded
-          PLAN_EXIT_CODE=${PIPESTATUS[0]}
-          echo "Pipeline exit codes: terraform=${PLAN_EXIT_CODE}, grep=${PIPESTATUS[1]}, tee=${PIPESTATUS[2]}"
+          # Print all pipeline exit codes (plan, grep, tee)
+          echo "Pipeline exit codes: terraform=${PIPESTATUS[0]}, grep=${PIPESTATUS[1]}, tee=${PIPESTATUS[2]}"
 
-          # Capture the summary line regardless of plan success/failure
-          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes detected.")
+          # Next command: terraform show
+          terraform show -no-color plan.out > full_plan.txt
+          echo "terraform show exit code: $?"
+
+          # Extracts only the diff section from the Plan by skipping everything before the resource changes,
+          # and filters out non-essential log lines like state refreshes and reads.
+          if [ -s full_plan.txt ]; then
+            sed -n '/^  #/,$p' full_plan.txt | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt || echo "No changes detected." > filtered_plan.txt
+          else
+            echo "No plan output available." > filtered_plan.txt
+          fi
+          echo "sed/grep pipeline exit codes: sed=${PIPESTATUS[0]}, grep=${PIPESTATUS[1]}"
+
+          # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
+          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
+          grep_exit=$?
+          echo "grep summary exit code: $grep_exit"
+
           echo "$SUMMARY_LINE" > plan_summary.txt
 
-          # Only proceed with plan show if plan was successful
-          if [ $PLAN_EXIT_CODE -eq 0 ]; then
-            # Show the plan and save to file
-            terraform show -no-color plan.out > full_plan.txt
-            SHOW_EXIT_CODE=$?
-            echo "terraform show exit code: $SHOW_EXIT_CODE"
-
-            # Check if full_plan.txt exists and has content
-            if [ -s full_plan.txt ]; then
-              # Extract the diff section
-              sed -n '/^  #/,$p' full_plan.txt | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt || true
-
-              # If filtered_plan.txt is empty, use the summary line
-              if [ ! -s filtered_plan.txt ]; then
-                echo "No resource changes found in the plan." > filtered_plan.txt
-                echo "$SUMMARY_LINE" >> filtered_plan.txt
-              fi
-            else
-              # Handle empty plan file
-              echo "Plan file is empty. This could mean no changes or an error occurred." > filtered_plan.txt
-              echo "$SUMMARY_LINE" >> filtered_plan.txt
-            fi
-          else
-            # If plan failed, create a minimal filtered plan with error info
-            echo "Terraform plan failed with exit code $PLAN_EXIT_CODE" > filtered_plan.txt
-            grep -E "Error:|error:" tf_plan_stdout.txt >> filtered_plan.txt || echo "No specific error message found." >> filtered_plan.txt
-          fi
-
-          # Prepare the output for PR comment
-          if [ "$(wc -c < filtered_plan.txt 2>/dev/null || echo 0)" -gt 60000 ]; then
+          # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
+          if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
             echo "${SUMMARY_LINE}" > plan_output_multiline.txt
             echo "" >> plan_output_multiline.txt
             echo "Full plan output was too long and was omitted. Check the workflow logs for full details." >> plan_output_multiline.txt
@@ -167,9 +151,9 @@ jobs:
             cat filtered_plan.txt > plan_output_multiline.txt
           fi
 
-          # Set exit code for this step based on the plan result
-          if [ $PLAN_EXIT_CODE -ne 0 ] || grep -q "::error::Terraform exited with code" tf_plan_stdout.txt; then
-            echo "Terraform plan failed"
+          # Error detection based on tf_plan_stdout.txt content
+          if grep -q "::error::Terraform exited with code" tf_plan_stdout.txt; then
+            echo "failed"
             exit 1
           fi
 
