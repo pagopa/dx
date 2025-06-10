@@ -3,40 +3,32 @@ description: Build and optionally push a Docker image
 
 inputs:
   dockerfile_path:
-    type: string
     required: false
     default: './Dockerfile'
     description: Dockerfile path
   dockerfile_context:
-    type: string
     required: false
     default: '.'
     description: Dockerfile build context
   docker_image_name:
-    type: string
     required: false
     default: ${{ github.repository }}
     description: Docker image name, defaults to repository name
   docker_image_description:
-    type: string
     required: true
     description: Image description set as image label
   docker_image_authors:
-    type: string
     required: false
     default: PagoPA
     description: Authors names set as image label
   build_args:
     description: List of build arguments to use for Dockerfile build, given in env=value format.
-    type: string
     required: false
   build_platforms:
-    type: string
     required: false
     default: linux/amd64
     description: Image runtime platform, supports multiple values
   push_to_registry:
-    type: boolean
     required: false
     default: true
     description: Push the image to the registry
@@ -80,7 +72,7 @@ runs:
           org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
 
-    - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
+    - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
       id: push_registry
       env:
