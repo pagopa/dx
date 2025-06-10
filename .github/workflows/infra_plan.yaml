@@ -132,8 +132,6 @@ jobs:
 
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
           SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
-          grep_exit=$?
-          echo "grep summary exit code: $grep_exit"
 
           echo "$SUMMARY_LINE" > plan_summary.txt
 
