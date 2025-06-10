@@ -1,0 +1,15 @@
+services:
+  github_runner:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - GITHUB_URL=${GITHUB_URL}
+      - RUNNER_TOKEN=${RUNNER_TOKEN}
+      - RUNNER_NAME=${RUNNER_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f run.sh || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

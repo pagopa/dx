@@ -1,0 +1,24 @@
+name: Build GitHub Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat-create-new-docker-image-self-hosted-runner # for testing purposes
+
+jobs:
+  drift_detection:
+    uses: ./.github/workflows/docker_image_build.yaml
+    name: Drift Detection
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      dockerfile_path: './self-hosted-runner/Dockerfile'
+      dockerfile_context: './self-hosted-runner'
+      docker_image_name: 'dx-github-self-hosted-runner'
+      image_description: 'DX GitHub Self-Hosted Runner'
+      image_authors: 'DevEx'
+      build_platforms: linux/amd64
