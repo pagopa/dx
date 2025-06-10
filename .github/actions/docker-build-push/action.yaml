@@ -77,7 +77,7 @@ runs:
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description=${{ env.DESCRIPTION }}
           org.opencontainers.image.authors=${{ env.AUTHORS }}
-          org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
+          org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
 
     - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
