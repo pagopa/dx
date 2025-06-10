@@ -148,3 +148,40 @@ variable "acr_registry" {
   default     = null
   description = "Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
 }
+
+variable "autoscaler" {
+  type = object({
+    replicas = object({
+      minimum = number
+      maximum = number
+    })
+
+    azure_queue_scalers = optional(list(object({
+      queue_name   = string
+      queue_length = number
+
+      authentication = object({
+        secret_name       = string
+        trigger_parameter = string
+      })
+    })))
+
+    http_scalers = optional(list(object({
+      name                = string
+      concurrent_requests = number,
+    })))
+
+    custom_scalers = optional(list(object({
+      name             = string
+      custom_rule_type = string
+      metadata         = map(string),
+
+      authentication = optional(object({
+        secret_name       = string
+        trigger_parameter = string
+      }), null)
+    })))
+  })
+
+  description = "Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/"
+}

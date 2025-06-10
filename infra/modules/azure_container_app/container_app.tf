@@ -40,8 +40,48 @@ resource "azurerm_container_app" "this" {
   }
 
   template {
-    min_replicas = local.sku.replicas.min
-    max_replicas = local.sku.replicas.max
+    termination_grace_period_seconds = 30
+    min_replicas                     = var.autoscaler.replicas.minimum
+    max_replicas                     = var.autoscaler.replicas.maximum
+    dynamic "azure_queue_scale_rule" {
+      for_each = var.autoscaler.azure_queue_scalers == null ? [] : var.autoscaler.azure_queue_scalers
+      content {
+        name         = azure_queue_scale_rule.value.queue_name
+        queue_name   = azure_queue_scale_rule.value.queue_name
+        queue_length = azure_queue_scale_rule.value.queue_length
+
+        authentication {
+          secret_name       = replace(lower(azure_queue_scale_rule.value.authentication.secret_name), "_", "-")
+          trigger_parameter = azure_queue_scale_rule.value.authentication.trigger_parameter
+        }
+      }
+    }
+
+    dynamic "http_scale_rule" {
+      for_each = var.autoscaler.http_scalers == null ? [] : var.autoscaler.http_scalers
+      content {
+        name                = http_scale_rule.value.name
+        concurrent_requests = http_scale_rule.value.concurrent_requests
+      }
+    }
+
+    dynamic "custom_scale_rule" {
+      for_each = var.autoscaler.custom_scalers == null ? [] : var.autoscaler.custom_scalers
+      content {
+        name             = custom_scale_rule.value.name
+        custom_rule_type = custom_scale_rule.value.custom_rule_type
+        metadata         = custom_scale_rule.value.metadata
+
+        dynamic "authentication" {
+          for_each = custom_scale_rule.value.authentication == null ? [] : [custom_scale_rule.value.authentication]
+
+          content {
+            secret_name       = replace(lower(authentication.value.secret_name), "_", "-")
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
 
     dynamic "container" {
       for_each = var.container_app_templates
