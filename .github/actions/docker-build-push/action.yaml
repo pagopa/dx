@@ -3,40 +3,32 @@ description: Build and optionally push a Docker image
 
 inputs:
   dockerfile_path:
-    type: string
     required: false
     default: './Dockerfile'
     description: Dockerfile path
   dockerfile_context:
-    type: string
     required: false
     default: '.'
     description: Dockerfile build context
   docker_image_name:
-    type: string
     required: false
     default: ${{ github.repository }}
     description: Docker image name, defaults to repository name
   docker_image_description:
-    type: string
     required: true
     description: Image description set as image label
   docker_image_authors:
-    type: string
     required: false
     default: PagoPA
     description: Authors names set as image label
   build_args:
     description: List of build arguments to use for Dockerfile build, given in env=value format.
-    type: string
     required: false
   build_platforms:
-    type: string
     required: false
     default: linux/amd64
     description: Image runtime platform, supports multiple values
   push_to_registry:
-    type: boolean
     required: false
     default: true
     description: Push the image to the registry
@@ -50,7 +42,7 @@ runs:
 
     - name: Log in to the Container registry
       uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-      if: ${{ inputs.push_to_registry }}
+      if: ${{ inputs.push_to_registry == 'true' }}
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -77,10 +69,10 @@ runs:
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description=${{ env.DESCRIPTION }}
           org.opencontainers.image.authors=${{ env.AUTHORS }}
-          org.opencontainers.image.url=github.com/pagopa/${{ env.REPOSITORY }}
+          org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
 
-    - name: ${{ inputs.push_to_registry && 'Build and Push Image' || 'Build Image' }}
+    - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
       id: push_registry
       env:
@@ -107,7 +99,7 @@ runs:
     # e.g. gh attestation verify oci://<img-uri> --owner org
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
-      if: ${{ inputs.push_to_registry }}
+      if: ${{ inputs.push_to_registry == 'true' }}
       env:
         IMAGE_NAME: ${{ inputs.docker_image_name }}
       with:
