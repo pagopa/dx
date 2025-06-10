@@ -119,12 +119,8 @@ jobs:
         run: |
           terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | grep -v "hidden-link:" | tee tf_plan_stdout.txt
 
-          # Print all pipeline exit codes (plan, grep, tee)
-          echo "Pipeline exit codes: terraform=${PIPESTATUS[0]}, grep=${PIPESTATUS[1]}, tee=${PIPESTATUS[2]}"
-
           # Next command: terraform show
           terraform show -no-color plan.out > full_plan.txt
-          echo "terraform show exit code: $?"
 
           # Extracts only the diff section from the Plan by skipping everything before the resource changes,
           # and filters out non-essential log lines like state refreshes and reads.
@@ -133,7 +129,6 @@ jobs:
           else
             echo "No plan output available." > filtered_plan.txt
           fi
-          echo "sed/grep pipeline exit codes: sed=${PIPESTATUS[0]}, grep=${PIPESTATUS[1]}"
 
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
           SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
