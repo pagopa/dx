@@ -92,7 +92,7 @@ export const expressToAzureFunction =
 ### Enabling Azure Monitor Telemetry
 
 > [!NOTE]
-> For Azure Functions, the recommended approach is to use the `NODE_OPTIONS` environment variable and register lifecycle hooks as described in the "Instrumenting Azure Functions" section. Manual initialization with `initAzureMonitor` is typically not required for Azure Functions, but it is useful for other Node.js applications (e.g., Azure App Services) where direct SDK initialization is preferred or necessary.
+> For Azure Functions, it is necessary to use the `NODE_OPTIONS` environment variable and register lifecycle hooks as described in the "Instrumenting Azure Functions" section. Manual initialization with `initAzureMonitor` is typically not required for Azure Functions (due to the issue previously explained), but it is useful for other Node.js applications (e.g., Azure App Services) where direct SDK initialization is preferred or necessary.
 
 If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
 
