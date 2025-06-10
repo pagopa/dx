@@ -107,7 +107,7 @@ runs:
     # e.g. gh attestation verify oci://<img-uri> --owner org
     - name: Generate Artifact Attestation
       uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
-      if: ${{ inputs.push_to_registry }}
+      if: ${{ inputs.push_to_registry == 'true' }}
       env:
         IMAGE_NAME: ${{ inputs.docker_image_name }}
       with:
