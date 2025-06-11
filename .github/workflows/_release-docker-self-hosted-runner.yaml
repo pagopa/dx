@@ -30,7 +30,7 @@ jobs:
     needs: [found_sha]
     permissions:
       contents: read
-      packages: read
+      packages: write
       actions: read
       id-token: write
     env:
