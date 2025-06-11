@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 1.0.2-beta.0
+
+### Patch Changes
+
+- e73f712: Need to bump
+
 ## 1.0.1
 
 ### Patch Changes
