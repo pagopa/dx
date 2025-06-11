@@ -26,6 +26,8 @@ jobs:
   found_sha:
     name: Found latest Github Self-Hosted Runner SHA
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       latest_digest: ${{ steps.latest_digest.outputs.latest_digest }}
 
