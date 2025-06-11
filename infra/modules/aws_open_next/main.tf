@@ -28,6 +28,9 @@ module "server" {
   isr_queue             = module.isr_revalidation.sqs_queue
   is_streaming_enabled  = var.server.is_streaming_enabled
 
+  enable_alarms  = var.enable_alarms
+  alarms_actions = var.alarms_actions
+
   vpc = var.vpc
 }
 

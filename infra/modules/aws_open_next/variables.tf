@@ -128,3 +128,15 @@ variable "are_previews_enabled" {
   description = "Whether to enable previews."
   default     = false
 }
+
+variable "enable_alarms" {
+  type        = bool
+  description = "Whether to enable alarms for the lambda functions."
+  default     = false
+}
+
+variable "alarms_actions" {
+  type        = list(string)
+  description = "List of actions to perform when an alarm is triggered. This can include SNS topics, Lambda functions, etc. If empty, no actions will be performed."
+  default     = []
+}
