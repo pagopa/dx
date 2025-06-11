@@ -130,7 +130,7 @@ jobs:
     name: Deploy
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
-    if: ${{ !github.event.act && !inputs.enable_staging_auto_deployment  }}
+    if: ${{ !github.event.act && !inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -186,7 +186,7 @@ jobs:
     name: Auto-Approve Staging Slot Deployment
     runs-on: ubuntu-latest
     needs: [build]
-    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment  }}
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
 
     steps:
 
@@ -232,7 +232,7 @@ jobs:
     name: Deploy to Staging
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
-    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment }}
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
@@ -266,7 +266,7 @@ jobs:
     name: Deploy to Production
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
     needs: [deploy_staging]
-    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.enable_staging_auto_deployment}}
+    if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
