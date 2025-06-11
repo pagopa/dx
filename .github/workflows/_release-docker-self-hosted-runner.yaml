@@ -41,7 +41,7 @@ jobs:
       id-token: write
     env:
       IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
-      IMAGE_TAG: ${{ inputs.test_run == 'true' && github.ref_name || 'latest' }}
+      IMAGE_TAG: ${{ inputs.test_run && github.ref_name || 'latest' }}
 
     steps:
       - name: Checkout
@@ -107,6 +107,6 @@ jobs:
           build_platforms: linux/amd64
           build_args: |
             RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
-          push_to_registry: ${{ inputs.test_run == 'true' && 'false' || 'true' }}
+          push_to_registry: ${{ inputs.test_run && 'false' || 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
