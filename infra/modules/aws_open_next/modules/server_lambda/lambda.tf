@@ -2,7 +2,7 @@ resource "aws_lambda_function" "function" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  function_name = "${local.app_prefix}-lambda-${local.app_suffix}"
+  function_name = local.function_name
   description   = "OpenNext Server Lambda Function for project ${local.project}"
 
   handler       = var.handler
@@ -92,4 +92,27 @@ resource "aws_lambda_permission" "function_url_permission" {
   qualifier              = aws_lambda_alias.production.name
   principal              = "cloudfront.amazonaws.com"
   function_url_auth_type = "AWS_IAM"
+}
+
+# alarms
+resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
+  count = var.enable_alarms ? 1 : 0
+
+  alarm_name          = "LambdaErrors-${local.function_name}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 3
+
+  dimensions = {
+    FunctionName = local.function_name
+  }
+
+  alarm_description  = "Alarm when Lambda ${local.function_name} has more than 5 errors in 5 minutes"
+  treat_missing_data = "notBreaching"
+
+  alarm_actions = var.alarms_actions
 }
