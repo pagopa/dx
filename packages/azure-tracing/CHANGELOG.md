@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.1
+
+### Patch Changes
+
+- ea6e987: Improve README to clarify functions usage
+
 ## 0.4.0
 
 ### Minor Changes
