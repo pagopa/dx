@@ -33,6 +33,8 @@ jobs:
       packages: read
       actions: read
       id-token: write
+    env:
+      IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
 
     steps:
       - name: Checkout
@@ -51,7 +53,7 @@ jobs:
         id: check_image
         run: |
           # Check if the image exists in the registry
-          if docker manifest inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest > /dev/null 2>&1; then
+          if docker manifest inspect ghcr.io/$IMAGE_NAME:latest > /dev/null 2>&1; then
             echo "🟢 Image exists in the registry!"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -64,14 +66,14 @@ jobs:
         if: steps.check_image.outputs.exists == 'true'
         run: |
           # Found used digest of the latest image
-          docker pull ghcr.io/pagopa/dx-github-self-hosted-runner:latest
-          old_digest=$(docker inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest | jq '.[0].Config.Labels["base_runner_digest"]')
+          docker pull ghcr.io/$IMAGE_NAME:latest
+          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:latest | jq '.[0].Config.Labels["base_runner_digest"]')
 
           echo "Digest: $old_digest"
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
 
           # Cleanup
-          docker rmi ghcr.io/pagopa/dx-github-self-hosted-runner:latest || true
+          docker rmi ghcr.io/$IMAGE_NAME:latest || true
 
       - name: Inject digest into Dockerfile
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
@@ -92,7 +94,7 @@ jobs:
         with:
           dockerfile_path: './self-hosted-runner/Dockerfile'
           dockerfile_context: './self-hosted-runner'
-          docker_image_name: 'dx-github-self-hosted-runner'
+          docker_image_name: '${{ env.IMAGE_NAME }}'
           docker_image_description: 'DX GitHub Self-Hosted Runner'
           docker_image_authors: 'DevEx'
           build_platforms: linux/amd64
