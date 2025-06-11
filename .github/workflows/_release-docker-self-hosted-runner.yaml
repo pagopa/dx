@@ -23,6 +23,8 @@ jobs:
           latest_digest=$(echo "$digests" | jq -r '.[] | select(.metadata.container.tags | index("latest")) | .name')
           echo $latest_digest
           echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
       
   publish:
     name: Publish GitHub Self-Hosted Runner
@@ -38,6 +40,8 @@ jobs:
           digests=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /orgs/pagopa/packages/container/dx-github-self-hosted-runner/versions)
           old_digest=$(echo "$digests" | jq -r '.[] | select(.metadata.container.tags | index("latest")) | .name')
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
 
       - name: Docker Build
         uses: pagopa/dx/.github/actions/docker-build-push@main
