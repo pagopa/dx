@@ -2,6 +2,12 @@ name: Publish GitHub Self-Hosted Runner
 
 on:
   workflow_dispatch:
+    inputs:
+      test_run:
+        description: 'Run the workflow for testing purposes'
+        required: false
+        default: false
+        type: boolean
   # schedule:
   #   - cron: '0 8 */14 * *' # Run every 14 days at 08:00 UTC
 
@@ -35,6 +41,7 @@ jobs:
       id-token: write
     env:
       IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
+      IMAGE_TAG: ${{ inputs.test_run == 'true' && github.ref_name || 'latest' }}
 
     steps:
       - name: Checkout
@@ -53,7 +60,7 @@ jobs:
         id: check_image
         run: |
           # Check if the image exists in the registry
-          if docker manifest inspect ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner > /dev/null 2>&1; then
+          if docker manifest inspect ghcr.io/$IMAGE_NAME:$IMAGE_TAG > /dev/null 2>&1; then
             echo "🟢 Image exists in the registry!"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -66,14 +73,14 @@ jobs:
         if: steps.check_image.outputs.exists == 'true'
         run: |
           # Found used digest of the latest image
-          docker pull ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner
-          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner | jq -r '.[0].Config.Labels["base_runner_digest"]')
+          docker pull ghcr.io/$IMAGE_NAME:$IMAGE_TAG
+          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:$IMAGE_TAG | jq -r '.[0].Config.Labels["base_runner_digest"]')
 
           echo "🔎 Used Digest: $old_digest"
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
 
           # Cleanup
-          docker rmi ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner || true
+          docker rmi ghcr.io/$IMAGE_NAME:$IMAGE_TAG || true
 
       - name: Inject digest into Dockerfile
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
@@ -100,6 +107,6 @@ jobs:
           build_platforms: linux/amd64
           build_args: |
             RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
-          push_to_registry: true
+          push_to_registry: ${{ inputs.test_run == 'true' && 'false' || 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
