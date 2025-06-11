@@ -1,6 +1,6 @@
 {
   "name": "self-hosted-runner",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "GitHub Self-Hosted Runner"
 }
