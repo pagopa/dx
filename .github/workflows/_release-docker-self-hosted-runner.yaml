@@ -4,9 +4,15 @@ on:
   workflow_dispatch:
   # schedule:
   #   - cron: '0 8 */14 * *' # Run every 14 days at 08:00 UTC
-  push:
-    branches:
-      - feat-create-new-docker-image-self-hosted-runner # for testing purposes
+  # push:
+  #   branches:
+  #     - feat-create-new-docker-image-self-hosted-runner # for testing purposes
+
+permissions:
+  contents: read
+  packages: read
+  actions: read
+  id-token: write
 
 jobs:
   found_sha:
