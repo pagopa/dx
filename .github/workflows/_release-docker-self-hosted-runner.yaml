@@ -67,9 +67,9 @@ jobs:
         run: |
           # Found used digest of the latest image
           docker pull ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner
-          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner | jq '.[0].Config.Labels["base_runner_digest"]')
+          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:feat-create-new-docker-image-self-hosted-runner | jq -r '.[0].Config.Labels["base_runner_digest"]')
 
-          echo "Digest: $old_digest"
+          echo "🔎 Used Digest: $old_digest"
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
 
           # Cleanup
