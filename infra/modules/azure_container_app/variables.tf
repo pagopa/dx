@@ -164,12 +164,12 @@ variable "autoscaler" {
         secret_name       = string
         trigger_parameter = string
       })
-    })))
+    })), [])
 
     http_scalers = optional(list(object({
       name                = string
       concurrent_requests = number,
-    })))
+    })), [])
 
     custom_scalers = optional(list(object({
       name             = string
@@ -179,9 +179,10 @@ variable "autoscaler" {
       authentication = optional(object({
         secret_name       = string
         trigger_parameter = string
-      }), null)
-    })))
+      }))
+    })), [])
   })
 
+  default     = null
   description = "Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/"
 }

@@ -50,13 +50,6 @@ run "container_app_is_correct_plan" {
       }
     ]
 
-    autoscaler = {
-      replicas = {
-        minimum = 1
-        maximum = 3
-      }
-    }
-
     secrets = [
       {
         name                = run.setup_tests.key_vault_secret1.name
@@ -90,12 +83,12 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_container_app.this.template[0].min_replicas == 1
+    condition     = azurerm_container_app.this.template[0].min_replicas == 0
     error_message = "The container app minimum replicas is not correct"
   }
 
   assert {
-    condition     = azurerm_container_app.this.template[0].max_replicas == 3
+    condition     = azurerm_container_app.this.template[0].max_replicas == 1
     error_message = "The container app maximum replicas is not correct"
   }
 
@@ -211,13 +204,6 @@ run "container_app_correct_container_name" {
         }
       }
     ]
-
-    autoscaler = {
-      replicas = {
-        minimum = 1
-        maximum = 3
-      }
-    }
   }
 
   assert {
@@ -256,13 +242,6 @@ run "container_app_correct_custom_container_name" {
         }
       }
     ]
-
-    autoscaler = {
-      replicas = {
-        minimum = 1
-        maximum = 3
-      }
-    }
   }
 
   assert {
@@ -273,6 +252,172 @@ run "container_app_correct_custom_container_name" {
   assert {
     condition     = azurerm_container_app.this.template[0].container[0].name == "custom-nginx"
     error_message = "The container app container name auto-generated is wrong"
+  }
+}
+
+run "container_app_correct_replicas" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    tier = "xs"
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    container_app_environment_id = run.setup_tests.container_app_environment_id
+    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
+
+    container_app_templates = [
+      {
+        image = "nginx:latest"
+        name  = "custom-nginx"
+
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+
+    autoscaler = {
+      replicas = {
+        minimum = 0
+        maximum = 5
+      }
+    }
+
+    secrets = [
+      {
+        name                = run.setup_tests.key_vault_secret1.name
+        key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.template[0].azure_queue_scale_rule) == 0
+    error_message = "The container app should not have the Azure Queue Scale Rule configured"
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.template[0].http_scale_rule) == 0
+    error_message = "The container app should not have the Http Scale Rule configured"
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.template[0].custom_scale_rule) == 0
+    error_message = "The container app should not have the Custom Scale Rule configured"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].min_replicas == 0
+    error_message = "The container app should have minimum replicas set to 0"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].max_replicas == 5
+    error_message = "The container app should have maximum replicas set to 5"
+  }
+}
+
+run "container_app_correct_custom_autoscaler" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    tier = "xs"
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    container_app_environment_id = run.setup_tests.container_app_environment_id
+    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
+
+    container_app_templates = [
+      {
+        image = "nginx:latest"
+        name  = "custom-nginx"
+
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+
+    autoscaler = {
+      replicas = {
+        minimum = 0
+        maximum = 5
+      }
+
+      custom_scalers = [
+        {
+          name             = "service-bus",
+          custom_rule_type = "azure-servicebus",
+          metadata = {
+            queueName              = "queue-test",
+            namespace              = "dx-d-itn-test-sbns-01"
+            activationMessageCount = "2"
+          }
+        }
+      ]
+    }
+
+    secrets = [
+      {
+        name                = run.setup_tests.key_vault_secret1.name
+        key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.template[0].azure_queue_scale_rule) == 0
+    error_message = "The container app should not have the Azure Queue Scale Rule configured"
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.template[0].http_scale_rule) == 0
+    error_message = "The container app should not have the Http Scale Rule configured"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].name == "service-bus"
+    error_message = "The container app does not have the Custom Scale Rule configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].custom_rule_type == "azure-servicebus"
+    error_message = "The container app does not have the Custom Scale Rule configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].metadata["queueName"] == "queue-test"
+    error_message = "The container app does not have the Custom Scale Rule metadata configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].metadata["namespace"] == "dx-d-itn-test-sbns-01"
+    error_message = "The container app does not have the Custom Scale Rule metadata configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].metadata["activationMessageCount"] == "2"
+    error_message = "The container app does not have the Custom Scale Rule metadata configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].min_replicas == 0
+    error_message = "The container app should have minimum replicas set to 0"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].max_replicas == 5
+    error_message = "The container app should have maximum replicas set to 5"
   }
 }
 
@@ -393,5 +538,15 @@ run "container_app_correct_autoscalers" {
   assert {
     condition     = azurerm_container_app.this.template[0].custom_scale_rule[0].metadata["activationMessageCount"] == "2"
     error_message = "The container app does not have the Custom Scale Rule metadata configured correctly"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].min_replicas == 0
+    error_message = "The container app should have minimum replicas set to 0"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].max_replicas == 5
+    error_message = "The container app should have maximum replicas set to 5"
   }
 }

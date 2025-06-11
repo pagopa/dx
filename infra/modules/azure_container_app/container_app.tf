@@ -41,10 +41,12 @@ resource "azurerm_container_app" "this" {
 
   template {
     termination_grace_period_seconds = 30
-    min_replicas                     = var.autoscaler.replicas.minimum
-    max_replicas                     = var.autoscaler.replicas.maximum
+
+    min_replicas = local.replica_minimum
+    max_replicas = local.replica_maximum
+
     dynamic "azure_queue_scale_rule" {
-      for_each = var.autoscaler.azure_queue_scalers == null ? [] : var.autoscaler.azure_queue_scalers
+      for_each = try(var.autoscaler.azure_queue_scalers, [])
       content {
         name         = azure_queue_scale_rule.value.queue_name
         queue_name   = azure_queue_scale_rule.value.queue_name
@@ -58,7 +60,7 @@ resource "azurerm_container_app" "this" {
     }
 
     dynamic "http_scale_rule" {
-      for_each = var.autoscaler.http_scalers == null ? [] : var.autoscaler.http_scalers
+      for_each = try(var.autoscaler.http_scalers, [])
       content {
         name                = http_scale_rule.value.name
         concurrent_requests = http_scale_rule.value.concurrent_requests
@@ -66,7 +68,7 @@ resource "azurerm_container_app" "this" {
     }
 
     dynamic "custom_scale_rule" {
-      for_each = var.autoscaler.custom_scalers == null ? [] : var.autoscaler.custom_scalers
+      for_each = try(var.autoscaler.custom_scalers, [])
       content {
         name             = custom_scale_rule.value.name
         custom_rule_type = custom_scale_rule.value.custom_rule_type
