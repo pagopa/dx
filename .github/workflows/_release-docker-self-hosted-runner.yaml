@@ -50,6 +50,7 @@ jobs:
       packages: write
       actions: read
       id-token: write
+      attestations: write
     env:
       IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
       IMAGE_TAG: ${{ inputs.test_run && github.ref_name || 'latest' }}
