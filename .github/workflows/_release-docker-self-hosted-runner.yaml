@@ -12,18 +12,21 @@ jobs:
   found_sha:
     name: Found latest Github Self-Hosted Runner SHA
     runs-on: ubuntu-latest
+    outputs:
+      latest_digest: ${{ steps.latest_digest.outputs.latest_digest }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+      # - name: Setup Docker buildx
+      #   uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Get official Runner image digests
         id: latest_digest
         run: |
-          latest_digest=$(docker buildx imagetools inspect ghcr.io/actions/actions-runner:latest --format "{{json .Manifest}}" | jq -r '.manifests[] | select(.platform.architecture == "amd64" and .platform.os == "linux") | .digest')
+          # Fetch the latest digest of the official GitHub Actions Runner image for amd64 Linux
+          latest_digest=$(docker manifest inspect ghcr.io/actions/actions-runner:latest | jq -r '.manifests[] | select(.platform.architecture == "amd64" and .platform.os == "linux") | .digest')
           echo $latest_digest
           echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
       
@@ -41,12 +44,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Container registry Login
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if image exists
+        id: check_image
+        run: |
+          # Check if the image exists in the registry
+          if docker manifest inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Read previous digest
         id: old_digest
+        if: steps.check_image.outputs.exists == 'true'
         run: |
+          # Found used digest of the latest image
           docker pull ghcr.io/pagopa/dx-github-self-hosted-runner:latest
           old_digest=$(docker inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest | jq '.[0].Config.Labels["base_runner_digest"]')
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
+
+          # Cleanup
+          docker rmi ghcr.io/pagopa/dx-github-self-hosted-runner:latest || true
 
       - name: Inject digest into Dockerfile
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
@@ -72,7 +99,7 @@ jobs:
           docker_image_authors: 'DevEx'
           build_platforms: linux/amd64
           build_args: |
-            RUNNER_DIGEST=${{ steps.found_sha.outputs.latest_digest }}
+            RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
           push_to_registry: false # For Testing purposes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
