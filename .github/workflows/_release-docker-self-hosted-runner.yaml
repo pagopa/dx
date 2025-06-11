@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   # schedule:
   #   - cron: '0 8 */14 * *' # Run every 14 days at 08:00 UTC
-  # push:
-  #   branches:
-  #     - feat-create-new-docker-image-self-hosted-runner # for testing purposes
 
 jobs:
   found_sha:
@@ -18,9 +15,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      # - name: Setup Docker buildx
-      #   uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Get official Runner image digests
         id: latest_digest
@@ -58,8 +52,10 @@ jobs:
         run: |
           # Check if the image exists in the registry
           if docker manifest inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest > /dev/null 2>&1; then
+            echo "🟢 Image exists in the registry!"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
+            echo "🔴 Image doesn't exist in the registry"
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
@@ -70,6 +66,8 @@ jobs:
           # Found used digest of the latest image
           docker pull ghcr.io/pagopa/dx-github-self-hosted-runner:latest
           old_digest=$(docker inspect ghcr.io/pagopa/dx-github-self-hosted-runner:latest | jq '.[0].Config.Labels["base_runner_digest"]')
+
+          echo "Digest: $old_digest"
           echo "digest=$old_digest" >> $GITHUB_OUTPUT
 
           # Cleanup
@@ -78,7 +76,7 @@ jobs:
       - name: Inject digest into Dockerfile
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
         run: |
-          echo "Updating Dockerfile..."
+          echo "⏳ Updating Dockerfile..."
           
           # Construct the new FROM statement
           new_from="FROM ghcr.io/actions/actions-runner:latest@${{ needs.found_sha.outputs.latest_digest }} AS base"
@@ -100,6 +98,6 @@ jobs:
           build_platforms: linux/amd64
           build_args: |
             RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
-          push_to_registry: false # For Testing purposes
+          push_to_registry: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
