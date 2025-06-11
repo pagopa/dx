@@ -1,0 +1,35 @@
+name: Call Release Candidate Reusable Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull Request Number'
+        required: true
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  call_release_candidate:
+    name: Call Release Candidate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Release Candidate Reusable Workflow
+        uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
+        secrets:
+          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+        with:
+          pr_number: ${{ inputs.pr_number }}
+
+  call_snapshot:
+    name: Call Snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Release Candidate Reusable Workflow
+        uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
+        secrets:
+          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+        with:
+          pr_number: ${{ inputs.pr_number }}
+          distribution_type: alpha
