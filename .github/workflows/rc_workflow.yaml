@@ -7,21 +7,58 @@ on:
 jobs:
   call_release_candidate:
     name: Call Release Candidate
-    concurrency: call-release-candidate-${{ github.ref }}
-    uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
-    secrets:
-      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
-      npm_token: ${{ secrets.NPM_TOKEN }}
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency: call-rc-${{ github.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-tags: 'true'
+          fetch-depth: 0
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Create Release Candidate
+        uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
+        secrets:
+          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+        with:
+          pr_number: ${{ github.event.pull_request.number }}
+          distribution_type: alpha
 
   call_snapshot:
     name: Call Snapshot
+    permissions:
+      contents: write
+      pull-requests: write
     concurrency: call-snapshot-${{ github.ref }}
-    uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
-    secrets:
-      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
-      npm_token: ${{ secrets.NPM_TOKEN }}
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
-      distribution_type: alpha
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        with:
+          fetch-tags: 'true'
+          fetch-depth: 0
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Create Snapshot
+        uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
+        secrets:
+          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+        with:
+          pr_number: ${{ github.event.pull_request.number }}
+          distribution_type: alpha
