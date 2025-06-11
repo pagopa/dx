@@ -13,27 +13,27 @@ variable "environment" {
 
 variable "alerts_on_active_messages" {
   type = object({
-    description   = string
-    entity_names  = list(string)
-    threshold     = optional(number, 0)
-    severity      = optional(string, "Error")
-    auto_mitigate = optional(bool, true)
-    frequency     = optional(string, "PT1M")
-    window_size   = optional(string, "PT5M")
-    enable        = optional(bool, true)
+    description     = string
+    entity_names    = list(string)
+    threshold       = optional(number, 10)
+    severity        = optional(string, "Error")
+    auto_mitigate   = optional(bool, true)
+    check_every     = optional(string, "PT15M")
+    lookback_period = optional(string, "PT30M")
+    enable          = optional(bool, true)
   })
 
   default     = null
   description = <<EOF
-"Configure alert over messages moved in dead-letter queue. If set to null, no alert will be created.
-- "description" is used to describe the alert in Azure Monitor
-- "entity_names" is the list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string."
-- "threshold" is the number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 0.
+"Configure alert over messages moved in dead-letter queue. If set to null, no alert will be created
+- "description": used to describe the alert in Azure Monitor
+- "entity_names": list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string
+- "threshold": the average number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 10.
 - "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive)"
 - "auto_mitigate": indicates whether the alert should automatically resolve when the condition is no longer met. Default is true"
-- "frequency" is the frequency at which the alert rule is evaluted. Default is PT1M (1 minute). Valid values are ISO 8601 durations"
-- "window_size": the time window over which the alert rule is evaluated. Default is PT5M (5 minutes). Valid values are ISO 8601 durations"
-- "enable": indicates whether alerts are enabled or not. Default is true.
+- "check_every": frequency at which the alert rule is evaluted. Default is PT15M (15 minutes). Valid values are ISO 8601 durations"
+- "lookback_period": the time window over which the alert rule is evaluated. Default is PT30M (30 minutes). Valid values are ISO 8601 durations"
+- "enable": indicates whether alerts are enabled or not. Default is true
 EOF
 
   validation {
@@ -54,26 +54,26 @@ EOF
 
 variable "alerts_on_dlq_messages" {
   type = object({
-    description   = string
-    entity_names  = list(string)
-    threshold     = optional(number, 0)
-    severity      = optional(string, "Error")
-    auto_mitigate = optional(bool, true)
-    frequency     = optional(string, "PT1M")
-    window_size   = optional(string, "PT5M")
+    description     = string
+    entity_names    = list(string)
+    threshold       = optional(number, 0)
+    severity        = optional(string, "Error")
+    auto_mitigate   = optional(bool, true)
+    check_every     = optional(string, "PT1M")
+    lookback_period = optional(string, "PT5M")
   })
 
   default     = null
   description = <<EOF
 "Configure alert over messages moved in dead-letter queue. If set to null, no alert will be created.
-- "description" is used to describe the alert in Azure Monitor
-- "entity_names" is the list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string."
-- "threshold" is the number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 0.
+- "description": used to describe the alert in Azure Monitor
+- "entity_names": list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string
+- "threshold": the average number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 0
 - "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive)"
 - "auto_mitigate": indicates whether the alert should automatically resolve when the condition is no longer met. Default is true"
-- "frequency" is the frequency at which the alert rule is evaluted. Default is PT1M (1 minute). Valid values are ISO 8601 durations"
-- "window_size": the time window over which the alert rule is evaluated. Default is PT5M (5 minutes). Valid values are ISO 8601 durations"
-- "enable": indicates whether alerts are enabled or not. Default is true.
+- "check_every": frequency at which the alert rule is evaluted. Default is PT1M (1 minute). Valid values are ISO 8601 durations"
+- "lookback_period": the time window over which the alert rule is evaluated. Default is PT5M (5 minutes). Valid values are ISO 8601 durations"
+- "enable": indicates whether alerts are enabled or not. Default is true
 EOF
 
   validation {
