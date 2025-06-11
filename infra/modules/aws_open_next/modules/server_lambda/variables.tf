@@ -112,3 +112,17 @@ variable "isr_queue" {
   })
   description = "The ARN and URL of the SQS queue used for ISR revalidation."
 }
+
+
+variable "enable_alarms" {
+  type        = bool
+  description = "Whether to enable CloudWatch alarms for the lambda function. "
+  default     = false
+}
+
+
+variable "alarms_actions" {
+  type        = list(string)
+  description = "List of actions to perform when an alarm is triggered. This can include SNS topics, Lambda functions, etc. If empty, no actions will be performed."
+  default     = []
+}
