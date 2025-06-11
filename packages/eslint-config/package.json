@@ -3,6 +3,9 @@
   "type": "module",
   "version": "4.0.5",
   "main": "index.js",
+  "repository": {
+    "url": "https://github.com/pagopa/dx"
+  },
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
