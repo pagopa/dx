@@ -1,35 +1,27 @@
 name: Call Release Candidate Reusable Workflow
 on:
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'Pull Request Number'
-        required: true
+  pull_request:
+    types: [opened, synchronize, reopened]
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   call_release_candidate:
     name: Call Release Candidate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Call Release Candidate Reusable Workflow
-        uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
-        secrets:
-          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
-          npm_token: ${{ secrets.NPM_TOKEN }}
-        with:
-          pr_number: ${{ inputs.pr_number }}
+    concurrency: call-release-candidate-${{ github.ref }}
+    uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
+    secrets:
+      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+      npm_token: ${{ secrets.NPM_TOKEN }}
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
 
   call_snapshot:
     name: Call Snapshot
-    runs-on: ubuntu-latest
-    steps:
-      - name: Call Release Candidate Reusable Workflow
-        uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
-        secrets:
-          gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
-          npm_token: ${{ secrets.NPM_TOKEN }}
-        with:
-          pr_number: ${{ inputs.pr_number }}
-          distribution_type: alpha
+    concurrency: call-snapshot-${{ github.ref }}
+    uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
+    secrets:
+      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+      npm_token: ${{ secrets.NPM_TOKEN }}
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      distribution_type: alpha
