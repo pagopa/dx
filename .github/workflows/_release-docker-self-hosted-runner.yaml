@@ -1,0 +1,56 @@
+name: Publish GitHub Self-Hosted Runner
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 8 */14 * *' # Run every 14 days at 08:00 UTC
+  push:
+    branches:
+      - feat-create-new-docker-image-self-hosted-runner # for testing purposes
+
+jobs:
+  found_sha:
+    name: Found latest Github Self-Hosted Runner SHA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      
+      - name: Get official Runner image digests
+        id: latest_digest
+        run: |
+          digests=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /orgs/actions/packages/container/actions-runner/versions)
+          latest_digest=$(echo "$digests" | jq -r '.[] | select(.metadata.container.tags | index("latest")) | .name')
+          echo $latest_digest
+          echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
+      
+  publish:
+    name: Publish GitHub Self-Hosted Runner
+    runs-on: ubuntu-latest
+    needs: [found_sha]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Read previous digest
+        id: old_digest
+        run: |
+          digests=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /orgs/pagopa/packages/container/dx-github-self-hosted-runner/versions)
+          old_digest=$(echo "$digests" | jq -r '.[] | select(.metadata.container.tags | index("latest")) | .name')
+          echo "digest=$old_digest" >> $GITHUB_OUTPUT
+
+      - name: Docker Build
+        uses: pagopa/dx/.github/actions/docker-build-push@main
+        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
+        with:
+          dockerfile_path: './self-hosted-runner/Dockerfile'
+          dockerfile_context: './self-hosted-runner'
+          docker_image_name: 'dx-github-self-hosted-runner'
+          docker_image_description: 'DX GitHub Self-Hosted Runner'
+          docker_image_authors: 'DevEx'
+          build_platforms: linux/amd64
+          build_args: |
+            RUNNER_DIGEST=${{ steps.found_sha.outputs.latest_digest }}
+          push_to_registry: false # For Testing purposes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

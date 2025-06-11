@@ -9,7 +9,7 @@ on:
 jobs:
   github_runner:
     uses: ./.github/workflows/docker_image_build.yaml
-    name: GitHub Self-Hosted Runner
+    name: Build GitHub Self-Hosted Runner
     permissions:
       contents: read
       actions: read

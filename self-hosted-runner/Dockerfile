@@ -1,5 +1,6 @@
 # === Stage 1: Use base Runner and install tools ===
-FROM ghcr.io/actions/actions-runner:latest AS base
+ARG RUNNER_DIGEST
+FROM ghcr.io/actions/actions-runner:@${RUNNER_DIGEST} AS base
 
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
