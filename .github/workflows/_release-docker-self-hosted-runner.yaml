@@ -1,5 +1,11 @@
 name: Publish GitHub Self-Hosted Runner
 
+# This workflow publishes the latest GitHub Self-Hosted Runner image to the GitHub Container Registry.
+# It checks for the latest official Runner image digest, updates the Dockerfile if necessary,
+# and builds and pushes the new image to the registry.
+# The workflow is scheduled to run every 2 months on the 1st day at 08:00 UTC.
+# It can also be triggered manually for testing purposes using input 'test_run'.
+
 on:
   workflow_dispatch:
     inputs:
@@ -8,8 +14,8 @@ on:
         required: false
         default: false
         type: boolean
-  # schedule:
-  #   - cron: '0 8 */14 * *' # Run every 14 days at 08:00 UTC
+  schedule:
+    - cron: '0 8 1 */2 *' # Every 2 months on the 1st day at 08:00 UTC
 
 jobs:
   found_sha:
