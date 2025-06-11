@@ -44,14 +44,15 @@ module "sbns_alert" {
 
   environment = local.environment
 
-  entity_names = [
-    azurerm_servicebus_queue.example.name,
-    azurerm_servicebus_topic.example.name
-  ]
+  alerts_on_active_messages = {
+    entity_names = [
+      azurerm_servicebus_queue.example.name,
+      azurerm_servicebus_topic.example.name
+    ]
+    description = "A test alert"
+  }
 
   service_bus_namespace_id = module.sbns.id
-
-  description = "A test alert"
 
   action_group_ids = [azurerm_monitor_action_group.dx.id]
 

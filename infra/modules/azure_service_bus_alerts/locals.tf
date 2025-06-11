@@ -19,5 +19,6 @@ locals {
     "Informational" = 3
     "Verbose"       = 4
   }
-  severity = local.severity_map[var.severity]
+  dlq_severity    = try(local.severity_map[var.alerts_on_dlq_messages.severity], 1)
+  active_severity = try(local.severity_map[var.alerts_on_active_messages.severity], 1)
 }
