@@ -1,9 +1,32 @@
 #!/bin/bash
 set -e
 
-if [[ -z "$GITHUB_URL" || -z "$RUNNER_TOKEN" ]]; then
-  echo "ERROR: GITHUB_URL and RUNNER_TOKEN are required"
+if [[ -z "$GITHUB_URL" ]]; then
+  echo "ERROR: GITHUB_URL is required"
   exit 1
+fi
+
+if [[ -z "$RUNNER_TOKEN" ]]; then
+  if [[ -z "$GITHUB_PAT" || -z "$TOKEN_API_URL" ]]; then
+    echo "ERROR: RUNNER_TOKEN is required, or provide GITHUB_PAT and TOKEN_API_URL to generate it"
+    exit 1
+  else
+    echo "Generating RUNNER_TOKEN using GITHUB_PAT and TOKEN_API_URL..."
+    RUNNER_TOKEN="$(curl -X POST -fsSL \
+      -H 'Accept: application/vnd.github.v3+json' \
+      -H "Authorization: Bearer $GITHUB_PAT" \
+      -H 'X-GitHub-Api-Version: 2022-11-28' \
+      "$TOKEN_API_URL" \
+      | jq -r '.token')"
+    
+    if [[ -z "$RUNNER_TOKEN" || "$RUNNER_TOKEN" == "null" ]]; then
+      echo "ERROR: Failed to generate RUNNER_TOKEN"
+      exit 1
+    fi
+
+    export RUNNER_TOKEN
+    unset GITHUB_PAT
+  fi
 fi
 
 cd /home/runner

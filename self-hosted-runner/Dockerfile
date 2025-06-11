@@ -10,14 +10,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # === Stage 2: Install Node.js ===
-FROM base AS node
+FROM base AS nodejs
 ENV NODE_VERSION=20.12.2
 RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz | \
     tar -xJ -C /usr/local --strip-components=1 && \
     corepack enable
 
 # === Stage 3: Install Azure CLI ===
-FROM node AS azure
+FROM nodejs AS azure
 RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
 # === Stage 4: Install AWS CLI ===
