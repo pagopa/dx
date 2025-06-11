@@ -3,6 +3,11 @@
   "version": "0.4.1",
   "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/azure-tracing"
+  },
   "keywords": [
     "azure",
     "azuremonitor",
