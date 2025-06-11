@@ -1,22 +1,22 @@
 #!/bin/bash
 set -e
 
-if [[ -z "$GITHUB_URL" ]]; then
-  echo "ERROR: GITHUB_URL is required"
+if [[ -z "$REPO_URL" ]]; then
+  echo "ERROR: REPO_URL is required"
   exit 1
 fi
 
 if [[ -z "$RUNNER_TOKEN" ]]; then
-  if [[ -z "$GITHUB_PAT" || -z "$TOKEN_API_URL" ]]; then
-    echo "ERROR: RUNNER_TOKEN is required, or provide GITHUB_PAT and TOKEN_API_URL to generate it"
+  if [[ -z "$GITHUB_PAT" || -z "$REGISTRATION_TOKEN_API_URL" ]]; then
+    echo "ERROR: RUNNER_TOKEN is required, or provide GITHUB_PAT and REGISTRATION_TOKEN_API_URL to generate it"
     exit 1
   else
-    echo "Generating RUNNER_TOKEN using GITHUB_PAT and TOKEN_API_URL..."
+    echo "Generating RUNNER_TOKEN using GITHUB_PAT and REGISTRATION_TOKEN_API_URL..."
     RUNNER_TOKEN="$(curl -X POST -fsSL \
       -H 'Accept: application/vnd.github.v3+json' \
       -H "Authorization: Bearer $GITHUB_PAT" \
       -H 'X-GitHub-Api-Version: 2022-11-28' \
-      "$TOKEN_API_URL" \
+      "$REGISTRATION_TOKEN_API_URL" \
       | jq -r '.token')"
     
     if [[ -z "$RUNNER_TOKEN" || "$RUNNER_TOKEN" == "null" ]]; then
@@ -45,14 +45,14 @@ if [ -z "$LABELS" ]; then
   export LABELS=""
 fi
 
-printf "ℹ️ Configuring GitHub Runner for %s\n\t" "$GITHUB_URL"
+printf "ℹ️ Configuring GitHub Runner for %s\n\t" "$REPO_URL"
 printf "ℹ️ Runner Name: %s\n\t" "$RUNNER_NAME"
 printf "ℹ️ Working Directory: %s\n\t" "$WORK_DIR"
 
 if [ ! -f ".runner" ]; then
   echo "Configuring the runner..."
   ./config.sh \
-    --url "$GITHUB_URL" \
+    --url "$REPO_URL" \
     --token "$RUNNER_TOKEN" \
     --name "$RUNNER_NAME" \
     --work "$WORK_DIR" \
