@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "main": "index.js",
   "repository": {
     "type": "git",

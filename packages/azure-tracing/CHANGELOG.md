@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.2
+
+### Patch Changes
+
+- 4316a40: Add the `repository` block in the `package.json` in order to verify provenance attestation
+
 ## 0.4.1
 
 ### Patch Changes
