@@ -16,6 +16,11 @@ on:
         type: boolean
   schedule:
     - cron: '0 8 1 */2 *' # Every 2 months on the 1st day at 08:00 UTC
+  push:
+    branches:
+      - main
+    paths:
+      - 'self-hosted-runner/**'
 
 jobs:
   found_sha:
@@ -55,6 +60,7 @@ jobs:
 
       - name: Container registry Login
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        if: github.event_name != 'push'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -64,6 +70,7 @@ jobs:
 
       - name: Check if image exists
         id: check_image
+        if: github.event_name != 'push'
         run: |
           # Check if the image exists in the registry
           if docker manifest inspect ghcr.io/$IMAGE_NAME:$IMAGE_TAG > /dev/null 2>&1; then
@@ -76,7 +83,7 @@ jobs:
 
       - name: Read previous digest
         id: old_digest
-        if: steps.check_image.outputs.exists == 'true'
+        if: steps.check_image.outputs.exists == 'true' && github.event_name != 'push'
         run: |
           # Found used digest of the latest image
           docker pull ghcr.io/$IMAGE_NAME:$IMAGE_TAG
@@ -89,7 +96,7 @@ jobs:
           docker rmi ghcr.io/$IMAGE_NAME:$IMAGE_TAG || true
 
       - name: Inject digest into Dockerfile
-        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
+        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
         run: |
           echo "⏳ Updating Dockerfile..."
           
@@ -103,7 +110,7 @@ jobs:
 
       - name: Docker Build
         uses: pagopa/dx/.github/actions/docker-build-push@main
-        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest
+        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
         with:
           dockerfile_path: './self-hosted-runner/Dockerfile'
           dockerfile_context: './self-hosted-runner'
