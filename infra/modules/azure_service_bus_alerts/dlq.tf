@@ -25,14 +25,10 @@ resource "azurerm_monitor_metric_alert" "dlq" {
     skip_metric_validation = false
     threshold              = var.alerts_on_dlq_messages.threshold
 
-    dynamic "dimension" {
-      for_each = var.alerts_on_dlq_messages.entity_names
-
-      content {
-        name     = "EntityName"
-        operator = "Include"
-        values   = [dimension.value]
-      }
+    dimension {
+      name     = "EntityName"
+      operator = "Include"
+      values   = var.alerts_on_dlq_messages.entity_names
     }
   }
 

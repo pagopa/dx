@@ -16,7 +16,7 @@ variable "alerts_on_active_messages" {
     description     = string
     entity_names    = list(string)
     threshold       = optional(number, 10)
-    severity        = optional(string, "Error")
+    severity        = optional(string, "Warning")
     auto_mitigate   = optional(bool, true)
     check_every     = optional(string, "PT15M")
     lookback_period = optional(string, "PT30M")
@@ -29,7 +29,7 @@ variable "alerts_on_active_messages" {
 - "description": used to describe the alert in Azure Monitor
 - "entity_names": list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string
 - "threshold": the average number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 10.
-- "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive)"
+- "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive). Default is "Warning"
 - "auto_mitigate": indicates whether the alert should automatically resolve when the condition is no longer met. Default is true"
 - "check_every": frequency at which the alert rule is evaluted. Default is PT15M (15 minutes). Valid values are ISO 8601 durations"
 - "lookback_period": the time window over which the alert rule is evaluated. Default is PT30M (30 minutes). Valid values are ISO 8601 durations"
@@ -69,7 +69,7 @@ variable "alerts_on_dlq_messages" {
 - "description": used to describe the alert in Azure Monitor
 - "entity_names": list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string
 - "threshold": the average number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 0
-- "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive)"
+- "severity": valid values are "Critical", "Error", "Warning", "Informational" or "Verbose" (case-sensitive). Default is "Error"
 - "auto_mitigate": indicates whether the alert should automatically resolve when the condition is no longer met. Default is true"
 - "check_every": frequency at which the alert rule is evaluted. Default is PT1M (1 minute). Valid values are ISO 8601 durations"
 - "lookback_period": the time window over which the alert rule is evaluated. Default is PT5M (5 minutes). Valid values are ISO 8601 durations"
