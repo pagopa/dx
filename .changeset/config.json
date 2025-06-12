@@ -11,5 +11,9 @@
   "privatePackages": {
     "version": true,
     "tag": true
+  },
+  "snapshot": {
+    "prereleaseTemplate": "{tag}.{commit}",
+    "useCalculatedVersion": true
   }
 }
