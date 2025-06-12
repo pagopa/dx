@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.3.0
+
+### Minor Changes
+
+- e056b94: Add naming convention support for alerts over Service Bus entities
+
 ## 0.2.1
 
 ### Patch Changes
