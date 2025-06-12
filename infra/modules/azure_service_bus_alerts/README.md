@@ -6,7 +6,7 @@ This Terraform module provisions alerts to monitor the amount of messages in bot
 
 ## Features
 
-- **Ready-to-use**: A ready-to-use configuration to have alerts over Service Bus queues and topics.
+- **Ready-to-use**: A ready-to-use configuration to have alerts over Service Bus entities (queues and topics).
 - **Support multiple entities**: Multiple Service Bus entities could be set in a single alert as a simple string collection.
 
 ## Usage Example
@@ -20,7 +20,7 @@ An example of how to use this module can be found in the [example/simple](https:
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.2.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.3.0 |
 
 ## Modules
 
