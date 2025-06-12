@@ -19,16 +19,16 @@ jobs:
       gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
       npm_token: ${{ secrets.NPM_TOKEN }}
 
-  call_snapshot:
-    name: Call Snapshot
-    uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
-    permissions:
-      contents: write
-      pull-requests: write
-    concurrency: call-snapshot-${{ github.ref }}
-    with:
-      pr_number: ${{ github.event.pull_request.number }}
-      distribution_type: alpha
-    secrets:
-      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
-      npm_token: ${{ secrets.NPM_TOKEN }}
+#  call_snapshot:
+#    name: Call Snapshot
+#    uses: pagopa/dx-playground/.github/workflows/snapshot_command.yaml@main
+#    permissions:
+#      contents: write
+#      pull-requests: write
+#    concurrency: call-snapshot-${{ github.ref }}
+#    with:
+#      pr_number: ${{ github.event.pull_request.number }}
+#      distribution_type: alpha
+#    secrets:
+#      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+#      npm_token: ${{ secrets.NPM_TOKEN }}
