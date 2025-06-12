@@ -7,7 +7,7 @@ on:
 jobs:
   call_release_candidate:
     name: Call Release Candidate
-    uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@main
+    uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@test/pr-comment
     permissions:
       contents: write
       pull-requests: write
