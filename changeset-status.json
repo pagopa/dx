@@ -7,19 +7,19 @@
           "type": "patch"
         }
       ],
-      "summary": "Upgrade the OpenTelemetry dependencies",
-      "id": "modern-feet-return"
+      "summary": "Upgrade @azure/monitor-opentelemetry-exporter and @azure/monitor-opentelemetry",
+      "id": "small-wings-shave"
     }
   ],
   "releases": [
     {
       "name": "@pagopa/azure-tracing",
       "type": "patch",
-      "oldVersion": "0.4.2",
+      "oldVersion": "0.4.3-beta.0",
       "changesets": [
-        "modern-feet-return"
+        "small-wings-shave"
       ],
-      "newVersion": "0.4.3-beta.0"
+      "newVersion": "0.4.3-beta.1"
     }
   ],
   "preState": {
@@ -51,11 +51,12 @@
       "github_selfhosted_runner_on_container_app_jobs": "1.0.9",
       "provider-azure": "0.2.1",
       "pre_commit_scripts": "0.1.0",
-      "@pagopa/azure-tracing": "0.4.2",
+      "@pagopa/azure-tracing": "0.4.3-beta.0",
       "@pagopa/eslint-config": "4.0.6"
     },
     "changesets": [
-      "modern-feet-return"
+      "modern-feet-return",
+      "small-wings-shave"
     ]
   }
 }
