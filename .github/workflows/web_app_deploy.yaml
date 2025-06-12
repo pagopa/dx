@@ -39,7 +39,7 @@ concurrency:
 
 env:
   BUNDLE_NAME: bundle
-  RESORUCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+  RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
       - name: Build the artifact
         id: make-artifact
         env:
-          # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
+          # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependencies
           YARN_NODE_LINKER: node-modules
           YARN_NM_HOISTING_LIMITS: workspaces
         working-directory: ./out/apps/${{ env.WORKSPACE }}
@@ -155,7 +155,7 @@ jobs:
         if: ${{ !inputs.use_staging_slot }}
         run: |
           az webapp deploy \
-            --resource-group "$RESORUCE_GROUP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --src-path "$BUNDLE_NAME".zip \
             --type zip \
@@ -165,7 +165,7 @@ jobs:
         if: ${{ inputs.use_staging_slot }}
         run: |
           az webapp deploy \
-            --resource-group "$RESORUCE_GROUP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --slot staging \
             --src-path "$BUNDLE_NAME".zip \
@@ -176,7 +176,7 @@ jobs:
         if: ${{ inputs.use_staging_slot }}
         run: |
           az webapp deployment slot swap \
-            --resource-group "$RESORUCE_GROUP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --slot staging \
             --target-slot production
@@ -255,7 +255,7 @@ jobs:
       - name: Deploy to Staging Slot
         run: |
           az webapp deploy \
-            --resource-group "$RESORUCE_GROUP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --slot staging \
             --src-path "$BUNDLE_NAME".zip \
@@ -285,7 +285,7 @@ jobs:
         if: ${{ inputs.use_staging_slot }}
         run: |
           az webapp deployment slot swap \
-            --resource-group "$RESORUCE_GROUP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
             --slot staging \
             --target-slot production
