@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.3-beta.0
+
+### Patch Changes
+
+- 08cfbb5: Upgrade the OpenTelemetry dependencies
+
 ## 0.4.2
 
 ### Patch Changes
