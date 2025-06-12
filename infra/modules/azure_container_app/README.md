@@ -16,12 +16,12 @@ This Terraform module deploys an Azure Container App in a provided Azure Contain
 
 ## Tiers and Configurations
 
-| Tier | Description                                                    | CPU   | Memory |
-|------|----------------------------------------------------------------|-------|--------|
-| xs   | Minimal configuration for testing.                             | 0.25  | 0.5Gi  |
-| s    | Suitable for development, testing, and small-scale production. | 0.5   | 1Gi    |
-| m    | Low-load production environments.                              | 1.25  | 2.5Gi  |
-| l    | High-load production environments.                             | 2     | 4Gi    |
+| Tier | Description                                                    | CPU   | Memory | Replicas (Min-Max) |
+|------|----------------------------------------------------------------|-------|--------|--------------------|
+| xs   | Minimal configuration for testing.                             | 0.25  | 0.5Gi  | 0-1                |
+| s    | Suitable for development, testing, and small-scale production. | 0.5   | 1Gi    | 1-1                |
+| m    | Low-load production environments.                              | 1.25  | 2.5Gi  | 1-2                |
+| l    | High-load production environments.                             | 2     | 4Gi    | 2-4                |
 
 ## Autoscaling
 
@@ -29,6 +29,8 @@ The module can scale dynamically the instance number from 0 to 1000, according t
 
 - Browse available rules on the [Keda website](https://keda.sh/docs/latest/scalers/).
 - Set the desired scalers via the `autoscaler.custom_scalers` variable. Use the `metadata` field to pass required parameters for each scaler.
+
+The range of instances is set automatically according to the chosen tier, however it can be overridden by the `autoscaler.replicas` variable, which allows you to set a custom minimum and maximum number of replicas
 
 Moreover, the Container App Service adds a couple of built-in scalers:
 
