@@ -125,6 +125,8 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"application_insights":           "appi",
 		"log_analytics":                  "log",
 		"cdn_monitor_diagnostic_setting": "cdnp",
+		"monitor_alert_sbns_active":      "sbns-act-ma",
+		"monitor_alert_sbns_dlq":         "sbns-dlq-ma",
 
 		// Miscellaneous
 		"resource_group": "rg",

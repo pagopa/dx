@@ -195,6 +195,8 @@ The following table lists the resource types and their abbreviations used in the
 |cdn_frontdoor_profile|afd|
 |cdn_frontdoor_route|cdnr|
 |cdn_monitor_diagnostic_setting|cdnp|
+|monitor_alert_sbns_active|sbns-act-ma|
+|monitor_alert_sbns_dlq|sbns-dlq-ma|
 |container_app|ca|
 |container_app_environment|cae|
 |container_app_job|caj|
