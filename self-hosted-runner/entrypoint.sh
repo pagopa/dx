@@ -49,6 +49,8 @@ printf "ℹ️ Configuring GitHub Runner for %s\n\t" "$REPO_URL"
 printf "ℹ️ Runner Name: %s\n\t" "$RUNNER_NAME"
 printf "ℹ️ Working Directory: %s\n\t" "$WORK_DIR"
 
+# Official GitHub Actions Runner configuration script
+# https://github.com/actions/runner/blob/097ada9374c9bde944aa9fa3de59ae2e656e79cf/src/Runner.Listener/Runner.cs#L1068
 if [ ! -f ".runner" ]; then
   echo "Configuring the runner..."
   ./config.sh \
@@ -58,7 +60,9 @@ if [ ! -f ".runner" ]; then
     --work "$WORK_DIR" \
     --labels "$LABELS" \
     --unattended \
-    --replace
+    --replace \
+    --ephemeral \
+    --disableupdate
 fi
 
 # Cleanup
