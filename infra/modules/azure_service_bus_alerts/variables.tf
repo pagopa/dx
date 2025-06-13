@@ -25,7 +25,7 @@ variable "alerts_on_active_messages" {
 
   default     = null
   description = <<EOF
-"Configure alert over messages moved in dead-letter queue. If set to null, no alert will be created
+"Configure alert over the number of messages in active state. If set to null, no alert will be created
 - "description": used to describe the alert in Azure Monitor
 - "entity_names": list of Service Bus Entities (Queues or Topics) to monitor for dead-lettered messages. Each entity should be specified as a string
 - "threshold": the average number of messages that triggers the alert. It is compared using GreaterThan operator. Default value is 10.
