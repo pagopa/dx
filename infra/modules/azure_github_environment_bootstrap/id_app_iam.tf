@@ -25,6 +25,15 @@ resource "azurerm_role_assignment" "app_cd_rgs_cdn_profile_contributor" {
   description          = "Allow ${var.repository.name} App CD identity to apply purge CDNs at ${each.value} resource group scope"
 }
 
+resource "azurerm_role_assignment" "app_cd_rgs_cae_contributor" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
+  role_definition_name = "Container Apps Contributor"
+  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
+  description          = "Allow ${var.repository.name} App CD identity to apply changes to Container App Environment at ${each.value} resource group scope"
+}
+
 resource "azurerm_role_assignment" "app_cd_rgs_blob_contributor" {
   for_each = local.resource_group_ids
 
