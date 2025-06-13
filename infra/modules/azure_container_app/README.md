@@ -23,6 +23,51 @@ This Terraform module deploys an Azure Container App in a provided Azure Contain
 | m    | Low-load production environments.                              | 1.25  | 2.5Gi  | 1-2                |
 | l    | High-load production environments.                             | 2     | 4Gi    | 2-4                |
 
+## Autoscaling
+
+The module can scale dynamically the instance number from 0 to 1000, according to various metrics:
+
+- Browse available rules on the [Keda website](https://keda.sh/docs/latest/scalers/).
+- Set the desired scalers via the `autoscaler.custom_scalers` variable. Use the `metadata` field to pass required parameters for each scaler.
+
+The range of instances is set automatically according to the chosen tier, however it can be overridden by the `autoscaler.replicas` variable, which allows you to set a custom minimum and maximum number of replicas
+
+Moreover, the Container App Service adds a couple of built-in scalers:
+
+- HTTP scaler: scales the number of instances based on the HTTP traffic received by the Container App
+- Azure Queue scaler: scales the number of instances based on the number of messages in an Azure Storage Queue
+
+### Autoscaling Authentication
+
+Autoscalers can authenticate with external services using Managed Identity or connection strings.
+
+- **Managed Identity**: [Currently supported](https://learn.microsoft.com/en-us/azure/container-apps/scale-app?pivots=azure-cli#authentication-2) for Azure Queue Storage, Service Bus, and Event Hub only. Moreover, it must be configured manually as not currently supported by Terraform.
+- **Connection String**: Use the `authentication` object:
+  - `secret_name`: Name of the secret holding the connection string (must also be stored as a secret in the Container App)
+  - `trigger_parameter`: Name of the authentication parameter expected by the autoscaler (see Keda docs for each scaler)
+
+### Example of an Autoscaler Configuration with Authentication
+
+The following is an example of how to configure the [Azure Blob Storage scaler](https://keda.sh/docs/2.17/scalers/azure-storage-blob). Note, it uses [`connection`](https://keda.sh/docs/2.17/scalers/azure-storage-blob/#authentication-parameters) to tell the scaler where the connection string is stored:
+
+```hcl
+custom_scalers = [{
+  name             = "scaler-on-my-blob-storage"
+  custom_rule_type = "azure-blob"
+  metadata = {
+    blobContainerName = "my-container"
+    accountName       = "myaccount"
+    blobCount         = "5"
+  }
+  authentication = {
+    secret_name       = "blob-connection-string-in-container-app-secrets"
+    trigger_parameter = "connection"
+  }
+}]
+```
+
+---
+
 ## Usage Example
 
 A complete usage example can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app/tree/main/examples/complete) directory.
@@ -32,7 +77,7 @@ A complete usage example can be found in the [example/complete](https://github.c
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.16.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 
 ## Modules
@@ -50,6 +95,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acr_registry"></a> [acr\_registry](#input\_acr\_registry) | Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name. | `string` | `null` | no |
+| <a name="input_autoscaler"></a> [autoscaler](#input\_autoscaler) | Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/ | <pre>object({<br/>    replicas = object({<br/>      minimum = number<br/>      maximum = number<br/>    })<br/><br/>    azure_queue_scalers = optional(list(object({<br/>      queue_name   = string<br/>      queue_length = number<br/><br/>      authentication = object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      })<br/>    })), [])<br/><br/>    http_scalers = optional(list(object({<br/>      name                = string<br/>      concurrent_requests = number,<br/>    })), [])<br/><br/>    custom_scalers = optional(list(object({<br/>      name             = string<br/>      custom_rule_type = string<br/>      metadata         = map(string),<br/><br/>      authentication = optional(object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      }))<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_container_app_environment_id"></a> [container\_app\_environment\_id](#input\_container\_app\_environment\_id) | The ID of the Azure Container App Environment where the container app will be deployed. | `string` | n/a | yes |
 | <a name="input_container_app_templates"></a> [container\_app\_templates](#input\_container\_app\_templates) | List of containers to be deployed in the Container App. Each container can have its own settings, including liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name. | <pre>list(object({<br/>    image        = string<br/>    name         = optional(string, "")<br/>    app_settings = optional(map(string), {})<br/><br/>    liveness_probe = object({<br/>      failure_count_threshold = optional(number, 3)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      initial_delay    = optional(number, 30)<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    })<br/><br/>    readiness_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds        = optional(number, 10)<br/>      initial_delay           = optional(number, 30)<br/>      path                    = string<br/>      success_count_threshold = optional(number, 3)<br/>      timeout                 = optional(number, 5)<br/>      transport               = optional(string, "HTTP")<br/>    }), null)<br/><br/>    startup_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    }), null)<br/>  }))</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
