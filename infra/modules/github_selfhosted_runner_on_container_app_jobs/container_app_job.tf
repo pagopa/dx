@@ -51,7 +51,7 @@ resource "azurerm_container_app_job" "github_runner" {
   template {
     container {
       cpu    = var.container_app_environment.cpu
-      image  = "ghcr.io/pagopa/github-self-hosted-runner-azure:latest"
+      image  = var.container_app_environment.image
       memory = var.container_app_environment.memory
       name   = "github-runner"
 
@@ -63,19 +63,12 @@ resource "azurerm_container_app_job" "github_runner" {
         }
       }
 
-      env {
-        name  = "REPO_URL"
-        value = "https://github.com/${var.repository.owner}/${var.repository.name}"
-      }
-
-      env {
-        name  = "REGISTRATION_TOKEN_API_URL"
-        value = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
-      }
-
-      env {
-        name        = "GITHUB_PAT"
-        secret_name = var.key_vault.secret_name
+      dynamic "env" {
+        for_each = local.runner_env_vars
+        content {
+          name  = env.key
+          value = env.value
+        }
       }
     }
   }
