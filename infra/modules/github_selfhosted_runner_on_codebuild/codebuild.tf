@@ -8,10 +8,10 @@ resource "aws_codebuild_project" "github_runner" {
   }
 
   environment {
-    image                       = var.docker_image != null ? var.docker_image : "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
-    compute_type                = local.compute_type[var.tier]
-    type                        = "LINUX_CONTAINER"
-    privileged_mode             = true
+    image           = var.docker_image != null ? var.docker_image : "aws/codebuild/amazonlinux2-x86_64-standard:5.0"
+    compute_type    = local.compute_type[var.tier]
+    type            = "LINUX_CONTAINER"
+    privileged_mode = true
 
     dynamic "environment_variable" {
       for_each = var.env_variables
