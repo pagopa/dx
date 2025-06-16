@@ -15,15 +15,20 @@ outputs:
 
 runs:
   using: "composite"
+  env:
+    CURRENT_REF: ${{ inputs.current_ref }}
   steps:
     - name: Get modified providers
       id: get-providers
       shell: bash
       run: |
         DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
-        echo "CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}" >> $GITHUB_ENV
+        if [ "$CURRENT_REF" != "" ]; then
+          CURRENT_BRANCH_SHA=$CURRENT_REF
+        else
+          CURRENT_BRANCH_SHA=${{ github.sha }}
+        fi
         echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
-        CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}
         echo "Current branch SHA: $CURRENT_BRANCH_SHA"
 
         folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA apps/providers \
