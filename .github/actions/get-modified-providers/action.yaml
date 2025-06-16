@@ -15,11 +15,11 @@ outputs:
 
 runs:
   using: "composite"
-  env:
-    CURRENT_REF: ${{ inputs.current_ref }}
   steps:
     - name: Get modified providers
       id: get-providers
+      env:
+        CURRENT_REF: ${{ inputs.current_ref }}
       shell: bash
       run: |
         DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
