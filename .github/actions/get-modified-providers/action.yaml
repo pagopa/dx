@@ -15,14 +15,13 @@ outputs:
 
 runs:
   using: "composite"
-  env:
-    CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}
   steps:
     - name: Get modified providers
       id: get-providers
       shell: bash
       run: |
         DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
+        echo "CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}" >> $GITHUB_ENV
         echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
         echo "Current branch SHA: $CURRENT_BRANCH_SHA"
 
