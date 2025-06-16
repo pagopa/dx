@@ -10,7 +10,7 @@ export default defineConfig({
     "!src/azure/monitor/env.ts",
     "!src/azure/opentelemetry/azure-undici-instrumentation.ts",
   ],
-  format: ["esm"],
+  format: ["esm", "cjs"],
   platform: "node",
   sourcemap: true,
   splitting: false,
