@@ -6274,6 +6274,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_service_bus_alerts@workspace:infra/modules/azure_service_bus_alerts":
+  version: 0.0.0-use.local
+  resolution: "azure_service_bus_alerts@workspace:infra/modules/azure_service_bus_alerts"
+  languageName: unknown
+  linkType: soft
+
 "azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace":
   version: 0.0.0-use.local
   resolution: "azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace"
