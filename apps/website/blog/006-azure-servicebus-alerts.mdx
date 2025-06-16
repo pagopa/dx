@@ -1,0 +1,79 @@
+---
+title: "Introducing the 'Azure Service Bus Alerts' Terraform Module"
+description: Boosting Service Bus setup
+slug: devex-azure-servicebus-alerts-0.1-alpha
+hide_table_of_contents: false
+date: 2025-03-28T17:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+---
+
+# Introducing the 'Azure Service Bus Alerts' Terraform Module
+
+The new Terraform module
+[`Azure Service Bus Alerts`](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-dlq-alert/azurerm/latest)
+has been released by the DevEx team to help teams monitor their Azure Service
+Bus instances with minimal setup and improved observability.
+
+This module allows teams to configure alerts for both **active** and
+**dead-lettered messages** across queues and topics, providing flexibility
+through customizable thresholds, severities, and metric windows.
+
+<!-- truncate -->
+
+It is designed to integrate easily with your existing Service Bus namespaces and
+can be customized through simple input variables. Multiple entities can be
+monitored at once, and alert actions can be routed to one or more Azure Monitor
+Action Groups.
+
+## Getting Started
+
+We recommend referencing the module via the Terraform Registry and pinning the
+version to the latest stable release:
+
+```hcl
+module "alerts" {
+  source  = "pagopa-dx/azure-service-bus-dlq-alert/azurerm"
+  version = "~> 0.0"
+
+  environment = {
+    prefix          = "example"
+    env_short       = "d"
+    location        = "westeurope"
+    app_name        = "myapp"
+    instance_number = "01"
+  }
+
+  service_bus_namespace_id = azurerm_servicebus_namespace.example.id
+
+  alerts_on_dlq_messages = {
+    description   = "DLQ messages alert"
+    entity_names  = ["queue1", "topic1"]
+    threshold     = 5
+    severity      = "Error"
+    check_every   = "PT5M"
+    lookback_period = "PT10M"
+  }
+
+  alerts_on_active_messages = {
+    description   = "Active messages alert"
+    entity_names  = ["queue1", "topic1"]
+    threshold     = 20
+    severity      = "Warning"
+    check_every   = "PT15M"
+    lookback_period = "PT30M"
+  }
+
+  action_group_ids = [azurerm_monitor_action_group.example.id]
+  tags             = local.tags
+}
+```
+
+### Examples
+
+Explore a
+[simple example](https://github.com/pagopa-dx/terraform-azurerm-azure-service-bus-dlq-alert/tree/main/example/simple)
+to get started quickly.
+
+More information about metrics and setup can be found in the
+[module documentation](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-dlq-alert/azurerm/latest).
