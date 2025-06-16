@@ -33,13 +33,13 @@ repos:
           - --args=--disable-rule terraform_required_version
           - --args=--disable-rule terraform_required_providers
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
-        exclude: ^infra/provider/.*
+        exclude: ^apps/providers/.*
       - id: terraform_validate
         args:
           - --args=-json
           - --args=-no-color
           - --hook-config=--retry-once-with-cleanup=true
-        exclude: ^infra/provider/.*
+        exclude: ^apps/providers/.*
       - id: terraform_trivy
         args:
           - --args=--skip-dirs="**/.terraform"

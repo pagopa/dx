@@ -13787,9 +13787,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"provider-azure@workspace:infra/provider":
+"provider-azure@workspace:apps/providers/azure":
   version: 0.0.0-use.local
-  resolution: "provider-azure@workspace:infra/provider"
+  resolution: "provider-azure@workspace:apps/providers/azure"
   languageName: unknown
   linkType: soft
 

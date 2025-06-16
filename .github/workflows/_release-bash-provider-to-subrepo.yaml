@@ -7,20 +7,45 @@ on:
     branches:
       - main
     paths:
-      - "infra/provider/**"
+      - "apps/providers/**"
 
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
+  detect-providers:
+    runs-on: ubuntu-latest
+    outputs:
+      providers: ${{ steps.get-all-providers.outputs.providers || steps.get-modified-providers.outputs.providers }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Get all providers
+        id: get-all-providers
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: pagopa/dx/.github/actions/get-all-providers@main
+
+      - name: Get modified providers
+        id: get-modified-providers
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: pagopa/dx/.github/actions/get-modified-providers@main
+        with:
+          current_ref: ${{ github.event.before }}
+
   push-provider:
     runs-on: ubuntu-latest
+    needs: [detect-providers]
     if: always()
     permissions:
       contents: read
     strategy:
       fail-fast: false
+      matrix:
+        provider: ${{ fromJSON(needs.detect-providers.outputs.providers) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -31,6 +56,6 @@ jobs:
         id: push-to-subrepository
         uses: ./.github/actions/push-to-subrepo
         with:
-          name: "azure"
+          name: ${{ matrix.provider }}
           repo_type: "provider"
           github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}
