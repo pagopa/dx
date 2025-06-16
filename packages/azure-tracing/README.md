@@ -22,9 +22,7 @@ which makes direct instrumentation of Azure Functions a bit tricky.
 So, if you have a Node.js project ESM based (`"type": "module"` in the `package.json`), to work around this, you have to preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
 
 > [!NOTE]
-> In case you have a CJS project (`"type": "commonjs"` in the `package.json`), you could use the [`opentelemetry-js` library](https://github.com/open-telemetry/opentelemetry-js?tab=readme-ov-file#quick-start)
-> to instrument the application, making sure the OpenTelemetry SDK is initialized before the Azure Functions runtime starts.  
-> This package is useful for ESM projects only, where the instrumentation logic needs to be preloaded.
+> In case you have a CJS project (`"type": "commonjs"` in the `package.json`), you could use the `@pagopa/azure-tracing` as well.
 
 This package provides a wrapper that simplifies this setup.
 
