@@ -19,15 +19,10 @@ runs:
     - name: Get modified providers
       id: get-providers
       env:
-        CURRENT_REF: ${{ inputs.current_ref }}
+        CURRENT_BRANCH_SHA: ${{ inputs.current_ref || github.sha }}
       shell: bash
       run: |
         DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
-        if [ "$CURRENT_REF" != "" ]; then
-          CURRENT_BRANCH_SHA=$CURRENT_REF
-        else
-          CURRENT_BRANCH_SHA=${{ github.sha }}
-        fi
         echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
         echo "Current branch SHA: $CURRENT_BRANCH_SHA"
 
