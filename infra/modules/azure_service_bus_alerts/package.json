@@ -1,6 +1,6 @@
 {
   "name": "azure_service_bus_alerts",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "provider": "azurerm",
   "description": "Quickly configure alerts on Azure Service Bus"

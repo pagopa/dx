@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.4.0
+
+### Minor Changes
+
+- 716b0f6: Add Container Apps Contributor role at resource groups scope
+
 ## 2.3.1
 
 ### Patch Changes
