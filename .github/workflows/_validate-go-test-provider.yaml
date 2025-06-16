@@ -4,21 +4,36 @@ on:
   pull_request:
     paths:
       - '.github/workflows/_validate-go-test-provider.yaml'
-      - 'infra/provider/**'
+      - 'apps/providers/**'
 
 permissions:
   contents: read
 
-env:
-  GO_MOD_PATH: 'infra/provider/go.mod'
-  WORKSPACE: 'infra/provider'
-
 jobs:
+  detect-providers:
+    runs-on: ubuntu-latest
+    outputs:
+      providers: ${{ steps.get-modified-providers.outputs.providers }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Get modified providers
+        id: get-modified-providers
+        uses: pagopa/dx/.github/actions/get-modified-providers@fix-move-provider-in-apps #main
+
   acceptance:
     name: Acceptance Tests
     runs-on: ubuntu-latest
+    needs: [detect-providers]
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: ${{ fromJSON(needs.detect-providers.outputs.providers) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -28,7 +43,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
-          go-version-file: '${{ env.GO_MOD_PATH }}'
+          go-version-file: 'apps/providers/${{ matrix.provider }}/go.mod'
 
       - name: Terraform Setup
         id: set-terraform-version
@@ -36,4 +51,4 @@ jobs:
 
       - name: Run Tests
         run: make testacc
-        working-directory: '${{ env.WORKSPACE }}'
+        working-directory: 'apps/providers/${{ matrix.provider }}'
