@@ -15,6 +15,8 @@ outputs:
 
 runs:
   using: "composite"
+  env:
+    CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}
   steps:
     - name: Get modified providers
       id: get-providers
@@ -22,7 +24,7 @@ runs:
       run: |
         DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
         echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
-        CURRENT_BRANCH_SHA=${{ inputs.current_ref || github.sha }}
+        echo "Current branch SHA: $CURRENT_BRANCH_SHA"
 
         folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA apps/providers \
           | xargs -r dirname \

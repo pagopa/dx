@@ -24,15 +24,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      # - name: Get all providers
+      #   id: get-all-providers
+      #   if: ${{ github.event_name == 'workflow_dispatch' }}
+      #   uses: pagopa/dx/.github/actions/get-all-providers@main
+
+      # - name: Get modified providers
+      #   id: get-modified-providers
+      #   if: ${{ github.event_name != 'workflow_dispatch' }}
+      #   uses: pagopa/dx/.github/actions/get-modified-providers@main
+      #   with:
+      #     current_ref: ${{ github.event.before }}
+
       - name: Get all providers
         id: get-all-providers
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-all-providers@main
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: pagopa/dx/.github/actions/get-all-providers@fix-move-provider-in-apps
 
       - name: Get modified providers
         id: get-modified-providers
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-modified-providers@main
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: pagopa/dx/.github/actions/get-modified-providers@fix-move-provider-in-apps
         with:
           current_ref: ${{ github.event.before }}
 
