@@ -16,51 +16,7 @@ The module sets up a fully managed GitHub runner using AWS CodeBuild, which auto
 
 ## Usage Example
 
-```hcl
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  name = "${local.app_prefix}-vpc-${local.app_suffix}"
-  cidr = "10.0.0.0/16"
-
-  azs             = ["eu-south-1a", "eu-south-1b", "eu-south-1c"]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
-
-  enable_nat_gateway = true
-  single_nat_gateway = true # For development environments
-
-  tags = local.tags
-}
-
-module "runner" {
-  source      = "pagopa-dx/github-selfhosted-runner-on-codebuild/aws"
-  version     = "~> 0.0"
-  environment = local.environment
-
-  tier       = "m"
-  repository = {
-    owner = "pagopa"
-    name  = "dx"
-  }
-
-  vpc = {
-    id              = module.vpc.vpc_id
-    private_subnets = module.vpc.private_subnets
-  }
-
-  env_variables = {
-    ENV_SHORT = local.environment.env_short
-  }
-
-  secrets = {
-    DB_URL      = { ssm_parameter_name = "/db/url" }
-  }
-
-  tags = local.tags
-}
-```
+A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-aws-github-selfhosted-runner-on-codebuild/tree/main/examples/complete) directory.
 
 ## Tiers and Configurations
 
