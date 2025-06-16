@@ -54,6 +54,8 @@ run "codebuild_is_correct_plan" {
       TestName       = "Create Self Hosted Runner for test"
     }
 
+    docker_image = "ghcr.io/pagopa/dx-github-self-hosted-runner:sha-4693a86"
+
     tier = "s"
 
     repository = {
@@ -97,5 +99,10 @@ run "codebuild_is_correct_plan" {
   assert {
     condition = (aws_codebuild_project.github_runner.environment[0].environment_variable[0].name == "ENV_SHORT") && (aws_codebuild_project.github_runner.environment[0].environment_variable[0].value == "d")
     error_message = "Environment variable ENV_SHORT not correctly set"
+  }
+
+  assert {
+    condition = aws_codebuild_project.github_runner.environment[0].image == "ghcr.io/pagopa/dx-github-self-hosted-runner:sha-4693a86"
+    error_message = "Custom docker image not correctly set"
   }
 }

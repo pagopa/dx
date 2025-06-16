@@ -21,6 +21,12 @@ variable "environment" {
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
 }
 
+variable "docker_image" {
+  type        = string
+  description = "The docker image to be used in the self-hosted runner. If not set, the default image will be used."
+  default     = null
+}
+
 variable "tier" {
   type        = string
   description = "Resource tiers depending on build requirements. Allowed values are 's', 'm', 'l'."
