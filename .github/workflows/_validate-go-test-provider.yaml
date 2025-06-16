@@ -22,7 +22,7 @@ jobs:
 
       - name: Get modified providers
         id: get-modified-providers
-        uses: pagopa/dx/.github/actions/get-modified-providers@fix-move-provider-in-apps #main
+        uses: pagopa/dx/.github/actions/get-modified-providers@main
 
   acceptance:
     name: Acceptance Tests
