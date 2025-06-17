@@ -9144,6 +9144,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"github_selfhosted_runner_on_codebuild@workspace:infra/modules/github_selfhosted_runner_on_codebuild":
+  version: 0.0.0-use.local
+  resolution: "github_selfhosted_runner_on_codebuild@workspace:infra/modules/github_selfhosted_runner_on_codebuild"
+  languageName: unknown
+  linkType: soft
+
 "github_environment_bootstrap@workspace:infra/modules/github_environment_bootstrap":
   version: 0.0.0-use.local
   resolution: "github_environment_bootstrap@workspace:infra/modules/github_environment_bootstrap"
