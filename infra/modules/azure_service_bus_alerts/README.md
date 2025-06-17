@@ -46,5 +46,8 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_active"></a> [active](#output\_active) | Id of the Metric Alert monitoring active message queue size |
+| <a name="output_dlq"></a> [dlq](#output\_dlq) | Id of the Metric Alert monitoring DLQ message queue size |
 <!-- END_TF_DOCS -->
