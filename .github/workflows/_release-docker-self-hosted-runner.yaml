@@ -4,13 +4,13 @@ name: Publish GitHub Self-Hosted Runner
 # It checks for the latest official Runner image digest, updates the Dockerfile if necessary,
 # and builds and pushes the new image to the registry.
 # The workflow is scheduled to run every 2 months on the 1st day at 08:00 UTC.
-# It can also be triggered manually for testing purposes using input 'test_run'.
+# It can also be triggered manually for testing purposes using input 'dry_run'.
 
 on:
   workflow_dispatch:
     inputs:
-      test_run:
-        description: 'Run the workflow for testing purposes'
+      dry_run:
+        description: 'Run the workflow for testing purposes (does not push the image)'
         required: false
         default: false
         type: boolean
@@ -55,7 +55,7 @@ jobs:
       attestations: write
     env:
       IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
-      IMAGE_TAG: ${{ inputs.test_run && github.ref_name || 'latest' }}
+      IMAGE_TAG: ${{ inputs.dry_run && github.ref_name || 'latest' }}
 
     steps:
       - name: Checkout
@@ -123,6 +123,6 @@ jobs:
           build_platforms: linux/amd64
           build_args: |
             RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
-          push_to_registry: ${{ inputs.test_run && 'false' || 'true' }}
+          push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
