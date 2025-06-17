@@ -60,7 +60,7 @@ jobs:
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
-    needs: ["get-terraform-version"]
+    needs: [get-terraform-version]
     secrets: inherit
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -71,7 +71,7 @@ jobs:
 
   tf_plan:
     name: 'Terraform Plan'
-    needs: ["get-terraform-version", "tf-modules-check"]
+    needs: [get-terraform-version, tf-modules-check]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
