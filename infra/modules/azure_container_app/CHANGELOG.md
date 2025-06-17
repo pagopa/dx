@@ -1,5 +1,11 @@
 # azure_container_app
 
+## 3.0.1
+
+### Patch Changes
+
+- 724717e: Fix azurerm minimum version definition
+
 ## 3.0.0
 
 ### Major Changes
