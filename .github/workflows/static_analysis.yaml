@@ -31,6 +31,11 @@ on:
         description: If enabled, it prints the verbose logging of pre-commit checks
         type: boolean
         required: false
+      fail_on_error:
+        description: If true, the workflow will fail if pre-commit checks fail
+        type: boolean
+        required: false
+        default: true
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}
@@ -51,12 +56,14 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-terraform-version
+        if: ${{ inputs.terraform_version == '' }}
         uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
 
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
+        if: ${{ inputs.pre_commit_tf_tag == '' }}
         uses: pagopa/dx/.github/actions/get-pre-commit-version@main
         with:
           default_version: "1.96.2"
@@ -94,28 +101,39 @@ jobs:
           apk --no-cache add tar
           python -m pip freeze --local
 
+
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
         id: pre_commit_specific_folders
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set -eu
+          set +e  # Continue execution even if pre-commit fails
 
           echo "Start pre-commit on specific folder ${{ inputs.folder }}"
 
           find "${{ inputs.folder }}" -type f | xargs pre-commit run \
             --color=always \
+            --show-diff-on-failure \
             ${{ inputs.check_to_run }} \
-            --files
+            --files 2>&1 | tee /tmp/pre-commit-output.log
+
+          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
+          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
+
+          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
+            exit $PRE_COMMIT_EXIT_CODE
+          fi
 
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
         id: pre_commit_modified_files
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set -eu
+          set +e  # Continue execution even if pre-commit fails
 
           echo "Start pre-commit only on modified files"
           echo "- FROM  Base ref: origin/${{ github.event.pull_request.base.ref }}"
@@ -126,19 +144,134 @@ jobs:
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+
+          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
+          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
+
+          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
+            exit $PRE_COMMIT_EXIT_CODE
+          fi
 
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set -eu
+          set +e  # Continue execution even if pre-commit fails
 
           echo "Start pre-commit on all files"
 
           pre-commit run \
             --color=always \
+            --show-diff-on-failure \
             --all-files \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+
+          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
+          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
+
+          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
+            exit $PRE_COMMIT_EXIT_CODE
+          fi
+
+      - name: Summarize pre-commit results
+        if: always()
+        run: |
+          # Display Terraform module lock information if available
+          if [ -f "lock_output.json" ]; then
+            # Use default values with error handling around jq calls
+            TOTAL_MODULES=$(jq -r '.summary.total_modules // 0' lock_output.json 2>/dev/null || echo "0")
+            EXIT_CODE=$(jq -r '.summary.exit_code // 0' lock_output.json 2>/dev/null || echo "0")
+
+            # Count modules by status with error handling
+            NEW_MODULES=0
+            CHANGED_MODULES=0
+            REMOVED_MODULES=0
+
+            # Safely parse JSON with fallbacks
+            if [ "$TOTAL_MODULES" -gt 0 ]; then
+              NEW_MODULES=$(jq -r '[.results[]? | select(.status == "new")] | length' lock_output.json 2>/dev/null || echo "0")
+              CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
+              REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
+
+              # Use GitHub alert syntax for the "what should be done next" section
+              echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
+              echo "> ### ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
+              echo ">" >> "$GITHUB_STEP_SUMMARY"
+              echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
+              echo ">" >> "$GITHUB_STEP_SUMMARY"
+              echo "> 1. Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
+              echo ">" >> "$GITHUB_STEP_SUMMARY"
+              echo "> \`\`\`bash" >> "$GITHUB_STEP_SUMMARY"
+              echo "> pre-commit run -a lock_modules" >> "$GITHUB_STEP_SUMMARY"
+              echo "> \`\`\`" >> "$GITHUB_STEP_SUMMARY"
+              echo ">" >> "$GITHUB_STEP_SUMMARY"
+              echo "> 2. Then open a dedicated Pull Request with the updated module locks" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            # Display module details in a collapsible table if any changes
+            if [ "$NEW_MODULES" -gt 0 ] || [ "$CHANGED_MODULES" -gt 0 ] || [ "$REMOVED_MODULES" -gt 0 ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+              echo "<summary>📊 What has changed</summary>" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "### Module Stats:" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Total modules**: ${TOTAL_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **New modules**: ${NEW_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Changed modules**: ${CHANGED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "- **Removed modules**: ${REMOVED_MODULES}" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "| Module | Status | Version | Path |" >> "$GITHUB_STEP_SUMMARY"
+              echo "|--------|--------|---------|------|" >> "$GITHUB_STEP_SUMMARY"
+
+              # Fix the jq syntax error by using a simpler concatenation approach
+              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
+                echo "Error processing JSON file. Raw content:" >> "$GITHUB_STEP_SUMMARY"
+                echo '```json' >> "$GITHUB_STEP_SUMMARY"
+                cat lock_output.json >> "$GITHUB_STEP_SUMMARY"
+                echo '```' >> "$GITHUB_STEP_SUMMARY"
+              }
+              echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -f "/tmp/pre-commit-output.log" ]; then
+            # Create a compact execution context description
+            EXECUTION_SCOPE=""
+            if [ "${{ inputs.folder }}" != "" ]; then
+              EXECUTION_SCOPE="folder: \`${{ inputs.folder }}\`"
+            elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ inputs.enable_modified_files_detection }}" == "true" ]; then
+              EXECUTION_SCOPE="modified files"
+            else
+              EXECUTION_SCOPE="all files"
+            fi
+
+            # Add check information
+            if [ "${{ inputs.check_to_run }}" != "" ]; then
+              CHECK_INFO="\`${{ inputs.check_to_run }}\`"
+            else
+              CHECK_INFO="all checks"
+            fi
+
+            # Combine into a single summary line with small text
+            echo "<details>" >> "$GITHUB_STEP_SUMMARY"
+            echo "<summary>📋 Pre-commit Output Log</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            # Clean up ANSI color codes for better markdown rendering
+            cat /tmp/pre-commit-output.log | sed 's/\x1b\[[0-9;]*m//g' >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⚠️ No pre-commit output found. Check if pre-commit was executed." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Add exit status summary
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "<sub>Generated on $(date)</br>Run $CHECK_INFO on $EXECUTION_SCOPE</sub>" >> "$GITHUB_STEP_SUMMARY"
