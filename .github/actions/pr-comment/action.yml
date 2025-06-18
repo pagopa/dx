@@ -1,0 +1,53 @@
+name: 'PR Comment Manager'
+description: 'Creates or updates comments on Pull Requests'
+inputs:
+  comment-body:
+    description: 'The comment content to post (supports markdown)'
+    required: true
+  search-pattern:
+    description: 'Text pattern to identify existing comments to replace. If not provided, a new comment will always be created'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Manage PR Comment
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      with:
+        script: |
+          const body = process.env.INPUT_COMMENT_BODY;
+          const searchPattern = process.env.INPUT_SEARCH_PATTERN;
+
+          // Find existing comment if search pattern is provided
+          let existingComment;
+          if (searchPattern) {
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            existingComment = comments.find(comment =>
+              comment.body.includes(searchPattern)
+            );
+          }
+
+          // Update or create comment
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+          }
+      env:
+        INPUT_COMMENT_BODY: ${{ inputs.comment-body }}
+        INPUT_SEARCH_PATTERN: ${{ inputs.search-pattern }}
