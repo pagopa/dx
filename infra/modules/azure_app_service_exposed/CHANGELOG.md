@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 1.0.2-beta.0
+
+### Patch Changes
+
+- 1ede6d9: A patch to release a beta version
+
 ## 1.0.1
 
 ### Patch Changes
