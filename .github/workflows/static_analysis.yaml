@@ -38,7 +38,7 @@ on:
         default: true
 
 concurrency:
-  group: tf-static-analysis-${{ github.head_ref }}
+  group: tf-static-analysis-${{ github.head_ref }}-${{inputs.folder || 'all-files'}}-${{ inputs.check_to_run || 'all-checks' }}
   cancel-in-progress: true
 
 jobs:
@@ -197,20 +197,29 @@ jobs:
               CHANGED_MODULES=$(jq -r '[.results[]? | select(.status == "changed")] | length' lock_output.json 2>/dev/null || echo "0")
               REMOVED_MODULES=$(jq -r '[.results[]? | select(.status == "removed")] | length' lock_output.json 2>/dev/null || echo "0")
 
-              # Use GitHub alert syntax for the "what should be done next" section
-              echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
-              echo "> ### ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
-              echo ">" >> "$GITHUB_STEP_SUMMARY"
-              echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
-              echo ">" >> "$GITHUB_STEP_SUMMARY"
-              echo "> 1. Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
-              echo ">" >> "$GITHUB_STEP_SUMMARY"
-              echo "> \`\`\`bash" >> "$GITHUB_STEP_SUMMARY"
-              echo "> pre-commit run -a lock_modules" >> "$GITHUB_STEP_SUMMARY"
-              echo "> \`\`\`" >> "$GITHUB_STEP_SUMMARY"
-              echo ">" >> "$GITHUB_STEP_SUMMARY"
-              echo "> 2. Then open a dedicated Pull Request with the updated module locks" >> "$GITHUB_STEP_SUMMARY"
-              echo "" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$NEW_MODULES" -eq 0 ] && [ "$CHANGED_MODULES" -eq 0 ] && [ "$REMOVED_MODULES" -eq 0 ]; then
+                # Success message when no changes detected
+                echo "> [!NOTE]" >> "$GITHUB_STEP_SUMMARY"
+                echo "> ### ✅ All Terraform module locks are up to date" >> "$GITHUB_STEP_SUMMARY"
+                echo ">" >> "$GITHUB_STEP_SUMMARY"
+                echo "> No module changes detected - everything is in sync!" >> "$GITHUB_STEP_SUMMARY"
+                echo "" >> "$GITHUB_STEP_SUMMARY"
+              else
+                # Warning message when changes detected
+                echo "> [!CAUTION]" >> "$GITHUB_STEP_SUMMARY"
+                echo "> ### ⚠️ Terraform module changes detected - locks need updating" >> "$GITHUB_STEP_SUMMARY"
+                echo ">" >> "$GITHUB_STEP_SUMMARY"
+                echo "> ### What should be done next" >> "$GITHUB_STEP_SUMMARY"
+                echo ">" >> "$GITHUB_STEP_SUMMARY"
+                echo "> 1. Run this command locally to update the module locks:" >> "$GITHUB_STEP_SUMMARY"
+                echo ">" >> "$GITHUB_STEP_SUMMARY"
+                echo "> \`\`\`bash" >> "$GITHUB_STEP_SUMMARY"
+                echo "> pre-commit run -a lock_modules" >> "$GITHUB_STEP_SUMMARY"
+                echo "> \`\`\`" >> "$GITHUB_STEP_SUMMARY"
+                echo ">" >> "$GITHUB_STEP_SUMMARY"
+                echo "> 2. Then open a dedicated Pull Request with the updated module locks" >> "$GITHUB_STEP_SUMMARY"
+                echo "" >> "$GITHUB_STEP_SUMMARY"
+              fi
             fi
 
             # Display module details in a collapsible table if any changes
