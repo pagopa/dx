@@ -7,38 +7,19 @@
           "type": "patch"
         }
       ],
-      "summary": "A patch to release a beta version",
-      "id": "breezy-moles-punch"
-    },
-    {
-      "releases": [
-        {
-          "name": "@pagopa/azure-tracing",
-          "type": "patch"
-        }
-      ],
-      "summary": "A new patch",
-      "id": "tired-ads-invent"
+      "summary": "Testing the new workflow",
+      "id": "eager-zoos-fetch"
     }
   ],
   "releases": [
     {
       "name": "azure_app_service_exposed",
       "type": "patch",
-      "oldVersion": "1.0.1",
+      "oldVersion": "1.0.2-beta.0",
       "changesets": [
-        "breezy-moles-punch"
+        "eager-zoos-fetch"
       ],
-      "newVersion": "1.0.2-beta.0"
-    },
-    {
-      "name": "@pagopa/azure-tracing",
-      "type": "patch",
-      "oldVersion": "0.4.3",
-      "changesets": [
-        "tired-ads-invent"
-      ],
-      "newVersion": "0.4.4-beta.0"
+      "newVersion": "1.0.2-beta.1"
     }
   ],
   "preState": {
@@ -49,7 +30,7 @@
       "docs": "0.2.5",
       "azure_api_management": "1.2.2",
       "azure_app_service": "1.0.1",
-      "azure_app_service_exposed": "1.0.1",
+      "azure_app_service_exposed": "1.0.2-beta.0",
       "azure_app_service_plan": "0.0.4",
       "azure_app_service_plan_autoscaler": "2.0.0",
       "azure_cdn": "0.3.0",
@@ -72,11 +53,12 @@
       "github_selfhosted_runner_on_codebuild": "0.0.1",
       "github_selfhosted_runner_on_container_app_jobs": "1.0.9",
       "pre_commit_scripts": "0.1.0",
-      "@pagopa/azure-tracing": "0.4.3",
+      "@pagopa/azure-tracing": "0.4.4-beta.0",
       "@pagopa/eslint-config": "4.0.6"
     },
     "changesets": [
       "breezy-moles-punch",
+      "eager-zoos-fetch",
       "modern-feet-return",
       "small-wings-shave",
       "tired-ads-invent"

@@ -1,5 +1,11 @@
 # azure_app_service_exposed
 
+## 1.0.2-beta.1
+
+### Patch Changes
+
+- 0cb3215: Testing the new workflow
+
 ## 1.0.2-beta.0
 
 ### Patch Changes
