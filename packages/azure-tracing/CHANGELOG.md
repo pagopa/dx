@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.4-beta.0
+
+### Patch Changes
+
+- 026a1fe: A new patch
+
 ## 0.4.3
 
 ### Patch Changes
