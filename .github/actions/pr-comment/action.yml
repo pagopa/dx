@@ -5,7 +5,7 @@ inputs:
     description: 'The comment content to post (supports markdown)'
     required: true
   search-pattern:
-    description: 'Text pattern to identify existing comments to replace. If not provided, a new comment will always be created'
+    description: 'Text pattern to identify existing comments to delete. If not provided, a new comment will always be created'
     required: false
 
 runs:
@@ -18,8 +18,7 @@ runs:
           const body = process.env.INPUT_COMMENT_BODY;
           const searchPattern = process.env.INPUT_SEARCH_PATTERN;
 
-          // Find existing comment if search pattern is provided
-          let existingComment;
+          // Find and delete existing comment if search pattern is provided
           if (searchPattern) {
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -27,27 +26,26 @@ runs:
               issue_number: context.issue.number
             });
 
-            existingComment = comments.find(comment =>
+            const existingComment = comments.find(comment =>
               comment.body.includes(searchPattern)
             );
+
+            if (existingComment) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id
+              });
+            }
           }
 
-          // Update or create comment
-          if (existingComment) {
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: existingComment.id,
-              body: body
-            });
-          } else {
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: body
-            });
-          }
+          // Create new comment (always)
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: body
+          });
       env:
         INPUT_COMMENT_BODY: ${{ inputs.comment-body }}
         INPUT_SEARCH_PATTERN: ${{ inputs.search-pattern }}
