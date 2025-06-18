@@ -234,7 +234,7 @@ jobs:
               echo "</details>" >> "$GITHUB_STEP_SUMMARY"
             else
               # Success message when no changes detected
-              echo "> [!NOTE]" >> "$GITHUB_STEP_SUMMARY"
+              echo "> [!TIP]" >> "$GITHUB_STEP_SUMMARY"
               echo "> ### ✅ All Terraform module locks are up to date" >> "$GITHUB_STEP_SUMMARY"
               echo ">" >> "$GITHUB_STEP_SUMMARY"
               echo "> No module changes detected - everything is in sync!" >> "$GITHUB_STEP_SUMMARY"
