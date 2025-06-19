@@ -264,12 +264,12 @@ jobs:
 
             # Show output log
             add_markdown \
-              "<details>" \
-              "<summary>📋 Pre-commit Output Log</summary>" \
-              "" \
-              "\`\`\`"
+              '<details>' \
+              '<summary>📋 Pre-commit Output Log</summary>' \
+              '' \
+              '```'
             sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
-            add_markdown "\`\`\`" "</details>"
+            add_markdown '```' '</details>'
           else
             add_to_summary "⚠️ No pre-commit output found. Check if pre-commit was executed."
           fi
