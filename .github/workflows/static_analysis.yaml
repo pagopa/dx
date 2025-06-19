@@ -282,11 +282,8 @@ jobs:
 
           # Set the summary as output
           SUMMARY_CONTENT=$(cat "$SUMMARY_FILE")
-          # Properly escape the content for GitHub Actions multiline output
-          SUMMARY_CONTENT="${SUMMARY_CONTENT//'%'/'%25'}"
-          SUMMARY_CONTENT="${SUMMARY_CONTENT//$'\n'/'%0A'}"
-          SUMMARY_CONTENT="${SUMMARY_CONTENT//$'\r'/'%0D'}"
           echo "summary=$SUMMARY_CONTENT" >> "$GITHUB_OUTPUT"
+          echo "decouple_string=Run ${CHECK_INFO} on ${EXECUTION_SCOPE}" >> "$GITHUB_OUTPUT"
 
           # Clean up
           rm "$SUMMARY_FILE"
@@ -298,4 +295,4 @@ jobs:
           comment-body: |
             ### Pre-commit Check Results
             ${{ steps.summary.outputs.summary }}
-          search-pattern: "Pre-commit Check Results"
+          search-pattern: ${{ steps.summary.outputs.decouple_string }}
