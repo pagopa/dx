@@ -13,10 +13,13 @@ runs:
   steps:
     - name: Manage PR Comment
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      env:
+        SEARCH_PATTERN: ${{ inputs.search-pattern }}
+        COMMENT_BODY: ${{ inputs.comment-body }}
       with:
         script: |
-          const body = '${{ inputs.comment-body }}';
-          const searchPattern = '${{ inputs.search-pattern }}';
+          const body = process.env.COMMENT_BODY;
+          const searchPattern = process.env.SEARCH_PATTERN;
 
           // Find and delete existing comment if search pattern is provided
           if (searchPattern) {
