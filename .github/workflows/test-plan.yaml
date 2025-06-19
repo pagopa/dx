@@ -1,0 +1,25 @@
+name: Terraform Plan - Test
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      
+jobs:
+  infra_review:
+    uses: ./.github/workflows/infra_plan.yaml
+    name: PR Test
+    secrets: inherit
+    with:
+      environment: complete
+      base_path: infra/modules/azure_core_infra/example
+      override_github_environment: infra-dev
