@@ -283,7 +283,7 @@ jobs:
           # Set the summary as output
           SUMMARY_CONTENT=$(cat "$SUMMARY_FILE")
           echo "summary=$SUMMARY_CONTENT" >> "$GITHUB_OUTPUT"
-          echo "decouple_string=Run ${CHECK_INFO} on ${EXECUTION_SCOPE}" >> "$GITHUB_OUTPUT"
+          echo "decouple_string=\"Run ${CHECK_INFO} on ${EXECUTION_SCOPE}\"" >> "$GITHUB_OUTPUT"
 
           # Clean up
           rm "$SUMMARY_FILE"
