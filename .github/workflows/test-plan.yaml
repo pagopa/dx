@@ -29,6 +29,6 @@ jobs:
     name: PR Test
     secrets: inherit
     with:
-      environment: example
+      environment: complete
       base_path: infra/modules/azure_core_infra/example
       override_github_environment: infra-dev
