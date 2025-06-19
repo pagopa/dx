@@ -187,8 +187,13 @@ jobs:
           ENABLE_MODIFIED_FILES_DETECTION: ${{ inputs.enable_modified_files_detection }}
           CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
+          # Initialize variables
+          EXECUTION_SCOPE="all files"
+          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: \`$FOLDER\`"
+          [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
+
           # Utility functions to add content to both summary and temporary file
-          add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1" }
+          add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1"; }
           add_markdown() { for line in "$@"; do add_to_summary "$line"; done; }
 
           # Terraform modules handling
@@ -254,18 +259,13 @@ jobs:
 
           # Pre-commit output
           if [ -f "/tmp/pre-commit-output.log" ]; then
-            # Determine execution context
-            EXECUTION_SCOPE="all files"
-            [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: \`$FOLDER\`"
-            [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
-
             # Show output log
             add_markdown \
               '<details>' \
               '<summary>📋 Pre-commit Output Log</summary>' \
               '' \
               '```'
-            cat /tmp/pre-commit-output.log | sed 's/\x1b\[[0-9;]*m//g' >> "$GITHUB_STEP_SUMMARY"
+            sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log >> "$GITHUB_STEP_SUMMARY"
             add_markdown '```' '</details>'
           else
             add_to_summary "⚠️ No pre-commit output found. Check if pre-commit was executed."
