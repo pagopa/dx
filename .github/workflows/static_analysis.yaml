@@ -37,6 +37,9 @@ on:
         required: false
         default: true
 
+permissions:
+  pull-requests: write # Needed for commenting on PRs
+
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}-${{inputs.folder || 'all-files'}}-${{ inputs.check_to_run || 'all-checks' }}
   cancel-in-progress: true
