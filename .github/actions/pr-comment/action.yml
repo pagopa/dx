@@ -15,8 +15,8 @@ runs:
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
       with:
         script: |
-          const body = core.getInput('comment-body');
-          const searchPattern = core.getInput('search-pattern');
+          const body = '${{ inputs.comment-body }}';
+          const searchPattern = '${{ inputs.search-pattern }}';
 
           // Find and delete existing comment if search pattern is provided
           if (searchPattern) {
