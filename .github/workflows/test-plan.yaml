@@ -13,13 +13,13 @@ on:
       - synchronize
       - reopened
       - ready_for_review
-      
+
 jobs:
   infra_review:
     uses: ./.github/workflows/infra_plan.yaml
     name: PR Test
     secrets: inherit
     with:
-      environment: complete
+      environment: develop
       base_path: infra/modules/azure_core_infra/example
       override_github_environment: infra-dev
