@@ -187,13 +187,17 @@ jobs:
           ENABLE_MODIFIED_FILES_DETECTION: ${{ inputs.enable_modified_files_detection }}
           CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
+          # Create a temporary file for the summary
+          SUMMARY_FILE="/tmp/pre-commit-summary.md"
+          touch "$SUMMARY_FILE"
+
           # Initialize variables
           EXECUTION_SCOPE="all files"
           [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: \`$FOLDER\`"
           [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
 
           # Utility functions to add content to both summary and temporary file
-          add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1"; }
+          add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1" >> "$SUMMARY_FILE"; }
           add_markdown() { for line in "$@"; do add_to_summary "$line"; done; }
 
           # Terraform modules handling
@@ -277,16 +281,13 @@ jobs:
             "" \
             "<sub>Generated on $(date)</br>Run ${CHECK_INFO} on ${EXECUTION_SCOPE}</sub>"
 
-          # Set the summary as output
-          SUMMARY_CONTENT=$(cat "$GITHUB_STEP_SUMMARY")
-          echo "summary=$SUMMARY_CONTENT" >> "$GITHUB_OUTPUT"
+          # Set the summary file path as output
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
           echo "decouple_string=\"Run ${CHECK_INFO} on ${EXECUTION_SCOPE}\"" >> "$GITHUB_OUTPUT"
 
       - name: Post Summary on PR
         if: always() && github.event_name == 'pull_request'
         uses: pagopa/dx/.github/actions/pr-comment@package-pr-comments-action
         with:
-          comment-body: |
-            ### Pre-commit Check Results
-            ${{ steps.summary.outputs.summary }}
+          comment-body-file: ${{ steps.summary.outputs.summary_file }}
           search-pattern: ${{ steps.summary.outputs.decouple_string }}
