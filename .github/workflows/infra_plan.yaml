@@ -136,8 +136,9 @@ jobs:
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
             echo "${SUMMARY_LINE}" > plan_output_multiline.txt
+            echo "\`\`\`" >> plan_output_multiline.txt
             echo "" >> plan_output_multiline.txt
-            echo "\`\`\`\nFull plan output was too long and was omitted. Check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for full details." >> plan_output_multiline.txt
+            echo "Full plan output was too long and was omitted. Check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for full details." >> plan_output_multiline.txt
           else
             cat filtered_plan.txt > plan_output_multiline.txt
             echo "\`\`\`" >> plan_output_multiline.txt
