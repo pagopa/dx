@@ -2,8 +2,11 @@ name: 'PR Comment Manager'
 description: 'Creates or updates comments on Pull Requests'
 inputs:
   comment-body:
-    description: 'The comment content to post (supports markdown)'
-    required: true
+    description: 'The comment content to post (supports markdown). Either this or comment-body-file must be provided'
+    required: false
+  comment-body-file:
+    description: 'Path to a file containing the comment content (supports markdown). Either this or comment-body must be provided'
+    required: false
   search-pattern:
     description: 'Text pattern to identify existing comments to delete. If not provided, a new comment will always be created'
     required: false
@@ -16,10 +19,23 @@ runs:
       env:
         SEARCH_PATTERN: ${{ inputs.search-pattern }}
         COMMENT_BODY: ${{ inputs.comment-body }}
+        COMMENT_BODY_FILE: ${{ inputs.comment-body-file }}
       with:
         script: |
-          const body = process.env.COMMENT_BODY;
+          const fs = require('fs');
+          const commentBody = process.env.COMMENT_BODY;
+          const commentBodyFile = process.env.COMMENT_BODY_FILE;
           const searchPattern = process.env.SEARCH_PATTERN;
+
+          // Validate inputs
+          if (!commentBody && !commentBodyFile) {
+            throw new Error('Either comment-body or comment-body-file must be provided');
+          }
+
+          // Read body from file if provided
+          const body = commentBodyFile
+            ? fs.readFileSync(commentBodyFile, 'utf8')
+            : commentBody;
 
           // Find and delete existing comment if search pattern is provided
           if (searchPattern) {
