@@ -68,7 +68,6 @@ jobs:
     secrets: inherit
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      enable_modified_files_detection: true
       check_to_run: lock_modules
       folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
       verbose: true
