@@ -53,7 +53,7 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@check-modules-lock-in-cicd
         with:
           default_version: "1.10.4"
 
