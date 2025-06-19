@@ -153,7 +153,7 @@ jobs:
       - name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/.github/actions/pr-comment@oackage-pr-comments-action
+        uses: pagopa/dx/.github/actions/pr-comment@package-pr-comments-action
         with:
           comment-body: |
             ### 📖 Terraform Plan (${{ steps.directory.outputs.dir }}) - ${{ steps.plan.outcome }}
