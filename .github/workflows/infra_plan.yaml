@@ -165,8 +165,6 @@ jobs:
             ```
             </details>
           search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
-          search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
-
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result
