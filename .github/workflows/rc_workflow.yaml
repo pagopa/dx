@@ -1,0 +1,31 @@
+name: Call Release Candidate Reusable Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  call_release_candidate:
+    name: Create Release Candidate Version
+    uses: pagopa/dx-playground/.github/workflows/release_candidate_command.yaml@refactors/release-candidate-workflows
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency: call-rc-${{ github.ref }}
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      distribution_type: beta
+    secrets:
+      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+      npm_token: ${{ secrets.NPM_TOKEN }}
+
+  call_snapshot:
+    name: Create Snapshot Version
+    uses: pagopa/dx-playground/.github/workflows/release_snapshot.yaml@refactors/release-candidate-workflows
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency: call-rc-${{ github.ref }}
+    secrets:
+      gh_bot_pat: ${{ secrets.BOT_GH_TOKEN }}
+      npm_token: ${{ secrets.NPM_TOKEN }}
