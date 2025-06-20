@@ -129,17 +129,15 @@ jobs:
           fi
 
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
-          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
-
-          echo "$SUMMARY_LINE" > plan_summary.txt
+          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" tf_plan_stdout.txt || echo "No changes.")
 
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
-            echo "${SUMMARY_LINE}" > plan_output_multiline.txt
-            echo "" >> plan_output_multiline.txt
-            echo "Full plan output was too long and was omitted. Check the workflow logs for full details." >> plan_output_multiline.txt
+            echo "${SUMMARY_LINE}" > plan_output.txt
+            echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
-            cat filtered_plan.txt > plan_output_multiline.txt
+            cat filtered_plan.txt > plan_output.txt
+            echo "COMPLETE_PLAN=true" >> $GITHUB_OUTPUT
           fi
 
           # Error detection based on tf_plan_stdout.txt content
@@ -148,22 +146,40 @@ jobs:
             exit 1
           fi
 
+      - name: Set Plan Output
+        id: set-plan-output
+        env:
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          COMPLETE_PLAN: ${{ steps.plan.outputs.COMPLETE_PLAN }}
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
+          echo "<details>" >> message_body.txt
+          echo "<summary>Show Plan</summary>" >> message_body.txt
+          echo "" >> message_body.txt
+
+          echo "\`\`\`hcl" >> message_body.txt
+          cat plan_output.txt >> message_body.txt
+          echo "\`\`\`" >> message_body.txt
+
+          if [ $COMPLETE_PLAN == 'false' ]; then
+            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          fi
+
+          echo "" >> message_body.txt
+          echo "</details>" >> message_body.txt
 
       # Post the plan output in the PR
       - name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
         uses: pagopa/dx/.github/actions/pr-comment@main
+        env:
+          COMMENT_BODY_FILE: "${{ steps.directory.outputs.dir }}/message_body.txt"
         with:
-          comment-body: |
-            ### 📖 Terraform Plan (${{ steps.directory.outputs.dir }}) - ${{ steps.plan.outcome }}
-            <details>
-            <summary>Show Plan</summary>
-
-            ```hcl
-            ${{ steps.plan.outputs.stdout }}
-            ```
-            </details>
+          comment-body-file: ${{ env.COMMENT_BODY_FILE }}
           search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
 
       # Fail the workflow if the Terraform plan failed
