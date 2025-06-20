@@ -129,7 +129,7 @@ jobs:
           fi
 
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
-          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
+          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" tf_plan_stdout.txt || echo "No changes.")
 
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
