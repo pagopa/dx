@@ -55,6 +55,10 @@ function add_module_result() {
     local prevhash="$6"
     local modulefoldername="$7"
     local modulesource="$8"
+    if [[ -z "$JSON_OUTPUT_FILE" ]]; then
+        # If JSON_OUTPUT_FILE is not set, just return
+        return 0
+    fi
 
     # Only filter out unchanged and skipped modules - always include removed ones
     if [[ "$status" == "unchanged" || "$status" == "skipped" ]]; then
