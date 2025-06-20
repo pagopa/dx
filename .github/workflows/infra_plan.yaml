@@ -150,9 +150,12 @@ jobs:
         id: set-plan-output
         env:
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          COMPLETE_PLAN: ${{ steps.plan.outputs.COMPLETE_PLAN }}
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          echo "### 📖 Terraform Plan (${{ steps.directory.outputs.dir }}) - ${{ steps.plan.outcome }}" > message_body.txt
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
           echo "<details>" >> message_body.txt
           echo "<summary>Show Plan</summary>" >> message_body.txt
           echo "" >> message_body.txt
@@ -161,7 +164,7 @@ jobs:
           cat plan_output.txt >> message_body.txt
           echo "\`\`\`" >> message_body.txt
 
-          if [ ${{ steps.plan.outputs.COMPLETE_PLAN }} == 'false' ]; then
+          if [ $COMPLETE_PLAN == 'false' ]; then
             echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
           fi
 
