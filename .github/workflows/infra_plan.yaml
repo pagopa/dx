@@ -160,11 +160,10 @@ jobs:
           echo "" >> message_body.txt
 
           echo "\`\`\`hcl" >> message_body.txt
-          if [ ${{ steps.plan.outputs.COMPLETE_PLAN }} == 'true' ]; then
-            cat plan_output_multiline.txt >> message_body.txt
-            echo "\`\`\`" >> message_body.txt
-          else
-            echo "\`\`\`" >> message_body.txt
+          cat plan_output_multiline.txt >> message_body.txt
+          echo "\`\`\`" >> message_body.txt
+
+          if [ ${{ steps.plan.outputs.COMPLETE_PLAN }} == 'false' ]; then
             echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
           fi
 
