@@ -131,14 +131,12 @@ jobs:
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
           SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
 
-          echo "$SUMMARY_LINE" > plan_summary.txt
-
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
-            echo "${SUMMARY_LINE}" > plan_output_multiline.txt
+            echo "${SUMMARY_LINE}" > plan_output.txt
             echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
-            cat filtered_plan.txt > plan_output_multiline.txt
+            cat filtered_plan.txt > plan_output.txt
             echo "COMPLETE_PLAN=true" >> $GITHUB_OUTPUT
           fi
 
@@ -160,7 +158,7 @@ jobs:
           echo "" >> message_body.txt
 
           echo "\`\`\`hcl" >> message_body.txt
-          cat plan_output_multiline.txt >> message_body.txt
+          cat plan_output.txt >> message_body.txt
           echo "\`\`\`" >> message_body.txt
 
           if [ ${{ steps.plan.outputs.COMPLETE_PLAN }} == 'false' ]; then
