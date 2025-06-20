@@ -1,5 +1,5 @@
 ---
-sidebar_label: Plan terraform configurations in CI
+sidebar_label: Preview Infrastructure Changes
 ---
 
 # Workflow Infra Plan

@@ -1,5 +1,5 @@
 ---
-sidebar_label: Infra Apply
+sidebar_label: Deploy Infrastructure Changes
 ---
 
 # Workflow Infra Apply
