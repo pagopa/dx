@@ -2,5 +2,8 @@
   "name": "provider-azure",
   "version": "0.3.0",
   "private": true,
-  "description": "Terraform provider for DX on Azure, to enhance developer experience"
+  "description": "Terraform provider for DX on Azure, to enhance developer experience",
+  "scripts": {
+    "format": "go fmt"
+  }
 }

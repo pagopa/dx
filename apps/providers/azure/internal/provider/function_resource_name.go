@@ -108,6 +108,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"postgresql":         "psql",
 		"postgresql_replica": "psql-replica",
 		"redis_cache":        "redis",
+		"mysql":              "mysql",
 
 		// Integration
 		"eventhub_namespace":   "evhns",
