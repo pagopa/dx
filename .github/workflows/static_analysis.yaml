@@ -31,11 +31,6 @@ on:
         description: If enabled, it prints the verbose logging of pre-commit checks
         type: boolean
         required: false
-      fail_on_error:
-        description: If true, the workflow will fail if pre-commit checks fail
-        type: boolean
-        required: false
-        default: true
 
 permissions:
   pull-requests: write # Needed for commenting on PRs
@@ -112,7 +107,7 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set +e  # Continue execution even if pre-commit fails
+          set -eu
 
           echo "Start pre-commit on specific folder ${{ inputs.folder }}"
 
@@ -121,14 +116,6 @@ jobs:
             --show-diff-on-failure \
             ${{ inputs.check_to_run }} \
             --files 2>&1 | tee /tmp/pre-commit-output.log
-
-          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
-          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
-
-          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
-            exit $PRE_COMMIT_EXIT_CODE
-          fi
-
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
         id: pre_commit_modified_files
@@ -136,7 +123,7 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set +e  # Continue execution even if pre-commit fails
+          set -eu
 
           echo "Start pre-commit only on modified files"
           echo "- FROM  Base ref: origin/${{ github.event.pull_request.base.ref }}"
@@ -149,13 +136,6 @@ jobs:
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
             ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
 
-          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
-          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
-
-          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
-            exit $PRE_COMMIT_EXIT_CODE
-          fi
-
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
@@ -163,7 +143,7 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
-          set +e  # Continue execution even if pre-commit fails
+          set -eu
 
           echo "Start pre-commit on all files"
 
@@ -172,13 +152,6 @@ jobs:
             --show-diff-on-failure \
             --all-files \
             ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
-
-          PRE_COMMIT_EXIT_CODE=${PIPESTATUS[0]}
-          echo "PRE_COMMIT_EXIT_CODE=$PRE_COMMIT_EXIT_CODE" >> $GITHUB_ENV
-
-          if [[ $PRE_COMMIT_EXIT_CODE -ne 0 && "${{ inputs.fail_on_error }}" == "true" ]]; then
-            exit $PRE_COMMIT_EXIT_CODE
-          fi
 
       - name: Summarize pre-commit results
         if: always()
