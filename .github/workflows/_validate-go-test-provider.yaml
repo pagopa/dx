@@ -13,7 +13,7 @@ jobs:
   detect-providers:
     runs-on: ubuntu-latest
     outputs:
-      providers: ${{ steps.get-modified-providers.outputs.providers }}
+      providers: ${{ steps.get-modified-providers.outputs.resources }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -22,7 +22,9 @@ jobs:
 
       - name: Get modified providers
         id: get-modified-providers
-        uses: pagopa/dx/.github/actions/get-modified-providers@main
+        uses: pagopa/dx/.github/actions/get-modified-resources@main
+        with:
+          resource_type: "provider"
 
   acceptance:
     name: Acceptance Tests
