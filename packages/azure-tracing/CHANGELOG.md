@@ -1,5 +1,13 @@
 # @pagopa/azure-tracing
 
+## 0.4.4-rc.03335717a46510d51a325422ec7bba68666ab68f
+
+### Patch Changes
+
+- 507df91: Upgrade the OpenTelemetry dependencies
+- 220e53a: Upgrade @azure/monitor-opentelemetry-exporter and @azure/monitor-opentelemetry
+- d7ca7d7: A new patch
+
 ## 0.4.4-beta.0
 
 ### Patch Changes

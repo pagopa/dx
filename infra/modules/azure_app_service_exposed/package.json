@@ -1,6 +1,6 @@
 {
   "name": "azure_app_service_exposed",
-  "version": "1.0.2-beta.1",
+  "version": "1.0.2-rc.03335717a46510d51a325422ec7bba68666ab68f",
   "private": true,
   "provider": "azurerm",
   "description": "Creates an Azure App Service configured for external access"

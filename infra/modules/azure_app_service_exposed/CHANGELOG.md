@@ -1,5 +1,12 @@
 # azure_app_service_exposed
 
+## 1.0.2-rc.03335717a46510d51a325422ec7bba68666ab68f
+
+### Patch Changes
+
+- 4cf5842: A patch to release a beta version
+- 52ca9ec: Testing the new workflow
+
 ## 1.0.2-beta.1
 
 ### Patch Changes
