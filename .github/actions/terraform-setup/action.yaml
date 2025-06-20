@@ -17,6 +17,7 @@ runs:
 
   steps:
     - name: Get Terraform Version
+      if: ${{ inputs.terraform_version == '' }}
       id: get-version
       uses: pagopa/dx/.github/actions/get-terraform-version@main
       with:
@@ -25,4 +26,4 @@ runs:
     - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
       name: Setup Terraform
       with:
-        terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+        terraform_version: ${{ inputs.terraform_version || steps.get-version.outputs.terraform_version }}
