@@ -152,6 +152,7 @@ jobs:
         id: set-plan-output
         env:
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           echo "### 📖 Terraform Plan (${{ steps.directory.outputs.dir }}) - ${{ steps.plan.outcome }}" > message_body.txt
           echo "<details>" >> message_body.txt
