@@ -1,0 +1,52 @@
+name: "Get Modified Resources"
+description: "Determines which Terraform providers or modules have been modified compared to the default branch"
+
+inputs:
+  current_ref:
+    description: "Current branch reference"
+    required: false
+    type: string
+    default: ""
+  resource_type:
+    description: "Specify if the resource to check is a provider or module. Possible values: 'provider', 'module'. Default is 'module'."
+    required: false
+    type: string
+    default: "module"
+
+outputs:
+  resources:
+    description: "List of modified resources in the format [\"name1\", \"name2\"]"
+    value: ${{ steps.get-resources.outputs.resources }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get modified ${{ inputs.resource_type }}
+      id: get-resources
+      env:
+        CURRENT_BRANCH_SHA: ${{ inputs.current_ref || github.sha }}
+        RESOURCE_TYPE: ${{ inputs.resource_type }}
+      shell: bash
+      run: |
+        if [ "$RESOURCE_TYPE" != "provider" ] && [ "$RESOURCE_TYPE" != "module" ]; then
+          echo "Invalid resource type: $RESOURCE_TYPE. Must be 'provider' or 'module'."
+          exit 1
+        elif [ "$RESOURCE_TYPE" == "provider" ]; then
+          FOLDER_PATH="apps/providers"
+        else
+          FOLDER_PATH="infra/modules"
+        fi
+
+        DEFAULT_BRANCH_SHA=$(git rev-parse origin/$(git remote show origin | awk '/HEAD branch/ {print $NF}'))
+        echo "Default branch SHA: $DEFAULT_BRANCH_SHA"
+        echo "Current branch SHA: $CURRENT_BRANCH_SHA"
+
+        folders_list=$(git diff --name-only $DEFAULT_BRANCH_SHA $CURRENT_BRANCH_SHA $FOLDER_PATH \
+          | xargs -r dirname \
+          | sed "s#^$FOLDER_PATH/\([^/]*\).*#\1#" \
+          | uniq \
+          | jq -R -c . \
+          | jq -s -c .)
+
+        echo "Resources changed: $folders_list"
+        echo "resources=$folders_list" >> $GITHUB_OUTPUT
