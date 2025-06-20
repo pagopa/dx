@@ -176,7 +176,7 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: pagopa/dx/.github/actions/pr-comment@main
         with:
-          comment-body: "message_body.txt"
+          comment-body-file: "message_body.txt"
           search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
 
 
