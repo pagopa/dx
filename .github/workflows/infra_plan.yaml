@@ -116,6 +116,8 @@ jobs:
       - name: Terraform Plan
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | grep -v "hidden-link:" | tee tf_plan_stdout.txt
           terraform show -no-color plan.out > full_plan.txt
@@ -138,7 +140,7 @@ jobs:
             echo "${SUMMARY_LINE}" > plan_output_multiline.txt
             echo "\`\`\`" >> plan_output_multiline.txt
             echo "" >> plan_output_multiline.txt
-            echo "Full plan output was too long and was omitted. Check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for full details." >> plan_output_multiline.txt
+            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> plan_output_multiline.txt
           else
             cat filtered_plan.txt > plan_output_multiline.txt
             echo "\`\`\`" >> plan_output_multiline.txt
