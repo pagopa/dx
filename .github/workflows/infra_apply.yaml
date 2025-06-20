@@ -62,7 +62,7 @@ jobs:
           default_version: "1.10.4"
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@add-static-analysis-action-resume
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [get-terraform-version]
     secrets: inherit
@@ -182,7 +182,7 @@ jobs:
           file_path: ${{ needs.tf_plan.outputs.working_dir }}
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@check-modules-lock-in-cicd
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 

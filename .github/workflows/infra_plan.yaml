@@ -53,12 +53,12 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@check-modules-lock-in-cicd
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@add-static-analysis-action-resume
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [get-terraform-version]
     secrets: inherit
@@ -129,7 +129,7 @@ jobs:
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@check-modules-lock-in-cicd
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
