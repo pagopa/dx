@@ -47,4 +47,4 @@ No modules.
 | <a name="output_distribution_id"></a> [distribution\_id](#output\_distribution\_id) | The ID of the CloudFront distribution. |
 | <a name="output_distribution_url"></a> [distribution\_url](#output\_distribution\_url) | The URL of the CloudFront distribution. |
 | <a name="output_domain_name"></a> [domain\_name](#output\_domain\_name) | The domain name of the CloudFront distribution. |
-| <a name="output_zone_id"></a> [zone\_id](#output\_zone\_id) | The hosted zone ID of the CloudFront distribution. |
+| <a name="output_hosted_zone_id"></a> [hosted\_zone\_id](#output\_hosted\_zone\_id) | The hosted zone ID of the CloudFront distribution. |
