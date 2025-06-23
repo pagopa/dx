@@ -4,8 +4,7 @@
     "outDir": "./bin",
     "rootDir": "./src",
     "moduleResolution": "NodeNext",
-    "module": "NodeNext",
-    "resolveJsonModule": true
+    "module": "NodeNext"
   },
   "include": ["src"]
 }
