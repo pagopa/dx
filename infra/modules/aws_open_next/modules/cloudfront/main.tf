@@ -157,7 +157,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   enabled         = true
   is_ipv6_enabled = true
   comment         = "${local.app_prefix} - CloudFront Distribution for Next.js Application"
-  aliases         = var.custom_domain != null ? var.custom_domain.domain_names : []
+  aliases         = var.custom_domain != null ? [var.custom_domain.domain_name, "www.${var.custom_domain.domain_name}"] : []
   web_acl_id      = var.enable_waf ? aws_wafv2_web_acl.cloudfront[0].arn : null
 
   viewer_certificate {
