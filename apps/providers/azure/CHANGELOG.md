@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.4.0
+
+### Minor Changes
+
+- 913bc67: Add mysql to resource abbreviations
+
 ## 0.3.0
 
 ### Minor Changes
