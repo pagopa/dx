@@ -130,7 +130,7 @@ jobs:
         uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@check-modules-lock-in-cicd
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         id: set-terraform-version
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -184,7 +184,7 @@ jobs:
           file_path: ${{ needs.tf_plan.outputs.working_dir }}
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@check-modules-lock-in-cicd
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 

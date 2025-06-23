@@ -129,7 +129,7 @@ jobs:
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@check-modules-lock-in-cicd
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
