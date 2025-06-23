@@ -35,7 +35,7 @@ No modules.
 | <a name="input_origins"></a> [origins](#input\_origins) | n/a | <pre>object({<br/>    assets_bucket = object({<br/>      domain_name = string<br/>      oac         = string<br/>    })<br/>    server_function = object({<br/>      url = string<br/>      oac = string<br/>    })<br/>    image_optimization_function = object({<br/>      url = string<br/>      oac = string<br/>    })<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_are_previews_enabled"></a> [are\_previews\_enabled](#input\_are\_previews\_enabled) | Enable previews for OpenNext application. | `bool` | `false` | no |
-| <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain information. | <pre>object({<br/>    domain_names        = list(string)<br/>    hosted_zone_id      = string<br/>    acm_certificate_arn = string<br/>  })</pre> | `null` | no |
+| <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain information. | <pre>object({<br/>    domain_name         = string<br/>    hosted_zone_id      = string<br/>    acm_certificate_arn = string<br/>  })</pre> | `null` | no |
 | <a name="input_custom_headers"></a> [custom\_headers](#input\_custom\_headers) | Custom headers to be added to the CloudFront distribution. | <pre>list(object({<br/>    header   = string<br/>    value    = string<br/>    override = optional(bool)<br/>  }))</pre> | `[]` | no |
 | <a name="input_enable_waf"></a> [enable\_waf](#input\_enable\_waf) | Enable WAF for CloudFront distribution. | `bool` | `false` | no |
 

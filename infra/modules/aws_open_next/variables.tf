@@ -22,7 +22,7 @@ variable "environment" {
 
 variable "custom_domain" {
   type = object({
-    domain_names        = list(string)
+    domain_name         = string
     acm_certificate_arn = string
     hosted_zone_id      = optional(string, null)
   })
