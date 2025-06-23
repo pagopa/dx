@@ -28,11 +28,14 @@
     "@types/node": "^20.12.2",
     "eslint": "8.57.0",
     "tsup": "^8.5.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4",
+    "vitest-mock-extended": "^3.1.0"
   },
   "scripts": {
     "build": "tsup",
     "lint": "eslint --fix src",
-    "lint:check": "eslint src"
+    "lint:check": "eslint src",
+    "test": "vitest"
   }
 }
