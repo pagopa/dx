@@ -6,5 +6,6 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["**/__tests__/**"]
 }
