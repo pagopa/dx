@@ -4396,6 +4396,7 @@ __metadata:
   dependencies:
     "@pagopa/eslint-config": "workspace:^"
     "@tsconfig/node20": "npm:^20.1.5"
+    "@types/node": "npm:^20.12.2"
     commander: "npm:^14.0.0"
     eslint: "npm:8.57.0"
     tsup: "npm:^8.5.0"
