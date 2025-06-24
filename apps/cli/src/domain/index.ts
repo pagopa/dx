@@ -1,7 +1,7 @@
 import { Dependencies } from "./dependencies.js";
 
 export const unwrapOrLogError =
-  ({ writer }: Dependencies) =>
+  ({ writer }: Pick<Dependencies, "writer">) =>
   async <T>(fn: () => Promise<T>): Promise<T> => {
     try {
       return await fn();
