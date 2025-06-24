@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "commander": "^14.0.0",
-    "execa": "^9.6.0"
+    "execa": "^9.6.0",
+    "zod": "^3.25.28"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

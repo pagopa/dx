@@ -4568,6 +4568,7 @@ __metadata:
     typescript: "npm:~5.8.3"
     vitest: "npm:^3.2.4"
     vitest-mock-extended: "npm:^3.1.0"
+    zod: "npm:^3.25.28"
   bin:
     dx: ./bin/index.js
   languageName: unknown
