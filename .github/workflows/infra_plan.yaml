@@ -42,8 +42,35 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
 
 jobs:
+  get-terraform-version:
+    name: Get Terraform Version
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        with:
+          default_version: "1.10.4"
+
+  tf-modules-check:
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    name: Check terraform registry modules hashes
+    needs: [get-terraform-version]
+    secrets: inherit
+    with:
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      check_to_run: lock_modules
+      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      verbose: true
+
   tf_plan:
     name: 'Terraform Plan'
+    needs: [get-terraform-version, tf-modules-check]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
@@ -103,6 +130,8 @@ jobs:
       - name: Terraform Setup
         id: set-terraform-version
         uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
