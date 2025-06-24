@@ -1,6 +1,6 @@
 # DX - Azure Service Bus Alerts
 
-![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-service-bus-dlq-alert/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-service-bus-dlq-alert%2Fazurerm%2Flatest)
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-service-bus-alerts/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-service-bus-dlq-alert%2Fazurerm%2Flatest)
 
 This Terraform module provisions alerts to monitor the amount of messages in both active and DLQ Service Bus entities (queue and topics).
 
