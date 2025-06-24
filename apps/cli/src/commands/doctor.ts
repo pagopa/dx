@@ -6,7 +6,7 @@ import { checkMonorepoScripts } from "../domain/node.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
-  "nodeReader" | "repositoryReader" | "writer"
+  "logger" | "nodeReader" | "repositoryReader"
 >;
 
 export const makeDoctorCommand = (dependencies: DoctorDependencies): Command =>
@@ -16,16 +16,16 @@ export const makeDoctorCommand = (dependencies: DoctorDependencies): Command =>
       "Verify the repository setup according to the DevEx guidelines",
     )
     .action(async () => {
-      const { repositoryReader, writer } = dependencies;
+      const { logger, repositoryReader } = dependencies;
 
       const repoRoot = repositoryReader.findRepositoryRoot(process.cwd());
       if (!repoRoot) {
-        writer.write(
-          "❌ Could not find repository root. Make sure to have the repo initialized.",
+        logger.error(
+          "Could not find repository root. Make sure to have the repo initialized.",
         );
         return;
       }
 
-      writer.write("Checking monorepo scripts...");
+      logger.log("Checking monorepo scripts...");
       await checkMonorepoScripts(repoRoot)(dependencies);
     });

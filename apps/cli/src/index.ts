@@ -7,9 +7,9 @@ import { doctor } from "./commands/index.js";
 import { Dependencies } from "./domain/dependencies.js";
 
 const deps: Dependencies = {
+  logger: makeConsoleLogger(),
   nodeReader: makeNodeReader(),
   repositoryReader: makeRepositoryReader(),
-  writer: makeConsoleLogger(),
 };
 
 const program = new Command();
