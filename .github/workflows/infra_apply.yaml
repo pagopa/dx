@@ -83,6 +83,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
     outputs:
