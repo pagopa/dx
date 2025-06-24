@@ -1,12 +1,14 @@
 import { Command } from "commander";
 
 import { makeConsoleWriter } from "./adapters/console/index.js";
+import { makeRepositoryReader } from "./adapters/node/index.js";
 import { makeNodeReader } from "./adapters/yarn/index.js";
 import { doctor } from "./commands/index.js";
 import { Dependencies } from "./domain/dependencies.js";
 
 const deps: Dependencies = {
   nodeReader: makeNodeReader(),
+  repositoryReader: makeRepositoryReader(),
   writer: makeConsoleWriter(),
 };
 

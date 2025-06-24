@@ -19,7 +19,8 @@ export interface NodeReader {
 const requiredRootScripts = ["code-review"];
 
 export const checkMonorepoScripts =
-  (monorepoDir: string) => async (dependencies: Dependencies) => {
+  (monorepoDir: string) =>
+  async (dependencies: Pick<Dependencies, "nodeReader" | "writer">) => {
     const { nodeReader, writer } = dependencies;
 
     const scripts = await unwrapOrLogError(dependencies)(() =>
