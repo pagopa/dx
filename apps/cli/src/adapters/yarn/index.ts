@@ -5,12 +5,12 @@ import { NodeReader, ScriptSchema } from "../../domain/node.js";
 
 export const makeNodeReader = (): NodeReader => ({
   getScripts: async (cwd = process.cwd()) => {
-    const { stdout } = await execa("yarn", ["run", "--json"], {
+    const { exitCode, stdout } = await execa("yarn", ["run", "--json"], {
       cwd,
     });
 
-    return stdout
-      .split("\n")
-      .map((line) => ScriptSchema.parse(JSON.parse(line)));
+    return exitCode === 1
+      ? []
+      : stdout.split("\n").map((line) => ScriptSchema.parse(JSON.parse(line)));
   },
 });
