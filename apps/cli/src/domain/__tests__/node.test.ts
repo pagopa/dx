@@ -9,13 +9,20 @@ describe("checkMonorepoScripts", () => {
   it("should log the error", async () => {
     const deps = makeMockDependencies();
 
+    // If promise fails with Error, it should log the error message
     const errorMessage = "Oh No!";
     deps.nodeReader.getScripts.mockRejectedValueOnce(new Error(errorMessage));
-
     await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
       errorMessage,
     );
     expect(deps.writer.write).toBeCalledWith(`❌ ${errorMessage}`);
+
+    // If promise fails with anything but Error, it should log a generic error message
+    deps.nodeReader.getScripts.mockRejectedValueOnce(errorMessage);
+    await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
+      errorMessage,
+    );
+    expect(deps.writer.write).toBeCalledWith("❌ Unknown error");
   });
 
   it("should log the message", async () => {
