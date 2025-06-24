@@ -12,7 +12,9 @@ type DoctorDependencies = Pick<
 export const makeDoctorCommand = (dependencies: DoctorDependencies): Command =>
   new Command()
     .name("doctor")
-    .description("Checks the development environment")
+    .description(
+      "Verify the repository setup according to the DevEx guidelines",
+    )
     .action(async () => {
       const { repositoryReader, writer } = dependencies;
 
