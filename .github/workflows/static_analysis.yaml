@@ -69,7 +69,7 @@ jobs:
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-latest
-    needs: [ get-versions ]
+    needs: [get-versions]
     # Ensures execution even if get-versions is skipped
     if: ${{ always() }}
     env:
@@ -98,7 +98,6 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
-
 
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
@@ -169,7 +168,7 @@ jobs:
 
           # Initialize variables
           EXECUTION_SCOPE="all files"
-          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: \`$FOLDER\`"
+          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: ($FOLDER)"
           [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
 
           # Utility functions to add content to both summary and temporary file
