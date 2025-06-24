@@ -1,8 +1,9 @@
-import { MockProxy, mock } from "vitest-mock-extended";
+import { mock } from "vitest-mock-extended";
 
-import { Dependencies } from "../dependencies.js";
+import { NodeReader } from "../node.js";
 import { Writer } from "../writer.js";
 
-export const makeMockDependencies = (): MockProxy<Dependencies> => ({
+export const makeMockDependencies = () => ({
+  nodeReader: mock<NodeReader>(),
   writer: mock<Writer>(),
 });
