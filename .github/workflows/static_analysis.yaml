@@ -168,7 +168,7 @@ jobs:
 
           # Initialize variables
           EXECUTION_SCOPE="all files"
-          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: ($FOLDER)"
+          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: $FOLDER"
           [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
 
           # Utility functions to add content to both summary and temporary file
