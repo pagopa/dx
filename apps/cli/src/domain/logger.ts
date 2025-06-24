@@ -1,3 +1,5 @@
 export interface Logger {
-  write(message: string): void;
+  error(message: string): void;
+  log(message: string): void;
+  success(message: string): void;
 }

@@ -12,8 +12,8 @@ describe("doctor command", () => {
     const doctorCommand = makeDoctorCommand(deps);
     doctorCommand.parse([]);
 
-    expect(deps.writer.write).toHaveBeenCalledWith(
-      "❌ Could not find repository root. Make sure to have the repo initialized.",
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      "Could not find repository root. Make sure to have the repo initialized.",
     );
   });
 });

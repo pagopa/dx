@@ -20,18 +20,18 @@ const requiredRootScripts = ["code-review"];
 
 export const checkMonorepoScripts =
   (monorepoDir: string) =>
-  async (dependencies: Pick<Dependencies, "nodeReader" | "writer">) => {
-    const { nodeReader, writer } = dependencies;
+  async (dependencies: Pick<Dependencies, "logger" | "nodeReader">) => {
+    const { logger, nodeReader } = dependencies;
 
     const scripts = await unwrapOrLogError(dependencies)(() =>
       nodeReader.getScripts(monorepoDir),
     );
-    requiredRootScripts
-      .map((script) => {
-        const exists = scripts.some(({ name }) => name === script);
-        return {
-          message: `${exists ? "✅" : "❌"} Script "${script}" is ${exists ? "present" : "missing"} in the monorepo root`,
-        };
-      })
-      .map(({ message }) => writer.write(message));
+    requiredRootScripts.map((script) => {
+      const exists = scripts.some(({ name }) => name === script);
+      if (exists) {
+        logger.success(`Script "${script}" is present in the monorepo root`);
+      } else {
+        logger.error(`Script "${script}" is missing in the monorepo root`);
+      }
+    });
   };

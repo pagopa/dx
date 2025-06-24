@@ -15,14 +15,14 @@ describe("checkMonorepoScripts", () => {
     await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
       errorMessage,
     );
-    expect(deps.writer.write).toBeCalledWith(`❌ ${errorMessage}`);
+    expect(deps.logger.error).toBeCalledWith(errorMessage);
 
     // If promise fails with anything but Error, it should log a generic error message
     deps.nodeReader.getScripts.mockRejectedValueOnce(errorMessage);
     await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
       errorMessage,
     );
-    expect(deps.writer.write).toBeCalledWith("❌ Unknown error");
+    expect(deps.logger.error).toBeCalledWith("Unknown error");
   });
 
   it("should log the message", async () => {
@@ -37,8 +37,8 @@ describe("checkMonorepoScripts", () => {
     deps.nodeReader.getScripts.mockResolvedValueOnce(scripts);
 
     await checkMonorepoScripts(monorepoDir)(deps);
-    expect(deps.writer.write).toHaveBeenCalledWith(
-      `❌ Script "code-review" is missing in the monorepo root`,
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      'Script "code-review" is missing in the monorepo root',
     );
   });
 });

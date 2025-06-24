@@ -1,13 +1,13 @@
 import { Dependencies } from "./dependencies.js";
 
 export const unwrapOrLogError =
-  ({ writer }: Pick<Dependencies, "writer">) =>
+  ({ logger }: Pick<Dependencies, "logger">) =>
   async <T>(fn: () => Promise<T>): Promise<T> => {
     try {
       return await fn();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      writer.write(`❌ ${message}`);
+      logger.error(message);
       throw error;
     }
   };
