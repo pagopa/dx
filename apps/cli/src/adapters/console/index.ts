@@ -1,6 +1,6 @@
-import { Writer } from "../../domain/writer.js";
+import { Logger } from "../../domain/logger.js";
 
-export const makeConsoleWriter = (): Writer => ({
+export const makeConsoleLogger = (): Logger => ({
   write: (message: string) => {
     console.log(message);
   },

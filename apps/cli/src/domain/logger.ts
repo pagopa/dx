@@ -1,3 +1,3 @@
-export interface Writer {
+export interface Logger {
   write(message: string): void;
 }

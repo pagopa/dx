@@ -1,11 +1,11 @@
 import { mock } from "vitest-mock-extended";
 
+import { Logger } from "../logger.js";
 import { NodeReader } from "../node.js";
 import { RepositoryReader } from "../reporisoty.js";
-import { Writer } from "../writer.js";
 
 export const makeMockDependencies = () => ({
   nodeReader: mock<NodeReader>(),
   repositoryReader: mock<RepositoryReader>(),
-  writer: mock<Writer>(),
+  writer: mock<Logger>(),
 });
