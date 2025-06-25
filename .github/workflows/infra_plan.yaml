@@ -58,7 +58,7 @@ jobs:
           default_version: "1.10.4"
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@pr-comments-action-dedup-not-working
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [get-terraform-version]
     secrets: inherit
