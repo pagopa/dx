@@ -15,7 +15,7 @@ const deps: Dependencies = {
 const program = new Command();
 
 program
-  .name("DX-CLI")
+  .name("dx")
   .description("The CLI for DX-Platform")
   .version(__CLI_VERSION__);
 
