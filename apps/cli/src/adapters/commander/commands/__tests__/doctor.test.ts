@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { makeMockDependencies } from "../../domain/__tests__/data";
+import { makeMockDependencies } from "../../../../domain/__tests__/data";
 import { makeDoctorCommand } from "../doctor";
 
 describe("doctor command", () => {

@@ -1,9 +1,9 @@
 import { Command } from "commander";
 
+import { doctor } from "./adapters/commander/commands/index.js";
 import { makeConsoleLogger } from "./adapters/console/index.js";
 import { makeRepositoryReader } from "./adapters/node/index.js";
 import { makeNodeReader } from "./adapters/yarn/index.js";
-import { doctor } from "./commands/index.js";
 import { Dependencies } from "./domain/dependencies.js";
 
 const deps: Dependencies = {
