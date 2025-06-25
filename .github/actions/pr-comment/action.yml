@@ -45,8 +45,19 @@ runs:
               issue_number: context.issue.number
             });
 
+            // Debug: log all comments and pattern matching
+            console.log('--- PR Comment Debug ---');
+            console.log('Search pattern:', searchPattern);
+            comments.forEach((comment, idx) => {
+              const found = comment.body.includes(searchPattern);
+              console.log(`Comment #${idx}: found=${found}`);
+              console.log(comment.body);
+            });
+
+            // Rendiamo il confronto più robusto: trim e case insensitive
+            const normalizedPattern = searchPattern.trim().toLowerCase();
             const matchingComments = comments.filter(comment =>
-              comment.body.includes(searchPattern)
+              comment.body && comment.body.toLowerCase().includes(normalizedPattern)
             );
 
             for (const comment of matchingComments) {
