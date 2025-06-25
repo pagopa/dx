@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { RepositoryReader } from "../../domain/reporisoty.js";
+import { RepositoryReader } from "../../domain/repository.js";
 
 const findRoot = (dir: string): null | string => {
   const gitPath = join(dir, ".git");
