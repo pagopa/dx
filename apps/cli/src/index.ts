@@ -1,4 +1,4 @@
-import { makeCli } from "./adapters/commander/commands/index.js";
+import { makeCli } from "./adapters/commander/index.js";
 import { makeConsoleLogger } from "./adapters/console/index.js";
 import { makeNodeReader } from "./adapters/node/index.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";

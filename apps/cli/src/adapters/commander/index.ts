@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
-import { Dependencies } from "../../../domain/dependencies.js";
-import { makeDoctorCommand } from "./doctor.js";
+import { Dependencies } from "../../domain/dependencies.js";
+import { makeDoctorCommand } from "./commands/doctor.js";
 
 export const makeCli = (dependencies: Dependencies) => {
   const program = new Command();
