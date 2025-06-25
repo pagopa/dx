@@ -16,7 +16,22 @@ export interface NodeReader {
   getScripts(cwd: string): Promise<Script[]>;
 }
 
-const requiredRootScripts = ["code-review"];
+const MonorepoScriptListSchema = z
+  .array(ScriptSchema)
+  .superRefine((scripts, ctx) => {
+    const scriptNames = scripts.map(({ name }) => name);
+    const requiredRootScripts = ["code-review"] as Script["name"][];
+    const missingScripts = requiredRootScripts.filter(
+      (rootScript) => !scriptNames.includes(rootScript),
+    );
+
+    if (missingScripts.length > 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Missing required scripts: ${missingScripts.join(", ")}`,
+      });
+    }
+  });
 
 export const checkMonorepoScripts =
   (monorepoDir: string) =>
@@ -26,12 +41,15 @@ export const checkMonorepoScripts =
     const scripts = await unwrapOrLogError(dependencies)(() =>
       nodeReader.getScripts(monorepoDir),
     );
-    requiredRootScripts.map((script) => {
-      const exists = scripts.some(({ name }) => name === script);
-      if (exists) {
-        logger.success(`Script "${script}" is present in the monorepo root`);
-      } else {
-        logger.error(`Script "${script}" is missing in the monorepo root`);
-      }
-    });
+    const { error, success } =
+      await MonorepoScriptListSchema.safeParseAsync(scripts);
+
+    if (success) {
+      logger.success("Monorepo scripts are correctly set up");
+    } else {
+      const errorMessage = error.errors
+        .map(({ message }) => message)
+        .join(", ");
+      logger.error(errorMessage);
+    }
   };

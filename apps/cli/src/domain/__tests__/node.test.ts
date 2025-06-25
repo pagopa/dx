@@ -25,20 +25,33 @@ describe("checkMonorepoScripts", () => {
     expect(deps.logger.error).toBeCalledWith("Unknown error");
   });
 
-  it("should log the message", async () => {
+  it("should log the success message", async () => {
     const deps = makeMockDependencies();
 
     const scripts = [
       {
-        name: "lint",
+        name: "build",
+        script: "eslint .",
+      },
+      {
+        name: "code-review",
         script: "eslint .",
       },
     ] as Script[];
     deps.nodeReader.getScripts.mockResolvedValueOnce(scripts);
 
     await checkMonorepoScripts(monorepoDir)(deps);
+    expect(deps.logger.success).toHaveBeenCalledTimes(1);
+  });
+
+  it("should log the missing script error message", async () => {
+    const deps = makeMockDependencies();
+
+    deps.nodeReader.getScripts.mockResolvedValueOnce([]);
+
+    await checkMonorepoScripts(monorepoDir)(deps);
     expect(deps.logger.error).toHaveBeenCalledWith(
-      'Script "code-review" is missing in the monorepo root',
+      "Missing required scripts: code-review",
     );
   });
 });
