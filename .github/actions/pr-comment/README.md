@@ -12,8 +12,9 @@ This action creates or updates comments on Pull Requests. It provides a simple w
 ## Usage
 
 ### Post a New Comment Using Direct Content
+
 ```yaml
-- uses: ./.github/actions/pr-comment
+- uses: pagopa/dx/.github/actions/pr-comment@main
   with:
     comment-body: |
       ### Build Results ✅
@@ -21,14 +22,17 @@ This action creates or updates comments on Pull Requests. It provides a simple w
 ```
 
 ### Post a New Comment Using Content from File
+
 ```yaml
-- uses: ./.github/actions/pr-comment
+- uses: pagopa/dx/.github/actions/pr-comment@main
   with:
     comment-body-file: path/to/build-report.md
+```
 
 ### Update Existing Comment
+
 ```yaml
-- uses: ./.github/actions/pr-comment
+- uses: pagopa/dx/.github/actions/pr-comment@main
   with:
     # Using direct content
     comment-body: |
@@ -36,28 +40,33 @@ This action creates or updates comments on Pull Requests. It provides a simple w
       \`\`\`json
       ${{ steps.coverage.outputs.report }}
       \`\`\`
-    search-pattern: 'Test Coverage Report'  # Will update existing comment if found
+    search-pattern: "Test Coverage Report" # Will update existing comment if found
+```
 
+### Update Existing Comment Using File Content
+
+```yaml
 # OR using file content
-- uses: ./.github/actions/pr-comment
+- uses: pagopa/dx/.github/actions/pr-comment@main
   with:
     comment-body-file: coverage-report.md
-    search-pattern: 'Test Coverage Report'  # Will update existing comment if found
+    search-pattern: "Test Coverage Report" # Will update existing comment if found
 ```
 
 ## Inputs
 
-| Input | Description | Required |
-|-------|-------------|----------|
-| `comment-body` | Content of the comment (supports markdown). Either this or `comment-body-file` must be provided | No |
-| `comment-body-file` | Path to a file containing the comment content (supports markdown). Either this or `comment-body` must be provided | No |
-| `search-pattern` | Text pattern to identify existing comments to replace | No |
+| Input               | Description                                                                                                       | Required |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- | -------- |
+| `comment-body`      | Content of the comment (supports markdown). Either this or `comment-body-file` must be provided                   | No       |
+| `comment-body-file` | Path to a file containing the comment content (supports markdown). Either this or `comment-body` must be provided | No       |
+| `search-pattern`    | Text pattern to identify existing comments to replace                                                             | No       |
 
 > **Note**: You must provide either `comment-body` or `comment-body-file`. If both are provided, `comment-body` takes precedence.
 
 ## Example Use Cases
 
 ### Terraform Plan
+
 ```yaml
 - uses: ./.github/actions/pr-comment
   with:
@@ -75,3 +84,4 @@ This action creates or updates comments on Pull Requests. It provides a simple w
 ## Maintainers
 
 This action is maintained by the [PagoPA DX](https://pagopa.github.io/dx/docs/) team.
+```

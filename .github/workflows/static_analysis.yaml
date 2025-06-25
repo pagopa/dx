@@ -258,7 +258,7 @@ jobs:
 
           # Set the summary file path as output
           echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
-          echo "decouple_string=\"Run ${CHECK_INFO} on ${EXECUTION_SCOPE}\"" >> "$GITHUB_OUTPUT"
+          echo "decouple_string=Run ${CHECK_INFO} on ${EXECUTION_SCOPE}" >> "$GITHUB_OUTPUT"
 
       - name: Post Summary on PR
         if: always() && github.event_name == 'pull_request'
