@@ -17,8 +17,6 @@ Storage Queue role assignments are designed to manage access to Azure Storage Qu
 ### Usage Notes
 
 - **Queue Scope**: You can assign roles to specific queues by providing the `queue_name`, or to all queues in a storage account by using the default value `"*"`.
-- **Resource Manager ID**: Optionally specify `queue_resource_manager_id` for explicit resource targeting.
-- **Multiple Roles**: The `reader` role automatically assigns both "Storage Queue Data Message Processor" and "Storage Queue Data Reader" roles to provide comprehensive read access.
 
 ### Example
 
