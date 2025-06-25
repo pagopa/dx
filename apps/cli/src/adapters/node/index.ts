@@ -1,16 +1,37 @@
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { Result, ResultAsync } from "neverthrow";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import * as process from "node:process";
 
-import { RepositoryReader } from "../../domain/repository.js";
+import { NodeReader } from "../../domain/node.js";
+import { PackageJsonSchema, ScriptsArraySchema } from "./codec.js";
 
-const findRoot = (dir: string): null | string => {
-  const gitPath = join(dir, ".git");
-  if (existsSync(gitPath)) return dir;
+const toJSON = Result.fromThrowable(
+  JSON.parse,
+  () => new Error("Failed to parse JSON"),
+);
 
-  const parent = dirname(dir);
-  return dir === parent ? null : findRoot(parent);
-};
+const toPackageJson = Result.fromThrowable(
+  PackageJsonSchema.parse,
+  () => new Error("Invalid package.json format"),
+);
 
-export const makeRepositoryReader = (): RepositoryReader => ({
-  findRepositoryRoot: findRoot,
+const toScriptsArray = Result.fromThrowable(
+  ScriptsArraySchema.parse,
+  () => new Error("Failed to validate scripts array"),
+);
+
+export const makeNodeReader = (): NodeReader => ({
+  getScripts: (cwd = process.cwd()) => {
+    const packageJsonPath = join(cwd, "package.json");
+
+    return ResultAsync.fromPromise(
+      readFile(packageJsonPath, "utf-8"),
+      () => new Error("Failed to read package.json"),
+    )
+      .andThen(toJSON)
+      .andThen(toPackageJson)
+      .map(({ scripts }) => scripts)
+      .andThen(toScriptsArray);
+  },
 });
