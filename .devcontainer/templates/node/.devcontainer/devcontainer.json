@@ -17,7 +17,8 @@
       "installYarnUsingApt": false,
       "pnpmVersion": "none",
       "nvmInstallPath": "/opt/nvm"
-    }
+    },
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
