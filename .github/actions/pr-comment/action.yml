@@ -46,12 +46,8 @@ runs:
             });
 
             // Debug: log all comments and pattern matching
-            console.log('--- PR Comment Debug ---');
-            console.log('Search pattern:', searchPattern);
             comments.forEach((comment, idx) => {
               const found = comment.body.includes(searchPattern);
-              console.log(`Comment #${idx}: found=${found}`);
-              console.log(comment.body);
             });
 
             // Rendiamo il confronto più robusto: trim e case insensitive

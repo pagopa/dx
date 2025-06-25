@@ -262,7 +262,7 @@ jobs:
 
       - name: Post Summary on PR
         if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/.github/actions/pr-comment@pr-comments-action-dedup-not-working
+        uses: pagopa/dx/.github/actions/pr-comment@main
         with:
           comment-body-file: ${{ steps.summary.outputs.summary_file }}
           search-pattern: ${{ steps.summary.outputs.decouple_string }}
