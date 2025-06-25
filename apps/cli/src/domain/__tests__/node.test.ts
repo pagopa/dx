@@ -1,3 +1,4 @@
+import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { Script, checkMonorepoScripts } from "../node.js";
@@ -6,26 +7,22 @@ import { makeMockDependencies } from "./data.js";
 describe("checkMonorepoScripts", () => {
   const monorepoDir = "/path/to/monorepo";
 
-  it("should log the error", async () => {
+  it("should log and return error result", async () => {
     const deps = makeMockDependencies();
 
-    // If promise fails with Error, it should log the error message
+    // If getScripts returns error, it should log the error message and return error result
     const errorMessage = "Oh No!";
-    deps.nodeReader.getScripts.mockRejectedValueOnce(new Error(errorMessage));
-    await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
-      errorMessage,
+    deps.nodeReader.getScripts.mockReturnValueOnce(
+      errAsync(new Error(errorMessage)),
     );
-    expect(deps.logger.error).toBeCalledWith(errorMessage);
 
-    // If promise fails with anything but Error, it should log a generic error message
-    deps.nodeReader.getScripts.mockRejectedValueOnce(errorMessage);
-    await expect(checkMonorepoScripts(monorepoDir)(deps)).rejects.toThrow(
-      errorMessage,
-    );
-    expect(deps.logger.error).toBeCalledWith("Unknown error");
+    const result = await checkMonorepoScripts(monorepoDir)(deps);
+
+    expect(result.isErr()).toBe(true);
+    expect(deps.logger.error).toBeCalledWith(errorMessage);
   });
 
-  it("should log the success message", async () => {
+  it("should log the success message and return ok result", async () => {
     const deps = makeMockDependencies();
 
     const scripts = [
@@ -38,18 +35,22 @@ describe("checkMonorepoScripts", () => {
         script: "eslint .",
       },
     ] as Script[];
-    deps.nodeReader.getScripts.mockResolvedValueOnce(scripts);
+    deps.nodeReader.getScripts.mockReturnValueOnce(okAsync(scripts));
 
-    await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
     expect(deps.logger.success).toHaveBeenCalledTimes(1);
   });
 
-  it("should log the missing script error message", async () => {
+  it("should log the missing script error message and return error result", async () => {
     const deps = makeMockDependencies();
 
-    deps.nodeReader.getScripts.mockResolvedValueOnce([]);
+    deps.nodeReader.getScripts.mockReturnValueOnce(okAsync([]));
 
-    await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(monorepoDir)(deps);
+
+    expect(result.isErr()).toBe(true);
     expect(deps.logger.error).toHaveBeenCalledWith(
       "Missing required scripts: code-review",
     );

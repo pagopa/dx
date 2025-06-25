@@ -1,7 +1,7 @@
+import { ResultAsync, err, ok } from "neverthrow";
 import { z } from "zod";
 
 import { Dependencies } from "./dependencies.js";
-import { unwrapOrLogError } from "./index.js";
 
 const ScriptName = z.string().brand<"ScriptName">();
 
@@ -13,14 +13,16 @@ export const ScriptSchema = z.object({
 export type Script = z.infer<typeof ScriptSchema>;
 
 export interface NodeReader {
-  getScripts(cwd: string): Promise<Script[]>;
+  getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
 const MonorepoScriptListSchema = z
   .array(ScriptSchema)
   .superRefine((scripts, ctx) => {
-    const scriptNames = scripts.map(({ name }) => name);
+    // List of scripts that are required in the root package.json
     const requiredRootScripts = ["code-review"] as Script["name"][];
+
+    const scriptNames = scripts.map(({ name }) => name);
     const missingScripts = requiredRootScripts.filter(
       (rootScript) => !scriptNames.includes(rootScript),
     );
@@ -38,18 +40,26 @@ export const checkMonorepoScripts =
   async (dependencies: Pick<Dependencies, "logger" | "nodeReader">) => {
     const { logger, nodeReader } = dependencies;
 
-    const scripts = await unwrapOrLogError(dependencies)(() =>
-      nodeReader.getScripts(monorepoDir),
-    );
-    const { error, success } =
-      await MonorepoScriptListSchema.safeParseAsync(scripts);
+    const scriptsResult = nodeReader.getScripts(monorepoDir).mapErr((error) => {
+      logger.error(error.message);
+      return error;
+    });
 
-    if (success) {
-      logger.success("Monorepo scripts are correctly set up");
-    } else {
-      const errorMessage = error.errors
-        .map(({ message }) => message)
-        .join(", ");
-      logger.error(errorMessage);
-    }
+    return await scriptsResult.andThen((scripts) =>
+      ResultAsync.fromPromise(
+        MonorepoScriptListSchema.safeParseAsync(scripts),
+        (error) => error,
+      ).andThen(({ error, success }) => {
+        if (success) {
+          logger.success("Monorepo scripts are correctly set up");
+          return ok();
+        } else {
+          const errorMessage = error.errors
+            .map(({ message }) => message)
+            .join(", ");
+          logger.error(errorMessage);
+          return err(new Error(errorMessage));
+        }
+      }),
+    );
   };
