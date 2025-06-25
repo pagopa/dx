@@ -1,6 +1,6 @@
 import { Logger } from "./logger.js";
 import { NodeReader } from "./node.js";
-import { RepositoryReader } from "./reporisoty.js";
+import { RepositoryReader } from "./repository.js";
 
 export interface Dependencies {
   logger: Logger;
