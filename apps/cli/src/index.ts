@@ -1,9 +1,7 @@
-import { Command } from "commander";
-
-import { doctor } from "./adapters/commander/commands/index.js";
+import { makeCli } from "./adapters/commander/commands/index.js";
 import { makeConsoleLogger } from "./adapters/console/index.js";
-import { makeRepositoryReader } from "./adapters/node/index.js";
-import { makeNodeReader } from "./adapters/yarn/index.js";
+import { makeNodeReader } from "./adapters/node/index.js";
+import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { Dependencies } from "./domain/dependencies.js";
 
 const deps: Dependencies = {
@@ -12,13 +10,6 @@ const deps: Dependencies = {
   repositoryReader: makeRepositoryReader(),
 };
 
-const program = new Command();
-
-program
-  .name("dx")
-  .description("The CLI for DX-Platform")
-  .version(__CLI_VERSION__);
-
-program.addCommand(doctor(deps));
+const program = makeCli(deps);
 
 program.parse();
