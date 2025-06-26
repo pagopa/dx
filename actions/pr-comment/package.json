@@ -24,7 +24,7 @@
     "typescript"
   ],
   "author": "PagoPA DX Team",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0"
