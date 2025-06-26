@@ -5,19 +5,19 @@ import { Dependencies } from "./dependencies.js";
 
 const ScriptName = z.string().brand<"ScriptName">();
 
-export const ScriptSchema = z.object({
+export const scriptSchema = z.object({
   name: ScriptName,
   script: z.string(),
 });
 
-export type Script = z.infer<typeof ScriptSchema>;
+export type Script = z.infer<typeof scriptSchema>;
 
 export interface NodeReader {
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
-const MonorepoScriptListSchema = z
-  .array(ScriptSchema)
+const monorepoScriptListSchema = z
+  .array(scriptSchema)
   .superRefine((scripts, ctx) => {
     // List of scripts that are required in the root package.json
     const requiredRootScripts = ["code-review"] as Script["name"][];
@@ -47,7 +47,7 @@ export const checkMonorepoScripts =
 
     return await scriptsResult.andThen((scripts) =>
       ResultAsync.fromPromise(
-        MonorepoScriptListSchema.safeParseAsync(scripts),
+        monorepoScriptListSchema.safeParseAsync(scripts),
         (error) => error,
       ).andThen(({ error, success }) => {
         if (success) {
