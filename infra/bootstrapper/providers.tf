@@ -21,7 +21,7 @@ terraform {
     resource_group_name  = "dx-p-itn-tfstate-rg-01"
     storage_account_name = "dxpitntfstatest01"
     container_name       = "terraform-state"
-    key                  = "dx.resources.dev.tfstate"
+    key                  = "dx.bootstrapper.multi.tfstate"
   }
 }
 
