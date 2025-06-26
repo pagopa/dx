@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.0.10
+
+### Patch Changes
+
+- 58f75f6: Remove key vault data source
+
 ## 1.0.9
 
 ### Patch Changes
