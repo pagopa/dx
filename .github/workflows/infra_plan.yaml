@@ -22,7 +22,7 @@ on:
         description: Set a value if GitHub Environment name is different than the TF environment folder
         type: string
         required: false
-        default: ''
+        default: ""
       use_labels:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
@@ -32,7 +32,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -69,7 +69,7 @@ jobs:
       verbose: true
 
   tf_plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
     needs: [get-terraform-version, tf-modules-check]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
@@ -88,7 +88,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
       - name: Set directory

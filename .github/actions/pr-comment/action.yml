@@ -1,18 +1,18 @@
-name: 'PR Comment Manager'
-description: 'Creates or updates comments on Pull Requests'
+name: "PR Comment Manager"
+description: "Creates or updates comments on Pull Requests"
 inputs:
   comment-body:
-    description: 'The comment content to post (supports markdown). Either this or comment-body-file must be provided'
+    description: "The comment content to post (supports markdown). Either this or comment-body-file must be provided"
     required: false
   comment-body-file:
-    description: 'Path to a file containing the comment content (supports markdown). Either this or comment-body must be provided'
+    description: "Path to a file containing the comment content (supports markdown). Either this or comment-body must be provided"
     required: false
   search-pattern:
-    description: 'Text pattern to identify existing comments to delete. If not provided, a new comment will always be created'
+    description: "Text pattern to identify existing comments to delete. If not provided, a new comment will always be created"
     required: false
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Manage PR Comment
       uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -37,7 +37,7 @@ runs:
             ? fs.readFileSync(commentBodyFile, 'utf8')
             : commentBody;
 
-          // Find and delete existing comment if search pattern is provided
+          // Find and delete all existing comments if search pattern is provided
           if (searchPattern) {
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -45,15 +45,22 @@ runs:
               issue_number: context.issue.number
             });
 
-            const existingComment = comments.find(comment =>
-              comment.body.includes(searchPattern)
+            // Debug: log all comments and pattern matching
+            comments.forEach((comment, idx) => {
+              const found = comment.body.includes(searchPattern);
+            });
+
+            // Rendiamo il confronto più robusto: trim e case insensitive
+            const normalizedPattern = searchPattern.trim().toLowerCase();
+            const matchingComments = comments.filter(comment =>
+              comment.body && comment.body.toLowerCase().includes(normalizedPattern)
             );
 
-            if (existingComment) {
+            for (const comment of matchingComments) {
               await github.rest.issues.deleteComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                comment_id: existingComment.id
+                comment_id: comment.id
               });
             }
           }
