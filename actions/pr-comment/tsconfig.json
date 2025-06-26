@@ -7,13 +7,5 @@
     "declaration": true,
     "moduleResolution": "bundler",
     "module": "ESNext"
-  },
-  "include": ["src/**/*"],
-  "exclude": [
-    "tsup.config.ts",
-    "vitest.config.ts",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  }
 }
