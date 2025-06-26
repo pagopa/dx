@@ -6219,12 +6219,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"azure_common_values_exporter@workspace:infra/modules/azure_common_values_exporter":
-  version: 0.0.0-use.local
-  resolution: "azure_common_values_exporter@workspace:infra/modules/azure_common_values_exporter"
-  languageName: unknown
-  linkType: soft
-
 "azure_container_app@workspace:infra/modules/azure_container_app":
   version: 0.0.0-use.local
   resolution: "azure_container_app@workspace:infra/modules/azure_container_app"
@@ -6240,6 +6234,12 @@ __metadata:
 "azure_core_infra@workspace:infra/modules/azure_core_infra":
   version: 0.0.0-use.local
   resolution: "azure_core_infra@workspace:infra/modules/azure_core_infra"
+  languageName: unknown
+  linkType: soft
+
+"azure_core_values_exporter@workspace:infra/modules/azure_core_values_exporter":
+  version: 0.0.0-use.local
+  resolution: "azure_core_values_exporter@workspace:infra/modules/azure_core_values_exporter"
   languageName: unknown
   linkType: soft
 
