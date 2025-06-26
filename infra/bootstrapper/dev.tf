@@ -1,38 +1,3 @@
-module "dev_core" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 1.0"
-
-  providers = {
-    azurerm = azurerm.dev
-  }
-
-  test_enabled = false
-
-  environment = merge(local.environment, { env_short = "d" })
-
-  virtual_network_cidr = "10.51.0.0/16"
-  pep_subnet_cidr      = "10.51.2.0/23"
-  gh_runner_snet       = "10.51.242.0/24"
-
-  vpn = {
-    cidr_subnet              = "10.51.133.0/24"
-    dnsforwarder_cidr_subnet = "10.51.252.8/29"
-  }
-
-  nat_enabled = true
-
-  tags = merge(local.tags, { Environment = "Dev" })
-}
-
-resource "azurerm_resource_group" "opex_dev" {
-  provider = azurerm.dev
-
-  name     = format(local.opex_rg_name, "d")
-  location = local.environment.location
-
-  tags = merge(local.tags, { Environment = "Dev" })
-}
-
 module "dev_bootstrap" {
   source = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 2.0"
