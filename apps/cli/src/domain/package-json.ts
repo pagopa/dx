@@ -11,16 +11,20 @@ export const scriptSchema = z.object({
 });
 
 export type Script = z.infer<typeof scriptSchema>;
+export type MonorepoRequiredScript = Pick<Script, "name">;
 
 export interface PackageJsonReader {
+  getRootRequiredScripts(): MonorepoRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
-const validateRequiredScripts = (scripts: Script[]) => {
-  // List of scripts that are required in the root package.json
-  const requiredRootScripts = ["code-review"] as Script["name"][];
+const validateRequiredScripts = (
+  scripts: Script[],
+  requiredScripts: MonorepoRequiredScript[],
+) => {
   const scriptNames = scripts.map(({ name }) => name);
-  const missingScripts = requiredRootScripts.filter(
+  const requiredScriptNames = requiredScripts.map(({ name }) => name);
+  const missingScripts = requiredScriptNames.filter(
     (rootScript) => !scriptNames.includes(rootScript),
   );
 
@@ -42,8 +46,10 @@ export const checkMonorepoScripts =
       return err(scriptsResult.error);
     }
 
+    const requiredScripts = packageJsonReader.getRootRequiredScripts();
     const { isValid, missingScripts } = validateRequiredScripts(
       scriptsResult.value,
+      requiredScripts,
     );
 
     if (isValid) {
