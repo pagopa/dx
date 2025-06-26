@@ -1,0 +1,38 @@
+{
+  "name": "@pagopa/pr-comment-action",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "TypeScript action for creating and managing PR comments",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "pr",
+    "comment",
+    "typescript"
+  ],
+  "author": "PagoPA DX Team",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^22.0.0",
+    "eslint": "8.57.0",
+    "prettier": "^3.2.5",
+    "tsup": "^8.3.5",
+    "typescript": "~5.8.3"
+  }
+}
