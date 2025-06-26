@@ -26,7 +26,7 @@ runs:
           echo "Invalid resource type: $RESOURCE_TYPE. Must be 'provider' or 'module'."
           exit 1
         elif [ "$RESOURCE_TYPE" == "provider" ]; then
-          FOLDER_PATH="apps/providers"
+          FOLDER_PATH="providers"
         else
           FOLDER_PATH="infra/modules"
         fi
