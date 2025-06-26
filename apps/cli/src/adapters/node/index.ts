@@ -4,7 +4,7 @@ import { join } from "node:path";
 import * as process from "node:process";
 
 import { NodeReader } from "../../domain/node.js";
-import { PackageJsonSchema, ScriptsArraySchema } from "./codec.js";
+import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
 
 const toJSON = Result.fromThrowable(
   JSON.parse,
@@ -12,12 +12,12 @@ const toJSON = Result.fromThrowable(
 );
 
 const toPackageJson = Result.fromThrowable(
-  PackageJsonSchema.parse,
+  packageJsonSchema.parse,
   () => new Error("Invalid package.json format"),
 );
 
 const toScriptsArray = Result.fromThrowable(
-  ScriptsArraySchema.parse,
+  scriptsArraySchema.parse,
   () => new Error("Failed to validate scripts array"),
 );
 
