@@ -40,26 +40,25 @@ export const checkMonorepoScripts =
   async (dependencies: Pick<Dependencies, "logger" | "nodeReader">) => {
     const { logger, nodeReader } = dependencies;
 
-    const scriptsResult = nodeReader.getScripts(monorepoDir).mapErr((error) => {
-      logger.error(error.message);
-      return error;
-    });
+    const scriptsResult = await nodeReader.getScripts(monorepoDir);
 
-    return await scriptsResult.andThen((scripts) =>
-      ResultAsync.fromPromise(
-        monorepoScriptListSchema.safeParseAsync(scripts),
-        (error) => error,
-      ).andThen(({ error, success }) => {
-        if (success) {
-          logger.success("Monorepo scripts are correctly set up");
-          return ok();
-        } else {
-          const errorMessage = error.issues
-            .map(({ message }) => message)
-            .join(", ");
-          logger.error(errorMessage);
-          return err(new Error(errorMessage));
-        }
-      }),
+    if (scriptsResult.isErr()) {
+      logger.error(scriptsResult.error.message);
+      return err(scriptsResult.error);
+    }
+
+    const validationResult = await monorepoScriptListSchema.safeParseAsync(
+      scriptsResult.value,
     );
+
+    if (validationResult.success) {
+      logger.success("Monorepo scripts are correctly set up");
+      return ok();
+    }
+
+    const errorMessage = validationResult.error.issues
+      .map(({ message }) => message)
+      .join(", ");
+    logger.error(errorMessage);
+    return err(new Error(errorMessage));
   };
