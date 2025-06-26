@@ -1,5 +1,5 @@
 import { ResultAsync, err, ok } from "neverthrow";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { Dependencies } from "./dependencies.js";
 
@@ -54,7 +54,7 @@ export const checkMonorepoScripts =
           logger.success("Monorepo scripts are correctly set up");
           return ok();
         } else {
-          const errorMessage = error.errors
+          const errorMessage = error.issues
             .map(({ message }) => message)
             .join(", ");
           logger.error(errorMessage);

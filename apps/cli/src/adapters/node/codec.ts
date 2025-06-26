@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { scriptSchema } from "../../domain/node.js";
 
-const scriptsRecordSchema = z.record(z.string()).optional();
+const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
 
 /**
  * Schema for validating a package.json file.
@@ -10,7 +10,7 @@ const scriptsRecordSchema = z.record(z.string()).optional();
  * which is a record of script names to their commands.
  */
 export const packageJsonSchema = z.object({
-  name: z.string().nonempty(),
+  name: z.string().min(1),
   scripts: scriptsRecordSchema,
 });
 
