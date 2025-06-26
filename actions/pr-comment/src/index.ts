@@ -5,8 +5,8 @@
  * It can create new comments or update existing ones based on a search pattern.
  */
 
-import * as core from "@actions/core";
-import * as github from "@actions/github";
+import { getInput, info, setFailed, setOutput, warning } from "@actions/core";
+import { context, getOctokit } from "@actions/github";
 import { readFileSync } from "fs";
 import { relative, resolve } from "path";
 
@@ -37,9 +37,9 @@ interface GitHubContext {
  * @throws Error if validation fails
  */
 function getInputs(): ActionInputs {
-  const commentBody = core.getInput("comment-body");
-  const commentBodyFile = core.getInput("comment-body-file");
-  const searchPattern = core.getInput("search-pattern");
+  const commentBody = getInput("comment-body");
+  const commentBodyFile = getInput("comment-body-file");
+  const searchPattern = getInput("search-pattern");
 
   // Validate that at least one content source is provided
   if (!commentBody && !commentBodyFile) {
@@ -61,8 +61,6 @@ function getInputs(): ActionInputs {
  * @throws Error if not running in a pull request context
  */
 function getGitHubContext(): GitHubContext {
-  const { context } = github;
-
   if (!context.issue.number) {
     throw new Error("This action can only be run on pull requests");
   }
@@ -156,14 +154,12 @@ function resolveCommentBody(inputs: ActionInputs): string {
  * @param searchPattern - Pattern to search for in existing comments
  */
 async function deleteMatchingComments(
-  octokit: ReturnType<typeof github.getOctokit>,
+  octokit: ReturnType<typeof getOctokit>,
   context: GitHubContext,
   searchPattern: string,
 ): Promise<void> {
   try {
-    core.info(
-      `Searching for existing comments with pattern: "${searchPattern}"`,
-    );
+    info(`Searching for existing comments with pattern: "${searchPattern}"`);
 
     // Use paginate to fetch all comments
     const comments = await octokit.paginate(octokit.rest.issues.listComments, {
@@ -176,11 +172,11 @@ async function deleteMatchingComments(
     // Normalize pattern for robust comparison (case-insensitive)
     const normalizedPattern = searchPattern.trim().toLowerCase();
 
-    const matchingComments = comments.filter((comment) =>
+    const matchingComments = comments.filter((comment: any) =>
       comment.body?.toLowerCase().includes(normalizedPattern),
     );
 
-    core.info(`Found ${matchingComments.length} matching comments to delete`);
+    info(`Found ${matchingComments.length} matching comments to delete`);
 
     for (const comment of matchingComments) {
       await octokit.rest.issues.deleteComment({
@@ -188,10 +184,10 @@ async function deleteMatchingComments(
         owner: context.owner,
         repo: context.repo,
       });
-      core.info(`Deleted comment with ID: ${comment.id}`);
+      info(`Deleted comment with ID: ${comment.id}`);
     }
   } catch (error) {
-    core.warning(
+    warning(
       `Failed to delete existing comments: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
@@ -204,7 +200,7 @@ async function deleteMatchingComments(
  * @param body - The comment body content
  */
 async function createComment(
-  octokit: ReturnType<typeof github.getOctokit>,
+  octokit: ReturnType<typeof getOctokit>,
   context: GitHubContext,
   body: string,
 ): Promise<void> {
@@ -216,9 +212,9 @@ async function createComment(
       repo: context.repo,
     });
 
-    core.info(`Successfully created comment with ID: ${comment.id}`);
-    core.setOutput("comment-id", comment.id.toString());
-    core.setOutput("comment-url", comment.html_url);
+    info(`Successfully created comment with ID: ${comment.id}`);
+    setOutput("comment-id", comment.id.toString());
+    setOutput("comment-url", comment.html_url);
   } catch (error) {
     throw new Error(
       `Failed to create comment: ${error instanceof Error ? error.message : String(error)}`,
@@ -231,31 +227,31 @@ async function createComment(
  */
 async function run(): Promise<void> {
   try {
-    core.info("Starting PR Comment Manager Action");
+    info("Starting PR Comment Manager Action");
 
     // Get and validate inputs
     const inputs = getInputs();
-    core.info("Successfully validated inputs");
+    info("Successfully validated inputs");
 
     // Get GitHub context
     const context = getGitHubContext();
-    core.info(
+    info(
       `Running on PR #${context.issueNumber} in ${context.owner}/${context.repo}`,
     );
 
     // Get GitHub token and create client
-    const token = core.getInput("github-token") || process.env.GITHUB_TOKEN;
+    const token = getInput("github-token") || process.env.GITHUB_TOKEN;
     if (!token) {
       throw new Error(
         "GitHub token not found. Please provide github-token input or GITHUB_TOKEN environment variable",
       );
     }
 
-    const octokit = github.getOctokit(token);
+    const octokit = getOctokit(token);
 
     // Resolve comment body content
     const commentBody = resolveCommentBody(inputs);
-    core.info("Successfully resolved comment body content");
+    info("Successfully resolved comment body content");
 
     // Delete existing comments if search pattern is provided
     if (inputs.searchPattern) {
@@ -265,10 +261,10 @@ async function run(): Promise<void> {
     // Create new comment
     await createComment(octokit, context, commentBody);
 
-    core.info("PR Comment Manager Action completed successfully");
+    info("PR Comment Manager Action completed successfully");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    core.setFailed(`Action failed: ${errorMessage}`);
+    setFailed(`Action failed: ${errorMessage}`);
   }
 }
 

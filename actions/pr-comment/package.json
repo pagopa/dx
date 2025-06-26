@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "description": "TypeScript action for creating and managing PR comments",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

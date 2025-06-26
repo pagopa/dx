@@ -2,13 +2,17 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["src/index.ts"],
-  format: ["cjs"],
+  format: ["esm"],
   dts: false,
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   minify: true,
   target: "node20",
   bundle: true,
   platform: "node",
-  external: [],
+  noExternal: [/.*/],
+  treeshake: true,
+  esbuildOptions(options) {
+    options.treeShaking = true;
+  },
 });
