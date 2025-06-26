@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.1.1
+
+### Patch Changes
+
+- 78c93b8: Enhance README with detailed Azure Storage role assignments
+
 ## 1.1.0
 
 ### Minor Changes
