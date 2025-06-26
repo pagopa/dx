@@ -34,8 +34,6 @@
     "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "typecheck": "tsc --noEmit"
   }
 }
