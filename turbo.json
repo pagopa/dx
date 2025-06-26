@@ -2,22 +2,9 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-<<<<<<< chores/pr-comment-refactor
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"],
-      "outputs": ["dist/**"]
-=======
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**/*.ts"
-      ],
-      "outputs": [
-        "dist/**",
-        "bin/**"
-      ]
->>>>>>> main
+      "outputs": ["dist/**", "bin/**"]
     },
     "typecheck": {
       "inputs": ["src/**/*.ts"]
