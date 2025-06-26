@@ -2,7 +2,7 @@ import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import {
-  MonorepoRequiredScript,
+  RootRequiredScript,
   Script,
   checkMonorepoScripts,
 } from "../package-json.js";
@@ -42,7 +42,7 @@ describe("checkMonorepoScripts", () => {
     deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(scripts));
     deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
       { name: "code-review" as Script["name"] },
-    ] as MonorepoRequiredScript[]);
+    ] as RootRequiredScript[]);
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
@@ -56,7 +56,7 @@ describe("checkMonorepoScripts", () => {
     deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync([]));
     deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
       { name: "code-review" as Script["name"] },
-    ] as MonorepoRequiredScript[]);
+    ] as RootRequiredScript[]);
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
