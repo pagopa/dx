@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check test:coverage",
+    "code-review": "turbo run typecheck format:check lint:check //#test:coverage",
     "version": "yarn changeset version && yarn --mode update-lockfile",
     "release": "yarn build && changeset publish"
   }

@@ -13,9 +13,14 @@
       "inputs": ["src/**/*.ts"]
     },
     "format:check": {},
-    "test:coverage": {
-      "inputs": ["src/**/*.ts"],
-      "outputs": ["coverage/**"]
+    "//#test:coverage": {
+      "inputs": [
+        "apps/**/src/**/*.ts",
+        "packages/**/src/**/*.ts",
+        "actions/**/src/**/*.ts"
+      ],
+      "outputs": ["coverage"],
+      "outputLogs": "errors-only"
     }
   }
 }
