@@ -11,16 +11,16 @@ export const scriptSchema = z.object({
 });
 
 export type Script = z.infer<typeof scriptSchema>;
-export type MonorepoRequiredScript = Pick<Script, "name">;
+export type RootRequiredScript = Pick<Script, "name">;
 
 export interface PackageJsonReader {
-  getRootRequiredScripts(): MonorepoRequiredScript[];
+  getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
 const validateRequiredScripts = (
   scripts: Script[],
-  requiredScripts: MonorepoRequiredScript[],
+  requiredScripts: RootRequiredScript[],
 ) => {
   const scriptNames = scripts.map(({ name }) => name);
   const requiredScriptNames = requiredScripts.map(({ name }) => name);
