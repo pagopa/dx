@@ -6219,6 +6219,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_common_values_exporter@workspace:infra/modules/azure_common_values_exporter":
+  version: 0.0.0-use.local
+  resolution: "azure_common_values_exporter@workspace:infra/modules/azure_common_values_exporter"
+  languageName: unknown
+  linkType: soft
+
 "azure_container_app@workspace:infra/modules/azure_container_app":
   version: 0.0.0-use.local
   resolution: "azure_container_app@workspace:infra/modules/azure_container_app"
