@@ -10,10 +10,11 @@
  * - Error handling scenarios
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync } from "fs";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
+import { readFileSync } from "fs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { run } from "../src/index.js";
 
 // Mock the dependencies
@@ -28,14 +29,14 @@ const mockReadFileSync = vi.mocked(readFileSync);
 
 // Mock octokit instance
 const mockOctokit = {
+  paginate: vi.fn(),
   rest: {
     issues: {
-      listComments: vi.fn(),
       createComment: vi.fn(),
       deleteComment: vi.fn(),
+      listComments: vi.fn(),
     },
   },
-  paginate: vi.fn(),
 };
 
 describe("PR Comment Manager Action", () => {
@@ -65,8 +66,8 @@ describe("PR Comment Manager Action", () => {
         const inputs: Record<string, string> = {
           "comment-body": "",
           "comment-body-file": "",
-          "search-pattern": "",
           "github-token": "test-token",
+          "search-pattern": "",
         };
         return inputs[name] || "";
       });
@@ -86,14 +87,14 @@ describe("PR Comment Manager Action", () => {
         const inputs: Record<string, string> = {
           "comment-body": "Test comment body",
           "comment-body-file": "",
-          "search-pattern": "",
           "github-token": "test-token",
+          "search-pattern": "",
         };
         return inputs[name] || "";
       });
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -115,15 +116,15 @@ describe("PR Comment Manager Action", () => {
         const inputs: Record<string, string> = {
           "comment-body": "",
           "comment-body-file": "comment.md",
-          "search-pattern": "",
           "github-token": "test-token",
+          "search-pattern": "",
         };
         return inputs[name] || "";
       });
 
       mockReadFileSync.mockReturnValue("File comment content");
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -265,8 +266,8 @@ describe("PR Comment Manager Action", () => {
       mockCore.getInput.mockImplementation((name: string) => {
         const inputs: Record<string, string> = {
           "comment-body": "New test comment",
-          "search-pattern": "<!-- test-marker -->",
           "github-token": "test-token",
+          "search-pattern": "<!-- test-marker -->",
         };
         return inputs[name] || "";
       });
@@ -275,14 +276,14 @@ describe("PR Comment Manager Action", () => {
     it("should delete existing comments with matching search pattern", async () => {
       // Arrange
       const mockComments = [
-        { id: 1, body: "<!-- test-marker --> Old comment 1" },
-        { id: 2, body: "Some other comment" },
-        { id: 3, body: "Another <!-- test-marker --> comment" },
+        { body: "<!-- test-marker --> Old comment 1", id: 1 },
+        { body: "Some other comment", id: 2 },
+        { body: "Another <!-- test-marker --> comment", id: 3 },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -306,7 +307,7 @@ describe("PR Comment Manager Action", () => {
       // Arrange
       mockOctokit.paginate.mockResolvedValue([]);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -345,7 +346,7 @@ describe("PR Comment Manager Action", () => {
     it("should handle comment deletion errors gracefully", async () => {
       // Arrange
       const mockComments = [
-        { id: 1, body: "<!-- test-marker --> Old comment" },
+        { body: "<!-- test-marker --> Old comment", id: 1 },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
@@ -353,7 +354,7 @@ describe("PR Comment Manager Action", () => {
         new Error("Comment not found"),
       );
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -372,21 +373,21 @@ describe("PR Comment Manager Action", () => {
       mockCore.getInput.mockImplementation((name: string) => {
         const inputs: Record<string, string> = {
           "comment-body": "New test comment",
-          "search-pattern": "TEST-MARKER",
           "github-token": "test-token",
+          "search-pattern": "TEST-MARKER",
         };
         return inputs[name] || "";
       });
 
       const mockComments = [
-        { id: 1, body: "<!-- test-marker --> Old comment" },
-        { id: 2, body: "<!-- TEST-MARKER --> Another comment" },
-        { id: 3, body: "No marker here" },
+        { body: "<!-- test-marker --> Old comment", id: 1 },
+        { body: "<!-- TEST-MARKER --> Another comment", id: 2 },
+        { body: "No marker here", id: 3 },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -409,7 +410,7 @@ describe("PR Comment Manager Action", () => {
       });
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 789, html_url: "https://github.com/test/comment/789" },
+        data: { html_url: "https://github.com/test/comment/789", id: 789 },
       } as any);
 
       // Act
@@ -439,7 +440,7 @@ describe("PR Comment Manager Action", () => {
       process.env.GITHUB_TOKEN = "env-token";
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act
@@ -475,20 +476,20 @@ describe("PR Comment Manager Action", () => {
       mockCore.getInput.mockImplementation((name: string) => {
         const inputs: Record<string, string> = {
           "comment-body": "New comment",
-          "search-pattern": "marker",
           "github-token": "test-token",
+          "search-pattern": "marker",
         };
         return inputs[name] || "";
       });
 
       const mockComments = [
-        { id: 1, body: undefined }, // Comment with undefined body
-        { id: 2, body: "Comment with marker" },
+        { body: undefined, id: 1 }, // Comment with undefined body
+        { body: "Comment with marker", id: 2 },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { id: 456, html_url: "https://github.com/test/comment/456" },
+        data: { html_url: "https://github.com/test/comment/456", id: 456 },
       } as any);
 
       // Act

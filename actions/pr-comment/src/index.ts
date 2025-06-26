@@ -8,7 +8,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
-import { resolve, relative } from "path";
+import { relative, resolve } from "path";
 
 /**
  * Input parameters for the PR comment action
@@ -169,8 +169,8 @@ async function deleteMatchingComments(
     const comments = await octokit.paginate(octokit.rest.issues.listComments, {
       issue_number: context.issueNumber,
       owner: context.owner,
-      repo: context.repo,
       per_page: 100, // Increase per_page for efficiency
+      repo: context.repo,
     });
 
     // Normalize pattern for robust comparison (case-insensitive)
