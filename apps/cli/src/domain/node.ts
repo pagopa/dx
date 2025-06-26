@@ -16,24 +16,19 @@ export interface NodeReader {
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
-const monorepoScriptListSchema = z
-  .array(scriptSchema)
-  .superRefine((scripts, ctx) => {
-    // List of scripts that are required in the root package.json
-    const requiredRootScripts = ["code-review"] as Script["name"][];
+const validateRequiredScripts = (scripts: Script[]) => {
+  // List of scripts that are required in the root package.json
+  const requiredRootScripts = ["code-review"] as Script["name"][];
+  const scriptNames = scripts.map(({ name }) => name);
+  const missingScripts = requiredRootScripts.filter(
+    (rootScript) => !scriptNames.includes(rootScript),
+  );
 
-    const scriptNames = scripts.map(({ name }) => name);
-    const missingScripts = requiredRootScripts.filter(
-      (rootScript) => !scriptNames.includes(rootScript),
-    );
-
-    if (missingScripts.length > 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Missing required scripts: ${missingScripts.join(", ")}`,
-      });
-    }
-  });
+  return {
+    isValid: missingScripts.length === 0,
+    missingScripts,
+  };
+};
 
 export const checkMonorepoScripts =
   (monorepoDir: string) =>
@@ -47,18 +42,16 @@ export const checkMonorepoScripts =
       return err(scriptsResult.error);
     }
 
-    const validationResult = await monorepoScriptListSchema.safeParseAsync(
+    const { isValid, missingScripts } = validateRequiredScripts(
       scriptsResult.value,
     );
 
-    if (validationResult.success) {
+    if (isValid) {
       logger.success("Monorepo scripts are correctly set up");
       return ok();
     }
 
-    const errorMessage = validationResult.error.issues
-      .map(({ message }) => message)
-      .join(", ");
+    const errorMessage = `Missing required scripts: ${missingScripts.join(", ")}`;
     logger.error(errorMessage);
     return err(new Error(errorMessage));
   };
