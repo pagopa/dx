@@ -8,6 +8,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
+import { resolve, relative } from "path";
 
 /**
  * Input parameters for the PR comment action
@@ -74,6 +75,55 @@ function getGitHubContext(): GitHubContext {
 }
 
 /**
+ * Validates that a file path is safe to read
+ * @param filePath - The file path to validate
+ * @throws Error if the path is unsafe
+ */
+function validateFilePath(filePath: string): void {
+  // Resolve the absolute path
+  const absolutePath = resolve(filePath);
+
+  // Get the current working directory
+  const cwd = process.cwd();
+
+  // Check if the resolved path is within the current working directory
+  const relativePath = relative(cwd, absolutePath);
+
+  // Prevent directory traversal attacks
+  if (
+    relativePath.startsWith("..") ||
+    resolve(cwd, relativePath) !== absolutePath
+  ) {
+    throw new Error(
+      `File path "${filePath}" is outside the allowed directory. Only files within the current working directory are allowed.`,
+    );
+  }
+
+  // Additional security: block common sensitive file patterns
+  const sensitivePatterns = [
+    "/etc/",
+    "/proc/",
+    "/sys/",
+    "/.ssh/",
+    "/.env",
+    "/tmp/",
+    "id_rsa",
+    "id_dsa",
+    "authorized_keys",
+    "known_hosts",
+  ];
+
+  const normalizedPath = absolutePath.toLowerCase();
+  for (const pattern of sensitivePatterns) {
+    if (normalizedPath.includes(pattern)) {
+      throw new Error(
+        `File path "${filePath}" contains potentially sensitive pattern "${pattern}".`,
+      );
+    }
+  }
+}
+
+/**
  * Resolves the comment body content from either direct input or file
  * @param inputs - The action inputs
  * @returns The comment body content
@@ -85,6 +135,9 @@ function resolveCommentBody(inputs: ActionInputs): string {
 
   if (inputs.commentBodyFile) {
     try {
+      // Validate the file path for security
+      validateFilePath(inputs.commentBodyFile);
+
       return readFileSync(inputs.commentBodyFile, "utf8");
     } catch (error) {
       throw new Error(
@@ -112,10 +165,12 @@ async function deleteMatchingComments(
       `Searching for existing comments with pattern: "${searchPattern}"`,
     );
 
-    const { data: comments } = await octokit.rest.issues.listComments({
+    // Use paginate to fetch all comments
+    const comments = await octokit.paginate(octokit.rest.issues.listComments, {
       issue_number: context.issueNumber,
       owner: context.owner,
       repo: context.repo,
+      per_page: 100, // Increase per_page for efficiency
     });
 
     // Normalize pattern for robust comparison (case-insensitive)
