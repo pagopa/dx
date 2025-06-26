@@ -52,3 +52,6 @@ dist
 .env
 node_modules
 .turbo
+
+# vitest
+coverage
