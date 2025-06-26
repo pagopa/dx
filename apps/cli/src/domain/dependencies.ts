@@ -1,9 +1,9 @@
 import { Logger } from "./logger.js";
-import { NodeReader } from "./node.js";
+import { PackageJsonReader } from "./package-json.js";
 import { RepositoryReader } from "./repository.js";
 
 export interface Dependencies {
   logger: Logger;
-  nodeReader: NodeReader;
+  packageJsonReader: PackageJsonReader;
   repositoryReader: RepositoryReader;
 }

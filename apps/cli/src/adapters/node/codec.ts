@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 
-import { scriptSchema } from "../../domain/node.js";
+import { scriptSchema } from "../../domain/package-json.js";
 
 const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
 

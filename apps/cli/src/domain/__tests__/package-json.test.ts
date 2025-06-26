@@ -1,7 +1,7 @@
 import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { Script, checkMonorepoScripts } from "../node.js";
+import { Script, checkMonorepoScripts } from "../package-json.js";
 import { makeMockDependencies } from "./data.js";
 
 describe("checkMonorepoScripts", () => {
@@ -12,7 +12,7 @@ describe("checkMonorepoScripts", () => {
 
     // If getScripts returns error, it should log the error message and return error result
     const errorMessage = "Oh No!";
-    deps.nodeReader.getScripts.mockReturnValueOnce(
+    deps.packageJsonReader.getScripts.mockReturnValueOnce(
       errAsync(new Error(errorMessage)),
     );
 
@@ -35,7 +35,7 @@ describe("checkMonorepoScripts", () => {
         script: "eslint .",
       },
     ] as Script[];
-    deps.nodeReader.getScripts.mockReturnValueOnce(okAsync(scripts));
+    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(scripts));
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
@@ -46,7 +46,7 @@ describe("checkMonorepoScripts", () => {
   it("should log the missing script error message and return error result", async () => {
     const deps = makeMockDependencies();
 
-    deps.nodeReader.getScripts.mockReturnValueOnce(okAsync([]));
+    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync([]));
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
