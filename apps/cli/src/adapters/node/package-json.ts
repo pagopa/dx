@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as process from "node:process";
 
-import { NodeReader } from "../../domain/node.js";
+import { PackageJsonReader } from "../../domain/package-json.js";
 import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
 
 const toJSON = Result.fromThrowable(
@@ -21,7 +21,7 @@ const toScriptsArray = Result.fromThrowable(
   () => new Error("Failed to validate scripts array"),
 );
 
-export const makeNodeReader = (): NodeReader => ({
+export const makePackageJsonReader = (): PackageJsonReader => ({
   getScripts: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
 
