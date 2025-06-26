@@ -9,7 +9,8 @@
         "src/**/*.ts"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        "bin/**"
       ]
     },
     "typecheck": {
