@@ -2,26 +2,20 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**/*.ts"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts"],
+      "outputs": ["dist/**"]
     },
     "typecheck": {
-      "inputs": [
-        "src/**/*.ts"
-      ]
+      "inputs": ["src/**/*.ts"]
     },
     "lint:check": {
-      "inputs": [
-        "src/**/*.ts"
-      ]
+      "inputs": ["src/**/*.ts"]
     },
-    "format:check": {}
+    "format:check": {},
+    "test:coverage": {
+      "inputs": ["src/**/*.ts"],
+      "outputs": ["coverage/**"]
+    }
   }
 }
