@@ -172,7 +172,7 @@ async function deleteMatchingComments(
     // Normalize pattern for robust comparison (case-insensitive)
     const normalizedPattern = searchPattern.trim().toLowerCase();
 
-    const matchingComments = comments.filter((comment: any) =>
+    const matchingComments = comments.filter((comment) =>
       comment.body?.toLowerCase().includes(normalizedPattern),
     );
 
