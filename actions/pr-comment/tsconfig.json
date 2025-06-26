@@ -8,5 +8,12 @@
     "moduleResolution": "bundler",
     "module": "ESNext"
   },
-  "exclude": ["tsup.config.ts"]
+  "include": ["src/**/*"],
+  "exclude": [
+    "tsup.config.ts",
+    "vitest.config.ts",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }
