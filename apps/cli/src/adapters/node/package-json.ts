@@ -4,8 +4,8 @@ import { join } from "node:path";
 import * as process from "node:process";
 
 import {
-  MonorepoRequiredScript,
   PackageJsonReader,
+  RootRequiredScript,
   Script,
 } from "../../domain/package-json.js";
 import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
@@ -26,7 +26,7 @@ const toScriptsArray = Result.fromThrowable(
 );
 
 export const makePackageJsonReader = (): PackageJsonReader => ({
-  getRootRequiredScripts: (): MonorepoRequiredScript[] => [
+  getRootRequiredScripts: (): RootRequiredScript[] => [
     { name: "code-review" as Script["name"] },
   ],
 
