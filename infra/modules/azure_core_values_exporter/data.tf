@@ -8,5 +8,3 @@ data "terraform_remote_state" "core" {
     key                  = var.core_state.key
   }
 }
-
-data "azurerm_client_config" "current" {}
