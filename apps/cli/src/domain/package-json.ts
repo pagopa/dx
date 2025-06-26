@@ -12,7 +12,7 @@ export const scriptSchema = z.object({
 
 export type Script = z.infer<typeof scriptSchema>;
 
-export interface NodeReader {
+export interface PackageJsonReader {
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
 
@@ -32,10 +32,10 @@ const validateRequiredScripts = (scripts: Script[]) => {
 
 export const checkMonorepoScripts =
   (monorepoDir: string) =>
-  async (dependencies: Pick<Dependencies, "logger" | "nodeReader">) => {
-    const { logger, nodeReader } = dependencies;
+  async (dependencies: Pick<Dependencies, "logger" | "packageJsonReader">) => {
+    const { logger, packageJsonReader } = dependencies;
 
-    const scriptsResult = await nodeReader.getScripts(monorepoDir);
+    const scriptsResult = await packageJsonReader.getScripts(monorepoDir);
 
     if (scriptsResult.isErr()) {
       logger.error(scriptsResult.error.message);

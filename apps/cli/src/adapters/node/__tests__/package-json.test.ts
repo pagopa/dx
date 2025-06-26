@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { makeNodeReader } from "../index";
+import { makePackageJsonReader } from "../package-json";
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
 }));
 
-describe("makeNodeReader", () => {
+describe("makePackageJsonReader", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -27,8 +27,8 @@ describe("makeNodeReader", () => {
       mockPackageJson,
     );
 
-    const nodeReader = makeNodeReader();
-    const result = await nodeReader.getScripts(directory);
+    const packageJsonReader = makePackageJsonReader();
+    const result = await packageJsonReader.getScripts(directory);
 
     expect(result.isOk()).toBe(true);
 
@@ -59,8 +59,8 @@ describe("makeNodeReader", () => {
       mockPackageJson,
     );
 
-    const nodeReader = makeNodeReader();
-    const result = await nodeReader.getScripts(directory);
+    const packageJsonReader = makePackageJsonReader();
+    const result = await packageJsonReader.getScripts(directory);
 
     expect(result.isOk()).toBe(true);
 
@@ -75,8 +75,8 @@ describe("makeNodeReader", () => {
       new Error("No such file or directory"),
     );
 
-    const nodeReader = makeNodeReader();
-    const result = await nodeReader.getScripts(directory);
+    const packageJsonReader = makePackageJsonReader();
+    const result = await packageJsonReader.getScripts(directory);
 
     expect(result.isErr()).toBe(true);
 
@@ -90,8 +90,8 @@ describe("makeNodeReader", () => {
       "invalid json content",
     );
 
-    const nodeReader = makeNodeReader();
-    const result = await nodeReader.getScripts(directory);
+    const packageJsonReader = makePackageJsonReader();
+    const result = await packageJsonReader.getScripts(directory);
 
     expect(result.isErr()).toBe(true);
 
