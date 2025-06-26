@@ -3,7 +3,11 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as process from "node:process";
 
-import { PackageJsonReader } from "../../domain/package-json.js";
+import {
+  MonorepoRequiredScript,
+  PackageJsonReader,
+  Script,
+} from "../../domain/package-json.js";
 import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
 
 const toJSON = Result.fromThrowable(
@@ -22,6 +26,10 @@ const toScriptsArray = Result.fromThrowable(
 );
 
 export const makePackageJsonReader = (): PackageJsonReader => ({
+  getRootRequiredScripts: (): MonorepoRequiredScript[] => [
+    { name: "code-review" as Script["name"] },
+  ],
+
   getScripts: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
 
