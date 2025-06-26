@@ -10,6 +10,8 @@
  * - Error handling scenarios
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
@@ -39,6 +41,7 @@ const mockOctokit = {
   },
 };
 
+/* eslint-disable max-lines-per-function */
 describe("PR Comment Manager Action", () => {
   beforeEach(() => {
     // Reset all mocks before each test
