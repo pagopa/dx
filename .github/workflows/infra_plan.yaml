@@ -203,7 +203,7 @@ jobs:
       - name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/.github/actions/pr-comment@main
+        uses: ./actions/pr-comment
         env:
           COMMENT_BODY_FILE: "${{ steps.directory.outputs.dir }}/message_body.txt"
         with:
