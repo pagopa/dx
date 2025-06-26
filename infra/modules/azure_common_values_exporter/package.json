@@ -1,0 +1,7 @@
+{
+  "name": "azure_common_values_exporter",
+  "version": "0.0.0",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Allow to output the main common values of configurations deployed via azure-core-infra module"
+}
