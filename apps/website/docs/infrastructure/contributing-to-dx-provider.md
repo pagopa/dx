@@ -11,21 +11,21 @@ publishing, testing, and troubleshooting.
 ## Publishing and Releasing the Provider
 
 The DX Azure provider is maintained in the
-[DX GitHub Repository](https://github.com/pagopa/dx/tree/main/infra/provider)
+[DX GitHub Repository](https://github.com/pagopa/dx/tree/main/providers)
 and is automatically pushed to its subrepository and released on the Terraform
 Registry using GitHub Actions workflows.
 
 ### Subrepository Push Workflow
 
 The `_release-bash-provider-to-subrepo.yaml` workflow ensures that changes to
-the provider in the `infra/provider` directory of the main repository (`dx`) are
+the provider in the `providers/*` directory of the main repository (`dx`) are
 pushed to its dedicated subrepository (e.g.,
 [terraform-provider-azure](https://github.com/pagopa-dx/terraform-provider-azure)).
 This workflow is triggered on changes to the `main` branch.
 
 ### Release Workflow
 
-The release workflow is located in the `infra/provider/.github/workflows`
+The release workflow is located in the `providers/*/.github/workflows`
 directory of the main repository (`dx`) and must be maintained there. It is
 executed in the subrepository of the provider after the changes are pushed. This
 workflow automates the release process by creating a new release when a tag

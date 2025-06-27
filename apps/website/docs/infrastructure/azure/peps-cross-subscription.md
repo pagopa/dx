@@ -41,6 +41,7 @@ resource "azurerm_private_endpoint" "example" {
     name                           = "example-private-endpoint"
     private_connection_resource_id = "/subscriptions/<SUBSCRIPTION_A>/resourceGroups/<RESOURCE_GROUP>/providers/Microsoft.DocumentDB/databaseAccounts/<COSMOSDB_ACCOUNT>"
     is_manual_connection           = true
+    request_message                = "A mandatory message for the target team (maximum 128 characters)"
   }
 }
 ```

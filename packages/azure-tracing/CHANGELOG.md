@@ -1,5 +1,25 @@
 # @pagopa/azure-tracing
 
+## 0.4.3
+
+### Patch Changes
+
+- b0331cd: Add support for CJS
+
+  With this release, the `@pagopa/azure-tracing` package now supports CommonJS (CJS) module format, allowing it to be used in environments that do not support ES modules.
+
+## 0.4.2
+
+### Patch Changes
+
+- 4316a40: Add the `repository` block in the `package.json` in order to verify provenance attestation
+
+## 0.4.1
+
+### Patch Changes
+
+- ea6e987: Improve README to clarify functions usage
+
 ## 0.4.0
 
 ### Minor Changes

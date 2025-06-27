@@ -27,4 +27,7 @@ locals {
   })
 
   labels = join(",", coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]))
+
+  key_vault_id  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.key_vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.key_vault.name}"
+  key_vault_uri = "https://${var.key_vault.name}.vault.azure.net/"
 }

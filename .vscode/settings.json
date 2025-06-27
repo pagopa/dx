@@ -4,10 +4,6 @@
     "**/.pnp.*": true
   },
   "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "[terraform]": {
-    "editor.defaultFormatter": "hashicorp.terraform"
-  },
   "github.copilot.chat.codeGeneration.instructions": [
     {
       "file": ".github/instructions/code.instructions.md"
@@ -35,7 +31,15 @@
   ],
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
   "[terraform-test]": {
     "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
   }
 }

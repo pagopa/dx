@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 4.0.6
+
+### Patch Changes
+
+- 4316a40: Add the `repository` block in the `package.json` in order to verify provenance attestation
+
 ## 4.0.5
 
 ### Patch Changes

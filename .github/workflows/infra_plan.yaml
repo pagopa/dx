@@ -22,7 +22,7 @@ on:
         description: Set a value if GitHub Environment name is different than the TF environment folder
         type: string
         required: false
-        default: ''
+        default: ""
       use_labels:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
@@ -32,7 +32,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -42,8 +42,35 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
 
 jobs:
+  get-terraform-version:
+    name: Get Terraform Version
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        with:
+          default_version: "1.10.4"
+
+  tf-modules-check:
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    name: Check terraform registry modules hashes
+    needs: [get-terraform-version]
+    secrets: inherit
+    with:
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      check_to_run: lock_modules
+      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      verbose: true
+
   tf_plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
+    needs: [get-terraform-version, tf-modules-check]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
@@ -61,7 +88,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
       - name: Set directory
@@ -103,6 +129,8 @@ jobs:
       - name: Terraform Setup
         id: set-terraform-version
         uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -129,17 +157,15 @@ jobs:
           fi
 
           # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
-          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to add" tf_plan_stdout.txt || echo "No changes.")
-
-          echo "$SUMMARY_LINE" > plan_summary.txt
+          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" tf_plan_stdout.txt || echo "No changes.")
 
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
-            echo "${SUMMARY_LINE}" > plan_output_multiline.txt
-            echo "" >> plan_output_multiline.txt
-            echo "Full plan output was too long and was omitted. Check the workflow logs for full details." >> plan_output_multiline.txt
+            echo "${SUMMARY_LINE}" > plan_output.txt
+            echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
-            cat filtered_plan.txt > plan_output_multiline.txt
+            cat filtered_plan.txt > plan_output.txt
+            echo "COMPLETE_PLAN=true" >> $GITHUB_OUTPUT
           fi
 
           # Error detection based on tf_plan_stdout.txt content
@@ -148,55 +174,41 @@ jobs:
             exit 1
           fi
 
+      - name: Set Plan Output
+        id: set-plan-output
+        env:
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          COMPLETE_PLAN: ${{ steps.plan.outputs.COMPLETE_PLAN }}
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
+          echo "<details>" >> message_body.txt
+          echo "<summary>Show Plan</summary>" >> message_body.txt
+          echo "" >> message_body.txt
+
+          echo "\`\`\`hcl" >> message_body.txt
+          cat plan_output.txt >> message_body.txt
+          echo "\`\`\`" >> message_body.txt
+
+          if [ $COMPLETE_PLAN == 'false' ]; then
+            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          fi
+
+          echo "" >> message_body.txt
+          echo "</details>" >> message_body.txt
 
       # Post the plan output in the PR
-      # The plan output is posted in a comment in the PR
-      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-        name: Post Plan on PR
+      - name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/.github/actions/pr-comment@main
         env:
-          OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
-          PLAN_STATUS: ${{ steps.plan.outcome }}
+          COMMENT_BODY_FILE: "${{ steps.directory.outputs.dir }}/message_body.txt"
         with:
-          script: |
-            const fs = require('fs');
-            const outputDir = process.env.OUTPUT_DIR;
-            const output = fs.readFileSync(`${outputDir}/plan_output_multiline.txt`, 'utf8');
-            const status = process.env.PLAN_STATUS;
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes(`Terraform Plan (${outputDir})`)
-            })
-            const commentBody = `#### 📖 Terraform Plan (${outputDir}) - ${status}
-            <details>
-            <summary>Terraform Plan</summary>
-
-            \`\`\`hcl
-            ${output}
-            \`\`\`
-
-            </details>
-            `;
-            if (botComment) {
-              await github.rest.issues.deleteComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id
-              })
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody,
-              issue_number: context.issue.number
-            })
-
+          comment-body-file: ${{ env.COMMENT_BODY_FILE }}
+          search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result

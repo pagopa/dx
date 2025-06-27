@@ -1,0 +1,38 @@
+{
+  "name": "@pagopa/dx-cli",
+  "version": "0.1.1",
+  "type": "module",
+  "private": true,
+  "description": "A CLI useful to manage DX tools.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "apps/cli"
+  },
+  "keywords": [
+    "DX",
+    "CLI"
+  ],
+  "files": [
+    "bin"
+  ],
+  "bin": {
+    "dx": "./bin/index.js"
+  },
+  "dependencies": {
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node20": "^20.1.5",
+    "@types/node": "^20.12.2",
+    "eslint": "8.57.0",
+    "tsup": "^8.5.0",
+    "typescript": "~5.8.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src"
+  }
+}

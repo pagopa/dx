@@ -42,7 +42,7 @@ resource "azurerm_container_app_job" "github_runner" {
   }
 
   secret {
-    key_vault_secret_id = "${data.azurerm_key_vault.kv.vault_uri}secrets/${var.key_vault.secret_name}" # no versioning
+    key_vault_secret_id = "${local.key_vault_uri}secrets/${var.key_vault.secret_name}" # no versioning
 
     identity = "System"
     name     = var.key_vault.secret_name

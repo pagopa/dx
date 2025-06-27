@@ -1,8 +1,13 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/eslint-config"
+  },
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",

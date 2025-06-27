@@ -78,7 +78,7 @@ jobs:
         with:
           working_dir: ./out
 
-      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
+      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependencies
       - name: Install dependencies
         run: |
           yarn config set nodeLinker node-modules

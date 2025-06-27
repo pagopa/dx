@@ -87,5 +87,19 @@ module "container_app" {
 
   user_assigned_identity_id = module.container_app_environment.user_assigned_identity.id
 
+  autoscaler = {
+    replicas = {
+      minimum = 0
+      maximum = 1
+    }
+
+    http_scalers = [
+      {
+        name                = "http-scaler"
+        concurrent_requests = 800
+      }
+    ]
+  }
+
   tags = local.tags
 }

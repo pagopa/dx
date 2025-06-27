@@ -32,8 +32,11 @@ on:
         type: boolean
         required: false
 
+permissions:
+  pull-requests: write # Needed for commenting on PRs
+
 concurrency:
-  group: tf-static-analysis-${{ github.head_ref }}
+  group: tf-static-analysis-${{ github.head_ref }}-${{inputs.folder || 'all-files'}}-${{ inputs.check_to_run || 'all-checks' }}
   cancel-in-progress: true
 
 jobs:
@@ -51,12 +54,14 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-terraform-version
+        if: ${{ inputs.terraform_version == '' }}
         uses: pagopa/dx/.github/actions/get-terraform-version@main
         with:
           default_version: "1.10.4"
 
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
+        if: ${{ inputs.pre_commit_tf_tag == '' }}
         uses: pagopa/dx/.github/actions/get-pre-commit-version@main
         with:
           default_version: "1.96.2"
@@ -64,7 +69,7 @@ jobs:
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-latest
-    needs: [ get-versions ]
+    needs: [get-versions]
     # Ensures execution even if get-versions is skipped
     if: ${{ always() }}
     env:
@@ -99,6 +104,7 @@ jobs:
         id: pre_commit_specific_folders
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set -eu
 
@@ -106,14 +112,15 @@ jobs:
 
           find "${{ inputs.folder }}" -type f | xargs pre-commit run \
             --color=always \
+            --show-diff-on-failure \
             ${{ inputs.check_to_run }} \
-            --files
-
+            --files 2>&1 | tee /tmp/pre-commit-output.log
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
         id: pre_commit_modified_files
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set -eu
 
@@ -126,13 +133,14 @@ jobs:
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
         id: pre_commit
         env:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
+          LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
         run: |
           set -eu
 
@@ -140,5 +148,121 @@ jobs:
 
           pre-commit run \
             --color=always \
+            --show-diff-on-failure \
             --all-files \
-            ${{ inputs.check_to_run }}
+            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+
+      - name: Summarize pre-commit results
+        if: always()
+        id: summary
+        shell: bash
+        env:
+          FOLDER: ${{ inputs.folder }}
+          EVENT_NAME: ${{ github.event_name }}
+          ENABLE_MODIFIED_FILES_DETECTION: ${{ inputs.enable_modified_files_detection }}
+          CHECK_TO_RUN: ${{ inputs.check_to_run }}
+        run: |
+          # Create a temporary file for the summary
+          SUMMARY_FILE="/tmp/pre-commit-summary.md"
+          touch "$SUMMARY_FILE"
+
+          # Initialize variables
+          EXECUTION_SCOPE="all files"
+          [ -n "$FOLDER" ] && EXECUTION_SCOPE="folder: $FOLDER"
+          [ "$EVENT_NAME" == "pull_request" ] && [ "$ENABLE_MODIFIED_FILES_DETECTION" == "true" ] && EXECUTION_SCOPE="modified files"
+
+          # Utility functions to add content to both summary and temporary file
+          add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1" >> "$SUMMARY_FILE"; }
+          add_markdown() { for line in "$@"; do add_to_summary "$line"; done; }
+
+          # Terraform modules handling
+          if [ -f "lock_output.json" ]; then
+            # Extract module statistics with fallback to 0
+            TOTAL_MODULES=$(jq -r '.summary.total_modules // 0' lock_output.json 2>/dev/null || echo "0")
+
+            if [ "$TOTAL_MODULES" -gt 0 ]; then
+              # Add change warning
+              add_markdown \
+                "> [!CAUTION]" \
+                "> ### ⚠️ Terraform module changes detected - locks need updating" \
+                ">" \
+                "> ### What should be done next" \
+                ">" \
+                "> 1. Run this command locally to update the module locks:" \
+                ">" \
+                "> \`\`\`bash" \
+                "> pre-commit run -a lock_modules" \
+                "> \`\`\`" \
+                ">" \
+                "> 2. Then open a dedicated Pull Request with the updated module locks" \
+                ""
+
+              # Change details
+              add_markdown \
+                "<details>" \
+                "<summary>📊 What has changed</summary>" \
+                "" \
+                "### Module Stats:"
+
+              # Calculate and show statistics
+              for status in "new" "changed" "removed"; do
+                count=$(jq -r "[.results[]? | select(.status == \"$status\")] | length" lock_output.json 2>/dev/null || echo "0")
+                add_to_summary "- **${status^} modules**: $count"
+              done
+
+              # Modules table
+              add_markdown \
+                "" \
+                "| Module | Status | Version | Path |" \
+                "|--------|--------|---------|------|"
+
+              # Add module details or show error
+              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
+                add_markdown \
+                  "Error processing JSON file. Raw content:" \
+                  "\`\`\`json"
+                cat lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+                add_to_summary "\`\`\`"
+              }
+              add_to_summary "</details>"
+            else
+              add_markdown \
+                "> [!TIP]" \
+                "> ### ✅ All Terraform module locks are up to date" \
+                ">" \
+                "> No module changes detected - everything is in sync!" \
+                ""
+            fi
+            add_to_summary ""
+          fi
+
+          # Pre-commit output
+          if [ -f "/tmp/pre-commit-output.log" ]; then
+            # Show output log
+            add_markdown \
+              '<details>' \
+              '<summary>📋 Pre-commit Output Log</summary>' \
+              '' \
+              '```'
+            sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+            add_markdown '```' '</details>'
+          else
+            add_to_summary "⚠️ No pre-commit output found. Check if pre-commit was executed."
+          fi
+
+          # Final summary
+          CHECK_INFO="${CHECK_TO_RUN:-all checks}"
+          add_markdown \
+            "" \
+            "<sub>Generated on $(date)</br>Run ${CHECK_INFO} on ${EXECUTION_SCOPE}</sub>"
+
+          # Set the summary file path as output
+          echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+          echo "decouple_string=Run ${CHECK_INFO} on ${EXECUTION_SCOPE}" >> "$GITHUB_OUTPUT"
+
+      - name: Post Summary on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/.github/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ steps.summary.outputs.summary_file }}
+          search-pattern: ${{ steps.summary.outputs.decouple_string }}

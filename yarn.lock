@@ -4390,6 +4390,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@pagopa/dx-cli@workspace:apps/cli":
+  version: 0.0.0-use.local
+  resolution: "@pagopa/dx-cli@workspace:apps/cli"
+  dependencies:
+    "@pagopa/eslint-config": "workspace:^"
+    "@tsconfig/node20": "npm:^20.1.5"
+    "@types/node": "npm:^20.12.2"
+    commander: "npm:^14.0.0"
+    eslint: "npm:8.57.0"
+    tsup: "npm:^8.5.0"
+    typescript: "npm:~5.8.3"
+  bin:
+    dx: ./bin/index.js
+  languageName: unknown
+  linkType: soft
+
 "@pagopa/dx@workspace:.":
   version: 0.0.0-use.local
   resolution: "@pagopa/dx@workspace:."
@@ -6274,6 +6290,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_service_bus_alerts@workspace:infra/modules/azure_service_bus_alerts":
+  version: 0.0.0-use.local
+  resolution: "azure_service_bus_alerts@workspace:infra/modules/azure_service_bus_alerts"
+  languageName: unknown
+  linkType: soft
+
 "azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace":
   version: 0.0.0-use.local
   resolution: "azure_service_bus_namespace@workspace:infra/modules/azure_service_bus_namespace"
@@ -6959,6 +6981,13 @@ __metadata:
   version: 10.0.1
   resolution: "commander@npm:10.0.1"
   checksum: 10c0/53f33d8927758a911094adadda4b2cbac111a5b377d8706700587650fd8f45b0bbe336de4b5c3fe47fd61f420a3d9bd452b6e0e6e5600a7e74d7bf0174f6efe3
+  languageName: node
+  linkType: hard
+
+"commander@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "commander@npm:14.0.0"
+  checksum: 10c0/73c4babfa558077868d84522b11ef56834165d472b9e86a634cd4c3ae7fc72d59af6377d8878e06bd570fe8f3161eced3cbe383c38f7093272bb65bd242b595b
   languageName: node
   linkType: hard
 
@@ -9141,6 +9170,12 @@ __metadata:
 "github_environment_bootstrap@workspace:infra/modules/github_environment_bootstrap":
   version: 0.0.0-use.local
   resolution: "github_environment_bootstrap@workspace:infra/modules/github_environment_bootstrap"
+  languageName: unknown
+  linkType: soft
+
+"github_selfhosted_runner_on_codebuild@workspace:infra/modules/github_selfhosted_runner_on_codebuild":
+  version: 0.0.0-use.local
+  resolution: "github_selfhosted_runner_on_codebuild@workspace:infra/modules/github_selfhosted_runner_on_codebuild"
   languageName: unknown
   linkType: soft
 
@@ -13781,9 +13816,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"provider-azure@workspace:infra/provider":
+"provider-azure@workspace:providers/azure":
   version: 0.0.0-use.local
-  resolution: "provider-azure@workspace:infra/provider"
+  resolution: "provider-azure@workspace:providers/azure"
   languageName: unknown
   linkType: soft
 

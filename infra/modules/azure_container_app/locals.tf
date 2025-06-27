@@ -44,4 +44,7 @@ locals {
   }
 
   sku = lookup(local.sku_mapping, var.tier, null)
+
+  replica_minimum = try(var.autoscaler.replicas.minimum, local.sku.replicas.min)
+  replica_maximum = try(var.autoscaler.replicas.maximum, local.sku.replicas.max)
 }

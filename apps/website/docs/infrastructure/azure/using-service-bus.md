@@ -111,6 +111,15 @@ even if the consumer is in another domain or
 scenario. If multiple teams read events from the same queue without being aware
 of them, hard-to-detect concurrency problems could occur.
 
+:::tip
+
+Stick to the [naming convention](../../conventions/azure-naming-convention.md)
+when you create new resources. For queues, use
+[the suffix](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations#integration)
+`sbq`.
+
+:::
+
 The following example does:
 
 - Create a queue
@@ -121,7 +130,7 @@ The following example does:
 
 ```hcl
 resource "azurerm_servicebus_queue" "example" {
-  name         = "example-queue"
+  name         = "example-sbq-01"
   namespace_id = module.service_bus_01.id
 }
 
@@ -193,6 +202,15 @@ Since topics replicate messages to each subscriber, the team owner of the entity
 will only need to define the topic itself and give the `Writer` role to producer
 service in order to post messages.
 
+:::tip
+
+Stick to the [naming convention](../../conventions/azure-naming-convention.md)
+when you create new resources. Use
+[the suffix](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations#integration)
+`sbt` for topics, and `sbts` for subscriptions.
+
+:::
+
 The following example does:
 
 - Create a topic
@@ -202,7 +220,7 @@ The following example does:
 
 ```hcl
 resource "azurerm_servicebus_topic" "example" {
-  name         = "example-topic"
+  name         = "example-sbt-01"
   namespace_id = module.service_bus_01.id
 }
 
@@ -259,18 +277,18 @@ The following example does:
 ```hcl
 # If you are the owner of the topic, you should already have this code:
 resource "azurerm_servicebus_topic" "example" {
-  name         = "example-topic"
+  name         = "example-sbt-01"
   namespace_id = module.service_bus_01.id
 }
 
 # Instead, if you are consuming events of another team's topic use:
 data "azurerm_servicebus_topic" "example" {
-  name         = "example-topic"
+  name         = "example-sbt-01"
   namespace_id = module.service_bus_01.id
 }
 
 resource "azurerm_servicebus_subscription" "example" {
-  name               = "example-sub"
+  name               = "example-sbts-01"
   topic_id           = (data.)azurerm_servicebus_topic.example.id
   max_delivery_count = 1
 }
