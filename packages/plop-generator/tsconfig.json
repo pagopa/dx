@@ -1,12 +1,13 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./lib",
     "rootDir": "./src",
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "bundler",
     "module": "ESNext"
   },
-  "exclude": ["tsup.config.ts", "templates"]
+  "include": ["src/**/*"],
+  "exclude": ["tsup.config.ts", "templates", "dist"]
 }
