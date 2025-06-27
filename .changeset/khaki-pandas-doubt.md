@@ -2,4 +2,4 @@
 "@pagopa/dx-cli": patch
 ---
 
-Add `typeckeck` script
+Add `typecheck` script
