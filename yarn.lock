@@ -4419,6 +4419,7 @@ __metadata:
   dependencies:
     "@changesets/cli": "npm:^2.29.2"
     "@devcontainers/cli": "npm:^0.75.0"
+    eslint: "npm:8.57.0"
     plop: "npm:^4.0.1"
     prettier: "npm:3.2.5"
     turbo: "npm:^2.5.2"
