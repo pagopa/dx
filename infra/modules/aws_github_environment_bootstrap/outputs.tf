@@ -1,0 +1,29 @@
+output "repository" {
+  description = "Details of the GitHub repository, including ID and name."
+  value = {
+    id   = try(module.github_repository["repo"].id, null)
+    name = local.repository_name
+  }
+}
+
+output "identities" {
+  description = "Details of the IAM roles for app, infra, including ARNs and names."
+  value = {
+    app = {
+      cd = {
+        id   = aws_iam_role.app_cd.arn
+        name = aws_iam_role.app_cd.name
+      }
+    }
+    infra = {
+      ci = {
+        id   = aws_iam_role.infra_ci.arn
+        name = aws_iam_role.infra_ci.name
+      }
+      cd = {
+        id   = aws_iam_role.infra_cd.arn
+        name = aws_iam_role.infra_cd.name
+      }
+    }
+  }
+}
