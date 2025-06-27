@@ -20,7 +20,7 @@ on:
     branches:
       - main
     paths:
-      - 'self-hosted-runner/**'
+      - 'containers/self-hosted-runner/**'
 
 jobs:
   found_sha:
@@ -107,7 +107,7 @@ jobs:
           new_from="FROM ghcr.io/actions/actions-runner:latest@${{ needs.found_sha.outputs.latest_digest }} AS base"
           
           # Replace the first line with the new FROM statement
-          sed -i "1s|.*|$new_from|" ./self-hosted-runner/Dockerfile
+          sed -i "1s|.*|$new_from|" ./containers/self-hosted-runner/Dockerfile
 
           echo "Dockerfile updated."
 
@@ -115,8 +115,8 @@ jobs:
         uses: pagopa/dx/.github/actions/docker-build-push@main
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
         with:
-          dockerfile_path: './self-hosted-runner/Dockerfile'
-          dockerfile_context: './self-hosted-runner'
+          dockerfile_path: './containers/self-hosted-runner/Dockerfile'
+          dockerfile_context: './containers/self-hosted-runner'
           docker_image_name: '${{ env.IMAGE_NAME }}'
           docker_image_description: 'DX GitHub Self-Hosted Runner'
           docker_image_authors: 'DevEx'
