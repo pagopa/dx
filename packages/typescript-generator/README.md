@@ -1,4 +1,4 @@
-# @pagopa/plop-generator
+# @pagopa/typescript-generator
 
 A PlopJS generator for creating TypeScript packages in the DX monorepo that follows established conventions and best practices.
 
@@ -15,39 +15,29 @@ A PlopJS generator for creating TypeScript packages in the DX monorepo that foll
 From the workspace root:
 
 ```bash
-yarn add -D @pagopa/plop-generator
+yarn add -D @pagopa/typescript-generator
 ```
 
 Or install globally:
 
 ```bash
-npm install -g @pagopa/plop-generator
+npm install -g @pagopa/typescript-generator
 ```
 
 ## Usage
 
-### Command Line Interface
-
-From anywhere within the monorepo:
-
 ```bash
-yarn dx-generate
-```
-
-Or if installed globally:
-
-```bash
-dx-generate
+yarn run turbo gen typescript-generator
 ```
 
 ### Programmatic Usage
 
 ```typescript
 import { Plop } from "plop";
-import plopGenerator from "@pagopa/plop-generator";
+import typescriptGenerator from "@pagopa/typescript-generator";
 
 const plop = new Plop();
-plopGenerator(plop);
+typescriptGenerator(plop);
 ```
 
 ## Generators
@@ -85,32 +75,6 @@ packages/your-package-name/
     └── index.ts
 ```
 
-## Development
-
-### Build
-
-```bash
-yarn build
-```
-
-### Development Mode
-
-```bash
-yarn dev
-```
-
-### Lint
-
-```bash
-yarn lint
-```
-
-### Format
-
-```bash
-yarn format
-```
-
 ## Templates
 
 Templates are located in the `templates/` directory and use Handlebars syntax. Each template corresponds to a file that will be generated in the new package.
@@ -125,16 +89,3 @@ Templates are located in the `templates/` directory and use Handlebars syntax. E
 
 - `kebabCase`: Converts text to kebab-case
 - `properCase`: Converts text to proper case
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Run linting and formatting
-6. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
