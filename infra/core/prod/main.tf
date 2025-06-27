@@ -1,7 +1,7 @@
 module "core" {
   source = "../_modules/core_infra"
 
-  environment = local.environment
-  virtual_network_cidr = local.virtual_network_cidr
-  tags = local.tags
+  environment          = local.environment
+  virtual_network_cidr = "10.52.0.0/16"
+  tags                 = local.tags
 }

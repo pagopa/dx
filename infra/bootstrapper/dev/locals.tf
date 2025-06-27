@@ -3,7 +3,7 @@ locals {
     prefix          = "dx"
     location        = "italynorth"
     location_short  = "itn"
-    env_short       = "p"
+    env_short       = "d"
     app_name        = "core"
     instance_number = "01"
   }
@@ -12,9 +12,9 @@ locals {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
-    Environment    = "Prod"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/core/prod"
+    Environment    = "Dev"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/bootstrapper/dev"
     ManagementTeam = "Developer Experience"
-    TestName       = "Create Azure core resources for prod DEVEX environment"
+    TestName       = "Create Azure Github environment bootstrap for test"
   }
 }

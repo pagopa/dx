@@ -8,8 +8,6 @@ locals {
     instance_number = "01"
   }
 
-  virtual_network_cidr = "10.51.0.0/16"
-
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
