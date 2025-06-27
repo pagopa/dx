@@ -6,7 +6,8 @@
     "apps/**",
     "infra/modules/*",
     "infra/scripts",
-    "actions/**"
+    "actions/**",
+    "providers/**"
   ],
   "devDependencies": {
     "@changesets/cli": "^2.29.2",

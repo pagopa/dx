@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - "apps/providers/**"
+      - "providers/**"
 
 concurrency:
   group: ${{ github.workflow }}
@@ -17,7 +17,7 @@ jobs:
   detect-providers:
     runs-on: ubuntu-latest
     outputs:
-      providers: ${{ steps.get-all-providers.outputs.providers || steps.get-modified-providers.outputs.providers }}
+      providers: ${{ steps.get-all-providers.outputs.resources || steps.get-modified-providers.outputs.resources }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -27,14 +27,17 @@ jobs:
       - name: Get all providers
         id: get-all-providers
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-all-providers@main
+        uses: pagopa/dx/.github/actions/get-all-resources@main
+        with:
+          resource_type: "provider"
 
       - name: Get modified providers
         id: get-modified-providers
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-modified-providers@main
+        uses: pagopa/dx/.github/actions/get-modified-resources@main
         with:
           current_ref: ${{ github.event.before }}
+          resource_type: "provider"
 
   push-provider:
     runs-on: ubuntu-latest
