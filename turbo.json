@@ -18,11 +18,6 @@
       "inputs": ["src/**/__tests__/**/*.test.ts"],
       "outputLogs": "errors-only"
     },
-    "test:coverage": {
-      "dependsOn": ["^test", "build"],
-      "inputs": ["src/**/__tests__/**/*.test.ts"],
-      "outputLogs": "full"
-    },
     "//#test:coverage": {
       "dependsOn": ["^build"],
       "inputs": ["apps/**/src/**/*.ts", "packages/**/src/**/*.ts"],
