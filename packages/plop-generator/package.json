@@ -1,16 +1,22 @@
 {
-  "name": "{{package.prefix}}/{{package.name}}",
+  "name": "@pagopa/plop-generator",
   "version": "0.1.0",
   "type": "module",
-  "description": "{{package.description}}",
+  "description": "PlopJS generator for creating TypeScript packages in the DX monorepo",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "{{packages.dir}}/{{package.name}}"
+    "directory": "packages/plop-generator"
   },
-  "keywords": [],
+  "keywords": [
+    "plop",
+    "generator",
+    "typescript",
+    "turborepo"
+  ],
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "main": "./dist/index.js",
   "exports": {
@@ -18,7 +24,10 @@
       "import": "./dist/index.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "inquirer": "^9.2.12",
+    "plop": "^4.0.1"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node20": "^20.1.5",
@@ -28,16 +37,12 @@
     "typescript": "~5.8.3"
   },
   "scripts": {
-    "start": "node .",
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "format:check": "prettier --check ."
   }
 }
