@@ -7,4 +7,7 @@
 
 const typescriptGenerator = require("./packages/typescript-generator/dist/index.cjs");
 
-module.exports = typescriptGenerator;
+module.exports = function (plop) {
+  // add your generators here
+  typescriptGenerator(plop);
+};
