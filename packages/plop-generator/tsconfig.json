@@ -1,13 +1,17 @@
 {
   "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
-    "outDir": "./lib",
-    "rootDir": "./src",
+    "outDir": "../typescript-generator/lib",
+    "rootDir": "../typescript-generator/src",
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "bundler",
     "module": "ESNext"
   },
-  "include": ["src/**/*"],
-  "exclude": ["tsup.config.ts", "templates", "dist"]
+  "include": ["../typescript-generator/src/**/*"],
+  "exclude": [
+    "../typescript-generator/tsup.config.ts",
+    "../typescript-generator/templates",
+    "../typescript-generator/dist"
+  ]
 }
