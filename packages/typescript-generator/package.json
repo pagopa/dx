@@ -2,7 +2,7 @@
   "name": "@pagopa/typescript-generator",
   "version": "0.1.0",
   "type": "module",
-  "description": "PlopJS generator for creating TypeScript packages in the DX monorepo",
+  "description": "PlopJS generator for creating TypeScript workspaces",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",

@@ -12,32 +12,18 @@ A PlopJS generator for creating TypeScript packages in the DX monorepo that foll
 
 ## Installation
 
-From the workspace root:
+From non-DX repositories:
 
 ```bash
 yarn add -D @pagopa/typescript-generator
 ```
 
-Or install globally:
-
-```bash
-npm install -g @pagopa/typescript-generator
-```
-
 ## Usage
+
+When using in the DX monorepo, you can run the generator directly from the root directory:
 
 ```bash
 yarn run turbo gen typescript-generator
-```
-
-### Programmatic Usage
-
-```typescript
-import { Plop } from "plop";
-import typescriptGenerator from "@pagopa/typescript-generator";
-
-const plop = new Plop();
-typescriptGenerator(plop);
 ```
 
 ## Generators
