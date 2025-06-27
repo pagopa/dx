@@ -13,8 +13,9 @@ locals {
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
     Environment    = "Prod"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/core/prod"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/bootstrapper/prod"
     ManagementTeam = "Developer Experience"
-    TestName       = "Create Azure core resources for prod DEVEX environment"
+    TestName       = "Create Azure Github environment bootstrap for test"
   }
 }
+
