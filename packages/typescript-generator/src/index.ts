@@ -125,7 +125,7 @@ export default function (plop: NodePlopAPI) {
       },
       {
         path: ".changeset/{{packageName}}-initial.md",
-        skip: (data: any) => {
+        skip: (data: Params) => {
           if (!data.createChangeset) {
             return "Skipping changeset creation";
           }
