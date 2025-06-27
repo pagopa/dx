@@ -13,6 +13,14 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+interface Params {
+  createChangeset: boolean;
+  createSrcFolder: boolean;
+  createTests: boolean;
+  description: string;
+  packageName: string;
+}
+
 export default function (plop: NodePlopAPI) {
   // Set the base path for templates
   plop.setGenerator("typescript-package", {
@@ -75,7 +83,7 @@ export default function (plop: NodePlopAPI) {
       },
       {
         path: "packages/{{packageName}}/src/index.ts",
-        skip: (data: any) => {
+        skip: (data: Params) => {
           if (!data.createSrcFolder) {
             return "Skipping src folder creation";
           }
@@ -89,7 +97,7 @@ export default function (plop: NodePlopAPI) {
       },
       {
         path: "packages/{{packageName}}/test/index.test.ts",
-        skip: (data: any) => {
+        skip: (data: Params) => {
           if (!data.createTests) {
             return "Skipping test folder creation";
           }
@@ -103,7 +111,7 @@ export default function (plop: NodePlopAPI) {
       },
       {
         path: "packages/{{packageName}}/vitest.config.ts",
-        skip: (data: any) => {
+        skip: (data: Params) => {
           if (!data.createTests) {
             return "Skipping vitest config creation";
           }
@@ -117,7 +125,7 @@ export default function (plop: NodePlopAPI) {
       },
       {
         path: ".changeset/{{packageName}}-initial.md",
-        skip: (data: any) => {
+        skip: (data: Params) => {
           if (!data.createChangeset) {
             return "Skipping changeset creation";
           }
