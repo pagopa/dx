@@ -41,5 +41,8 @@
   },
   "[go]": {
     "editor.defaultFormatter": "golang.go"
+  },
+  "[handlebars]": {
+    "editor.defaultFormatter": null
   }
 }
