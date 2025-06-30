@@ -5,11 +5,6 @@ import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { Dependencies } from "./domain/dependencies.js";
 
-const deps: Dependencies = {
-  packageJsonReader: makePackageJsonReader(),
-  repositoryReader: makeRepositoryReader(),
-};
-
 await configure({
   loggers: [
     { category: ["dx-cli"], lowestLevel: "info", sinks: ["console"] },
@@ -21,6 +16,11 @@ await configure({
   ],
   sinks: { console: getConsoleSink() },
 });
+
+const deps: Dependencies = {
+  packageJsonReader: makePackageJsonReader(),
+  repositoryReader: makeRepositoryReader(),
+};
 
 const program = makeCli(deps);
 
