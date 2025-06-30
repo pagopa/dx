@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { ResultAsync, err, ok } from "neverthrow";
 import { z } from "zod/v4";
 
@@ -36,8 +37,9 @@ const validateRequiredScripts = (
 
 export const checkMonorepoScripts =
   (monorepoDir: string) =>
-  async (dependencies: Pick<Dependencies, "logger" | "packageJsonReader">) => {
-    const { logger, packageJsonReader } = dependencies;
+  async (dependencies: Pick<Dependencies, "packageJsonReader">) => {
+    const logger = getLogger(["dx-cli", "validation"]);
+    const { packageJsonReader } = dependencies;
 
     const scriptsResult = await packageJsonReader.getScripts(monorepoDir);
 
@@ -53,11 +55,11 @@ export const checkMonorepoScripts =
     );
 
     if (isValid) {
-      logger.success("Monorepo scripts are correctly set up");
+      logger.info("✅ Monorepo scripts are correctly set up");
       return ok();
     }
 
     const errorMessage = `Missing required scripts: ${missingScripts.join(", ")}`;
-    logger.error(errorMessage);
+    logger.error(`❌ ${errorMessage}`);
     return err(new Error(errorMessage));
   };

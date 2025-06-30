@@ -3626,6 +3626,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@logtape/logtape@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@logtape/logtape@npm:1.0.0"
+  checksum: 10c0/c1f70c0b61109c67980595d0794205652e5cc6d1d5d297712902f4cf8e0992a69033d8099b5a7bb2f11d1d4b6d045f712d6aa78c95e737f3324ed09af62adfb5
+  languageName: node
+  linkType: hard
+
 "@manypkg/find-root@npm:^1.1.0":
   version: 1.1.0
   resolution: "@manypkg/find-root@npm:1.1.0"
@@ -4593,6 +4600,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@pagopa/dx-cli@workspace:apps/cli"
   dependencies:
+    "@logtape/logtape": "npm:^1.0.0"
     "@pagopa/eslint-config": "workspace:^"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
