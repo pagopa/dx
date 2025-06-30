@@ -27,6 +27,7 @@ module "server" {
   isr_tags_ddb          = module.isr_revalidation.ddb_tags_table
   isr_queue             = module.isr_revalidation.sqs_queue
   is_streaming_enabled  = var.server.is_streaming_enabled
+  lambda_layers         = var.server.lambda_layers
 
   enable_alarms  = var.enable_alarms
   alarms_actions = var.alarms_actions
