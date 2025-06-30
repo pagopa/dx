@@ -9,7 +9,8 @@ on:
       - .terraform-version
       - .pre-commit-config.yaml
       - .trivyignore
-
+permissions:
+  pull-requests: write
 jobs:
   tf_analysis:
     # Don't run in Changeset PRs
