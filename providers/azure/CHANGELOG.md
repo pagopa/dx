@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.5.0
+
+### Minor Changes
+
+- 5b44af0: Add resource abbreviations for DNS Private Resolvers
+
 ## 0.4.0
 
 ### Minor Changes

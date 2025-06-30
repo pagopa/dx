@@ -44,5 +44,6 @@
   },
   "[handlebars]": {
     "editor.defaultFormatter": null
-  }
+  },
+  "eslint.nodePath": ".yarn/sdks"
 }
