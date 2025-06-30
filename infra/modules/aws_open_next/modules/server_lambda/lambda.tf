@@ -8,7 +8,9 @@ resource "aws_lambda_function" "function" {
   handler       = var.handler
   runtime       = "nodejs${var.node_major_version}.x"
   architectures = ["arm64"]
-  role          = aws_iam_role.lambda_role.arn
+  layers        = var.lambda_layers
+
+  role = aws_iam_role.lambda_role.arn
 
   # kms_key_arn                    = var.kms_key_arn
   # reserved_concurrent_executions = var.reserved_concurrent_executions
