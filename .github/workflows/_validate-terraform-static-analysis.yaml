@@ -11,6 +11,7 @@ on:
       - .trivyignore
 permissions:
   pull-requests: write
+  contents: read
 jobs:
   tf_analysis:
     # Don't run in Changeset PRs
@@ -19,6 +20,7 @@ jobs:
     name: Terraform Validation
     secrets: inherit
     permissions:
+      pull-requests: write
       contents: read
     with:
       enable_modified_files_detection: true
