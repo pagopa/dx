@@ -75,6 +75,13 @@ variable "timeout" {
   }
 }
 
+variable "lambda_layers" {
+  type        = list(string)
+  description = "The list of Lambda layers to attach to the function. The default is an empty list."
+  default     = []
+
+}
+
 variable "environment_variables" {
   type        = map(string)
   description = "The environment variables to set for the lambda function."
