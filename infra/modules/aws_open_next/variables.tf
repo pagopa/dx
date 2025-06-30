@@ -61,6 +61,7 @@ variable "server" {
     handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
     is_streaming_enabled  = optional(bool, false)
+    lambda_layers         = optional(list(string), [])
   })
 
   description = "The server lambda function configuration."
