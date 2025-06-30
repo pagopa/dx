@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { Command } from "commander";
 import * as process from "node:process";
 
@@ -6,26 +7,30 @@ import { checkMonorepoScripts } from "../../../domain/package-json.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
-  "logger" | "packageJsonReader" | "repositoryReader"
+  "packageJsonReader" | "repositoryReader"
 >;
 
-export const makeDoctorCommand = (dependencies: DoctorDependencies): Command =>
-  new Command()
+export const makeDoctorCommand = (
+  dependencies: DoctorDependencies,
+): Command => {
+  const logger = getLogger(["dx-cli", "doctor"]);
+  return new Command()
     .name("doctor")
     .description(
       "Verify the repository setup according to the DevEx guidelines",
     )
     .action(async () => {
-      const { logger, repositoryReader } = dependencies;
+      const { repositoryReader } = dependencies;
 
       const repoRoot = repositoryReader.findRepositoryRoot(process.cwd());
       if (!repoRoot) {
         logger.error(
-          "Could not find repository root. Make sure to have the repo initialized.",
+          "❌ Could not find repository root. Make sure to have the repo initialized.",
         );
         return;
       }
 
-      logger.log("Checking monorepo scripts...");
+      logger.info("Checking monorepo scripts...");
       await checkMonorepoScripts(repoRoot)(dependencies);
     });
+};

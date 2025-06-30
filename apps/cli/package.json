@@ -20,6 +20,7 @@
     "dx": "./bin/index.js"
   },
   "dependencies": {
+    "@logtape/logtape": "^1.0.0",
     "commander": "^14.0.0",
     "neverthrow": "^8.2.0",
     "zod": "^3.25.28"
