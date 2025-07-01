@@ -20,3 +20,9 @@ variable "virtual_network_cidr" {
   type        = string
   description = "CIDR for the virtual network"
 }
+
+variable "nat_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable NAT for the virtual network"
+}

@@ -15,7 +15,7 @@ module "core" {
     dnsforwarder_cidr_subnet = module.cidrs.network_cidr_blocks.vpn_dnsforwarder
   }
 
-  nat_enabled = true
+  nat_enabled = var.nat_enabled
 
   tags = var.tags
 }

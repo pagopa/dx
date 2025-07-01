@@ -10,7 +10,7 @@ module "cidrs" {
     },
     {
       name     = "gh_runner"
-      new_bits = 8
+      new_bits = 9
     },
     {
       name     = "vpn"
