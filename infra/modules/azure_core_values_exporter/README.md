@@ -1,4 +1,7 @@
-# azure_core_values_exporter
+# DX - Azure Core Values Exporter
+
+This Terraform module enables the standardized export and sharing of core Azure infrastructure values across projects and environments.  
+It is designed to harmonize the configuration of cloud resources by exposing key outputs such as resource group names, network details, and shared service endpoints from the main `azure-core-infra` state, making them easily consumable by dependent modules and project-specific stacks.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -16,7 +19,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [terraform_remote_state.core](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs
