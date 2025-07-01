@@ -26,7 +26,7 @@ resource "azurerm_resource_group" "opex" {
 }
 
 resource "azurerm_resource_group" "test" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count    = var.environment.env_short == "d" ? 1 : 0
   name     = "${local.project}-test-rg-01"
   location = var.environment.location
 
