@@ -1,5 +1,5 @@
 module "bootstrapper" {
-  source = "./_modules/bootstrapper"
+  source = "../_modules/bootstrapper"
 
   environment = local.environment
 

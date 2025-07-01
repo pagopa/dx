@@ -17,7 +17,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bootstrapper"></a> [bootstrapper](#module\_bootstrapper) | ./_modules/bootstrapper | n/a |
+| <a name="module_bootstrapper"></a> [bootstrapper](#module\_bootstrapper) | ../_modules/bootstrapper | n/a |
 
 ## Resources
 
