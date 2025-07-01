@@ -21,6 +21,5 @@ jobs:
     secrets: inherit
     permissions:
       contents: read
-      pull-requests: write
     with:
       enable_modified_files_detection: true
