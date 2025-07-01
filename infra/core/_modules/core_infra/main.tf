@@ -2,8 +2,6 @@ module "core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
   version = "~> 1.0"
 
-  test_enabled = false
-
   environment = var.environment
 
   virtual_network_cidr = var.virtual_network_cidr
@@ -20,8 +18,16 @@ module "core" {
   tags = var.tags
 }
 
-resource "azurerm_resource_group" "opex_dev" {
+resource "azurerm_resource_group" "opex" {
   name     = "${local.project}-opex-rg-01"
+  location = var.environment.location
+
+  tags = var.tags
+}
+
+resource "azurerm_resource_group" "test" {
+  count = var.environment.env_short == "d" ? 1 : 0
+  name     = "${local.project}-test-rg-01"
   location = var.environment.location
 
   tags = var.tags

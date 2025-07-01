@@ -16,12 +16,10 @@ jobs:
   tf_analysis:
     # Don't run in Changeset PRs
     if: ${{ github.actor != 'dx-pagopa-bot' }}
-    # uses: ./.github/workflows/static_analysis.yaml
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@avoid-rate-limiting-tflint
+    uses: ./.github/workflows/static_analysis.yaml
     name: Terraform Validation
     secrets: inherit
     permissions:
       contents: read
-      pull-requests: write
     with:
       enable_modified_files_detection: true
