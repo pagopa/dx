@@ -164,6 +164,8 @@ export default function (plop: NodePlopAPI) {
         ),
         type: "add",
       },
+      // Post-generation: install dependencies
+      installDependencies,
     ],
     description: "Create a new TypeScript package for the DX monorepo",
     prompts: [
@@ -237,4 +239,28 @@ export default function (plop: NodePlopAPI) {
 
   // Helper to get the current git repository URL
   plop.setHelper("getGitRepositoryUrl", () => getGitRepositoryUrl());
+}
+
+/**
+ * Install dependencies for a new TypeScript package
+ */
+function installDependencies(answers: Record<string, unknown>): string {
+  const packagePath = path.join(
+    process.cwd(),
+    "packages",
+    answers.packageName as string,
+  );
+  try {
+    execSync(
+      "yarn add -D @pagopa/eslint-config @tsconfig/node20 @types/node eslint@^8.0.0 tsup typescript vitest",
+      { cwd: packagePath, stdio: "inherit" },
+    );
+    execSync("yarn add -DE prettier", {
+      cwd: packagePath,
+      stdio: "inherit",
+    });
+    return "Dependencies installed successfully.";
+  } catch (e) {
+    return `Dependency installation failed: ${e}`;
+  }
 }
