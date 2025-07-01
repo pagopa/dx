@@ -5,7 +5,7 @@ module "core_values" {
 }
 
 module "bootstrap" {
-  source = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 2.0"
 
   environment = var.environment

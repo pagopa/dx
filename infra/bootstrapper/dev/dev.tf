@@ -10,18 +10,12 @@ module "bootstrapper" {
     key                  = "dx.core.dev.tfstate"
   }
 
-  ad_groups = {
-    admins_name    = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}-adgroup-admins"
-    devs_name      = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}-adgroup-developers"
-    externals_name = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}-adgroup-externals"
-  }
-
   repository = {
-    name               = "dx"
-    configure          = true
-    description        = "Devex repository for shared tools and pipelines."
-    topics             = ["developer-experience"]
-    reviewers_teams    = ["engineering-team-devex"]
+    name            = "dx"
+    configure       = true
+    description     = "Devex repository for shared tools and pipelines."
+    topics          = ["developer-experience"]
+    reviewers_teams = ["engineering-team-devex"]
   }
 
   tags = local.tags

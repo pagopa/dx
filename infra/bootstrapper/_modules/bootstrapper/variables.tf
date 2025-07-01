@@ -32,6 +32,17 @@ variable "repository" {
   description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project."
 }
 
+variable "core_state" {
+  type = object({
+    resource_group_name  = string
+    storage_account_name = string
+    container_name       = string
+    key                  = string
+  })
+
+  description = "Details about the Azure Storage Account used to store the Terraform state file."
+}
+
 variable "tags" {
   type        = map(any)
   description = "Map of tags to apply to all created resources."
