@@ -7,11 +7,37 @@
 
 import type { NodePlopAPI } from "plop";
 
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Get the git repository URL from the current git remote
+ */
+function getGitRepositoryUrl(): string {
+  try {
+    // Get the remote origin URL
+    const remoteUrl = execSync("git config --get remote.origin.url", {
+      encoding: "utf8",
+    }).trim();
+
+    // Convert SSH URLs to HTTPS format for package.json
+    if (remoteUrl.startsWith("git@github.com:")) {
+      return remoteUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(/\.git$/, "");
+    }
+
+    // Remove .git suffix if present
+    return remoteUrl.replace(/\.git$/, "");
+  } catch {
+    // Fallback to the current hardcoded URL if git command fails
+    return "https://github.com/pagopa/dx";
+  }
+}
 
 interface Params {
   createChangeset: boolean;
@@ -19,6 +45,7 @@ interface Params {
   createTests: boolean;
   description: string;
   packageName: string;
+  repositoryUrl: string;
 }
 
 export default function (plop: NodePlopAPI) {
@@ -207,4 +234,7 @@ export default function (plop: NodePlopAPI) {
       (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
     ),
   );
+
+  // Helper to get the current git repository URL
+  plop.setHelper("getGitRepositoryUrl", () => getGitRepositoryUrl());
 }
