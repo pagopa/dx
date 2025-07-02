@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 1.0.10
+
+### Patch Changes
+
+- 9b8c061: Add opex resource group
+
 ## 1.0.9
 
 ### Patch Changes
