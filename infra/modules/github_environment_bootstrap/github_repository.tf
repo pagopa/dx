@@ -5,6 +5,8 @@ resource "github_repository" "this" {
 
   visibility = "public"
 
+  homepage_url = var.repository.homepage_url
+
   allow_auto_merge            = true
   allow_rebase_merge          = false
   allow_merge_commit          = false
@@ -14,11 +16,11 @@ resource "github_repository" "this" {
 
   delete_branch_on_merge = true
 
-  has_projects    = false
+  has_projects    = var.repository.has_projects
   has_wiki        = false
   has_discussions = false
   has_issues      = false
-  has_downloads   = false
+  has_downloads   = var.repository.has_downloads
 
   vulnerability_alerts = true
 
@@ -36,6 +38,13 @@ resource "github_repository" "this" {
 
     advanced_security {
       status = "enabled"
+    }
+  }
+
+  dynamic "pages" {
+    for_each = var.repository.pages_enabled ? [var.repository.pages_enabled] : []
+    content {
+      build_type = "workflow"
     }
   }
 }

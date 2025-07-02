@@ -1,12 +1,13 @@
 module "core_values" {
-  source = "github.com/pagopa/dx.git//infra/modules/azure_core_values_exporter?ref=implement-common-values-for-core-infra"
+  source = "../../../modules/azure_core_values_exporter"
+  # version = "~> 0.0"
 
   core_state = var.core_state
 }
 
 module "bootstrap" {
-  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 2.0"
+  source = "../../../modules/azure_github_environment_bootstrap"
+  # version = "~> 2.0"
 
   environment = var.environment
 
@@ -20,8 +21,8 @@ module "bootstrap" {
   }
 
   terraform_storage_account = {
-    name                = format(local.tf_storage_account.name, "p")
-    resource_group_name = format(local.tf_storage_account.resource_group_name, "p")
+    name                = local.tf_storage_account.name
+    resource_group_name = local.tf_storage_account.resource_group_name
   }
 
   repository = var.repository

@@ -55,7 +55,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # e.g. infra-prod-cd
+    # e.g. infra-${local.env_name}-cd
     infra_environment_name = "infra-${local.env_name}-%s"
     app_environment_name   = "app-${local.env_name}-%s"
     opex_environment_name  = "opex-${local.env_name}-%s"

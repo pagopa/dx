@@ -1,5 +1,5 @@
 resource "github_repository_environment" "infra_prod_cd" {
-  environment = "infra-prod-cd"
+  environment = "infra-${local.env_name}-cd"
   repository  = local.repository_name
 
   deployment_branch_policy {
@@ -17,7 +17,7 @@ resource "github_repository_environment" "infra_prod_cd" {
 }
 
 resource "github_repository_environment" "app_prod_cd" {
-  environment = "app-prod-cd"
+  environment = "app-${local.env_name}-cd"
   repository  = local.repository_name
 
   deployment_branch_policy {
@@ -35,7 +35,7 @@ resource "github_repository_environment" "app_prod_cd" {
 }
 
 resource "github_repository_environment" "opex_prod_cd" {
-  environment = "opex-prod-cd"
+  environment = "opex-${local.env_name}-cd"
   repository  = local.repository_name
 
   deployment_branch_policy {

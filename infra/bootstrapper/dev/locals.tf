@@ -4,6 +4,7 @@ locals {
     location        = "italynorth"
     location_short  = "itn"
     env_short       = "d"
+    domain          = "devex"
     app_name        = "core"
     instance_number = "01"
   }

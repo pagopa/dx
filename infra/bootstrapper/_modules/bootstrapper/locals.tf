@@ -1,5 +1,5 @@
 locals {
-  project = "${var.environment.prefix}-${local.location_short}"
+  project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
 
   location_short = {
     italynorth = "itn"
@@ -7,13 +7,13 @@ locals {
   }[lower(var.environment.location)]
 
   adgroups = {
-    admins_name   = "${local.project}-adgroup-admin"
-    devs_name     = "${local.project}-adgroup-developers"
-    external_name = "${local.project}-adgroup-externals"
+    admins_name   = "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin"
+    devs_name     = "${var.environment.prefix}-${var.environment.env_short}-adgroup-developers"
+    external_name = "${var.environment.prefix}-${var.environment.env_short}-adgroup-externals"
   }
 
   tf_storage_account = {
-    name                = "${var.environment.prefix}${local.location_short}tfstatest01"
+    name                = replace("${local.project}tfstatest01", "-", "")
     resource_group_name = "${local.project}-tfstate-rg-01"
   }
 }
