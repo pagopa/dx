@@ -285,7 +285,7 @@ export function setupCommonHelpers(plop: NodePlopAPI) {
   plop.setHelper("properCase", (text: string) =>
     text.replace(
       /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
     ),
   );
 
