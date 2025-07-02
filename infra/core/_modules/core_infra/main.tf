@@ -18,13 +18,6 @@ module "core" {
   tags = var.tags
 }
 
-resource "azurerm_resource_group" "opex" {
-  name     = "${local.project}-opex-rg-01"
-  location = var.environment.location
-
-  tags = var.tags
-}
-
 resource "azurerm_resource_group" "test" {
   count    = var.environment.env_short == "d" ? 1 : 0
   name     = "${local.project}-test-rg-01"

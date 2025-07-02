@@ -1,5 +1,5 @@
 locals {
-  project = "${var.environment.prefix}-${var.environment.location_short}"
+  project = "${var.environment.prefix}-${local.location_short}"
 
   location_short = {
     italynorth = "itn"
