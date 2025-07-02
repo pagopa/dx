@@ -6,7 +6,7 @@ A PlopJS generator for creating TypeScript packages in the DX monorepo that foll
 
 - 🚀 **TypeScript Package Generator**: Creates new TypeScript packages with all necessary configuration
 - 📦 **Turborepo Integration**: Follows monorepo structure and conventions
-- 🔧 **Pre-configured Tools**: Includes ESLint, TypeScript, tsup, and other essential tools
+- 🔧 **Pre-configured Tools**: Includes ESLint, TypeScript, and other essential tools
 - 📝 **Template-based**: Uses Handlebars templates for consistent package structure
 - 🎯 **Workspace Aware**: Automatically detects and works within the monorepo structure
 
@@ -34,7 +34,6 @@ Creates a new TypeScript package with:
 
 - **package.json** with proper dependencies and scripts
 - **tsconfig.json** with TypeScript configuration
-- **tsup.config.ts** for building and bundling
 - **eslint.config.js** with shared ESLint rules
 - **README.md** with basic documentation template
 - **.gitignore** and **.node-version** files
@@ -52,7 +51,6 @@ Creates a new TypeScript package with:
 packages/your-package-name/
 ├── package.json
 ├── tsconfig.json
-├── tsup.config.ts
 ├── eslint.config.js
 ├── README.md
 ├── .gitignore

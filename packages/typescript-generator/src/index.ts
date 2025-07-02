@@ -69,14 +69,6 @@ export default function (plop: NodePlopAPI) {
         type: "add",
       },
       {
-        path: "packages/{{packageName}}/tsup.config.ts",
-        templateFile: path.join(
-          __dirname,
-          "../templates/typescript-package/tsup.config.ts.hbs",
-        ),
-        type: "add",
-      },
-      {
         path: "packages/{{packageName}}/eslint.config.js",
         templateFile: path.join(
           __dirname,
@@ -249,7 +241,7 @@ function installDependencies(answers: Record<string, unknown>): string {
   );
   try {
     execSync(
-      "yarn add -D @pagopa/eslint-config @tsconfig/node20 @types/node eslint@^8.0.0 tsup typescript vitest",
+      "yarn add -D @pagopa/eslint-config @tsconfig/node20 @types/node eslint@^8.0.0 typescript vitest",
       { cwd: packagePath, stdio: "inherit" },
     );
     execSync("yarn add -DE prettier", {
