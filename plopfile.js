@@ -6,8 +6,10 @@
  */
 
 const typescriptGenerator = require("./packages/typescript-generator/dist/index.cjs");
+const typescriptLibraryGenerator = require("./packages/typescript-library-generator/dist/index.cjs");
 
 module.exports = function (plop) {
   // add your generators here
   typescriptGenerator(plop);
+  typescriptLibraryGenerator(plop);
 };

@@ -4461,6 +4461,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@pagopa/typescript-library-generator@workspace:packages/typescript-library-generator":
+  version: 0.0.0-use.local
+  resolution: "@pagopa/typescript-library-generator@workspace:packages/typescript-library-generator"
+  dependencies:
+    "@pagopa/eslint-config": "workspace:^"
+    "@tsconfig/node20": "npm:^20.1.5"
+    "@types/node": "npm:^20.12.2"
+    eslint: "npm:8.57.0"
+    inquirer: "npm:^9.2.12"
+    plop: "npm:^4.0.1"
+    prettier: "npm:3.2.5"
+    tsup: "npm:^8.5.0"
+    typescript: "npm:~5.8.3"
+  languageName: unknown
+  linkType: soft
+
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
