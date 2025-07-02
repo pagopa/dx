@@ -11,15 +11,18 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.2",
     "@devcontainers/cli": "^0.75.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "8.57.0",
     "prettier": "3.2.5",
     "turbo": "^2.5.2",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.4"
   },
   "scripts": {
     "build": "turbo run build",
     "code-review": "turbo run typecheck format:check lint:check",
     "version": "yarn changeset version && yarn --mode update-lockfile",
-    "release": "yarn build && changeset publish"
+    "release": "yarn build && changeset publish",
+    "test:coverage": "vitest run --coverage"
   }
 }
