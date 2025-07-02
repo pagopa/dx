@@ -4445,9 +4445,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pagopa/typescript-generator@workspace:packages/typescript-generator":
+"@pagopa/typescript-base-generator@workspace:packages/typescript-base-generator":
   version: 0.0.0-use.local
-  resolution: "@pagopa/typescript-generator@workspace:packages/typescript-generator"
+  resolution: "@pagopa/typescript-base-generator@workspace:packages/typescript-base-generator"
+  dependencies:
+    "@pagopa/eslint-config": "workspace:^"
+    "@pagopa/typescript-core-generator": "workspace:^"
+    "@tsconfig/node20": "npm:^20.1.5"
+    "@types/node": "npm:^20.12.2"
+    eslint: "npm:8.57.0"
+    inquirer: "npm:^9.2.12"
+    plop: "npm:^4.0.1"
+    prettier: "npm:3.2.5"
+    tsup: "npm:^8.5.0"
+    typescript: "npm:~5.8.3"
+  languageName: unknown
+  linkType: soft
+
+"@pagopa/typescript-core-generator@workspace:^, @pagopa/typescript-core-generator@workspace:packages/typescript-core-generator":
+  version: 0.0.0-use.local
+  resolution: "@pagopa/typescript-core-generator@workspace:packages/typescript-core-generator"
   dependencies:
     "@pagopa/eslint-config": "workspace:^"
     "@tsconfig/node20": "npm:^20.1.5"
@@ -4466,6 +4483,7 @@ __metadata:
   resolution: "@pagopa/typescript-library-generator@workspace:packages/typescript-library-generator"
   dependencies:
     "@pagopa/eslint-config": "workspace:^"
+    "@pagopa/typescript-core-generator": "workspace:^"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
     eslint: "npm:8.57.0"

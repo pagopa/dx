@@ -1,18 +1,19 @@
 {
-  "name": "@pagopa/typescript-generator",
+  "name": "@pagopa/typescript-core-generator",
   "version": "0.1.0",
   "type": "module",
-  "description": "PlopJS generator for creating TypeScript workspaces",
+  "description": "Shared core functionality for TypeScript package generators",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/typescript-generator"
+    "directory": "packages/typescript-core-generator"
   },
   "keywords": [
     "plop",
     "generator",
     "typescript",
-    "turborepo"
+    "turborepo",
+    "core"
   ],
   "files": [
     "dist",
@@ -21,7 +22,8 @@
   "main": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "dependencies": {

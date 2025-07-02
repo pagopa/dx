@@ -1,12 +1,12 @@
 {
-  "name": "@pagopa/typescript-library-generator",
+  "name": "@pagopa/typescript-base-generator",
   "version": "0.1.0",
   "type": "module",
-  "description": "PlopJS generator for creating TypeScript libraries",
+  "description": "PlopJS generator for creating TypeScript workspaces",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/typescript-library-generator"
+    "directory": "packages/typescript-base-generator"
   },
   "keywords": [
     "plop",

@@ -1,5 +1,5 @@
 ---
-"@pagopa/typescript-generator": minor
+"@pagopa/typescript-base-generator": minor
 ---
 
 Add PlopJS generator for creating TypeScript packages in the DX monorepo

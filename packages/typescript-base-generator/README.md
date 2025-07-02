@@ -1,4 +1,4 @@
-# @pagopa/typescript-generator
+# @pagopa/typescript-base-generator
 
 A PlopJS generator for creating TypeScript packages in the DX monorepo that follows established conventions and best practices.
 
@@ -15,7 +15,7 @@ A PlopJS generator for creating TypeScript packages in the DX monorepo that foll
 From non-DX repositories:
 
 ```bash
-yarn add -D @pagopa/typescript-generator
+yarn add -D @pagopa/typescript-base-generator
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ yarn add -D @pagopa/typescript-generator
 When using in the DX monorepo, you can run the generator directly from the root directory:
 
 ```bash
-yarn run turbo gen typescript-generator
+yarn run turbo gen typescript-base-generator
 ```
 
 ## Generators
