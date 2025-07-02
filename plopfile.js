@@ -5,11 +5,11 @@
  * to generate new packages using the generators.
  */
 
-const typescriptGenerator = require("./packages/typescript-base-generator/dist/index.cjs");
+const typescriptBaseGenerator = require("./packages/typescript-base-generator/dist/index.cjs");
 const typescriptLibraryGenerator = require("./packages/typescript-library-generator/dist/index.cjs");
 
 module.exports = function (plop) {
   // add your generators here
-  typescriptGenerator(plop);
+  typescriptBaseGenerator(plop);
   typescriptLibraryGenerator(plop);
 };
