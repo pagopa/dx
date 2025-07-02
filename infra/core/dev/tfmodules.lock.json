@@ -1,4 +1,14 @@
 {
-  "core.cidrs": "3cd7d74677fa640991692055d020f226a885078a11c4a4a9ee4ea00e2be13ad8",
-  "core.core": "3a39df081edd175a6e2433c1436a008ff9d3295d0e91245997708fc3d8ad607e"
+  "core.cidrs": {
+    "hash": "3cd7d74677fa640991692055d020f226a885078a11c4a4a9ee4ea00e2be13ad8",
+    "version": "unknown",
+    "name": "unknown",
+    "source": "https://registry.terraform.io/modules/hashicorp/subnets/cidr/1.0.0"
+  },
+  "core.core": {
+    "hash": "3a39df081edd175a6e2433c1436a008ff9d3295d0e91245997708fc3d8ad607e",
+    "version": "1.0.9",
+    "name": "azure_core_infra",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/1.0.9"
+  }
 }
