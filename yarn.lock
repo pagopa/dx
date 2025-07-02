@@ -6237,6 +6237,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"azure_core_values_exporter@workspace:infra/modules/azure_core_values_exporter":
+  version: 0.0.0-use.local
+  resolution: "azure_core_values_exporter@workspace:infra/modules/azure_core_values_exporter"
+  languageName: unknown
+  linkType: soft
+
 "azure_cosmos_account@workspace:infra/modules/azure_cosmos_account":
   version: 0.0.0-use.local
   resolution: "azure_cosmos_account@workspace:infra/modules/azure_cosmos_account"

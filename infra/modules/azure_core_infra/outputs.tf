@@ -29,6 +29,16 @@ output "test_resource_group_id" {
   value       = var.test_enabled ? azurerm_resource_group.test[0].id : null
 }
 
+output "opex_resource_group_name" {
+  description = "The name of the OPEX resource group."
+  value       = azurerm_resource_group.opex.name
+}
+
+output "opex_resource_group_id" {
+  description = "The ID of the OPEX resource group."
+  value       = azurerm_resource_group.opex.id
+}
+
 output "github_runner" {
   description = "Details of the GitHub runner, including environment ID, resource group name, and subnet ID."
   value = {
