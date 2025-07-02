@@ -61,7 +61,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs. | <pre>object({<br/>    name                = string<br/>    description         = string<br/>    topics              = list(string)<br/>    default_branch_name = optional(string, "main")<br/>    jira_boards_ids     = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs. | <pre>object({<br/>    name                   = string<br/>    description            = string<br/>    topics                 = list(string)<br/>    default_branch_name    = optional(string, "main")<br/>    jira_boards_ids        = optional(list(string), [])<br/>    pages_enabled          = optional(bool, false)<br/>    has_downloads          = optional(bool, false)<br/>    has_projects           = optional(bool, false)<br/>    homepage_url           = optional(string, null)<br/>    pull_request_bypassers = optional(list(string), [])<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
