@@ -13,7 +13,13 @@
       "inputs": ["src/**/*.ts"]
     },
     "format:check": {},
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["src/**/__tests__/**/*.test.ts"],
+      "outputLogs": "errors-only"
+    },
     "//#test:coverage": {
+      "dependsOn": ["^build"],
       "inputs": [
         "apps/**/src/**/*.ts",
         "packages/**/src/**/*.ts",
