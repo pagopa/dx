@@ -29,6 +29,16 @@ output "test_resource_group_id" {
   value       = data.terraform_remote_state.core.outputs.test_resource_group_id
 }
 
+output "opex_resource_group_name" {
+  description = "The name of the OPEX resource group."
+  value       = data.terraform_remote_state.core.outputs.opex_resource_group_name
+}
+
+output "opex_resource_group_id" {
+  description = "The ID of the OPEX resource group."
+  value       = data.terraform_remote_state.core.outputs.opex_resource_group_id
+}
+
 output "github_runner" {
   description = "Details of the GitHub runner, including environment ID, resource group name, and subnet ID."
   value = {
