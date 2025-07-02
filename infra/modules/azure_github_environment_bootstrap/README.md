@@ -158,7 +158,7 @@ For each of these resources, the module provides an optional variable to which t
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_github_repository"></a> [github\_repository](#module\_github\_repository) | ../github_environment_bootstrap | n/a |
+| <a name="module_github_repository"></a> [github\_repository](#module\_github\_repository) | pagopa-dx/github-environment-bootstrap/github | ~> 0.0 |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 1.0 |
 
 ## Resources

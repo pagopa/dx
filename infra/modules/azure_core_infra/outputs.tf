@@ -66,6 +66,14 @@ output "common_pep_snet" {
   }
 }
 
+output "common_test_snet" {
+  description = "Details of the test subnet, including its name and ID."
+  value = {
+    name = module.network.test_snet.name
+    id   = module.network.test_snet.id
+  }
+}
+
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value = flatten([

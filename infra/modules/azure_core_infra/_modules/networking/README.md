@@ -14,6 +14,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_subnet.pep_snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azurerm_subnet.test_snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) | resource |
 
 ## Inputs
@@ -25,6 +26,7 @@ No modules.
 | <a name="input_pep_snet_cidr"></a> [pep\_snet\_cidr](#input\_pep\_snet\_cidr) | PEP subnet CIDR block | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
+| <a name="input_test_snet_cidr"></a> [test\_snet\_cidr](#input\_test\_snet\_cidr) | Test subnet CIDR block | `string` | `null` | no |
 | <a name="input_vnet_cidr"></a> [vnet\_cidr](#input\_vnet\_cidr) | VNet CIDR block | `string` | n/a | yes |
 
 ## Outputs
@@ -32,5 +34,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_pep_snet"></a> [pep\_snet](#output\_pep\_snet) | n/a |
+| <a name="output_test_snet"></a> [test\_snet](#output\_test\_snet) | n/a |
 | <a name="output_vnet"></a> [vnet](#output\_vnet) | n/a |
 <!-- END_TF_DOCS -->

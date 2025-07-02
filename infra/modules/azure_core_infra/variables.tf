@@ -40,6 +40,12 @@ variable "pep_subnet_cidr" {
   default     = "10.0.2.0/23"
 }
 
+variable "test_subnet_cidr" {
+  type        = string
+  description = "Test subnet CIDR block"
+  default     = null
+}
+
 variable "vpn" {
   type = object({
     cidr_subnet              = optional(string, "")

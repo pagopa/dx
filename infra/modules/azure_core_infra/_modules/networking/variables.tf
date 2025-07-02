@@ -31,3 +31,9 @@ variable "pep_snet_cidr" {
   type        = string
   description = "PEP subnet CIDR block"
 }
+
+variable "test_snet_cidr" {
+  type        = string
+  description = "Test subnet CIDR block"
+  default     = null
+}

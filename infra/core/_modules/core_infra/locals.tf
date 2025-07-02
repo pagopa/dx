@@ -1,8 +1,27 @@
 locals {
-  location_short = {
-    italynorth = "itn"
-    westeurope = "weu"
-  }[var.environment.location]
+  test_network = var.test_enabled ? [
+    {
+      name     = "test"
+      new_bits = 8
+    }
+  ] : []
 
-  project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
+  networks = concat([
+    {
+      name     = "pep"
+      new_bits = 7
+    },
+    {
+      name     = "gh_runner"
+      new_bits = 7
+    },
+    {
+      name     = "vpn"
+      new_bits = 8
+    },
+    {
+      name     = "vpn_dnsforwarder"
+      new_bits = 13
+    }
+  ], local.test_network)
 }

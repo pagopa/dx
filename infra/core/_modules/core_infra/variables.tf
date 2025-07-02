@@ -26,3 +26,9 @@ variable "nat_enabled" {
   default     = true
   description = "Enable NAT for the virtual network"
 }
+
+variable "test_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable test resources"
+}

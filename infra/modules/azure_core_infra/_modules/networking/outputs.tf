@@ -14,3 +14,11 @@ output "pep_snet" {
     address_prefixes = azurerm_subnet.pep_snet.address_prefixes
   }
 }
+
+output "test_snet" {
+  value = {
+    id               = azurerm_subnet.test_snet.id
+    name             = azurerm_subnet.test_snet.name
+    address_prefixes = azurerm_subnet.test_snet.address_prefixes
+  }
+}

@@ -97,6 +97,7 @@ module "network" {
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
   pep_snet_cidr       = var.pep_subnet_cidr
+  test_snet_cidr      = var.test_subnet_cidr
 
   tags = local.tags
 }
