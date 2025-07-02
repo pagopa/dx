@@ -5,7 +5,7 @@
  * that follow the DX monorepo conventions and best practices.
  */
 
-import type { NodePlopAPI, ActionType } from "plop";
+import type { ActionType, NodePlopAPI } from "plop";
 
 import { execSync } from "node:child_process";
 import path from "node:path";
@@ -45,31 +45,31 @@ export interface GeneratorParams {
 }
 
 export interface GeneratorConfig {
-  /** The name of the generator */
-  name: string;
-  /** The description of the generator */
-  description: string;
-  /** Path to the templates directory */
-  templatesPath: string;
-  /** Additional dependencies to install beyond the base ones */
-  additionalDependencies?: string[];
   /** Additional actions to perform during generation */
   additionalActions?: ActionType[];
+  /** Additional dependencies to install beyond the base ones */
+  additionalDependencies?: string[];
+  /** The description of the generator */
+  description: string;
+  /** The name of the generator */
+  name: string;
   /** Custom validation for package name (optional) */
   packageNameValidation?: (input: string) => boolean | string;
   /** Override specific template paths */
   templateOverrides?: {
-    packageJson?: string;
-    tsconfig?: string;
+    changeset?: string;
     eslintConfig?: string;
-    readme?: string;
     gitignore?: string;
     nodeVersion?: string;
+    packageJson?: string;
+    readme?: string;
     srcIndex?: string;
     testIndex?: string;
+    tsconfig?: string;
     vitestConfig?: string;
-    changeset?: string;
   };
+  /** Path to the templates directory */
+  templatesPath: string;
 }
 
 /**
@@ -180,7 +180,7 @@ function createBasePrompts() {
       message: "What is the package name?",
       name: "packageName",
       type: "input",
-      validate: (input: string) => {
+      validate: (input: string): boolean | string => {
         if (!input) {
           return "Package name is required";
         }
@@ -322,7 +322,7 @@ export function createTypeScriptGenerator(
   if (config.packageNameValidation) {
     const packageNamePrompt = basePrompts.find((p) => p.name === "packageName");
     if (packageNamePrompt) {
-      (packageNamePrompt as any).validate = config.packageNameValidation;
+      packageNamePrompt.validate = config.packageNameValidation;
     }
   }
 

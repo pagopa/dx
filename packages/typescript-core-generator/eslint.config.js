@@ -1,3 +1,3 @@
-import config from "@pagopa/eslint-config/base.js";
+import lintRules from "@pagopa/eslint-config";
 
-export default config;
+export default lintRules;
