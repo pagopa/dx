@@ -34,8 +34,8 @@ function getGitRepositoryUrl(): string {
     // Remove .git suffix if present
     return remoteUrl.replace(/\.git$/, "");
   } catch {
-    // Fallback to the current hardcoded URL if git command fails
-    return "https://github.com/pagopa/dx";
+    // Throw an error if git command fails
+    throw new Error("Failed to get git repository URL");
   }
 }
 
@@ -170,7 +170,7 @@ export default function (plop: NodePlopAPI) {
     description: "Create a new TypeScript package for the DX monorepo",
     prompts: [
       {
-        message: "What is the package name? (without @pagopa/ prefix)",
+        message: "What is the package name?",
         name: "packageName",
         type: "input",
         validate: (input: string) => {
@@ -179,9 +179,6 @@ export default function (plop: NodePlopAPI) {
           }
           if (input.includes(" ")) {
             return "Package name cannot contain spaces";
-          }
-          if (input.startsWith("@")) {
-            return "Do not include the @pagopa/ prefix";
           }
           if (!/^[a-z0-9-]+$/.test(input)) {
             return "Package name must only contain lowercase letters, numbers, and hyphens";
