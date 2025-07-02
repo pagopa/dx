@@ -71,6 +71,20 @@ resource "azurerm_resource_group" "test" {
   tags = local.tags
 }
 
+resource "azurerm_resource_group" "opex" {
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "opex",
+      domain        = "",
+      resource_type = "resource_group",
+    })
+  )
+  location = var.environment.location
+
+  tags = local.tags
+}
+
 #------------#
 # NETWORKING #
 #------------#
