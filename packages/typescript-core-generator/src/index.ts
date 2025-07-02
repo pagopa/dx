@@ -245,6 +245,7 @@ export function createInstallDependenciesAction(
       "@tsconfig/node20",
       "@types/node",
       "eslint@^8.0.0",
+      "prettier",
       "typescript",
       "vitest",
     ];
@@ -258,10 +259,6 @@ export function createInstallDependenciesAction(
       );
 
       execSync(`yarn add -D ${sanitizedDependencies.join(" ")}`, {
-        cwd: packagePath,
-        stdio: "inherit",
-      });
-      execSync("yarn add -DE prettier", {
         cwd: packagePath,
         stdio: "inherit",
       });
