@@ -252,7 +252,12 @@ export function createInstallDependenciesAction(
     const allDependencies = [...baseDependencies, ...additionalDependencies];
 
     try {
-      execSync(`yarn add -D ${allDependencies.join(" ")}`, {
+      // Sanitize dependency names to prevent shell injection
+      const sanitizedDependencies = allDependencies.map((dep) =>
+        dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
+      );
+
+      execSync(`yarn add -D ${sanitizedDependencies.join(" ")}`, {
         cwd: packagePath,
         stdio: "inherit",
       });
