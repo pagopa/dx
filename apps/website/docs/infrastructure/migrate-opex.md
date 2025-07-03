@@ -107,7 +107,7 @@ terraform apply tf.plan
 
 :::info
 
-Due to internal limitations, the Opex resources will always be created in the
+Because of a limitation in the dashboard-generating application, the Opex resources will always be created in the
 location of the resource group `dashboards`.
 
 :::
