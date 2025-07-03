@@ -1,5 +1,5 @@
 ---
-"@fake-scope/fake-pkg": patch
+"docs": patch
 ---
 
 Remove Opex migration guide
