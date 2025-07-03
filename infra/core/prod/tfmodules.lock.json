@@ -1,11 +1,5 @@
 {
-  "core.cidrs": {
-    "hash": "3cd7d74677fa640991692055d020f226a885078a11c4a4a9ee4ea00e2be13ad8",
-    "version": "unknown",
-    "name": "unknown",
-    "source": "https://registry.terraform.io/modules/hashicorp/subnets/cidr/1.0.0"
-  },
-  "core.core": {
+  "core": {
     "hash": "4b77bf187f7969aef2c0529a30a8c9df4b5fe77302e3af83952275f8bcdd2ce3",
     "version": "1.0.10",
     "name": "azure_core_infra",

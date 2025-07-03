@@ -16,7 +16,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_core"></a> [core](#module\_core) | ../_modules/core_infra | n/a |
+| <a name="module_core"></a> [core](#module\_core) | pagopa-dx/azure-core-infra/azurerm | ~> 1.0 |
 
 ## Resources
 
@@ -28,5 +28,7 @@ No inputs.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_values"></a> [values](#output\_values) | n/a |
 <!-- END_TF_DOCS -->

@@ -6,6 +6,11 @@ locals {
     westeurope = "weu"
   }[lower(var.environment.location)]
 
+  env_long = {
+    d = "dev"
+    p = "prod"
+  }[lower(var.environment.env_short)]
+
   adgroups = {
     admins_name   = "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin"
     devs_name     = "${var.environment.prefix}-${var.environment.env_short}-adgroup-developers"
