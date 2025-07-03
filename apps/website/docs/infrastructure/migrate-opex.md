@@ -98,13 +98,13 @@ terraform plan -no-color > tf.plan
 > - resource "azurerm_portal_dashboard" "this" {
 > ```
 
-6. If the plan looks correct, apply it using the command:
+7. If the plan looks correct, apply it using the command:
 
 ```bash
 terraform apply tf.plan
 ```
 
-7. After applying the empty configuration, all existing Opex dashboards and
+8. After applying the empty configuration, all existing Opex dashboards and
    alerts will be deleted. You can now update your Opex configuration with the
    new Application Gateway id and run the GitHub Actions workflow to recreate
    dashboards and alerts.
