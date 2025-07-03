@@ -42,16 +42,12 @@ variable "pep_subnet_cidr" {
 
 variable "vpn" {
   type = object({
-    cidr_subnet              = optional(string, "")
-    dnsforwarder_cidr_subnet = optional(string, "")
+    cidr_subnet              = string
+    dnsforwarder_cidr_subnet = string
+    display_name             = string
   })
-  description = "VPN configuration. Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together or not at all."
+  description = "VPN configuration"
   default     = {}
-
-  validation {
-    condition     = (var.vpn.cidr_subnet == "" && var.vpn.dnsforwarder_cidr_subnet == "") || (var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "")
-    error_message = "Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together, or both must be left empty."
-  }
 }
 
 variable "nat_enabled" {

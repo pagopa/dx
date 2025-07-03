@@ -40,3 +40,8 @@ variable "tenant_id" {
   type        = string
   description = "Tenant ID"
 }
+
+variable "vpn_display_name" {
+  type        = string
+  description = "VPN Display Name"
+}

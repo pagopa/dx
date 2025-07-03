@@ -127,6 +127,7 @@ module "vpn" {
 
   vpn_cidr_subnet          = var.vpn.cidr_subnet
   dnsforwarder_cidr_subnet = var.vpn.dnsforwarder_cidr_subnet
+  vpn_display_name         = var.vpn.display_name
 
   virtual_network = {
     id   = module.network.vnet.id
