@@ -18,14 +18,14 @@ variable "tags" {
   description = "Resources tags"
 }
 
-variable "vpn_cidr_subnet" {
+variable "vpn_subnet_id" {
   type        = string
-  description = "VPN network address space."
+  description = "VPN network subnet ID."
 }
 
-variable "dnsforwarder_cidr_subnet" {
+variable "dnsforwarder_subnet_id" {
   type        = string
-  description = "DNS forwarder network address space."
+  description = "DNS forwarder subnet ID."
 }
 
 variable "virtual_network" {

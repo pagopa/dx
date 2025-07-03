@@ -96,8 +96,8 @@ module "network" {
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
-  pep_snet_cidr       = var.pep_subnet_cidr
-  test_snet_cidr      = var.test_subnet_cidr
+  test_enabled        = var.test_enabled
+  vpn_enabled         = var.vpn_enabled
 
   tags = local.tags
 }
@@ -116,7 +116,7 @@ module "nat_gateway" {
 }
 
 module "vpn" {
-  count = local.vpn_enabled ? 1 : 0
+  count = var.vpn_enabled ? 1 : 0
 
   source = "./_modules/vpn"
 
@@ -126,8 +126,8 @@ module "vpn" {
 
   tenant_id = data.azurerm_client_config.current.tenant_id
 
-  vpn_cidr_subnet          = var.vpn.cidr_subnet
-  dnsforwarder_cidr_subnet = var.vpn.dnsforwarder_cidr_subnet
+  vpn_subnet_id          = module.network.vpn_snet.id
+  dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
 
   virtual_network = {
     id   = module.network.vnet.id
@@ -208,7 +208,8 @@ module "github_runner" {
     name                = module.network.vnet.name
     resource_group_name = azurerm_resource_group.network.name
   }
-  subnet_cidr = var.gh_runner_snet
+
+  runner_snet = module.network.runner_snet.id
 
   log_analytics_workspace_id = module.common_log_analytics.id
 

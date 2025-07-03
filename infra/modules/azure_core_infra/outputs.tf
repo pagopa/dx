@@ -44,7 +44,7 @@ output "github_runner" {
   value = {
     environment_id      = module.github_runner.cae_id
     resource_group_name = azurerm_resource_group.gh_runner.name
-    subnet_id           = module.github_runner.subnet_id
+    subnet_id           = module.network.runner_snet.id
   }
 }
 

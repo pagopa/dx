@@ -1,3 +1,3 @@
 output "values" {
-  value = module.core.core
+  value = module.core
 }

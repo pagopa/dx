@@ -27,13 +27,12 @@ variable "vnet_cidr" {
   description = "VNet CIDR block"
 }
 
-variable "pep_snet_cidr" {
-  type        = string
-  description = "PEP subnet CIDR block"
+variable "test_enabled" {
+  type        = bool
+  description = "Enable test resources"
 }
 
-variable "test_snet_cidr" {
-  type        = string
-  description = "Test subnet CIDR block"
-  default     = null
+variable "vpn_enabled" {
+  type        = bool
+  description = "Enable VPN CIDR identification"
 }

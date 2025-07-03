@@ -38,7 +38,6 @@ variable "log_analytics_workspace_id" {
   type = string
 }
 
-variable "subnet_cidr" {
-  type    = string
-  default = "10.0.242.0/23"
+variable "runner_snet" {
+  type = string
 }

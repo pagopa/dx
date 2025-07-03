@@ -1,9 +1,14 @@
 module "core" {
-  source = "../_modules/core_infra"
+  source  = "pagopa-dx/azure-core-infra/azurerm"
+  version = "~> 1.0"
 
-  environment          = local.environment
+  environment = local.environment
+
+  nat_enabled  = false
+  vpn_enabled  = true
+  test_enabled = true
+
   virtual_network_cidr = "10.51.0.0/16"
-  nat_enabled          = false
-  test_enabled         = true
-  tags                 = local.tags
+
+  tags = local.tags
 }
