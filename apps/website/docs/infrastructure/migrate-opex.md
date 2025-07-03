@@ -33,7 +33,19 @@ mkdir empty-terraform-config
 cd empty-terraform-config
 ```
 
-2. Create a new file named `main.tf` with the following content:
+2. Note the backend configuration of your Opex Terraform state. This is
+   typically found in the `backend.tfvars` file of the Opex configuration you
+   are migrating. This information is necessary for the next step.
+
+:::warning
+
+Be careful. Setting the wrong values could lead to the deletion of unwanted
+resources. **Double-check that your backend configuration matches the Opex state
+only.**
+
+:::
+
+3. Create a new file named `main.tf` with the following content:
 
 ```hcl
 terraform {
@@ -60,24 +72,16 @@ provider "azurerm" {
 }
 ```
 
-1. Replace the placeholders with your actual Azure resources. They can be found
-   in the `backend.tfvars` file of the `opex` configuration.
+4. Replace the placeholders in the `backend` block with the actual values you
+   noted in step 2.
 
-:::warning
-
-Be careful. Setting the wrong values could lead to the deletion of unwanted
-resources. **Double-check that your backend configuration matches the Opex state
-only.**
-
-:::
-
-4. Generate a Terraform plan to a file using the command:
+5. Generate a Terraform plan to a file using the command:
 
 ```bash
 terraform plan -no-color > tf.plan
 ```
 
-5. Check the generated plan file to ensure that it only contains the deletion of
+6. Check the generated plan file to ensure that it only contains the deletion of
    your Opex dashboard and alerts. **Do not proceed if other resources are
    listed for deletion.**
 
@@ -107,7 +111,8 @@ terraform apply tf.plan
 
 :::info
 
-Because of a limitation in the dashboard-generating application, the Opex resources will always be created in the
-location of the resource group `dashboards`.
+Because of a limitation in the dashboard-generating application, the Opex
+resources will always be created in the location of the resource group
+`dashboards`.
 
 :::
