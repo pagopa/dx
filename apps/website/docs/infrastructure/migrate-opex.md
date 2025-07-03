@@ -60,8 +60,8 @@ provider "azurerm" {
 }
 ```
 
-3. Replace the placeholders with your actual Azure resource names. They can be
-   found in the `backend.tfvars` file of the `opex` configuration.
+1. Replace the placeholders with your actual Azure resources. They can be found
+   in the `backend.tfvars` file of the `opex` configuration.
 
 :::warning
 
