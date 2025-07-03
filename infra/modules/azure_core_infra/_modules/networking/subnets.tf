@@ -11,6 +11,7 @@ resource "azurerm_subnet" "pep_snet" {
 }
 
 resource "azurerm_subnet" "test_snet" {
+  count = var.test_snet_cidr != null ? 1 : 0
   name = provider::dx::resource_name(merge(
     var.naming_config,
     {

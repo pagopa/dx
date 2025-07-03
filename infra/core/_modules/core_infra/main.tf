@@ -1,6 +1,7 @@
 module "core" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 1.0"
+  source = "../../../modules/azure_core_infra"
+  # source  = "pagopa-dx/azure-core-infra/azurerm"
+  # version = "~> 1.0"
 
   environment = var.environment
 

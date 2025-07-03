@@ -17,8 +17,8 @@ output "pep_snet" {
 
 output "test_snet" {
   value = {
-    id               = azurerm_subnet.test_snet.id
-    name             = azurerm_subnet.test_snet.name
-    address_prefixes = azurerm_subnet.test_snet.address_prefixes
+    id               = var.test_snet_cidr != null ? azurerm_subnet.test_snet[0].id : null
+    name             = var.test_snet_cidr != null ? azurerm_subnet.test_snet[0].name : null
+    address_prefixes = var.test_snet_cidr != null ? azurerm_subnet.test_snet[0].address_prefixes : null
   }
 }

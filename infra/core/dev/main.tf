@@ -4,5 +4,6 @@ module "core" {
   environment          = local.environment
   virtual_network_cidr = "10.51.0.0/16"
   nat_enabled          = false
+  test_enabled         = true
   tags                 = local.tags
 }
