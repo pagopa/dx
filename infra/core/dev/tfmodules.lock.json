@@ -4,11 +4,5 @@
     "version": "unknown",
     "name": "unknown",
     "source": "https://registry.terraform.io/modules/hashicorp/subnets/cidr/1.0.0"
-  },
-  "core.core": {
-    "hash": "4b77bf187f7969aef2c0529a30a8c9df4b5fe77302e3af83952275f8bcdd2ce3",
-    "version": "1.0.10",
-    "name": "azure_core_infra",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/1.0.10"
   }
 }
