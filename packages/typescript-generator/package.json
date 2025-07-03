@@ -1,12 +1,12 @@
 {
-  "name": "@pagopa/typescript-core-generator",
+  "name": "@pagopa/typescript-generator",
   "version": "0.1.0",
   "type": "module",
   "description": "Shared core functionality for TypeScript package generators",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/typescript-core-generator"
+    "directory": "packages/typescript-generator"
   },
   "keywords": [
     "plop",

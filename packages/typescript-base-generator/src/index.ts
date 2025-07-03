@@ -7,7 +7,7 @@
 
 import type { NodePlopAPI } from "plop";
 
-import { createTypeScriptGenerator } from "@pagopa/typescript-core-generator";
+import { createTypeScriptGenerator } from "@pagopa/typescript-generator";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,7 +21,7 @@ export default function (plop: NodePlopAPI) {
     name: "typescript-package",
     templatesPath: path.join(
       __dirname,
-      "../../typescript-core-generator/templates/typescript-package",
+      "../../typescript-generator/templates/typescript-package",
     ),
     // Uses core templates with no additional dependencies or overrides
   });

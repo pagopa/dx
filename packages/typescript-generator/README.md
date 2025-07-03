@@ -1,4 +1,4 @@
-# @pagopa/typescript-core-generator
+# @pagopa/typescript-generator
 
 Core functionality for TypeScript package generators in the DX monorepo.
 
@@ -18,7 +18,7 @@ This package provides shared functionality for creating new TypeScript packages 
 ## Usage
 
 ```typescript
-import { createTypeScriptGenerator } from "@pagopa/typescript-core-generator";
+import { createTypeScriptGenerator } from "@pagopa/typescript-generator";
 import type { NodePlopAPI } from "plop";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -86,7 +86,7 @@ All generators automatically install these base dependencies:
 
 To create a new generator that extends the core functionality:
 
-1. Create a new package that depends on `@pagopa/typescript-core-generator`
+1. Create a new package that depends on `@pagopa/typescript-generator`
 2. Create your templates directory
 3. Use `createTypeScriptGenerator` with your specific configuration
 4. Add any additional actions or dependencies as needed

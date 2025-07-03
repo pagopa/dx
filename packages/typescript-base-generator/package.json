@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@pagopa/typescript-core-generator": "workspace:^",
+    "@pagopa/typescript-generator": "workspace:^",
     "inquirer": "^9.2.12",
     "plop": "^4.0.1"
   },
