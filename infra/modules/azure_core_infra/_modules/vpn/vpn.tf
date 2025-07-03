@@ -1,7 +1,7 @@
 ## VPN
 
 data "azuread_application" "vpn_app" {
-  display_name = "eng-d-app-vpn"
+  display_name = var.vpn_display_name
 }
 
 resource "azurerm_subnet" "vpn_snet" {
