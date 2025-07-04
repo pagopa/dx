@@ -1,6 +1,6 @@
 import js from "@eslint/js";
-import prettier from "eslint-config-prettier";
-import perfectionist from "eslint-plugin-perfectionist/configs/recommended-natural";
+import prettier from "eslint-config-prettier/flat";
+import perfectionist from "eslint-plugin-perfectionist";
 
 export default [
   {
@@ -11,5 +11,5 @@ export default [
   },
   js.configs.recommended,
   prettier,
-  perfectionist,
+  perfectionist.configs["recommended-natural"],
 ];
