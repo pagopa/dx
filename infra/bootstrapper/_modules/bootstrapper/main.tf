@@ -1,13 +1,15 @@
 module "core_values" {
-  source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 0.0"
+  source = "../../../modules/azure_core_values_exporter"
+  # source  = "pagopa-dx/azure-core-values-exporter/azurerm"
+  # version = "~> 0.0"
 
   core_state = var.core_state
 }
 
 module "bootstrap" {
-  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 2.0"
+  source = "../../../modules/azure_github_environment_bootstrap"
+  # source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  # version = "~> 2.0"
 
   environment = var.environment
 
@@ -66,7 +68,7 @@ module "roles_ci" {
       resource_group_name = module.core_values.common_key_vault.resource_group_name
       description         = "Allow dx repo CI to read secrets"
       roles = {
-        secrets = "reader"
+        secrets = "writer"
       }
     }
   ]
@@ -89,4 +91,18 @@ module "roles_cd" {
       }
     }
   ]
+}
+
+resource "azurerm_role_assignment" "storage_blob_contributor" {
+  count                = var.environment.env_short == "d" ? 1 : 0
+  scope                = data.azurerm_resource_group.tfstate.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
+}
+
+resource "azurerm_role_assignment" "contributor" {
+  count                = var.environment.env_short == "d" ? 1 : 0
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }

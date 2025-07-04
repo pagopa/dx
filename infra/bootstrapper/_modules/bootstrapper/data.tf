@@ -13,3 +13,7 @@ data "azuread_group" "developers" {
 data "azuread_group" "externals" {
   display_name = local.adgroups.external_name
 }
+
+data "azurerm_resource_group" "tfstate" {
+  name = "dx-d-itn-tfstate-rg-01"
+}
