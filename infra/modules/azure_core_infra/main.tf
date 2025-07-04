@@ -199,11 +199,6 @@ module "github_runner" {
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location
-  virtual_network = {
-    id                  = module.network.vnet.id
-    name                = module.network.vnet.name
-    resource_group_name = azurerm_resource_group.network.name
-  }
 
   runner_snet = module.network.runner_snet.id
 

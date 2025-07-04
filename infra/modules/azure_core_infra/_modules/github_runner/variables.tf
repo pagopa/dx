@@ -25,15 +25,6 @@ variable "tags" {
   description = "Resources tags"
 }
 
-variable "virtual_network" {
-  type = object({
-    id                  = string
-    name                = string
-    resource_group_name = string
-  })
-  description = "Virtual network where to attach private dns zones"
-}
-
 variable "log_analytics_workspace_id" {
   type = string
 }
