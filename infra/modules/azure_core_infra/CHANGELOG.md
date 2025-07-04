@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.0.0
+
+### Major Changes
+
+- a08a2c9: Remove CIDR variables, found automatically with pagopa-dx found cidr resource
+
 ## 1.0.10
 
 ### Patch Changes
@@ -71,7 +77,6 @@
   Update your Terraform configuration from azurerm v3 to azurerm v4, and make sure your Terraform version is above or equal to 1.9.
 
   Remember that azurerm v4 requires you to set in your local CLI profile the following environment variable:
-
   - `ARM_SUBSCRIPTION_ID`: with the id of the subscription you want to work with
 
 ## 0.0.5
