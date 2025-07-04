@@ -36,7 +36,7 @@
         "-ms-azuretools.vscode-azureterraform",
         "ms-azuretools.vscode-azure-github-copilot",
         "ms-vscode.vscode-websearchforcopilot",
-        "azapi-vscode.azapi",
+        "ms-azuretools.vscode-azureterraform",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "arcanis.vscode-zipfs",
