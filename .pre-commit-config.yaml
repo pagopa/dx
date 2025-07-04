@@ -32,7 +32,8 @@ repos:
           - --hook-config=--create-file-if-not-exist=true
         exclude: |
           (?x)^(
-            infra/modules/.*?
+            infra/modules/.*?|
+            providers/.*?
             )$
       - id: terraform_tflint
         args:
