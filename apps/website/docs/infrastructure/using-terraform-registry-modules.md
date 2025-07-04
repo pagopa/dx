@@ -165,14 +165,12 @@ module "roles" {
 Let's break down the key changes:
 
 1. **Source Format**
-
    - Old: `github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main`
    - New: `pagopa-dx/azure-role-assignments/azurerm`
 
    The Registry format follows the pattern: `<NAMESPACE>/<NAME>/<PROVIDER>`
 
 2. **Version Specification**
-
    - Old: Using git ref (`?ref=main`)
    - New: Using semantic versioning (`version = "~> 0.0"`)
 
