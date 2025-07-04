@@ -23,6 +23,7 @@ resource "github_branch_protection" "main" {
     require_code_owner_reviews      = true
     required_approving_review_count = 1
     restrict_dismissals             = true
+    pull_request_bypassers          = var.repository.pull_request_bypassers
   }
 
   lifecycle {

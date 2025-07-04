@@ -1,5 +1,5 @@
 resource "azurerm_public_ip_prefix" "ng" {
-  count = var.ng_ippres_number
+  count = var.ng_number
 
   name                = format("%s-ippre-%02d", "${var.project}-ng", count.index + 1)
   location            = var.location
@@ -25,7 +25,7 @@ resource "azurerm_nat_gateway" "this" {
 }
 
 resource "azurerm_nat_gateway_public_ip_prefix_association" "this_ippres" {
-  count               = var.ng_ippres_number
-  nat_gateway_id      = azurerm_nat_gateway.this[0].id
+  count               = var.ng_number
+  nat_gateway_id      = azurerm_nat_gateway.this[count.index].id
   public_ip_prefix_id = azurerm_public_ip_prefix.ng[count.index].id
 }
