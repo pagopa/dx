@@ -23,13 +23,13 @@ export const makeDoctorCommand = (
     .action(async () => {
       const { repositoryReader, validationReporter } = dependencies;
 
-      const repoRoot = repositoryReader.findRepositoryRoot(process.cwd());
-      if (!repoRoot) {
-        logger.error(
-          "❌ Could not find repository root. Make sure to have the repo initialized.",
-        );
+      const repoRootResult = repositoryReader.findRepositoryRoot(process.cwd());
+      if (repoRootResult.isErr()) {
+        logger.error(`❌ ${repoRootResult.error.message}`);
         process.exit(1);
       }
+
+      const { value: repoRoot } = repoRootResult;
 
       logger.info("Checking monorepo scripts...");
       const result = await checkMonorepoScripts(repoRoot)(dependencies);

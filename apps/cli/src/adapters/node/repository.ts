@@ -1,14 +1,23 @@
+import { Result, err, ok } from "neverthrow";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { RepositoryReader } from "../../domain/repository.js";
 
-const findRoot = (dir: string): null | string => {
+const findRoot = (dir: string): Result<string, Error> => {
   const gitPath = join(dir, ".git");
-  if (existsSync(gitPath)) return dir;
+  if (existsSync(gitPath)) return ok(dir);
 
   const parent = dirname(dir);
-  return dir === parent ? null : findRoot(parent);
+  if (dir === parent) {
+    return err(
+      new Error(
+        "Could not find repository root. Make sure to have the repo initialized.",
+      ),
+    );
+  }
+
+  return findRoot(parent);
 };
 
 export const makeRepositoryReader = (): RepositoryReader => ({
