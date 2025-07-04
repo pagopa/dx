@@ -1,4 +1,4 @@
-import { ResultAsync, err, ok } from "neverthrow";
+import { err, ok, ResultAsync } from "neverthrow";
 import { z } from "zod/v4";
 
 import { Dependencies } from "./dependencies.js";
@@ -11,13 +11,13 @@ export const scriptSchema = z.object({
   script: z.string(),
 });
 
-export type Script = z.infer<typeof scriptSchema>;
-export type RootRequiredScript = Pick<Script, "name">;
-
 export interface PackageJsonReader {
   getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
+export type RootRequiredScript = Pick<Script, "name">;
+
+export type Script = z.infer<typeof scriptSchema>;
 
 const findMissingScripts = (
   availableScripts: Script[],

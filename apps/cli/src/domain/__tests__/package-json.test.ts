@@ -2,9 +2,9 @@ import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import {
+  checkMonorepoScripts,
   RootRequiredScript,
   Script,
-  checkMonorepoScripts,
 } from "../package-json.js";
 import { makeMockDependencies } from "./data.js";
 
