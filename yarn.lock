@@ -298,7 +298,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.32, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.31":
+"@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.32, @azure/monitor-opentelemetry-exporter@npm:^1.0.0-beta.32":
   version: 1.0.0-beta.32
   resolution: "@azure/monitor-opentelemetry-exporter@npm:1.0.0-beta.32"
   dependencies:
@@ -318,7 +318,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/monitor-opentelemetry@npm:^1.11.0":
+"@azure/monitor-opentelemetry@npm:^1.11.1":
   version: 1.11.1
   resolution: "@azure/monitor-opentelemetry@npm:1.11.1"
   dependencies:
@@ -3888,12 +3888,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/api-logs@npm:0.201.1, @opentelemetry/api-logs@npm:^0.201.1":
-  version: 0.201.1
-  resolution: "@opentelemetry/api-logs@npm:0.201.1"
+"@opentelemetry/api-logs@npm:0.202.0, @opentelemetry/api-logs@npm:^0.202.0":
+  version: 0.202.0
+  resolution: "@opentelemetry/api-logs@npm:0.202.0"
   dependencies:
     "@opentelemetry/api": "npm:^1.3.0"
-  checksum: 10c0/f5652a7d1dbfcba9d9a9b0e53a1debb428c99f859e833f14c09e471c0f01614245558bf3a4c0e9bda39c2031c10fa172ba3a564509aad56e5c8a30550a488170
+  checksum: 10c0/2b6fd961c9303c5581367e7bef16a0cc7e7fc9a22ffae417ac7812151238760a9c0db20aad2c222c492cd8afc8353a611076bcac9272168d04b64e6386e71a66
   languageName: node
   linkType: hard
 
@@ -4209,15 +4209,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/instrumentation-undici@npm:^0.12.0":
-  version: 0.12.0
-  resolution: "@opentelemetry/instrumentation-undici@npm:0.12.0"
+"@opentelemetry/instrumentation-undici@npm:^0.13.1":
+  version: 0.13.1
+  resolution: "@opentelemetry/instrumentation-undici@npm:0.13.1"
   dependencies:
     "@opentelemetry/core": "npm:^2.0.0"
-    "@opentelemetry/instrumentation": "npm:^0.201.0"
+    "@opentelemetry/instrumentation": "npm:^0.202.0"
   peerDependencies:
     "@opentelemetry/api": ^1.7.0
-  checksum: 10c0/97411490bae3d508332d8a71eed688bc4e56530502031e8aa92b60f1663c9be66ddd6c88b6b3d5dbc40822d4d64bc67d869fc8626442c2f1905d147fcc0dd22b
+  checksum: 10c0/9e02b509eb0654b0bbc68c4cf6f0e9503fa259104ea7f71e54446bc68e180a09783209871d771f393152671a9db4d2b85a7ed4996070c3897a00f36ea58b9bd4
   languageName: node
   linkType: hard
 
@@ -4248,18 +4248,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/instrumentation@npm:^0.201.0, @opentelemetry/instrumentation@npm:^0.201.1":
-  version: 0.201.1
-  resolution: "@opentelemetry/instrumentation@npm:0.201.1"
+"@opentelemetry/instrumentation@npm:^0.202.0":
+  version: 0.202.0
+  resolution: "@opentelemetry/instrumentation@npm:0.202.0"
   dependencies:
-    "@opentelemetry/api-logs": "npm:0.201.1"
-    "@types/shimmer": "npm:^1.2.0"
+    "@opentelemetry/api-logs": "npm:0.202.0"
     import-in-the-middle: "npm:^1.8.1"
     require-in-the-middle: "npm:^7.1.1"
-    shimmer: "npm:^1.2.1"
   peerDependencies:
     "@opentelemetry/api": ^1.3.0
-  checksum: 10c0/b78e4e4225c7eb62f5ba8b5f70c078dc2e3a8d3685286ae3e025365c1ea69de520df2770a96510958be58e6fc93549085fd6431df38865ee5805de56d732d359
+  checksum: 10c0/3edac99d3093841bcd6008c19353f989042231485bcfe93c069e6ac41f35ab11800998275c0e3a85873656a21af982b8fd8721da974288a4ac653ecae8407641
   languageName: node
   linkType: hard
 
@@ -4538,21 +4536,21 @@ __metadata:
   resolution: "@pagopa/azure-tracing@workspace:packages/azure-tracing"
   dependencies:
     "@azure/functions": "npm:^4.7.2"
-    "@azure/monitor-opentelemetry": "npm:^1.11.0"
-    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.31"
+    "@azure/monitor-opentelemetry": "npm:^1.11.1"
+    "@azure/monitor-opentelemetry-exporter": "npm:^1.0.0-beta.32"
     "@opentelemetry/api": "npm:^1.9.0"
-    "@opentelemetry/api-logs": "npm:^0.201.1"
-    "@opentelemetry/instrumentation": "npm:^0.201.1"
-    "@opentelemetry/instrumentation-undici": "npm:^0.12.0"
+    "@opentelemetry/api-logs": "npm:^0.202.0"
+    "@opentelemetry/instrumentation": "npm:^0.202.0"
+    "@opentelemetry/instrumentation-undici": "npm:^0.13.1"
     "@pagopa/eslint-config": "workspace:^"
-    "@t3-oss/env-core": "npm:^0.13.4"
+    "@t3-oss/env-core": "npm:^0.13.8"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
     eslint: "npm:9.30.1"
-    import-in-the-middle: "npm:^1.13.2"
+    import-in-the-middle: "npm:^1.14.2"
     tsup: "npm:^8.5.0"
     typescript: "npm:~5.8.3"
-    zod: "npm:^3.25.28"
+    zod: "npm:^3.25.73"
   languageName: unknown
   linkType: soft
 
@@ -5086,7 +5084,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@t3-oss/env-core@npm:^0.13.4":
+"@t3-oss/env-core@npm:^0.13.8":
   version: 0.13.8
   resolution: "@t3-oss/env-core@npm:0.13.8"
   peerDependencies:
@@ -10043,7 +10041,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"import-in-the-middle@npm:^1.13.2, import-in-the-middle@npm:^1.8.1":
+"import-in-the-middle@npm:^1.14.2, import-in-the-middle@npm:^1.8.1":
   version: 1.14.2
   resolution: "import-in-the-middle@npm:1.14.2"
   dependencies:
@@ -16907,7 +16905,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25.28":
+"zod@npm:^3.25.73":
   version: 3.25.73
   resolution: "zod@npm:3.25.73"
   checksum: 10c0/dac012027decd7fc9206242a046b8e4ad175e3b4ae1fc8de62e60e650932f72ec709773b9861ec41c89cb7dce41b3536551f0ab5942ff2373592af8d2b667631
