@@ -1,5 +1,11 @@
 # docs
 
+## 0.2.6
+
+### Patch Changes
+
+- 7684ade: Remove Opex migration guide
+
 ## 0.2.5
 
 ### Patch Changes

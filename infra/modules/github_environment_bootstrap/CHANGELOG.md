@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 0.1.1
+
+### Patch Changes
+
+- a08a2c9: Update some configuration with new optional variables
+
 ## 0.1.0
 
 ### Minor Changes
