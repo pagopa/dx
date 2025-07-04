@@ -17,7 +17,7 @@ jobs:
     with:
       environment: 'dev'
       override_github_environment: 'infra-dev'
-      base_path: 'infra/resources/dev'
+      base_path: 'infra/resources'
 
   drift_detection_prod:
     uses: ./.github/workflows/infra_drift_detection.yml
@@ -30,4 +30,4 @@ jobs:
     with:
       environment: 'prod'
       override_github_environment: 'infra-prod'
-      base_path: 'infra/resources/prod'
+      base_path: 'infra/resources'
