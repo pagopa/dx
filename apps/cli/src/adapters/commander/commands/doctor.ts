@@ -35,10 +35,5 @@ export const makeDoctorCommand = (
       const result = await checkMonorepoScripts(repoRoot)(dependencies);
 
       validationReporter.reportValidationResult(result);
-
-      // Exit with error code if either the Result is an error OR the validation failed
-      if (result.isErr() || (result.isOk() && !result.value.isValid)) {
-        process.exit(1);
-      }
     });
 };
