@@ -1,9 +1,11 @@
 import { Result } from "neverthrow";
 
-interface SuccessfulCheck {
-  checkName: string;
-  isValid: true;
-  successMessage: string;
+export type ValidationCheck = FailedCheck | SuccessfulCheck;
+
+export type ValidationCheckResult = Result<ValidationCheck, Error>;
+
+export interface ValidationReporter {
+  reportValidationResult(result: ValidationCheckResult): void;
 }
 
 interface FailedCheck extends Pick<SuccessfulCheck, "checkName"> {
@@ -11,10 +13,8 @@ interface FailedCheck extends Pick<SuccessfulCheck, "checkName"> {
   isValid: false;
 }
 
-export type ValidationCheck = FailedCheck | SuccessfulCheck;
-
-export type ValidationCheckResult = Result<ValidationCheck, Error>;
-
-export interface ValidationReporter {
-  reportValidationResult(result: ValidationCheckResult): void;
+interface SuccessfulCheck {
+  checkName: string;
+  isValid: true;
+  successMessage: string;
 }
