@@ -1,8 +1,7 @@
 module "github_repository" {
   for_each = var.repository.configure ? { repo = var.repository.name } : {}
-  source = "../github_environment_bootstrap"
-  # source   = "pagopa-dx/github-environment-bootstrap/github"
-  # version  = "~> 0.0"
+  source   = "pagopa-dx/github-environment-bootstrap/github"
+  version  = "~> 0.0"
 
   repository = {
     name                   = var.repository.name
