@@ -123,16 +123,12 @@ module "vpn" {
   project             = local.project
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
+  env_short           = var.environment.env_short
 
   tenant_id = data.azurerm_client_config.current.tenant_id
 
   vpn_subnet_id          = module.network.vpn_snet.id
   dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
-
-  virtual_network = {
-    id   = module.network.vnet.id
-    name = module.network.vnet.name
-  }
 
   tags = local.tags
 }

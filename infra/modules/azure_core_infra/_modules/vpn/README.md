@@ -23,12 +23,12 @@ No requirements.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_dnsforwarder_subnet_id"></a> [dnsforwarder\_subnet\_id](#input\_dnsforwarder\_subnet\_id) | DNS forwarder subnet ID. | `string` | n/a | yes |
+| <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment in short form where resources are located | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | env prefix, short environment and short location | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | Tenant ID | `string` | n/a | yes |
-| <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network where to attach private dns zones | <pre>object({<br/>    id   = string<br/>    name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_vpn_subnet_id"></a> [vpn\_subnet\_id](#input\_vpn\_subnet\_id) | VPN network subnet ID. | `string` | n/a | yes |
 
 ## Outputs

@@ -28,15 +28,12 @@ variable "dnsforwarder_subnet_id" {
   description = "DNS forwarder subnet ID."
 }
 
-variable "virtual_network" {
-  type = object({
-    id   = string
-    name = string
-  })
-  description = "Virtual network where to attach private dns zones"
-}
-
 variable "tenant_id" {
   type        = string
   description = "Tenant ID"
+}
+
+variable "env_short" {
+  type        = string
+  description = "Environment in short form where resources are located"
 }
