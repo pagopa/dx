@@ -1,7 +1,7 @@
 ## VPN
 
 data "azuread_application" "vpn_app" {
-  display_name = "eng-d-app-vpn"
+  display_name = "dx-d-app-vpn"
 }
 
 module "vpn" {

@@ -267,6 +267,24 @@ run "cd_disabled" {
 
     subscription_id = run.setup_tests.subscription_id
 
+    continuos_integration = {
+      enable = true
+      roles = {
+        subscription = [
+          "Reader",
+          "Reader and Data Access",
+          "PagoPA IaC Reader",
+          "DocumentDB Account Contributor",
+          "PagoPA API Management Service List Secrets"
+        ]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+
     continuos_delivery = {
       enable = false
     }
@@ -305,6 +323,18 @@ run "ci_disabled" {
       enable = false
     }
 
+    continuos_delivery = {
+      enable = true
+      roles = {
+        subscription = ["Contributor"]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+    
     tags = {}
   }
 
