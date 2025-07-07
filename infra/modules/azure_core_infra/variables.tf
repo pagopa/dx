@@ -45,9 +45,3 @@ variable "vpn_enabled" {
   description = "A boolean flag to enable or disable the creation of a VPN."
   default     = false
 }
-
-variable "has_application_insights" {
-  type        = bool
-  description = "A boolean flag to enable or disable the creation of Application Insights."
-  default     = true
-}
