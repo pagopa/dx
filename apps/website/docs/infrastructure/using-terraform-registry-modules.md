@@ -219,12 +219,11 @@ If you encounter problems generating lock files:
 2. Ensure your pre-commit hook is properly configured
 3. Clear your local Terraform cache if needed
 
----
 
 :::info
 
 For more details on how to configure and use pre-commit hooks with
-Terraform, see the [dedicated documentation](./pre-commit-terraform.md).
+Terraform and solve eventual issues during module/provider upgrades, see the [dedicated documentation](./pre-commit-terraform.md).
 
 :::
 
