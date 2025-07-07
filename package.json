@@ -7,6 +7,7 @@
     "infra/modules/*",
     "infra/scripts",
     "providers/**",
+    "containers/**",
     "actions/**"
   ],
   "devDependencies": {
