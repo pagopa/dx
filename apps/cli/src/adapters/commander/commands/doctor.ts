@@ -4,6 +4,7 @@ import * as process from "node:process";
 
 import { Dependencies } from "../../../domain/dependencies.js";
 import { checkMonorepoScripts } from "../../../domain/package-json.js";
+import { checkPreCommitConfig } from "../../../domain/repository.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
@@ -30,6 +31,12 @@ export const makeDoctorCommand = (
       }
 
       const { value: repoRoot } = repoRootResult;
+
+      logger.info("Checking pre-commit configuration...");
+      const preCommitResult = await checkPreCommitConfig(repoRoot)({
+        repositoryReader,
+      });
+      validationReporter.reportValidationResult(preCommitResult);
 
       logger.info("Checking monorepo scripts...");
       const result = await checkMonorepoScripts(repoRoot)(dependencies);
