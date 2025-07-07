@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# Pre-commit Configuration and Best Practices
+# Configuring pre-commit hooks for Terraform to ensure smooth module upgrades
 
 This guide explains how to configure pre-commit hooks for Terraform projects,
 why these hooks are important, and best practices for managing Terraform lock
