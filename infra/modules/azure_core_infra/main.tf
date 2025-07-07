@@ -189,6 +189,7 @@ module "common_log_analytics" {
 }
 
 module "application_insights" {
+  count  = var.has_application_insights ? 1 : 0
   source = "./_modules/application_insights"
 
   naming_config = local.naming_config

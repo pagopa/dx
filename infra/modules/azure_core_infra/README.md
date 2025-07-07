@@ -58,6 +58,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_has_application_insights"></a> [has\_application\_insights](#input\_has\_application\_insights) | A boolean flag to enable or disable the creation of Application Insights. | `bool` | `true` | no |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | A boolean flag to enable or disable the creation of a NAT gateway. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_test_enabled"></a> [test\_enabled](#input\_test\_enabled) | A boolean flag to enable or disable the creation of testing resources. | `bool` | `false` | no |
