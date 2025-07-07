@@ -14860,6 +14860,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"self-hosted-runner@workspace:containers/self-hosted-runner":
+  version: 0.0.0-use.local
+  resolution: "self-hosted-runner@workspace:containers/self-hosted-runner"
+  languageName: unknown
+  linkType: soft
+
 "selfsigned@npm:^2.1.1":
   version: 2.4.1
   resolution: "selfsigned@npm:2.4.1"
