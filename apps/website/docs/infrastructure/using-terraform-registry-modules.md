@@ -221,8 +221,9 @@ If you encounter problems generating lock files:
 
 :::info
 
-For more details on how to configure and use pre-commit hooks with
-Terraform and solve eventual issues during module/provider upgrades, see the [dedicated documentation](./pre-commit-terraform.md).
+For more details on how to configure and use pre-commit hooks with Terraform and
+solve eventual issues during module/provider upgrades, see the
+[dedicated documentation](./pre-commit-terraform.md).
 
 :::
 
