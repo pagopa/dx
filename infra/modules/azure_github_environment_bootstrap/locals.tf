@@ -55,7 +55,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # e.g. infra-prod-cd
+    # e.g. infra-${local.env_name}-cd
     infra_environment_name = "infra-${local.env_name}-%s"
     app_environment_name   = "app-${local.env_name}-%s"
     opex_environment_name  = "opex-${local.env_name}-%s"
@@ -75,39 +75,43 @@ locals {
   parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
 
   repo_secrets = {
-    "ARM_TENANT_ID"       = var.tenant_id
-    "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+    "ARM_TENANT_ID" = var.tenant_id
   }
 
   infra_ci = {
     secrets = {
-      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
   }
 
   opex_ci = {
     secrets = {
-      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.opex_ci.client_id
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
   }
 
   infra_cd = {
     secrets = {
-      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.infra_cd.client_id
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
     reviewers_teams = var.repository.reviewers_teams
   }
 
   app_cd = {
     secrets = {
-      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.app_cd.client_id
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_cd.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
     reviewers_teams = var.repository.reviewers_teams
   }
 
   opex_cd = {
     secrets = {
-      "ARM_CLIENT_ID" = azurerm_user_assigned_identity.opex_cd.client_id
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_cd.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
     reviewers_teams = var.repository.reviewers_teams
   }

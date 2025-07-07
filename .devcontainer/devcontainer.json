@@ -19,7 +19,8 @@
       "nvmInstallPath": "/opt/nvm"
     },
     "ghcr.io/devcontainers/features/go:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers-extra/features/act:1": {}
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
@@ -36,7 +37,7 @@
         "-ms-azuretools.vscode-azureterraform",
         "ms-azuretools.vscode-azure-github-copilot",
         "ms-vscode.vscode-websearchforcopilot",
-        "azapi-vscode.azapi",
+        "ms-azuretools.vscode-azureterraform",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "arcanis.vscode-zipfs",

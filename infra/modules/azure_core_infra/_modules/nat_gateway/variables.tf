@@ -28,14 +28,3 @@ variable "ng_number" {
     error_message = "Number of nat gateways must be between 1 and 9."
   }
 }
-
-variable "ng_ippres_number" {
-  type        = number
-  description = "Number of Public IP Prefix assigned to the nat gateway"
-  default     = 3
-
-  validation {
-    condition     = var.ng_ippres_number > 0 && var.ng_ippres_number <= 3
-    error_message = "Number of Public IP Prefix assigned to the nat gateway must be between 1 and 3."
-  }
-}

@@ -29,12 +29,22 @@ output "test_resource_group_id" {
   value       = var.test_enabled ? azurerm_resource_group.test[0].id : null
 }
 
+output "opex_resource_group_name" {
+  description = "The name of the OPEX resource group."
+  value       = azurerm_resource_group.opex.name
+}
+
+output "opex_resource_group_id" {
+  description = "The ID of the OPEX resource group."
+  value       = azurerm_resource_group.opex.id
+}
+
 output "github_runner" {
   description = "Details of the GitHub runner, including environment ID, resource group name, and subnet ID."
   value = {
     environment_id      = module.github_runner.cae_id
     resource_group_name = azurerm_resource_group.gh_runner.name
-    subnet_id           = module.github_runner.subnet_id
+    subnet_id           = module.network.runner_snet.id
   }
 }
 
@@ -53,6 +63,14 @@ output "common_pep_snet" {
   value = {
     name = module.network.pep_snet.name
     id   = module.network.pep_snet.id
+  }
+}
+
+output "common_test_snet" {
+  description = "Details of the test subnet, including its name and ID."
+  value = {
+    name = module.network.test_snet.name
+    id   = module.network.test_snet.id
   }
 }
 

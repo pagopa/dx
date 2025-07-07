@@ -14,8 +14,6 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  vpn_enabled = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != ""
-
   nat_enabled = var.nat_enabled && !var.test_enabled
 
   private_dns_zones = {

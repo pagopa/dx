@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.1.2
+
+### Patch Changes
+
+- afee89d: Add `typecheck` script
+- 5b31f4f: Upgrade to latest version of `@pagopa/eslint-config` package
+
 ## 0.1.1
 
 ### Patch Changes
