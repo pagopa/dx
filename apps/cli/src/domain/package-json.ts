@@ -86,6 +86,6 @@ export const checkTurboConfig =
     return ok({
       checkName,
       isValid: true,
-      successMessage: "Turbo configuration found",
+      successMessage: "Turbo configuration is present in the monorepo root",
     });
   };
