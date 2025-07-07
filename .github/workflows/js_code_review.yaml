@@ -15,16 +15,26 @@ jobs:
         uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
 
       - name: Node Setup
+        id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
 
-      - name: Install dependencies
+      - name: Install dependencies (Yarn)
+        if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
         run: yarn install --immutable
+
+      - name: Install dependencies (pnpm)
+        if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
+        run: pnpm install
+
+      - name: Install dependencies (npm)
+        if: ${{ steps.node-setup.outputs.package-manager == 'npm' }}
+        run: npm ci
 
       # The code-review script must be defined in the root workspace
       # Example: "turbo run typecheck format:check lint:check //#test:coverage"
       # See https://github.com/pagopa/io-fims/pull/41
       - name: Run code-review script
-        run: yarn run code-review
+        run: ${{ steps.node-setup.outputs.package-manager }} run code-review
 
       # Codecov provides reports and metrics about test coverage data.
       # To enable set CODECOV_TOKEN secret at repo level and make sure
