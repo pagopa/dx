@@ -21,6 +21,10 @@ export const dependencySchema = z.object({
 export type Dependency = z.infer<typeof dependencySchema>;
 export type DependencyName = z.infer<typeof DependencyName>;
 
+export interface DependencyVersionValidator {
+  isValid(dependency: Dependency, minVersion: string): boolean;
+}
+
 export interface PackageJsonReader {
   getDependencies(
     cwd: string,

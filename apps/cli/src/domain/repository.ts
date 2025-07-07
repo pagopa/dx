@@ -1,5 +1,6 @@
 import { ok, Result } from "neverthrow";
 
+import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { ValidationCheckResult } from "./validation.js";
 
@@ -37,9 +38,14 @@ export const checkPreCommitConfig =
 export const checkTurboConfig =
   (monorepoDir: string) =>
   async (
-    dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
+    dependencies: Pick<
+      Dependencies,
+      "dependencyVersionValidator" | "packageJsonReader" | "repositoryReader"
+    >,
+    { minVersions }: Config,
   ): Promise<ValidationCheckResult> => {
-    const { repositoryReader } = dependencies;
+    const { dependencyVersionValidator, packageJsonReader, repositoryReader } =
+      dependencies;
     const checkName = "Turbo Configuration";
 
     const turboResult = repositoryReader.existsTurboConfig(monorepoDir);
@@ -51,10 +57,43 @@ export const checkTurboConfig =
       });
     }
 
-    return ok({
-      checkName,
-      isValid: true,
-      successMessage:
-        "Turbo configuration is present in the monorepo root and turbo dependency is installed",
-    });
+    const dependenciesResult = await packageJsonReader.getDependencies(
+      monorepoDir,
+      "dev",
+    );
+    if (dependenciesResult.isErr()) {
+      return ok({
+        checkName,
+        errorMessage: dependenciesResult.error.message,
+        isValid: false,
+      });
+    }
+
+    const turboDependency = dependenciesResult.value.find(
+      ({ name }) => name === "turbo",
+    );
+    if (!turboDependency) {
+      return ok({
+        checkName,
+        errorMessage:
+          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+        isValid: false,
+      });
+    }
+
+    return dependencyVersionValidator.isValid(
+      turboDependency,
+      minVersions.turbo,
+    )
+      ? ok({
+          checkName,
+          isValid: true,
+          successMessage:
+            "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+        })
+      : ok({
+          checkName,
+          errorMessage: `Turbo version (${turboDependency.version}) is too low. Minimum required version is ${minVersions.turbo}.`,
+          isValid: false,
+        });
   };

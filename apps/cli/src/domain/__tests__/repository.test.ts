@@ -1,9 +1,9 @@
 import { err, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { Dependency, DependencyName } from "../package-json.js";
+import { DependencyName } from "../package-json.js";
 import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
-import { makeMockDependencies } from "./data.js";
+import { makeMockConfig, makeMockDependencies } from "./data.js";
 
 describe("checkPreCommitConfig", () => {
   const monorepoDir = "/path/to/monorepo";
@@ -53,6 +53,7 @@ describe("checkPreCommitConfig", () => {
 
 describe("checkTurboConfig", () => {
   const monorepoDir = "/path/to/monorepo";
+  const config = makeMockConfig();
 
   it("should return ok result with successful validation when turbo.json exists and turbo dependency is present", async () => {
     const deps = makeMockDependencies();
@@ -62,13 +63,13 @@ describe("checkTurboConfig", () => {
       okAsync([
         {
           name: "turbo" as DependencyName,
-          type: "dev" as const,
           version: "^2.5.2",
-        } as Dependency,
+        },
       ]),
     );
+    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(true);
 
-    const result = await checkTurboConfig(monorepoDir)(deps);
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -91,13 +92,12 @@ describe("checkTurboConfig", () => {
       okAsync([
         {
           name: "eslint" as DependencyName,
-          type: "dev" as const,
           version: "^8.0.0",
-        } as Dependency,
+        },
       ]),
     );
 
-    const result = await checkTurboConfig(monorepoDir)(deps);
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -121,7 +121,7 @@ describe("checkTurboConfig", () => {
       err(new Error(errorMessage)),
     );
 
-    const result = await checkTurboConfig(monorepoDir)(deps);
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -130,6 +130,83 @@ describe("checkTurboConfig", () => {
       expect(validation.checkName).toBe("Turbo Configuration");
       if (!validation.isValid) {
         expect(validation.errorMessage).toBe(errorMessage);
+      }
+    }
+  });
+
+  it("should return the error message when turbo is not listed in devDependencies", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
+    deps.packageJsonReader.getDependencies.mockReturnValueOnce(
+      okAsync([
+        {
+          name: "eslint" as DependencyName,
+          version: "^8.0.0",
+        },
+      ]),
+    );
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Turbo Configuration");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+        );
+      }
+    }
+  });
+
+  it("should return the error message when turbo version is less than minimum", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
+    deps.packageJsonReader.getDependencies.mockReturnValueOnce(
+      okAsync([
+        {
+          name: "turbo" as DependencyName,
+          version: "1.0.0",
+        },
+      ]),
+    );
+    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(false);
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Turbo Configuration");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          `Turbo version (1.0.0) is too low. Minimum required version is ${config.minVersions.turbo}.`,
+        );
+      }
+    }
+  });
+
+  it("should return the success message when turbo version is ok", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
+    deps.packageJsonReader.getDependencies.mockReturnValueOnce(
+      okAsync([
+        {
+          name: "turbo" as DependencyName,
+          version: config.minVersions.turbo,
+        },
+      ]),
+    );
+    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(true);
+    const result = await checkTurboConfig(monorepoDir)(deps, config);
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(true);
+      expect(validation.checkName).toBe("Turbo Configuration");
+      if (validation.isValid) {
+        expect(validation.successMessage).toBe(
+          "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+        );
       }
     }
   });

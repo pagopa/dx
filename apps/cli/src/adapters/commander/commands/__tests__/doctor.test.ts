@@ -1,10 +1,14 @@
 import { err } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { makeMockDependencies } from "../../../../domain/__tests__/data.js";
+import {
+  makeMockConfig,
+  makeMockDependencies,
+} from "../../../../domain/__tests__/data.js";
 import { makeDoctorCommand } from "../doctor.js";
 
 describe("doctor command", () => {
+  const config = makeMockConfig();
   it("should handle when no repository root is found", async () => {
     const deps = makeMockDependencies();
 
@@ -12,7 +16,7 @@ describe("doctor command", () => {
       err(new Error("Could not find repository root")),
     );
 
-    const doctorCommand = makeDoctorCommand(deps);
+    const doctorCommand = makeDoctorCommand(deps, config);
 
     expect(doctorCommand.name()).toBe("doctor");
     expect(doctorCommand.description()).toBe(
