@@ -15,7 +15,9 @@ No providers.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_core_values"></a> [core\_values](#module\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
 
 ## Resources
 
