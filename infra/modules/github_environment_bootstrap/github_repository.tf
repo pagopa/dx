@@ -19,7 +19,7 @@ resource "github_repository" "this" {
   has_projects    = var.repository.has_projects
   has_wiki        = false
   has_discussions = false
-  has_issues      = true
+  has_issues      = false
   has_downloads   = var.repository.has_downloads
 
   vulnerability_alerts = true
