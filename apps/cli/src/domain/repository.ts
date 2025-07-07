@@ -37,7 +37,7 @@ export const checkPreCommitConfig =
 export const checkTurboConfig =
   (monorepoDir: string) =>
   async (
-    dependencies: Pick<Dependencies, "repositoryReader">,
+    dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
   ): Promise<ValidationCheckResult> => {
     const { repositoryReader } = dependencies;
     const checkName = "Turbo Configuration";
@@ -54,6 +54,7 @@ export const checkTurboConfig =
     return ok({
       checkName,
       isValid: true,
-      successMessage: "Turbo configuration is present in the monorepo root",
+      successMessage:
+        "Turbo configuration is present in the monorepo root and turbo dependency is installed",
     });
   };

@@ -1,6 +1,7 @@
-import { err, ok } from "neverthrow";
+import { err, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
+import { Dependency, DependencyName } from "../package-json.js";
 import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
 import { makeMockDependencies } from "./data.js";
 
@@ -53,10 +54,19 @@ describe("checkPreCommitConfig", () => {
 describe("checkTurboConfig", () => {
   const monorepoDir = "/path/to/monorepo";
 
-  it("should return ok result with successful validation when turbo.json exists", async () => {
+  it("should return ok result with successful validation when turbo.json exists and turbo dependency is present", async () => {
     const deps = makeMockDependencies();
 
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
+    deps.packageJsonReader.getDependencies.mockReturnValueOnce(
+      okAsync([
+        {
+          name: "turbo" as DependencyName,
+          type: "dev" as const,
+          version: "^2.5.2",
+        } as Dependency,
+      ]),
+    );
 
     const result = await checkTurboConfig(monorepoDir)(deps);
 
@@ -67,7 +77,36 @@ describe("checkTurboConfig", () => {
       expect(validation.checkName).toBe("Turbo Configuration");
       if (validation.isValid) {
         expect(validation.successMessage).toBe(
-          "Turbo configuration is present in the monorepo root",
+          "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+        );
+      }
+    }
+  });
+
+  it("should return ok result with failed validation when turbo.json exists but turbo dependency is missing", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
+    deps.packageJsonReader.getDependencies.mockReturnValueOnce(
+      okAsync([
+        {
+          name: "eslint" as DependencyName,
+          type: "dev" as const,
+          version: "^8.0.0",
+        } as Dependency,
+      ]),
+    );
+
+    const result = await checkTurboConfig(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Turbo Configuration");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
         );
       }
     }

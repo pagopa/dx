@@ -25,7 +25,8 @@ export const makeDoctorCommand = (
       "Verify the repository setup according to the DevEx guidelines",
     )
     .action(async () => {
-      const { repositoryReader, validationReporter } = dependencies;
+      const { packageJsonReader, repositoryReader, validationReporter } =
+        dependencies;
 
       const repoRootResult = repositoryReader.findRepositoryRoot(process.cwd());
       if (repoRootResult.isErr()) {
@@ -43,6 +44,7 @@ export const makeDoctorCommand = (
 
       logger.info("Checking Turbo configuration...");
       const turboResult = await checkTurboConfig(repoRoot)({
+        packageJsonReader,
         repositoryReader,
       });
       validationReporter.reportValidationResult(turboResult);

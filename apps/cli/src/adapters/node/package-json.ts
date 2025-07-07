@@ -8,7 +8,11 @@ import {
   RootRequiredScript,
   Script,
 } from "../../domain/package-json.js";
-import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
+import {
+  dependenciesArraySchema,
+  packageJsonSchema,
+  scriptsArraySchema,
+} from "./codec.js";
 
 const toJSON = Result.fromThrowable(
   JSON.parse,
@@ -25,7 +29,28 @@ const toScriptsArray = Result.fromThrowable(
   () => new Error("Failed to validate scripts array"),
 );
 
+const toDependenciesArray = Result.fromThrowable(
+  dependenciesArraySchema.parse,
+  () => new Error("Failed to validate dependencies array"),
+);
+
 export const makePackageJsonReader = (): PackageJsonReader => ({
+  getDependencies: (cwd = process.cwd(), type) => {
+    const packageJsonPath = join(cwd, "package.json");
+
+    return ResultAsync.fromPromise(
+      readFile(packageJsonPath, "utf-8"),
+      () => new Error("Failed to read package.json"),
+    )
+      .andThen(toJSON)
+      .andThen(toPackageJson)
+      .map((packageJson) => {
+        const key = type === "dev" ? "devDependencies" : "dependencies";
+        return packageJson[key];
+      })
+      .andThen(toDependenciesArray);
+  },
+
   getRootRequiredScripts: (): RootRequiredScript[] => [
     { name: "code-review" as Script["name"] },
   ],
