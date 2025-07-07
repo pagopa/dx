@@ -20,6 +20,21 @@ const findRoot = (dir: string): Result<string, Error> => {
   return findRoot(parent);
 };
 
+const existsPreCommitConfig = (repoRoot: string): Result<boolean, Error> => {
+  const fileName = ".pre-commit-config.yaml";
+  const preCommitPath = join(repoRoot, fileName);
+  if (existsSync(preCommitPath)) {
+    return ok(true);
+  }
+
+  return err(
+    new Error(
+      `${fileName} not found in repository root. Make sure to have pre-commit configured for the repository.`,
+    ),
+  );
+};
+
 export const makeRepositoryReader = (): RepositoryReader => ({
+  existsPreCommitConfig: existsPreCommitConfig,
   findRepositoryRoot: findRoot,
 });
