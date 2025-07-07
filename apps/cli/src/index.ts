@@ -1,10 +1,29 @@
-import { Command } from "commander";
+import { configure, getConsoleSink } from "@logtape/logtape";
 
-const program = new Command();
+import { makeCli } from "./adapters/commander/index.js";
+import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
+import { makePackageJsonReader } from "./adapters/node/package-json.js";
+import { makeRepositoryReader } from "./adapters/node/repository.js";
+import { Dependencies } from "./domain/dependencies.js";
 
-program
-  .name("DX-CLI")
-  .description("The CLI for DX-Platform")
-  .version(__CLI_VERSION__);
+await configure({
+  loggers: [
+    { category: ["dx-cli"], lowestLevel: "info", sinks: ["console"] },
+    {
+      category: ["logtape", "meta"],
+      lowestLevel: "warning",
+      sinks: ["console"],
+    },
+  ],
+  sinks: { console: getConsoleSink() },
+});
+
+const deps: Dependencies = {
+  packageJsonReader: makePackageJsonReader(),
+  repositoryReader: makeRepositoryReader(),
+  validationReporter: makeValidationReporter(),
+};
+
+const program = makeCli(deps);
 
 program.parse();

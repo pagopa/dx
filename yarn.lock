@@ -1629,7 +1629,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.21.3, @babel/types@npm:^7.25.4, @babel/types@npm:^7.27.1, @babel/types@npm:^7.27.3, @babel/types@npm:^7.27.6, @babel/types@npm:^7.28.0, @babel/types@npm:^7.4.4":
+"@babel/types@npm:^7.21.3, @babel/types@npm:^7.25.4, @babel/types@npm:^7.27.1, @babel/types@npm:^7.27.3, @babel/types@npm:^7.27.6, @babel/types@npm:^7.4.4":
+  version: 7.27.6
+  resolution: "@babel/types@npm:7.27.6"
+  dependencies:
+    "@babel/helper-string-parser": "npm:^7.27.1"
+    "@babel/helper-validator-identifier": "npm:^7.27.1"
+  checksum: 10c0/39d556be114f2a6d874ea25ad39826a9e3a0e98de0233ae6d932f6d09a4b222923a90a7274c635ed61f1ba49bbd345329226678800900ad1c8d11afabd573aaf
+  languageName: node
+  linkType: hard
+
+"@babel/types@npm:^7.28.0":
   version: 7.28.0
   resolution: "@babel/types@npm:7.28.0"
   dependencies:
@@ -3533,13 +3543,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jridgewell/gen-mapping@npm:^0.3.12, @jridgewell/gen-mapping@npm:^0.3.2, @jridgewell/gen-mapping@npm:^0.3.5":
+"@jridgewell/gen-mapping@npm:^0.3.12":
   version: 0.3.12
   resolution: "@jridgewell/gen-mapping@npm:0.3.12"
   dependencies:
     "@jridgewell/sourcemap-codec": "npm:^1.5.0"
     "@jridgewell/trace-mapping": "npm:^0.3.24"
   checksum: 10c0/32f771ae2467e4d440be609581f7338d786d3d621bac3469e943b9d6d116c23c4becb36f84898a92bbf2f3c0511365c54a945a3b86a83141547a2a360a5ec0c7
+  languageName: node
+  linkType: hard
+
+"@jridgewell/gen-mapping@npm:^0.3.2, @jridgewell/gen-mapping@npm:^0.3.5":
+  version: 0.3.8
+  resolution: "@jridgewell/gen-mapping@npm:0.3.8"
+  dependencies:
+    "@jridgewell/set-array": "npm:^1.2.1"
+    "@jridgewell/sourcemap-codec": "npm:^1.4.10"
+    "@jridgewell/trace-mapping": "npm:^0.3.24"
+  checksum: 10c0/c668feaf86c501d7c804904a61c23c67447b2137b813b9ce03eca82cb9d65ac7006d766c218685d76e3d72828279b6ee26c347aa1119dab23fbaf36aed51585a
   languageName: node
   linkType: hard
 
@@ -3550,6 +3571,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jridgewell/set-array@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@jridgewell/set-array@npm:1.2.1"
+  checksum: 10c0/2a5aa7b4b5c3464c895c802d8ae3f3d2b92fcbe84ad12f8d0bfbb1f5ad006717e7577ee1fd2eac00c088abe486c7adb27976f45d2941ff6b0b92b2c3302c60f4
+  languageName: node
+  linkType: hard
+
 "@jridgewell/source-map@npm:^0.3.3":
   version: 0.3.10
   resolution: "@jridgewell/source-map@npm:0.3.10"
@@ -3557,6 +3585,13 @@ __metadata:
     "@jridgewell/gen-mapping": "npm:^0.3.5"
     "@jridgewell/trace-mapping": "npm:^0.3.25"
   checksum: 10c0/cf6a51808bc710eb91a9e6c5e250c1af5714299c8de3db2b74e273a27ba7313f37c198ba332a512b7657fa23fed125c0147bfb1b925cadc9697a89cebecad0d8
+  languageName: node
+  linkType: hard
+
+"@jridgewell/sourcemap-codec@npm:^1.4.10":
+  version: 1.5.0
+  resolution: "@jridgewell/sourcemap-codec@npm:1.5.0"
+  checksum: 10c0/2eb864f276eb1096c3c11da3e9bb518f6d9fc0023c78344cdc037abadc725172c70314bdb360f2d4b7bffec7f5d657ce006816bc5d4ecb35e61b66132db00c18
   languageName: node
   linkType: hard
 
@@ -3588,6 +3623,13 @@ __metadata:
   version: 2.0.5
   resolution: "@leichtgewicht/ip-codec@npm:2.0.5"
   checksum: 10c0/14a0112bd59615eef9e3446fea018045720cd3da85a98f801a685a818b0d96ef2a1f7227e8d271def546b2e2a0fe91ef915ba9dc912ab7967d2317b1a051d66b
+  languageName: node
+  linkType: hard
+
+"@logtape/logtape@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@logtape/logtape@npm:1.0.0"
+  checksum: 10c0/c1f70c0b61109c67980595d0794205652e5cc6d1d5d297712902f4cf8e0992a69033d8099b5a7bb2f11d1d4b6d045f712d6aa78c95e737f3324ed09af62adfb5
   languageName: node
   linkType: hard
 
@@ -4558,13 +4600,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@pagopa/dx-cli@workspace:apps/cli"
   dependencies:
+    "@logtape/logtape": "npm:^1.0.0"
     "@pagopa/eslint-config": "workspace:^"
     "@tsconfig/node20": "npm:^20.1.5"
     "@types/node": "npm:^20.12.2"
+    "@vitest/coverage-v8": "npm:3.2.4"
     commander: "npm:^14.0.0"
     eslint: "npm:9.30.1"
+    neverthrow: "npm:^8.2.0"
     tsup: "npm:^8.5.0"
     typescript: "npm:~5.8.3"
+    vitest: "npm:^3.2.4"
+    vitest-mock-extended: "npm:^3.1.0"
+    zod: "npm:^3.25.28"
   bin:
     dx: ./bin/index.js
   languageName: unknown
@@ -4832,6 +4880,13 @@ __metadata:
 "@rollup/rollup-linux-x64-gnu@npm:4.44.2":
   version: 4.44.2
   resolution: "@rollup/rollup-linux-x64-gnu@npm:4.44.2"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@rollup/rollup-linux-x64-gnu@npm:^4.24.0":
+  version: 4.44.1
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.44.1"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
@@ -5820,7 +5875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/coverage-v8@npm:^3.2.4":
+"@vitest/coverage-v8@npm:3.2.4, @vitest/coverage-v8@npm:^3.2.4":
   version: 3.2.4
   resolution: "@vitest/coverage-v8@npm:3.2.4"
   dependencies:
@@ -12184,6 +12239,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"neverthrow@npm:^8.2.0":
+  version: 8.2.0
+  resolution: "neverthrow@npm:8.2.0"
+  dependencies:
+    "@rollup/rollup-linux-x64-gnu": "npm:^4.24.0"
+  dependenciesMeta:
+    "@rollup/rollup-linux-x64-gnu":
+      optional: true
+  checksum: 10c0/7058a31bcc4b608021dbc217287105c133480265eca742ec11b0211ff81bdf1bb16098687bf16b20d0212578ccaf47f7df8733cea10f10c315bd4538b4cc1f04
+  languageName: node
+  linkType: hard
+
 "no-case@npm:^3.0.4":
   version: 3.0.4
   resolution: "no-case@npm:3.0.4"
@@ -15758,6 +15825,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ts-essentials@npm:>=10.0.0":
+  version: 10.1.1
+  resolution: "ts-essentials@npm:10.1.1"
+  peerDependencies:
+    typescript: ">=4.5.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/8c59148a03eae086e7b1454fa6895e94e2f71385089ccda7e1f720a586749ede7e49ff7338e5f27e44a79f4bed740cc5dc3ad59313769bec028a85fa985685ff
+  languageName: node
+  linkType: hard
+
 "ts-interface-checker@npm:^0.1.9":
   version: 0.1.13
   resolution: "ts-interface-checker@npm:0.1.13"
@@ -16376,6 +16455,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vitest-mock-extended@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "vitest-mock-extended@npm:3.1.0"
+  dependencies:
+    ts-essentials: "npm:>=10.0.0"
+  peerDependencies:
+    typescript: 3.x || 4.x || 5.x
+    vitest: ">=3.0.0"
+  checksum: 10c0/1d73c15b26c11f06ec8d1e8d3c9c2c727725fe2238e936dc260f1be919e0be67b90c92cab3ce67c79536264c0ffe77ce14d66bce60244429cf6d2e6c8273e36b
+  languageName: node
+  linkType: hard
+
 "vitest@npm:^3.2.4":
   version: 3.2.4
   resolution: "vitest@npm:3.2.4"
@@ -16903,6 +16994,13 @@ __metadata:
   version: 1.2.1
   resolution: "yocto-queue@npm:1.2.1"
   checksum: 10c0/5762caa3d0b421f4bdb7a1926b2ae2189fc6e4a14469258f183600028eb16db3e9e0306f46e8ebf5a52ff4b81a881f22637afefbef5399d6ad440824e9b27f9f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.25.28":
+  version: 3.25.67
+  resolution: "zod@npm:3.25.67"
+  checksum: 10c0/80a0cab3033272c4ab9312198081f0c4ea88e9673c059aa36dc32024906363729db54bdb78f3dc9d5529bd1601f74974d5a56c0a23e40c6f04a9270c9ff22336
   languageName: node
   linkType: hard
 
