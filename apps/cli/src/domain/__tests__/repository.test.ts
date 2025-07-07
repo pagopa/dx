@@ -1,8 +1,7 @@
 import { err, ok } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { checkTurboConfig } from "../package-json.js";
-import { checkPreCommitConfig } from "../repository.js";
+import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
 import { makeMockDependencies } from "./data.js";
 
 describe("checkPreCommitConfig", () => {

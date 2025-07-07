@@ -3,11 +3,11 @@ import { Command } from "commander";
 import * as process from "node:process";
 
 import { Dependencies } from "../../../domain/dependencies.js";
+import { checkMonorepoScripts } from "../../../domain/package-json.js";
 import {
-  checkMonorepoScripts,
+  checkPreCommitConfig,
   checkTurboConfig,
-} from "../../../domain/package-json.js";
-import { checkPreCommitConfig } from "../../../domain/repository.js";
+} from "../../../domain/repository.js";
 
 type DoctorDependencies = Pick<
   Dependencies,

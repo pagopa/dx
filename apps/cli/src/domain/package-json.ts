@@ -65,27 +65,3 @@ export const checkMonorepoScripts =
       isValid: false,
     });
   };
-
-export const checkTurboConfig =
-  (monorepoDir: string) =>
-  async (
-    dependencies: Pick<Dependencies, "repositoryReader">,
-  ): Promise<ValidationCheckResult> => {
-    const { repositoryReader } = dependencies;
-    const checkName = "Turbo Configuration";
-
-    const turboResult = repositoryReader.existsTurboConfig(monorepoDir);
-    if (turboResult.isErr()) {
-      return ok({
-        checkName,
-        errorMessage: turboResult.error.message,
-        isValid: false,
-      });
-    }
-
-    return ok({
-      checkName,
-      isValid: true,
-      successMessage: "Turbo configuration is present in the monorepo root",
-    });
-  };
