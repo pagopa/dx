@@ -188,6 +188,8 @@ The following table lists the resource types and their abbreviations used in the
 | app_subnet                             |     app-snet     |
 | application_insights                   |       appi       |
 | blob_private_endpoint                  |     blob-pep     |
+| function_blob_private_endpoint         |  func-blob-pep   |
+| dfunction_blob_private_endpoint        |  dfunc-blob-pep  |
 | blob_storage                           |       blob       |
 | cdn_frontdoor_endpoint                 |       fde        |
 | cdn_frontdoor_origin                   |       fdo        |
@@ -210,6 +212,8 @@ The following table lists the resource types and their abbreviations used in the
 | eventhub_namespace                     |      evhns       |
 | eventhub_private_endpoint              |    evhns-pep     |
 | file_private_endpoint                  |     file-pep     |
+| function_file_private_endpoint         |  func-file-pep   |
+| dfunction_file_private_endpoint        |  dfunc-file-pep  |
 | file_storage                           |       file       |
 | function_app                           |       func       |
 | function_private_endpoint              |     func-pep     |
@@ -232,6 +236,8 @@ The following table lists the resource types and their abbreviations used in the
 | private_endpoint_subnet                |     pep-snet     |
 | public_ip                              |       pip        |
 | queue_private_endpoint                 |    queue-pep     |
+| function_queue_private_endpoint        |  func-queue-pep  |
+| dfunction_queue_private_endpoint       | dfunc-queue-pep  |
 | queue_storage                          |      queue       |
 | redis_cache                            |      redis       |
 | resource_group                         |        rg        |
@@ -241,6 +247,8 @@ The following table lists the resource types and their abbreviations used in the
 | storage_account                        |        st        |
 | subnet                                 |       snet       |
 | table_private_endpoint                 |    table-pep     |
+| function_table_private_endpoint        |  func-table-pep  |
+| dfunction_table_private_endpoint       | dfunc-table-pep  |
 | table_storage                          |      table       |
 | virtual_machine                        |        vm        |
 | virtual_network                        |       vnet       |
