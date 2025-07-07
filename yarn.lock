@@ -8003,6 +8003,14 @@ __metadata:
   languageName: node
   linkType: hard
 
+"detect-node-package-manager@workspace:actions/detect-node-package-manager":
+  version: 0.0.0-use.local
+  resolution: "detect-node-package-manager@workspace:actions/detect-node-package-manager"
+  dependencies:
+    prettier: "npm:3.6.2"
+  languageName: unknown
+  linkType: soft
+
 "detect-node@npm:^2.0.4":
   version: 2.1.0
   resolution: "detect-node@npm:2.1.0"

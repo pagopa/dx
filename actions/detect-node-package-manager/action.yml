@@ -1,0 +1,40 @@
+name: "Detect Node.js Package Manager"
+description: "This action detects the Node.js package manager used in the repository."
+
+outputs:
+  package-manager:
+    description: "The detected package manager (npm, yarn, pnpm)"
+    value: ${{ steps.detect-pm.outputs.package-manager }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect package manager
+      id: detect-pm
+      shell: bash
+      run: |
+        # First, try to detect from package.json packageManager field
+        if [ -f "package.json" ]; then
+          PACKAGE_MANAGER=$(jq -r '.packageManager // empty' package.json 2>/dev/null | cut -d'@' -f1)
+
+          if [ -n "$PACKAGE_MANAGER" ]; then
+            echo "package-manager=$PACKAGE_MANAGER" >> $GITHUB_OUTPUT
+            echo "Detected package manager from package.json: $PACKAGE_MANAGER"
+            exit 0
+          fi
+        fi
+
+        # Fall back to lock file detection
+        if [ -f "yarn.lock" ]; then
+          echo "package-manager=yarn" >> $GITHUB_OUTPUT
+          echo "Detected package manager from lock file: yarn"
+        elif [ -f "pnpm-lock.yaml" ]; then
+          echo "package-manager=pnpm" >> $GITHUB_OUTPUT
+          echo "Detected package manager from lock file: pnpm"
+        elif [ -f "package-lock.json" ]; then
+          echo "package-manager=npm" >> $GITHUB_OUTPUT
+          echo "Detected package manager from lock file: npm"
+        else
+          echo "package-manager=npm" >> $GITHUB_OUTPUT
+          echo "No package manager detected, defaulting to npm"
+        fi
