@@ -5,6 +5,7 @@ import { ValidationCheckResult } from "./validation.js";
 
 export interface RepositoryReader {
   existsPreCommitConfig(repoRoot: string): Result<boolean, Error>;
+  existsTurboConfig(repoRoot: string): Result<boolean, Error>;
   findRepositoryRoot(cwd: string): Result<string, Error>;
 }
 

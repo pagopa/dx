@@ -3,8 +3,11 @@ import { Command } from "commander";
 import * as process from "node:process";
 
 import { Dependencies } from "../../../domain/dependencies.js";
-import { checkMonorepoScripts } from "../../../domain/package-json.js";
 import { checkPreCommitConfig } from "../../../domain/repository.js";
+import {
+  checkMonorepoScripts,
+  checkTurboConfig,
+} from "../../../domain/package-json.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
@@ -37,6 +40,12 @@ export const makeDoctorCommand = (
         repositoryReader,
       });
       validationReporter.reportValidationResult(preCommitResult);
+
+      logger.info("Checking Turbo configuration...");
+      const turboResult = await checkTurboConfig(repoRoot)({
+        repositoryReader,
+      });
+      validationReporter.reportValidationResult(turboResult);
 
       logger.info("Checking monorepo scripts...");
       const result = await checkMonorepoScripts(repoRoot)(dependencies);
