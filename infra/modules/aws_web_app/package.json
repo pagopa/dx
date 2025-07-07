@@ -1,0 +1,7 @@
+{
+  "name": "aws_web_app",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "aws",
+  "description": "Creates the infrastructure needed to run websites built with different frameworks at scale (NextJS SSR or Static, Angular, React Native, etc.)"
+}

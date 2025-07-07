@@ -6498,6 +6498,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"aws_web_app@workspace:infra/modules/aws_web_app":
+  version: 0.0.0-use.local
+  resolution: "aws_web_app@workspace:infra/modules/aws_web_app"
+  languageName: unknown
+  linkType: soft
+
 "azure_api_management@workspace:infra/modules/azure_api_management":
   version: 0.0.0-use.local
   resolution: "azure_api_management@workspace:infra/modules/azure_api_management"
