@@ -103,9 +103,10 @@ output "common_log_analytics_workspace" {
 output "application_insights" {
   description = "Details of the Application Insights instance, including its ID, name, and instrumentation key."
   value = {
-    id                               = data.terraform_remote_state.core.outputs.values.application_insights.id
-    name                             = data.terraform_remote_state.core.outputs.values.application_insights.name
-    instrumentation_key_kv_secret_id = data.terraform_remote_state.core.outputs.values.application_insights.instrumentation_key_kv_secret_id
-    resource_group_name              = data.terraform_remote_state.core.outputs.values.application_insights.resource_group_name
+    id                                 = data.terraform_remote_state.core.outputs.values.application_insights.id
+    name                               = data.terraform_remote_state.core.outputs.values.application_insights.name
+    instrumentation_key_kv_secret_id   = data.terraform_remote_state.core.outputs.values.application_insights.instrumentation_key_kv_secret_id
+    instrumentation_key_kv_secret_name = data.terraform_remote_state.core.outputs.values.application_insights.instrumentation_key_kv_secret_name
+    resource_group_name                = data.terraform_remote_state.core.outputs.values.application_insights.resource_group_name
   }
 }

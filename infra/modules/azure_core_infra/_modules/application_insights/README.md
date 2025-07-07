@@ -34,6 +34,7 @@ No modules.
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_instrumentation_key_kv_secret_id"></a> [instrumentation\_key\_kv\_secret\_id](#output\_instrumentation\_key\_kv\_secret\_id) | n/a |
+| <a name="output_instrumentation_key_kv_secret_name"></a> [instrumentation\_key\_kv\_secret\_name](#output\_instrumentation\_key\_kv\_secret\_name) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 <!-- END_TF_DOCS -->
