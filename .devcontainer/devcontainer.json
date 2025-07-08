@@ -39,7 +39,6 @@
         "ms-azuretools.vscode-azureterraform",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
-        "arcanis.vscode-zipfs",
         "esbenp.prettier-vscode",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
