@@ -4,7 +4,7 @@ export interface Config {
   };
 }
 
-export const makeConfig = (): Config => ({
+export const getConfig = (): Config => ({
   minVersions: {
     turbo: "2",
   },

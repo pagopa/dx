@@ -5,7 +5,7 @@ import { makeValidationReporter } from "./adapters/logtape/validation-reporter.j
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { makeDependencyVersionValidator } from "./adapters/semver/dependency-version-validator.js";
-import { makeConfig } from "./config.js";
+import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 
 await configure({
@@ -27,7 +27,7 @@ const deps: Dependencies = {
   validationReporter: makeValidationReporter(),
 };
 
-const config = makeConfig();
+const config = getConfig();
 
 const program = makeCli(deps, config);
 
