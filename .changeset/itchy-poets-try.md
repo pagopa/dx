@@ -4,4 +4,4 @@
 
 Improve `doctor` command to verify `turbo` configuration
 
-When running the `doctor` command, the CLI now verifies that the `turbo.json` file exists.
+When running the `doctor` command, the CLI now verifies that the `turbo.json` file exists and that the `turbo` version is valid.
