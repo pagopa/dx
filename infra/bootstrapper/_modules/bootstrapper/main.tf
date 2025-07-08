@@ -1,6 +1,7 @@
 module "core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
   version = "~> 0.0"
+  # source = "github.com/pagopa/dx//infra/modules/azure_core_values_exporter?ref=application-insights-as-core-resource"
 
   core_state = var.core_state
 }
@@ -47,11 +48,13 @@ module "bootstrap" {
   tags                          = var.tags
 }
 
-resource "github_actions_secret" "appi_instrumentation_key" {
-  repository      = var.repository.name
-  secret_name     = "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY"
-  plaintext_value = data.azurerm_key_vault_secret.appinsights_instrumentation_key.value
-}
+# resource "github_actions_environment_secret" "appi_instrumentation_key" {
+#   count           = var.environment.env_short == "p" ? 1 : 0
+#   repository      = var.repository.name
+#   environment     = "github-pages"
+#   secret_name     = "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY"
+#   plaintext_value = data.azurerm_key_vault_secret.appinsights_instrumentation_key.value
+# }
 
 resource "azurerm_role_assignment" "user_access_administrator" {
   count                = var.environment.env_short == "d" ? 1 : 0

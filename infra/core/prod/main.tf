@@ -1,6 +1,7 @@
 module "core" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 2.0"
+  # source  = "pagopa-dx/azure-core-infra/azurerm"
+  # version = "~> 2.0"
+  source = "github.com/pagopa/dx//infra/modules/azure_core_infra?ref=application-insights-as-core-resource"
 
   environment = local.environment
 
