@@ -220,7 +220,7 @@ jobs:
                 "|--------|--------|---------|------|"
 
               # Add module details or show error
-              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" || {
+              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE" || {
                 add_markdown \
                   "Error processing JSON file. Raw content:" \
                   "\`\`\`json"
