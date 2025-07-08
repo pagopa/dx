@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.5
+
+### Patch Changes
+
+- ce98aa8: Bump dependencies to fix a peerDependency warning
+
 ## 0.4.4
 
 ### Patch Changes

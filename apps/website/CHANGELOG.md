@@ -1,5 +1,11 @@
 # docs
 
+## 0.3.1
+
+### Patch Changes
+
+- ce98aa8: Bump dependencies to fix a peerDependency warning
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.2.1
+
+### Patch Changes
+
+- ce98aa8: Bump dependencies to fix a peerDependency warning
+
 ## 0.2.0
 
 ### Minor Changes
