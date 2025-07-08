@@ -22,7 +22,6 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
-| <a name="input_ng_ippres_number"></a> [ng\_ippres\_number](#input\_ng\_ippres\_number) | Number of Public IP Prefix assigned to the nat gateway | `number` | `3` | no |
 | <a name="input_ng_number"></a> [ng\_number](#input\_ng\_number) | Number of nat gateways to deploy | `number` | `1` | no |
 | <a name="input_project"></a> [project](#input\_project) | env prefix, short environment and short location | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name | `string` | n/a | yes |

@@ -165,14 +165,12 @@ module "roles" {
 Let's break down the key changes:
 
 1. **Source Format**
-
    - Old: `github.com/pagopa/dx//infra/modules/azure_role_assignments?ref=main`
    - New: `pagopa-dx/azure-role-assignments/azurerm`
 
    The Registry format follows the pattern: `<NAMESPACE>/<NAME>/<PROVIDER>`
 
 2. **Version Specification**
-
    - Old: Using git ref (`?ref=main`)
    - New: Using semantic versioning (`version = "~> 0.0"`)
 
@@ -220,6 +218,14 @@ If you encounter problems generating lock files:
 1. Verify that your module source references are correct
 2. Ensure your pre-commit hook is properly configured
 3. Clear your local Terraform cache if needed
+
+:::info
+
+For more details on how to configure and use pre-commit hooks with Terraform and
+solve eventual issues during module/provider upgrades, see the
+[dedicated documentation](./pre-commit-terraform.md).
+
+:::
 
 ## Getting Support
 

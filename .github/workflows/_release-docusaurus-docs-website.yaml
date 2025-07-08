@@ -33,10 +33,10 @@ jobs:
         uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install
 
       - name: Build website
-        run: yarn run build
+        run: pnpm build
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3

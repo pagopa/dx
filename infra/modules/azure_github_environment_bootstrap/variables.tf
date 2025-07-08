@@ -105,6 +105,11 @@ variable "repository" {
     app_cd_policy_tags       = optional(set(string), [])
     jira_boards_ids          = optional(list(string), [])
     configure                = optional(bool, true)
+    pages_enabled            = optional(bool, false)
+    has_downloads            = optional(bool, false)
+    has_projects             = optional(bool, false)
+    homepage_url             = optional(string, null)
+    pull_request_bypassers   = optional(list(string), [])
   })
 
   description = "Details about the GitHub repository, including owner, name, description, topics, and branch/tag policies. Set the configure option to false only if you already setup the repository for another cloud service provider or environment in the same project."

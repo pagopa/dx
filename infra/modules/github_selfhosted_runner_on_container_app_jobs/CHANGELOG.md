@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.1.0
+
+### Minor Changes
+
+- f5564d9: Updated module to add container_app_environment.image optional value
+
 ## 1.0.10
 
 ### Patch Changes

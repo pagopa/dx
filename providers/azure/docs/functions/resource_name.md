@@ -54,72 +54,86 @@ resource_name(configuration map of string) string
 
 The following table lists the resource types and their abbreviations used in the resource_name function:
 
-|Type|Abbreviation|
-|:---|:---:|
-|ai_search|srch|
-|api_management|apim|
-|api_management_autoscale|apim-as|
-|apim_network_security_group|apim-nsg|
-|apim_subnet|apim-snet|
-|app_gateway|agw|
-|app_private_endpoint|app-pep|
-|app_service|app|
-|app_service_plan|asp|
-|app_slot_private_endpoint|staging-app-pep|
-|app_subnet|app-snet|
-|application_insights|appi|
-|blob_private_endpoint|blob-pep|
-|blob_storage|blob|
-|cdn_frontdoor_endpoint|fde|
-|cdn_frontdoor_origin|fdo|
-|cdn_frontdoor_origin_group|fdog|
-|cdn_frontdoor_profile|afd|
-|cdn_frontdoor_route|cdnr|
-|cdn_monitor_diagnostic_setting|cdnp|
-|container_app|ca|
-|container_app_environment|cae|
-|container_app_job|caj|
-|container_app_private_endpoint|cae-pep|
-|container_app_subnet|cae-snet|
-|cosmos_db|cosmos|
-|cosmos_db_nosql|cosno|
-|cosmos_private_endpoint|cosno-pep|
-|customer_key_storage_account|stcmk|
-|durable_function_storage_account|stfd|
-|eventhub_namespace|evhns|
-|eventhub_private_endpoint|evhns-pep|
-|file_private_endpoint|file-pep|
-|file_storage|file|
-|function_app|func|
-|function_private_endpoint|func-pep|
-|function_slot_private_endpoint|staging-func-pep|
-|function_storage_account|stfn|
-|function_subnet|func-snet|
-|key_vault|kv|
-|key_vault_private_endpoint|kv-pep|
-|load_testing|lt|
-|log_analytics|log|
-|managed_identity|id|
-|nat_gateway|ng|
-|network_security_group|nsg|
-|postgre_endpoint|psql-ep|
-|postgre_private_endpoint|psql-pep|
-|postgre_replica_private_endpoint|psql-pep-replica|
-|postgresql|psql|
-|postgresql_replica|psql-replica|
-|private_endpoint|pep|
-|private_endpoint_subnet|pep-snet|
-|public_ip|pip|
-|queue_private_endpoint|queue-pep|
-|queue_storage|queue|
-|redis_cache|redis|
-|resource_group|rg|
-|servicebus_namespace|sbns|
-|servicebus_private_endpoint|sbns-pep|
-|static_web_app|stapp|
-|storage_account|st|
-|subnet|snet|
-|table_private_endpoint|table-pep|
-|table_storage|table|
-|virtual_machine|vm|
-|virtual_network|vnet|
+| Type                                   |   Abbreviation   |
+| :------------------------------------- | :--------------: |
+| ai_search                              |       srch       |
+| api_management                         |       apim       |
+| api_management_autoscale               |     apim-as      |
+| apim_network_security_group            |     apim-nsg     |
+| apim_subnet                            |    apim-snet     |
+| app_gateway                            |       agw        |
+| app_private_endpoint                   |     app-pep      |
+| app_service                            |       app        |
+| app_service_plan                       |       asp        |
+| app_slot_private_endpoint              | staging-app-pep  |
+| app_subnet                             |     app-snet     |
+| application_insights                   |       appi       |
+| blob_private_endpoint                  |     blob-pep     |
+| function_blob_private_endpoint         |  func-blob-pep   |
+| dfunction_blob_private_endpoint        |  dfunc-blob-pep  |
+| blob_storage                           |       blob       |
+| cdn_frontdoor_endpoint                 |       fde        |
+| cdn_frontdoor_origin                   |       fdo        |
+| cdn_frontdoor_origin_group             |       fdog       |
+| cdn_frontdoor_profile                  |       afd        |
+| cdn_frontdoor_route                    |       cdnr       |
+| cdn_monitor_diagnostic_setting         |       cdnp       |
+| monitor_alert_sbns_active              |   sbns-act-ma    |
+| monitor_alert_sbns_dlq                 |   sbns-dlq-ma    |
+| container_app                          |        ca        |
+| container_app_environment              |       cae        |
+| container_app_job                      |       caj        |
+| container_app_private_endpoint         |     cae-pep      |
+| container_app_subnet                   |     cae-snet     |
+| cosmos_db                              |      cosmos      |
+| cosmos_db_nosql                        |      cosno       |
+| cosmos_private_endpoint                |    cosno-pep     |
+| customer_key_storage_account           |      stcmk       |
+| durable_function_storage_account       |       stfd       |
+| eventhub_namespace                     |      evhns       |
+| eventhub_private_endpoint              |    evhns-pep     |
+| file_private_endpoint                  |     file-pep     |
+| function_file_private_endpoint         |  func-file-pep   |
+| dfunction_file_private_endpoint        |  dfunc-file-pep  |
+| file_storage                           |       file       |
+| function_app                           |       func       |
+| function_private_endpoint              |     func-pep     |
+| function_slot_private_endpoint         | staging-func-pep |
+| function_storage_account               |       stfn       |
+| function_subnet                        |    func-snet     |
+| key_vault                              |        kv        |
+| key_vault_private_endpoint             |      kv-pep      |
+| load_testing                           |        lt        |
+| log_analytics                          |       log        |
+| managed_identity                       |        id        |
+| nat_gateway                            |        ng        |
+| network_security_group                 |       nsg        |
+| postgre_endpoint                       |     psql-ep      |
+| postgre_private_endpoint               |     psql-pep     |
+| postgre_replica_private_endpoint       | psql-pep-replica |
+| postgresql                             |       psql       |
+| postgresql_replica                     |   psql-replica   |
+| private_endpoint                       |       pep        |
+| private_endpoint_subnet                |     pep-snet     |
+| public_ip                              |       pip        |
+| queue_private_endpoint                 |    queue-pep     |
+| function_queue_private_endpoint        |  func-queue-pep  |
+| dfunction_queue_private_endpoint       | dfunc-queue-pep  |
+| queue_storage                          |      queue       |
+| redis_cache                            |      redis       |
+| resource_group                         |        rg        |
+| servicebus_namespace                   |       sbns       |
+| servicebus_private_endpoint            |     sbns-pep     |
+| static_web_app                         |      stapp       |
+| storage_account                        |        st        |
+| subnet                                 |       snet       |
+| table_private_endpoint                 |    table-pep     |
+| function_table_private_endpoint        |  func-table-pep  |
+| dfunction_table_private_endpoint       | dfunc-table-pep  |
+| table_storage                          |      table       |
+| virtual_machine                        |        vm        |
+| virtual_network                        |       vnet       |
+| dns_forwarding_ruleset                 |      dnsfrs      |
+| dns_private_resolver                   |      dnspr       |
+| dns_private_resolver_inbound_endpoint  |        in        |
+| dns_private_resolver_outbound_endpoint |       out        |

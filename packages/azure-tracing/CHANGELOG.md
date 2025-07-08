@@ -1,5 +1,12 @@
 # @pagopa/azure-tracing
 
+## 0.4.4
+
+### Patch Changes
+
+- 14c4e2b: Bump dependencies version
+- 5b31f4f: Upgrade to latest version of `@pagopa/eslint-config` package
+
 ## 0.4.3
 
 ### Patch Changes
@@ -75,7 +82,6 @@
 - 66efe11: Create `@pagopa/azure-tracing` package
 
   ## Features
-
   - Instrument an Azure Function (ECMAScript version) with OpenTelemetry and Azure Monitor.
     To enable tracing, add the `NODE_OPTIONS = "--import @pagopa/azure-tracing"` environment variable.
   - Log custom events using the `emitCustomEvent` function.

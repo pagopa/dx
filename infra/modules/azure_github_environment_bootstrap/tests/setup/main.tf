@@ -36,7 +36,7 @@ data "azurerm_resource_group" "vnet" {
 }
 
 data "azurerm_resource_group" "dashboards" {
-  name = "dashboards"
+  name = "${local.project}-opex-rg-01"
 }
 
 data "azurerm_resource_group" "common" {

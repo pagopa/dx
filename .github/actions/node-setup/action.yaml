@@ -7,9 +7,13 @@ description: "Setup Node.js and Turbo cache"
 inputs:
   working_dir:
     description: "Specify the working directory"
-    type: string
     required: false
     default: "."
+
+outputs:
+  package-manager:
+    description: "The detected package manager (npm, yarn, pnpm)"
+    value: ${{ steps.detect-pm.outputs.package-manager }}
 
 runs:
   using: "composite"
@@ -19,11 +23,14 @@ runs:
       shell: bash
       run: corepack enable
 
+    - name: Detect Node.js package manager
+      id: detect-pm
+      uses: pagopa/dx/actions/detect-node-package-manager@main
+
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
-        node-version-file: ".node-version"
-        cache: yarn
-        cache-dependency-path: "${{ inputs.working_dir }}/yarn.lock"
+        node-version-file: .node-version
+        cache: ${{ steps.detect-pm.outputs.package-manager }}
 
     - name: Setup turbo cache
       if: ${{ env.TURBO_CACHE_DIR != '' }}

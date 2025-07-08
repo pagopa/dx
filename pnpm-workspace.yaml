@@ -1,0 +1,10 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+  - "infra/modules/*"
+  - "infra/scripts"
+  - "providers/*"
+  - "containers/*"
+  - "actions/*"
+
+packageImportMethod: clone-or-copy
