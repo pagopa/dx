@@ -34,6 +34,7 @@ jobs:
       # Example: "turbo run typecheck format:check lint:check //#test:coverage"
       # See https://github.com/pagopa/io-fims/pull/41
       - name: Run code-review script
+        if: steps.node-setup.outputs.package-manager != ''
         run: ${{ steps.node-setup.outputs.package-manager }} run code-review
 
       # Codecov provides reports and metrics about test coverage data.
