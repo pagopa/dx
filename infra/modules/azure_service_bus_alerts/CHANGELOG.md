@@ -1,5 +1,11 @@
 # azure_service_bus_alerts
 
+## 0.1.2
+
+### Patch Changes
+
+- c54e7ce: Update contraint for pagopa-dx-azure provider by allowing minor upgrades.
+
 ## 0.1.1
 
 ### Patch Changes
