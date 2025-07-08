@@ -43,7 +43,7 @@ module "bootstrap" {
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
 
-  additional_resource_group_ids = [module.core_values.common_resource_group_id]
+  additional_resource_group_ids = concat([module.core_values.common_resource_group_id], (module.core_values.test_resource_group_id != null ? [module.core_values.test_resource_group_id] : []))
   tags                          = var.tags
 }
 
@@ -92,10 +92,18 @@ module "roles_cd" {
   ]
 }
 
+resource "azurerm_role_assignment" "storage_blob_contributor" {
+  count                = var.environment.env_short == "d" ? 1 : 0
+  scope                = data.azurerm_resource_group.tfstate.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
+}
+
 resource "azurerm_role_assignment" "contributor" {
+  count                = var.environment.env_short == "d" ? 1 : 0
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
-  principal_id         = module.bootstrap.identities.infra.cd.principal_id
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
 
 resource "github_actions_secret" "codecov_token" {
