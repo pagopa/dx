@@ -11,7 +11,5 @@ export default defineConfig({
   bundle: true,
   platform: "node",
   noExternal: [/.*/],
-  treeshake: true,
-  esbuildOptions(options) {
-  },
+  treeshake: true
 });
