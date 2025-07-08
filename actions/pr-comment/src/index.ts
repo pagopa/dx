@@ -86,7 +86,7 @@ async function deleteMatchingComments(
     const normalizedPattern = searchPattern.trim().toLowerCase();
 
     const matchingComments = comments.filter((comment) =>
-      comment.body?.toLowerCase().includes(normalizedPattern),
+      (comment.body ?? '').toLowerCase().includes(normalizedPattern),
     );
 
     info(`Found ${matchingComments.length} matching comments to delete`);
