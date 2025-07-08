@@ -1,14 +1,3 @@
-/**
- * @fileoverview Unit tests for PR Comment Manager Action
- *
- * This test suite covers all the main functionality of the pr-comment action:
- * - Input validation and processing
- * - GitHub context handling
- * - File path validation and security
- * - Comment body resolution
- * - Comment creation and deletion
- * - Error handling scenarios
- */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
