@@ -1,0 +1,122 @@
+name: 'Incremental Rollout for App Service'
+description: 'Incrementally shift traffic to staging slot, run canary script, shift traffic and finalize with slot swap.'
+
+inputs:
+  resource_group_name:
+    description: 'Azure Resource Group name'
+    required: true
+  web_app_name:
+    description: 'Azure Web App name'
+    required: true
+  script_language:
+    description: 'Script language (typescript (npm) or typescript (yarn))'
+    required: true
+    default: 'typescript (npm)'
+  script_name:
+    description: 'Script name to execute during canary deployment'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Incremental Rollout to Staging Slot
+      shell: bash
+      env:
+        SCRIPT_LANGUAGE: ${{ inputs.script_language }}
+        SCRIPT_NAME: ${{ inputs.script_name }}
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        WEB_APP_NAME: ${{ inputs.web_app_name }}
+      run: |
+        set -euo pipefail
+
+        currentPercentage=0
+        stagingSlot=staging
+        prodSlot=production
+
+        while true; do
+          case "$SCRIPT_LANGUAGE" in
+            "typescript (npm)")
+              output="$(npm run -s "$SCRIPT_NAME" $currentPercentage)"
+              ;;
+            "typescript (yarn)")
+              output="$(yarn "$SCRIPT_NAME" $currentPercentage)"
+              ;;
+            *)
+              echo "::error::script_language input is required"
+              exit 1
+              ;;
+          esac
+
+          exit_code=$?
+          echo "Script Output: $output"
+
+          if [ $exit_code -ne 0 ]; then
+            echo "::error::Monitoring script failed. Reverting traffic to production."
+            az webapp traffic-routing clear \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --name "$WEB_APP_NAME"
+            exit 1
+          fi
+
+          swap=$(echo "$output" | jq -r '.swap // empty')
+          if [ "$swap" == "true" ]; then
+            echo "::warning::Swap to new version requested."
+            echo "::notice::Swap to staging requested. Moving all traffic to staging."
+            az webapp traffic-routing set \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --name "$WEB_APP_NAME" \
+              --distribution staging=100,production=0
+            break
+          fi
+
+          nextPercentage=$(echo "$output" | jq -r '.nextPercentage')
+          afterMs=$(echo "$output" | jq -r '.afterMs')
+
+          if [ -z "$nextPercentage" ] || [ -z "$afterMs" ]; then
+            echo "::error::Invalid output from script (missing nextPercentage or afterMs). Reverting traffic."
+            az webapp traffic-routing clear \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --name "$WEB_APP_NAME"
+            exit 1
+          fi
+
+          echo "::notice::Next traffic percentage: $nextPercentage% to staging"
+          az webapp traffic-routing set \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --distribution staging=$nextPercentage,production=$((100-nextPercentage))
+
+          currentPercentage=$nextPercentage
+
+          if [ "$nextPercentage" -ge 100 ]; then
+            echo "::notice::Successfully shifted 100% traffic to staging slot"
+            break
+          else
+            delaySeconds=$((afterMs / 1000))
+            echo "Waiting for $delaySeconds seconds..."
+            sleep $delaySeconds
+          fi
+        done
+
+    - name: Finalize Traffic to Production Slot
+      shell: bash
+      env:
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        WEB_APP_NAME: ${{ inputs.web_app_name }}
+      run: |
+        az webapp traffic-routing set \
+          --resource-group "$RESOURCE_GROUP_NAME" \
+          --name "$WEB_APP_NAME" \
+          --distribution production=100,staging=0
+
+    - name: Swap Staging and Production Slots (Finalize)
+      shell: bash
+      env:
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        WEB_APP_NAME: ${{ inputs.web_app_name }}
+      run: |
+        az webapp deployment slot swap \
+          --resource-group "$RESOURCE_GROUP_NAME" \
+          --name "$WEB_APP_NAME" \
+          --slot staging \
+          --target-slot production
