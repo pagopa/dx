@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.1
+
+### Patch Changes
+
+- 6c54e98: Update resource_name function documentation
+
 ## 0.6.0
 
 ### Minor Changes

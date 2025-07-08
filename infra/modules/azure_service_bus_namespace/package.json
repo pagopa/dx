@@ -1,6 +1,6 @@
 {
   "name": "azure_service_bus_namespace",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "provider": "azurerm",
   "description": "Creates an Azure Service Bus Namepsace with network, authentication and scaling built-in capabilities"
