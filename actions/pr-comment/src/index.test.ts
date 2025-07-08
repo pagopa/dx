@@ -1,6 +1,3 @@
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
@@ -37,11 +34,11 @@ describe("PR Comment Manager Action", () => {
     vi.clearAllMocks();
 
     // Set up default mocks
-    mockGithub.getOctokit.mockReturnValue(mockOctokit as any);
+    mockGithub.getOctokit.mockReturnValue(mockOctokit);
     mockGithub.context = {
       issue: { number: 123 },
       repo: { owner: "test-owner", repo: "test-repo" },
-    } as any;
+    };
 
     // Mock process.cwd()
     vi.spyOn(process, "cwd").mockReturnValue("/test/workspace");
@@ -87,7 +84,7 @@ describe("PR Comment Manager Action", () => {
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -117,7 +114,7 @@ describe("PR Comment Manager Action", () => {
       mockReadFileSync.mockReturnValue("File comment content");
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -149,7 +146,7 @@ describe("PR Comment Manager Action", () => {
       mockGithub.context = {
         issue: { number: null },
         repo: { owner: "test-owner", repo: "test-repo" },
-      } as any;
+      };
 
       // Act
       await run();
@@ -276,7 +273,7 @@ describe("PR Comment Manager Action", () => {
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -300,7 +297,7 @@ describe("PR Comment Manager Action", () => {
       mockOctokit.paginate.mockResolvedValue([]);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -347,7 +344,7 @@ describe("PR Comment Manager Action", () => {
       );
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -380,7 +377,7 @@ describe("PR Comment Manager Action", () => {
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -403,7 +400,7 @@ describe("PR Comment Manager Action", () => {
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/789", id: 789 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -433,7 +430,7 @@ describe("PR Comment Manager Action", () => {
 
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
@@ -482,7 +479,7 @@ describe("PR Comment Manager Action", () => {
       mockOctokit.paginate.mockResolvedValue(mockComments);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
         data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      } as any);
+      });
 
       // Act
       await run();
