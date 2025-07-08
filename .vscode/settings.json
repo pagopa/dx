@@ -1,9 +1,4 @@
 {
-  "search.exclude": {
-    "**/.yarn": true,
-    "**/.pnp.*": true
-  },
-  "prettier.prettierPath": ".yarn/sdks/prettier/index.cjs",
   "github.copilot.chat.codeGeneration.instructions": [
     {
       "file": ".github/instructions/code.instructions.md"
@@ -29,8 +24,6 @@
       "file": ".github/instructions/test.instructions.md"
     }
   ],
-  "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "[terraform]": {
@@ -42,5 +35,4 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
-  "eslint.nodePath": ".yarn/sdks"
 }
