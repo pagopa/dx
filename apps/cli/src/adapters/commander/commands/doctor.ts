@@ -12,10 +12,7 @@ import {
 
 type DoctorDependencies = Pick<
   Dependencies,
-  | "dependencyVersionValidator"
-  | "packageJsonReader"
-  | "repositoryReader"
-  | "validationReporter"
+  "packageJsonReader" | "repositoryReader" | "validationReporter"
 >;
 
 export const makeDoctorCommand = (

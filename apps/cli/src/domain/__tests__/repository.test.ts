@@ -67,7 +67,6 @@ describe("checkTurboConfig", () => {
         },
       ]),
     );
-    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(true);
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
 
@@ -170,7 +169,6 @@ describe("checkTurboConfig", () => {
         },
       ]),
     );
-    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(false);
     const result = await checkTurboConfig(monorepoDir)(deps, config);
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
@@ -196,7 +194,6 @@ describe("checkTurboConfig", () => {
         },
       ]),
     );
-    deps.dependencyVersionValidator.isValid.mockReturnValueOnce(true);
     const result = await checkTurboConfig(monorepoDir)(deps, config);
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
