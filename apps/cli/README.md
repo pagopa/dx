@@ -60,6 +60,8 @@ This command will:
 
 - Check if you're in a valid Git repository
 - Validate that required monorepo scripts are present in package.json
+- Check that the `turbo.json` file exists
+- Verify that the installed `turbo` version meets the required minimum
 
 **Example output:**
 
