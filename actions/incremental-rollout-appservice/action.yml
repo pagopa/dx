@@ -1,23 +1,23 @@
-name: 'Incremental Rollout for App Service'
-description: 'Incrementally shift traffic to staging slot, run canary script, shift traffic and finalize with slot swap.'
+name: "Incremental Rollout for App Service"
+description: "Incrementally shift traffic to staging slot, run canary script, shift traffic and finalize with slot swap."
 
 inputs:
   resource_group_name:
-    description: 'Azure Resource Group name'
+    description: "Azure Resource Group name"
     required: true
   web_app_name:
-    description: 'Azure Web App name'
+    description: "Azure Web App name"
     required: true
   script_language:
-    description: 'Script language (typescript (npm) or typescript (yarn))'
+    description: "Script language (typescript (npm) or typescript (yarn))"
     required: true
-    default: 'typescript (npm)'
+    default: "typescript (npm)"
   script_name:
-    description: 'Script name to execute during canary deployment'
+    description: "Script name to execute during canary deployment"
     required: true
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Incremental Rollout to Staging Slot
       shell: bash

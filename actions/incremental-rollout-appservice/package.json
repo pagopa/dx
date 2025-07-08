@@ -1,0 +1,13 @@
+{
+  "name": "incremental-rollout-appservice",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "prettier": "3.6.2"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
