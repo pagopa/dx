@@ -13,6 +13,5 @@ export default defineConfig({
   noExternal: [/.*/],
   treeshake: true,
   esbuildOptions(options) {
-    options.treeShaking = true;
   },
 });
