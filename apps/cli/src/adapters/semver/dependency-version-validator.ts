@@ -1,18 +1,25 @@
-import { coerce, satisfies, valid } from "semver";
+import coerce from "semver/functions/coerce.js";
+import semverGte from "semver/functions/gte.js";
 
 import {
   Dependency,
   DependencyVersionValidator,
 } from "../../domain/package-json.js";
 
+/**
+ * Validates if a dependency version meets the minimum version requirement.
+ * Handles both exact versions and semver ranges (like caret ranges).
+ */
 export const makeDependencyVersionValidator =
   (): DependencyVersionValidator => ({
-    isValid: (dependency: Dependency, minVersion: string): boolean => {
-      // Check if the dependency version is valid semver or a valid range
-      if (!valid(dependency.version) && !valid(coerce(dependency.version))) {
+    isValid: ({ version }: Dependency, minVersion: string): boolean => {
+      const minAcceptedSemVer = coerce(minVersion);
+      const dependencySemVer = coerce(version);
+
+      if (!minAcceptedSemVer || !dependencySemVer) {
         return false;
       }
 
-      return satisfies(dependency.version, `>=${minVersion}`);
+      return semverGte(dependencySemVer, minAcceptedSemVer);
     },
   });

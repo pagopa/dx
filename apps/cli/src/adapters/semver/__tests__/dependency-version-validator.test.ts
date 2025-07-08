@@ -3,77 +3,99 @@ import { describe, expect, it } from "vitest";
 import { Dependency, DependencyName } from "../../../domain/package-json.js";
 import { makeDependencyVersionValidator } from "../dependency-version-validator.js";
 
-describe("makeDependencyVersionValidator", () => {
+describe("DependencyVersionValidator", () => {
   const minVersion = "2.5.0";
+  const validDependency: Dependency = {
+    name: "turbo" as DependencyName,
+    version: "3.0.0",
+  };
   describe("isValid", () => {
-    it("should return true when exact version is greater than minimum major version", () => {
+    it("should handle exact versions", () => {
       const validator = makeDependencyVersionValidator();
-      const dependency: Dependency = {
-        name: "turbo" as DependencyName,
-        version: "3.0.0",
-      };
+
       const minVersion = "2";
+      // 3.0.0 is greater than 2.5.0
+      expect(validator.isValid(validDependency, minVersion)).toBe(true);
 
-      const result = validator.isValid(dependency, minVersion);
-
-      expect(result).toBe(true);
-    });
-
-    it("should return true when exact versions are equals", () => {
-      const validator = makeDependencyVersionValidator();
-      const dependency: Dependency = {
-        name: "turbo" as DependencyName,
+      // 2.5.0 is greater than 2.5.0
+      const anotherValidDependency = {
+        ...validDependency,
         version: "2.5.0",
       };
-      const result = validator.isValid(dependency, minVersion);
+      expect(validator.isValid(anotherValidDependency, minVersion)).toBe(true);
 
-      expect(result).toBe(true);
-    });
-
-    it("should return false when exact version is less than minimum", () => {
-      const validator = makeDependencyVersionValidator();
-      const dependency: Dependency = {
-        name: "turbo" as DependencyName,
+      // 1.0.0 is less than 2.5.0
+      const invalidDependency = {
+        ...validDependency,
         version: "1.0.0",
       };
-      const result = validator.isValid(dependency, minVersion);
-
-      expect(result).toBe(false);
+      expect(validator.isValid(invalidDependency, minVersion)).toBe(false);
     });
 
-    it("should return false for invalid semver versions", () => {
+    it("should handle invalid versions", () => {
       const validator = makeDependencyVersionValidator();
-      const dependency: Dependency = {
+      const invalidDependency: Dependency = {
         name: "turbo" as DependencyName,
         version: "invalid-version",
       };
 
-      const result = validator.isValid(dependency, minVersion);
+      expect(validator.isValid(invalidDependency, minVersion)).toBe(false);
 
-      expect(result).toBe(false);
-    });
-
-    it("should return false for empty version", () => {
-      const validator = makeDependencyVersionValidator();
-      const dependency: Dependency = {
-        name: "turbo" as DependencyName,
+      const anotherValidDependency = {
+        ...validDependency,
         version: "",
       };
-
-      const result = validator.isValid(dependency, minVersion);
-
-      expect(result).toBe(false);
+      expect(validator.isValid(anotherValidDependency, minVersion)).toBe(false);
     });
 
-    it("should handle pre-release versions", () => {
+    it("should handle caret versions", () => {
       const validator = makeDependencyVersionValidator();
       const dependency: Dependency = {
         name: "turbo" as DependencyName,
-        version: "2.5.0-beta.1",
+        version: "^3.0.0",
       };
-      const result = validator.isValid(dependency, minVersion);
 
-      expect(result).toBe(false);
+      // ^3.0.0 is greater than 2.5.0
+      expect(validator.isValid(dependency, minVersion)).toBe(true);
+
+      // ^2.5.0 is greater than 2.5.0
+      const anotherValidDependency = {
+        ...validDependency,
+        version: "^2.5.0",
+      };
+      expect(validator.isValid(anotherValidDependency, minVersion)).toBe(true);
+
+      // ^2.4.0 is less than 2.5.0
+      const invalidDependency = {
+        ...validDependency,
+        version: "^2.4.0",
+      };
+      expect(validator.isValid(invalidDependency, minVersion)).toBe(false);
+
+      // ^1.0.0 is less than 2.5.0
+      const anotherInvalidDependency = {
+        ...validDependency,
+        version: "^1.0.0",
+      };
+      expect(validator.isValid(anotherInvalidDependency, minVersion)).toBe(
+        false,
+      );
+
+      // ^2.6.0-beta.1 is greater than 2.5.0
+      const aValidBetaDependency = {
+        ...validDependency,
+        version: "^2.6.0-beta.1",
+      };
+      expect(validator.isValid(aValidBetaDependency, minVersion)).toBe(true);
+
+      // ^2.4.0-beta.1 is less than 2.5.0
+      const anInvalidBetaDependency = {
+        ...validDependency,
+        version: "^2.4.0-beta.1",
+      };
+      expect(validator.isValid(anInvalidBetaDependency, minVersion)).toBe(
+        false,
+      );
     });
   });
 });
