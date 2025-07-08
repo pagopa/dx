@@ -15,6 +15,5 @@ locals {
     Environment    = "Dev"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/core/dev"
     ManagementTeam = "Developer Experience"
-    TestName       = "Create Azure core resources for dev DEVEX environment"
   }
 }

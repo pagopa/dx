@@ -33,6 +33,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_application_insights"></a> [application\_insights](#module\_application\_insights) | ./_modules/application_insights | n/a |
 | <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
 | <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
@@ -67,6 +68,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Description |
 |------|-------------|
+| <a name="output_application_insights"></a> [application\_insights](#output\_application\_insights) | Details of the Application Insights instance, including its ID, name, and instrumentation key. |
 | <a name="output_common_key_vault"></a> [common\_key\_vault](#output\_common\_key\_vault) | Details of the common Key Vault, including its name, ID, and resource group name. |
 | <a name="output_common_log_analytics_workspace"></a> [common\_log\_analytics\_workspace](#output\_common\_log\_analytics\_workspace) | Details of the common Log Analytics Workspace, including its ID, name, and workspace ID. |
 | <a name="output_common_nat_gateways"></a> [common\_nat\_gateways](#output\_common\_nat\_gateways) | A list of NAT gateways, including their IDs and names. |
