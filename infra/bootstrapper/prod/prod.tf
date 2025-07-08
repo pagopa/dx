@@ -19,6 +19,7 @@ module "bootstrapper" {
     pages_enabled          = true
     has_downloads          = true
     has_projects           = true
+    has_issues             = true
     homepage_url           = "https://pagopa.github.io/dx/docs/"
     pull_request_bypassers = ["/dx-pagopa-bot"]
   }
