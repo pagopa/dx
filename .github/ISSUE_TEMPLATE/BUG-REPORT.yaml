@@ -1,0 +1,32 @@
+name: Bug Report
+description: File a bug report.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+projects: ["pagopa/dx"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-was-expected
+    attributes:
+      label: What's the expected result?
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened-instead
+    attributes:
+      label: What happened instead?
+      description: Share relevant links and/or logs output masking sensitive information.
+    validations:
+      required: true
