@@ -12,8 +12,8 @@ importers:
         specifier: ^2.29.5
         version: 2.29.5
       '@devcontainers/cli':
-        specifier: ^0.75.0
-        version: 0.75.0
+        specifier: ^0.79.0
+        version: 0.79.0
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.14.1)(jiti@1.21.7)(terser@5.39.0))
@@ -1301,8 +1301,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@devcontainers/cli@0.75.0':
-    resolution: {integrity: sha512-fYcAZMX1RjhG9bIhkiBrQMcKwnoGp808PWToAvWyNqSg8AeY8Bm2ClXVrFQknnPLRzD+GENlLrlx+WpI6weuUA==}
+  '@devcontainers/cli@0.79.0':
+    resolution: {integrity: sha512-q+PbnYU/imFoEXv2YH5mmoxsxTO5ADsMG4KRt0Ri2+g3EXpforr31lfCGSUPxEYeDNWHdlZMDMbbiiiL28qdFA==}
     engines: {node: ^16.13.0 || >=18.0.0}
     hasBin: true
 
@@ -8527,7 +8527,7 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  '@devcontainers/cli@0.75.0': {}
+  '@devcontainers/cli@0.79.0': {}
 
   '@discoveryjs/json-ext@0.5.7': {}
 
