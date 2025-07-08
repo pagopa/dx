@@ -104,3 +104,9 @@ resource "azurerm_role_assignment" "contributor" {
   role_definition_name = "Contributor"
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
+
+resource "github_actions_secret" "codecov_token" {
+  repository      = var.repository.name
+  secret_name     = "CODECOV_TOKEN"
+  plaintext_value = data.azurerm_key_vault_secret.codecov_token.value
+}
