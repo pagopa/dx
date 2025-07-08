@@ -50,7 +50,7 @@ module "bootstrap" {
 resource "github_actions_secret" "appi_instrumentation_key" {
   repository      = var.repository.name
   secret_name     = "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY"
-  plaintext_value = each.value
+  plaintext_value = data.azurerm_key_vault_secret.appinsights_instrumentation_key.value
 }
 
 resource "azurerm_role_assignment" "user_access_administrator" {
