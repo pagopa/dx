@@ -1,18 +1,9 @@
-import { readFile } from "node:fs/promises";
+import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { dependenciesArraySchema, scriptsArraySchema } from "../codec.js";
 import { makePackageJsonReader } from "../package-json.js";
 import { makeMockPackageJson } from "./data.js";
-
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn(),
-}));
-
-const mockReadFile = (content: string) =>
-  (readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-    content,
-  );
 
 describe("makePackageJsonReader", () => {
   beforeEach(() => {
@@ -26,7 +17,9 @@ describe("makePackageJsonReader", () => {
       const mockPackageJson = makeMockPackageJson();
       const packageJson = JSON.stringify(mockPackageJson);
 
-      mockReadFile(packageJson);
+      const mockReadFile = vi
+        .spyOn(fs, "readFile")
+        .mockResolvedValueOnce(packageJson);
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
@@ -40,7 +33,7 @@ describe("makePackageJsonReader", () => {
         );
       }
 
-      expect(readFile).toHaveBeenCalledWith(
+      expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
         "utf-8",
       );
@@ -51,7 +44,7 @@ describe("makePackageJsonReader", () => {
         makeMockPackageJson({ scripts: undefined }),
       );
 
-      mockReadFile(mockPackageJson);
+      vi.spyOn(fs, "readFile").mockResolvedValueOnce(mockPackageJson);
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
@@ -65,7 +58,7 @@ describe("makePackageJsonReader", () => {
     });
 
     it("should return an error when package.json does not exist", async () => {
-      (readFile as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      vi.spyOn(fs, "readFile").mockRejectedValueOnce(
         new Error("No such file or directory"),
       );
 
@@ -80,7 +73,7 @@ describe("makePackageJsonReader", () => {
     });
 
     it("should return an error when package.json is invalid JSON", async () => {
-      mockReadFile("invalid json content");
+      vi.spyOn(fs, "readFile").mockResolvedValueOnce("invalid json content");
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
@@ -104,7 +97,9 @@ describe("makePackageJsonReader", () => {
       const mockPackageJson = makeMockPackageJson();
       const packageJson = JSON.stringify(mockPackageJson);
 
-      mockReadFile(packageJson);
+      const mockReadFile = vi
+        .spyOn(fs, "readFile")
+        .mockResolvedValueOnce(packageJson);
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
@@ -118,7 +113,7 @@ describe("makePackageJsonReader", () => {
         );
       }
 
-      expect(readFile).toHaveBeenCalledWith(
+      expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
         "utf-8",
       );
@@ -128,7 +123,9 @@ describe("makePackageJsonReader", () => {
       const mockPackageJson = makeMockPackageJson();
       const packageJson = JSON.stringify(mockPackageJson);
 
-      mockReadFile(packageJson);
+      const mockReadFile = vi
+        .spyOn(fs, "readFile")
+        .mockResolvedValueOnce(packageJson);
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "prod");
@@ -142,7 +139,7 @@ describe("makePackageJsonReader", () => {
         );
       }
 
-      expect(readFile).toHaveBeenCalledWith(
+      expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
         "utf-8",
       );
@@ -155,7 +152,7 @@ describe("makePackageJsonReader", () => {
       });
       const packageJson = JSON.stringify(mockPackageJson);
 
-      mockReadFile(packageJson);
+      vi.spyOn(fs, "readFile").mockResolvedValueOnce(packageJson);
 
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
@@ -169,7 +166,7 @@ describe("makePackageJsonReader", () => {
     });
 
     it("should return an error when package.json does not exist for dependencies", async () => {
-      (readFile as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      vi.spyOn(fs, "readFile").mockRejectedValueOnce(
         new Error("No such file or directory"),
       );
 

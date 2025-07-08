@@ -1,5 +1,5 @@
 import { Result, ResultAsync } from "neverthrow";
-import { readFile } from "node:fs/promises";
+import fs from "node:fs/promises";
 import { join } from "node:path";
 import * as process from "node:process";
 
@@ -39,7 +39,7 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
     const packageJsonPath = join(cwd, "package.json");
 
     return ResultAsync.fromPromise(
-      readFile(packageJsonPath, "utf-8"),
+      fs.readFile(packageJsonPath, "utf-8"),
       () => new Error("Failed to read package.json"),
     )
       .andThen(toJSON)
@@ -59,7 +59,7 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
     const packageJsonPath = join(cwd, "package.json");
 
     return ResultAsync.fromPromise(
-      readFile(packageJsonPath, "utf-8"),
+      fs.readFile(packageJsonPath, "utf-8"),
       () => new Error("Failed to read package.json"),
     )
       .andThen(toJSON)
