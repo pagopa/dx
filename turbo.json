@@ -21,7 +21,11 @@
     },
     "//#test:coverage": {
       "dependsOn": ["^build"],
-      "inputs": ["apps/**/src/**/*.ts", "packages/**/src/**/*.ts"],
+      "inputs": [
+        "apps/**/src/**/*.ts",
+        "packages/**/src/**/*.ts",
+        "actions/**/src/**/*.ts"
+      ],
       "outputs": ["coverage"],
       "outputLogs": "errors-only"
     }
