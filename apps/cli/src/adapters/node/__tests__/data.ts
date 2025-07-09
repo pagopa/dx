@@ -17,6 +17,7 @@ export const makeMockPackageJson = (
       build: "tsc",
       "code-review": "eslint .",
     },
+    workspaces: ["packages/*", "apps/*"],
   };
 
   return { ...basePackageJson, ...overrides };
