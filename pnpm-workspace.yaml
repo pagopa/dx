@@ -17,8 +17,6 @@ catalog:
   '@tsconfig/node20': ^20.1.6
   '@types/node': ^20.19.4
 
-catalogMode: strict
-
 onlyBuiltDependencies:
   - esbuild
 
