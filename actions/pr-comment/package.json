@@ -37,6 +37,7 @@
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "vitest-mock-extended": "^3.1.0"
   }
 }

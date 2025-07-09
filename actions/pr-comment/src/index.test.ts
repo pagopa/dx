@@ -2,30 +2,61 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mockDeep } from "vitest-mock-extended";
 
 import { run } from "../src/index.js";
 
 // Mock the dependencies
-vi.mock("@actions/core");
-vi.mock("@actions/github");
-vi.mock("fs");
+vi.mock("@actions/core", () => ({
+  getInput: vi.fn(),
+  info: vi.fn(),
+  setFailed: vi.fn(),
+  setOutput: vi.fn(),
+  warning: vi.fn(),
+}));
 
-// Create typed mocks
+vi.mock("@actions/github", () => ({
+  context: {},
+  getOctokit: vi.fn(),
+}));
+
+vi.mock("fs", () => ({
+  readFileSync: vi.fn(),
+}));
+
+// Create deep mocks with proper typing
 const mockCore = vi.mocked(core);
 const mockGithub = vi.mocked(github);
 const mockReadFileSync = vi.mocked(readFileSync);
 
-// Mock octokit instance
-const mockOctokit = {
-  paginate: vi.fn(),
+// Define proper interfaces for GitHub API
+interface GitHubComment {
+  body?: string;
+  html_url: string;
+  id: number;
+}
+
+interface OctokitInstance {
+  paginate: (fn: unknown, params: unknown) => Promise<GitHubComment[]>;
   rest: {
     issues: {
-      createComment: vi.fn(),
-      deleteComment: vi.fn(),
-      listComments: vi.fn(),
-    },
-  },
-};
+      createComment: (
+        params: unknown,
+      ) => Promise<OctokitResponse<GitHubComment>>;
+      deleteComment: (params: unknown) => Promise<void>;
+      listComments: (
+        params: unknown,
+      ) => Promise<OctokitResponse<GitHubComment[]>>;
+    };
+  };
+}
+
+interface OctokitResponse<T> {
+  data: T;
+}
+
+// Create properly typed octokit mock using vitest-mock-extended
+const mockOctokit = mockDeep<OctokitInstance>();
 
 /* eslint-disable max-lines-per-function */
 describe("PR Comment Manager Action", () => {
@@ -34,11 +65,19 @@ describe("PR Comment Manager Action", () => {
     vi.clearAllMocks();
 
     // Set up default mocks
-    mockGithub.getOctokit.mockReturnValue(mockOctokit);
-    mockGithub.context = {
-      issue: { number: 123 },
-      repo: { owner: "test-owner", repo: "test-repo" },
-    };
+    mockGithub.getOctokit.mockReturnValue(
+      mockOctokit as unknown as ReturnType<typeof github.getOctokit>,
+    );
+
+    // Mock the context object by overriding the property
+    Object.defineProperty(mockGithub, "context", {
+      configurable: true,
+      value: {
+        issue: { number: 123 },
+        repo: { owner: "test-owner", repo: "test-repo" },
+      },
+      writable: true,
+    });
 
     // Mock process.cwd()
     vi.spyOn(process, "cwd").mockReturnValue("/test/workspace");
@@ -142,11 +181,15 @@ describe("PR Comment Manager Action", () => {
         return inputs[name] || "";
       });
 
-      // Mock context without issue number
-      mockGithub.context = {
-        issue: { number: null },
-        repo: { owner: "test-owner", repo: "test-repo" },
-      };
+      // Mock context without issue number using Object.defineProperty
+      Object.defineProperty(mockGithub, "context", {
+        configurable: true,
+        value: {
+          issue: { number: null },
+          repo: { owner: "test-owner", repo: "test-repo" },
+        },
+        writable: true,
+      });
 
       // Act
       await run();
@@ -264,10 +307,22 @@ describe("PR Comment Manager Action", () => {
 
     it("should delete existing comments with matching search pattern", async () => {
       // Arrange
-      const mockComments = [
-        { body: "<!-- test-marker --> Old comment 1", id: 1 },
-        { body: "Some other comment", id: 2 },
-        { body: "Another <!-- test-marker --> comment", id: 3 },
+      const mockComments: GitHubComment[] = [
+        {
+          body: "<!-- test-marker --> Old comment 1",
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        },
+        {
+          body: "Some other comment",
+          html_url: "https://github.com/test/comment/2",
+          id: 2,
+        },
+        {
+          body: "Another <!-- test-marker --> comment",
+          html_url: "https://github.com/test/comment/3",
+          id: 3,
+        },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
@@ -334,8 +389,12 @@ describe("PR Comment Manager Action", () => {
 
     it("should handle comment deletion errors gracefully", async () => {
       // Arrange
-      const mockComments = [
-        { body: "<!-- test-marker --> Old comment", id: 1 },
+      const mockComments: GitHubComment[] = [
+        {
+          body: "<!-- test-marker --> Old comment",
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
@@ -368,10 +427,22 @@ describe("PR Comment Manager Action", () => {
         return inputs[name] || "";
       });
 
-      const mockComments = [
-        { body: "<!-- test-marker --> Old comment", id: 1 },
-        { body: "<!-- TEST-MARKER --> Another comment", id: 2 },
-        { body: "No marker here", id: 3 },
+      const mockComments: GitHubComment[] = [
+        {
+          body: "<!-- test-marker --> Old comment",
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        },
+        {
+          body: "<!-- TEST-MARKER --> Another comment",
+          html_url: "https://github.com/test/comment/2",
+          id: 2,
+        },
+        {
+          body: "No marker here",
+          html_url: "https://github.com/test/comment/3",
+          id: 3,
+        },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
@@ -471,9 +542,17 @@ describe("PR Comment Manager Action", () => {
         return inputs[name] || "";
       });
 
-      const mockComments = [
-        { body: undefined, id: 1 }, // Comment with undefined body
-        { body: "Comment with marker", id: 2 },
+      const mockComments: GitHubComment[] = [
+        {
+          body: undefined,
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        }, // Comment with undefined body
+        {
+          body: "Comment with marker",
+          html_url: "https://github.com/test/comment/2",
+          id: 2,
+        },
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
