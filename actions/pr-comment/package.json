@@ -30,13 +30,13 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node20": "^20.1.4",
-    "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^2.1.8",
-    "eslint": "9.30.1",
-    "prettier": "^3.2.5",
-    "tsup": "^8.3.5",
-    "typescript": "~5.8.3",
-    "vitest": "3.2.4"
+    "@tsconfig/node20": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
