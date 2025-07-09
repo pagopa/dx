@@ -1,8 +1,9 @@
 resource "aws_security_group" "lambda" {
   count = var.vpc == null ? 0 : 1
 
-  name   = "${local.app_prefix}-lambda-sg-${local.app_suffix}"
-  vpc_id = var.vpc.id
+  name        = "${local.app_prefix}-lambda-sg-${local.app_suffix}"
+  description = "Security group for OpenNext server lambda function allowing outbound traffic for external API calls and resource access"
+  vpc_id      = var.vpc.id
 
   tags = var.tags
 }
