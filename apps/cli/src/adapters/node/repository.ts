@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { RepositoryReader } from "../../domain/repository.js";
 import { fileExists } from "./fs/file-reader.js";
 import { Workspace } from "../../domain/workspace.js";
+import { readFile } from "./fs/index.js";
 
 const findRoot = (dir: string): ResultAsync<string, Error> => {
   const gitPath = join(dir, ".git");
@@ -33,13 +34,8 @@ const existsTurboConfig = (repoRoot: string): ResultAsync<boolean, Error> =>
       ),
   );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const getWorkspaces = (_repoRoot: string): ResultAsync<Workspace[], Error> =>
-  // TODO: Implement this. For now, we're returning an empty array.
-  ResultAsync.fromPromise(
-    Promise.resolve([]),
-    () => new Error("Failed to get workspaces"),
-  );
+const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
+  readFile(repoRoot, "pnpm-workspace.yaml").map(() => [] as Workspace[]);
 
 export const makeRepositoryReader = (): RepositoryReader => ({
   existsPreCommitConfig,
