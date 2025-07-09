@@ -7,42 +7,8 @@
 
 import type { ActionType, NodePlopAPI } from "plop";
 
-import { execSync, execFileSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import * as path from "node:path";
-
-/**
- * Get the git repository URL from the current git remote
- */
-export function getGitRepositoryUrl(): string {
-  try {
-    // Get the remote origin URL
-    const remoteUrl = execSync("git config --get remote.origin.url", {
-      encoding: "utf8",
-    }).trim();
-
-    // Convert SSH URLs to HTTPS format for package.json
-    if (remoteUrl.startsWith("git@github.com:")) {
-      return remoteUrl
-        .replace("git@github.com:", "https://github.com/")
-        .replace(/\.git$/, "");
-    }
-
-    // Remove .git suffix if present
-    return remoteUrl.replace(/\.git$/, "");
-  } catch {
-    // Throw an error if git command fails
-    throw new Error("Failed to get git repository URL");
-  }
-}
-
-export interface GeneratorParams {
-  createChangeset: boolean;
-  createSrcFolder: boolean;
-  createTests: boolean;
-  description: string;
-  packageName: string;
-  repositoryUrl: string;
-}
 
 export interface GeneratorConfig {
   /** Additional actions to perform during generation */
@@ -72,9 +38,152 @@ export interface GeneratorConfig {
   templatesPath: string;
 }
 
+export interface GeneratorParams {
+  createChangeset: boolean;
+  createSrcFolder: boolean;
+  createTests: boolean;
+  description: string;
+  packageName: string;
+  repositoryUrl: string;
+}
+
+/**
+ * Install dependencies for a new TypeScript package
+ */
+export function createInstallDependenciesAction(
+  additionalDependencies: string[] = [],
+) {
+  return function installDependencies(
+    answers: Record<string, unknown>,
+  ): string {
+    const packagePath = path.join(
+      process.cwd(),
+      "packages",
+      answers.packageName as string,
+    );
+
+    const baseDependencies = [
+      "@pagopa/eslint-config",
+      "@tsconfig/node20",
+      "@types/node",
+      "eslint@^8.0.0",
+      "prettier",
+      "typescript",
+      "vitest",
+    ];
+
+    const allDependencies = [...baseDependencies, ...additionalDependencies];
+
+    try {
+      // Sanitize dependency names to prevent shell injection
+      const sanitizedDependencies = allDependencies.map((dep) =>
+        dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
+      );
+
+      execFileSync("pnpm", ["add", "-D", ...sanitizedDependencies], {
+        cwd: packagePath,
+        stdio: "inherit",
+      });
+      return "Dependencies installed successfully.";
+    } catch (e) {
+      return `Dependency installation failed: ${e}`;
+    }
+  };
+}
+
+/**
+ * Create a TypeScript package generator with the given configuration
+ */
+export function createTypeScriptGenerator(
+  plop: NodePlopAPI,
+  config: GeneratorConfig,
+) {
+  setupCommonHelpers(plop);
+
+  const baseActions = createBaseActions(
+    config.templatesPath,
+    config.templateOverrides,
+  );
+  const installDependenciesAction = createInstallDependenciesAction(
+    config.additionalDependencies,
+  );
+
+  const actions = [
+    ...baseActions,
+    ...(config.additionalActions || []),
+    installDependenciesAction,
+  ];
+
+  const basePrompts = createBasePrompts();
+
+  // Override package name validation if provided
+  if (config.packageNameValidation) {
+    const packageNamePrompt = basePrompts.find((p) => p.name === "packageName");
+    if (packageNamePrompt) {
+      packageNamePrompt.validate = config.packageNameValidation;
+    }
+  }
+
+  plop.setGenerator(config.name, {
+    actions,
+    description: config.description,
+    prompts: basePrompts,
+  });
+}
+
+/**
+ * Get the git repository URL from the current git remote
+ */
+export function getGitRepositoryUrl(): string {
+  try {
+    // Get the remote origin URL
+    const remoteUrl = execSync("git config --get remote.origin.url", {
+      encoding: "utf8",
+    }).trim();
+
+    // Convert SSH URLs to HTTPS format for package.json
+    if (remoteUrl.startsWith("git@github.com:")) {
+      return remoteUrl
+        .replace("git@github.com:", "https://github.com/")
+        .replace(/\.git$/, "");
+    }
+
+    // Remove .git suffix if present
+    return remoteUrl.replace(/\.git$/, "");
+  } catch {
+    // Throw an error if git command fails
+    throw new Error("Failed to get git repository URL");
+  }
+}
+
+/**
+ * Setup common helpers for all generators
+ */
+export function setupCommonHelpers(plop: NodePlopAPI) {
+  // Helper for package names
+  plop.setHelper("kebabCase", (text: string) =>
+    text
+      .replace(/([a-z])([A-Z])/g, "$1-$2")
+      .replace(/[\s_]+/g, "-")
+      .toLowerCase(),
+  );
+
+  // Helper for proper case
+  plop.setHelper("properCase", (text: string) =>
+    text.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
+    ),
+  );
+
+  // Helper to get the current git repository URL
+  plop.setHelper("getGitRepositoryUrl", () => getGitRepositoryUrl());
+}
+
 /**
  * Create the base actions that all generators share
  */
+// eslint-disable-next-line complexity
 function createBaseActions(
   templatesPath: string,
   overrides: GeneratorConfig["templateOverrides"] = {},
@@ -223,112 +332,4 @@ function createBasePrompts() {
       type: "confirm",
     },
   ];
-}
-
-/**
- * Install dependencies for a new TypeScript package
- */
-export function createInstallDependenciesAction(
-  additionalDependencies: string[] = [],
-) {
-  return function installDependencies(
-    answers: Record<string, unknown>,
-  ): string {
-    const packagePath = path.join(
-      process.cwd(),
-      "packages",
-      answers.packageName as string,
-    );
-
-    const baseDependencies = [
-      "@pagopa/eslint-config",
-      "@tsconfig/node20",
-      "@types/node",
-      "eslint@^8.0.0",
-      "prettier",
-      "typescript",
-      "vitest",
-    ];
-
-    const allDependencies = [...baseDependencies, ...additionalDependencies];
-
-    try {
-      // Sanitize dependency names to prevent shell injection
-      const sanitizedDependencies = allDependencies.map((dep) =>
-        dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
-      );
-
-      execFileSync("pnpm", ["add", "-D", ...sanitizedDependencies], {
-        cwd: packagePath,
-        stdio: "inherit",
-      });
-      return "Dependencies installed successfully.";
-    } catch (e) {
-      return `Dependency installation failed: ${e}`;
-    }
-  };
-}
-
-/**
- * Setup common helpers for all generators
- */
-export function setupCommonHelpers(plop: NodePlopAPI) {
-  // Helper for package names
-  plop.setHelper("kebabCase", (text: string) =>
-    text
-      .replace(/([a-z])([A-Z])/g, "$1-$2")
-      .replace(/[\s_]+/g, "-")
-      .toLowerCase(),
-  );
-
-  // Helper for proper case
-  plop.setHelper("properCase", (text: string) =>
-    text.replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
-    ),
-  );
-
-  // Helper to get the current git repository URL
-  plop.setHelper("getGitRepositoryUrl", () => getGitRepositoryUrl());
-}
-
-/**
- * Create a TypeScript package generator with the given configuration
- */
-export function createTypeScriptGenerator(
-  plop: NodePlopAPI,
-  config: GeneratorConfig,
-) {
-  setupCommonHelpers(plop);
-
-  const baseActions = createBaseActions(
-    config.templatesPath,
-    config.templateOverrides,
-  );
-  const installDependenciesAction = createInstallDependenciesAction(
-    config.additionalDependencies,
-  );
-
-  const actions = [
-    ...baseActions,
-    ...(config.additionalActions || []),
-    installDependenciesAction,
-  ];
-
-  const basePrompts = createBasePrompts();
-
-  // Override package name validation if provided
-  if (config.packageNameValidation) {
-    const packageNamePrompt = basePrompts.find((p) => p.name === "packageName");
-    if (packageNamePrompt) {
-      packageNamePrompt.validate = config.packageNameValidation;
-    }
-  }
-
-  plop.setGenerator(config.name, {
-    actions,
-    description: config.description,
-    prompts: basePrompts,
-  });
 }
