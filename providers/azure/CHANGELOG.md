@@ -1,5 +1,17 @@
 # provider-azure
 
+## 0.6.1
+
+### Patch Changes
+
+- 6c54e98: Update resource_name function documentation
+
+## 0.6.0
+
+### Minor Changes
+
+- faf821b: Add support to Function App's Storage Account Private Endpoints names
+
 ## 0.5.0
 
 ### Minor Changes

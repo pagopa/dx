@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.4.2
+
+### Patch Changes
+
+- a08a2c9: Update some configuration with new optional variables
+
 ## 2.4.1
 
 ### Patch Changes
@@ -30,7 +36,6 @@
 ### Minor Changes
 
 - 33ecfc7: Two changes to App CD Identity roles in team resource groups:
-
   - It is now Blob Data Contributor to allow CDN deployments
   - It is not Contributor anymore, but Website Contributor instead
 

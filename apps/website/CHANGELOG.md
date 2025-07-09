@@ -1,5 +1,26 @@
 # docs
 
+## 0.3.1
+
+### Patch Changes
+
+- ce98aa8: Bump dependencies to fix a peerDependency warning
+
+## 0.3.0
+
+### Minor Changes
+
+- 0919f37: Add `@pagopa/eslint-config` as dependency
+
+  Also, add `lint` and `format` scripts and run them. Remove the
+  `babel.config.js` file, as it is not needed anymore.
+
+## 0.2.6
+
+### Patch Changes
+
+- 7684ade: Remove Opex migration guide
+
 ## 0.2.5
 
 ### Patch Changes

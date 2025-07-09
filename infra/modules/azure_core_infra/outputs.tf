@@ -44,7 +44,7 @@ output "github_runner" {
   value = {
     environment_id      = module.github_runner.cae_id
     resource_group_name = azurerm_resource_group.gh_runner.name
-    subnet_id           = module.github_runner.subnet_id
+    subnet_id           = module.network.runner_snet.id
   }
 }
 
@@ -63,6 +63,14 @@ output "common_pep_snet" {
   value = {
     name = module.network.pep_snet.name
     id   = module.network.pep_snet.id
+  }
+}
+
+output "common_test_snet" {
+  description = "Details of the test subnet, including its name and ID."
+  value = {
+    name = module.network.test_snet.name
+    id   = module.network.test_snet.id
   }
 }
 
@@ -96,5 +104,16 @@ output "common_log_analytics_workspace" {
     id           = module.common_log_analytics.id
     name         = module.common_log_analytics.name
     workspace_id = module.common_log_analytics.workspace_id
+  }
+}
+
+output "application_insights" {
+  description = "Details of the Application Insights instance, including its ID, name, and instrumentation key."
+  value = {
+    id                                 = module.application_insights.id
+    name                               = module.application_insights.name
+    instrumentation_key_kv_secret_id   = module.application_insights.instrumentation_key_kv_secret_id
+    instrumentation_key_kv_secret_name = module.application_insights.instrumentation_key_kv_secret_name
+    resource_group_name                = module.application_insights.resource_group_name
   }
 }

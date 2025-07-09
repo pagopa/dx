@@ -39,15 +39,6 @@ __azurite_*
 **/modules/**/.terraform.lock.hcl
 **/_modules/**/.terraform.lock.hcl
 
-# yarn
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
 dist
 .env
 node_modules
@@ -55,3 +46,5 @@ node_modules
 
 # vitest
 coverage
+
+.pnpm-store

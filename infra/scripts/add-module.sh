@@ -63,8 +63,8 @@ if [ ! -f "${PACKAGE_JSON}" ]; then
   "description": "${DESCRIPTION}"
 }
 EOL
-  echo -e "${GREEN}package.json created in '${MODULE_DIR}'. Running yarn install to update the lock.${NC}"
-  yarn install
+  echo -e "${GREEN}package.json created in '${MODULE_DIR}'. Running pnpm install to update the lock.${NC}"
+  pnpm install
 else
   echo -e "${YELLOW}package.json already exists in '${MODULE_DIR}'. Skipping file creation.${NC}"
 fi
@@ -121,7 +121,7 @@ EOL
     rm .gitignore
     rm -rf .git
     echo -e "${GREEN}Module '${MODULE_NAME}' pushed to GitHub repository.${NC}"
-    echo -e "${YELLOW}The creation of a changeset is required to produce the first release. Please run yarn changeset from the root of the repo.${NC}"
+    echo -e "${YELLOW}The creation of a changeset is required to produce the first release. Please run pnpm changeset from the root of the repo.${NC}"
   else
     echo -e "${YELLOW}Module '${MODULE_NAME}' already has a Git repository. Skipping initialization.${NC}"
   fi

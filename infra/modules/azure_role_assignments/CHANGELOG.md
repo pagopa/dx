@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.1.2
+
+### Patch Changes
+
+- c5149ae: Fix bug of missing storage_account_id when assigning roles on specific blob containers, tables or queues
+
 ## 1.1.1
 
 ### Patch Changes

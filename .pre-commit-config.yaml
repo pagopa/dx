@@ -3,13 +3,19 @@ repos:
     hooks:
       - id: lock_modules
         name: Lock Terraform Registry modules
-        description: 'Locks Terraform module versions and maintains hashes'
+        description: "Locks Terraform module versions and maintains hashes"
         entry: infra/scripts/lock-modules.sh
         language: script
         files: '\.tf$'
         exclude: ^.*/(provider|modules)(/.*)?$
         pass_filenames: true
         require_serial: true
+      - id: terraform_providers_lock_staged
+        name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
+        entry: infra/scripts/terraform_lock_precommit.sh
+        language: script
+        pass_filenames: false
+        verbose: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:
@@ -26,7 +32,9 @@ repos:
           - --hook-config=--create-file-if-not-exist=true
         exclude: |
           (?x)^(
-            infra/modules/.*?
+            infra/modules/.*?|
+            providers/.*?|
+            infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
             )$
       - id: terraform_tflint
         args:
@@ -39,7 +47,7 @@ repos:
           - --args=-json
           - --args=-no-color
           - --hook-config=--retry-once-with-cleanup=true
-        exclude: ^providers/.*
+        exclude: ^providers/.*|.*/examples?(/|$)
       - id: terraform_trivy
         args:
           - --args=--skip-dirs="**/.terraform"
