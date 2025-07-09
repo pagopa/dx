@@ -116,3 +116,42 @@ export const checkTurboConfig = async (
       "Turbo configuration is present in the monorepo root and turbo dependency is installed",
   });
 };
+
+export const checkWorkspaces =
+  (monorepoDir: string) =>
+  async (
+    dependencies: Pick<Dependencies, "repositoryReader">,
+  ): Promise<ValidationCheckResult> => {
+    const { repositoryReader } = dependencies;
+    const checkName = "Workspaces";
+
+    const workspacesResult = await repositoryReader.getWorkspaces(monorepoDir);
+    if (workspacesResult.isErr()) {
+      return ok({
+        checkName,
+        errorMessage:
+          "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
+        isValid: false,
+      });
+    }
+
+    const workspaces = workspacesResult.value;
+    const nonRootWorkspaces = workspaces.filter(
+      (workspace) => workspace.name !== "root",
+    );
+
+    if (nonRootWorkspaces.length === 0) {
+      return ok({
+        checkName,
+        errorMessage:
+          "No workspaces found in the repository. Make sure to have at least one workspace configured.",
+        isValid: false,
+      });
+    }
+
+    return ok({
+      checkName,
+      isValid: true,
+      successMessage: `Found ${nonRootWorkspaces.length} workspaces in the repository`,
+    });
+  };
