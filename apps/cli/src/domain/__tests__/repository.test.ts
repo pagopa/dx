@@ -1,7 +1,12 @@
 import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
+import {
+  checkPreCommitConfig,
+  checkTurboConfig,
+  checkWorkspaces,
+} from "../repository.js";
+import { workspaceSchema } from "../workspace.js";
 import { makeMockConfig, makeMockDependencies } from "./data.js";
 
 describe("checkPreCommitConfig", () => {
@@ -181,6 +186,94 @@ describe("checkTurboConfig", () => {
       if (validation.isValid) {
         expect(validation.successMessage).toBe(
           "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+        );
+      }
+    }
+  });
+});
+
+describe("checkWorkspaces", () => {
+  const monorepoDir = "/path/to/monorepo";
+
+  it("should return the list of workspaces, without counting the root workspace", async () => {
+    const deps = makeMockDependencies();
+
+    const workspaces = [
+      workspaceSchema.parse({
+        name: "root",
+        path: "/path/to/monorepo",
+      }),
+      workspaceSchema.parse({
+        name: "workspace1",
+        path: "/path/to/workspace1",
+      }),
+      workspaceSchema.parse({
+        name: "workspace2",
+        path: "/path/to/workspace2",
+      }),
+    ];
+
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok(workspaces));
+
+    const result = await checkWorkspaces(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(true);
+      expect(validation.checkName).toBe("Workspaces");
+      if (validation.isValid) {
+        expect(validation.successMessage).toBe(
+          "Found 2 workspaces in the repository",
+        );
+      }
+    }
+  });
+
+  it("should return the error message when no workspaces are found", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
+      ok([
+        workspaceSchema.parse({
+          name: "root",
+          path: "/path/to/monorepo",
+        }),
+      ]),
+    );
+
+    const result = await checkWorkspaces(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Workspaces");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          "No workspaces found in the repository. Make sure to have at least one workspace configured.",
+        );
+      }
+    }
+  });
+
+  it("should return error when getWorkspaces fails", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
+      err(new Error("Failed to get workspaces")),
+    );
+
+    const result = await checkWorkspaces(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Workspaces");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
         );
       }
     }
