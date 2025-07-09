@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 import { Dependencies } from "./dependencies.js";
 import { ValidationCheckResult } from "./validation.js";
+import { Workspace } from "./workspace.js";
 
 const ScriptName = z.string().brand<"ScriptName">();
 
@@ -28,6 +29,11 @@ export interface PackageJsonReader {
   ): ResultAsync<Dependency[], Error>;
   getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
+  /**
+   * Reads workspace configuration from package.json files (e.g., Yarn workspaces)
+   * and returns an array of Workspace objects.
+   */
+  getWorkspaces(cwd: string): ResultAsync<Workspace[], Error>;
 }
 
 export type RootRequiredScript = Pick<Script, "name">;

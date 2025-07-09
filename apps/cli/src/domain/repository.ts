@@ -11,6 +11,10 @@ export interface RepositoryReader {
   existsPreCommitConfig(repoRoot: string): Result<boolean, Error>;
   existsTurboConfig(repoRoot: string): Result<boolean, Error>;
   findRepositoryRoot(cwd: string): Result<string, Error>;
+  /**
+   * Reads workspace configuration from repository files (e.g., pnpm-workspace.yaml)
+   * and returns a list of workspace objects.
+   */
   getWorkspaces(repoRoot: string): ResultAsync<Workspace[], Error>;
 }
 

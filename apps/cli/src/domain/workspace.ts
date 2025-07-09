@@ -16,13 +16,21 @@ export type Workspace = z.infer<typeof workspaceSchema>;
 export const checkWorkspaces =
   (monorepoDir: string) =>
   async (
-    dependencies: Pick<Dependencies, "repositoryReader">,
+    dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
   ): Promise<ValidationCheckResult> => {
-    const { repositoryReader } = dependencies;
+    const { packageJsonReader, repositoryReader } = dependencies;
     const checkName = "Workspaces";
 
-    const workspacesResult = await repositoryReader.getWorkspaces(monorepoDir);
-    if (workspacesResult.isErr()) {
+    const [packageJsonWorkspacesResult, repositoryWorkspacesResult] =
+      await Promise.all([
+        packageJsonReader.getWorkspaces(monorepoDir),
+        repositoryReader.getWorkspaces(monorepoDir),
+      ]);
+
+    if (
+      repositoryWorkspacesResult.isErr() ||
+      packageJsonWorkspacesResult.isErr()
+    ) {
       return ok({
         checkName,
         errorMessage:
@@ -31,27 +39,39 @@ export const checkWorkspaces =
       });
     }
 
-    const workspaces = workspacesResult.value;
-    const nonRootWorkspaces = workspaces.filter(
-      ({ path }) => path !== monorepoDir,
-    );
+    const workspacesDefinedInFile = repositoryWorkspacesResult.value;
+    const workspacesDefinedInPackageJson = packageJsonWorkspacesResult.value;
 
-    if (nonRootWorkspaces.length === 0) {
+    const hasRepositoryWorkspaces = workspacesDefinedInFile.length > 0;
+    const hasPackageJsonWorkspaces = workspacesDefinedInPackageJson.length > 0;
+
+    if (!hasRepositoryWorkspaces && !hasPackageJsonWorkspaces) {
       return ok({
         checkName,
         errorMessage:
-          "No workspaces found in the repository. Make sure to have at least one workspace configured.",
+          "No workspace configuration found. Make sure to configure workspaces in either pnpm-workspace.yaml or package.json.",
         isValid: false,
       });
     }
 
-    const workspacesNumber = nonRootWorkspaces.length;
+    if (hasRepositoryWorkspaces || hasPackageJsonWorkspaces) {
+      const workspacesNumber = hasRepositoryWorkspaces
+        ? workspacesDefinedInFile.length
+        : workspacesDefinedInPackageJson.length;
+
+      return ok({
+        checkName,
+        isValid: true,
+        successMessage: `Found ${workspacesNumber} workspace${
+          workspacesNumber === 1 ? "" : "s"
+        }`,
+      });
+    }
 
     return ok({
       checkName,
-      isValid: true,
-      successMessage: `Found ${workspacesNumber} ${
-        workspacesNumber === 1 ? "workspace" : "workspaces"
-      } in the repository`,
+      errorMessage:
+        "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
+      isValid: false,
     });
   };
