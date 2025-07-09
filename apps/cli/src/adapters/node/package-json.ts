@@ -1,6 +1,4 @@
-import { Result, ResultAsync } from "neverthrow";
-import fs from "node:fs/promises";
-import { join } from "node:path";
+import { Result } from "neverthrow";
 import * as process from "node:process";
 
 import {
@@ -13,6 +11,7 @@ import {
   packageJsonSchema,
   scriptsArraySchema,
 } from "./codec.js";
+import { readFile } from "./fs/index.js";
 
 const toJSON = Result.fromThrowable(
   JSON.parse,
@@ -35,36 +34,24 @@ const toDependenciesArray = Result.fromThrowable(
 );
 
 export const makePackageJsonReader = (): PackageJsonReader => ({
-  getDependencies: (cwd = process.cwd(), type) => {
-    const packageJsonPath = join(cwd, "package.json");
-
-    return ResultAsync.fromPromise(
-      fs.readFile(packageJsonPath, "utf-8"),
-      () => new Error("Failed to read package.json"),
-    )
+  getDependencies: (cwd = process.cwd(), type) =>
+    readFile(cwd, "package.json")
       .andThen(toJSON)
       .andThen(toPackageJson)
       .map((packageJson) => {
         const key = type === "dev" ? "devDependencies" : "dependencies";
         return packageJson[key];
       })
-      .andThen(toDependenciesArray);
-  },
+      .andThen(toDependenciesArray),
 
   getRootRequiredScripts: (): RootRequiredScript[] => [
     { name: "code-review" as Script["name"] },
   ],
 
-  getScripts: (cwd = process.cwd()) => {
-    const packageJsonPath = join(cwd, "package.json");
-
-    return ResultAsync.fromPromise(
-      fs.readFile(packageJsonPath, "utf-8"),
-      () => new Error("Failed to read package.json"),
-    )
+  getScripts: (cwd = process.cwd()) =>
+    readFile(cwd, "package.json")
       .andThen(toJSON)
       .andThen(toPackageJson)
       .map(({ scripts }) => scripts)
-      .andThen(toScriptsArray);
-  },
+      .andThen(toScriptsArray),
 });
