@@ -43,8 +43,9 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name   = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
-  policy = data.aws_iam_policy_document.lambda_policy.json
+  name        = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
+  description = "IAM policy for OpenNext ISR revalidation lambda function to enable X-Ray tracing, DynamoDB ISR tag operations, and SQS message processing"
+  policy      = data.aws_iam_policy_document.lambda_policy.json
 
   tags = var.tags
 }
