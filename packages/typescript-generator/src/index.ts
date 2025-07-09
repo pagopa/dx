@@ -258,7 +258,7 @@ export function createInstallDependenciesAction(
         dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
       );
 
-      execSync(`pnpm add -D ${sanitizedDependencies.join(" ")}`, {
+      execFileSync("pnpm", ["add", "-D", ...sanitizedDependencies], {
         cwd: packagePath,
         stdio: "inherit",
       });
