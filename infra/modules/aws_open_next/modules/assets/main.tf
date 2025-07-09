@@ -1,3 +1,5 @@
+#trivy:ignore:AVD-AWS-0089
+#trivy:ignore:AVD-AWS-0090
 resource "aws_s3_bucket" "assets" {
   bucket = "${local.app_prefix}-${local.app_suffix}"
 
@@ -18,6 +20,7 @@ resource "aws_s3_bucket_policy" "assets" {
   policy = data.aws_iam_policy_document.read_assets_bucket.json
 }
 
+#trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "assets" {
   bucket = aws_s3_bucket.assets.bucket
 

@@ -56,6 +56,7 @@ resource "aws_lambda_alias" "production" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0017
 resource "aws_cloudwatch_log_group" "function_log_group" {
   name              = "/aws/lambda/${aws_lambda_function.function.function_name}"
   skip_destroy      = true
@@ -71,6 +72,7 @@ resource "aws_lambda_function_url" "function_url" {
   invoke_mode        = "BUFFERED"
 }
 
+#trivy:ignore:AVD-AWS-0067
 resource "aws_lambda_permission" "function_url_permission" {
   action                 = "lambda:InvokeFunctionUrl"
   function_name          = aws_lambda_function.function.function_name

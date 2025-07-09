@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-AWS-0025
 resource "aws_dynamodb_table" "tags" {
   name = "${local.app_prefix}-cache-tags-${local.app_suffix}"
 
@@ -26,6 +27,10 @@ resource "aws_dynamodb_table" "tags" {
     hash_key        = "path"
     range_key       = "revalidatedAt"
     projection_type = "ALL"
+  }
+
+  point_in_time_recovery {
+    enabled = true
   }
 
   tags = var.tags

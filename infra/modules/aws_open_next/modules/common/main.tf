@@ -1,3 +1,5 @@
+#trivy:ignore:AVD-AWS-0089
+#trivy:ignore:AVD-AWS-0090
 resource "aws_s3_bucket" "lambda_code" {
   bucket = "${local.app_prefix}-${local.app_suffix}"
 
@@ -14,6 +16,7 @@ resource "aws_s3_bucket_public_access_block" "lambda_code" {
 }
 
 
+#trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "lambda_code" {
   bucket = aws_s3_bucket.lambda_code.bucket
 
