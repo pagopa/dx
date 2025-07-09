@@ -142,19 +142,19 @@ This action is written in TypeScript and uses the following key dependencies:
 
 ```bash
 # Install dependencies
-yarn install
+pnpm install
 
 # Build the action
-yarn build
+pnpm build
 
 # Type check
-yarn typecheck
+pnpm typecheck
 
 # Lint
-yarn lint
+pnpm lint
 
 # Format
-yarn format
+pnpm format
 ```
 
 ### Local Development
