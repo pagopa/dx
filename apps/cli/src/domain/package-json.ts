@@ -11,12 +11,26 @@ export const scriptSchema = z.object({
   script: z.string(),
 });
 
+const DependencyName = z.string().brand<"DependencyName">();
+
+export const dependencySchema = z.object({
+  name: DependencyName,
+  version: z.string(),
+});
+
+export type Dependency = z.infer<typeof dependencySchema>;
+export type DependencyName = z.infer<typeof DependencyName>;
+
 export interface PackageJsonReader {
+  getDependencies(
+    cwd: string,
+    type: "dev" | "prod",
+  ): ResultAsync<Dependency[], Error>;
   getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
 }
-export type RootRequiredScript = Pick<Script, "name">;
 
+export type RootRequiredScript = Pick<Script, "name">;
 export type Script = z.infer<typeof scriptSchema>;
 
 const findMissingScripts = (

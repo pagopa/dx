@@ -34,7 +34,22 @@ const existsPreCommitConfig = (repoRoot: string): Result<boolean, Error> => {
   );
 };
 
+const existsTurboConfig = (repoRoot: string): Result<boolean, Error> => {
+  const fileName = "turbo.json";
+  const turboPath = join(repoRoot, fileName);
+  if (existsSync(turboPath)) {
+    return ok(true);
+  }
+
+  return err(
+    new Error(
+      `${fileName} not found in repository root. Make sure to have Turbo configured for the monorepo.`,
+    ),
+  );
+};
+
 export const makeRepositoryReader = (): RepositoryReader => ({
   existsPreCommitConfig: existsPreCommitConfig,
+  existsTurboConfig: existsTurboConfig,
   findRepositoryRoot: findRoot,
 });
