@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { RepositoryReader } from "../../domain/repository.js";
 import { fileExists } from "./fs/file-reader.js";
+import { Workspace } from "../../domain/workspace.js";
 
 const findRoot = (dir: string): ResultAsync<string, Error> => {
   const gitPath = join(dir, ".git");
@@ -32,8 +33,17 @@ const existsTurboConfig = (repoRoot: string): ResultAsync<boolean, Error> =>
       ),
   );
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getWorkspaces = (_repoRoot: string): ResultAsync<Workspace[], Error> =>
+  // TODO: Implement this. For now, we're returning an empty array.
+  ResultAsync.fromPromise(
+    Promise.resolve([]),
+    () => new Error("Failed to get workspaces"),
+  );
+
 export const makeRepositoryReader = (): RepositoryReader => ({
   existsPreCommitConfig,
   existsTurboConfig,
   findRepositoryRoot: findRoot,
+  getWorkspaces: getWorkspaces,
 });
