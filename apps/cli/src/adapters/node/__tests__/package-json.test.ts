@@ -1,4 +1,3 @@
-import { ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -179,26 +178,6 @@ describe("makePackageJsonReader", () => {
       if (result.isErr()) {
         expect(result.error.message).toContain("Failed to read package.json");
       }
-    });
-  });
-
-  describe("getWorkspaces", () => {
-    beforeEach(() => {
-      vi.clearAllMocks();
-    });
-
-    const directory = "/some/dir";
-
-    it("should return an empty array when no workspaces exist", async () => {
-      const mockPackageJson = makeMockPackageJson({ workspaces: undefined });
-      const packageJson = JSON.stringify(mockPackageJson);
-
-      vi.spyOn(fs, "readFile").mockResolvedValueOnce(packageJson);
-
-      const packageJsonReader = makePackageJsonReader();
-      const result = await packageJsonReader.getWorkspaces(directory);
-
-      expect(result).toStrictEqual(ok([]));
     });
   });
 });

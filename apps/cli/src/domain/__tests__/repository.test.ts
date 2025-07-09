@@ -230,7 +230,6 @@ describe("checkWorkspaces", () => {
     deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
       ok(validWorkspaces),
     );
-    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
@@ -251,7 +250,6 @@ describe("checkWorkspaces", () => {
     deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
       err(new Error("Failed to get workspaces")),
     );
-    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
@@ -268,11 +266,10 @@ describe("checkWorkspaces", () => {
     }
   });
 
-  it("should return success when only package.json workspaces are found", async () => {
+  it("should return success when workspaces are found", async () => {
     const deps = makeMockDependencies();
 
-    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok([]));
-    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
       ok([validWorkspaces[0]]),
     );
 
@@ -293,7 +290,6 @@ describe("checkWorkspaces", () => {
     const deps = makeMockDependencies();
 
     deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok([]));
-    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
@@ -304,7 +300,7 @@ describe("checkWorkspaces", () => {
       expect(validation.checkName).toBe("Workspaces");
       if (!validation.isValid) {
         expect(validation.errorMessage).toBe(
-          "No workspace configuration found. Make sure to configure workspaces in either pnpm-workspace.yaml or package.json.",
+          "No workspace configuration found. Make sure to configure workspaces in pnpm-workspace.yaml.",
         );
       }
     }
