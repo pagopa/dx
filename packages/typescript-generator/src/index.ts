@@ -258,7 +258,7 @@ export function createInstallDependenciesAction(
         dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
       );
 
-      execSync(`yarn add -D ${sanitizedDependencies.join(" ")}`, {
+      execSync(`pnpm add -D ${sanitizedDependencies.join(" ")}`, {
         cwd: packagePath,
         stdio: "inherit",
       });

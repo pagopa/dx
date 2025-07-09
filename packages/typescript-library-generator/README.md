@@ -15,7 +15,7 @@ A PlopJS generator for creating TypeScript libraries in the DX monorepo that fol
 From non-DX repositories:
 
 ```bash
-yarn add -D @pagopa/typescript-library-generator
+pnpm add -D @pagopa/typescript-library-generator
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ yarn add -D @pagopa/typescript-library-generator
 When using in the DX monorepo, you can run the generator directly from the root directory:
 
 ```bash
-yarn run turbo gen typescript-library-generator
+pnpm run turbo gen typescript-library-generator
 ```
 
 ## Generators
