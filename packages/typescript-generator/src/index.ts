@@ -7,8 +7,8 @@
 
 import type { ActionType, NodePlopAPI } from "plop";
 
-import { execSync } from "node:child_process";
-import path from "node:path";
+import { execSync, execFileSync } from "node:child_process";
+import * as path from "node:path";
 
 /**
  * Get the git repository URL from the current git remote
