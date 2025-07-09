@@ -191,26 +191,24 @@ describe("checkTurboConfig", () => {
 
 describe("checkWorkspaces", () => {
   const monorepoDir = "/path/to/monorepo";
+  const validWorkspaces = [
+    workspaceSchema.parse({
+      name: "workspace1",
+      path: "/path/to/workspace1",
+    }),
+    workspaceSchema.parse({
+      name: "workspace2",
+      path: "/path/to/workspace2",
+    }),
+  ];
 
-  it("should return the list of workspaces, without counting the root workspace", async () => {
+  it("should return the list of workspaces", async () => {
     const deps = makeMockDependencies();
 
-    const workspaces = [
-      workspaceSchema.parse({
-        name: "root",
-        path: "/path/to/monorepo",
-      }),
-      workspaceSchema.parse({
-        name: "workspace1",
-        path: "/path/to/workspace1",
-      }),
-      workspaceSchema.parse({
-        name: "workspace2",
-        path: "/path/to/workspace2",
-      }),
-    ];
-
-    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok(workspaces));
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
+      ok(validWorkspaces),
+    );
+    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
@@ -220,36 +218,7 @@ describe("checkWorkspaces", () => {
       expect(validation.isValid).toBe(true);
       expect(validation.checkName).toBe("Workspaces");
       if (validation.isValid) {
-        expect(validation.successMessage).toBe(
-          "Found 2 workspaces in the repository",
-        );
-      }
-    }
-  });
-
-  it("should return the error message when no workspaces are found", async () => {
-    const deps = makeMockDependencies();
-
-    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
-      ok([
-        workspaceSchema.parse({
-          name: "root",
-          path: "/path/to/monorepo",
-        }),
-      ]),
-    );
-
-    const result = await checkWorkspaces(monorepoDir)(deps);
-
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Workspaces");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
-          "No workspaces found in the repository. Make sure to have at least one workspace configured.",
-        );
+        expect(validation.successMessage).toBe("Found 2 workspaces");
       }
     }
   });
@@ -260,6 +229,7 @@ describe("checkWorkspaces", () => {
     deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(
       err(new Error("Failed to get workspaces")),
     );
+    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
@@ -271,6 +241,48 @@ describe("checkWorkspaces", () => {
       if (!validation.isValid) {
         expect(validation.errorMessage).toBe(
           "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
+        );
+      }
+    }
+  });
+
+  it("should return success when only package.json workspaces are found", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok([]));
+    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(
+      ok([validWorkspaces[0]]),
+    );
+
+    const result = await checkWorkspaces(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(true);
+      expect(validation.checkName).toBe("Workspaces");
+      if (validation.isValid) {
+        expect(validation.successMessage).toBe("Found 1 workspace");
+      }
+    }
+  });
+
+  it("should return error when no workspace configuration is found", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok([]));
+    deps.packageJsonReader.getWorkspaces.mockResolvedValueOnce(ok([]));
+
+    const result = await checkWorkspaces(monorepoDir)(deps);
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const validation = result.value;
+      expect(validation.isValid).toBe(false);
+      expect(validation.checkName).toBe("Workspaces");
+      if (!validation.isValid) {
+        expect(validation.errorMessage).toBe(
+          "No workspace configuration found. Make sure to configure workspaces in either pnpm-workspace.yaml or package.json.",
         );
       }
     }
