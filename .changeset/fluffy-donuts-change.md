@@ -1,5 +1,5 @@
 ---
-"@pagopa/pr-comment-action": minor
+"pr-comment-action": minor
 ---
 
 Refactor PR Comment Action to TypeScript and update workflows
