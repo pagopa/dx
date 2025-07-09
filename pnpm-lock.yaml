@@ -66,6 +66,12 @@ importers:
         specifier: 'catalog:'
         version: 3.6.2
 
+  actions/incremental-rollout-appservice:
+    devDependencies:
+      prettier:
+        specifier: 3.6.2
+        version: 3.6.2
+
   apps/cli:
     dependencies:
       '@logtape/logtape':
