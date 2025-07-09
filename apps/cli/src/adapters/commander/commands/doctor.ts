@@ -2,9 +2,13 @@ import { getLogger } from "@logtape/logtape";
 import { Command } from "commander";
 import * as process from "node:process";
 
+import { Config } from "../../../config.js";
 import { Dependencies } from "../../../domain/dependencies.js";
 import { checkMonorepoScripts } from "../../../domain/package-json.js";
-import { checkPreCommitConfig } from "../../../domain/repository.js";
+import {
+  checkPreCommitConfig,
+  checkTurboConfig,
+} from "../../../domain/repository.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
@@ -13,6 +17,7 @@ type DoctorDependencies = Pick<
 
 export const makeDoctorCommand = (
   dependencies: DoctorDependencies,
+  config: Config,
 ): Command => {
   const logger = getLogger(["dx-cli", "doctor"]);
 
@@ -37,6 +42,13 @@ export const makeDoctorCommand = (
         repositoryReader,
       });
       validationReporter.reportValidationResult(preCommitResult);
+
+      logger.info("Checking Turbo configuration...");
+      const turboResult = await checkTurboConfig(repoRoot)(
+        dependencies,
+        config,
+      );
+      validationReporter.reportValidationResult(turboResult);
 
       logger.info("Checking monorepo scripts...");
       const result = await checkMonorepoScripts(repoRoot)(dependencies);

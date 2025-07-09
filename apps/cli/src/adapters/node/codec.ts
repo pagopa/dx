@@ -1,15 +1,14 @@
 import { z } from "zod/v4";
 
-import { scriptSchema } from "../../domain/package-json.js";
+import { dependencySchema, scriptSchema } from "../../domain/package-json.js";
 
 const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
 
-/**
- * Schema for validating a package.json file.
- * It expects a `name` field and an optional `scripts` field,
- * which is a record of script names to their commands.
- */
+const dependenciesRecordSchema = z.record(z.string(), z.string()).optional();
+
 export const packageJsonSchema = z.object({
+  dependencies: dependenciesRecordSchema,
+  devDependencies: dependenciesRecordSchema,
   name: z.string().min(1),
   scripts: scriptsRecordSchema,
 });
@@ -25,3 +24,18 @@ export const scriptsArraySchema = scriptsRecordSchema.transform((obj) =>
       )
     : [],
 );
+
+/**
+ * Transform a dependencies object (if present) into an array of Dependency objects.
+ * If the record is not present, it returns an empty array.
+ */
+export const dependenciesArraySchema = dependenciesRecordSchema.transform(
+  (obj) =>
+    obj
+      ? Object.entries(obj).map(([name, version]) =>
+          dependencySchema.parse({ name, version }),
+        )
+      : [],
+);
+
+export type PackageJson = z.infer<typeof packageJsonSchema>;
