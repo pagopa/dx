@@ -21,10 +21,9 @@ export const checkWorkspaces =
     const { repositoryReader } = dependencies;
     const checkName = "Workspaces";
 
-    const repositoryWorkspacesResult =
-      await repositoryReader.getWorkspaces(monorepoDir);
+    const workspacesResult = await repositoryReader.getWorkspaces(monorepoDir);
 
-    if (repositoryWorkspacesResult.isErr()) {
+    if (workspacesResult.isErr()) {
       return ok({
         checkName,
         errorMessage:
@@ -33,9 +32,9 @@ export const checkWorkspaces =
       });
     }
 
-    const workspaces = repositoryWorkspacesResult.value;
+    const { length: workspaceNumber } = workspacesResult.value;
 
-    if (workspaces.length === 0) {
+    if (workspaceNumber === 0) {
       return ok({
         checkName,
         errorMessage:
@@ -47,8 +46,8 @@ export const checkWorkspaces =
     return ok({
       checkName,
       isValid: true,
-      successMessage: `Found ${workspaces.length} workspace${
-        workspaces.length === 1 ? "" : "s"
+      successMessage: `Found ${workspaceNumber} workspace${
+        workspaceNumber === 1 ? "" : "s"
       }`,
     });
   };
