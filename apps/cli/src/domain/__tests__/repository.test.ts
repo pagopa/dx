@@ -18,17 +18,14 @@ describe("checkPreCommitConfig", () => {
 
     const result = await checkPreCommitConfig(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Pre-commit Configuration");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe(
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Pre-commit Configuration",
+        isValid: true,
+        successMessage:
           "Pre-commit configuration is present in the repository root",
-        );
-      }
-    }
+      }),
+    );
   });
 
   it("should return ok result with failed validation when .pre-commit-config.yaml does not exist", async () => {
@@ -42,15 +39,13 @@ describe("checkPreCommitConfig", () => {
 
     const result = await checkPreCommitConfig(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Pre-commit Configuration");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(errorMessage);
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Pre-commit Configuration",
+        errorMessage,
+        isValid: false,
+      }),
+    );
   });
 });
 
@@ -68,17 +63,14 @@ describe("checkTurboConfig", () => {
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe(
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        isValid: true,
+        successMessage:
           "Turbo configuration is present in the monorepo root and turbo dependency is installed",
-        );
-      }
-    }
+      }),
+    );
   });
 
   it("should return ok result with failed validation when turbo.json exists but turbo dependency is missing", async () => {
@@ -91,17 +83,14 @@ describe("checkTurboConfig", () => {
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        errorMessage:
           "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
-        );
-      }
-    }
+        isValid: false,
+      }),
+    );
   });
 
   it("should return ok result with failed validation when turbo.json does not exist", async () => {
@@ -115,15 +104,13 @@ describe("checkTurboConfig", () => {
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(errorMessage);
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        errorMessage,
+        isValid: false,
+      }),
+    );
   });
 
   it("should return the error message when turbo is not listed in devDependencies", async () => {
@@ -133,17 +120,15 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        errorMessage:
           "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
-        );
-      }
-    }
+        isValid: false,
+      }),
+    );
   });
 
   it("should return the error message when turbo version is less than minimum", async () => {
@@ -153,17 +138,14 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("turbo", "1.0.0")),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
-          `Turbo version (1.0.0) is too low. Minimum required version is ${config.minVersions.turbo}.`,
-        );
-      }
-    }
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        errorMessage: `Turbo version (1.0.0) is too low. Minimum required version is ${config.minVersions.turbo}.`,
+        isValid: false,
+      }),
+    );
   });
 
   it("should return the success message when turbo version is ok", async () => {
@@ -173,17 +155,15 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("turbo", config.minVersions.turbo)),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Turbo Configuration");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe(
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Turbo Configuration",
+        isValid: true,
+        successMessage:
           "Turbo configuration is present in the monorepo root and turbo dependency is installed",
-        );
-      }
-    }
+      }),
+    );
   });
 });
 
@@ -209,15 +189,13 @@ describe("checkWorkspaces", () => {
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Workspaces");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe("Found 2 workspaces");
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Workspaces",
+        isValid: true,
+        successMessage: "Found 2 workspaces",
+      }),
+    );
   });
 
   it("should return error when getWorkspaces fails", async () => {
@@ -229,17 +207,14 @@ describe("checkWorkspaces", () => {
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Workspaces");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Workspaces",
+        errorMessage:
           "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
-        );
-      }
-    }
+        isValid: false,
+      }),
+    );
   });
 
   it("should return success when workspaces are found", async () => {
@@ -251,15 +226,13 @@ describe("checkWorkspaces", () => {
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Workspaces");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe("Found 1 workspace");
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Workspaces",
+        isValid: true,
+        successMessage: "Found 1 workspace",
+      }),
+    );
   });
 
   it("should return error when no workspace configuration is found", async () => {
@@ -269,16 +242,13 @@ describe("checkWorkspaces", () => {
 
     const result = await checkWorkspaces(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Workspaces");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toBe(
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Workspaces",
+        errorMessage:
           "No workspace configuration found. Make sure to configure workspaces in pnpm-workspace.yaml.",
-        );
-      }
-    }
+        isValid: false,
+      }),
+    );
   });
 });
