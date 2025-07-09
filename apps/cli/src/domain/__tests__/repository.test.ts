@@ -2,11 +2,8 @@ import { err, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { DependencyName } from "../package-json.js";
-import {
-  checkPreCommitConfig,
-  checkTurboConfig,
-  checkWorkspaces,
-} from "../repository.js";
+import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
+import { checkWorkspaces } from "../workspace.js";
 import { workspaceSchema } from "../workspace.js";
 import { makeMockConfig, makeMockDependencies } from "./data.js";
 
