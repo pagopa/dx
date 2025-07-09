@@ -35,8 +35,4 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
-  "[handlebars]": {
-    "editor.defaultFormatter": null
-  },
-  "eslint.nodePath": ".yarn/sdks"
 }
