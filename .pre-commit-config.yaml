@@ -33,7 +33,8 @@ repos:
         exclude: |
           (?x)^(
             infra/modules/.*?|
-            providers/.*?
+            providers/.*?|
+            infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
             )$
       - id: terraform_tflint
         args:

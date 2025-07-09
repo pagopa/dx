@@ -15,6 +15,5 @@ locals {
     Environment    = "Prod"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/core/prod"
     ManagementTeam = "Developer Experience"
-    TestName       = "Create Azure core resources for prod DEVEX environment"
   }
 }

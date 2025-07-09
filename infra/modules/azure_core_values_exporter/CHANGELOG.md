@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.1.0
+
+### Minor Changes
+
+- c93e73f: Add application insights resource
+
 ## 0.0.2
 
 ### Patch Changes

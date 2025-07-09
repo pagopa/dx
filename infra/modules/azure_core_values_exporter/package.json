@@ -1,6 +1,6 @@
 {
   "name": "azure_core_values_exporter",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "private": true,
   "provider": "azurerm",
   "description": "Allow to output the main core values of configurations deployed via azure-core-infra module"

@@ -16,6 +16,5 @@ locals {
     Environment    = "Dev"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/bootstrapper/dev"
     ManagementTeam = "Developer Experience"
-    TestName       = "Create Azure Github environment bootstrap for test"
   }
 }
