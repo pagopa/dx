@@ -11,5 +11,5 @@ export default defineConfig({
   bundle: true,
   platform: "node",
   noExternal: [/.*/],
-  treeshake: true
+  treeshake: true,
 });
