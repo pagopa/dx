@@ -34,4 +34,17 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
 
     return readFileAndDecode(packageJsonPath, packageJsonSchema);
   },
+
+  // TODO: Improve this. For now this returns an empty array.
+  getWorkspaces: (cwd = process.cwd()) => {
+    const packageJsonPath = join(cwd, "package.json");
+
+    return ResultAsync.fromPromise(
+      fs.readFile(packageJsonPath, "utf-8"),
+      () => new Error("Failed to read package.json"),
+    )
+      .andThen(toJSON)
+      .andThen(toPackageJson)
+      .map(() => []);
+  },
 });
