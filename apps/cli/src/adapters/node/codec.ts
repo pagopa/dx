@@ -11,6 +11,7 @@ export const packageJsonSchema = z.object({
   devDependencies: dependenciesRecordSchema,
   name: z.string().min(1),
   scripts: scriptsRecordSchema,
+  workspaces: z.array(z.string()).optional(),
 });
 
 /**
