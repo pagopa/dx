@@ -48,13 +48,13 @@ module "bootstrap" {
   tags                          = var.tags
 }
 
-# resource "github_actions_environment_secret" "appi_instrumentation_key" {
-#   count           = var.environment.env_short == "p" ? 1 : 0
-#   repository      = var.repository.name
-#   environment     = "github-pages"
-#   secret_name     = "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY"
-#   plaintext_value = data.azurerm_key_vault_secret.appinsights_instrumentation_key.value
-# }
+resource "github_actions_environment_secret" "appi_instrumentation_key" {
+  count           = var.environment.env_short == "p" ? 1 : 0
+  repository      = var.repository.name
+  environment     = "github-pages"
+  secret_name     = "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY"
+  plaintext_value = data.azurerm_key_vault_secret.appinsights_instrumentation_key[0].value
+}
 
 resource "azurerm_role_assignment" "user_access_administrator" {
   count                = var.environment.env_short == "d" ? 1 : 0
@@ -115,8 +115,21 @@ resource "azurerm_role_assignment" "contributor" {
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
 
+resource "azurerm_key_vault_secret" "codecov_token" {
+  name         = "codecov-token"
+  value        = "Dummy to be replaced"
+  key_vault_id = module.core_values.common_key_vault.id
+
+  lifecycle {
+    ignore_changes = [
+      value
+    ]
+  }
+}
+
 resource "github_actions_secret" "codecov_token" {
+  count           = var.environment.env_short == "d" ? 1 : 0
   repository      = var.repository.name
   secret_name     = "CODECOV_TOKEN"
-  plaintext_value = data.azurerm_key_vault_secret.codecov_token.value
+  plaintext_value = azurerm_key_vault_secret.codecov_token.value
 }
