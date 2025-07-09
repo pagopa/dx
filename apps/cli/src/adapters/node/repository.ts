@@ -2,6 +2,7 @@ import { ResultAsync } from "neverthrow";
 import { join } from "node:path";
 
 import { RepositoryReader } from "../../domain/repository.js";
+import { Workspace } from "../../domain/workspace.js";
 import { fileExists, readFile } from "./fs/file-reader.js";
 
 const findRepositoryRoot = (
@@ -18,8 +19,17 @@ const findRepositoryRoot = (
     .map(() => dir);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getWorkspaces = (_repoRoot: string): ResultAsync<Workspace[], Error> =>
+  // TODO: Implement this. For now, we're returning an empty array.
+  ResultAsync.fromPromise(
+    Promise.resolve([]),
+    () => new Error("Failed to get workspaces"),
+  );
+
 export const makeRepositoryReader = (): RepositoryReader => ({
   fileExists,
   findRepositoryRoot,
+  getWorkspaces: getWorkspaces,
   readFile,
 });
