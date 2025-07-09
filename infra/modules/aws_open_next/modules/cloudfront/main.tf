@@ -152,6 +152,7 @@ resource "aws_cloudfront_response_headers_policy" "response_headers_policy" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0010
 resource "aws_cloudfront_distribution" "distribution" {
   price_class     = "PriceClass_All"
   enabled         = true

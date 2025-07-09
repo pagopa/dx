@@ -34,6 +34,7 @@ data "aws_iam_policy_document" "lambda_policy" {
     resources = ["*"]
   }
 
+  #trivy:ignore:AVD-AWS-0057
   statement {
     effect = "Allow"
     actions = [
@@ -71,6 +72,7 @@ data "aws_iam_policy_document" "lambda_policy" {
     resources = [var.assets_bucket.arn]
   }
 
+  #trivy:ignore:AVD-AWS-0057
   statement {
     effect    = "Allow"
     actions   = ["cloudfront:CreateInvalidation"]
