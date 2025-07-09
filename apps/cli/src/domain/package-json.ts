@@ -31,7 +31,7 @@ export interface PackageJsonReader {
   getScripts(cwd: string): ResultAsync<Script[], Error>;
   /**
    * Reads workspace configuration from package.json files (e.g., Yarn workspaces)
-   * and returns an array of Workspace objects.
+   * and returns an array of workspace objects.
    */
   getWorkspaces(cwd: string): ResultAsync<Workspace[], Error>;
 }
