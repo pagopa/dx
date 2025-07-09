@@ -41,8 +41,9 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name   = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
-  policy = data.aws_iam_policy_document.lambda_policy.json
+  name        = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
+  description = "IAM policy for OpenNext initialization lambda function to enable X-Ray tracing and DynamoDB operations for ISR tag initialization"
+  policy      = data.aws_iam_policy_document.lambda_policy.json
 
   tags = var.tags
 }

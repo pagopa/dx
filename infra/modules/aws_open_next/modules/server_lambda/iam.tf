@@ -79,8 +79,9 @@ data "aws_iam_policy_document" "lambda_policy" {
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name   = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
-  policy = data.aws_iam_policy_document.lambda_policy.json
+  name        = "${local.app_prefix}-lambda-policy-${local.app_suffix}"
+  description = "IAM policy for OpenNext server lambda function with comprehensive permissions for X-Ray tracing, DynamoDB ISR operations, SQS messaging, S3 asset management, and CloudFront invalidation"
+  policy      = data.aws_iam_policy_document.lambda_policy.json
 
   tags = var.tags
 }
