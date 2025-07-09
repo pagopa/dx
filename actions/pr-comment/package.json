@@ -1,5 +1,5 @@
 {
-  "name": "@pagopa/pr-comment-action",
+  "name": "pr-comment-action",
   "type": "module",
   "version": "0.0.0",
   "description": "TypeScript action for creating and managing PR comments",
@@ -23,7 +23,6 @@
     "comment",
     "typescript"
   ],
-  "author": "PagoPA DX Team",
   "license": "UNLICENSED",
   "dependencies": {
     "@actions/core": "^1.11.1",
