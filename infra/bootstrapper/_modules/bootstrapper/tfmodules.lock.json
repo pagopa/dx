@@ -18,10 +18,10 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm/1.1.0"
   },
   "core_values": {
-    "hash": "3ebcf48e27544296a5cefc458ae7bd442df7c768a4b1601d08533602b7ee842c",
-    "version": "0.0.2",
+    "hash": "6ad7adf52a4bbeaa42e540890daf8e9ddcfd9ffc471f9b550f2481bbf2ba4ddc",
+    "version": "0.1.0",
     "name": "azure_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.0.2"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.1.0"
   },
   "roles_cd": {
     "hash": "433fe44b2863b8af8d4f4206ee2590599b0cb67d78b372e65d68317d3199aaa1",

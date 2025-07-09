@@ -15,4 +15,5 @@ resource "aws_lambda_permission" "allow_execution_from_eventbridge" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_alias.production.arn
   principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.scheduled_lambda_event_rule.arn
 }
