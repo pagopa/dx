@@ -136,7 +136,7 @@ export const checkWorkspaces =
 
     const workspaces = workspacesResult.value;
     const nonRootWorkspaces = workspaces.filter(
-      (workspace) => workspace.name !== "root",
+      ({ path }) => path !== monorepoDir,
     );
 
     if (nonRootWorkspaces.length === 0) {
@@ -148,9 +148,13 @@ export const checkWorkspaces =
       });
     }
 
+    const workspacesNumber = nonRootWorkspaces.length;
+
     return ok({
       checkName,
       isValid: true,
-      successMessage: `Found ${nonRootWorkspaces.length} workspaces in the repository`,
+      successMessage: `Found ${workspacesNumber} ${
+        workspacesNumber === 1 ? "workspace" : "workspaces"
+      } in the repository`,
     });
   };
