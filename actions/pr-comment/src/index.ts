@@ -8,7 +8,7 @@
 import { getInput, info, setFailed, setOutput, warning } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 import { readFileSync } from "fs";
-import { relative, resolve } from "path";
+import { resolve } from "path";
 
 /**
  * Input parameters for the PR comment action
