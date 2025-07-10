@@ -1,5 +1,13 @@
 # pr-comment-action
 
+## 0.1.1
+
+### Patch Changes
+
+- b8ef216: Set private property to true
+
+  This package does not need to be published to npm registry.
+
 ## 0.1.0
 
 ### Minor Changes
