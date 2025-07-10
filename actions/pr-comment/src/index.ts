@@ -251,7 +251,6 @@ function validateFilePath(filePath: string): void {
     "/sys/",
     "/.ssh/",
     "/.env",
-    "/tmp/",
     "id_rsa",
     "id_dsa",
     "authorized_keys",
