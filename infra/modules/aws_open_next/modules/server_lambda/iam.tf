@@ -28,10 +28,27 @@ resource "aws_iam_role_policy_attachment" "s3_read_only" {
 }
 
 data "aws_iam_policy_document" "lambda_policy" {
+
   statement {
     effect    = "Allow"
     actions   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
     resources = ["*"]
+  }
+
+  # Allow Lambda to manage network interfaces if running in a VPC
+  dynamic "statement" {
+    for_each = var.vpc != null ? [1] : []
+    content {
+      effect = "Allow"
+      actions = [
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
+      ]
+      resources = ["*"]
+    }
   }
 
   #trivy:ignore:AVD-AWS-0057
