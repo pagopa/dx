@@ -7,7 +7,7 @@ A template for Node.js projects
 | Options Id       | Description                     | Type   | Default Value |
 | ---------------- | ------------------------------- | ------ | ------------- |
 | projectName      | The name of the project         | string | undefined     |
-| nodeVersion      | The version of Node.js to use   | string | 22            |
+| nodeVersion      | The version of Node.js to use   | string | 20            |
 | terraformVersion | The version of Terraform to use | string | latest        |
 
 ---
