@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.2.2
+
+### Patch Changes
+
+- 2a6b261: Improve `doctor` command to verify `turbo` configuration
+
+  When running the `doctor` command, the CLI now verifies that the `turbo.json` file exists and that the `turbo` version is valid.
+
 ## 0.2.1
 
 ### Patch Changes
