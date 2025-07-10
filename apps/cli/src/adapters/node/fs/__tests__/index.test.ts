@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { readFile } from "./index.js";
+import { readFile } from "../index.js";
 
 describe("readFile", () => {
   const directory = "/some/directory";
