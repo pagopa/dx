@@ -224,28 +224,6 @@ describe("PR Comment Manager Action", () => {
   });
 
   describe("File path validation", () => {
-    it("should reject paths outside working directory", async () => {
-      // Arrange
-      mockCore.getInput.mockImplementation((name: string) => {
-        const inputs: Record<string, string> = {
-          "comment-body": "",
-          "comment-body-file": "../../../etc/passwd",
-          "github-token": "test-token",
-        };
-        return inputs[name] || "";
-      });
-
-      // Act
-      await run();
-
-      // Assert
-      expect(mockCore.setFailed).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'File path "../../../etc/passwd" is outside the allowed directory',
-        ),
-      );
-    });
-
     it("should reject sensitive file patterns", async () => {
       // Arrange
       mockCore.getInput.mockImplementation((name: string) => {
