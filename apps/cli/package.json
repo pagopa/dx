@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node20": "catalog:",
+    "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "^7.7.0",
     "@vitest/coverage-v8": "catalog:",
