@@ -64,7 +64,7 @@ export function createInstallDependenciesAction(
 
     const baseDependencies = [
       "@pagopa/eslint-config",
-      "@tsconfig/node20",
+      "@tsconfig/node22",
       "@types/node",
       "eslint@^8.0.0",
       "prettier",
