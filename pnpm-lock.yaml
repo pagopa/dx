@@ -41,6 +41,9 @@ importers:
       '@devcontainers/cli':
         specifier: ^0.79.0
         version: 0.79.0
+      '@pagopa/dx-cli':
+        specifier: workspace:^
+        version: link:apps/cli
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0))
