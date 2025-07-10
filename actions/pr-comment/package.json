@@ -1,7 +1,8 @@
 {
   "name": "pr-comment-action",
-  "type": "module",
   "version": "0.1.0",
+  "type": "module",
+  "private": true,
   "description": "TypeScript action for creating and managing PR comments",
   "main": "dist/index.cjs",
   "scripts": {
