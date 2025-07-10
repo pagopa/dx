@@ -17,7 +17,13 @@ catalog:
   '@tsconfig/node22': 22.0.2
   '@types/node': ^22.16.2
 
+linkWorkspacePackages: true
+
 onlyBuiltDependencies:
   - esbuild
 
 packageImportMethod: clone-or-copy
+
+preferWorkspacePackages: true
+
+saveWorkspaceProtocol: rolling
