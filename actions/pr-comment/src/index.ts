@@ -228,22 +228,6 @@ function validateFilePath(filePath: string): void {
   // Resolve the absolute path
   const absolutePath = resolve(filePath);
 
-  // Get the current working directory
-  const cwd = process.cwd();
-
-  // Check if the resolved path is within the current working directory
-  const relativePath = relative(cwd, absolutePath);
-
-  // Prevent directory traversal attacks
-  if (
-    relativePath.startsWith("..") ||
-    resolve(cwd, relativePath) !== absolutePath
-  ) {
-    throw new Error(
-      `File path "${filePath}" is outside the allowed directory. Only files within the current working directory are allowed.`,
-    );
-  }
-
   // Additional security: block common sensitive file patterns
   const sensitivePatterns = [
     "/etc/",
