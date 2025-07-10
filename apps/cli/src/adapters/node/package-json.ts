@@ -12,11 +12,7 @@ import {
   scriptsArraySchema,
 } from "./codec.js";
 import { readFile } from "./fs/index.js";
-
-const toJSON = Result.fromThrowable(
-  JSON.parse,
-  () => new Error("Failed to parse JSON"),
-);
+import { toJSON } from "./json/index.js";
 
 const toPackageJson = Result.fromThrowable(
   packageJsonSchema.parse,
