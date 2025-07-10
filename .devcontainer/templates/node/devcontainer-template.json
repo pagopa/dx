@@ -1,6 +1,6 @@
 {
   "id": "node",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "name": "Node.js",
   "description": "A template for Node.js projects",
   "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/templates/node",
@@ -12,7 +12,7 @@
     "nodeVersion": {
       "type": "string",
       "description": "The version of Node.js to use",
-      "enum": ["20"],
+      "enum": ["20", "22"],
       "default": "20"
     },
     "terraformVersion": {
