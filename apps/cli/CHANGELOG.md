@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.3.0
+
+### Minor Changes
+
+- 25f7786: Migrate to Node 22
+
 ## 0.2.2
 
 ### Patch Changes
