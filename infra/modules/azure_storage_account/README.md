@@ -21,6 +21,19 @@ This Terraform module provisions an Azure Storage Account with optional configur
 | `s`  | Ideal for lightweight workloads, testing, and development.       | No     | No                         | LRS              | Standard     |
 | `l`  | Suitable for production with moderate to high performance needs. | Yes    | Yes (except in italynorth) | ZRS              | Standard     |
 
+## Access Tier Comparison
+
+| Access Tier       | Description                                               | Storage Costs | Access Costs |  Use Case                                                            |
+|-------------------|-----------------------------------------------------------|---------------|--------------|----------------------------------------------------------------------|
+| `frequent`        | Frequent access with immediate retrieval.                 | High          | Low          | Real-time workloads, data for web/mobile apps                        |
+| `infrequent`      | Infrequent access with slightly delayed retrieval.        | Low           | High         | Short-term backups, Disaster Recovery, less frequently accessed logs |
+| `rare`            | Rare access with immediate retrieval.                     | Low           | High         | Long-term backups, historical/audit data, inactive document archives |
+| `performance`     | SSD-based high-speed access for demanding workloads.      | Very High     | Very High    | File shares for high-performance apps, latency-critical databases    |
+
+### Backward Compatibility
+
+The old values `Hot`, `Cool`, `Cold`, and `Premium` are still supported for the `access_tier` variable but will be deprecated in future releases. Please update your configurations to use the new values (`frequent`, `infrequent`, `rare`, `performance`) to ensure future compatibility.
+
 ## Important Considerations for CDN Origin
 
 This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
@@ -62,7 +75,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'. | `string` | `"Hot"` | no |
+| <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Use cases for the storage account access tier. Options:<br/>- 'frequent'    → frequent access (Hot)<br/>- 'infrequent'  → infrequent access (Cool)<br/>- 'rare'        → rare access, immediate retrieval (Cold)<br/>- 'performance' → SSD-based high-speed access (Premium)<br/><br/>Backward compatibility: The old values 'Hot', 'Cool', 'Cold', and 'Premium' are still supported but will be deprecated in future releases. | `string` | `"frequent"` | no |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | ID of the Action Group for alerts. Required for tier 'l'. | `string` | `null` | no |
 | <a name="input_blob_features"></a> [blob\_features](#input\_blob\_features) | Advanced blob features like versioning, change feed, immutability, and retention policies. | <pre>object({<br/>    restore_policy_days   = optional(number, 0)<br/>    delete_retention_days = optional(number, 0)<br/>    last_access_time      = optional(bool, false)<br/>    versioning            = optional(bool, false)<br/>    change_feed = optional(object({<br/>      enabled           = optional(bool, false)<br/>      retention_in_days = optional(number, 0)<br/>    }), { enabled = false })<br/>    immutability_policy = optional(object({<br/>      enabled                       = optional(bool, false)<br/>      allow_protected_append_writes = optional(bool, false)<br/>      period_since_creation_in_days = optional(number, 730)<br/>    }), { enabled = false })<br/>  })</pre> | <pre>{<br/>  "change_feed": {<br/>    "enabled": false,<br/>    "retention_in_days": 0<br/>  },<br/>  "delete_retention_days": 0,<br/>  "immutability_policy": {<br/>    "enabled": false<br/>  },<br/>  "last_access_time": false,<br/>  "restore_policy_days": 0,<br/>  "versioning": false<br/>}</pre> | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration for the storage account. | <pre>object({<br/>    name          = optional(string, null)<br/>    use_subdomain = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "name": null,<br/>  "use_subdomain": false<br/>}</pre> | no |

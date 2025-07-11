@@ -64,8 +64,21 @@ variable "force_public_network_access_enabled" {
 
 variable "access_tier" {
   type        = string
-  description = "Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'."
-  default     = "Hot"
+  description = <<EOT
+Use cases for the storage account access tier. Options:
+- 'frequent'    → frequent access (Hot)
+- 'infrequent'  → infrequent access (Cool)
+- 'rare'        → rare access, immediate retrieval (Cold)
+- 'performance' → SSD-based high-speed access (Premium)
+
+Backward compatibility: The old values 'Hot', 'Cool', 'Cold', and 'Premium' are still supported but will be deprecated in future releases.
+EOT
+  default     = "frequent"
+
+  validation {
+    condition     = contains(["frequent", "infrequent", "rare", "performance", "Hot", "Cool", "Cold", "Premium"], var.access_tier)
+    error_message = "Valid options: 'frequent', 'infrequent', 'rare', 'performance', 'Hot', 'Cool', 'Cold', 'Premium'."
+  }
 }
 
 variable "subservices_enabled" {
