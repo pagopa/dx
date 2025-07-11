@@ -1,0 +1,50 @@
+{
+  "name": "@pagopa/typescript-base-generator",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PlopJS generator for creating TypeScript workspaces",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/typescript-base-generator"
+  },
+  "keywords": [
+    "plop",
+    "generator",
+    "typescript",
+    "turborepo"
+  ],
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@pagopa/typescript-generator": "workspace:^",
+    "inquirer": "catalog:",
+    "plop": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
