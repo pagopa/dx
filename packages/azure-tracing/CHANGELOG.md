@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.6
+
+### Patch Changes
+
+- 25f7786: Replace `@tsconfig/node20` with `@tsconfig/node22`
+
 ## 0.4.5
 
 ### Patch Changes

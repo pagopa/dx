@@ -13,7 +13,7 @@
     "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
     "ghcr.io/pagopa/devcontainer-features/plantuml:1": {},
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "20",
+      "version": "22",
       "installYarnUsingApt": false,
       "pnpmVersion": "none",
       "nvmInstallPath": "/opt/nvm"

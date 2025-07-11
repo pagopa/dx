@@ -19,7 +19,7 @@ resource "azurerm_monitor_metric_alert" "active" {
 
   criteria {
     metric_namespace       = "Microsoft.ServiceBus/namespaces"
-    metric_name            = "DeadletteredMessages"
+    metric_name            = "ActiveMessages"
     aggregation            = "Average"
     operator               = "GreaterThan"
     skip_metric_validation = false

@@ -1,5 +1,11 @@
 # pr-comment-action
 
+## 0.1.2
+
+### Patch Changes
+
+- 25f7786: Replace `@tsconfig/node20` with `@tsconfig/node22`
+
 ## 0.1.1
 
 ### Patch Changes

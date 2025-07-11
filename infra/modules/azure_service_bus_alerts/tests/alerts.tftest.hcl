@@ -76,6 +76,11 @@ run "plan_alerts_on_active_messages" {
   }
 
   assert {
+    condition     = azurerm_monitor_metric_alert.active[0].criteria[0].metric_name == "ActiveMessages"
+    error_message = "Active messages alert metric name value is incorrect"
+  }
+
+  assert {
     condition     = length(azurerm_monitor_metric_alert.active[0].criteria[0].dimension) == 1
     error_message = "Active messages alert should have one dimension in criteria"
   }
@@ -164,6 +169,11 @@ run "plan_alerts_on_dlq_messages" {
   assert {
     condition     = azurerm_monitor_metric_alert.dlq[0].criteria[0].threshold == 0
     error_message = "DLQ messages alert threshold value is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.dlq[0].criteria[0].metric_name == "DeadletteredMessages"
+    error_message = "DLQ messages alert metric name value is incorrect"
   }
 
   assert {

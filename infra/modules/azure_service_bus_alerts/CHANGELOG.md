@@ -1,5 +1,11 @@
 # azure_service_bus_alerts
 
+## 0.1.3
+
+### Patch Changes
+
+- 641858d: Fix monitored metric in active message alert
+
 ## 0.1.2
 
 ### Patch Changes
