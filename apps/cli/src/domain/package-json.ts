@@ -78,12 +78,12 @@ const findMissingScripts = (
   availableScripts: Script[],
   requiredScripts: RootRequiredScript[],
 ) => {
-  const availableScriptNames = availableScripts.map(({ name }) => name);
-  const requiredScriptNames = requiredScripts.map(({ name }) => name);
-
-  return requiredScriptNames.filter(
-    (required) => !availableScriptNames.includes(required),
+  const availableScriptNames = new Set(
+    availableScripts.map(({ name }) => name),
   );
+  const requiredScriptNames = new Set(requiredScripts.map(({ name }) => name));
+
+  return Array.from(requiredScriptNames.difference(availableScriptNames));
 };
 
 export const checkMonorepoScripts =
