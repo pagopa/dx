@@ -18,8 +18,48 @@ export const dependencySchema = z.object({
   version: z.string(),
 });
 
+const PackageJsonName = z.string().min(1).brand<"PackageJsonName">();
+export type PackageJsonName = z.infer<typeof PackageJsonName>;
+
+const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
+
+const dependenciesRecordSchema = z.record(z.string(), z.string()).optional();
+
+/**
+ * Transform a record (if present) into an array of Script objects.
+ * If the record is not present, it returns an empty array.
+ */
+export const scriptsArraySchema = scriptsRecordSchema.transform((obj) =>
+  obj
+    ? Object.entries(obj).map(([name, script]) =>
+        scriptSchema.parse({ name, script }),
+      )
+    : [],
+);
+
+/**
+ * Transform a dependencies object (if present) into an array of Dependency objects.
+ * If the record is not present, it returns an empty array.
+ */
+export const dependenciesArraySchema = dependenciesRecordSchema.transform(
+  (obj) =>
+    obj
+      ? Object.entries(obj).map(([name, version]) =>
+          dependencySchema.parse({ name, version }),
+        )
+      : [],
+);
+
+export const packageJsonSchema = z.object({
+  dependencies: dependenciesRecordSchema,
+  devDependencies: dependenciesRecordSchema,
+  name: PackageJsonName,
+  scripts: scriptsRecordSchema,
+});
+
 export type Dependency = z.infer<typeof dependencySchema>;
 export type DependencyName = z.infer<typeof DependencyName>;
+export type PackageJson = z.infer<typeof packageJsonSchema>;
 
 export interface PackageJsonReader {
   getDependencies(
@@ -28,6 +68,7 @@ export interface PackageJsonReader {
   ): ResultAsync<Dependency[], Error>;
   getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
+  readPackageJson(cwd: string): ResultAsync<PackageJson, Error>;
 }
 
 export type RootRequiredScript = Pick<Script, "name">;
