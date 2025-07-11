@@ -1,0 +1,187 @@
+name: Deploy OpenNext Application
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Choose environment'
+        type: string
+        required: true
+        default: dev
+      app_path:
+        description: 'Path to the Next.js application'
+        type: string
+        required: true
+      project_name:
+        description: 'Project name for OpenNext deployment. Es. dx-d-itn'
+        type: string
+        required: false
+      aws_region:
+        description: 'AWS region for deployment'
+        type: string
+        default: eu-south-1
+        required: false
+      cloudfront_distribution_id:
+        description: 'CloudFront distribution ID for OpenNext deployment'
+        type: string
+        required: true
+
+# Global environment variables - customize these for your project
+env:
+  PROJECT_NAME: ${{ vars.PROJECT_NAME || inputs.project_name }}
+  AWS_REGION : ${{ inputs.aws_region  }}
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ inputs.cloudfront_distribution_id }}
+
+jobs:
+  deploy:
+    name: Deploy OpenNext ${{ inputs.environment }}
+    # Customize runner based on your infrastructure
+    # For GitHub-hosted runners:
+    runs-on: ubuntu-24.04
+    # For custom CodeBuild runners (uncomment and comment above):
+    # runs-on: codebuild-${{ inputs.environment }}-github-runner-${{ github.run_id }}-${{ github.run_attempt }}
+
+    continue-on-error: false
+    environment: ${{ inputs.environment }}
+
+    env:
+      # Environment short names mapping - customize as needed
+      ENV_SHORT: ${{ fromJSON('{"dev":"d","uat":"u","prod":"p"}')[inputs.environment] }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Cache npm dependencies
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+        with:
+          package_manager: npm
+
+      - name: Install dependencies
+        run: npm ci --audit=false --fund=false
+
+      - name: Compile
+        run: npm run compile
+
+      - name: Configure AWS Credentials
+        uses: pagopa/dx/.github/actions/aws-login@opennext-module
+        with:
+          role_to_assume: ${{ secrets.APP_CD_ROLE_ARN }}
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Setup environment variables from Lambda
+        working-directory: ${{ inputs.app_path }}
+        run: |
+          # Get environment variables from existing Lambda function
+          aws lambda get-function-configuration \
+            --function-name ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-server-lambda-01 \
+            | jq -r '.Environment.Variables | to_entries[] | "\(.key)=\(.value)"' > .env || echo "No environment variables found"
+
+      - name: Build OpenNext
+        working-directory: ${{ inputs.app_path }}
+        run: npx @opennextjs/aws build
+
+      - name: Sync Assets to S3
+        working-directory: ${{ inputs.app_path }}
+        run: |
+          aws s3 sync ./.open-next/assets \
+            s3://${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-assets-01/_assets \
+
+      - name: Sync Cache to S3
+        working-directory: ${{ inputs.app_path }}
+        run: |
+          aws s3 sync ./.open-next/cache \
+            s3://${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-assets-01/_cache \
+
+      - name: Clean up config files
+        working-directory: ${{ inputs.app_path }}/.open-next
+        run: |
+          find ./ -type f -name ".env" -delete
+
+      - name: Deploy Lambda Server Function
+        uses: ./.github/actions/deploy-lambda
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-server-lambda-01
+          working_directory: ${{ inputs.app_path }}/.open-next/server-functions/default
+          s3_bucket: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opennext-lambda-code-01
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Deploy Lambda Image Optimization Function
+        uses: ./.github/actions/deploy-lambda
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-img-opt-lambda-01
+          working_directory: ${{ inputs.app_path }}/.open-next/image-optimization-function
+          s3_bucket: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opennext-lambda-code-01
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Deploy Lambda DynamoDB Provider Function
+        uses: ./.github/actions/deploy-lambda
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-init-lambda-01
+          working_directory: ${{ inputs.app_path }}/.open-next/dynamodb-provider
+          s3_bucket: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opennext-lambda-code-01
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Deploy Lambda Revalidation Function
+        uses: ./.github/actions/deploy-lambda
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-isr-lambda-01
+          working_directory: ${{ inputs.app_path }}/.open-next/revalidation-function
+          s3_bucket: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opennext-lambda-code-01
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Initialize DynamoDB Provider
+        run: |
+          aws lambda invoke \
+            --function-name ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-init-lambda-01 \
+            --payload '{}' \
+            response.json
+
+      - name: Publish Lambda version - Server Function
+        uses: ./.github/actions/publish-lambda-version
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-server-lambda-01
+          alias_name: production
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Publish Lambda version - Image Optimization Function
+        uses: ./.github/actions/publish-lambda-version
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-img-opt-lambda-01
+          alias_name: production
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Publish Lambda version - Revalidation Function
+        uses: ./.github/actions/publish-lambda-version
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-isr-lambda-01
+          alias_name: production
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Publish Lambda version - DynamoDB Provider Function
+        uses: ./.github/actions/publish-lambda-version
+        with:
+          function_name: ${{ env.PROJECT_NAME }}-${{ env.ENV_SHORT }}-website-opnext-init-lambda-01
+          alias_name: production
+          aws_region: ${{ inputs.aws_region }}
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.cloudfront_distribution_id }} \
+            --paths "/*" \
