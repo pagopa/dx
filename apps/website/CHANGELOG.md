@@ -1,5 +1,11 @@
 # docs
 
+## 0.4.0
+
+### Minor Changes
+
+- 25f7786: Migrate to Node 22
+
 ## 0.3.1
 
 ### Patch Changes
