@@ -1,0 +1,37 @@
+name: AWS Login
+description: Configure AWS Credentials
+
+inputs:
+  role_to_assume:
+    description: 'The IAM role to assume for deployment'
+    required: true
+  aws_region:
+    description: 'The AWS region'
+    default: 'eu-south-1'
+    required: false
+  role_duration_seconds:
+    description: 'The duration, in seconds, of the credentials'
+    required: false
+    default: '3600' # 1 hour
+  role_session_name:
+    description: 'An identifier for the assumed role session'
+    required: false
+    default: 'GitHubActions'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df # v4.2.1
+      with:
+        role-to-assume: ${{ inputs.role_to_assume }}
+        aws-region: ${{ inputs.aws_region }}
+        role-duration-seconds: ${{ inputs.role_duration_seconds }}
+        role-session-name: ${{ inputs.role_session_name }}
+
+    - name: Verify AWS Configuration
+      shell: bash
+      run: |
+        echo "AWS CLI version: $(aws --version)"
+        echo "AWS Region: $(aws configure get region)"
+        echo "AWS Account ID: $(aws sts get-caller-identity --query Account --output text)"
