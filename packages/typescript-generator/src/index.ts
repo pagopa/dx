@@ -63,13 +63,13 @@ export function createInstallDependenciesAction(
     );
 
     const baseDependencies = [
-      "@pagopa/eslint-config",
-      "@tsconfig/node22",
-      "@types/node",
-      "eslint@^8.0.0",
-      "prettier",
-      "typescript",
-      "vitest",
+      "@pagopa/eslint-config@catalog:",
+      "@tsconfig/node22@catalog:",
+      "@types/node@catalog:",
+      "eslint@catalog:",
+      "prettier@catalog:",
+      "typescript@catalog:",
+      "vitest@catalog:",
     ];
 
     const allDependencies = [...baseDependencies, ...additionalDependencies];
@@ -77,7 +77,7 @@ export function createInstallDependenciesAction(
     try {
       // Sanitize dependency names to prevent shell injection
       const sanitizedDependencies = allDependencies.map((dep) =>
-        dep.replace(/[^a-zA-Z0-9@/._-]/g, ""),
+        dep.replace(/[^a-zA-Z0-9@:/._-]/g, ""),
       );
 
       execFileSync("pnpm", ["add", "-D", ...sanitizedDependencies], {
