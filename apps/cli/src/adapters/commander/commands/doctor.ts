@@ -9,6 +9,7 @@ import {
   checkPreCommitConfig,
   checkTurboConfig,
 } from "../../../domain/repository.js";
+import { checkWorkspaces } from "../../../domain/workspace.js";
 
 type DoctorDependencies = Pick<
   Dependencies,
@@ -52,7 +53,10 @@ export const makeDoctorCommand = (
 
       logger.info("Checking monorepo scripts...");
       const result = await checkMonorepoScripts(repoRoot)(dependencies);
-
       validationReporter.reportValidationResult(result);
+
+      logger.info("Checking workspaces...");
+      const workspacesResult = await checkWorkspaces(repoRoot)(dependencies);
+      validationReporter.reportValidationResult(workspacesResult);
     });
 };

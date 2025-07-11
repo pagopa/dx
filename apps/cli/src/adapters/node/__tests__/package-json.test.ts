@@ -68,7 +68,9 @@ describe("makePackageJsonReader", () => {
       expect(result.isErr()).toBe(true);
 
       if (result.isErr()) {
-        expect(result.error.message).toContain("Failed to read package.json");
+        expect(result.error.message).toContain(
+          `Failed to read file: ${directory}/package.json`,
+        );
       }
     });
 
@@ -176,7 +178,9 @@ describe("makePackageJsonReader", () => {
       expect(result.isErr()).toBe(true);
 
       if (result.isErr()) {
-        expect(result.error.message).toContain("Failed to read package.json");
+        expect(result.error.message).toContain(
+          `Failed to read file: ${directory}/package.json`,
+        );
       }
     });
   });

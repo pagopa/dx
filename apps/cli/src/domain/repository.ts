@@ -1,15 +1,21 @@
-import { ok, Result } from "neverthrow";
+import { ok, Result, ResultAsync } from "neverthrow";
 import coerce from "semver/functions/coerce.js";
 import semverGte from "semver/functions/gte.js";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { ValidationCheckResult } from "./validation.js";
+import { Workspace } from "./workspace.js";
 
 export interface RepositoryReader {
   existsPreCommitConfig(repoRoot: string): Result<boolean, Error>;
   existsTurboConfig(repoRoot: string): Result<boolean, Error>;
   findRepositoryRoot(cwd: string): Result<string, Error>;
+  /**
+   * Reads workspace configuration from repository files (e.g., pnpm-workspace.yaml)
+   * and returns a list of workspace objects.
+   */
+  getWorkspaces(repoRoot: string): ResultAsync<Workspace[], Error>;
 }
 
 const isVersionValid = (version: string, minVersion: string): boolean => {
