@@ -6,11 +6,11 @@
     "@devcontainers/cli": "^0.79.0",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "plop": "catalog:",
     "prettier": "catalog:",
     "turbo": "^2.5.4",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "plop": "^4.0.1"
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "turbo run build",

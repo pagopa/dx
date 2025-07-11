@@ -8,6 +8,8 @@ packages:
   - actions/*
 
 catalog:
+  inquirer: ^9.2.12
+  plop: ^4.0.1
   prettier: 3.6.2
   eslint: ^9.30.1
   typescript: ~5.8.3

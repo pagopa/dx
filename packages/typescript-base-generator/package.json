@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@pagopa/typescript-generator": "workspace:^",
-    "inquirer": "^9.2.12",
-    "plop": "^4.0.1"
+    "inquirer": "catalog:",
+    "plop": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
