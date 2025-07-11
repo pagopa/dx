@@ -1,4 +1,4 @@
-import { errAsync, okAsync } from "neverthrow";
+import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -44,17 +44,13 @@ describe("checkMonorepoScripts", () => {
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Monorepo Scripts");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe(
-          "Monorepo scripts are correctly set up",
-        );
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Monorepo Scripts",
+        isValid: true,
+        successMessage: "Monorepo scripts are correctly set up",
+      }),
+    );
   });
 
   it("should return ok result with failed validation when required scripts are missing", async () => {
@@ -67,16 +63,12 @@ describe("checkMonorepoScripts", () => {
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Monorepo Scripts");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toContain(
-          "Missing required scripts: code-review",
-        );
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Monorepo Scripts",
+        errorMessage: "Missing required scripts: code-review",
+        isValid: false,
+      }),
+    );
   });
 });
