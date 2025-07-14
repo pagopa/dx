@@ -1,3 +1,176 @@
+# DX - AWS OpenNext Module
+
+This Terraform module deploys a complete serverless infrastructure for Next.js applications on AWS using the [OpenNext](https://open-next.js.org/) framework. OpenNext is an open-source implementation that enables you to deploy Next.js applications to AWS with full support for SSG, SSR, ISR, and API routes using Lambda functions and CloudFront.
+
+## 🚀 Features
+
+- **Complete Next.js Support**: Full compatibility with Next.js features including SSG, SSR, ISR, and API routes
+- **Serverless Architecture**: Built on AWS Lambda, S3, CloudFront, and DynamoDB for optimal performance and cost
+- **Image Optimization**: Dedicated Lambda function for Next.js image optimization
+- **Incremental Static Regeneration (ISR)**: Built-in support for ISR with DynamoDB caching
+- **CloudFront Distribution**: Global CDN with optimized caching strategies
+- **Custom Domain Support**: Easy setup with custom domains and SSL certificates
+- **Preview Deployments**: Optional support for preview deployments
+- **WAF Protection**: Optional Web Application Firewall for enhanced security
+- **Monitoring & Alarms**: Built-in CloudWatch alarms and monitoring
+- **VPC Support**: Optional VPC deployment for private resources access
+
+## 🏗️ Architecture
+
+This module creates the following AWS resources:
+
+```
+                              ┌─────────────────┐
+                              │   CloudFront    │
+                              │  Distribution   │
+                              └─────────┬───────┘
+                                        │
+                  ┌─────────────────────┼─────────────────────┐
+                  │                     │                     │
+          ┌───────▼───────┐    ┌────────▼────────┐    ┌───────▼───────┐
+          │   S3 Bucket   │    │  Server Lambda  │    │Image Optimizer│
+          │   (Assets)    │    │    Function     │    │    Lambda     │
+          └───────────────┘    └─────────────────┘    └───────────────┘
+                                        │
+                              ┌─────────▼─────────┐
+                              │   DynamoDB + S3   │
+                              │    (ISR Cache)    │
+                              └───────────────────┘
+```
+
+### Components
+
+1. **Server Lambda**: Handles SSR, API routes, and dynamic content
+2. **Image Optimizer Lambda**: Processes and optimizes images on-demand
+3. **ISR Revalidation Lambda**: Manages incremental static regeneration
+4. **Initializer Lambda**: Sets up initial DynamoDB configuration
+5. **S3 Assets Bucket**: Stores static assets and cache
+6. **CloudFront Distribution**: Global CDN with intelligent routing
+7. **DynamoDB and S3**: Stores ISR tags and cache metadata
+
+## 📋 Prerequisites
+
+Before using this module, ensure you have:
+
+1. **AWS Provider**: Configure the AWS provider with appropriate credentials
+2. **OpenNext Build**: Your Next.js application must be built with OpenNext
+3. **Domain & Certificate** (optional): ACM certificate and Route53 hosted zone for custom domains
+
+## 📚 Examples
+
+For complete examples, see the [examples/](./examples/) directory:
+
+- [Basic deployment](./examples/basic/) - Minimal configuration
+
+## 🚢 Deployment with GitHub Actions
+
+This module integrates seamlessly with the provided GitHub Actions workflow for automated deployments. The workflow handles building your Next.js application with OpenNext and deploying the generated artifacts.
+
+### Setting up the Workflow
+
+**Add the workflow call** to your repository's workflow file:
+
+```yaml
+name: Deploy Next.js Application
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: pagopa/dx/.github/workflows/_release-bash-aws-open-next.yaml@main
+    with:
+      workspace_name: "my-nextjs-app"
+      environment: "production"
+      app_path: "./apps/frontend"
+      project_prefix: "mycompany-p-eus-web-frontend"
+      aws_region: "eu-south-1"
+      cloudfront_distribution_id: ${{ needs.terraform.outputs.cloudfront_distribution_id }}
+    secrets:
+      APP_CD_ROLE_ARN: ${{ secrets.APP_CD_ROLE_ARN }}
+```
+
+### Workflow Process
+
+The GitHub Actions workflow performs the following steps:
+
+1. **Build Phase**:
+   - Checks out the repository
+   - Sets up Node.js environment
+   - Installs dependencies using the monorepo structure
+   - Builds the Next.js application
+   - Runs OpenNext to generate deployment artifacts
+   - Creates and uploads the deployment bundle
+
+2. **Deploy Phase**:
+   - Configures AWS credentials using OIDC
+   - Downloads the deployment artifact
+   - Syncs static assets to S3
+   - Deploys Lambda functions for:
+     - Server-side rendering
+     - Image optimization
+     - ISR revalidation
+     - DynamoDB initialization
+   - Publishes Lambda versions with aliases
+   - Invalidates CloudFront cache
+
+### Required Secrets and Variables
+
+Configure the following in your GitHub repository:
+
+**Secrets:**
+
+- `APP_CD_ROLE_ARN`: AWS IAM role ARN for deployment (with OIDC trust relationship)
+
+**Variables:**
+
+- `PROJECT_PREFIX`: Resource naming prefix (optional, can be passed as input)
+
+### Resource Naming Convention
+
+The workflow uses a consistent naming pattern for AWS resources:
+
+- **Lambda Functions**: `{project_prefix}-website-opnext-{function-type}-lambda-01`
+- **S3 Buckets**: `{project_prefix}-website-opnext-assets-01` (assets), `{project_prefix}-website-opennext-lambda-code-01` (code)
+- **Aliases**: All Lambda functions use the `production` alias
+
+Example with `project_prefix: "mycompany-p-eus-web-frontend"`:
+
+- Server Lambda: `mycompany-p-eus-web-frontend-website-opnext-server-lambda-01`
+- Assets S3: `mycompany-p-eus-web-frontend-website-opnext-assets-01`
+
+## 📊 Monitoring and Observability
+
+When `enable_alarms` is set to `true`, the module creates CloudWatch alarms for:
+
+- Lambda function errors
+- Lambda function duration
+- Lambda function throttles
+- CloudFront error rates
+
+## 🔒 Security Features
+
+- **IAM Roles**: Least-privilege IAM roles for all Lambda functions
+- **WAF Integration**: Optional Web Application Firewall protection
+- **VPC Support**: Deploy Lambda functions in private subnets
+- **HTTPS Only**: CloudFront enforces HTTPS redirects
+- **Origin Access Control**: Secure S3 bucket access
+
+## 💰 Cost Optimization
+
+- **ARM64 Architecture**: Lambda functions use ARM64 for better price-performance
+- **CloudFront Caching**: Aggressive caching reduces origin requests
+- **S3 Intelligent Tiering**: Automatic cost optimization for stored assets
+- **Lambda Provisioned Concurrency**: Optional for consistent performance (configure via variables)
+
+```
+
+---
+
+<!-- markdownlint-disable -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
@@ -53,3 +226,5 @@ No resources.
 | <a name="output_initializer"></a> [initializer](#output\_initializer) | The initializer lambda function. |
 | <a name="output_isr_revalidation"></a> [isr\_revalidation](#output\_isr\_revalidation) | The ISR revalidation lambda function. |
 | <a name="output_server"></a> [server](#output\_server) | The server lambda function. |
+<!-- END_TF_DOCS -->
+```
