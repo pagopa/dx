@@ -48,3 +48,7 @@ node_modules
 coverage
 
 .pnpm-store
+
+# Go build artifacts
+terraform-provider-azure
+providers/azure/terraform-provider-azure
