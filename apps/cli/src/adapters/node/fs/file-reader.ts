@@ -25,7 +25,7 @@ export const readFileAndDecode = <T>(
 
   return ResultAsync.fromPromise(
     fs.readFile(filePath, "utf-8"),
-    () => new Error(`Failed to read file: ${filePath}`),
+    (cause) => new Error(`Failed to read file: ${filePath}`, { cause }),
   )
     .andThen(toJSON)
     .andThen(decode);
