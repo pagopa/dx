@@ -1,3 +1,4 @@
+import "core-js/actual/set/index.js";
 import { configure, getConsoleSink } from "@logtape/logtape";
 
 import { makeCli } from "./adapters/commander/index.js";
