@@ -43,6 +43,7 @@ variable "container_app_environment" {
     memory                      = optional(string, "1Gi")
     image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")
     env_vars                    = optional(map(string), {})
+    secrets                     = optional(map(string), {})
   })
 
   description = "Configuration for the Container App Environment."
