@@ -23,7 +23,22 @@ export type PackageName = z.infer<typeof PackageName>;
 
 const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
 
-const dependenciesRecordSchema = z.record(z.string(), z.string()).optional();
+const dependenciesSchema = z
+  // An object where keys are Dependency["name"] and values are their versions (string for now, but we could type them as well)
+  .record(DependencyName, z.string())
+  .optional()
+  // Transform the record into a Map<Dependency["name"], Dependency["version"]>
+  .transform(
+    (obj) =>
+      new Map<Dependency["name"], Dependency["version"]>(
+        obj
+          ? Object.entries(obj).map(([name, version]) => [
+              DependencyName.parse(name),
+              version,
+            ])
+          : [],
+      ),
+  );
 
 /**
  * Transform a record (if present) into an array of Script objects.
@@ -37,22 +52,9 @@ export const scriptsArraySchema = scriptsRecordSchema.transform((obj) =>
     : [],
 );
 
-/**
- * Transform a dependencies object (if present) into an array of Dependency objects.
- * If the record is not present, it returns an empty array.
- */
-export const dependenciesArraySchema = dependenciesRecordSchema.transform(
-  (obj) =>
-    obj
-      ? Object.entries(obj).map(([name, version]) =>
-          dependencySchema.parse({ name, version }),
-        )
-      : [],
-);
-
 export const packageJsonSchema = z.object({
-  dependencies: dependenciesRecordSchema,
-  devDependencies: dependenciesRecordSchema,
+  dependencies: dependenciesSchema,
+  devDependencies: dependenciesSchema,
   name: PackageName,
   scripts: scriptsRecordSchema,
 });
@@ -65,7 +67,7 @@ export interface PackageJsonReader {
   getDependencies(
     cwd: string,
     type: "dev" | "prod",
-  ): ResultAsync<Dependency[], Error>;
+  ): ResultAsync<Map<Dependency["name"], Dependency["version"]>, Error>;
   getRootRequiredScripts(): RootRequiredScript[];
   getScripts(cwd: string): ResultAsync<Script[], Error>;
   readPackageJson(cwd: string): ResultAsync<PackageJson, Error>;

@@ -3,7 +3,6 @@ import { join } from "node:path";
 import * as process from "node:process";
 
 import {
-  dependenciesArraySchema,
   PackageJson,
   PackageJsonReader,
   packageJsonSchema,
@@ -18,21 +17,16 @@ const toScriptsArray = ResultAsync.fromThrowable(
   () => new Error("Failed to validate scripts array"),
 );
 
-const toDependenciesArray = ResultAsync.fromThrowable(
-  dependenciesArraySchema.parseAsync,
-  () => new Error("Failed to validate dependencies array"),
-);
-
 export const makePackageJsonReader = (): PackageJsonReader => ({
   getDependencies: (cwd = process.cwd(), type) => {
     const packageJsonPath = join(cwd, "package.json");
 
-    return readFileAndDecode(packageJsonPath, packageJsonSchema)
-      .map((packageJson) => {
+    return readFileAndDecode(packageJsonPath, packageJsonSchema).map(
+      (packageJson) => {
         const key = type === "dev" ? "devDependencies" : "dependencies";
         return packageJson[key];
-      })
-      .andThen(toDependenciesArray);
+      },
+    );
   },
 
   getRootRequiredScripts: (): RootRequiredScript[] => [

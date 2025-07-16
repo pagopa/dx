@@ -1,11 +1,6 @@
-import {
-  PackageJson,
-  packageJsonSchema,
-} from "../../../domain/package-json.js";
+import { PackageJson } from "../../../domain/package-json.js";
 
-export const makeMockPackageJson = (
-  overrides: Partial<PackageJson> = {},
-): PackageJson => {
+export const makeMockPackageJson = (overrides: Partial<PackageJson> = {}) => {
   const basePackageJson = {
     dependencies: {
       aDependency: "^4.17.21",
@@ -22,5 +17,5 @@ export const makeMockPackageJson = (
     },
   };
 
-  return packageJsonSchema.parse({ ...basePackageJson, ...overrides });
+  return { ...basePackageJson, ...overrides };
 };

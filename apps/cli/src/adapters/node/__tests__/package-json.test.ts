@@ -2,10 +2,7 @@ import { err, ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  dependenciesArraySchema,
-  scriptsArraySchema,
-} from "../../../domain/package-json.js";
+import { scriptsArraySchema } from "../../../domain/package-json.js";
 import { makePackageJsonReader } from "../package-json.js";
 import { makeMockPackageJson } from "./data.js";
 
@@ -93,7 +90,7 @@ describe("makePackageJsonReader", () => {
       const result = await packageJsonReader.getDependencies(directory, "dev");
 
       expect(result).toStrictEqual(
-        ok(dependenciesArraySchema.parse(mockPackageJson.devDependencies)),
+        ok(new Map().set("turbo", "^2.5.2").set("typescript", "^5.0.0")),
       );
 
       expect(mockReadFile).toHaveBeenCalledWith(
@@ -114,7 +111,11 @@ describe("makePackageJsonReader", () => {
       const result = await packageJsonReader.getDependencies(directory, "prod");
 
       expect(result).toStrictEqual(
-        ok(dependenciesArraySchema.parse(mockPackageJson.dependencies)),
+        ok(
+          new Map()
+            .set("aDependency", "^4.17.21")
+            .set("anotherDependency", "^8.0.0"),
+        ),
       );
 
       expect(mockReadFile).toHaveBeenCalledWith(
@@ -135,7 +136,7 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
 
-      expect(result).toStrictEqual(ok([]));
+      expect(result).toStrictEqual(ok(new Map()));
     });
 
     it("should return an error when package.json does not exist for dependencies", async () => {
