@@ -19,3 +19,8 @@ export const makeMockPackageJson = (overrides: Partial<PackageJson> = {}) => {
 
   return { ...basePackageJson, ...overrides };
 };
+
+export const makeMockPnpmWorkspaceYaml = () => `
+  packages:
+  - packages/*
+`;

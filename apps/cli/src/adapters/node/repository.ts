@@ -1,4 +1,5 @@
-import { ResultAsync } from "neverthrow";
+import { okAsync, ResultAsync } from "neverthrow";
+import fs from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod/v4";
 
@@ -39,7 +40,12 @@ const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
   readFile(join(repoRoot, "pnpm-workspace.yaml"))
     .andThen(parseYaml)
     // Decode the pnpm-workspace.yaml file to a zod schema
-    .andThen(decode(z.object({ packages: z.array(z.string()) })))
+    .andThen((json) =>
+      // If no packages are defined, go on with an empty array
+      decode(z.object({ packages: z.array(z.string()) }))(json).orElse(() =>
+        okAsync({ packages: [] }),
+      ),
+    )
     .andThen(({ packages }) =>
       // For every package pattern in the pnpm-workspace.yaml file, get the list of subdirectories
       ResultAsync.combine(packages.map(resolveWorkspacePattern(repoRoot)))
