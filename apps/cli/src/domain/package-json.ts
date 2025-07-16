@@ -82,8 +82,8 @@ const findMissingScripts = (
     availableScripts.map(({ name }) => name),
   );
   const requiredScriptNames = new Set(requiredScripts.map(({ name }) => name));
-
-  return Array.from(requiredScriptNames.difference(availableScriptNames));
+  // Returns a set of scripts that are required, but not listed in the package.json
+  return requiredScriptNames.difference(availableScriptNames);
 };
 
 export const checkMonorepoScripts =
@@ -106,7 +106,7 @@ export const checkMonorepoScripts =
       requiredScripts,
     );
 
-    if (missingScripts.length === 0) {
+    if (missingScripts.size === 0) {
       return ok({
         checkName,
         isValid: true,
@@ -116,7 +116,7 @@ export const checkMonorepoScripts =
 
     return ok({
       checkName,
-      errorMessage: `Missing required scripts: ${missingScripts.join(", ")}`,
+      errorMessage: `Missing required scripts: ${Array.from(missingScripts).join(", ")}`,
       isValid: false,
     });
   };
