@@ -2,7 +2,6 @@ import { err, ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { scriptsArraySchema } from "../../../domain/package-json.js";
 import { makePackageJsonReader } from "../package-json.js";
 import { makeMockPackageJson } from "./data.js";
 
@@ -26,7 +25,7 @@ describe("makePackageJsonReader", () => {
       const result = await packageJsonReader.getScripts(directory);
 
       expect(result).toStrictEqual(
-        ok(scriptsArraySchema.parse(mockPackageJson.scripts)),
+        ok(new Map().set("build", "tsc").set("code-review", "eslint .")),
       );
 
       expect(mockReadFile).toHaveBeenCalledWith(
@@ -45,7 +44,7 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
 
-      expect(result).toStrictEqual(ok([]));
+      expect(result).toStrictEqual(ok(new Map()));
     });
 
     it("should return an error when package.json does not exist", async () => {

@@ -6,16 +6,9 @@ import {
   PackageJson,
   PackageJsonReader,
   packageJsonSchema,
-  RootRequiredScript,
   Script,
-  scriptsArraySchema,
 } from "../../domain/package-json.js";
 import { readFileAndDecode } from "./fs/file-reader.js";
-
-const toScriptsArray = ResultAsync.fromThrowable(
-  scriptsArraySchema.parseAsync,
-  () => new Error("Failed to validate scripts array"),
-);
 
 export const makePackageJsonReader = (): PackageJsonReader => ({
   getDependencies: (cwd = process.cwd(), type) => {
@@ -29,16 +22,15 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
     );
   },
 
-  getRootRequiredScripts: (): RootRequiredScript[] => [
-    { name: "code-review" as Script["name"] },
-  ],
+  getRootRequiredScripts: (): Map<Script["name"], Script["script"]> =>
+    new Map().set("code-review", "eslint ."),
 
   getScripts: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
 
-    return readFileAndDecode(packageJsonPath, packageJsonSchema)
-      .map(({ scripts }) => scripts)
-      .andThen(toScriptsArray);
+    return readFileAndDecode(packageJsonPath, packageJsonSchema).map(
+      ({ scripts }) => scripts,
+    );
   },
 
   readPackageJson: (cwd = process.cwd()): ResultAsync<PackageJson, Error> => {

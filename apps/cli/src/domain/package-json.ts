@@ -21,7 +21,20 @@ export const dependencySchema = z.object({
 const PackageName = z.string().min(1).brand<"PackageName">();
 export type PackageName = z.infer<typeof PackageName>;
 
-const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
+const scriptsSchema = z
+  .record(ScriptName, z.string())
+  .optional()
+  .transform(
+    (obj) =>
+      new Map<z.infer<typeof ScriptName>, string>(
+        obj
+          ? Object.entries(obj).map(([name, script]) => [
+              ScriptName.parse(name),
+              script,
+            ])
+          : [],
+      ),
+  );
 
 const dependenciesSchema = z
   // An object where keys are Dependency["name"] and values are their versions (string for now, but we could type them as well)
@@ -40,23 +53,11 @@ const dependenciesSchema = z
       ),
   );
 
-/**
- * Transform a record (if present) into an array of Script objects.
- * If the record is not present, it returns an empty array.
- */
-export const scriptsArraySchema = scriptsRecordSchema.transform((obj) =>
-  obj
-    ? Object.entries(obj).map(([name, script]) =>
-        scriptSchema.parse({ name, script }),
-      )
-    : [],
-);
-
 export const packageJsonSchema = z.object({
   dependencies: dependenciesSchema,
   devDependencies: dependenciesSchema,
   name: PackageName,
-  scripts: scriptsRecordSchema,
+  scripts: scriptsSchema,
 });
 
 export type Dependency = z.infer<typeof dependencySchema>;
@@ -68,8 +69,10 @@ export interface PackageJsonReader {
     cwd: string,
     type: "dev" | "prod",
   ): ResultAsync<Map<Dependency["name"], Dependency["version"]>, Error>;
-  getRootRequiredScripts(): RootRequiredScript[];
-  getScripts(cwd: string): ResultAsync<Script[], Error>;
+  getRootRequiredScripts(): Map<Script["name"], Script["script"]>;
+  getScripts(
+    cwd: string,
+  ): ResultAsync<Map<Script["name"], Script["script"]>, Error>;
   readPackageJson(cwd: string): ResultAsync<PackageJson, Error>;
 }
 
@@ -77,13 +80,11 @@ export type RootRequiredScript = Pick<Script, "name">;
 export type Script = z.infer<typeof scriptSchema>;
 
 const findMissingScripts = (
-  availableScripts: Script[],
-  requiredScripts: RootRequiredScript[],
+  availableScripts: Map<Script["name"], Script["script"]>,
+  requiredScripts: Map<Script["name"], Script["script"]>,
 ) => {
-  const availableScriptNames = new Set(
-    availableScripts.map(({ name }) => name),
-  );
-  const requiredScriptNames = new Set(requiredScripts.map(({ name }) => name));
+  const availableScriptNames = new Set(availableScripts.keys());
+  const requiredScriptNames = new Set(requiredScripts.keys());
   // Returns a set of scripts that are required, but not listed in the package.json
   return requiredScriptNames.difference(availableScriptNames);
 };
@@ -102,10 +103,10 @@ export const checkMonorepoScripts =
       return err(scriptsResult.error);
     }
 
-    const requiredScripts = packageJsonReader.getRootRequiredScripts();
+    const requiredScriptsMap = packageJsonReader.getRootRequiredScripts();
     const missingScripts = findMissingScripts(
       scriptsResult.value,
-      requiredScripts,
+      requiredScriptsMap,
     );
 
     if (missingScripts.size === 0) {

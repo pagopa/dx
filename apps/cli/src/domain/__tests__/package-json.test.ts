@@ -1,11 +1,7 @@
 import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import {
-  checkMonorepoScripts,
-  RootRequiredScript,
-  Script,
-} from "../package-json.js";
+import { checkMonorepoScripts } from "../package-json.js";
 import { makeMockDependencies } from "./data.js";
 
 describe("checkMonorepoScripts", () => {
@@ -27,20 +23,13 @@ describe("checkMonorepoScripts", () => {
   it("should return ok result with successful validation when all required scripts are present", async () => {
     const deps = makeMockDependencies();
 
-    const scripts = [
-      {
-        name: "build",
-        script: "eslint .",
-      },
-      {
-        name: "code-review",
-        script: "eslint .",
-      },
-    ] as Script[];
+    const scripts = new Map()
+      .set("build", "eslint .")
+      .set("code-review", "eslint .");
     deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(scripts));
-    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
-      { name: "code-review" as Script["name"] },
-    ] as RootRequiredScript[]);
+    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce(
+      new Map().set("code-review", "eslint ."),
+    );
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
@@ -56,10 +45,10 @@ describe("checkMonorepoScripts", () => {
   it("should return ok result with failed validation when required scripts are missing", async () => {
     const deps = makeMockDependencies();
 
-    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync([]));
-    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
-      { name: "code-review" as Script["name"] },
-    ] as RootRequiredScript[]);
+    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(new Map()));
+    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce(
+      new Map().set("code-review", "eslint ."),
+    );
 
     const result = await checkMonorepoScripts(monorepoDir)(deps);
 
