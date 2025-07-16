@@ -63,15 +63,15 @@ jobs:
   build:
     name: Build Artifact
     runs-on: ubuntu-latest
-    env:
-      WORKSPACE: ${{ inputs.workspace_name }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Prune
-        run: npx turbo@2 prune --scope=${{ env.WORKSPACE }}
+        run: npx turbo@2 prune --scope=$WORKSPACE
+        env:
+          WORKSPACE: ${{ inputs.workspace_name }}
 
       - name: Node Setup
         id: node-setup
@@ -98,7 +98,9 @@ jobs:
         working-directory: ./out
 
       - name: Build project
-        run: ${{ steps.node-setup.outputs.package-manager }} run build
+        run: $PACKAGE_MANAGER run build
+        env:
+          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
         working-directory: ./out
 
       - name: Find dist directory path
