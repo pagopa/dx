@@ -119,7 +119,7 @@ jobs:
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-ci #cd
+    environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
       contents: read
@@ -143,7 +143,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy Assets and Purge CDN
-        uses: pagopa/dx/.github/actions/cdn-code-deploy@feat-add-cdn-deploy-workflow #main
+        uses: pagopa/dx/.github/actions/cdn-code-deploy@main
         with:
           storage_account_name: ${{ env.STORAGE_ACCOUNT_NAME }}
           blob_container_name: "${{ env.BLOB_CONTAINER_NAME }}"
