@@ -18,8 +18,8 @@ export const dependencySchema = z.object({
   version: z.string(),
 });
 
-const PackageJsonName = z.string().min(1).brand<"PackageJsonName">();
-export type PackageJsonName = z.infer<typeof PackageJsonName>;
+const PackageName = z.string().min(1).brand<"PackageName">();
+export type PackageName = z.infer<typeof PackageName>;
 
 const scriptsRecordSchema = z.record(z.string(), z.string()).optional();
 
@@ -53,7 +53,7 @@ export const dependenciesArraySchema = dependenciesRecordSchema.transform(
 export const packageJsonSchema = z.object({
   dependencies: dependenciesRecordSchema,
   devDependencies: dependenciesRecordSchema,
-  name: PackageJsonName,
+  name: PackageName,
   scripts: scriptsRecordSchema,
 });
 
