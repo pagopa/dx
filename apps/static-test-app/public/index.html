@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sito Statico di Prova</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            padding: 40px 50px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+        }
+        h1 {
+            color: #28a745;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #555;
+        }
+        .timestamp {
+            margin-top: 25px;
+            font-size: 0.9rem;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Deploy Riuscito!</h1>
+        <p>Se vedi questa pagina, il workflow di deploy sulla CDN ha funzionato correttamente.</p>
+        <p class="timestamp">Timestamp del Build: <span id="timestamp"></span></p>
+    </div>
+    <script>
+        document.getElementById('timestamp').innerText = new Date().toLocaleString('it-IT', { dateStyle: 'full', timeStyle: 'medium' });
+    </script>
+</body>
+</html>
