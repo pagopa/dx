@@ -1,12 +1,9 @@
-import { ResultAsync } from "neverthrow";
 import { join } from "node:path";
 import * as process from "node:process";
 
 import {
-  PackageJson,
   PackageJsonReader,
   packageJsonSchema,
-  Script,
 } from "../../domain/package-json.js";
 import { readFileAndDecode } from "./fs/file-reader.js";
 
@@ -22,8 +19,7 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
     );
   },
 
-  getRootRequiredScripts: (): Map<Script["name"], Script["script"]> =>
-    new Map().set("code-review", "eslint ."),
+  getRootRequiredScripts: () => new Map().set("code-review", "eslint ."),
 
   getScripts: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
@@ -33,7 +29,7 @@ export const makePackageJsonReader = (): PackageJsonReader => ({
     );
   },
 
-  readPackageJson: (cwd = process.cwd()): ResultAsync<PackageJson, Error> => {
+  readPackageJson: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
 
     return readFileAndDecode(packageJsonPath, packageJsonSchema);
