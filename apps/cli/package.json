@@ -22,6 +22,7 @@
   "dependencies": {
     "@logtape/logtape": "^1.0.0",
     "commander": "^14.0.0",
+    "core-js": "^3.44.0",
     "neverthrow": "^8.2.0",
     "semver": "^7.7.2",
     "zod": "^3.25.28"
