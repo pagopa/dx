@@ -27,6 +27,11 @@ The DX CLI is a command-line tool designed to help developers manage and validat
 > [!NOTE]
 > The CLI is currently only available locally and is not yet distributed through package managers.
 
+### Requirements
+
+- Node.js >=22.0.0
+- pnpm (recommended package manager)
+
 ### From Source (Development)
 
 ```bash
@@ -35,10 +40,10 @@ git clone https://github.com/pagopa/dx.git
 cd dx
 
 # Install dependencies
-yarn install
+pnpm install
 
 # Build the CLI
-yarn build
+pnpm build
 
 # Run the CLI
 node ./apps/cli/bin/index.js --help
@@ -53,7 +58,7 @@ node ./apps/cli/bin/index.js --help
 Verify the repository setup according to the DevEx guidelines.
 
 ```bash
-dx doctor
+node ./apps/cli/bin/index.js doctor
 ```
 
 This command will:
@@ -66,9 +71,13 @@ This command will:
 **Example output:**
 
 ```bash
-$ dx doctor
-Checking monorepo scripts...
-✅ Monorepo scripts are correctly set up
+$ node ./apps/cli/bin/index.js doctor
+09:36:53.748 INF dx-cli·doctor Checking pre-commit configuration...
+09:36:53.750 INF dx-cli·validation ✅ Pre-commit configuration is present in the repository root
+09:36:53.750 INF dx-cli·doctor Checking Turbo configuration...
+09:36:53.753 INF dx-cli·validation ✅ Turbo configuration is present in the monorepo root and turbo dependency is installed
+09:36:53.753 INF dx-cli·doctor Checking monorepo scripts...
+09:36:53.754 INF dx-cli·validation ✅ Monorepo scripts are correctly set up
 ```
 
 ### Global Options
