@@ -1,3 +1,4 @@
+import * as glob from "glob";
 import { okAsync, ResultAsync } from "neverthrow";
 import fs from "node:fs/promises";
 import { join } from "node:path";
@@ -26,7 +27,9 @@ const findRepositoryRoot = (
 
 const resolveWorkspacePattern = (repoRoot: string) => (pattern: string) =>
   ResultAsync.fromPromise(
-    Array.fromAsync(fs.glob(pattern, { cwd: repoRoot })),
+    // For now it is not possible to use the fs.glob function (from node:fs/promises)
+    // because it is not possible to run it on Node 20.x
+    glob.glob(pattern, { cwd: repoRoot }),
     (cause) =>
       new Error(`Failed to resolve workspace glob: ${pattern}`, {
         cause,
