@@ -361,6 +361,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.2
 
+  providers/aws: {}
+
   providers/azure: {}
 
 packages:
