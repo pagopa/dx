@@ -9,7 +9,7 @@ terraform {
 provider "dx" {
   prefix      = "dx"
   environment = "d"
-  region      = "eu"
+  region      = "eus1"
 }
 
 # Example resource name for S3 bucket
@@ -30,7 +30,7 @@ output "lambda_function_name" {
   value = provider::dx::resource_name({
     prefix          = "dx",
     environment     = "p",
-    region          = "euc1",
+    region          = "eus1",
     domain          = "processing",
     name            = "handler",
     resource_type   = "lambda_function",
@@ -43,7 +43,7 @@ output "vpc_name" {
   value = provider::dx::resource_name({
     prefix          = "dx",
     environment     = "u",
-    region          = "euw2",
+    region          = "euc1",
     name            = "main",
     resource_type   = "vpc",
     instance_number = "1"

@@ -48,9 +48,6 @@ test_example.tf
 terraform.tfvars
 *.auto.tfvars
 
-# Documentation generation
-docs/
-
 # Temporary files
 .tmp/
 tmp/

@@ -12,11 +12,11 @@ terraform {
 provider "dx" {
   prefix      = "dx"
   environment = "d"
-  region      = "eu"
+  region      = "eus1"
 }
 
 provider "aws" {
-  region = "eu-west-1"
+  region = "eu-south-1"
 }
 
 # Create a VPC first
