@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Prune
-        run: npx turbo@2 prune --scope=$WORKSPACE
+        run: npx turbo prune --scope=$WORKSPACE
         env:
           WORKSPACE: ${{ inputs.workspace_name }}
 
@@ -79,9 +79,6 @@ jobs:
         with:
           working_dir: ./out
       
-      # Install dependencies based on the detected package manager
-      # Exec the specific install command for npm, yarn, or pnpm 
-      # that garantees a clean install without modifying the lock file
       - name: Install dependencies (npm)
         if: steps.node-setup.outputs.package-manager == 'npm'
         run: npm ci
@@ -94,13 +91,11 @@ jobs:
 
       - name: Install dependencies (pnpm)
         if: steps.node-setup.outputs.package-manager == 'pnpm'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
         working-directory: ./out
 
       - name: Build project
-        run: $PACKAGE_MANAGER run build
-        env:
-          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
+        run: npx turbo build
         working-directory: ./out
 
       - name: Find dist directory path
