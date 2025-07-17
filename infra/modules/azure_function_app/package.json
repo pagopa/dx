@@ -6,6 +6,7 @@
   "description": "Deploys an Azure Function App with storage, networking and RBAC configuration",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

@@ -6,6 +6,7 @@
   "description": "Create and configure a new GitHub repository",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

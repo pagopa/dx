@@ -6,6 +6,7 @@
   "description": "Deploys an Azure API Management service with monitoring and network configuration",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

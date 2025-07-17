@@ -6,6 +6,7 @@
   "description": "Provisions an Azure Storage Account with networking, monitoring, and security configurations",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

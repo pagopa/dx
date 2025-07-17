@@ -6,6 +6,7 @@
   "description": "Sets up the core Azure infrastructure including VNet, DNS zones, and Key Vault. Useful to bootstrap production or development environments.",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

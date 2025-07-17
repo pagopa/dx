@@ -6,6 +6,7 @@
   "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

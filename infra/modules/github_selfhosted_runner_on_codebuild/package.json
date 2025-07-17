@@ -6,6 +6,7 @@
   "description": "Deploy a self-hosted runner based on AWS CodeBuild",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

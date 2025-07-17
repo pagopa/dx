@@ -6,6 +6,7 @@
   "description": "Sets up monorepo's settings and required Azure permissions and roles",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

@@ -6,6 +6,7 @@
   "description": "Creates an Azure Service Bus Namepsace with network, authentication and scaling built-in capabilities",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

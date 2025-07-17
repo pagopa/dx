@@ -6,6 +6,7 @@
   "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

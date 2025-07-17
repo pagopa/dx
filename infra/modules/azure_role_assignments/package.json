@@ -6,6 +6,7 @@
   "description": "Manages Azure RBAC role assignments for resources and security principals",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

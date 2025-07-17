@@ -6,6 +6,7 @@
   "description": "Provisions an Azure Container App with a given configuration",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }
