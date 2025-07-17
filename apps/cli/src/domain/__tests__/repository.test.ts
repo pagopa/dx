@@ -1,7 +1,6 @@
 import { err, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { DependencyName } from "../package-json.js";
 import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
 import { makeMockConfig, makeMockDependencies } from "./data.js";
 
@@ -60,12 +59,7 @@ describe("checkTurboConfig", () => {
 
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync([
-        {
-          name: "turbo" as DependencyName,
-          version: "^2.5.2",
-        },
-      ]),
+      okAsync(new Map().set("turbo", "^2.5.2")),
     );
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
@@ -88,12 +82,7 @@ describe("checkTurboConfig", () => {
 
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync([
-        {
-          name: "eslint" as DependencyName,
-          version: "^8.0.0",
-        },
-      ]),
+      okAsync(new Map().set("eslint", "^8.0.0")),
     );
 
     const result = await checkTurboConfig(monorepoDir)(deps, config);
@@ -137,12 +126,7 @@ describe("checkTurboConfig", () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync([
-        {
-          name: "eslint" as DependencyName,
-          version: "^8.0.0",
-        },
-      ]),
+      okAsync(new Map().set("eslint", "^8.0.0")),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
     expect(result.isOk()).toBe(true);
@@ -162,12 +146,7 @@ describe("checkTurboConfig", () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync([
-        {
-          name: "turbo" as DependencyName,
-          version: "1.0.0",
-        },
-      ]),
+      okAsync(new Map().set("turbo", "1.0.0")),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
     expect(result.isOk()).toBe(true);
@@ -187,12 +166,7 @@ describe("checkTurboConfig", () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.existsTurboConfig.mockReturnValueOnce(ok(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync([
-        {
-          name: "turbo" as DependencyName,
-          version: config.minVersions.turbo,
-        },
-      ]),
+      okAsync(new Map().set("turbo", config.minVersions.turbo)),
     );
     const result = await checkTurboConfig(monorepoDir)(deps, config);
     expect(result.isOk()).toBe(true);

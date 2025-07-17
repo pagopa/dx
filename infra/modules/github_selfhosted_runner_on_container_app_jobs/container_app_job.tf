@@ -70,6 +70,14 @@ resource "azurerm_container_app_job" "github_runner" {
           value = env.value
         }
       }
+
+      dynamic "env" {
+        for_each = local.runner_secrets
+        content {
+          name        = env.key
+          secret_name = env.value
+        }
+      }
     }
   }
 

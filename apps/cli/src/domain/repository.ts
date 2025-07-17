@@ -4,6 +4,7 @@ import semverGte from "semver/functions/gte.js";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
+import { Dependency } from "./package-json.js";
 import { ValidationCheckResult } from "./validation.js";
 
 export interface RepositoryReader {
@@ -78,10 +79,10 @@ export const checkTurboConfig =
       });
     }
 
-    const turboDependency = dependenciesResult.value.find(
-      ({ name }) => name === "turbo",
+    const turboVersion = dependenciesResult.value.get(
+      "turbo" as Dependency["name"],
     );
-    if (!turboDependency) {
+    if (!turboVersion) {
       return ok({
         checkName,
         errorMessage:
@@ -90,10 +91,10 @@ export const checkTurboConfig =
       });
     }
 
-    if (!isVersionValid(turboDependency.version, minVersions.turbo)) {
+    if (!isVersionValid(turboVersion, minVersions.turbo)) {
       return ok({
         checkName,
-        errorMessage: `Turbo version (${turboDependency.version}) is too low. Minimum required version is ${minVersions.turbo}.`,
+        errorMessage: `Turbo version (${turboVersion}) is too low. Minimum required version is ${minVersions.turbo}.`,
         isValid: false,
       });
     }
