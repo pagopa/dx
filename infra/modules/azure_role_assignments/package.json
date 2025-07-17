@@ -3,5 +3,9 @@
   "version": "1.2.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Manages Azure RBAC role assignments for resources and security principals"
+  "description": "Manages Azure RBAC role assignments for resources and security principals",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

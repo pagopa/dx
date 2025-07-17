@@ -3,5 +3,9 @@
   "version": "0.0.11",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure Event Hub with monitoring and network configuration"
+  "description": "Creates an Azure Event Hub with monitoring and network configuration",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

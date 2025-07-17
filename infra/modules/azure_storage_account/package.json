@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Storage Account with networking, monitoring, and security configurations"
+  "description": "Provisions an Azure Storage Account with networking, monitoring, and security configurations",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

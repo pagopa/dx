@@ -3,5 +3,9 @@
   "version": "0.3.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Allows to easily create an Azure FrontDoor CDN"
+  "description": "Allows to easily create an Azure FrontDoor CDN",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

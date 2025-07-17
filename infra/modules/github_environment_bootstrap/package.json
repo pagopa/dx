@@ -3,5 +3,9 @@
   "version": "0.1.1",
   "private": true,
   "provider": "github",
-  "description": "Create and configure a new GitHub repository"
+  "description": "Create and configure a new GitHub repository",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

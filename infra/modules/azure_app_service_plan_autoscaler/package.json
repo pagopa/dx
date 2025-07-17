@@ -3,5 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Configures autoscaling rules for Azure App Service Plans"
+  "description": "Configures autoscaling rules for Azure App Service Plans",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

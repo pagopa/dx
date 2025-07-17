@@ -2,5 +2,9 @@
   "name": "self-hosted-runner",
   "version": "0.0.1",
   "private": true,
-  "description": "GitHub Self-Hosted Runner"
+  "description": "GitHub Self-Hosted Runner",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
 }

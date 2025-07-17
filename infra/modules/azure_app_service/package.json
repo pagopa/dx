@@ -3,5 +3,9 @@
   "version": "1.0.1",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure App Service with networking and deployment slot support"
+  "description": "Creates an Azure App Service with networking and deployment slot support",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

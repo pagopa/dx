@@ -3,5 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Allow to output the main core values of configurations deployed via azure-core-infra module"
+  "description": "Allow to output the main core values of configurations deployed via azure-core-infra module",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }
