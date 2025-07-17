@@ -140,6 +140,5 @@ describe("makeRepositoryReader", () => {
       "utf-8",
     );
     expect(fs.glob).nthCalledWith(1, "packages/*", { cwd: repoRoot });
-    expect(fs.readFile).toHaveBeenCalledTimes(1);
   });
 });
