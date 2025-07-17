@@ -1,4 +1,4 @@
-import { errAsync, okAsync } from "neverthrow";
+import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
