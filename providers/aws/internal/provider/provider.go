@@ -70,12 +70,9 @@ func (p *dxProvider) Schema(ctx context.Context, req provider.SchemaRequest, res
 					stringvalidator.OneOf([]string{
 						"eu", "eu-west-1",
 						"euc1", "eu-central-1",
-						"euc2", "eu-central-2",
-						"euw2", "eu-west-2",
 						"euw3", "eu-west-3",
 						"eun1", "eu-north-1",
 						"eus1", "eu-south-1",
-						"eus2", "eu-south-2",
 					}...),
 				},
 			},

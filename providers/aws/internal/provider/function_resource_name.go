@@ -58,7 +58,6 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"s3_bucket":       "s3",
 		"ebs_volume":      "ebs",
 		"efs_file_system": "efs",
-		"fsx_file_system": "fsx",
 
 		// Database
 		"rds_instance":        "rds",
@@ -69,7 +68,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 
 		// Networking
 		"vpc":                       "vpc",
-		"subnet":                    "subnet",
+		"subnet":                    "snet",
 		"internet_gateway":          "igw",
 		"nat_gateway":               "nat",
 		"route_table":               "rt",
@@ -80,12 +79,6 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"application_load_balancer": "alb",
 		"network_load_balancer":     "nlb",
 		"target_group":              "tg",
-
-		// VPC Endpoints
-		"s3_vpc_endpoint":       "s3-vpce",
-		"dynamodb_vpc_endpoint": "ddb-vpce",
-		"lambda_vpc_endpoint":   "lambda-vpce",
-		"rds_vpc_endpoint":      "rds-vpce",
 
 		// API Management
 		"api_gateway":            "apigw",
@@ -107,7 +100,6 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"cloudwatch_dashboard": "cw-dash",
 		"sns_topic":            "sns",
 		"sqs_queue":            "sqs",
-		"application_insights": "appinsights",
 
 		// CDN
 		"cloudfront_distribution": "cf",
@@ -133,12 +125,10 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"resource_group": "rg",
 
 		// Route53
-		"route53_zone":   "r53-zone",
-		"route53_record": "r53-record",
+		"route53_zone": "r53-zone",
 
 		// ElastiCache specific
-		"elasticache_redis":     "redis",
-		"elasticache_memcached": "memcached",
+		"elasticache_redis": "redis",
 
 		// Application Integration
 		"sqs_dead_letter_queue": "sqs-dlq",

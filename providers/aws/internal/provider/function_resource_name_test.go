@@ -192,7 +192,7 @@ func TestResourceNameFunction_S3BucketSpecialHandling(t *testing.T) {
           value = provider::dx::resource_name({
 						prefix = "dx",
 						environment = "p",
-						region = "euw2",
+						region = "euw3",
 						name = "data-store",
 						resource_type = "s3_bucket",
 						instance_number = "5"
@@ -200,7 +200,7 @@ func TestResourceNameFunction_S3BucketSpecialHandling(t *testing.T) {
         }
         `,
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("dx-p-euw2-data-store-s3-05")),
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("dx-p-euw3-data-store-s3-05")),
 				},
 			},
 		},
@@ -248,18 +248,12 @@ func TestResourceNameFunction_AllRegions(t *testing.T) {
 		{"EU West 1 Full", "eu-west-1", "dx-d-eu-test-ec2-01"},
 		{"EU Central 1", "euc1", "dx-d-euc1-test-ec2-01"},
 		{"EU Central 1 Full", "eu-central-1", "dx-d-euc1-test-ec2-01"},
-		{"EU Central 2", "euc2", "dx-d-euc2-test-ec2-01"},
-		{"EU Central 2 Full", "eu-central-2", "dx-d-euc2-test-ec2-01"},
-		{"EU West 2", "euw2", "dx-d-euw2-test-ec2-01"},
-		{"EU West 2 Full", "eu-west-2", "dx-d-euw2-test-ec2-01"},
 		{"EU West 3", "euw3", "dx-d-euw3-test-ec2-01"},
 		{"EU West 3 Full", "eu-west-3", "dx-d-euw3-test-ec2-01"},
 		{"EU North 1", "eun1", "dx-d-eun1-test-ec2-01"},
 		{"EU North 1 Full", "eu-north-1", "dx-d-eun1-test-ec2-01"},
 		{"EU South 1", "eus1", "dx-d-eus1-test-ec2-01"},
 		{"EU South 1 Full", "eu-south-1", "dx-d-eus1-test-ec2-01"},
-		{"EU South 2", "eus2", "dx-d-eus2-test-ec2-01"},
-		{"EU South 2 Full", "eu-south-2", "dx-d-eus2-test-ec2-01"},
 	}
 
 	for _, tc := range testCases {

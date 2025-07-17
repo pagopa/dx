@@ -67,12 +67,9 @@ provider "dx" {
 | :----------- | :--------------- | :----------------- |
 | eu           | eu-west-1        | Europe (Ireland)   |
 | euc1         | eu-central-1     | Europe (Frankfurt) |
-| euc2         | eu-central-2     | Europe (Zurich)    |
-| euw2         | eu-west-2        | Europe (London)    |
 | euw3         | eu-west-3        | Europe (Paris)     |
 | eun1         | eu-north-1       | Europe (Stockholm) |
 | eus1         | eu-south-1       | Europe (Milan)     |
-| eus2         | eu-south-2       | Europe (Spain)     |
 
 ## Resources
 
@@ -208,7 +205,6 @@ The following table lists the resource types and their abbreviations used in the
 | s3_bucket                 |      s3      |
 | ebs_volume                |     ebs      |
 | efs_file_system           |     efs      |
-| fsx_file_system           |     fsx      |
 | rds_instance              |     rds      |
 | rds_cluster               |  rdscluster  |
 | dynamodb_table            |     ddb      |
@@ -226,10 +222,6 @@ The following table lists the resource types and their abbreviations used in the
 | application_load_balancer |     alb      |
 | network_load_balancer     |     nlb      |
 | target_group              |      tg      |
-| s3_vpc_endpoint           |   s3-vpce    |
-| dynamodb_vpc_endpoint     |   ddb-vpce   |
-| lambda_vpc_endpoint       | lambda-vpce  |
-| rds_vpc_endpoint          |   rds-vpce   |
 | api_gateway               |    apigw     |
 | api_gateway_v2            |   apigwv2    |
 | api_gateway_stage         | apigw-stage  |
@@ -245,7 +237,6 @@ The following table lists the resource types and their abbreviations used in the
 | cloudwatch_dashboard      |   cw-dash    |
 | sns_topic                 |     sns      |
 | sqs_queue                 |     sqs      |
-| application_insights      | appinsights  |
 | cloudfront_distribution   |      cf      |
 | cloudfront_origin         |  cf-origin   |
 | ecr_repository            |     ecr      |
@@ -260,9 +251,7 @@ The following table lists the resource types and their abbreviations used in the
 | opensearch_domain         |      os      |
 | resource_group            |      rg      |
 | route53_zone              |   r53-zone   |
-| route53_record            |  r53-record  |
 | elasticache_redis         |    redis     |
-| elasticache_memcached     |  memcached   |
 | sqs_dead_letter_queue     |   sqs-dlq    |
 | sns_subscription          |   sns-sub    |
 
