@@ -69,26 +69,83 @@ The test suite is organized following the testing pyramid pattern:
 
 ## Running Tests
 
-### Run All Tests
+### Prerequisites
+
+The tests require Azure authentication to access data sources. You have several options:
+
+#### Option 1: Azure CLI Authentication (Recommended for Development)
+```bash
+az login
+terraform test
+```
+
+#### Option 2: Service Principal Authentication
+```bash
+export ARM_SUBSCRIPTION_ID="your-subscription-id"
+export ARM_TENANT_ID="your-tenant-id"
+export ARM_CLIENT_ID="your-client-id"
+export ARM_CLIENT_SECRET="your-client-secret"
+terraform test
+```
+
+#### Option 3: Mock Testing (Limited Unit Tests)
+For testing without Azure authentication, you can use mock data:
+```bash
+# Configure tests to use mock setup
+sed -i 's|tests/setup|tests/mock-setup|g' tests/*.tftest.hcl
+# Set mock data flag
+export TF_VAR_use_mock_data=true
+terraform test
+```
+
+### Test Execution Commands
+
+#### Run All Tests
 ```bash
 terraform test
 ```
 
-### Run Specific Test Files
+#### Run Specific Test Files
 ```bash
 terraform test -filter=unit-app-service-plan.tftest.hcl
 terraform test -filter=integration-app-settings.tftest.hcl
 terraform test -filter=validation-error-conditions.tftest.hcl
 ```
 
-### Run Tests with Verbose Output
+#### Run Tests with Verbose Output
 ```bash
 terraform test -verbose
 ```
 
-### Run Tests in Parallel
+#### Run Tests in Parallel
 ```bash
 terraform test -parallelism=5
+```
+
+#### Run Tests with JSON Output
+```bash
+terraform test -json
+```
+
+### CI/CD Integration
+
+For CI/CD pipelines, configure authentication using service principal:
+
+```yaml
+# Example GitHub Actions workflow
+steps:
+  - name: Configure Azure credentials
+    run: |
+      export ARM_SUBSCRIPTION_ID="${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+      export ARM_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+      export ARM_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+      export ARM_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+      
+  - name: Run Terraform tests
+    run: |
+      cd infra/modules/azure_app_service
+      terraform init
+      terraform test -verbose
 ```
 
 ## Test Coverage
@@ -186,19 +243,34 @@ The tests are designed to be run in CI/CD pipelines:
 - Use setup modules for common test infrastructure
 - Leverage parallelism for faster execution
 
-## Troubleshooting
+### Troubleshooting
 
 ### Common Issues
-1. **Test Setup Failures** - Ensure setup module has correct permissions
-2. **Assertion Failures** - Check variable names and expected values
-3. **Resource Conflicts** - Use unique CIDR blocks and resource names
-4. **Provider Issues** - Verify provider authentication and versions
+1. **Authentication Failures** - Ensure Azure CLI is logged in or service principal is configured
+2. **Test Setup Failures** - Verify that required Azure resources exist (resource groups, virtual networks)
+3. **Assertion Failures** - Check variable names and expected values in test assertions
+4. **Resource Conflicts** - Use unique CIDR blocks and resource names across test runs
+5. **Provider Issues** - Verify provider authentication and versions
 
 ### Debug Tips
 1. Use `terraform test -verbose` for detailed output
 2. Check individual test files with `-filter` option
 3. Review assertion error messages for specific failures
 4. Validate test variables and expected outcomes
+5. Use `terraform validate` to check configuration syntax
+
+### Authentication Issues
+If you encounter authentication errors:
+1. Verify Azure CLI login: `az account show`
+2. Check service principal configuration
+3. Ensure required permissions are granted
+4. Consider using mock setup for development testing
+
+### Test Data Management
+- Tests use mock data when Azure resources are not available
+- Real Azure resources are required for full integration testing
+- Data sources may fail without proper authentication
+- Consider using dedicated test subscriptions for isolation
 
 ## Future Enhancements
 
