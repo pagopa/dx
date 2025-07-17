@@ -58,6 +58,8 @@
     "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   }
 }

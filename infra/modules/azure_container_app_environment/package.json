@@ -3,5 +3,9 @@
   "version": "1.0.2",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Container App Environment with a given configuration"
+  "description": "Provisions an Azure Container App Environment with a given configuration",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

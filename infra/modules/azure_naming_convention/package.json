@@ -3,5 +3,9 @@
   "version": "0.0.7",
   "private": true,
   "provider": "azurerm",
-  "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns"
+  "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

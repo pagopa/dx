@@ -3,5 +3,9 @@
   "version": "1.1.2",
   "private": true,
   "provider": "azurerm",
-  "description": "Deploys GitHub self-hosted runners using Azure Container Apps jobs for scalable CI/CD workflows"
+  "description": "Deploys GitHub self-hosted runners using Azure Container Apps jobs for scalable CI/CD workflows",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

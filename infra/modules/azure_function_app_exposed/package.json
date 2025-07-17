@@ -3,5 +3,9 @@
   "version": "1.0.1",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure Function App configured for external access"
+  "description": "Creates an Azure Function App configured for external access",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

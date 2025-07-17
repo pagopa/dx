@@ -4,6 +4,7 @@
   "private": true,
   "description": "Terraform provider for DX on Azure, to enhance developer experience",
   "scripts": {
-    "format": "go fmt"
+    "format": "go fmt",
+    "format:check": "go fmt -l"
   }
 }

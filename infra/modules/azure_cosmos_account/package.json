@@ -3,5 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings"
+  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

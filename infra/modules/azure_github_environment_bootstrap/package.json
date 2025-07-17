@@ -3,5 +3,9 @@
   "version": "2.4.4",
   "private": true,
   "provider": "azurerm",
-  "description": "Sets up monorepo's settings and required Azure permissions and roles"
+  "description": "Sets up monorepo's settings and required Azure permissions and roles",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

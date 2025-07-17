@@ -3,5 +3,9 @@
   "version": "2.0.1",
   "private": true,
   "provider": "azurerm",
-  "description": "Deploys an Azure Function App with storage, networking and RBAC configuration"
+  "description": "Deploys an Azure Function App with storage, networking and RBAC configuration",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

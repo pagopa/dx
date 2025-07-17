@@ -3,5 +3,9 @@
   "version": "1.0.3",
   "private": true,
   "provider": "azurerm",
-  "description": "Sets up federated identity between Azure and GitHub for authentication"
+  "description": "Sets up federated identity between Azure and GitHub for authentication",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

@@ -3,5 +3,9 @@
   "version": "0.0.4",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure App Service Plan"
+  "description": "Creates an Azure App Service Plan",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }

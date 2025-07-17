@@ -3,5 +3,9 @@
   "version": "1.2.2",
   "private": true,
   "provider": "azurerm",
-  "description": "Deploys an Azure API Management service with monitoring and network configuration"
+  "description": "Deploys an Azure API Management service with monitoring and network configuration",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check"
+  }
 }
