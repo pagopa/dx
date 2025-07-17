@@ -6,6 +6,7 @@
   "description": "Allow to output the main core values of configurations deployed via azure-core-infra module",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }

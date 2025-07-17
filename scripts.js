@@ -6,12 +6,14 @@ const toolchain = {
   "terraform-module": {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
+    validate: "terraform validate",
   },
   terraform: {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
     plan: "terraform plan",
     init: "terraform init",
+    validate: "terraform validate",
   },
   javascript: {
     format: "prettier --write .",

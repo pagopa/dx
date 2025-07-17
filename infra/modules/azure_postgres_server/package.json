@@ -6,6 +6,7 @@
   "description": "Deploys and configures Azure PostgreSQL Flexible Server with monitoring and networking capabilities",
   "scripts": {
     "format": "terraform fmt",
-    "format:check": "terraform fmt -check"
+    "format:check": "terraform fmt -check",
+    "validate": "terraform validate"
   }
 }
