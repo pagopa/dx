@@ -1,3 +1,4 @@
+import * as glob from "glob";
 import { err, ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,14 +7,8 @@ import { PackageJson } from "../../../domain/package-json.js";
 import { makeRepositoryReader } from "../repository.js";
 import { makeMockPackageJson, makeMockPnpmWorkspaceYaml } from "./data.js";
 
-async function* makeAsyncPaths(paths: string[]) {
-  for (const path of paths) {
-    await new Promise((resolve) => resolve(path));
-    yield path;
-  }
-}
-
 describe("makeRepositoryReader", () => {
+  vi.mock("glob", { spy: true });
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -38,7 +33,7 @@ describe("makeRepositoryReader", () => {
 
     it("should return no workspaces if the packages entry is not in the pnpm-workspace.yaml file", async () => {
       vi.spyOn(fs, "readFile").mockResolvedValueOnce("aValidYaml");
-      vi.spyOn(fs, "glob");
+      vi.spyOn(glob, "glob");
 
       const repositoryReader = makeRepositoryReader();
       const result = await repositoryReader.getWorkspaces(repoRoot);
@@ -49,7 +44,7 @@ describe("makeRepositoryReader", () => {
         "/some/repo/root/pnpm-workspace.yaml",
         "utf-8",
       );
-      expect(fs.glob).not.toHaveBeenCalled();
+      expect(glob.glob).not.toHaveBeenCalled();
     });
   });
 
@@ -68,9 +63,10 @@ describe("makeRepositoryReader", () => {
           makeMockPackageJson({ name: "bar" as PackageJson["name"] }),
         ),
       );
-    vi.spyOn(fs, "glob").mockImplementationOnce(() =>
-      makeAsyncPaths(["packages/foo", "packages/bar"]),
-    );
+    vi.mocked(glob.glob).mockResolvedValueOnce([
+      "packages/foo",
+      "packages/bar",
+    ]);
 
     const repositoryReader = makeRepositoryReader();
     const result = await repositoryReader.getWorkspaces(repoRoot);
@@ -92,8 +88,10 @@ describe("makeRepositoryReader", () => {
       "/some/repo/root/pnpm-workspace.yaml",
       "utf-8",
     );
-    expect(fs.glob).toHaveBeenCalledTimes(1);
-    expect(fs.glob).toHaveBeenCalledWith("packages/*", { cwd: repoRoot });
+    expect(vi.mocked(glob.glob)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(glob.glob)).toHaveBeenCalledWith("packages/*", {
+      cwd: repoRoot,
+    });
     expect(fs.readFile).nthCalledWith(
       2,
       "/some/repo/root/packages/foo/package.json",
@@ -110,10 +108,9 @@ describe("makeRepositoryReader", () => {
     vi.spyOn(fs, "readFile")
       // First read the pnpm-workspace.yaml file
       .mockResolvedValueOnce(makeMockPnpmWorkspaceYaml());
-    vi.spyOn(fs, "glob").mockImplementationOnce(async function* () {
-      throw new Error("glob failed");
-      yield "";
-    });
+    vi.mocked(glob.glob).mockImplementationOnce(() =>
+      Promise.reject(new Error("glob failed")),
+    );
 
     const repositoryReader = makeRepositoryReader();
     const result = await repositoryReader.getWorkspaces(repoRoot);
@@ -125,6 +122,8 @@ describe("makeRepositoryReader", () => {
       "/some/repo/root/pnpm-workspace.yaml",
       "utf-8",
     );
-    expect(fs.glob).toBeCalledWith("packages/*", { cwd: repoRoot });
+    expect(vi.mocked(glob.glob)).toBeCalledWith("packages/*", {
+      cwd: repoRoot,
+    });
   });
 });
