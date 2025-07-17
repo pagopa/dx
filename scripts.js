@@ -3,9 +3,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const toolchain = {
+  "terraform-module": {
+    format: "terraform fmt",
+    "format:check": "terraform fmt -check",
+  },
   terraform: {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
+    plan: "terraform plan",
+    init: "terraform init",
   },
   javascript: {
     format: "prettier --write .",
@@ -17,22 +23,28 @@ const toolchain = {
   },
 };
 
-function getLanguage(workspacePath) {
-  if (workspacePath.startsWith("infra")) {
-    return "terraform";
+function getToolchain(ws) {
+  if (ws.path.startsWith("infra/modules")) {
+    return toolchain["terraform-module"];
   }
-  if (workspacePath.startsWith("providers")) {
-    return "go";
+  if (ws.path.startsWith("infra/scripts")) {
+    return toolchain.javascript;
   }
-  return "javascript";
+  if (ws.path.startsWith("infra")) {
+    return toolchain.terraform;
+  }
+  if (ws.path.startsWith("providers")) {
+    return toolchain.go;
+  }
+  return toolchain.javascript;
 }
 
-async function updatePackageScripts(workspacePath) {
-  const packageJsonPath = path.join(workspacePath, "package.json");
+async function updatePackageScripts(ws) {
+  const packageJsonPath = path.join(ws.path, "package.json");
   const content = await fs.readFile(packageJsonPath, "utf8");
   const packageJson = JSON.parse(content);
   packageJson.scripts = packageJson.scripts || {};
-  Object.assign(packageJson.scripts, toolchain[getLanguage(workspacePath)]);
+  Object.assign(packageJson.scripts, getToolchain(ws));
   await fs.writeFile(
     packageJsonPath,
     JSON.stringify(packageJson, null, 2) + "\n",
@@ -48,7 +60,7 @@ async function run() {
   })("turbo", ["ls", "--output", "json"]);
   const workspace = JSON.parse(stdout);
   return Promise.all(
-    workspace.packages.items.map((ws) => updatePackageScripts(ws.path)),
+    workspace.packages.items.map((ws) => updatePackageScripts(ws)),
   );
 }
 
