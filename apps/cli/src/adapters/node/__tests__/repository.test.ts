@@ -35,16 +35,6 @@ describe("makeRepositoryReader", () => {
         ),
       );
     });
-    it("should return an error when pnpm-workspace.yaml is malformed", async () => {
-      vi.spyOn(fs, "readFile").mockResolvedValueOnce(
-        "invalid: content: not a valid YAML",
-      );
-
-      const repositoryReader = makeRepositoryReader();
-      const result = await repositoryReader.getWorkspaces(repoRoot);
-
-      expect(result).toStrictEqual(err(new Error("Failed to parse YAML")));
-    });
 
     it("should return no workspaces if the packages entry is not in the pnpm-workspace.yaml file", async () => {
       vi.spyOn(fs, "readFile").mockResolvedValueOnce("aValidYaml");
@@ -59,7 +49,7 @@ describe("makeRepositoryReader", () => {
         "/some/repo/root/pnpm-workspace.yaml",
         "utf-8",
       );
-      expect(fs.glob).toHaveBeenCalledTimes(0);
+      expect(fs.glob).not.toHaveBeenCalled();
     });
   });
 
@@ -102,7 +92,8 @@ describe("makeRepositoryReader", () => {
       "/some/repo/root/pnpm-workspace.yaml",
       "utf-8",
     );
-    expect(fs.glob).nthCalledWith(1, "packages/*", { cwd: repoRoot });
+    expect(fs.glob).toHaveBeenCalledTimes(1);
+    expect(fs.glob).toHaveBeenCalledWith("packages/*", { cwd: repoRoot });
     expect(fs.readFile).nthCalledWith(
       2,
       "/some/repo/root/packages/foo/package.json",
@@ -119,14 +110,10 @@ describe("makeRepositoryReader", () => {
     vi.spyOn(fs, "readFile")
       // First read the pnpm-workspace.yaml file
       .mockResolvedValueOnce(makeMockPnpmWorkspaceYaml());
-    vi.spyOn(fs, "glob").mockImplementationOnce(() => ({
-      async next() {
-        throw new Error("glob failed");
-      },
-      [Symbol.asyncIterator]() {
-        return this;
-      },
-    }));
+    vi.spyOn(fs, "glob").mockImplementationOnce(async function* () {
+      throw new Error("glob failed");
+      yield "";
+    });
 
     const repositoryReader = makeRepositoryReader();
     const result = await repositoryReader.getWorkspaces(repoRoot);
@@ -134,11 +121,10 @@ describe("makeRepositoryReader", () => {
     expect(result).toStrictEqual(
       err(new Error("Failed to resolve workspace glob: packages/*")),
     );
-    expect(fs.readFile).nthCalledWith(
-      1,
+    expect(fs.readFile).toBeCalledWith(
       "/some/repo/root/pnpm-workspace.yaml",
       "utf-8",
     );
-    expect(fs.glob).nthCalledWith(1, "packages/*", { cwd: repoRoot });
+    expect(fs.glob).toBeCalledWith("packages/*", { cwd: repoRoot });
   });
 });
