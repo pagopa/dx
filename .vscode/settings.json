@@ -1,7 +1,10 @@
 {
-  "github.copilot.chat.codeGeneration.instructions": [
+  "chat.agent.enabled": true,
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "chat.promptFiles": true,
+  "github.copilot.chat.reviewSelection.instructions": [
     {
-      "file": ".github/instructions/code.instructions.md"
+      "file": ".github/instructions/review.instructions.md"
     }
   ],
   "github.copilot.chat.commitMessageGeneration.instructions": [
@@ -11,21 +14,13 @@
   ],
   "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
     {
-      "file": ".github/instructions/pull-request-description.instructions.md"
-    }
-  ],
-  "github.copilot.chat.reviewSelection.instructions": [
-    {
       "file": ".github/instructions/review.instructions.md"
-    }
-  ],
-  "github.copilot.chat.testGeneration.instructions": [
-    {
-      "file": ".github/instructions/test.instructions.md"
     }
   ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
   "[terraform]": {
     "editor.defaultFormatter": "hashicorp.terraform"
   },
