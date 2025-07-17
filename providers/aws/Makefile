@@ -1,5 +1,5 @@
 test:
-	go test -v ./...
+	go test -v ./internal/provider
 
 testacc:
-	TF_ACC=1 go test -v ./... -tags=acceptance
+	TF_ACC=1 go test -v ./internal/provider -tags=acceptance
