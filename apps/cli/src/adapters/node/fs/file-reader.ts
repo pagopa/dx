@@ -30,3 +30,9 @@ export const readFileAndDecode = <T>(
     .andThen(toJSON)
     .andThen(decode);
 };
+
+export const fileExists = (path: string): ResultAsync<boolean, Error> =>
+  ResultAsync.fromPromise(
+    fs.stat(path),
+    () => new Error(`${path} not found.`),
+  ).map(() => true);
