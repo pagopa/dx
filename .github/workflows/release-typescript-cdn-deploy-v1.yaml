@@ -11,6 +11,11 @@ on:
         description: The name of the workspace to create the artifact for.
         type: string
         required: true
+      output_dir:
+        description: The name of the build output directory.
+        type: string
+        required: false
+        default: 'dist'
       storage_account_name:
         description: Azure Storage account name where the assets will be uploaded.
         type: string
@@ -58,6 +63,7 @@ concurrency:
 
 env:
   BUNDLE_NAME: bundle
+  OUTPUT_DIR: ${{ inputs.output_dir }}
 
 jobs:
   build:
@@ -98,18 +104,20 @@ jobs:
         run: npx turbo build
         working-directory: ./out
 
-      - name: Find dist directory path
-        id: find_dist
+      - name: Find build output directory path
+        id: find_package
         run: |
-          dist_path=$(find ./out -path '*/node_modules' -prune -o -type d -name dist -print | head -n 1)
-          echo "Found dist directory at: $dist_path"
-          echo "dist_path=$dist_path" >> $GITHUB_OUTPUT
+          packages_path=$(TURBO_PRINT_VERSION_DISABLED=1 npx turbo ls --output json | jq -sr --arg WORKSPACE "$WORKSPACE" '.[].packages.items[] | select(.name==$WORKSPACE).path')
+          echo "Found $OUTPUT_DIR directory at: ./out/$packages_path/$OUTPUT_DIR"
+          echo "packages_path=./out/$packages_path/$OUTPUT_DIR" >> $GITHUB_OUTPUT
+        env:
+          WORKSPACE: ${{ inputs.workspace_name }}
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
-          file_path: ${{ steps.find_dist.outputs.dist_path }}
+          file_path: ${{ steps.find_package.outputs.packages_path }}
 
   deploy:
     name: Deploy
@@ -129,7 +137,7 @@ jobs:
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
-          file_path: "./dist"
+          file_path: "./${{ env.OUTPUT_DIR }}"
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
@@ -147,6 +155,7 @@ jobs:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           profile_name: ${{ env.CDN_PROFILE_NAME }}
           endpoint_name: ${{ env.CDN_ENDPOINT_NAME }}
+          sync_dir_name: ${{ env.OUTPUT_DIR }}
         env:
           STORAGE_ACCOUNT_NAME: ${{ inputs.storage_account_name }}
           RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
