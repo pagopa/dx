@@ -169,6 +169,7 @@ func (r *availableSubnetCidrResource) Create(ctx context.Context, req resource.C
 			"AWS API Error",
 			"Unable to describe subnets: "+err.Error(),
 		)
+		return
 	}
 
 	// Collect existing CIDR blocks
