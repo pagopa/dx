@@ -1,9 +1,10 @@
 import { err, ok } from "neverthrow";
+import { Stats } from "node:fs";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod/v4";
 
-import { readFileAndDecode } from "../file-reader.js";
+import { fileExists, readFileAndDecode } from "../file-reader.js";
 
 describe("readFileAndDecode", () => {
   beforeEach(() => {
@@ -64,5 +65,27 @@ describe("readFileAndDecode", () => {
     expect(result).toStrictEqual(
       err(new Error("File content is not valid for the given schema")),
     );
+  });
+});
+
+describe("fileExists", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return true when the path exists", async () => {
+    vi.spyOn(fs, "stat").mockResolvedValueOnce({} as Stats);
+    const result = await fileExists("/path/to/file.txt");
+    expect(result).toStrictEqual(ok(true));
+    expect(fs.stat).toHaveBeenCalledWith("/path/to/file.txt");
+  });
+
+  it("should return the error when the path does not exist", async () => {
+    vi.spyOn(fs, "stat").mockRejectedValueOnce(new Error("not found"));
+    const result = await fileExists("/path/to/missing.txt");
+    expect(result).toStrictEqual(
+      err(new Error("/path/to/missing.txt not found.")),
+    );
+    expect(fs.stat).toHaveBeenCalledWith("/path/to/missing.txt");
   });
 });
