@@ -27,6 +27,16 @@
       ],
       "outputs": ["coverage"],
       "outputLogs": "errors-only"
+    },
+    "init": {
+      "inputs": ["**/*.tf"]
+    },
+    "validate": {
+      "dependsOn": ["init"],
+      "inputs": ["**/*.tf"]
+    },
+    "plan": {
+      "inputs": ["**/*.tf"]
     }
   }
 }

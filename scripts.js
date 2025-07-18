@@ -7,6 +7,7 @@ const toolchain = {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
     validate: "terraform validate",
+    init: "terraform init",
   },
   terraform: {
     format: "terraform fmt",
@@ -21,7 +22,7 @@ const toolchain = {
   },
   go: {
     format: "go fmt",
-    "format:check": "go fmt -l",
+    "format:check": "gofmt -l main.go",
   },
 };
 

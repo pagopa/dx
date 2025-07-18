@@ -5,6 +5,6 @@
   "description": "Terraform provider for DX on Azure, to enhance developer experience",
   "scripts": {
     "format": "go fmt",
-    "format:check": "go fmt -l"
+    "format:check": "gofmt -l main.go"
   }
 }
