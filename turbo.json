@@ -36,6 +36,7 @@
       "inputs": ["**/*.tf"]
     },
     "plan": {
+      "dependsOn": ["init"],
       "inputs": ["**/*.tf"]
     }
   }
