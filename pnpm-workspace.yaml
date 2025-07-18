@@ -2,6 +2,7 @@ packages:
   - packages/*
   - apps/*
   - infra/modules/*
+  - infra/resources/*
   - infra/scripts
   - providers/*
   - containers/*

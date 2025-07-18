@@ -272,6 +272,10 @@ importers:
 
   infra/modules/github_selfhosted_runner_on_container_app_jobs: {}
 
+  infra/resources/dev: {}
+
+  infra/resources/prod: {}
+
   infra/scripts: {}
 
   packages/azure-tracing:
