@@ -6,7 +6,7 @@ resource "azurerm_storage_account" "this" {
   account_kind                    = "StorageV2"
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = local.tier_features.replication_type
-  access_tier                     = var.access_tier
+  access_tier                     = local.mapped_access_tier
   public_network_access_enabled   = var.force_public_network_access_enabled
   allow_nested_items_to_be_public = var.force_public_network_access_enabled
 
