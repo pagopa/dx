@@ -29,7 +29,9 @@ export const makeDoctorCommand = (
     .action(async () => {
       const { repositoryReader, validationReporter } = dependencies;
 
-      const repoRootResult = repositoryReader.findRepositoryRoot(process.cwd());
+      const repoRootResult = await repositoryReader.findRepositoryRoot(
+        process.cwd(),
+      );
       if (repoRootResult.isErr()) {
         logger.error(`❌ ${repoRootResult.error.message}`);
         process.exit(1);
