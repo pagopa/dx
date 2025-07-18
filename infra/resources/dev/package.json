@@ -1,0 +1,10 @@
+{
+  "name": "dev-resources",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check",
+    "plan": "terraform plan",
+    "init": "terraform init",
+    "validate": "terraform validate"
+  }
+}
