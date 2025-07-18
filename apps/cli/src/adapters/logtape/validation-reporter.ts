@@ -16,11 +16,9 @@ export const makeValidationReporter = (): ValidationReporter => {
           logger.info(`✅ ${validation.successMessage}`);
         } else {
           logger.error(`❌ ${validation.errorMessage}`);
-          process.exit(1);
         }
       } else {
         logger.error(`❌ ${result.error.message}`);
-        process.exit(1);
       }
     },
   };
