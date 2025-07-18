@@ -275,7 +275,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		instance))
 
 	// Special handling for S3 buckets - they need globally unique names and no underscores
-	if strings.Contains(resourceType, "s3_bucket") {
+	if resourceType == "s3_bucket" {
 		result = strings.ReplaceAll(result, "_", "-")
 	}
 
