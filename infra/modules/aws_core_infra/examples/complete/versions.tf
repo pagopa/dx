@@ -9,17 +9,9 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
-
-    github = {
-      source  = "integrations/github"
-      version = "~> 6.0"
-    }
   }
 }
 
 provider "aws" {
-  region = var.environment.location
-  default_tags {
-    tags = var.tags
-  }
+  region = local.environment.location
 }
