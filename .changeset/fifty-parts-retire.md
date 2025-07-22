@@ -2,6 +2,6 @@
 "@pagopa/dx-cli": patch
 ---
 
-Refactor the `doctor` command logic to deep use the ResultAsync utilities
+Refactor the `doctor` command logic call the functions from the domain.
 
 The business logic hasn't changed.
