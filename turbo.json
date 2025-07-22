@@ -1,5 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "ARM_SUBSCRIPTION_ID",
+    "ARM_CLIENT_ID",
+    "ARM_CLIENT_SECRET",
+    "ARM_TENANT_ID",
+    "GITHUB_TOKEN"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -28,16 +35,17 @@
       "outputs": ["coverage"],
       "outputLogs": "errors-only"
     },
-    "init": {
-      "inputs": ["**/*.tf"]
+    "tf-init": {
+      "inputs": ["*.tf"],
+      "outputLogs": "hash-only"
     },
-    "validate": {
-      "dependsOn": ["init"],
-      "inputs": ["**/*.tf"]
+    "tf-validate": {
+      "dependsOn": ["tf-init"],
+      "inputs": ["*.tf"],
+      "outputLogs": "hash-only"
     },
-    "plan": {
-      "dependsOn": ["init"],
-      "inputs": ["**/*.tf"]
+    "tf-plan": {
+      "dependsOn": ["tf-validate", "tf-init"]
     }
   }
 }

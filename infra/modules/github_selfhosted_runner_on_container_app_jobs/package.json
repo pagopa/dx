@@ -7,7 +7,7 @@
   "scripts": {
     "format": "terraform fmt",
     "format:check": "terraform fmt -check",
-    "validate": "terraform validate",
-    "init": "terraform init"
+    "tf-validate": "terraform validate",
+    "tf-init": "terraform init"
   }
 }

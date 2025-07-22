@@ -6,15 +6,15 @@ const toolchain = {
   "terraform-module": {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
-    validate: "terraform validate",
-    init: "terraform init",
+    "tf-validate": "terraform validate",
+    "tf-init": "terraform init",
   },
   terraform: {
     format: "terraform fmt",
     "format:check": "terraform fmt -check",
-    plan: "terraform plan",
-    init: "terraform init",
-    validate: "terraform validate",
+    "tf-plan": "terraform plan -no-color -out=$npm_package_name.tfplan",
+    "tf-init": "terraform init",
+    "tf-validate": "terraform validate",
   },
   javascript: {
     format: "prettier --write .",
@@ -47,7 +47,11 @@ async function updatePackageScripts(ws) {
   const content = await fs.readFile(packageJsonPath, "utf8");
   const packageJson = JSON.parse(content);
   packageJson.scripts = packageJson.scripts || {};
-  Object.assign(packageJson.scripts, getToolchain(ws));
+  if (ws.path.startsWith("infra")) {
+    packageJson.scripts = getToolchain(ws);
+  } else {
+    Object.assign(packageJson.scripts, getToolchain(ws));
+  }
   await fs.writeFile(
     packageJsonPath,
     JSON.stringify(packageJson, null, 2) + "\n",
