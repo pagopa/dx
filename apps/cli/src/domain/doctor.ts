@@ -26,7 +26,7 @@ const runDoctor =
   (dependencies: Dependencies): DoctorEnv["doctor"] =>
   (config) =>
     dependencies.repositoryReader
-      .findRepositoryRoot(process.cwd())
+      .findRepositoryRoot()
       .andThen((repoRoot) => {
         const doctorChecks = [
           ResultAsync.fromPromise(

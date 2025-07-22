@@ -10,7 +10,7 @@ import { ValidationCheckResult } from "./validation.js";
 export interface RepositoryReader {
   existsPreCommitConfig(repoRoot: string): ResultAsync<boolean, Error>;
   existsTurboConfig(repoRoot: string): ResultAsync<boolean, Error>;
-  findRepositoryRoot(cwd: string): ResultAsync<string, Error>;
+  findRepositoryRoot(cwd?: string): ResultAsync<string, Error>;
 }
 
 const isVersionValid = (version: string, minVersion: string): boolean => {

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { RepositoryReader } from "../../domain/repository.js";
 import { fileExists } from "./fs/file-reader.js";
 
-const findRoot = (dir: string): ResultAsync<string, Error> => {
+const findRoot = (dir = process.cwd()): ResultAsync<string, Error> => {
   const gitPath = join(dir, ".git");
   return ResultAsync.fromPromise(
     fs.stat(gitPath),
