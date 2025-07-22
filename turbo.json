@@ -37,12 +37,12 @@
     },
     "tf-init": {
       "inputs": ["*.tf"],
-      "outputLogs": "hash-only"
+      "outputLogs": "full"
     },
     "tf-validate": {
       "dependsOn": ["tf-init"],
       "inputs": ["*.tf"],
-      "outputLogs": "hash-only"
+      "outputLogs": "full"
     },
     "tf-plan": {
       "dependsOn": ["tf-validate", "tf-init"]
