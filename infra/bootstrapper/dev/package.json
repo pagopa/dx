@@ -1,5 +1,5 @@
 {
-  "name": "dev-resources",
+  "name": "dev-bootstrapper",
   "scripts": {
     "format": "terraform fmt",
     "format:check": "terraform fmt -check",

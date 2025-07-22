@@ -3,8 +3,8 @@
   "scripts": {
     "format": "terraform fmt",
     "format:check": "terraform fmt -check",
-    "plan": "terraform plan",
-    "init": "terraform init",
-    "validate": "terraform validate"
+    "tf-plan": "terraform plan -no-color -out=$npm_package_name.tfplan",
+    "tf-init": "terraform init",
+    "tf-validate": "terraform validate"
   }
 }

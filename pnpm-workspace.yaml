@@ -3,6 +3,7 @@ packages:
   - apps/*
   - infra/modules/*
   - infra/resources/*
+  - infra/bootstrapper/*
   - infra/scripts
   - providers/*
   - containers/*
