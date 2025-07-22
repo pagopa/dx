@@ -49,6 +49,12 @@ variable "subnet_pep_id" {
   description = "The ID of the subnet used for private endpoints."
 }
 
+variable "delegated_subnet_id" {
+  type        = string
+  description = "The ID of the subnet to which the PostgreSQL Flexible Server will be delegated."
+  default     = null
+}
+
 #----------------#
 # Administration #
 #----------------#

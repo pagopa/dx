@@ -23,6 +23,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
 
   # Network
   public_network_access_enabled = false
+  delegated_subnet_id           = var.delegated_subnet_id
 
   # Credentials
   administrator_login    = var.administrator_credentials.name
