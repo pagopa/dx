@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.3.2
+
+### Patch Changes
+
+- 35645df: Convert the functions of the RepositoryReader interface to async
+
+  This change was made to ensure all file system operations are handled asynchronously, improving performance and consistency across the codebase.
+
 ## 0.3.1
 
 ### Patch Changes

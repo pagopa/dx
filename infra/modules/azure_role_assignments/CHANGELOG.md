@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.2.0
+
+### Minor Changes
+
+- 93d355a: Add permissions to set visibility timeout in storage queues to readers
+
 ## 1.1.2
 
 ### Patch Changes
