@@ -1,4 +1,4 @@
-import { err } from "neverthrow";
+import { errAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -13,7 +13,7 @@ describe("doctor command", () => {
     const deps = makeMockDependencies();
 
     deps.repositoryReader.findRepositoryRoot.mockImplementationOnce(() =>
-      err(new Error("Could not find repository root")),
+      errAsync(new Error("Could not find repository root")),
     );
 
     const doctorCommand = makeDoctorCommand(deps, config);

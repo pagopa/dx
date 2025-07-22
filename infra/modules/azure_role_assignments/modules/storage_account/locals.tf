@@ -54,7 +54,7 @@ locals {
     }
 
     queue = {
-      reader = ["Storage Queue Data Message Processor", "Storage Queue Data Reader"],
+      reader = ["Storage Queue Data Message Processor", "Storage Queue Data Reader", "PagoPA Storage Queue Data Message Contributor"],
       writer = ["Storage Queue Data Message Sender"],
       owner  = ["Storage Queue Data Contributor"]
     }

@@ -1,7 +1,7 @@
+import { err, ok } from "neverthrow";
 import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { dependenciesArraySchema, scriptsArraySchema } from "../codec.js";
 import { makePackageJsonReader } from "../package-json.js";
 import { makeMockPackageJson } from "./data.js";
 
@@ -24,14 +24,9 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
 
-      expect(result.isOk()).toBe(true);
-
-      if (result.isOk()) {
-        const scripts = result.value;
-        expect(scripts).toStrictEqual(
-          scriptsArraySchema.parse(mockPackageJson.scripts),
-        );
-      }
+      expect(result).toStrictEqual(
+        ok(new Map().set("build", "tsc").set("code-review", "eslint .")),
+      );
 
       expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
@@ -49,12 +44,7 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
 
-      expect(result.isOk()).toBe(true);
-
-      if (result.isOk()) {
-        const scripts = result.value;
-        expect(scripts).toStrictEqual([]);
-      }
+      expect(result).toStrictEqual(ok(new Map()));
     });
 
     it("should return an error when package.json does not exist", async () => {
@@ -65,11 +55,9 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
 
-      expect(result.isErr()).toBe(true);
-
-      if (result.isErr()) {
-        expect(result.error.message).toContain("Failed to read package.json");
-      }
+      expect(result).toStrictEqual(
+        err(new Error("Failed to read file: /some/dir/package.json")),
+      );
     });
 
     it("should return an error when package.json is invalid JSON", async () => {
@@ -78,11 +66,7 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getScripts(directory);
 
-      expect(result.isErr()).toBe(true);
-
-      if (result.isErr()) {
-        expect(result.error.message).toContain("Failed to parse JSON");
-      }
+      expect(result).toStrictEqual(err(new Error("Failed to parse JSON")));
     });
   });
 
@@ -104,14 +88,9 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
 
-      expect(result.isOk()).toBe(true);
-
-      if (result.isOk()) {
-        const dependencies = result.value;
-        expect(dependencies).toStrictEqual(
-          dependenciesArraySchema.parse(mockPackageJson.devDependencies),
-        );
-      }
+      expect(result).toStrictEqual(
+        ok(new Map().set("turbo", "^2.5.2").set("typescript", "^5.0.0")),
+      );
 
       expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
@@ -130,14 +109,13 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "prod");
 
-      expect(result.isOk()).toBe(true);
-
-      if (result.isOk()) {
-        const dependencies = result.value;
-        expect(dependencies).toStrictEqual(
-          dependenciesArraySchema.parse(mockPackageJson.dependencies),
-        );
-      }
+      expect(result).toStrictEqual(
+        ok(
+          new Map()
+            .set("aDependency", "^4.17.21")
+            .set("anotherDependency", "^8.0.0"),
+        ),
+      );
 
       expect(mockReadFile).toHaveBeenCalledWith(
         `${directory}/package.json`,
@@ -157,12 +135,7 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
 
-      expect(result.isOk()).toBe(true);
-
-      if (result.isOk()) {
-        const dependencies = result.value;
-        expect(dependencies).toStrictEqual([]);
-      }
+      expect(result).toStrictEqual(ok(new Map()));
     });
 
     it("should return an error when package.json does not exist for dependencies", async () => {
@@ -173,11 +146,9 @@ describe("makePackageJsonReader", () => {
       const packageJsonReader = makePackageJsonReader();
       const result = await packageJsonReader.getDependencies(directory, "dev");
 
-      expect(result.isErr()).toBe(true);
-
-      if (result.isErr()) {
-        expect(result.error.message).toContain("Failed to read package.json");
-      }
+      expect(result).toStrictEqual(
+        err(new Error("Failed to read file: /some/dir/package.json")),
+      );
     });
   });
 });

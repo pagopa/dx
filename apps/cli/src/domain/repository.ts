@@ -1,15 +1,16 @@
-import { ok, Result } from "neverthrow";
+import { ok, ResultAsync } from "neverthrow";
 import coerce from "semver/functions/coerce.js";
 import semverGte from "semver/functions/gte.js";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
+import { Dependency } from "./package-json.js";
 import { ValidationCheckResult } from "./validation.js";
 
 export interface RepositoryReader {
-  existsPreCommitConfig(repoRoot: string): Result<boolean, Error>;
-  existsTurboConfig(repoRoot: string): Result<boolean, Error>;
-  findRepositoryRoot(cwd: string): Result<string, Error>;
+  existsPreCommitConfig(repoRoot: string): ResultAsync<boolean, Error>;
+  existsTurboConfig(repoRoot: string): ResultAsync<boolean, Error>;
+  findRepositoryRoot(cwd: string): ResultAsync<string, Error>;
 }
 
 const isVersionValid = (version: string, minVersion: string): boolean => {
@@ -31,7 +32,8 @@ export const checkPreCommitConfig =
     const { repositoryReader } = dependencies;
     const checkName = "Pre-commit Configuration";
 
-    const preCommitResult = repositoryReader.existsPreCommitConfig(monorepoDir);
+    const preCommitResult =
+      await repositoryReader.existsPreCommitConfig(monorepoDir);
     if (preCommitResult.isErr()) {
       return ok({
         checkName,
@@ -57,7 +59,7 @@ export const checkTurboConfig =
     const { packageJsonReader, repositoryReader } = dependencies;
     const checkName = "Turbo Configuration";
 
-    const turboResult = repositoryReader.existsTurboConfig(monorepoDir);
+    const turboResult = await repositoryReader.existsTurboConfig(monorepoDir);
     if (turboResult.isErr()) {
       return ok({
         checkName,
@@ -78,10 +80,10 @@ export const checkTurboConfig =
       });
     }
 
-    const turboDependency = dependenciesResult.value.find(
-      ({ name }) => name === "turbo",
+    const turboVersion = dependenciesResult.value.get(
+      "turbo" as Dependency["name"],
     );
-    if (!turboDependency) {
+    if (!turboVersion) {
       return ok({
         checkName,
         errorMessage:
@@ -90,10 +92,10 @@ export const checkTurboConfig =
       });
     }
 
-    if (!isVersionValid(turboDependency.version, minVersions.turbo)) {
+    if (!isVersionValid(turboVersion, minVersions.turbo)) {
       return ok({
         checkName,
-        errorMessage: `Turbo version (${turboDependency.version}) is too low. Minimum required version is ${minVersions.turbo}.`,
+        errorMessage: `Turbo version (${turboVersion}) is too low. Minimum required version is ${minVersions.turbo}.`,
         isValid: false,
       });
     }

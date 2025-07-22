@@ -23,7 +23,10 @@ locals {
   runner_env_vars = merge(var.container_app_environment.env_vars, {
     REPO_URL                   = "https://github.com/${var.repository.owner}/${var.repository.name}"
     REGISTRATION_TOKEN_API_URL = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
-    GITHUB_PAT                 = var.key_vault.secret_name
+  })
+
+  runner_secrets = merge(var.container_app_environment.secrets, {
+    GITHUB_PAT = var.key_vault.secret_name
   })
 
   labels = join(",", coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]))
