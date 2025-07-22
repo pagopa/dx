@@ -205,18 +205,12 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"eu-west-1":    "eu",
 		"euc1":         "euc1",
 		"eu-central-1": "euc1",
-		"euc2":         "euc2",
-		"eu-central-2": "euc2",
-		"euw2":         "euw2",
-		"eu-west-2":    "euw2",
 		"euw3":         "euw3",
 		"eu-west-3":    "euw3",
 		"eun1":         "eun1",
 		"eu-north-1":   "eun1",
 		"eus1":         "eus1",
 		"eu-south-1":   "eus1",
-		"eus2":         "eus2",
-		"eu-south-2":   "eus2",
 	}
 
 	// Check if the region is valid and normalize it
@@ -224,7 +218,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		region = normalizedRegion
 	} else {
 		// Create a more dynamic error message listing allowed values
-		allowedRegions := []string{"eu-west-1", "eu-central-1", "eu-central-2", "eu-west-2", "eu-west-3", "eu-north-1", "eu-south-1", "eu-south-2", "eu", "euc1", "euc2", "euw2", "euw3", "eun1", "eus1", "eus2"}
+		allowedRegions := []string{"eu-west-1", "eu-central-1", "eu-west-3", "eu-north-1", "eu-south-1", "eu", "euc1", "euw3", "eun1", "eus1"}
 		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidRegion: Region must be one of: %s", strings.Join(allowedRegions, ", ")))
 		return
 	}
