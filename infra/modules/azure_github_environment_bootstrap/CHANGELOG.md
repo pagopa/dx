@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.4.3
+
+### Patch Changes
+
+- ad75e08: Replace Key Vault Crypto User with Key Vault Crypto Officer role for Infra CI identity to allow to read keys rotation policies
+
 ## 2.4.2
 
 ### Patch Changes
