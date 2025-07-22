@@ -46,7 +46,8 @@
     },
     "tf-plan": {
       "dependsOn": ["tf-validate", "tf-init"],
-      "outputLogs": "hash-only"
+      "outputLogs": "hash-only",
+      "cache": false
     }
   }
 }
