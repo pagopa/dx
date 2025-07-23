@@ -90,8 +90,8 @@ const findMissingScripts = (
 };
 
 export const checkMonorepoScripts = async (
-  monorepoDir: string,
   dependencies: Pick<Dependencies, "packageJsonReader">,
+  monorepoDir: string,
 ): Promise<ValidationCheckResult> => {
   const { packageJsonReader } = dependencies;
   const checkName = "Monorepo Scripts";

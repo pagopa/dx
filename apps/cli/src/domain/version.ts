@@ -1,12 +1,6 @@
 import { getLogger } from "@logtape/logtape";
 
-export interface VersionEnv {
-  printVersion: () => void;
+export function printVersion(): void {
+  const logger = getLogger(["dx-cli", "version"]);
+  logger.info(`dx CLI version: ${__CLI_VERSION__}`);
 }
-
-export const makeVersionEnv = (): VersionEnv => ({
-  printVersion: () => {
-    const logger = getLogger(["dx-cli", "version"]);
-    logger.info(`dx CLI version: ${__CLI_VERSION__}`);
-  },
-});

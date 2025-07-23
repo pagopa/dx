@@ -1,10 +1,8 @@
 import { Command } from "commander";
 
-import { CliEnv } from "../../../domain/cli.js";
+import { printVersion } from "../../../domain/version.js";
 
-export const makeVersionCommand = ({
-  printVersion,
-}: Pick<CliEnv, "printVersion">): Command =>
+export const makeVersionCommand = (): Command =>
   new Command()
     .name("version")
     .alias("v")

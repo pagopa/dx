@@ -25,8 +25,8 @@ const isVersionValid = (version: string, minVersion: string): boolean => {
 };
 
 export const checkPreCommitConfig = async (
-  monorepoDir: string,
   dependencies: Pick<Dependencies, "repositoryReader">,
+  monorepoDir: string,
 ): Promise<ValidationCheckResult> => {
   const { repositoryReader } = dependencies;
   const checkName = "Pre-commit Configuration";
@@ -50,9 +50,9 @@ export const checkPreCommitConfig = async (
 };
 
 export const checkTurboConfig = async (
-  monorepoDir: string,
   dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
   { minVersions }: Config,
+  monorepoDir: string,
 ): Promise<ValidationCheckResult> => {
   const { packageJsonReader, repositoryReader } = dependencies;
   const checkName = "Turbo Configuration";
