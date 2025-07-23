@@ -35,5 +35,6 @@ const existsTurboConfig = (repoRoot: string): ResultAsync<boolean, Error> =>
 export const makeRepositoryReader = (): RepositoryReader => ({
   existsPreCommitConfig,
   existsTurboConfig,
+  fileExists,
   findRepositoryRoot: findRoot,
 });

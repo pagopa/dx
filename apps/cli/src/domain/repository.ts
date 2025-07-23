@@ -10,6 +10,7 @@ import { ValidationCheckResult } from "./validation.js";
 export interface RepositoryReader {
   existsPreCommitConfig(repoRoot: string): ResultAsync<boolean, Error>;
   existsTurboConfig(repoRoot: string): ResultAsync<boolean, Error>;
+  fileExists(path: string): ResultAsync<boolean, Error>;
   findRepositoryRoot(cwd?: string): ResultAsync<string, Error>;
 }
 

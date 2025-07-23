@@ -1,4 +1,5 @@
 import { getLogger } from "@logtape/logtape";
+import { join } from "node:path";
 
 import { Dependencies } from "./dependencies.js";
 import { PackageJson } from "./package-json.js";
@@ -8,23 +9,41 @@ export interface InfoResult {
 }
 
 // TODO: Implement this. Just a placeholder for now.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const detectFromLockFile = (dependencies: Dependencies) => {
-  const lockFile = undefined;
-  return lockFile;
+
+const detectFromLockFile = async (
+  dependencies: Dependencies,
+): Promise<"npm" | "pnpm" | "yarn" | undefined> => {
+  const { repositoryReader } = dependencies;
+  const repoRootResult = await repositoryReader.findRepositoryRoot(
+    process.cwd(),
+  );
+  if (repoRootResult.isErr()) return undefined;
+  const repoRoot = repoRootResult.value;
+  const pnpmResult = await repositoryReader.fileExists(
+    join(repoRoot, "pnpm-lock.yaml"),
+  );
+  if (pnpmResult.isOk() && pnpmResult.value) return "pnpm";
+  const yarnResult = await repositoryReader.fileExists(
+    join(repoRoot, "yarn.lock"),
+  );
+  if (yarnResult.isOk() && yarnResult.value) return "yarn";
+  const npmResult = await repositoryReader.fileExists(
+    join(repoRoot, "package-lock.json"),
+  );
+  if (npmResult.isOk() && npmResult.value) return "npm";
+  return undefined;
 };
 
-const detectPackageManager = (
+const detectPackageManager = async (
   dependencies: Dependencies,
-): InfoResult["packageManager"] => {
+): Promise<InfoResult["packageManager"]> => {
   const packageManager = detectFromPackageJson(dependencies.packageJson);
   if (!packageManager) {
     // Detect from lock files
-    const packageManagerFromLockFile = detectFromLockFile(dependencies);
+    const packageManagerFromLockFile = await detectFromLockFile(dependencies);
     // If no lock file is found, default to npm
     return packageManagerFromLockFile ? packageManagerFromLockFile : "npm";
   }
-
   return packageManager;
 };
 const detectFromPackageJson = ({ packageManager }: PackageJson) => {
@@ -38,8 +57,10 @@ const detectFromPackageJson = ({ packageManager }: PackageJson) => {
   return undefined;
 };
 
-export const getInfo = (dependencies: Dependencies): InfoResult => ({
-  packageManager: detectPackageManager(dependencies),
+export const getInfo = async (
+  dependencies: Dependencies,
+): Promise<InfoResult> => ({
+  packageManager: await detectPackageManager(dependencies),
 });
 
 export const printInfo = (result: InfoResult): void => {
