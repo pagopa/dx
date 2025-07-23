@@ -127,9 +127,11 @@ jobs:
             ### 📖 $TITLE - $PLAN_OUTCOME
             <details>
               <summary>Show Plan</summary>
+
               \`\`\`hcl
               $(cat plan_output.txt)
               \`\`\`
+
             </details>
           EOF
 
