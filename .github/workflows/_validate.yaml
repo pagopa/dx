@@ -113,7 +113,6 @@ jobs:
           if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
             # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
             SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" ${{ matrix.tf-plan-path }} || echo "No changes.")
-            WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             echo "$SUMMARY_LINE" >> plan_output.txt
             cat filtered_plan.txt
           else
@@ -134,6 +133,11 @@ jobs:
 
           </details>
           EOF
+
+          if [ -z "$SUMMARY_LINE" ]; then
+            WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> summary.txt
+          fi
 
           cat summary.txt > $GITHUB_STEP_SUMMARY
 
