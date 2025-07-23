@@ -13,41 +13,40 @@ export const workspaceSchema = z.object({
 
 export type Workspace = z.infer<typeof workspaceSchema>;
 
-export const checkWorkspaces =
-  (monorepoDir: string) =>
-  async (
-    dependencies: Pick<Dependencies, "repositoryReader">,
-  ): Promise<ValidationCheckResult> => {
-    const { repositoryReader } = dependencies;
-    const checkName = "Workspaces";
+export const checkWorkspaces = async (
+  dependencies: Pick<Dependencies, "repositoryReader">,
+  monorepoDir: string,
+): Promise<ValidationCheckResult> => {
+  const { repositoryReader } = dependencies;
+  const checkName = "Workspaces";
 
-    const workspacesResult = await repositoryReader.getWorkspaces(monorepoDir);
+  const workspacesResult = await repositoryReader.getWorkspaces(monorepoDir);
 
-    if (workspacesResult.isErr()) {
-      return ok({
-        checkName,
-        errorMessage:
-          "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
-        isValid: false,
-      });
-    }
-
-    const { length: workspaceNumber } = workspacesResult.value;
-
-    if (workspaceNumber === 0) {
-      return ok({
-        checkName,
-        errorMessage:
-          "No workspace configuration found. Make sure to configure workspaces in pnpm-workspace.yaml.",
-        isValid: false,
-      });
-    }
-
+  if (workspacesResult.isErr()) {
     return ok({
       checkName,
-      isValid: true,
-      successMessage: `Found ${workspaceNumber} workspace${
-        workspaceNumber === 1 ? "" : "s"
-      }`,
+      errorMessage:
+        "Something is wrong with the workspaces configuration. If you need help, please contact the DevEx team.",
+      isValid: false,
     });
-  };
+  }
+
+  const { length: workspaceNumber } = workspacesResult.value;
+
+  if (workspaceNumber === 0) {
+    return ok({
+      checkName,
+      errorMessage:
+        "No workspace configuration found. Make sure to configure workspaces in pnpm-workspace.yaml.",
+      isValid: false,
+    });
+  }
+
+  return ok({
+    checkName,
+    isValid: true,
+    successMessage: `Found ${workspaceNumber} workspace${
+      workspaceNumber === 1 ? "" : "s"
+    }`,
+  });
+};
