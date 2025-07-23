@@ -8,6 +8,8 @@ resource "azurerm_servicebus_namespace" "this" {
   capacity                     = local.capacity
   premium_messaging_partitions = local.partitions
 
+  public_network_access_enabled = false
+
   network_rule_set {
     public_network_access_enabled = false
     default_action                = local.default_action

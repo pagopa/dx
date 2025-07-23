@@ -29,28 +29,33 @@ output "identities" {
   value = {
     app = {
       cd = {
-        id   = azurerm_user_assigned_identity.app_cd.id
-        name = azurerm_user_assigned_identity.app_cd.name
+        id           = azurerm_user_assigned_identity.app_cd.id
+        name         = azurerm_user_assigned_identity.app_cd.name
+        principal_id = azurerm_user_assigned_identity.app_cd.principal_id
       }
     }
     infra = {
       ci = {
-        id   = azurerm_user_assigned_identity.infra_ci.id
-        name = azurerm_user_assigned_identity.infra_ci.name
+        id           = azurerm_user_assigned_identity.infra_ci.id
+        name         = azurerm_user_assigned_identity.infra_ci.name
+        principal_id = azurerm_user_assigned_identity.infra_ci.principal_id
       }
       cd = {
-        id   = azurerm_user_assigned_identity.infra_cd.id
-        name = azurerm_user_assigned_identity.infra_cd.name
+        id           = azurerm_user_assigned_identity.infra_cd.id
+        name         = azurerm_user_assigned_identity.infra_cd.name
+        principal_id = azurerm_user_assigned_identity.infra_cd.principal_id
       }
     }
     opex = {
       ci = {
-        id   = azurerm_user_assigned_identity.opex_ci.id
-        name = azurerm_user_assigned_identity.opex_ci.name
+        id           = azurerm_user_assigned_identity.opex_ci.id
+        name         = azurerm_user_assigned_identity.opex_ci.name
+        principal_id = azurerm_user_assigned_identity.opex_ci.principal_id
       }
       cd = {
-        id   = azurerm_user_assigned_identity.opex_cd.id
-        name = azurerm_user_assigned_identity.opex_cd.name
+        id           = azurerm_user_assigned_identity.opex_cd.id
+        name         = azurerm_user_assigned_identity.opex_cd.name
+        principal_id = azurerm_user_assigned_identity.opex_cd.principal_id
       }
     }
   }

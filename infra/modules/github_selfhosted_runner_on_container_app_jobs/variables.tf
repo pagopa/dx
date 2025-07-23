@@ -41,6 +41,9 @@ variable "container_app_environment" {
     override_labels             = optional(list(string), [])
     cpu                         = optional(number, 0.5)
     memory                      = optional(string, "1Gi")
+    image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")
+    env_vars                    = optional(map(string), {})
+    secrets                     = optional(map(string), {})
   })
 
   description = "Configuration for the Container App Environment."

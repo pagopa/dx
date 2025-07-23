@@ -1,0 +1,8 @@
+{
+  "core": {
+    "hash": "a3a0537d54f6dd499767c7f663eb08fb9f5f14d7d9ee031c63006263f65f108d",
+    "version": "2.1.0",
+    "name": "azure_core_infra",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/2.1.0"
+  }
+}

@@ -73,31 +73,18 @@ jobs:
         if: steps.turbo-version.outputs.version != '1'
         run: npx turbo prune --scope ${{ env.WORKSPACE }}
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b #v4.0.3
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
         with:
-          node-version-file: ".node-version"
-          cache: "yarn"
-          cache-dependency-path: "./out/yarn.lock"
+          working_dir: ./out
 
-      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependendencies
+      # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependencies
       - name: Install dependencies
         run: |
           yarn config set nodeLinker node-modules
           yarn config set nmHoistingLimits workspaces
           yarn install --immutable
         working-directory: ./out
-
-      - name: Restore turbo cache
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 #v4.2.0
-        with:
-          path: ./out/${{ env.TURBO_CACHE_DIR }}
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo
 
       - name: Build
         run: yarn build
@@ -142,7 +129,7 @@ jobs:
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
-          
+
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
 

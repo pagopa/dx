@@ -13,27 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
       pull-requests: write
     steps:
       - name: Checkout Repo
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           # https://github.com/actions/checkout/issues/1471#issuecomment-1771231294
-          fetch-tags: 'true'
+          fetch-tags: "true"
           fetch-depth: 0
 
       - name: Node Setup
         uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Install dependencies
-        run: yarn
+        run: pnpm install
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
         with:
-          version: yarn run version
-          publish: yarn run release
+          version: pnpm run version
+          publish: pnpm run release
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true

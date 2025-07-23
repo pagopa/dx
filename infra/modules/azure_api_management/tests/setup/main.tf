@@ -37,6 +37,11 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = "dx-d-itn-network-rg-01"
 }
 
+resource "dx_available_subnet_cidr" "cidr" {
+  virtual_network_id = data.azurerm_virtual_network.vnet.id
+  prefix_length      = 24
+}
+
 resource "azurerm_subnet" "subnet" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "test",
@@ -44,7 +49,7 @@ resource "azurerm_subnet" "subnet" {
   }))
   virtual_network_name = data.azurerm_virtual_network.vnet.name
   resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
-  address_prefixes     = ["10.50.250.0/24"]
+  address_prefixes     = [dx_available_subnet_cidr.cidr.cidr_block]
 }
 
 resource "azurerm_public_ip" "pip" {

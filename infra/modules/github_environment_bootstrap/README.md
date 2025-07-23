@@ -50,16 +50,18 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [github_actions_repository_permissions.repo](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_repository_permissions) | resource |
 | [github_branch_default.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_default) | resource |
 | [github_branch_protection.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_protection) | resource |
 | [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository) | resource |
 | [github_repository_autolink_reference.jira_board](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_autolink_reference) | resource |
+| [null_resource.workflow_permissions](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs. | <pre>object({<br/>    name                = string<br/>    description         = string<br/>    topics              = list(string)<br/>    default_branch_name = optional(string, "main")<br/>    jira_boards_ids     = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs. | <pre>object({<br/>    name                   = string<br/>    description            = string<br/>    topics                 = list(string)<br/>    default_branch_name    = optional(string, "main")<br/>    jira_boards_ids        = optional(list(string), [])<br/>    pages_enabled          = optional(bool, false)<br/>    has_downloads          = optional(bool, false)<br/>    has_projects           = optional(bool, false)<br/>    homepage_url           = optional(string, null)<br/>    pull_request_bypassers = optional(list(string), [])<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

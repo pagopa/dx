@@ -1,5 +1,23 @@
 # azure_role_assignments
 
+## 1.2.0
+
+### Minor Changes
+
+- 93d355a: Add permissions to set visibility timeout in storage queues to readers
+
+## 1.1.2
+
+### Patch Changes
+
+- c5149ae: Fix bug of missing storage_account_id when assigning roles on specific blob containers, tables or queues
+
+## 1.1.1
+
+### Patch Changes
+
+- 78c93b8: Enhance README with detailed Azure Storage role assignments
+
 ## 1.1.0
 
 ### Minor Changes

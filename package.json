@@ -1,24 +1,22 @@
 {
   "name": "@pagopa/dx",
-  "packageManager": "yarn@4.9.1+sha512.f95ce356460e05be48d66401c1ae64ef84d163dd689964962c6888a9810865e39097a5e9de748876c2e0bf89b232d583c33982773e9903ae7a76257270986538",
-  "workspaces": [
-    "packages/**",
-    "apps/**",
-    "infra/modules/*",
-    "infra/provider",
-    "infra/scripts"
-  ],
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
   "devDependencies": {
-    "@changesets/cli": "^2.29.2",
-    "@devcontainers/cli": "^0.75.0",
-    "prettier": "3.2.5",
-    "turbo": "^2.5.2",
-    "typescript": "~5.8.3"
+    "@changesets/cli": "^2.29.5",
+    "@devcontainers/cli": "^0.79.0",
+    "@pagopa/dx-cli": "workspace:^",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "^2.5.4",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check",
-    "version": "yarn changeset version && yarn --mode update-lockfile",
-    "release": "yarn build && changeset publish"
+    "code-review": "turbo run typecheck format:check lint:check //#test:coverage",
+    "version": "changeset version && pnpm i --lockfile-only",
+    "release": "pnpm build && changeset publish",
+    "test:coverage": "vitest run --coverage"
   }
 }

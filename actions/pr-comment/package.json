@@ -1,0 +1,44 @@
+{
+  "name": "pr-comment-action",
+  "version": "0.1.2",
+  "type": "module",
+  "private": true,
+  "description": "TypeScript action for creating and managing PR comments",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "pr",
+    "comment",
+    "typescript"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vitest-mock-extended": "^3.1.0"
+  }
+}

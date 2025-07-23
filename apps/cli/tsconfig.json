@@ -1,0 +1,11 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./bin",
+    "rootDir": "./src",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2022"
+  },
+  "include": ["src"]
+}

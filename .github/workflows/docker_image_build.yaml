@@ -40,8 +40,6 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
 
     steps:
 
@@ -54,8 +52,8 @@ jobs:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
           docker_image_name: ${{ inputs.docker_image_name }}
-          image_description: ${{ inputs.image_description }}
-          image_authors: ${{ inputs.image_authors }}
+          docker_image_description: ${{ inputs.image_description }}
+          docker_image_authors: ${{ inputs.image_authors }}
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: false

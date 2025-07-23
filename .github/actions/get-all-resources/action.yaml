@@ -1,0 +1,36 @@
+name: "Get All Resources"
+description: "Lists all Terraform providers or modules in the repository"
+
+inputs:
+  resource_type:
+    description: "Specify if the resource to check is a provider or module. Possible values: 'provider', 'module'. Default is 'module'."
+    required: false
+    type: string
+    default: "module"
+
+outputs:
+  resources:
+    description: "List of all resources in the format [\"name1\", \"name2\"]"
+    value: ${{ steps.get-all-resources.outputs.resources }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get all ${{ inputs.resource_type }}
+      id: get-all-resources
+      env:
+        RESOURCE_TYPE: ${{ inputs.resource_type }}
+      shell: bash
+      run: |
+        if [ "$RESOURCE_TYPE" != "provider" ] && [ "$RESOURCE_TYPE" != "module" ]; then
+          echo "Invalid resource type: $RESOURCE_TYPE. Must be 'provider' or 'module'."
+          exit 1
+        elif [ "$RESOURCE_TYPE" == "provider" ]; then
+          FOLDER_PATH="providers"
+        else
+          FOLDER_PATH="infra/modules"
+        fi
+
+        folders_list=$(find $FOLDER_PATH -mindepth 1 -maxdepth 1 -type d | sed "s#$FOLDER_PATH/##" | jq -R -c . | jq -s -c .)
+        echo "All resources: $folders_list"
+        echo "resources=$folders_list" >> $GITHUB_OUTPUT

@@ -1,0 +1,388 @@
+on:
+  workflow_call:
+    inputs:
+      dockerfile_path:
+        type: string
+        required: false
+        default: './Dockerfile'
+        description: Dockerfile path
+      dockerfile_context:
+        type: string
+        required: false
+        default: '.'
+        description: Dockerfile build context
+      docker_image_name:
+        type: string
+        required: false
+        default: ${{ github.repository }}
+        description: Docker image name, defaults to repository name
+      docker_image_description:
+        type: string
+        required: true
+        description: A description to use as image label
+      docker_image_authors:
+        type: string
+        required: false
+        default: PagoPA
+        description: Authors names to use as image label
+      build_args:
+        description: List of build arguments to use for Dockerfile build, given in env=value format.
+        type: string
+        required: false
+      build_platforms:
+        type: string
+        required: false
+        default: linux/amd64
+        description: Image runtime platform, supports multiple comma-separated values
+      container_app:
+        type: string
+        required: true
+        description: Name of the container app to deploy
+      resource_group_name:
+        type: string
+        required: true
+        description: Name of the resource group of the container app
+      environment:
+        description: Environment where the image will be deployed
+        type: string
+        required: true
+      script_language:
+        type: string
+        default: 'typescript (npm)'
+        required: false
+        description: Define the language and package manager of the script to run to check for errors during canary deployment. Available only when Revision Mode is set to Multiple. Supports 'typescript (npm)', 'typescript (yarn)' values only.
+      script_name:
+        type: string
+        required: false
+        description: Script name to execute during canary deployment. When using npm, it refers to the script path; when using yarn, it is used as script name. Available only when Revision Mode is set to Multiple
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: ${{ inputs.docker_image_name }}
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+
+    steps:
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        name: Checkout
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: pagopa/dx/.github/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: ${{ inputs.dockerfile_path }}
+          dockerfile_context: ${{ inputs.dockerfile_context }}
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_description: "${{ inputs.docker_image_description }}"
+          docker_image_authors: ${{ inputs.docker_image_authors }}
+          build_args: ${{ inputs.build_args }}
+          build_platforms: ${{ inputs.build_platforms }}
+          push_to_registry: true
+
+  release:
+    name: Deploy To Container App
+    runs-on: ubuntu-latest
+    needs: build
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CONTAINER_APP_NAME: ${{ inputs.container_app }}
+      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+      SCRIPT_LANGUAGE: ${{ inputs.script_language }}
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Get Short SHA of Latest Commit
+        id: get_commit_sha
+        env:
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo
+
+          sha=$(git rev-parse --short "$GIT_SHA")
+
+          echo "::notice::Latest commit: $sha"
+
+          echo "short_sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+
+      - name: Configure AZ CLI
+        run: |
+          az config set extension.use_dynamic_install=yes_without_prompt
+          az configure --defaults group="$RESOURCE_GROUP_NAME"
+
+      - name: Get Container App Revision Mode
+        id: get_revision_mode
+        run: |
+          set -euo
+
+          revision_mode=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --query "properties.configuration.activeRevisionsMode" \
+            --output tsv)
+
+          echo "::notice::Revision mode: $revision_mode"
+
+          echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
+
+      - name: Validate Script Language Input
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && inputs.script_name != '' }}
+        run: |
+          set -euo
+
+          case "$SCRIPT_LANGUAGE" in
+            "typescript (npm)")
+              echo "::notice::Using TypeScript (npm) script for canary deployment"
+              ;;
+            "typescript (yarn)")
+              echo "::notice::Using TypeScript (yarn) script for canary deployment"
+              ;;
+            *)
+              echo "::error::script_language input is required"
+              exit 1
+              ;;
+          esac
+
+      - name: Get Container App Current Revision
+        id: get_current_revision
+        run: |
+          set -euo
+
+          current_revision=$(az containerapp revision list \
+            --name "$CONTAINER_APP_NAME" \
+            --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
+
+          echo "::notice::Current revision: $current_revision"
+          echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
+
+      - name: Create New Container App Revision
+        id: create_new_revision
+        env:
+          CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
+          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode}}
+        run: |
+          set -euo
+
+          new_revision=$(az containerapp revision copy \
+            --name "$CONTAINER_APP_NAME" \
+            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
+            --from-revision "$CURRENT_REVISION" \
+            --query "properties.latestRevisionName" \
+            --output tsv)
+
+          echo "::notice::Current revision: $CURRENT_REVISION"
+          echo "::notice::New revision: $new_revision"
+
+          if [[ "$CURRENT_REVISION" == "$new_revision" ]]; then
+            echo "::warning::No deployment needed - current revision is already using the latest image"
+            echo "skip_remaining_steps=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
+          echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
+
+          if [[ "$REVISION_MODE" == "Multiple" ]]; then
+            az containerapp ingress traffic set \
+              --name "$CONTAINER_APP_NAME" \
+              --revision-weight "$CURRENT_REVISION"=100 \
+              --revision-weight $new_revision=0 \
+              --output table
+          fi
+
+      - name: Wait for the New Revision to be Ready
+        if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          set -euo
+
+          max_attempts=30
+          attempt=0
+          health_state=""
+
+          echo "::notice::Waiting for new revision ("$NEW_REVISION_NAME") to be healthy..."
+
+          while [ "$health_state" != "Healthy" ] && [ $attempt -lt $max_attempts ]; do
+
+            health_state=$(az containerapp revision list \
+              --name "$CONTAINER_APP_NAME" \
+              --query "[?contains(name, '$NEW_REVISION_NAME')].{Health:properties.healthState}|[0].Health" -o tsv)
+
+            echo "::notice::Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
+
+            if [ "$health_state" == "Healthy" ]; then
+              echo "::notice::New revision is now healthy!"
+              break
+            fi
+
+            attempt=$((attempt+1))
+            sleep 3
+          done
+
+          if [ "$health_state" != "Healthy" ]; then
+            echo "::error::New revision did not become healthy within the timeout period"
+            exit 1
+          fi
+
+      - name: Get Container App Id
+        id: get_container_app_id
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        run: |
+          set -euo
+
+          container_app_id=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --query "id" \
+            --output tsv)
+
+          echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
+
+      - name: Check for New Revision Errors and Increment Traffic
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          SCRIPT_NAME: ${{ inputs.script_name }}
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+        run: |
+          set -euo
+
+          if [ -z "$SCRIPT_NAME" ]; then
+            echo "::warning::No script provided, skipping canary deployment"
+
+            az containerapp ingress traffic set \
+              --name "$CONTAINER_APP_NAME" \
+              --revision-weight "$CURRENT_REVISION_NAME"=0 \
+              --revision-weight "$NEW_REVISION_NAME"=100
+
+            exit 0
+          fi
+
+          currentPercentage=0
+
+          while true; do
+
+            case "$SCRIPT_LANGUAGE" in
+              "typescript (npm)")
+                output="$(npm run -s "$SCRIPT_NAME" $currentPercentage)"
+                ;;
+              "typescript (yarn)")
+                output="$(yarn "$SCRIPT_NAME" $currentPercentage)"
+                ;;
+              *)
+                echo "::error::script_language input is required"
+                exit 1
+                ;;
+            esac
+
+            exit_code=$?
+            echo "Script Output: $output"
+
+            if [ $exit_code -ne 0 ]; then
+              echo "::error::Monitoring script failed."
+              echo "::warning::Reverting traffic to previous revision."
+
+              az containerapp ingress traffic set \
+                --name "$CONTAINER_APP_NAME" \
+                --revision-weight "$CURRENT_REVISION_NAME"=100 \
+                --revision-weight "$NEW_REVISION_NAME"=0
+              exit 1
+            fi
+
+            # Parse JSON's output using jq.
+            swap=$(echo "$output" | jq -r '.swap // empty')
+            if [ "$swap" == "true" ]; then
+              echo "::warning::Swap to new version requested."
+              echo "::notice::Swapping all traffic to next revision."
+
+              az containerapp ingress traffic set \
+                --name "$CONTAINER_APP_NAME" \
+                --revision-weight "$CURRENT_REVISION_NAME"=0 \
+                --revision-weight "$NEW_REVISION_NAME"=100
+              break
+            fi
+
+            nextPercentage=$(echo "$output" | jq -r '.nextPercentage')
+            afterMs=$(echo "$output" | jq -r '.afterMs')
+
+            # Validate that the fields are present
+            if [ -z "$nextPercentage" ] || [ -z "$afterMs" ]; then
+              echo "::error::Invalid output from script (missing nextPercentage or afterMs)."
+              echo "::warning::Reverting traffic to previous revision."
+
+              az containerapp ingress traffic set \
+                --name "$CONTAINER_APP_NAME" \
+                --revision-weight "$CURRENT_REVISION_NAME"=100 \
+                --revision-weight "$NEW_REVISION_NAME"=0
+              exit 1
+            fi
+
+            echo "::notice::Next traffic percentage: $nextPercentage%"
+
+            az containerapp ingress traffic set \
+              --name "$CONTAINER_APP_NAME" \
+              --revision-weight "$CURRENT_REVISION_NAME"=$((100 - nextPercentage)) \
+              --revision-weight "$NEW_REVISION_NAME"=$nextPercentage
+
+            currentPercentage=$nextPercentage
+
+            if [ "$nextPercentage" -ge 100 ]; then
+              echo "::notice::Successfully shifted 100% traffic to new revision"
+              break
+            else
+              delaySeconds=$((afterMs / 1000))
+              echo "Waiting for $delaySeconds seconds..."
+              sleep $delaySeconds
+            fi
+          done
+
+      - name: Deactivate Old Revision
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+        run: |
+          az containerapp revision deactivate \
+            --name "$CONTAINER_APP_NAME" \
+            --revision "$CURRENT_REVISION_NAME"
+
+      - name: Deactivate New Revision
+        if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
+        env:
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          az containerapp ingress traffic set \
+            --name "$CONTAINER_APP_NAME" \
+            --revision-weight "$CURRENT_REVISION_NAME"=100 \
+            --revision-weight "$NEW_REVISION_NAME"=0 \
+            --output table
+
+          az containerapp revision deactivate \
+            --name "$CONTAINER_APP_NAME" \
+            --revision "$NEW_REVISION_NAME"

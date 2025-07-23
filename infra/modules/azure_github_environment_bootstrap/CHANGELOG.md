@@ -1,5 +1,44 @@
 # Azure GitHub Environment Bootstrap
 
+## 2.4.2
+
+### Patch Changes
+
+- a08a2c9: Update some configuration with new optional variables
+
+## 2.4.1
+
+### Patch Changes
+
+- 4623f67: Output the CI/CD principals' ids
+
+## 2.4.0
+
+### Minor Changes
+
+- 716b0f6: Add Container Apps Contributor role at resource groups scope
+
+## 2.3.1
+
+### Patch Changes
+
+- b4081c8: Improved module documentation. It now contains examples about setup customization
+- 91515f8: Update Readme with some information about required Azure Permissions
+
+## 2.3.0
+
+### Minor Changes
+
+- fad5db7: App CD Identity is now CDN Profile Contributor in team resource groups
+
+## 2.2.0
+
+### Minor Changes
+
+- 33ecfc7: Two changes to App CD Identity roles in team resource groups:
+  - It is now Blob Data Contributor to allow CDN deployments
+  - It is not Contributor anymore, but Website Contributor instead
+
 ## 2.1.0
 
 ### Minor Changes

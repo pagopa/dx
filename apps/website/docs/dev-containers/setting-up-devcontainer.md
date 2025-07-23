@@ -141,8 +141,9 @@ npm --version
 yarn --version
 ```
 
-:::tip How to rebuild a development container? In Visual Studio Code you can
-rebuild the development container by running the
+:::tip How to rebuild a development container?
+
+In Visual Studio Code you can rebuild the development container by running the
 `Dev Containers: Rebuild Container` command from the command palette. In the
 terminal, you can run the `devcontainer up --workspace-folder .` command. :::
 
@@ -234,8 +235,10 @@ Customizations are a great way to centralize the configuration of your
 development environment and share it with your team. You can learn more about
 customizations in the [Supporting Tool](https://containers.dev/supporting) page.
 
-:::tip Did you know? Some features includes customizations that are
-automatically applied to the development container. For example the
+:::tip Did you know?
+
+Some features includes customizations that are automatically applied to the
+development container. For example the
 [Official Terraform Feature](https://github.com/devcontainers/features/tree/main/src/terraform)
 automatically installs the `hashicorp.terraform` VSC extension and sets up the
 `terraform` language server. :::
@@ -294,11 +297,12 @@ build the development container.
    development container and open a shell inside it to test the newly added `y`
    alias.
 
-:::tip Docker Compose If you need to run multiple containers alongside the
-development container, you can use **Docker Compose** to define the services
-that should be started with the development container. This is useful when you
-need to run backing services like databases, caches, or message brokers
-alongside the development container.
+:::tip Docker Compose
+
+If you need to run multiple containers alongside the development container, you
+can use **Docker Compose** to define the services that should be started with
+the development container. This is useful when you need to run backing services
+like databases, caches, or message brokers alongside the development container.
 
 A real-world example of this setup can be found in the
 [pagopa/io-messages GitHub repository](https://github.com/pagopa/io-messages/blob/main/.devcontainer/devcontainer.json)
@@ -327,9 +331,10 @@ devcontainer templates apply -t ghcr.io/pagopa/devcontainer-templates/node:1
 This will scaffold a `devcontainer.json` ready to work with `node`, `terraform`,
 `azure` and the other tools we use in our projects.
 
-:::tip PagoPA's features and templates The DX team is working to develop custom
-features and templates that are not available in the official registry. You can
-find them in the
+:::tip PagoPA's features and templates
+
+The DX team is working to develop custom features and templates that are not
+available in the official registry. You can find them in the
 [pagopa/dx GitHub repository](https://github.com/pagopa/dx/tree/main/.devcontainer).
 :::
 

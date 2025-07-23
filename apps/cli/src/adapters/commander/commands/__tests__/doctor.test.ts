@@ -1,0 +1,26 @@
+import { errAsync } from "neverthrow";
+import { describe, expect, it } from "vitest";
+
+import {
+  makeMockConfig,
+  makeMockDependencies,
+} from "../../../../domain/__tests__/data.js";
+import { makeDoctorCommand } from "../doctor.js";
+
+describe("doctor command", () => {
+  const config = makeMockConfig();
+  it("should handle when no repository root is found", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.findRepositoryRoot.mockImplementationOnce(() =>
+      errAsync(new Error("Could not find repository root")),
+    );
+
+    const doctorCommand = makeDoctorCommand(deps, config);
+
+    expect(doctorCommand.name()).toBe("doctor");
+    expect(doctorCommand.description()).toBe(
+      "Verify the repository setup according to the DevEx guidelines",
+    );
+  });
+});

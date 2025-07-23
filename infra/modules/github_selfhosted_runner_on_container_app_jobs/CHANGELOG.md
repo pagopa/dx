@@ -1,5 +1,23 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.1.1
+
+### Patch Changes
+
+- 6f94721: Fix GITHUB_PAT secret and added container_app_environment.secrets optional value
+
+## 1.1.0
+
+### Minor Changes
+
+- f5564d9: Updated module to add container_app_environment.image optional value
+
+## 1.0.10
+
+### Patch Changes
+
+- 58f75f6: Remove key vault data source
+
 ## 1.0.9
 
 ### Patch Changes

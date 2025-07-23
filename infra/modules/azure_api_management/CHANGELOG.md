@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 1.2.2
+
+### Patch Changes
+
+- e1418e0: Update README with Public Network Access limitation workaround
+
 ## 1.2.1
 
 ### Patch Changes

@@ -9,7 +9,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.8.0, < 5.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.6.0, < 1.0.0 |
 
 ## Modules
 
@@ -83,6 +83,7 @@ No modules.
 | <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints) | Enable service endpoints for the subnet used by the Function App. Set this only if dependencies do not use private endpoints. | <pre>object({<br/>    cosmos  = optional(bool, false)<br/>    storage = optional(bool, false)<br/>    web     = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility. | `string` | `"l"` | no |
+| <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Details of the virtual network where the subnet for the Function App will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs

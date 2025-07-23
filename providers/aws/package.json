@@ -1,0 +1,9 @@
+{
+  "name": "provider-aws",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Terraform provider for DX on AWS, to enhance developer experience",
+  "scripts": {
+    "format": "go fmt"
+  }
+}

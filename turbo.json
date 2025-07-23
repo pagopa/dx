@@ -2,26 +2,31 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**/*.ts"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts"],
+      "outputs": ["dist/**", "bin/**"]
     },
     "typecheck": {
-      "inputs": [
-        "src/**/*.ts"
-      ]
+      "inputs": ["src/**/*.ts"]
     },
     "lint:check": {
-      "inputs": [
-        "src/**/*.ts"
-      ]
+      "inputs": ["src/**/*.ts"]
     },
-    "format:check": {}
+    "format:check": {},
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["src/**/__tests__/**/*.test.ts"],
+      "outputLogs": "errors-only"
+    },
+    "//#test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "apps/**/src/**/*.ts",
+        "packages/**/src/**/*.ts",
+        "actions/**/src/**/*.ts"
+      ],
+      "outputs": ["coverage"],
+      "outputLogs": "errors-only"
+    }
   }
 }

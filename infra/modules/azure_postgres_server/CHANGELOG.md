@@ -1,5 +1,11 @@
 # azure_postgres_server
 
+## 1.0.6
+
+### Patch Changes
+
+- 493ae69: Add delegated_subnet_id variable
+
 ## 1.0.5
 
 ### Patch Changes

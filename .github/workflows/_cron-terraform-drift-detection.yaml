@@ -6,7 +6,7 @@ on:
       - cron: '00 08 * * *' # Run at 08:00 every day
 
 jobs:
-  drift_detection:
+  drift_detection_dev:
     uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection
     permissions:
@@ -17,4 +17,17 @@ jobs:
     with:
       environment: 'dev'
       override_github_environment: 'infra-dev'
-      base_path: 'infra/resources/'
+      base_path: 'infra/resources'
+
+  drift_detection_prod:
+    uses: ./.github/workflows/infra_drift_detection.yml
+    name: Drift Detection
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: 'prod'
+      override_github_environment: 'infra-prod'
+      base_path: 'infra/resources'

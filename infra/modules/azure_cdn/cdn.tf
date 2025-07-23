@@ -3,6 +3,10 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   tags = local.tags
 }
 
@@ -43,12 +47,17 @@ resource "azurerm_cdn_frontdoor_origin" "this" {
   certificate_name_check_enabled = true
 }
 
+resource "azurerm_cdn_frontdoor_rule_set" "this" {
+  name                     = "ruleset"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
+}
+
 resource "azurerm_cdn_frontdoor_route" "this" {
   name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_route" }))
   cdn_frontdoor_endpoint_id       = azurerm_cdn_frontdoor_endpoint.this.id
   cdn_frontdoor_origin_group_id   = azurerm_cdn_frontdoor_origin_group.this.id
   cdn_frontdoor_origin_ids        = [for origin in azurerm_cdn_frontdoor_origin.this : origin.id]
-  cdn_frontdoor_rule_set_ids      = []
+  cdn_frontdoor_rule_set_ids      = [azurerm_cdn_frontdoor_rule_set.this.id]
   cdn_frontdoor_custom_domain_ids = length(var.custom_domains) > 0 ? [for domain in azurerm_cdn_frontdoor_custom_domain.this : domain.id] : []
   enabled                         = true
 

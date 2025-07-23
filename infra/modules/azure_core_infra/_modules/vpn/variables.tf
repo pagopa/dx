@@ -18,25 +18,22 @@ variable "tags" {
   description = "Resources tags"
 }
 
-variable "vpn_cidr_subnet" {
+variable "vpn_subnet_id" {
   type        = string
-  description = "VPN network address space."
+  description = "VPN network subnet ID."
 }
 
-variable "dnsforwarder_cidr_subnet" {
+variable "dnsforwarder_subnet_id" {
   type        = string
-  description = "DNS forwarder network address space."
-}
-
-variable "virtual_network" {
-  type = object({
-    id   = string
-    name = string
-  })
-  description = "Virtual network where to attach private dns zones"
+  description = "DNS forwarder subnet ID."
 }
 
 variable "tenant_id" {
   type        = string
   description = "Tenant ID"
+}
+
+variable "env_short" {
+  type        = string
+  description = "Environment in short form where resources are located"
 }

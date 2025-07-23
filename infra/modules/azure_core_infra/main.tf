@@ -71,6 +71,20 @@ resource "azurerm_resource_group" "test" {
   tags = local.tags
 }
 
+resource "azurerm_resource_group" "opex" {
+  name = provider::dx::resource_name(merge(
+    local.naming_config,
+    {
+      name          = "opex",
+      domain        = "",
+      resource_type = "resource_group",
+    })
+  )
+  location = var.environment.location
+
+  tags = local.tags
+}
+
 #------------#
 # NETWORKING #
 #------------#
@@ -82,7 +96,8 @@ module "network" {
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
   vnet_cidr           = var.virtual_network_cidr
-  pep_snet_cidr       = var.pep_subnet_cidr
+  test_enabled        = var.test_enabled
+  vpn_enabled         = var.vpn_enabled
 
   tags = local.tags
 }
@@ -101,23 +116,19 @@ module "nat_gateway" {
 }
 
 module "vpn" {
-  count = local.vpn_enabled ? 1 : 0
+  count = var.vpn_enabled ? 1 : 0
 
   source = "./_modules/vpn"
 
   project             = local.project
   location            = var.environment.location
   resource_group_name = azurerm_resource_group.network.name
+  env_short           = var.environment.env_short
 
   tenant_id = data.azurerm_client_config.current.tenant_id
 
-  vpn_cidr_subnet          = var.vpn.cidr_subnet
-  dnsforwarder_cidr_subnet = var.vpn.dnsforwarder_cidr_subnet
-
-  virtual_network = {
-    id   = module.network.vnet.id
-    name = module.network.vnet.name
-  }
+  vpn_subnet_id          = module.network.vpn_snet.id
+  dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
 
   tags = local.tags
 }
@@ -177,6 +188,20 @@ module "common_log_analytics" {
   tags = local.tags
 }
 
+module "application_insights" {
+  source = "./_modules/application_insights"
+
+  naming_config = local.naming_config
+
+  resource_group_name = azurerm_resource_group.common.name
+  location            = var.environment.location
+
+  log_analytics_workspace_id = module.common_log_analytics.id
+  key_vault_id               = module.key_vault.id
+
+  tags = local.tags
+}
+
 #---------------#
 # GITHUB RUNNER #
 #---------------#
@@ -188,12 +213,8 @@ module "github_runner" {
 
   resource_group_name = azurerm_resource_group.gh_runner.name
   location            = var.environment.location
-  virtual_network = {
-    id                  = module.network.vnet.id
-    name                = module.network.vnet.name
-    resource_group_name = azurerm_resource_group.network.name
-  }
-  subnet_cidr = var.gh_runner_snet
+
+  runner_snet = module.network.runner_snet.id
 
   log_analytics_workspace_id = module.common_log_analytics.id
 

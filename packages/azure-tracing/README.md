@@ -15,14 +15,14 @@ yarn add @pagopa/azure-tracing
 
 ### Instrumenting Azure Functions
 
+To enable OpenTelemetry tracing and route telemetry to Azure Monitor in your Azure Functions (both v3 and v4 programming models), you primarily need to perform two steps: preload the instrumentation logic via `NODE_OPTIONS` and register lifecycle hooks.
+
 Currently, [ECMAScript Modules (ESM) support in OpenTelemetry is still experimental](https://github.com/open-telemetry/opentelemetry-js/blob/966ac176af249d86de6cb10feac2306062846768/doc/esm-support.md),
 which makes direct instrumentation of Azure Functions a bit tricky.
 So, if you have a Node.js project ESM based (`"type": "module"` in the `package.json`), to work around this, you have to preload the instrumentation logic at runtime using the `NODE_OPTIONS` environment variable.
 
 > [!NOTE]
-> In case you have a CJS project (`"type": "commonjs"` in the `package.json`), you could use the [`opentelemetry-js` library](https://github.com/open-telemetry/opentelemetry-js?tab=readme-ov-file#quick-start)
-> to instrument the application, making sure the OpenTelemetry SDK is initialized before the Azure Functions runtime starts.  
-> This package is useful for ESM projects only, where the instrumentation logic needs to be preloaded.
+> In case you have a CJS project (`"type": "commonjs"` in the `package.json`), you could use the `@pagopa/azure-tracing` as well.
 
 This package provides a wrapper that simplifies this setup.
 
@@ -68,7 +68,29 @@ registerAzureFunctionHooks(app);
 ...
 ```
 
+### Instrumenting Azure Functions v3 Handlers
+
+For Azure Functions using the v3 programming model, if you need more granular control over OpenTelemetry context propagation within your function handlers, you can use the `withOtelContextFunctionV3` helper function to wrap your handlers. This function is designed to work with the v3 `Context` object structure.
+
+To wrap the execution of your Azure Function in the OpenTelemetry context, use the `withOtelContextFunctionV3` helper as follows:
+
+```ts
+import { AzureFunction, Context as FunctionContext } from "@azure/functions"; // "@azure/functions": "^3"
+import createAzureFunctionHandler from "@pagopa/express-azure-functions/dist/src/createAzureFunctionsHandler.js";
+import { withOtelContextFunctionV3 } from "@pagopa/azure-tracing/azure-functions/v3"; // "@pagopa/azure-tracing": "^0.4"
+
+export const expressToAzureFunction =
+  (app: Express): AzureFunction =>
+  (context: FunctionContext): void => {
+    app.set("context", context);
+    withOtelContextFunctionV3(context)(createAzureFunctionHandler(app)); // wrap the function execution in the OpenTelemetry context
+  };
+```
+
 ### Enabling Azure Monitor Telemetry
+
+> [!NOTE]
+> For Azure Functions, it is necessary to use the `NODE_OPTIONS` environment variable and register lifecycle hooks as described in the "Instrumenting Azure Functions" section. Manual initialization with `initAzureMonitor` is typically not required for Azure Functions (due to the issue previously explained), but it is useful for other Node.js applications (e.g., Azure App Services) where direct SDK initialization is preferred or necessary.
 
 If you want to enable Azure Monitor telemetry in your application, and you don't have those issues previously described, you can do so in the following ways:
 
@@ -81,17 +103,6 @@ const config: AzureMonitorOpenTelemetryOptions = {} // A valid AzureMonitorOpenT
 const instrumentations = [new ExpressInstrumentation()] // A list of custom OpenTelemetry instrumentations
 initAzureMonitor(instrumentations, config);
 ...
-```
-
-> [!NOTE]
-> the use of `ExpressInstrumentation` is just for example, you can use any other OpenTelemetry instrumentation you want.
-
-or, if you want to use the default configuration:
-
-```ts
-import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
-...
-initAzureMonitor();
 ```
 
 ### Logging Custom Events
