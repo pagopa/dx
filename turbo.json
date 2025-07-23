@@ -5,7 +5,8 @@
     "ARM_CLIENT_ID",
     "ARM_CLIENT_SECRET",
     "ARM_TENANT_ID",
-    "GITHUB_TOKEN"
+    "GITHUB_TOKEN",
+    "TERRAFORM_CLI_PATH"
   ],
   "tasks": {
     "build": {
