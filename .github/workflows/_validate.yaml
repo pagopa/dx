@@ -63,7 +63,7 @@ jobs:
         uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Validate
-        run: pnpm turbo run format:check tf-plan --filter "...[fe7a9998e95a057b0584f555c1b4b9c5cd3a6ad5]" --continue=dependencies-successful
+        run: pnpm turbo run format:check tf-plan --filter "...[fe7a9998e95a057b0584f555c1b4b9c5cd3a6ad5]" --continue=dependencies-successful --output-logs=full
         continue-on-error: true
 
       - name: Find Terraform plans
