@@ -57,6 +57,7 @@ export const packageJsonSchema = z.object({
   dependencies: dependenciesSchema,
   devDependencies: dependenciesSchema,
   name: PackageName,
+  packageManager: z.string().optional(),
   scripts: scriptsSchema,
 });
 

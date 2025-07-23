@@ -20,9 +20,22 @@ await configure({
   sinks: { console: getConsoleSink() },
 });
 
+const repositoryReader = makeRepositoryReader();
+const packageJsonReader = makePackageJsonReader();
+
+const repoPackageJson = await repositoryReader
+  .findRepositoryRoot(process.cwd())
+  .andThen(packageJsonReader.readPackageJson);
+
+if (repoPackageJson.isErr()) {
+  process.exit(1);
+}
+const packageJson = repoPackageJson.value;
+
 const deps: Dependencies = {
-  packageJsonReader: makePackageJsonReader(),
-  repositoryReader: makeRepositoryReader(),
+  packageJson,
+  packageJsonReader,
+  repositoryReader,
   validationReporter: makeValidationReporter(),
 };
 
