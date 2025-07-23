@@ -40,4 +40,7 @@ export const makeMockConfig = (): Config => ({
   minVersions: {
     turbo: "2.5.0",
   },
+  repository: {
+    root: "a/repo/root",
+  },
 });

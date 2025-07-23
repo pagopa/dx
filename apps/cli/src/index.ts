@@ -37,10 +37,18 @@ const repositoryReader = makeRepositoryReader();
 const packageJsonReader = makePackageJsonReader();
 const validationReporter = makeValidationReporter();
 
-// Read once the package.json file in the repo root
-const repoPackageJson = await repositoryReader
-  .findRepositoryRoot(process.cwd())
-  .andThen(packageJsonReader.readPackageJson);
+// Find the repository root
+const repoRoot = await repositoryReader.findRepositoryRoot(process.cwd());
+if (repoRoot.isErr()) {
+  logger.error(
+    "Could not find repository root. Make sure to have the repo initialized.",
+  );
+  process.exit(1);
+}
+const repositoryRoot = repoRoot.value;
+
+// Read the package.json file in the repo root
+const repoPackageJson = await packageJsonReader.readPackageJson(repositoryRoot);
 
 if (repoPackageJson.isErr()) {
   logger.error("Repository does not contain a package.json file");
@@ -54,7 +62,7 @@ const deps: Dependencies = {
   validationReporter,
 };
 
-const config = getConfig();
+const config = getConfig(repositoryRoot);
 
 const program = makeCli(deps, config);
 

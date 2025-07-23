@@ -16,7 +16,7 @@ export const makeCli = (deps: Dependencies, config: Config) => {
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeVersionCommand());
-  program.addCommand(makeInfoCommand(dependencies));
+  program.addCommand(makeInfoCommand(dependencies, config));
 
   return program;
 };

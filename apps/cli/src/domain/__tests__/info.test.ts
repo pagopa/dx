@@ -2,7 +2,11 @@ import { ok } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { getInfo } from "../info.js";
-import { makeMockDependencies, makeMockPackageJson } from "./data.js";
+import {
+  makeMockConfig,
+  makeMockDependencies,
+  makeMockPackageJson,
+} from "./data.js";
 
 describe("getInfo", () => {
   it("should return default packageManager (npm) when packageManager is not detected", async () => {
@@ -11,12 +15,10 @@ describe("getInfo", () => {
       ...makeMockDependencies(),
       packageJson: mockPackageJson,
     };
-    mockDependencies.repositoryReader.findRepositoryRoot.mockResolvedValue(
-      ok("a/repo/root"),
-    );
+    const config = makeMockConfig();
     mockDependencies.repositoryReader.fileExists.mockResolvedValue(ok(false));
 
-    const result = await getInfo(mockDependencies);
+    const result = await getInfo(mockDependencies, config);
     expect(result.packageManager).toStrictEqual("npm");
 
     expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -35,7 +37,8 @@ describe("getInfo", () => {
 
   it("should return the packageManager when present in the package.json", async () => {
     const mockDependencies = makeMockDependencies();
-    const result = await getInfo(mockDependencies);
+    const config = makeMockConfig();
+    const result = await getInfo(mockDependencies, config);
     expect(result.packageManager).toStrictEqual("pnpm");
   });
 
@@ -45,16 +48,14 @@ describe("getInfo", () => {
       ...makeMockDependencies(),
       packageJson: mockPackageJson,
     };
-    mockDependencies.repositoryReader.findRepositoryRoot.mockResolvedValue(
-      ok("a/repo/root"),
-    );
     mockDependencies.repositoryReader.fileExists
       .mockResolvedValueOnce(
         ok(false), // pnpm lock file does not exist
       )
       .mockResolvedValueOnce(ok(true)); // yarn lock file exists
 
-    const result = await getInfo(mockDependencies);
+    const config = makeMockConfig();
+    const result = await getInfo(mockDependencies, config);
     expect(result.packageManager).toStrictEqual("yarn");
 
     expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
