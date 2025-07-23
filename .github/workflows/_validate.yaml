@@ -1,0 +1,121 @@
+name: Validate
+
+on:
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: infra-dev-ci
+
+    outputs:
+      tf-plans-paths: ${{ steps.find-tfplan.outputs.tf-plans-paths }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm i --filter "...[8b969a24c30a62cb0d32cd51eba85a0031d466a0]"
+
+      - name: Set up turbo cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+
+      - name: Validate
+        run: pnpm turbo run format:check tf-plan --filter "...[8b969a24c30a62cb0d32cd51eba85a0031d466a0]" --continue=dependencies-successful
+        continue-on-error: true
+
+      - name: Find Terraform plans
+        id: find-tfplan
+        shell: bash
+        run: |
+          find infra -name "*.tfplan" -execdir sh -c 'terraform show -no-color {} > {}.txt' \;
+          tfplan_files=$(find infra -name "*.tfplan.txt" -printf '"%p",' | sed 's/,$//')
+          json_output="[${tfplan_files}]"
+          echo "tf-plans-paths=$json_output" >> $GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tf-plans
+          path: "**/*.tfplan.txt"
+
+  show_tf_plan:
+    runs-on: ubuntu-latest
+    needs: validate
+
+    strategy:
+      matrix:
+        tf-plan-path: ${{ fromJson(needs.validate.outputs.tf-plans-paths) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download Terraform plan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-plans
+
+      - name: Show Terraform plan
+        id: show-plan
+        run: |
+          if [ -s ${{ matrix.tf-plan-path }} ]; then
+            sed -n '/^  #/,$p' ${{ matrix.tf-plan-path }} | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt || echo "No changes detected." > filtered_plan.txt
+          else
+            echo "No plan output available." > filtered_plan.txt
+          fi
+
+          PLAN_OUTCOME=$(grep -q "::error::Terraform exited with code" ${{ matrix.tf-plan-path }} && echo "Failed" || echo "Success")
+
+          # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
+          if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
+            # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
+            SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" ${{ matrix.tf-plan-path }} || echo "No changes.")
+            WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "$SUMMARY_LINE" >> plan_output.txt
+            cat filtered_plan.txt
+          else
+            cat filtered_plan.txt > plan_output.txt
+          fi
+
+          TITLE="Terraform Plan ($(dirname ${{ matrix.tf-plan-path }}))"
+          echo "pr-comment-search-pattern=$TITLE" >> $GITHUB_OUTPUT
+
+          cat <<EOF > summary.txt
+            ### 📖 $TITLE - $PLAN_OUTCOME
+            <details>
+              <summary>Show Plan</summary>
+              \`\`\`hcl
+              $(cat plan_output.txt)
+              \`\`\`
+            </details>
+          EOF
+
+          cat summary.txt > $GITHUB_STEP_SUMMARY
+
+      - name: Post Plan Summary On PR
+        id: comment
+        if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: summary.txt
+          search-pattern: ${{ steps.show-plan.outputs.pr-comment-search-pattern }}
