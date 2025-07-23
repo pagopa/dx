@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # Checkout all history, just for testing purpose
 
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
         name: Install pnpm
@@ -31,7 +33,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm i --filter "...[24296e87af3c1eba290830766b61223c1c4ad6c3]"
+        run: pnpm i --filter "...[5f0fee6af78c861506bb723e4e0c96f61ced3026]"
 
       - name: Set up turbo cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -45,7 +47,7 @@ jobs:
         uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Validate
-        run: pnpm turbo run format:check tf-plan --filter "...[24296e87af3c1eba290830766b61223c1c4ad6c3]" --continue=dependencies-successful
+        run: pnpm turbo run format:check tf-plan --filter "...[5f0fee6af78c861506bb723e4e0c96f61ced3026]" --continue=dependencies-successful
         continue-on-error: true
 
       - name: Find Terraform plans
