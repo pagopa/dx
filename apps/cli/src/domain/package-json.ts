@@ -89,37 +89,36 @@ const findMissingScripts = (
   return requiredScriptNames.difference(availableScriptNames);
 };
 
-export const checkMonorepoScripts =
-  (monorepoDir: string) =>
-  async (
-    dependencies: Pick<Dependencies, "packageJsonReader">,
-  ): Promise<ValidationCheckResult> => {
-    const { packageJsonReader } = dependencies;
-    const checkName = "Monorepo Scripts";
+export const checkMonorepoScripts = async (
+  monorepoDir: string,
+  dependencies: Pick<Dependencies, "packageJsonReader">,
+): Promise<ValidationCheckResult> => {
+  const { packageJsonReader } = dependencies;
+  const checkName = "Monorepo Scripts";
 
-    const scriptsResult = await packageJsonReader.getScripts(monorepoDir);
+  const scriptsResult = await packageJsonReader.getScripts(monorepoDir);
 
-    if (scriptsResult.isErr()) {
-      return err(scriptsResult.error);
-    }
+  if (scriptsResult.isErr()) {
+    return err(scriptsResult.error);
+  }
 
-    const requiredScriptsMap = packageJsonReader.getRootRequiredScripts();
-    const missingScripts = findMissingScripts(
-      scriptsResult.value,
-      requiredScriptsMap,
-    );
+  const requiredScriptsMap = packageJsonReader.getRootRequiredScripts();
+  const missingScripts = findMissingScripts(
+    scriptsResult.value,
+    requiredScriptsMap,
+  );
 
-    if (missingScripts.size === 0) {
-      return ok({
-        checkName,
-        isValid: true,
-        successMessage: "Monorepo scripts are correctly set up",
-      });
-    }
-
+  if (missingScripts.size === 0) {
     return ok({
       checkName,
-      errorMessage: `Missing required scripts: ${Array.from(missingScripts).join(", ")}`,
-      isValid: false,
+      isValid: true,
+      successMessage: "Monorepo scripts are correctly set up",
     });
-  };
+  }
+
+  return ok({
+    checkName,
+    errorMessage: `Missing required scripts: ${Array.from(missingScripts).join(", ")}`,
+    isValid: false,
+  });
+};

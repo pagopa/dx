@@ -24,86 +24,84 @@ const isVersionValid = (version: string, minVersion: string): boolean => {
   return semverGte(dependencySemVer, minAcceptedSemVer);
 };
 
-export const checkPreCommitConfig =
-  (monorepoDir: string) =>
-  async (
-    dependencies: Pick<Dependencies, "repositoryReader">,
-  ): Promise<ValidationCheckResult> => {
-    const { repositoryReader } = dependencies;
-    const checkName = "Pre-commit Configuration";
+export const checkPreCommitConfig = async (
+  monorepoDir: string,
+  dependencies: Pick<Dependencies, "repositoryReader">,
+): Promise<ValidationCheckResult> => {
+  const { repositoryReader } = dependencies;
+  const checkName = "Pre-commit Configuration";
 
-    const preCommitResult =
-      await repositoryReader.existsPreCommitConfig(monorepoDir);
-    if (preCommitResult.isErr()) {
-      return ok({
-        checkName,
-        errorMessage: preCommitResult.error.message,
-        isValid: false,
-      });
-    }
-
+  const preCommitResult =
+    await repositoryReader.existsPreCommitConfig(monorepoDir);
+  if (preCommitResult.isErr()) {
     return ok({
       checkName,
-      isValid: true,
-      successMessage:
-        "Pre-commit configuration is present in the repository root",
+      errorMessage: preCommitResult.error.message,
+      isValid: false,
     });
-  };
+  }
 
-export const checkTurboConfig =
-  (monorepoDir: string) =>
-  async (
-    dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
-    { minVersions }: Config,
-  ): Promise<ValidationCheckResult> => {
-    const { packageJsonReader, repositoryReader } = dependencies;
-    const checkName = "Turbo Configuration";
+  return ok({
+    checkName,
+    isValid: true,
+    successMessage:
+      "Pre-commit configuration is present in the repository root",
+  });
+};
 
-    const turboResult = await repositoryReader.existsTurboConfig(monorepoDir);
-    if (turboResult.isErr()) {
-      return ok({
-        checkName,
-        errorMessage: turboResult.error.message,
-        isValid: false,
-      });
-    }
+export const checkTurboConfig = async (
+  monorepoDir: string,
+  dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
+  { minVersions }: Config,
+): Promise<ValidationCheckResult> => {
+  const { packageJsonReader, repositoryReader } = dependencies;
+  const checkName = "Turbo Configuration";
 
-    const dependenciesResult = await packageJsonReader.getDependencies(
-      monorepoDir,
-      "dev",
-    );
-    if (dependenciesResult.isErr()) {
-      return ok({
-        checkName,
-        errorMessage: dependenciesResult.error.message,
-        isValid: false,
-      });
-    }
-
-    const turboVersion = dependenciesResult.value.get(
-      "turbo" as Dependency["name"],
-    );
-    if (!turboVersion) {
-      return ok({
-        checkName,
-        errorMessage:
-          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
-        isValid: false,
-      });
-    }
-
-    if (!isVersionValid(turboVersion, minVersions.turbo)) {
-      return ok({
-        checkName,
-        errorMessage: `Turbo version (${turboVersion}) is too low. Minimum required version is ${minVersions.turbo}.`,
-        isValid: false,
-      });
-    }
-
+  const turboResult = await repositoryReader.existsTurboConfig(monorepoDir);
+  if (turboResult.isErr()) {
     return ok({
       checkName,
-      isValid: true,
-      successMessage:
-        "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+      errorMessage: turboResult.error.message,
+      isValid: false,
     });
-  };
+  }
+
+  const dependenciesResult = await packageJsonReader.getDependencies(
+    monorepoDir,
+    "dev",
+  );
+  if (dependenciesResult.isErr()) {
+    return ok({
+      checkName,
+      errorMessage: dependenciesResult.error.message,
+      isValid: false,
+    });
+  }
+
+  const turboVersion = dependenciesResult.value.get(
+    "turbo" as Dependency["name"],
+  );
+  if (!turboVersion) {
+    return ok({
+      checkName,
+      errorMessage:
+        "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+      isValid: false,
+    });
+  }
+
+  if (!isVersionValid(turboVersion, minVersions.turbo)) {
+    return ok({
+      checkName,
+      errorMessage: `Turbo version (${turboVersion}) is too low. Minimum required version is ${minVersions.turbo}.`,
+      isValid: false,
+    });
+  }
+
+  return ok({
+    checkName,
+    isValid: true,
+    successMessage:
+      "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+  });
+};

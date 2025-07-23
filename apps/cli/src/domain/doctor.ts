@@ -30,15 +30,15 @@ const runDoctor =
       .andThen((repoRoot) => {
         const doctorChecks = [
           ResultAsync.fromPromise(
-            checkPreCommitConfig(repoRoot)(dependencies),
+            checkPreCommitConfig(repoRoot, dependencies),
             () => new Error("Error checking pre-commit configuration"),
           ),
           ResultAsync.fromPromise(
-            checkTurboConfig(repoRoot)(dependencies, config),
+            checkTurboConfig(repoRoot, dependencies, config),
             () => new Error("Error checking Turbo configuration"),
           ),
           ResultAsync.fromPromise(
-            checkMonorepoScripts(repoRoot)(dependencies),
+            checkMonorepoScripts(repoRoot, dependencies),
             () => new Error("Error checking monorepo scripts"),
           ),
         ];
@@ -74,7 +74,7 @@ const toDoctorResult = (
   };
 };
 
-const printDoctorResult =
+export const printDoctorResult =
   ({ validationReporter }: Dependencies): DoctorEnv["printResult"] =>
   ({ checks }) => {
     checks.map(validationReporter.reportCheckResult);
