@@ -1,13 +1,5 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": [
-    "ARM_SUBSCRIPTION_ID",
-    "ARM_CLIENT_ID",
-    "ARM_CLIENT_SECRET",
-    "ARM_TENANT_ID",
-    "GITHUB_TOKEN",
-    "TERRAFORM_CLI_PATH"
-  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
