@@ -30,12 +30,13 @@
     },
     "tf-init": {
       "inputs": ["*.tf"],
-      "outputLogs": "hash-only"
+      "outputs": [".terraform"],
+      "outputLogs": "errors-only"
     },
     "tf-validate": {
       "dependsOn": ["tf-init"],
       "inputs": ["*.tf"],
-      "outputLogs": "hash-only"
+      "outputLogs": "errors-only"
     },
     "tf-plan": {
       "dependsOn": ["tf-validate", "tf-init"],
