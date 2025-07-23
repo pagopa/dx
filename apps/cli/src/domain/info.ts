@@ -43,6 +43,6 @@ export const getInfo = (dependencies: Dependencies): InfoResult => ({
 });
 
 export const printInfo = (result: InfoResult): void => {
-  const logger = getLogger(["dx-cli", "info"]);
-  logger.info(JSON.stringify(result, null, 2));
+  const logger = getLogger("json");
+  logger.info(result as unknown as Record<string, unknown>);
 };
