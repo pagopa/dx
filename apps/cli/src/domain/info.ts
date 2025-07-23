@@ -8,8 +8,6 @@ export interface InfoResult {
   packageManager: "npm" | "pnpm" | "yarn";
 }
 
-// TODO: Implement this. Just a placeholder for now.
-
 const detectFromLockFile = async (
   dependencies: Dependencies,
 ): Promise<"npm" | "pnpm" | "yarn" | undefined> => {
