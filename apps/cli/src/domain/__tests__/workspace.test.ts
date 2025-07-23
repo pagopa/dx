@@ -24,7 +24,7 @@ describe("checkWorkspaces", () => {
       ok(validWorkspaces),
     );
 
-    const result = await checkWorkspaces(monorepoDir)(deps);
+    const result = await checkWorkspaces(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
@@ -42,7 +42,7 @@ describe("checkWorkspaces", () => {
       err(new Error("Failed to get workspaces")),
     );
 
-    const result = await checkWorkspaces(monorepoDir)(deps);
+    const result = await checkWorkspaces(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
@@ -61,7 +61,7 @@ describe("checkWorkspaces", () => {
       ok([validWorkspaces[0]]),
     );
 
-    const result = await checkWorkspaces(monorepoDir)(deps);
+    const result = await checkWorkspaces(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
@@ -77,7 +77,7 @@ describe("checkWorkspaces", () => {
 
     deps.repositoryReader.getWorkspaces.mockResolvedValueOnce(ok([]));
 
-    const result = await checkWorkspaces(monorepoDir)(deps);
+    const result = await checkWorkspaces(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
