@@ -136,7 +136,7 @@ jobs:
 
           if [ -n "$SUMMARY_LINE" ]; then
             WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> summary.txt
+            echo -e "\nFull plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> summary.txt
           fi
 
           cat summary.txt > $GITHUB_STEP_SUMMARY
