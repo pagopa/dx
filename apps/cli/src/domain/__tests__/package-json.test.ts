@@ -15,7 +15,7 @@ describe("checkMonorepoScripts", () => {
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, monorepoDir);
 
     expect(result.isErr()).toBe(true);
   });
@@ -31,7 +31,7 @@ describe("checkMonorepoScripts", () => {
       new Map().set("code-review", "eslint ."),
     );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
@@ -50,7 +50,7 @@ describe("checkMonorepoScripts", () => {
       new Map().set("code-review", "eslint ."),
     );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, monorepoDir);
 
     expect(result).toStrictEqual(
       ok({
