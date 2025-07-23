@@ -8,17 +8,22 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  ARM_USE_OIDC: true
-  ARM_USE_AZUREAD: true
-  ARM_STORAGE_USE_AZUREAD: true
-
 jobs:
   validate:
     runs-on: ubuntu-latest
     environment: infra-dev-ci
+
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      ARM_STORAGE_USE_AZUREAD: true
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     outputs:
       tf-plans-paths: ${{ steps.find-tfplan.outputs.tf-plans-paths }}
