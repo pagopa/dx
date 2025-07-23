@@ -159,6 +159,12 @@ Warnings are suppressed by $WarningPreference='SilentlyContinue'.
 #Requires -Modules Az.ServiceBus
 #Requires -Modules PowerShellGet
 
+#--------------------------------------------------------------------
+# FOR POC ONLY:
+# Remember that everything marked with 'TESTING' comment is something added for this PoC
+# so is not part of the original script.
+#--------------------------------------------------------------------
+
 
 ################################################################################
 # Configuration Settings
@@ -1847,7 +1853,11 @@ function Get-UserConfirmationWithTimeout(
 ################################################################################
 # Execution
 ################################################################################
-$WhatIfPreference = $true # REMOVE AFTER POC
+
+# TESTING
+$WhatIfPreference = $true # ADDED FOR POC TO FORCE WHATIF MODE
+# TESTING
+
 $WarningPreference = 'SilentlyContinue'  # to suppress upcoming breaking changes warnings
 
 $IsWhatIfMode = !$PSCmdlet.ShouldProcess("mode is enabled (no changes will be made)", $null, $null)
@@ -1871,6 +1881,7 @@ Write-HostOrOutput "Signing-in to Azure..."
 Connect-AzAccount -Identity
 # TESTING
 
+# TESTING
 # $loggedIn = $false
 # $null = Disable-AzContextAutosave -Scope Process # ensures that an AzContext is not inherited
 # $useSystemIdentity = ![string]::IsNullOrWhiteSpace($AutomationAccountResourceId)
@@ -1901,6 +1912,8 @@ Connect-AzAccount -Identity
 #     throw [System.ApplicationException]::new("Sign-in failed")
 #     return
 # }
+# TESTING
+
 Write-HostOrOutput "Signed in successfully."
 
 # Measure runtime
@@ -1927,6 +1940,7 @@ else {
 # Filled during processing and reported at the end
 $usedResourceTypesWithoutHook = @{}
 
+# TESTING
 # $signedInIdentity = $null
 # if ($useSystemIdentity) {
 #     Write-HostOrOutput "Getting system-managed identity of the automation account..."
@@ -1941,6 +1955,7 @@ $usedResourceTypesWithoutHook = @{}
 #     $signedInIdentity = Get-AzADUser -SignedIn
 # }
 # Write-HostOrOutput "Identity Object ID: $($signedInIdentity.Id)"
+# TESTING
 
 foreach ($sub in $allSubscriptions) {
     if ($null -ne $SubscriptionIdsToProcess -and $SubscriptionIdsToProcess.Count -gt 0 -and !$SubscriptionIdsToProcess.Contains($sub.Id)) {
@@ -1953,8 +1968,9 @@ foreach ($sub in $allSubscriptions) {
     Select-AzSubscription -SubscriptionName $sub.Name -TenantId $TenantId -WhatIf:$false | Out-Null
 
     # TESTING
-    $signedInIdentity = Get-AzUserAssignedIdentity -SubscriptionId $sub.Id -ResourceGroupName "dx-d-itn-common-identity-rg-01" -Name "dx-d-itn-common-infra-github-ci-id-01"
+    $signedInIdentity = Get-AzUserAssignedIdentity -SubscriptionId $sub.Id -ResourceGroupName "dx-d-itn-devex-rg-01" -Name "dx-d-itn-devex-infra-github-ci-id-01"
     # TESTING
+
     $tempRoleAssignment = $null
     if ($TryMakingUserContributorTemporarily) {
         if ($null -ne $signedInIdentity) {
