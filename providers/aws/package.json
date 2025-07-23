@@ -4,6 +4,7 @@
   "private": true,
   "description": "Terraform provider for DX on AWS, to enhance developer experience",
   "scripts": {
-    "format": "go fmt"
+    "format": "go fmt",
+    "format:check": "gofmt -l main.go"
   }
 }
