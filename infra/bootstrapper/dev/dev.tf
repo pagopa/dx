@@ -14,7 +14,7 @@ module "bootstrapper" {
     name                   = "dx"
     configure              = true
     description            = "Devex repository for shared tools and pipelines."
-    topics                 = ["developer-experience"]
+    topics                 = ["developer-experience", "dx"]
     reviewers_teams        = ["engineering-team-devex"]
     pages_enabled          = true
     has_downloads          = true
