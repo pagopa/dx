@@ -8,7 +8,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-eip-nat${var.naming_config.instance_number}-${count.index + 1}"
+    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-eip-nat-${var.naming_config.instance_number}-${count.index + 1}"
   })
 }
 
@@ -20,7 +20,15 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = var.public_subnet_ids[count.index]
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-nat${var.naming_config.instance_number}-${count.index + 1}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "nat"
+      resource_type   = "nat_gateway"
+      instance_number = var.naming_config.instance_number + count.index
+    })
   })
 
   depends_on = [aws_eip.nat]

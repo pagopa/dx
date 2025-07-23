@@ -3,7 +3,6 @@
 # - VPC with public and private subnets across 3 AZs
 # - Internet Gateway and NAT Gateways for connectivity
 # - VPC Endpoints for S3 and DynamoDB
-# - VPN Client configuration (optional)
 
 #---------#
 # Network #
@@ -13,7 +12,6 @@ module "networking" {
   source = "./_modules/networking"
 
   naming_config = local.naming_config
-  region        = var.environment.location
   vpc_cidr      = var.vpc_cidr
 
   availability_zones    = local.availability_zones
@@ -71,25 +69,7 @@ module "vpc_endpoints" {
 
   vpc_id                  = module.networking.vpc_id
   region                  = var.environment.location
-  private_subnet_ids      = module.networking.private_subnet_ids
   private_route_table_ids = module.routing.private_route_table_ids
-
-  tags = local.tags
-}
-
-#-----#
-# VPN #
-#-----#
-
-module "vpn" {
-  count  = var.vpn_enabled ? 1 : 0
-  source = "./_modules/vpn"
-
-  naming_config = local.naming_config
-
-  vpc_id            = module.networking.vpc_id
-  vpc_cidr          = var.vpc_cidr
-  public_subnet_ids = module.networking.public_subnet_ids
 
   tags = local.tags
 }

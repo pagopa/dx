@@ -37,8 +37,3 @@ variable "nat_gateway_count" {
   }
 }
 
-variable "vpn_enabled" {
-  type        = bool
-  description = "A boolean flag to enable or disable the creation of a VPN."
-  default     = false
-}

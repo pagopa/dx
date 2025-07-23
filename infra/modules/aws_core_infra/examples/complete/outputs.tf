@@ -46,14 +46,3 @@ output "dynamodb_endpoint_id" {
   description = "The ID of the DynamoDB VPC endpoint"
   value       = module.core.dynamodb_endpoint_id
 }
-
-# VPN
-output "client_vpn_endpoint_id" {
-  description = "The ID of the Client VPN endpoint"
-  value       = module.core.client_vpn_endpoint_id
-}
-
-output "client_vpn_endpoint_dns_name" {
-  description = "The DNS name of the Client VPN endpoint"
-  value       = module.core.client_vpn_endpoint_dns_name
-}

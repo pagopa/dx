@@ -8,7 +8,6 @@ module "core" {
 
   # Feature flags
   nat_gateway_count = 3 # High availability with 3 NAT gateways
-  vpn_enabled       = true
 
   tags = local.tags
 }

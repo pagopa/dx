@@ -5,7 +5,15 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-vpc${var.naming_config.instance_number}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "network"
+      resource_type   = "vpc"
+      instance_number = var.naming_config.instance_number
+    })
   })
 }
 
@@ -14,6 +22,14 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-igw${var.naming_config.instance_number}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "network"
+      resource_type   = "internet_gateway"
+      instance_number = var.naming_config.instance_number
+    })
   })
 }

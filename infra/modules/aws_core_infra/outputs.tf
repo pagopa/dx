@@ -88,27 +88,6 @@ output "vpc_endpoints_security_group_id" {
   value       = module.vpc_endpoints.vpc_endpoints_security_group_id
 }
 
-# VPN Outputs
-output "client_vpn_endpoint_id" {
-  description = "The ID of the Client VPN endpoint"
-  value       = var.vpn_enabled ? module.vpn[0].client_vpn_endpoint_id : null
-}
-
-output "client_vpn_endpoint_dns_name" {
-  description = "The DNS name of the Client VPN endpoint"
-  value       = var.vpn_enabled ? module.vpn[0].client_vpn_endpoint_dns_name : null
-}
-
-output "vpn_server_certificate_arn" {
-  description = "ARN of the VPN server certificate"
-  value       = var.vpn_enabled ? module.vpn[0].vpn_server_certificate_arn : null
-}
-
-output "vpn_client_certificate_arn" {
-  description = "ARN of the VPN client certificate"
-  value       = var.vpn_enabled ? module.vpn[0].vpn_client_certificate_arn : null
-}
-
 # General Outputs
 output "availability_zones" {
   description = "List of availability zones used"

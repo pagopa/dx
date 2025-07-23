@@ -8,7 +8,15 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-pub-snet${var.naming_config.instance_number}-${count.index + 1}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "public"
+      resource_type   = "subnet"
+      instance_number = var.naming_config.instance_number + count.index
+    })
     Type = "Public"
   })
 }
@@ -22,7 +30,15 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[count.index]
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-priv-snet${var.naming_config.instance_number}-${count.index + 1}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "private"
+      resource_type   = "subnet"
+      instance_number = var.naming_config.instance_number + count.index
+    })
     Type = "Private"
   })
 }
@@ -36,7 +52,15 @@ resource "aws_subnet" "isolated" {
   availability_zone = var.availability_zones[count.index]
 
   tags = merge(var.tags, {
-    Name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-isolated-snet${var.naming_config.instance_number}-${count.index + 1}"
+    Name = provider::dx::resource_name({
+      prefix          = var.naming_config.prefix
+      environment     = var.naming_config.environment
+      region          = var.naming_config.location
+      domain          = var.naming_config.domain
+      name            = "isolated"
+      resource_type   = "subnet"
+      instance_number = var.naming_config.instance_number + count.index
+    })
     Type = "Isolated"
   })
 }
