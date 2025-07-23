@@ -52,3 +52,6 @@ coverage
 # Go build artifacts
 terraform-provider-azure
 providers/azure/terraform-provider-azure
+
+*.tfplan
+*.tfplan.txt
