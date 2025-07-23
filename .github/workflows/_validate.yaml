@@ -72,6 +72,7 @@ jobs:
           echo "tf-plans-paths=$json_output" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
+        if: steps.find-tfplan.outputs.tf-plans-paths != '[]'
         with:
           name: tf-plans
           path: "**/*.tfplan.txt"
