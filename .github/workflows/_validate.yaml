@@ -4,6 +4,10 @@ on:
   pull_request: {}
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -27,7 +31,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm i --filter "...[8b969a24c30a62cb0d32cd51eba85a0031d466a0]"
+        run: pnpm i --filter "...[24296e87af3c1eba290830766b61223c1c4ad6c3]"
 
       - name: Set up turbo cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -41,7 +45,7 @@ jobs:
         uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Validate
-        run: pnpm turbo run format:check tf-plan --filter "...[8b969a24c30a62cb0d32cd51eba85a0031d466a0]" --continue=dependencies-successful
+        run: pnpm turbo run format:check tf-plan --filter "...[24296e87af3c1eba290830766b61223c1c4ad6c3]" --continue=dependencies-successful
         continue-on-error: true
 
       - name: Find Terraform plans
