@@ -38,6 +38,12 @@ export const readFileAndDecode = <T>(
   return readFile(filePath).andThen(toJSON).andThen(decode);
 };
 
+/**
+ * Checks if a file exists.
+ *
+ * @param path - The path to the file to check
+ * @returns ResultAsync with true if the file exists, false otherwise
+ */
 export const fileExists = (path: string): ResultAsync<boolean, Error> =>
   ResultAsync.fromPromise(
     fs.stat(path),
