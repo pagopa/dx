@@ -146,7 +146,7 @@ The following table lists the resource types and their abbreviations used in the
 | cloudwatch_event_rule                  |     cw-event-rule     |
 | cloudwatch_event_target                |    cw-event-target    |
 | cloudwatch_log_group                   |        cw-log         |
-| cloudwatch_metric_alarm                |       cw-alarm        |
+| cloudwatch_metric_alarm                |    cw-metric-alarm    |
 | **Networking**                         |                       |
 | elastic_ip                             |          eip          |
 | internet_gateway                       |          igw          |
