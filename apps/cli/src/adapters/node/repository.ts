@@ -25,7 +25,7 @@ const findRepositoryRoot = (
     .map(() => dir);
 };
 
-const resolveWorkspacePattern = (repoRoot: string) => (pattern: string) =>
+const resolveWorkspacePattern = (repoRoot: string, pattern: string) =>
   ResultAsync.fromPromise(
     // For now it is not possible to use the fs.glob function (from node:fs/promises)
     // because it is not possible to run it on Node 20.x
@@ -51,7 +51,9 @@ const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
     )
     .andThen(({ packages }) =>
       // For every package pattern in the pnpm-workspace.yaml file, get the list of subdirectories
-      ResultAsync.combine(packages.map(resolveWorkspacePattern(repoRoot)))
+      ResultAsync.combine(
+        packages.map((pattern) => resolveWorkspacePattern(repoRoot, pattern)),
+      )
         .map((workspacesList) => workspacesList.flat())
         .andThen((workspaceFolders) => {
           // For every subdirectory, read the package.json file and decode it to a zod schema
