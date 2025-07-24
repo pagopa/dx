@@ -34,17 +34,11 @@ const detectPackageManager = async (
   dependencies: Dependencies,
   config: Config,
 ): Promise<PackageManager> => {
-  const packageManagerFromPackageJson = dependencies.packageJson.packageManager;
-  if (!packageManagerFromPackageJson) {
-    // Detect from lock files
-    const packageManagerFromLockFile = await detectFromLockFile(
-      dependencies,
-      config,
-    );
-    // If no lock file is found, default to npm
-    return packageManagerFromLockFile ? packageManagerFromLockFile : "npm";
-  }
-  return packageManagerFromPackageJson;
+  const packageManager =
+    dependencies.packageJson.packageManager ??
+    (await detectFromLockFile(dependencies, config));
+
+  return packageManager ?? "npm";
 };
 
 export const getInfo = async (
