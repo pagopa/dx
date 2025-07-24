@@ -70,7 +70,7 @@ export const packageJsonSchema = z.object({
 export type Dependency = z.infer<typeof dependencySchema>;
 export type DependencyName = z.infer<typeof DependencyName>;
 export type PackageJson = z.infer<typeof packageJsonSchema>;
-export interface PackageJsonReader {
+export type PackageJsonReader = {
   getDependencies(
     cwd: string,
     type: "dev" | "prod",
@@ -80,7 +80,7 @@ export interface PackageJsonReader {
     cwd: string,
   ): ResultAsync<Map<Script["name"], Script["script"]>, Error>;
   readPackageJson(cwd: string): ResultAsync<PackageJson, Error>;
-}
+};
 
 export type PackageManager = z.infer<typeof packageManagerSchema>;
 

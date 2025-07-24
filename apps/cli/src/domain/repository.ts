@@ -7,12 +7,12 @@ import { Dependencies } from "./dependencies.js";
 import { Dependency } from "./package-json.js";
 import { ValidationCheckResult } from "./validation.js";
 
-export interface RepositoryReader {
+export type RepositoryReader = {
   existsPreCommitConfig(repoRoot: string): ResultAsync<boolean, Error>;
   existsTurboConfig(repoRoot: string): ResultAsync<boolean, Error>;
   fileExists(path: string): ResultAsync<boolean, Error>;
   findRepositoryRoot(cwd?: string): ResultAsync<string, Error>;
-}
+};
 
 const isVersionValid = (version: string, minVersion: string): boolean => {
   const minAcceptedSemVer = coerce(minVersion);

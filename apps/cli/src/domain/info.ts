@@ -5,9 +5,9 @@ import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { PackageManager } from "./package-json.js";
 
-export interface InfoResult {
+export type InfoResult = {
   packageManager: PackageManager;
-}
+};
 
 const detectFromLockFile = async (
   dependencies: Dependencies,
