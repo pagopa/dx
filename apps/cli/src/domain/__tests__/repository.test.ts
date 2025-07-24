@@ -119,7 +119,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
-    const result = await checkTurboConfig(deps, config, monorepoDir);
+    const result = await checkTurboConfig(deps, config);
     expect(result).toStrictEqual(
       ok({
         checkName: "Turbo Configuration",
@@ -136,7 +136,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("turbo", "1.0.0")),
     );
-    const result = await checkTurboConfig(deps, config, monorepoDir);
+    const result = await checkTurboConfig(deps, config);
 
     expect(result).toStrictEqual(
       ok({
@@ -153,7 +153,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("turbo", config.minVersions.turbo)),
     );
-    const result = await checkTurboConfig(deps, config, monorepoDir);
+    const result = await checkTurboConfig(deps, config);
 
     expect(result).toStrictEqual(
       ok({
