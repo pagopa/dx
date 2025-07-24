@@ -3,10 +3,8 @@ import { mock } from "vitest-mock-extended";
 import { Config } from "../../config.js";
 import {
   Dependency,
-  DependencyName,
   PackageJson,
   PackageJsonReader,
-  PackageName,
   Script,
 } from "../package-json.js";
 import { RepositoryReader } from "../repository.js";
@@ -16,9 +14,9 @@ export const makeMockPackageJson = (
   overrides: Partial<PackageJson> = {},
 ): PackageJson => {
   const basePackageJson: PackageJson = {
-    dependencies: new Map<DependencyName, Dependency["version"]>(),
-    devDependencies: new Map<DependencyName, Dependency["version"]>(),
-    name: "test-package" as PackageName,
+    dependencies: new Map<Dependency["name"], Dependency["version"]>(),
+    devDependencies: new Map<Dependency["name"], Dependency["version"]>(),
+    name: "test-package" as PackageJson["name"],
     packageManager: "pnpm",
     scripts: new Map<Script["name"], Script["script"]>(),
   };

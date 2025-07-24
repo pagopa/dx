@@ -56,5 +56,5 @@ export const getInfo = async (
 
 export const printInfo = (result: InfoResult): void => {
   const logger = getLogger("json");
-  logger.info(result as unknown as Record<string, unknown>);
+  logger.info(result);
 };
