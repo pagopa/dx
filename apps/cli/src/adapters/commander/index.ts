@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
 import { makeDoctorCommand } from "./commands/doctor.js";
+import { makeInfoCommand } from "./commands/info.js";
 import { makeVersionCommand } from "./commands/version.js";
 
 export const makeCli = (deps: Dependencies, config: Config) => {
@@ -15,6 +16,7 @@ export const makeCli = (deps: Dependencies, config: Config) => {
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeVersionCommand());
+  program.addCommand(makeInfoCommand(deps, config));
 
   return program;
 };
