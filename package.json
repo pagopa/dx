@@ -4,7 +4,6 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
     "@devcontainers/cli": "^0.79.0",
-    "@pagopa/dx-cli": "workspace:^",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
