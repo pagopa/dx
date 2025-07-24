@@ -53,18 +53,23 @@ const dependenciesSchema = z
       ),
   );
 
+const packageManagerSchema = z.enum(["npm", "pnpm", "yarn"]);
+
 export const packageJsonSchema = z.object({
   dependencies: dependenciesSchema,
   devDependencies: dependenciesSchema,
   name: PackageName,
-  packageManager: z.string().optional(),
+  packageManager: z
+    .string()
+    .transform((str) => str.split("@")[0])
+    .pipe(packageManagerSchema)
+    .optional(),
   scripts: scriptsSchema,
 });
 
 export type Dependency = z.infer<typeof dependencySchema>;
 export type DependencyName = z.infer<typeof DependencyName>;
 export type PackageJson = z.infer<typeof packageJsonSchema>;
-
 export interface PackageJsonReader {
   getDependencies(
     cwd: string,
@@ -76,6 +81,8 @@ export interface PackageJsonReader {
   ): ResultAsync<Map<Script["name"], Script["script"]>, Error>;
   readPackageJson(cwd: string): ResultAsync<PackageJson, Error>;
 }
+
+export type PackageManager = z.infer<typeof packageManagerSchema>;
 
 export type RootRequiredScript = Pick<Script, "name">;
 export type Script = z.infer<typeof scriptSchema>;

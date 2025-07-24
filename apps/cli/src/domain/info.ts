@@ -3,16 +3,16 @@ import { join } from "node:path";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
-import { PackageJson } from "./package-json.js";
+import { PackageManager } from "./package-json.js";
 
 export interface InfoResult {
-  packageManager: "npm" | "pnpm" | "yarn";
+  packageManager: PackageManager;
 }
 
 const detectFromLockFile = async (
   dependencies: Dependencies,
   config: Config,
-): Promise<"npm" | "pnpm" | "yarn" | undefined> => {
+): Promise<PackageManager | undefined> => {
   const { repositoryReader } = dependencies;
   const repoRoot = config.repository.root;
   const pnpmResult = await repositoryReader.fileExists(
@@ -33,9 +33,9 @@ const detectFromLockFile = async (
 const detectPackageManager = async (
   dependencies: Dependencies,
   config: Config,
-): Promise<InfoResult["packageManager"]> => {
-  const packageManager = detectFromPackageJson(dependencies.packageJson);
-  if (!packageManager) {
+): Promise<PackageManager> => {
+  const packageManagerFromPackageJson = dependencies.packageJson.packageManager;
+  if (!packageManagerFromPackageJson) {
     // Detect from lock files
     const packageManagerFromLockFile = await detectFromLockFile(
       dependencies,
@@ -44,17 +44,7 @@ const detectPackageManager = async (
     // If no lock file is found, default to npm
     return packageManagerFromLockFile ? packageManagerFromLockFile : "npm";
   }
-  return packageManager;
-};
-const detectFromPackageJson = ({ packageManager }: PackageJson) => {
-  if (packageManager?.startsWith("pnpm")) {
-    return "pnpm";
-  } else if (packageManager?.startsWith("yarn")) {
-    return "yarn";
-  } else if (packageManager?.startsWith("npm")) {
-    return "npm";
-  }
-  return undefined;
+  return packageManagerFromPackageJson;
 };
 
 export const getInfo = async (
