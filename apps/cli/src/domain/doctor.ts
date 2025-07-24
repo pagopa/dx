@@ -7,10 +7,10 @@ import { checkPreCommitConfig } from "./repository.js";
 import { checkTurboConfig } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
 
-interface DoctorResult {
+type DoctorResult = {
   checks: ValidationCheck[];
   hasErrors: boolean;
-}
+};
 
 export const runDoctor = (dependencies: Dependencies, config: Config) =>
   dependencies.repositoryReader
