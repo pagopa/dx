@@ -2,8 +2,8 @@ locals {
   environment = {
     prefix          = "dx"
     env_short       = "d"
-    location        = "eu-south-1"
-    domain          = "test"
+    region          = "eu-south-1"
+    domain          = "core"
     app_name        = "aws-core"
     instance_number = "01"
   }

@@ -9,15 +9,10 @@ resource "aws_vpc_endpoint" "s3" {
   route_table_ids   = var.private_route_table_ids
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
-      name            = "s3"
-      resource_type   = "vpc_endpoint"
-      instance_number = var.naming_config.instance_number
-    })
+    Name = provider::dx::resource_name(merge(var.naming_config, {
+      name          = "s3"
+      resource_type = "vpc_endpoint"
+    }))
   })
 }
 
@@ -29,29 +24,19 @@ resource "aws_vpc_endpoint" "dynamodb" {
   route_table_ids   = var.private_route_table_ids
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
-      name            = "dynamodb"
-      resource_type   = "vpc_endpoint"
-      instance_number = var.naming_config.instance_number
-    })
+    Name = provider::dx::resource_name(merge(var.naming_config, {
+      name          = "ddb"
+      resource_type = "vpc_endpoint"
+    }))
   })
 }
 
 # Security Group for Interface Endpoints
 resource "aws_security_group" "vpc_endpoints" {
-  name_prefix = provider::dx::resource_name({
-    prefix          = var.naming_config.prefix
-    environment     = var.naming_config.environment
-    region          = var.naming_config.location
-    domain          = var.naming_config.domain
-    name            = "vpce"
-    resource_type   = "security_group"
-    instance_number = var.naming_config.instance_number
-  })
+  name_prefix = provider::dx::resource_name(merge(var.naming_config, {
+    name          = "vpce"
+    resource_type = "security_group"
+  }))
   description = "Security group for VPC endpoints"
   vpc_id      = var.vpc_id
 
@@ -72,15 +57,10 @@ resource "aws_security_group" "vpc_endpoints" {
   }
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
-      name            = "vpce"
-      resource_type   = "security_group"
-      instance_number = var.naming_config.instance_number
-    })
+    Name = provider::dx::resource_name(merge(var.naming_config, {
+      name          = "vpce"
+      resource_type = "security_group"
+    }))
   })
 }
 

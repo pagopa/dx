@@ -23,7 +23,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.environment.location
+  region = var.environment.region
   default_tags {
     tags = var.tags
   }
@@ -32,6 +32,6 @@ provider "aws" {
 provider "dx" {
   prefix      = var.environment.prefix
   environment = var.environment.env_short
-  region      = local.location_short
+  region      = local.region_short
   domain      = var.environment.domain
 }

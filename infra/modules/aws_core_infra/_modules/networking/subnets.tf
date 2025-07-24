@@ -8,15 +8,11 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
+    Name = provider::dx::resource_name(merge(var.naming_config, {
       name            = "public"
       resource_type   = "subnet"
-      instance_number = var.naming_config.instance_number + count.index
-    })
+      instance_number = tostring(var.naming_config.instance_number + count.index)
+    }))
     Type = "Public"
   })
 }
@@ -30,15 +26,11 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[count.index]
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
+    Name = provider::dx::resource_name(merge(var.naming_config, {
       name            = "private"
       resource_type   = "subnet"
-      instance_number = var.naming_config.instance_number + count.index
-    })
+      instance_number = tostring(var.naming_config.instance_number + count.index)
+    }))
     Type = "Private"
   })
 }
@@ -52,15 +44,11 @@ resource "aws_subnet" "isolated" {
   availability_zone = var.availability_zones[count.index]
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
+    Name = provider::dx::resource_name(merge(var.naming_config, {
       name            = "isolated"
       resource_type   = "subnet"
-      instance_number = var.naming_config.instance_number + count.index
-    })
+      instance_number = tostring(var.naming_config.instance_number + count.index)
+    }))
     Type = "Isolated"
   })
 }

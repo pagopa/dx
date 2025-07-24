@@ -11,15 +11,10 @@ resource "aws_route_table" "public" {
   }
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
-      name            = "public"
-      resource_type   = "route_table"
-      instance_number = var.naming_config.instance_number
-    })
+    Name = provider::dx::resource_name(merge(var.naming_config, {
+      name          = "public"
+      resource_type = "route_table"
+    }))
     Type = "Public"
   })
 }
@@ -49,15 +44,11 @@ resource "aws_route_table" "private" {
   }
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
+    Name = provider::dx::resource_name(merge(var.naming_config, {
       name            = "private"
       resource_type   = "route_table"
-      instance_number = var.naming_config.instance_number + count.index
-    })
+      instance_number = tostring(var.naming_config.instance_number + count.index)
+    }))
     Type = "Private"
   })
 }
@@ -79,15 +70,11 @@ resource "aws_route_table" "isolated" {
   # No routes to internet - completely isolated
 
   tags = merge(var.tags, {
-    Name = provider::dx::resource_name({
-      prefix          = var.naming_config.prefix
-      environment     = var.naming_config.environment
-      region          = var.naming_config.location
-      domain          = var.naming_config.domain
+    Name = provider::dx::resource_name(merge(var.naming_config, {
       name            = "isolated"
       resource_type   = "route_table"
-      instance_number = var.naming_config.instance_number + count.index
-    })
+      instance_number = tostring(var.naming_config.instance_number + count.index)
+    }))
     Type = "Isolated"
   })
 }

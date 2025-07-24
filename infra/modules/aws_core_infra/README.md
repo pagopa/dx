@@ -59,7 +59,7 @@ module "aws_core_infra" {
   environment = {
     prefix          = "myorg"
     env_short       = "dev"
-    location        = "eu-central-1"
+    region        = "eu-central-1"
     domain          = "core"
     app_name        = "myapp"
     instance_number = "01"
@@ -143,7 +143,7 @@ module "aws_core_infra" {
 ## Important Notes
 
 - **Database Subnets**: Completely isolated subnets with no internet access, perfect for RDS, ElastiCache, and other database services
-- **Subnet Allocation**: Uses CIDR ranges 0-2 for public, 3-5 for private, 6-8 for database subnets
+- **Subnet Alregion**: Uses CIDR ranges 0-2 for public, 3-5 for private, 6-8 for database subnets
 - **NAT Gateways**: When `test_enabled` is `true`, NAT Gateways are automatically disabled to reduce costs during testing
 - **NAT Gateway Count**: Configure 1-3 NAT gateways to balance high availability and costs. With fewer than 3, private subnets will share NAT gateways using round-robin distribution
 - **High Availability**: The module creates resources across 3 availability zones for maximum resilience
@@ -194,7 +194,7 @@ module "aws_core_infra" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    app_name        = string<br/>    domain          = optional(string, "core")<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_gateway_count"></a> [nat\_gateway\_count](#input\_nat\_gateway\_count) | Number of NAT gateways to create. Set to 0 to disable NAT gateways, or 1-3 for high availability. | `number` | `3` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | The CIDR block defining the IP address range for the VPC. | `string` | n/a | yes |

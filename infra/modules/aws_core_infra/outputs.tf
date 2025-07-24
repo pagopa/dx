@@ -96,7 +96,7 @@ output "availability_zones" {
 
 output "region" {
   description = "AWS region where resources are created"
-  value       = var.environment.location
+  value       = var.environment.region
 }
 
 output "project" {

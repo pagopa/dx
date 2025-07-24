@@ -10,22 +10,23 @@ locals {
   )
 
   # Location/region mapping for short names
-  location_short = {
+  region_short = {
     "us-east-1"      = "use1",
     "us-west-2"      = "usw2",
     "eu-west-1"      = "euw1",
     "eu-central-1"   = "euc1",
     "ap-southeast-1" = "aps1",
     "eu-south-1"     = "eus1"
-  }[var.environment.location]
+  }[var.environment.region]
 
   # Project naming convention
-  project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
+  project = "${var.environment.prefix}-${var.environment.env_short}-${local.region_short}"
 
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
-    location        = local.location_short,
+    region          = local.region_short,
+    name            = var.environment.app_name,
     domain          = var.environment.domain,
     instance_number = tonumber(var.environment.instance_number),
   }

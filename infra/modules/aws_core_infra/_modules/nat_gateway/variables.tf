@@ -2,7 +2,8 @@ variable "naming_config" {
   type = object({
     prefix          = string
     environment     = string
-    location        = string
+    region          = string
+    name            = string
     domain          = optional(string)
     instance_number = number
   })
