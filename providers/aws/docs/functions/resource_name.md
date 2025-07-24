@@ -91,6 +91,7 @@ The following table lists the resource types and their abbreviations used in the
 | application_load_balancer |     alb      |
 | network_load_balancer     |     nlb      |
 | target_group              |      tg      |
+| elastic_ip                |     eip      |
 | **API Management**        |              |
 | api_gateway               |    apigw     |
 | api_gateway_v2            |   apigwv2    |
@@ -131,3 +132,5 @@ The following table lists the resource types and their abbreviations used in the
 | route53_zone              |   r53-zone   |
 | **Resource Groups**       |              |
 | resource_group            |      rg      |
+| **Other**                 |              |
+| acm_certificate           |   acm-cert   |

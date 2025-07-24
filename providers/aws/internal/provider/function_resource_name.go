@@ -79,6 +79,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"application_load_balancer": "alb",
 		"network_load_balancer":     "nlb",
 		"target_group":              "tg",
+		"elastic_ip":                "eip",
 
 		// API Management
 		"api_gateway":            "apigw",
@@ -133,6 +134,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		// Application Integration
 		"sqs_dead_letter_queue": "sqs-dlq",
 		"sns_subscription":      "sns-sub",
+		"acm_certificate":       "acm-cert",
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))
