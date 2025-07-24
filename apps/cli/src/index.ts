@@ -1,10 +1,5 @@
 import "core-js/actual/set/index.js";
-import {
-  configure,
-  getConsoleSink,
-  getJsonLinesFormatter,
-  getLogger,
-} from "@logtape/logtape";
+import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
 
 import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
@@ -16,7 +11,7 @@ import { Dependencies } from "./domain/dependencies.js";
 await configure({
   loggers: [
     { category: ["dx-cli"], lowestLevel: "info", sinks: ["console"] },
-    { category: ["json"], lowestLevel: "info", sinks: ["json"] },
+    { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
     {
       category: ["logtape", "meta"],
       lowestLevel: "warning",
@@ -25,9 +20,10 @@ await configure({
   ],
   sinks: {
     console: getConsoleSink(),
-    json: getConsoleSink({
-      formatter: getJsonLinesFormatter(),
-    }),
+    rawJson(record) {
+      // eslint-disable-next-line no-console
+      console.log(record.rawMessage);
+    },
   },
 });
 
