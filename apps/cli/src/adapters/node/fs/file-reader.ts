@@ -1,6 +1,9 @@
-import { Result, ResultAsync } from "neverthrow";
+import { ResultAsync } from "neverthrow";
 import fs from "node:fs/promises";
 import { z } from "zod/v4";
+
+import { decode } from "../../zod/index.js";
+import { toJSON } from "../json/index.js";
 
 /**
  * Reads a file from a directory with a specific filename.
@@ -24,19 +27,8 @@ export const readFile = (filePath: string): ResultAsync<string, Error> =>
 export const readFileAndDecode = <T>(
   filePath: string,
   schema: z.ZodSchema<T>,
-): ResultAsync<T, Error> => {
-  const decode = ResultAsync.fromThrowable(
-    schema.parseAsync,
-    () => new Error("File content is not valid for the given schema"),
-  );
-
-  const toJSON = Result.fromThrowable(
-    JSON.parse,
-    () => new Error("Failed to parse JSON"),
-  );
-
-  return readFile(filePath).andThen(toJSON).andThen(decode);
-};
+): ResultAsync<T, Error> =>
+  readFile(filePath).andThen(toJSON).andThen(decode(schema));
 
 /**
  * Checks if a file exists.
