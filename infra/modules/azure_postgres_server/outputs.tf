@@ -1,6 +1,6 @@
 output "private_endpoint" {
   description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server."
-  value       = try(azurerm_private_endpoint.postgre_pep[0].id, null)
+  value       = var.delegated_subnet_id == null ? azurerm_private_endpoint.postgre_pep[0].id : null
 }
 
 output "postgres" {
@@ -14,7 +14,7 @@ output "postgres" {
 
 output "private_endpoint_replica" {
   description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server Replica. Returns null if the tier is not 'l'."
-  value       = var.tier == "l" ? azurerm_private_endpoint.replica_postgre_pep[0].id : null
+  value       = var.tier == "l" && var.delegated_subnet_id == null ? azurerm_private_endpoint.replica_postgre_pep[0].id : null
 }
 
 output "postgres_replica" {

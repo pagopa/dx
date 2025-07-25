@@ -115,4 +115,9 @@ run "postgres_delegated_snet_is_correct_plan" {
     condition     = azurerm_private_endpoint.postgre_pep == []
     error_message = "The Private Endpoint resource must not exist"
   }
+
+  assert {
+    condition     = azurerm_private_endpoint.replica_postgre_pep == []
+    error_message = "The Replica Private Endpoint resource must not exist"
+  }
 }
