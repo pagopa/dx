@@ -69,7 +69,50 @@ run "postgres_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_private_endpoint.postgre_pep.subnet_id == run.setup_tests.pep_id
+    condition     = azurerm_private_endpoint.postgre_pep[0].subnet_id == run.setup_tests.pep_id
     error_message = "The Private Endpoint must be in the correct subnet"
+  }
+}
+
+run "postgres_delegated_snet_is_correct_plan" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter  = "TS700 - ENGINEERING"
+      CreatedBy   = "Terraform"
+      Environment = "Dev"
+      Owner       = "DevEx"
+      Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
+      Test        = "true"
+      TestName    = "Create PostgreSQL for test"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+    tier                = "l"
+
+    delegated_subnet_id                  = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    administrator_credentials = {
+      name     = "psql_admin"
+      password = "password"
+    }
+
+  }
+
+  # Checks some assertions
+  assert {
+    condition     = azurerm_private_endpoint.postgre_pep == []
+    error_message = "The Private Endpoint resource must not exist"
   }
 }

@@ -1,6 +1,6 @@
 output "private_endpoint" {
   description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server."
-  value       = azurerm_private_endpoint.postgre_pep.id
+  value       = try(azurerm_private_endpoint.postgre_pep[0].id, null)
 }
 
 output "postgres" {
