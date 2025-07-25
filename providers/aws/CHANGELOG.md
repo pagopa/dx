@@ -1,5 +1,11 @@
 # provider-aws
 
+## 0.1.0
+
+### Minor Changes
+
+- 11cdaa1: Added and reorganized resource abbreviations according to existing projects
+
 ## 0.0.1
 
 ### Patch Changes
