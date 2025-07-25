@@ -3,9 +3,16 @@ lockfileVersion: '9.0'
 settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
+  injectWorkspacePackages: true
 
 catalogs:
   default:
+    '@tsconfig/node22':
+      specifier: 22.0.2
+      version: 22.0.2
+    '@types/node':
+      specifier: ^22.16.2
+      version: 22.16.2
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
@@ -15,6 +22,9 @@ catalogs:
     prettier:
       specifier: 3.6.2
       version: 3.6.2
+    tsup:
+      specifier: ^8.5.0
+      version: 8.5.0
     typescript:
       specifier: ~5.8.3
       version: 5.8.3

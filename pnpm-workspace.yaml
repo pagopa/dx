@@ -25,3 +25,5 @@ onlyBuiltDependencies:
 packageImportMethod: clone-or-copy
 
 preferWorkspacePackages: true
+
+injectWorkspacePackages: true
