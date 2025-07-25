@@ -4,19 +4,15 @@ description: "Send a notification to a Slack channel"
 inputs:
   id:
     description: "ID of the notification in mrkdwn format"
-    type: string
     required: true
   title:
     description: "Visible title of the notification in mrkdwn format"
-    type: string
     required: false
   text:
     description: "Text of the notification in mrkdwn format"
-    type: string
     required: false
   slack_webhook_url:
     description: "Slack Webhook URL to send the notification to"
-    type: string
     required: true
 
 runs:
@@ -33,7 +29,7 @@ runs:
         else
           title="${{ inputs.title }}"
         fi
-        
+
         echo "title=$title" >> "$GITHUB_OUTPUT"
 
     # Reference: https://github.com/slackapi/slack-github-action

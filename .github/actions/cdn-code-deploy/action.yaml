@@ -1,4 +1,4 @@
-name: CDN Code Deploy 
+name: CDN Code Deploy
 description: Assets deployment to CDN
 
 # This action allows you to deploy the passed asset to the CDN.
@@ -7,23 +7,18 @@ description: Assets deployment to CDN
 inputs:
   storage_account_name:
     description: Azure Storage account name where the assets will be uploaded.
-    type: string
     required: true
   blob_container_name:
     description: Blob container name within the Azure Storage account.
-    type: string
     required: true
   resource_group_name:
     description: CDN resource group name.
-    type: string
     required: true
   profile_name:
     description: CDN Profile name associated with the endpoint.
-    type: string
     required: true
   endpoint_name:
     description: CDN endpoint name where the assets will be served.
-    type: string
     required: true
   selective_purge_paths:
     description: |
@@ -32,20 +27,17 @@ inputs:
       For example, if syncing ./dist, to include ./dist/path/file1 and ./dist/path/file2, specify "./path/file1 ./path/file2."
       To recursively purge an entire directory, use the pattern "./path/dir/*".
 
-      The format should follow the parameters as described in the official documentation: 
+      The format should follow the parameters as described in the official documentation:
       https://learn.microsoft.com/en-us/cli/azure/cdn/endpoint?view=azure-cli-latest#az-cdn-endpoint-purge-required-parameters
-    type: string
     required: false
   sync_dir_name:
     description: Path to the files directory (Default is 'dist')
-    type: string
     required: false
-    default: 'dist'
+    default: "dist"
   working_directory:
     description: The path of the directory containing the folder to be synchronized (Default is '.')
-    type: string
     required: false
-    default: '.'
+    default: "."
 
 runs:
   using: composite
