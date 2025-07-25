@@ -29,7 +29,7 @@ variable "vpc_cidr" {
 
 variable "nat_gateway_count" {
   type        = number
-  description = "Number of NAT gateways to create. Set to 0 to disable NAT gateways, or 1-3 for high availability."
+  description = "Number of NAT gateways to create. Set to 0 to disable NAT gateways, 1 for development environment, 3 for high availability in production environment."
   default     = 3
 
   validation {
