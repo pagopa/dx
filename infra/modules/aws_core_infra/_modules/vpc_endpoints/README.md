@@ -25,6 +25,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_isolated_route_table_ids"></a> [isolated\_route\_table\_ids](#input\_isolated\_route\_table\_ids) | List of isolated route table IDs for gateway endpoints | `list(string)` | `[]` | no |
 | <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Configuration object for generating consistent resource names | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    region          = string<br/>    name            = string<br/>    domain          = optional(string)<br/>    instance_number = number<br/>  })</pre> | n/a | yes |
 | <a name="input_private_route_table_ids"></a> [private\_route\_table\_ids](#input\_private\_route\_table\_ids) | List of private route table IDs for gateway endpoints | `list(string)` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | AWS region for service endpoints | `string` | n/a | yes |

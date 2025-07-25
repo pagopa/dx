@@ -6,7 +6,8 @@ resource "aws_vpc" "main" {
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
-      name          = "network"
+      domain        = ""
+      name          = "core"
       resource_type = "vpc"
     }))
   })
@@ -18,7 +19,8 @@ resource "aws_internet_gateway" "main" {
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
-      name          = "network"
+      domain        = ""
+      name          = "core"
       resource_type = "internet_gateway"
     }))
   })

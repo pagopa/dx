@@ -37,7 +37,7 @@ resource "aws_subnet" "private" {
 
 # Isolated Subnets (always 3 - completely isolated, no internet access)
 resource "aws_subnet" "isolated" {
-  count = 3
+  count = length(var.isolated_subnet_cidrs)
 
   vpc_id            = aws_vpc.main.id
   cidr_block        = var.isolated_subnet_cidrs[count.index]

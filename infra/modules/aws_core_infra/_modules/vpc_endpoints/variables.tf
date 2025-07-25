@@ -25,6 +25,12 @@ variable "private_route_table_ids" {
   description = "List of private route table IDs for gateway endpoints"
 }
 
+variable "isolated_route_table_ids" {
+  type        = list(string)
+  description = "List of isolated route table IDs for gateway endpoints"
+  default     = []
+}
+
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources"

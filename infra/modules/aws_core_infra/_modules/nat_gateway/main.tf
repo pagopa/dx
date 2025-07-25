@@ -9,7 +9,7 @@ resource "aws_eip" "nat" {
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
-      name            = "eip-nat"
+      name            = "nat"
       resource_type   = "elastic_ip"
       instance_number = tostring(var.naming_config.instance_number + count.index)
     }))
@@ -25,7 +25,8 @@ resource "aws_nat_gateway" "main" {
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
-      name            = "network"
+      domain          = ""
+      name            = "core"
       resource_type   = "nat_gateway"
       instance_number = tostring(var.naming_config.instance_number + count.index)
     }))

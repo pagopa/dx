@@ -6,7 +6,7 @@ resource "aws_vpc_endpoint" "s3" {
   vpc_id            = var.vpc_id
   service_name      = "com.amazonaws.${var.region}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = var.private_route_table_ids
+  route_table_ids   = concat(var.private_route_table_ids, var.isolated_route_table_ids)
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
@@ -21,7 +21,7 @@ resource "aws_vpc_endpoint" "dynamodb" {
   vpc_id            = var.vpc_id
   service_name      = "com.amazonaws.${var.region}.dynamodb"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = var.private_route_table_ids
+  route_table_ids   = concat(var.private_route_table_ids, var.isolated_route_table_ids)
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {

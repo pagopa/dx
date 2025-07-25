@@ -67,9 +67,10 @@ module "vpc_endpoints" {
 
   naming_config = local.naming_config
 
-  vpc_id                  = module.networking.vpc_id
-  region                  = var.environment.region
-  private_route_table_ids = module.routing.private_route_table_ids
+  vpc_id                   = module.networking.vpc_id
+  region                   = var.environment.region
+  private_route_table_ids  = module.routing.private_route_table_ids
+  isolated_route_table_ids = module.routing.isolated_route_table_ids
 
   tags = local.tags
 }
