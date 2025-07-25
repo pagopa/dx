@@ -3,5 +3,11 @@
   "version": "3.0.1",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Container App with a given configuration"
+  "description": "Provisions an Azure Container App with a given configuration",
+  "scripts": {
+    "format": "terraform fmt",
+    "format:check": "terraform fmt -check",
+    "tf-validate": "terraform validate",
+    "tf-init": "terraform init"
+  }
 }
