@@ -16,7 +16,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_core"></a> [core](#module\_core) | pagopa-dx/azure-core-infra/azurerm | ~> 2.0 |
+| <a name="module_core"></a> [core](#module\_core) | github.com/pagopa/dx//infra/modules/azure_core_infra | application-insights-as-core-resource |
 
 ## Resources
 
