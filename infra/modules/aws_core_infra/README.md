@@ -131,7 +131,7 @@ module "aws_core_infra" {
 | vpc_cidr_block       | The CIDR block of the VPC                                 |
 | public_subnet_ids    | List of IDs of the public subnets                         |
 | private_subnet_ids   | List of IDs of the private subnets                        |
-| database_subnet_ids  | List of IDs of the database subnets                       |
+| isolated_subnet_ids  | List of IDs of the database subnets                       |
 | internet_gateway_id  | The ID of the Internet Gateway                            |
 | nat_gateway_ids      | List of IDs of the NAT Gateways                           |
 | nat_gateway_ips      | List of Elastic IP addresses assigned to the NAT Gateways |
