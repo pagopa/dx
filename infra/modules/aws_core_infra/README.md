@@ -144,7 +144,7 @@ module "aws_core_infra" {
 
 - **Database Subnets**: Completely isolated subnets with no internet access, perfect for RDS, ElastiCache, and other database services
 - **Subnet Allocation**: Uses CIDR ranges 0-2 for public, 3-5 for private, 6-8 for database subnets
-- **NAT Gateways**: When `test_enabled` is `true`, NAT Gateways are automatically disabled to reduce costs during testing
+- **NAT Gateways**: When `nat_gateway_count` is set to `0`, NAT Gateways are automatically disabled to reduce costs during testing
 - **NAT Gateway Count**: Configure 1-3 NAT gateways to balance high availability and costs. With fewer than 3, private subnets will share NAT gateways using round-robin distribution
 - **High Availability**: The module creates resources across 3 availability zones for maximum resilience
 - **VPC Endpoints**: Gateway endpoints for S3 and DynamoDB are always enabled as they are free and improve security
