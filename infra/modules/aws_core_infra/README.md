@@ -160,7 +160,7 @@ module "aws_core_infra" {
 
 ## Cost Optimization
 
-- Set `test_enabled = true` during development to skip expensive resources like NAT Gateways
+- Set `nat_gateway_count = 0` during development to skip expensive resources like NAT Gateways
 - Configure `nat_gateway_count` based on your needs: 1 for cost savings, 3 for high availability
 - VPC endpoints are always enabled as they reduce data transfer costs for S3 and DynamoDB access at no additional charge
 - NAT Gateway costs can be significant - consider using 1 NAT Gateway for non-production environments
