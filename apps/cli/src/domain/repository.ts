@@ -1,5 +1,5 @@
 import { ok, ResultAsync } from "neverthrow";
-import { join } from "node:path";
+import fs from "node:path";
 import coerce from "semver/functions/coerce.js";
 import semverGte from "semver/functions/gte.js";
 
@@ -32,7 +32,7 @@ export const checkPreCommitConfig = async (
   const checkName = "Pre-commit Configuration";
 
   const preCommitResult = await repositoryReader.fileExists(
-    join(config.repository.root, ".pre-commit-config.yaml"),
+    fs.join(config.repository.root, ".pre-commit-config.yaml"),
   );
 
   if (preCommitResult.isOk() && preCommitResult.value) {
@@ -64,7 +64,7 @@ export const checkTurboConfig = async (
   const repoRoot = config.repository.root;
 
   const turboResult = await repositoryReader.fileExists(
-    join(repoRoot, "turbo.json"),
+    fs.join(repoRoot, "turbo.json"),
   );
   if (turboResult.isErr()) {
     return ok({
