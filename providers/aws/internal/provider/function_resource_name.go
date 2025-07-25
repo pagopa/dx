@@ -44,95 +44,147 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 
 	// AWS resource type abbreviations
 	var resourceAbbreviations = map[string]string{
+		// Analytics
+		"elasticsearch_domain": "es",
+		"kinesis_firehose":     "firehose",
+		"kinesis_stream":       "kinesis",
+		"opensearch_domain":    "os",
+
+		// API Gateway
+		"api_gateway":                   "apigw",
+		"api_gateway_account":           "apigw-account",
+		"api_gateway_authorizer":        "apigw-auth",
+		"api_gateway_base_path_mapping": "apigw-path-map",
+		"api_gateway_deployment":        "apigw-deploy",
+		"api_gateway_domain_name":       "apigw-domain",
+		"api_gateway_integration":       "apigw-integration",
+		"api_gateway_method":            "apigw-method",
+		"api_gateway_method_settings":   "apigw-method-settings",
+		"api_gateway_resource":          "apigw-resource",
+		"api_gateway_rest_api":          "apigw-rest-api",
+		"api_gateway_stage":             "apigw-stage",
+		"api_gateway_v2":                "apigwv2",
+
+		// Application Integration
+		"eventbridge_bus":        "eb-bus",
+		"eventbridge_rule":       "eb-rule",
+		"pipes_pipe":             "pipes-pipe",
+		"sns_subscription":       "sns-sub",
+		"sns_topic":              "sns",
+		"sns_topic_policy":       "sns-policy",
+		"sns_topic_subscription": "sns-sub",
+		"sqs_dead_letter_queue":  "sqs-dlq",
+		"sqs_queue":              "sqs",
+		"step_function":          "sf",
+
+		// CDN
+		"cloudfront_distribution":            "cf",
+		"cloudfront_function":                "cf-func",
+		"cloudfront_origin":                  "cf-origin",
+		"cloudfront_origin_access_identity":  "cf-oai",
+		"cloudfront_response_headers_policy": "cf-headers-policy",
+
+		// Certificates
+		"acm_certificate": "acm-cert",
+
 		// Compute
-		"ec2_instance":         "ec2",
-		"ecs_cluster":          "ecs",
-		"ecs_service":          "ecssvc",
-		"ecs_task_definition":  "ecstd",
-		"lambda_function":      "lambda",
 		"auto_scaling_group":   "asg",
+		"ec2_instance":         "ec2",
 		"launch_configuration": "lc",
 		"launch_template":      "lt",
 
-		// Storage
-		"s3_bucket":       "s3",
-		"ebs_volume":      "ebs",
-		"efs_file_system": "efs",
+		// Container Services
+		"ecr_repository":      "ecr",
+		"ecs_cluster":         "ecs",
+		"ecs_service":         "ecssvc",
+		"ecs_task_definition": "ecstd",
+		"eks_cluster":         "eks",
+		"eks_node_group":      "eks-ng",
 
 		// Database
-		"rds_instance":        "rds",
-		"rds_cluster":         "rdscluster",
+		"documentdb_cluster":  "docdb",
 		"dynamodb_table":      "ddb",
 		"elasticache_cluster": "redis",
-		"documentdb_cluster":  "docdb",
+		"elasticache_redis":   "redis",
+		"rds_cluster":         "rdscluster",
+		"rds_instance":        "rds",
 
-		// Networking
-		"vpc":                       "vpc",
-		"subnet":                    "snet",
-		"internet_gateway":          "igw",
-		"nat_gateway":               "nat",
-		"route_table":               "rt",
-		"security_group":            "sg",
-		"network_acl":               "nacl",
-		"vpc_endpoint":              "vpce",
-		"elastic_load_balancer":     "elb",
+		// DNS
+		"route53_record": "r53-record",
+		"route53_zone":   "r53-zone",
+
+		// Identity & Access Management (IAM)
+		"cognito_identity_pool":                  "cognito-id-pool",
+		"cognito_identity_pool_roles_attachment": "cognito-id-roles",
+		"cognito_user":                           "cognito-user",
+		"cognito_user_group":                     "cognito-group",
+		"cognito_user_pool":                      "cognito-pool",
+		"cognito_user_pool_client":               "cognito-client",
+		"cognito_user_pool_domain":               "cognito-domain",
+		"iam_group":                              "group",
+		"iam_group_policy_attachment":            "iam-group-policy",
+		"iam_openid_connect_provider":            "iam-oidc",
+		"iam_policy":                             "policy",
+		"iam_policy_attachment":                  "iam-policy-attach",
+		"iam_role":                               "role",
+		"iam_role_policy":                        "iam-role-policy",
+		"iam_role_policy_attachment":             "iam-role-attach",
+		"iam_user":                               "user",
+
+		// Load Balancing
 		"application_load_balancer": "alb",
+		"elastic_load_balancer":     "elb",
 		"network_load_balancer":     "nlb",
 		"target_group":              "tg",
 
-		// API Management
-		"api_gateway":            "apigw",
-		"api_gateway_v2":         "apigwv2",
-		"api_gateway_stage":      "apigw-stage",
-		"api_gateway_deployment": "apigw-deploy",
+		// Monitoring & Logging
+		"cloudwatch_alarm":        "cw-alarm",
+		"cloudwatch_dashboard":    "cw-dash",
+		"cloudwatch_event_rule":   "cw-event-rule",
+		"cloudwatch_event_target": "cw-event-target",
+		"cloudwatch_log_group":    "cw-log",
+		"cloudwatch_metric_alarm": "cw-metric-alarm",
 
-		// Security
-		"kms_key":         "kms",
-		"iam_role":        "role",
-		"iam_policy":      "policy",
-		"iam_user":        "user",
-		"iam_group":       "group",
-		"secrets_manager": "sm",
+		// Networking
+		"elastic_ip":          "eip",
+		"internet_gateway":    "igw",
+		"nat_gateway":         "nat",
+		"network_acl":         "nacl",
+		"route_table":         "rt",
+		"security_group":      "sg",
+		"security_group_rule": "sg-rule",
+		"subnet":              "snet",
+		"vpc":                 "vpc",
+		"vpc_endpoint":        "vpce",
 
-		// Monitoring
-		"cloudwatch_log_group": "cw-log",
-		"cloudwatch_alarm":     "cw-alarm",
-		"cloudwatch_dashboard": "cw-dash",
-		"sns_topic":            "sns",
-		"sqs_queue":            "sqs",
-
-		// CDN
-		"cloudfront_distribution": "cf",
-		"cloudfront_origin":       "cf-origin",
-
-		// Container Services
-		"ecr_repository": "ecr",
-		"eks_cluster":    "eks",
-		"eks_node_group": "eks-ng",
-
-		// Serverless
-		"step_function":    "sf",
-		"eventbridge_rule": "eb-rule",
-		"eventbridge_bus":  "eb-bus",
-
-		// Analytics
-		"kinesis_stream":       "kinesis",
-		"kinesis_firehose":     "firehose",
-		"elasticsearch_domain": "es",
-		"opensearch_domain":    "os",
-
-		// Resource Groups
+		// Resource Management
 		"resource_group": "rg",
 
-		// Route53
-		"route53_zone": "r53-zone",
+		// Security
+		"kms_key":                   "kms",
+		"secrets_manager":           "sm",
+		"wafv2_web_acl":             "waf-acl",
+		"wafv2_web_acl_association": "waf-assoc",
 
-		// ElastiCache specific
-		"elasticache_redis": "redis",
+		// Serverless
+		"lambda_function":   "lambda",
+		"lambda_permission": "lambda-perm",
 
-		// Application Integration
-		"sqs_dead_letter_queue": "sqs-dlq",
-		"sns_subscription":      "sns-sub",
+		// Storage
+		"ebs_volume":                        "ebs",
+		"efs_access_point":                  "efs-access-point",
+		"efs_file_system":                   "efs",
+		"efs_mount_target":                  "efs-mount",
+		"s3_bucket":                         "s3",
+		"s3_bucket_acl":                     "s3-acl",
+		"s3_bucket_lifecycle_configuration": "s3-lifecycle",
+		"s3_bucket_ownership_controls":      "s3-ownership",
+		"s3_bucket_policy":                  "s3-policy",
+		"s3_bucket_public_access_block":     "s3-public-block",
+		"s3_bucket_versioning":              "s3-versioning",
+
+		// Systems Manager
+		"ssm_parameter": "ssm-param",
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))
