@@ -4,7 +4,6 @@ description: "Setup Terraform and initialize the working directory"
 inputs:
   terraform_version:
     description: "Specify the Terraform version to use, if not set, it will be read from .terraform-version file"
-    type: string
     required: false
 
 outputs:

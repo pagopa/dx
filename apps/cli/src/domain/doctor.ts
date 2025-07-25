@@ -12,33 +12,29 @@ type DoctorResult = {
   hasErrors: boolean;
 };
 
-export const runDoctor = (dependencies: Dependencies, config: Config) =>
-  dependencies.repositoryReader
-    .findRepositoryRoot()
-    .andThen((repoRoot) => {
-      const doctorChecks = [
-        ResultAsync.fromPromise(
-          checkPreCommitConfig(dependencies, repoRoot),
-          () => new Error("Error checking pre-commit configuration"),
-        ),
-        ResultAsync.fromPromise(
-          checkTurboConfig(dependencies, config, repoRoot),
-          () => new Error("Error checking Turbo configuration"),
-        ),
-        ResultAsync.fromPromise(
-          checkMonorepoScripts(dependencies, repoRoot),
-          () => new Error("Error checking monorepo scripts"),
-        ),
-      ];
-      return ResultAsync.combine(doctorChecks);
-    })
-    .match(
-      toDoctorResult,
-      (): DoctorResult => ({
-        checks: [],
-        hasErrors: true,
-      }),
-    );
+export const runDoctor = (dependencies: Dependencies, config: Config) => {
+  const doctorChecks = [
+    ResultAsync.fromPromise(
+      checkPreCommitConfig(dependencies, config),
+      () => new Error("Error checking pre-commit configuration"),
+    ),
+    ResultAsync.fromPromise(
+      checkTurboConfig(dependencies, config),
+      () => new Error("Error checking Turbo configuration"),
+    ),
+    ResultAsync.fromPromise(
+      checkMonorepoScripts(dependencies, config),
+      () => new Error("Error checking monorepo scripts"),
+    ),
+  ];
+  return ResultAsync.combine(doctorChecks).match(
+    toDoctorResult,
+    (): DoctorResult => ({
+      checks: [],
+      hasErrors: true,
+    }),
+  );
+};
 
 const toDoctorResult = (
   validationCheckResults: ValidationCheckResult[],

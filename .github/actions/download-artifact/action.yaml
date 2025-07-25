@@ -7,11 +7,9 @@ description: "Download an artifact from a previous job"
 inputs:
   bundle_name:
     description: "Name of the bundle to download"
-    type: string
     required: true
   file_path:
     description: "Path to the directory where the artifact will be downloaded. You can also rename the artifact by specifying a different name in the path."
-    type: string
     required: false
     default: "."
 
@@ -19,8 +17,8 @@ runs:
   using: "composite"
 
   steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: ${{ inputs.bundle_name }}
-          path: ${{ inputs.file_path }}
+    - name: Download Artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        name: ${{ inputs.bundle_name }}
+        path: ${{ inputs.file_path }}
