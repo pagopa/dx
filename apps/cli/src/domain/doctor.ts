@@ -6,6 +6,7 @@ import { checkMonorepoScripts } from "./package-json.js";
 import { checkPreCommitConfig } from "./repository.js";
 import { checkTurboConfig } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
+import { checkWorkspaces } from "./workspace.js";
 
 type DoctorResult = {
   checks: ValidationCheck[];
@@ -24,6 +25,10 @@ export const runDoctor = (dependencies: Dependencies, config: Config) => {
     ),
     ResultAsync.fromPromise(
       checkMonorepoScripts(dependencies, config),
+      () => new Error("Error checking monorepo scripts"),
+    ),
+    ResultAsync.fromPromise(
+      checkWorkspaces(dependencies, config.repository.root),
       () => new Error("Error checking monorepo scripts"),
     ),
   ];
