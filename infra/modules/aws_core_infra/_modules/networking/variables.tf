@@ -36,6 +36,28 @@ variable "isolated_subnet_cidrs" {
   default     = []
 }
 
+variable "map_public_ip_on_launch" {
+  type        = bool
+  description = "Whether to assign public IP addresses to instances launched in public subnets"
+  default     = true
+}
+
+variable "enable_flow_logs" {
+  type        = bool
+  description = "Whether to enable VPC Flow Logs"
+  default     = false
+}
+
+variable "flow_logs_destination_type" {
+  type        = string
+  description = "Type of destination for VPC Flow Logs (cloud-watch-logs or s3)"
+  default     = "cloud-watch-logs"
+  validation {
+    condition     = contains(["cloud-watch-logs", "s3"], var.flow_logs_destination_type)
+    error_message = "Flow logs destination type must be either 'cloud-watch-logs' or 's3'."
+  }
+}
+
 variable "tags" {
   type        = map(any)
   description = "Tags to apply to resources"
