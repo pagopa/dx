@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0, < 5.0"
+      version = ">= 4.37.0, < 5.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
@@ -62,6 +62,11 @@ resource "azurerm_eventhub" "events" {
   resource_group_name = var.resource_group_name
   partition_count     = each.value.partitions
   message_retention   = each.value.message_retention_days
+
+  retention_description {
+    cleanup_policy          = "Delete"
+    retention_time_in_hours = 168
+  }
 }
 
 resource "azurerm_eventhub_consumer_group" "consumer_group" {
