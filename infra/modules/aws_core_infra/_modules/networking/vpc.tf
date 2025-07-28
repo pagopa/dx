@@ -31,7 +31,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   count = var.enable_flow_logs && var.flow_logs_destination_type == "cloud-watch-logs" ? 1 : 0
 
   name              = "/aws/vpc/flowlogs"
-  retention_in_days = 7
+  retention_in_days = 3
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
