@@ -52,13 +52,4 @@ locals {
   isolated_subnet_cidrs = [
     for i in range(3) : cidrsubnet(var.vpc_cidr, local.subnet_cidr_bits - local.vpc_cidr_bits, i + 6)
   ]
-
-  # Security settings based on environment
-  is_production = var.environment.env_short == "p"
-
-  # Automatically enable flow logs for production, optional for dev/test
-  enable_flow_logs = local.is_production ? true : false
-
-  # Disable auto-assign public IPs for security (all environments)
-  map_public_ip_on_launch = false
 }

@@ -19,11 +19,6 @@ module "networking" {
   private_subnet_cidrs  = local.private_subnet_cidrs
   isolated_subnet_cidrs = local.isolated_subnet_cidrs
 
-  # Automatic security configurations
-  map_public_ip_on_launch    = local.map_public_ip_on_launch
-  enable_flow_logs           = local.enable_flow_logs
-  flow_logs_destination_type = "cloud-watch-logs"
-
   tags = local.tags
 }
 

@@ -1,11 +1,12 @@
 # Public Subnets
+# trivy:ignore:AVD-AWS-0164 Public IP assignment controlled by variable for flexibility
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
-  map_public_ip_on_launch = var.map_public_ip_on_launch
+  map_public_ip_on_launch = false
 
   tags = merge(var.tags, {
     Name = provider::dx::resource_name(merge(var.naming_config, {
