@@ -1,4 +1,4 @@
-FROM ghcr.io/actions/actions-runner:latest AS base
+FROM ghcr.io/actions/actions-runner:latest@sha256:551dc313e6b6ef1ca7b9594d8090a7a6cc7aeb663f1079ba2fec07e9158f3259 AS base
 
 # === Stage 1: Use base Runner and install tools ===
 ARG RUNNER_DIGEST
