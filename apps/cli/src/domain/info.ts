@@ -6,6 +6,7 @@ import { Dependencies } from "./dependencies.js";
 import { PackageManager } from "./package-json.js";
 
 export type InfoResult = {
+  node?: string;
   packageManager: PackageManager;
 };
 
@@ -41,10 +42,20 @@ const detectPackageManager = async (
   return packageManager ?? "npm";
 };
 
+const detectNodeVersion = async (
+  { repositoryReader }: Pick<Dependencies, "repositoryReader">,
+  nodeVersionFilePath: string,
+): Promise<string | undefined> =>
+  await repositoryReader.readFile(nodeVersionFilePath).unwrapOr(undefined);
+
 export const getInfo = async (
   dependencies: Dependencies,
   config: Config,
 ): Promise<InfoResult> => ({
+  node: await detectNodeVersion(
+    { repositoryReader: dependencies.repositoryReader },
+    `${config.repository.root}/.node-version`,
+  ),
   packageManager: await detectPackageManager(dependencies, config),
 });
 
