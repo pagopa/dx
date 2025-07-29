@@ -37,7 +37,8 @@ jobs:
       - name: Get workspace path
         id: get-workspace-path
         run: |
-          WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr '.[].packages.items[] | select(.name == "${{ env.WORKSPACE_NAME }}").path')
+          WORKSPACE_PATH=$(npx turbo ls --output=json |
+            jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
           echo "path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
 
       - name: Make artifact
@@ -45,6 +46,7 @@ jobs:
         env:
           YARN_NODE_LINKER: node-modules
           YARN_NM_HOISTING_LIMITS: workspaces
+          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
         working-directory: ${{ steps.get-workspace-path.outputs.path }}
         run: |
           if grep -rq --include='next.config.*' 'output: "standalone"' .; then
@@ -55,7 +57,7 @@ jobs:
             exit 0
           fi
 
-          if [ "${{ steps.node-setup.outputs.package-manager }}" == "pnpm" ]; then
+          if [ "$PACKAGE_MANAGER" == "pnpm" ]; then
             pnpm --filter $WORKSPACE_NAME deploy --prod bundle
             cd bundle && zip -r $BUNDLE_NAME.zip .
             echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
