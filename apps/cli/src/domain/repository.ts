@@ -11,6 +11,7 @@ import { ValidationCheckResult } from "./validation.js";
 export type RepositoryReader = {
   fileExists(path: string): ResultAsync<boolean, Error>;
   findRepositoryRoot(cwd?: string): ResultAsync<string, Error>;
+  readFile(path: string): ResultAsync<string, Error>;
 };
 
 const isVersionValid = (version: string, minVersion: string): boolean => {
