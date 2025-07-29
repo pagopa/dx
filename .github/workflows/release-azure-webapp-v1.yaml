@@ -5,6 +5,43 @@ on:
         description: The name of the workspace to create the artifact for.
         type: string
         required: true
+      resource_group_name:
+        description: Web App resource group name.
+        type: string
+        required: true
+      web_app_name:
+        description: Web App name.
+        type: string
+        required: true
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      use_staging_slot:
+        description: True if artifact should be deployed to staging slot
+        type: boolean
+        required: false
+        default: true
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
+
+env:
+  BUNDLE_NAME: bundle-${{ github.run_id }}
+  RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+  WEB_APP_NAME: ${{ inputs.web_app_name }}
 
 jobs:
   build:
@@ -13,7 +50,6 @@ jobs:
 
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
-      BUNDLE_NAME: bundle-${{ github.run_id }}
 
     steps:
       - name: Check out repository
@@ -75,3 +111,100 @@ jobs:
         with:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: artifact
+
+  deploy_prod:
+    name: Deploy to Production
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [build]
+    if: ${{ !github.event.act && !inputs.use_staging_slot }}
+    environment: ${{ inputs.environment }}-cd
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: artifact
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Production Slot
+        run: |
+          az webapp deploy \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --src-path "$BUNDLE_NAME.zip" \
+            --type zip \
+            --async false
+
+  deploy_staging:
+    name: Deploy to Staging
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [build]
+    if: ${{ !github.event.act && inputs.use_staging_slot }}
+    environment: ${{ inputs.environment }}-cd
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: artifact
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Staging Slot
+        run: |
+          az webapp deploy \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --slot staging \
+            --src-path "$BUNDLE_NAME.zip" \
+            --type zip \
+            --async false
+
+  swap_staging_production:
+    name: Swap Staging and Production Slots
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [deploy_staging]
+    if: ${{ !github.event.act && inputs.use_staging_slot }}
+    environment: ${{ inputs.environment }}-cd
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Swap Staging and Production Slots
+        run: |
+          az webapp deployment slot swap \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --slot staging \
+            --target-slot production
