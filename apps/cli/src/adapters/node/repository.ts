@@ -1,22 +1,25 @@
 import { ResultAsync } from "neverthrow";
-import fs from "node:fs/promises";
 import { join } from "node:path";
 
 import { RepositoryReader } from "../../domain/repository.js";
-import { fileExists } from "./fs/file-reader.js";
+import { fileExists, readFile } from "./fs/file-reader.js";
 
-const findRoot = (dir = process.cwd()): ResultAsync<string, Error> => {
+const findRepositoryRoot = (
+  dir = process.cwd(),
+): ResultAsync<string, Error> => {
   const gitPath = join(dir, ".git");
-  return ResultAsync.fromPromise(
-    fs.stat(gitPath),
-    () =>
-      new Error(
-        "Could not find repository root. Make sure to have the repo initialized.",
-      ),
-  ).map(() => dir);
+  return fileExists(gitPath)
+    .mapErr(
+      () =>
+        new Error(
+          "Could not find repository root. Make sure to have the repo initialized.",
+        ),
+    )
+    .map(() => dir);
 };
 
 export const makeRepositoryReader = (): RepositoryReader => ({
   fileExists,
-  findRepositoryRoot: findRoot,
+  findRepositoryRoot,
+  readFile,
 });
