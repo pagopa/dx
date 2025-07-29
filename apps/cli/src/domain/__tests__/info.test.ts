@@ -113,4 +113,38 @@ describe("getInfo", () => {
       expect(result.node).toStrictEqual("22.0.0");
     });
   });
+
+  describe("terraform", () => {
+    it("should return undefined when .terraform-version file does not exist", async () => {
+      const mockDependencies = makeMockDependencies();
+      const config = makeMockConfig();
+
+      mockDependencies.repositoryReader.readFile.mockReturnValue(
+        errAsync(new Error("File not found")),
+      );
+
+      const result = await getInfo(mockDependencies, config);
+      expect(result.terraform).toBeUndefined();
+
+      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
+        "a/repo/root/.terraform-version",
+      );
+    });
+
+    it("should return the terraform version when .terraform-version file exists", async () => {
+      const mockDependencies = makeMockDependencies();
+      const config = makeMockConfig();
+
+      mockDependencies.repositoryReader.readFile.mockReturnValue(
+        okAsync("1.0.0"),
+      );
+
+      const result = await getInfo(mockDependencies, config);
+      expect(result.terraform).toStrictEqual("1.0.0");
+
+      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
+        "a/repo/root/.terraform-version",
+      );
+    });
+  });
 });

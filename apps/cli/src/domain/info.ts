@@ -8,6 +8,7 @@ import { PackageManager } from "./package-json.js";
 export type InfoResult = {
   node?: string;
   packageManager: PackageManager;
+  terraform?: string;
 };
 
 const detectFromLockFile = async (
