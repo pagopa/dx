@@ -98,6 +98,9 @@ describe("getInfo", () => {
       const config = makeMockConfig();
       const result = await getInfo(mockDependencies, config);
       expect(result.node).toBeUndefined();
+      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
+        "a/repo/root/.node-version",
+      );
     });
     it("should return the node version", async () => {
       const mockDependencies = makeMockDependencies();
