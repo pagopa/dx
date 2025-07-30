@@ -1,6 +1,6 @@
 import * as glob from "glob";
 import { okAsync, ResultAsync } from "neverthrow";
-import { join } from "node:path";
+import * as path from "node:path";
 import { z } from "zod/v4";
 
 import { packageJsonSchema } from "../../domain/package-json.js";
@@ -13,7 +13,7 @@ import { fileExists, readFile, readFileAndDecode } from "./fs/file-reader.js";
 const findRepositoryRoot = (
   dir = process.cwd(),
 ): ResultAsync<string, Error> => {
-  const gitPath = join(dir, ".git");
+  const gitPath = path.join(dir, ".git");
   return fileExists(gitPath)
     .mapErr(
       () =>
@@ -35,11 +35,11 @@ const resolveWorkspacePattern = (repoRoot: string, pattern: string) =>
       }),
   ).map((subDirectories) =>
     // Create the absolute path to the subdirectory
-    subDirectories.map((directory) => join(repoRoot, directory)),
+    subDirectories.map((directory) => path.join(repoRoot, directory)),
   );
 
 const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
-  readFile(join(repoRoot, "pnpm-workspace.yaml"))
+  readFile(path.join(repoRoot, "pnpm-workspace.yaml"))
     .andThen(parseYaml)
     // Decode the pnpm-workspace.yaml file to a zod schema
     .andThen((json) =>
@@ -59,7 +59,7 @@ const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
           const workspaceResults = workspaceFolders.map(
             (nodeWorkspaceDirectory) =>
               readFileAndDecode(
-                join(nodeWorkspaceDirectory, "package.json"),
+                path.join(nodeWorkspaceDirectory, "package.json"),
                 packageJsonSchema,
               ).map(({ name }) =>
                 // Create the workspace object using the package.json name and the nodeWorkspaceDirectory
@@ -74,6 +74,6 @@ const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
 export const makeRepositoryReader = (): RepositoryReader => ({
   fileExists,
   findRepositoryRoot,
-  getWorkspaces: getWorkspaces,
+  getWorkspaces,
   readFile,
 });
