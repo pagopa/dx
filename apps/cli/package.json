@@ -35,6 +35,7 @@
     "@types/semver": "^7.7.0",
     "@vitest/coverage-v8": "catalog:dx",
     "eslint": "catalog:dx",
+    "memfs": "^4.23.0",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
