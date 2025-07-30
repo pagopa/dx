@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import { z } from "zod/v4";
 
 import { decode } from "../../zod/index.js";
-import { toJSON } from "../json/index.js";
+import { parseJson } from "../json/index.js";
 
 /**
  * Reads a file from a directory with a specific filename.
@@ -28,7 +28,7 @@ export const readFileAndDecode = <T>(
   filePath: string,
   schema: z.ZodSchema<T>,
 ): ResultAsync<T, Error> =>
-  readFile(filePath).andThen(toJSON).andThen(decode(schema));
+  readFile(filePath).andThen(parseJson).andThen(decode(schema));
 
 /**
  * Checks if a file exists.
