@@ -27,6 +27,14 @@ jobs:
       - name: Node Setup
         uses: pagopa/dx/.github/actions/node-setup@main
 
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./apps/website
+
+      - name: Build website
+        run: pnpm build
+        working-directory: ./apps/website
+
       - name: Build and Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -35,7 +43,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           
-          app_location: "/apps/website/"
+          app_location: "/apps/website/build"
           api_location: ""
-          output_location: "build"
-          # app_build_command: 'pnpm install && pnpm build'
