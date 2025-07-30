@@ -30,6 +30,12 @@ locals {
   }
 }
 
+variable "enable_cdn" {
+  type        = bool
+  description = "Enable or disable CDN for the static web app"
+  default     = true
+}
+
 resource "azurerm_static_web_app" "test" {
   configuration_file_changes_enabled = true
   location                           = "westeurope"
@@ -50,18 +56,28 @@ resource "azurerm_static_web_app" "test" {
 }
 
 resource "null_resource" "enable_enterprise_edge" {
+  count = var.enable_cdn ? 1 : 0
   triggers = {
     static_web_app_id = azurerm_static_web_app.test.id
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
-      echo "Installing/Updating enterprise-edge extension..."
-      az extension add --name enterprise-edge --upgrade
+    command = "az staticwebapp enterprise-edge enable --name ${azurerm_static_web_app.test.name} --resource-group ${azurerm_static_web_app.test.resource_group_name}"
 
-      echo "Enabling Enterprise-grade edge for Static Web App ${azurerm_static_web_app.test.name}..."
-      az staticwebapp enterprise-edge enable --name ${azurerm_static_web_app.test.name} --resource-group ${azurerm_static_web_app.test.resource_group_name} --no-wait
-    EOT
+    interpreter = ["bash", "-c"]
+  }
+
+  depends_on = [azurerm_static_web_app.test]
+}
+
+resource "null_resource" "disable_enterprise_edge" {
+  count = var.enable_cdn ? 0 : 1
+  triggers = {
+    static_web_app_id = azurerm_static_web_app.test.id
+  }
+
+  provisioner "local-exec" {
+    command = "az staticwebapp enterprise-edge disable --name ${azurerm_static_web_app.test.name} --resource-group ${azurerm_static_web_app.test.resource_group_name}"
 
     interpreter = ["bash", "-c"]
   }
