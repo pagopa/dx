@@ -2,10 +2,6 @@
 "docs": minor
 ---
 
----
-
-## "docs": minor
-
 Update infrastructure folder structure documentation
 
 Updated the infrastructure folder structure conventions to reflect the current best practices:
