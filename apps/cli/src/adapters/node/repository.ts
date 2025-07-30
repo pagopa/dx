@@ -42,9 +42,9 @@ const getWorkspaces = (repoRoot: string): ResultAsync<Workspace[], Error> =>
   readFile(path.join(repoRoot, "pnpm-workspace.yaml"))
     .andThen(parseYaml)
     // Decode the pnpm-workspace.yaml file to a zod schema
-    .andThen((json) =>
+    .andThen((obj) =>
       // If no packages are defined, go on with an empty array
-      decode(z.object({ packages: z.array(z.string()) }))(json).orElse(() =>
+      decode(z.object({ packages: z.array(z.string()) }))(obj).orElse(() =>
         okAsync({ packages: [] }),
       ),
     )
