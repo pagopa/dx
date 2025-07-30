@@ -1,9 +1,9 @@
 name: Deploy Static Site to Azure - TEST
 
 on:
-  # push:
-  #   branches:
-  #     - feat-dx-docs-on-static-app-poc # main
+  push:
+    branches:
+      - feat-dx-docs-on-static-app-poc # main
   # pull_request:
   #   types: [opened, synchronize, reopened, closed]
   #   branches:
