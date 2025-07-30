@@ -1,0 +1,37 @@
+name: Deploy Static Site to Azure - TEST
+
+on:
+  # push:
+  #   branches:
+  #     - feat-dx-docs-on-static-app-poc # main
+  # pull_request:
+  #   types: [opened, synchronize, reopened, closed]
+  #   branches:
+  #     - feat-dx-docs-on-static-app-poc # main
+  workflow_dispatch:
+    inputs:
+      AZURE_STATIC_WEB_APPS_API_TOKEN: # Then convert into a secret in the repo
+        description: 'Azure Static Web Apps API Token'
+        required: true
+
+jobs:
+  build_and_deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Build and Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ inputs.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          
+          app_location: "/apps/website/"
+          api_location: ""
+          output_location: "build"
