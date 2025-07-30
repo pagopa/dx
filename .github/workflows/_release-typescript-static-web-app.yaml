@@ -24,6 +24,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
       - name: Build and Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -35,3 +38,4 @@ jobs:
           app_location: "/apps/website/"
           api_location: ""
           output_location: "build"
+          # app_build_command: 'pnpm install && pnpm build'
