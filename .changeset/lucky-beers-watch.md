@@ -13,7 +13,3 @@ Updated the infrastructure folder structure conventions to reflect the current b
   - `bootstrapper`: Contains the `azure-github-environment-bootstrap` module for creating GitHub runners, managed identities, and environment configurations
   - `core`: Optional folder for shared subscription-level resources
   - `resources`: Application-specific resource definitions
-
-- **Enhanced folder structure example**: Updated the example directory tree to show the current recommended structure with `bootstrapper/dev` and `bootstrapper/prod` configurations
-
-These changes align the documentation with the actual implementation patterns used in DX projects and provide clearer guidance for repository setup.
