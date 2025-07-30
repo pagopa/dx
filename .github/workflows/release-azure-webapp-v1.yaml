@@ -18,12 +18,12 @@ on:
         type: string
         required: true
       use_staging_slot:
-        description: True if artifact should be deployed to staging slot
+        description: Use a staging slot for the deployment.
         type: boolean
         required: false
         default: true
       disable_auto_staging_deploy:
-        description: Enable automatic deployments to the staging slot, bypassing the need for manual approval. If this setting is true, ensure that `use_staging_slot` is also enabled.
+        description: Disable automatic deployments to the staging slot.
         type: boolean
         required: false
         default: false
@@ -43,14 +43,18 @@ on:
         required: false
         default: ""
 
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
 env:
-  BUNDLE_NAME: bundle-${{ github.run_id }}
+  BUNDLE_NAME: ${{ inputs.workspace_name }}
   RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
 
 jobs:
   build:
-    name: Build Artifact
+    name: Build artifact
     runs-on: ubuntu-latest
 
     env:
@@ -115,10 +119,10 @@ jobs:
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
-          bundle_name: artifact
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
   deploy_prod:
-    name: Deploy to Production
+    name: Deploy to production
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
     if: ${{ !github.event.act && !inputs.use_staging_slot }}
@@ -132,7 +136,7 @@ jobs:
       - name: Download Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          bundle_name: artifact
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
@@ -152,7 +156,7 @@ jobs:
             --async false
 
   deploy_staging:
-    name: Deploy to Staging
+    name: Deploy to staging slot
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
     if: ${{ !github.event.act && inputs.use_staging_slot }}
@@ -166,7 +170,7 @@ jobs:
       - name: Download Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          bundle_name: artifact
+          bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
@@ -187,14 +191,14 @@ jobs:
             --async false
 
   auto_approve_staging_deploy:
-    name: Auto-Approve Staging Slot Deployment
+    name: Approve deploy to staging slot
     runs-on: ubuntu-latest
     needs: [build]
 
     if: ${{ !github.event.act && inputs.use_staging_slot && !inputs.disable_auto_staging_deploy }}
 
     steps:
-      - name: Approve Next Step
+      - name: Approve deployment
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }}
           REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
@@ -236,7 +240,7 @@ jobs:
             -f "comment=Auto approve for staging slot"
 
   swap_staging_production:
-    name: Swap Staging and Production Slots
+    name: Swap staging and production slots
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [deploy_staging]
     if: ${{ !github.event.act && inputs.use_staging_slot }}
