@@ -1,9 +1,9 @@
 name: Deploy Static Site to Azure - TEST
 
 on:
-  push:
-    branches:
-      - feat-dx-docs-on-static-app-poc # main
+  # push:
+  #   branches:
+  #     - feat-dx-docs-on-static-app-poc # main
   # pull_request:
   #   types: [opened, synchronize, reopened, closed]
   #   branches:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   build_and_deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    # if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
