@@ -107,13 +107,12 @@ jobs:
       - name: Find build output directory path
         id: find_package
         env:
-           TURBO_PRINT_VERSION_DISABLED: 1
+          TURBO_PRINT_VERSION_DISABLED: 1
+          WORKSPACE: ${{ inputs.workspace_name }}
         run: |
           packages_path=$(npx turbo ls --output json | jq -sr --arg WORKSPACE "$WORKSPACE" '.[].packages.items[] | select(.name==$WORKSPACE).path')
           echo "Found $OUTPUT_DIR directory at: ./out/$packages_path/$OUTPUT_DIR"
           echo "packages_path=./out/$packages_path/$OUTPUT_DIR" >> $GITHUB_OUTPUT
-        env:
-          WORKSPACE: ${{ inputs.workspace_name }}
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
