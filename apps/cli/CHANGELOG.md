@@ -1,5 +1,20 @@
 # @pagopa/dx-cli
 
+## 0.4.1
+
+### Patch Changes
+
+- 9599934: Check the version of Node.JS, by checking the `.node-version` file in the root of the project.
+
+  If the file does not exist, then it returns `undefined`.
+
+- beadc6c: Remove `private` property from `package.json`.
+
+  The CLI is going to be available as NPM package.
+
+- eefa19c: Extract `readFile` function and add it to `RepositoryReader` interface
+- 62c24ce: Check the version of Terraform, by checking the `.terraform-version` file in the root of the project.
+
 ## 0.4.0
 
 ### Minor Changes
