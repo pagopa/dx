@@ -4,12 +4,12 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
     "@devcontainers/cli": "^0.79.0",
-    "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
+    "@vitest/coverage-v8": "catalog:dx",
+    "eslint": "catalog:dx",
     "prettier": "catalog:",
     "turbo": "^2.5.4",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:dx"
   },
   "scripts": {
     "build": "turbo run build",
