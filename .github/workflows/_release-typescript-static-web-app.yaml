@@ -9,10 +9,6 @@ on:
   #   branches:
   #     - feat-dx-docs-on-static-app-poc # main
   workflow_dispatch:
-    inputs:
-      AZURE_STATIC_WEB_APPS_API_TOKEN: # Then convert into a secret in the repo
-        description: 'Azure Static Web Apps API Token'
-        required: true
 
 jobs:
   build_and_deploy:
@@ -20,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
-          submodules: true
+          fetch-depth: 0
 
       - name: Node Setup
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -35,11 +31,26 @@ jobs:
         run: pnpm build
         working-directory: ./apps/website
 
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Find API Key
+        id: find_api_key
+        run: |
+          api_key=$(az staticwebapp secrets list --name dx-d-itn-static-app-test-app-01 --resource-group dx-d-itn-test-rg-01 | jq -r '.properties.apiKey')
+          echo "::add-mask::$api_key"
+          echo "sensitive-value=$api_key" >> $GITHUB_OUTPUT
+
       - name: Build and Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ inputs.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.sensitive-value }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           
