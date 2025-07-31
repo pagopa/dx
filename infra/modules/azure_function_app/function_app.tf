@@ -90,6 +90,7 @@ resource "azurerm_linux_function_app" "this" {
 
   lifecycle {
     ignore_changes = [
+      site_config["health_check_eviction_time_in_min"],
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],

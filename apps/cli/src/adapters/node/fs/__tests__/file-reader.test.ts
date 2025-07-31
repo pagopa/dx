@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod/v4";
 
-import { fileExists, readFileAndDecode } from "../file-reader.js";
+import { fileExists, readFile, readFileAndDecode } from "../file-reader.js";
 
 describe("readFileAndDecode", () => {
   beforeEach(() => {
@@ -87,5 +87,33 @@ describe("fileExists", () => {
       err(new Error("/path/to/missing.txt not found.")),
     );
     expect(fs.stat).toHaveBeenCalledWith("/path/to/missing.txt");
+  });
+});
+
+describe("readFile", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should read a file when it exists", async () => {
+    const filePath = "/path/to/existing.txt";
+    const fileContent = "hello world";
+    vi.spyOn(fs, "readFile").mockResolvedValueOnce(fileContent);
+
+    const result = await readFile(filePath);
+    expect(result).toStrictEqual(ok(fileContent));
+    expect(fs.readFile).toHaveBeenCalledWith(filePath, "utf-8");
+  });
+
+  it("should return error when file does not exist", async () => {
+    const filePath = "/path/to/missing.txt";
+    vi.spyOn(fs, "readFile").mockRejectedValueOnce(
+      new Error("ENOENT: no such file or directory"),
+    );
+
+    const result = await readFile(filePath);
+    expect(result).toStrictEqual(
+      err(new Error("Failed to read file: /path/to/missing.txt")),
+    );
   });
 });
