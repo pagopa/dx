@@ -14,10 +14,10 @@ This will add `pnpm-plugin-pagopa` to the [configDependencies](https://pnpm.io/c
 
 This configuration package provides the following default settings for your `pnpm-workspace.yaml`.
 
-- Sets [workspacePackagePatterns](https://pnpm.io/settings#workspacepackagepatterns) to `["apps/*", "packages/*"]`.
+- Sets [workspacePackagePatterns](https://pnpm.io/workspaces) to `["apps/*", "packages/*"]`.
 - Sets [linkWorkspacePackages](https://pnpm.io/cli/run#linkworkspacepackages) to `true`.
-- Sets [packageImportMethod](https://pnpm.io/settings#hoistpattern) to `clone-or-copy`
-- Adds `dx` [catalog](https://pnpm.io/catalogs) which includes recommended version of the packages supported by the PagoPA DX toolchain. Here you can find the full [list of packages included](https://github.com/pagopa/dx/blob/main/packages/pnpm-config/pnpmfile.cjs).
+- Sets [packageImportMethod](https://pnpm.io/settings#packageimportmethod) to `clone-or-copy`
+- Adds `dx` [catalog](https://pnpm.io/catalogs) which includes recommended version of the packages supported by the PagoPA DX toolchain. Here you can find the full [list of packages included](https://github.com/pagopa/dx/blob/main/packages/pnpm-plugin-pagopa/pnpmfile.cjs).
 
 ## Use the PagoPA DX catalog
 
