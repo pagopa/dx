@@ -1,0 +1,12 @@
+{
+  "name": "pnpm-plugin-pagopa",
+  "version": "0.0.0",
+  "files": [
+    "pnpmfile.cjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/pnpm-plugin-pagopa"
+  }
+}
