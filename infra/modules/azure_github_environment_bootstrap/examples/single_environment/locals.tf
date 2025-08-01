@@ -41,8 +41,6 @@ locals {
 
   repository = {
     name               = "dx-test-monorepo-starter-pack"
-    description        = "Devex repository for shared tools and pipelines."
-    topics             = ["developer-experience"]
     reviewers_teams    = ["engineering-team-cloud-eng"]
     app_cd_policy_tags = ["release/"]
   }
