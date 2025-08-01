@@ -156,13 +156,16 @@ jobs:
       - name: Find API Key
         id: find_api_key
         run: |
-          api_key=$(az staticwebapp secrets list --name ${{ inputs.static_web_app_name }} --resource-group ${{ inputs.resource_group_name }} | jq -r '.properties.apiKey')
+          api_key=$(az staticwebapp secrets list --name $STATIC_WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME | jq -r '.properties.apiKey')
           echo "::add-mask::$api_key"
           echo "sensitive-value=$api_key" >> $GITHUB_OUTPUT
+        env:
+          STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
       - name: Deploy
         id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
           azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.sensitive-value }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
