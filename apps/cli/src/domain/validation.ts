@@ -6,7 +6,6 @@ export type ValidationCheckResult = Result<ValidationCheck, Error>;
 
 export type ValidationReporter = {
   reportCheckResult(result: ValidationCheck): void;
-  reportValidationResult(result: ValidationCheckResult): void;
 };
 
 type FailedCheck = Pick<SuccessfulCheck, "checkName"> & {

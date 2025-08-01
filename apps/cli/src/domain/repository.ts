@@ -7,10 +7,12 @@ import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { Dependency } from "./package-json.js";
 import { ValidationCheckResult } from "./validation.js";
+import { Workspace } from "./workspace.js";
 
 export type RepositoryReader = {
   fileExists(path: string): ResultAsync<boolean, Error>;
   findRepositoryRoot(cwd?: string): ResultAsync<string, Error>;
+  getWorkspaces(repoRoot: string): ResultAsync<Workspace[], Error>;
   readFile(path: string): ResultAsync<string, Error>;
 };
 
