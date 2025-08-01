@@ -1,6 +1,6 @@
 {
-  "name": "incremental-rollout-appservice",
-  "version": "1.0.0",
+  "name": "incremental-rollout-appsvc",
+  "version": "0.0.0",
   "type": "module",
   "private": true,
   "devDependencies": {

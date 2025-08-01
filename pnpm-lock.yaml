@@ -69,7 +69,7 @@ importers:
         specifier: 'catalog:'
         version: 3.6.2
 
-  actions/incremental-rollout-appservice:
+  actions/incremental-rollout-appsvc:
     devDependencies:
       prettier:
         specifier: 'catalog:'
