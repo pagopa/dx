@@ -3,6 +3,18 @@ import fs from "node:fs/promises";
 import { z } from "zod/v4";
 
 /**
+ * Reads a file from a directory with a specific filename.
+ *
+ * @param filePath - The path to the file to read
+ * @returns ResultAsync with file content or error
+ */
+export const readFile = (filePath: string): ResultAsync<string, Error> =>
+  ResultAsync.fromPromise(
+    fs.readFile(filePath, "utf-8"),
+    (cause) => new Error(`Failed to read file: ${filePath}`, { cause }),
+  );
+
+/**
  * Generic function to read a file and parse its content with a given zod schema.
  *
  * @param filePath - The path to the file to read
@@ -23,12 +35,7 @@ export const readFileAndDecode = <T>(
     () => new Error("Failed to parse JSON"),
   );
 
-  return ResultAsync.fromPromise(
-    fs.readFile(filePath, "utf-8"),
-    (cause) => new Error(`Failed to read file: ${filePath}`, { cause }),
-  )
-    .andThen(toJSON)
-    .andThen(decode);
+  return readFile(filePath).andThen(toJSON).andThen(decode);
 };
 
 export const fileExists = (path: string): ResultAsync<boolean, Error> =>

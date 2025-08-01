@@ -87,11 +87,15 @@ pnpm --filter WORKSPACE_NAME run command
 pnpm --filter citizen-func run test
 # or (with turbo)
 pnpm turbo test -- citizen-func
+```
 
 ### Add dependencies
 
 ```bash
 # add a dependency to the workspace root
 pnpm add turbo
+# add a dependency to a specific workspace
+pnpm --filter WORKSPACE_NAME add dependency-name
+```
 
 Thank you for contributing to DX!

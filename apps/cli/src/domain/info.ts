@@ -6,7 +6,9 @@ import { Dependencies } from "./dependencies.js";
 import { PackageManager } from "./package-json.js";
 
 export type InfoResult = {
+  node?: string;
   packageManager: PackageManager;
+  terraform?: string;
 };
 
 const detectFromLockFile = async (
@@ -41,11 +43,37 @@ const detectPackageManager = async (
   return packageManager ?? "npm";
 };
 
+const detectNodeVersion = async (
+  { repositoryReader }: Pick<Dependencies, "repositoryReader">,
+  nodeVersionFilePath: `${string}/.node-version`,
+): Promise<string | undefined> =>
+  await repositoryReader
+    .readFile(nodeVersionFilePath)
+    .map((nodeVersion) => nodeVersion.trim())
+    .unwrapOr(undefined);
+
+const detectTerraformVersion = async (
+  { repositoryReader }: Pick<Dependencies, "repositoryReader">,
+  terraformVersionFilePath: `${string}/.terraform-version`,
+): Promise<string | undefined> =>
+  await repositoryReader
+    .readFile(terraformVersionFilePath)
+    .map((tfVersion) => tfVersion.trim())
+    .unwrapOr(undefined);
+
 export const getInfo = async (
   dependencies: Dependencies,
   config: Config,
 ): Promise<InfoResult> => ({
+  node: await detectNodeVersion(
+    { repositoryReader: dependencies.repositoryReader },
+    `${config.repository.root}/.node-version`,
+  ),
   packageManager: await detectPackageManager(dependencies, config),
+  terraform: await detectTerraformVersion(
+    { repositoryReader: dependencies.repositoryReader },
+    `${config.repository.root}/.terraform-version`,
+  ),
 });
 
 export const printInfo = (result: InfoResult): void => {
