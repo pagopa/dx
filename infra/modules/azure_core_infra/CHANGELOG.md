@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.1.1
+
+### Patch Changes
+
+- 9ffff21: Resolved typos inside examples
+
 ## 2.1.0
 
 ### Minor Changes
