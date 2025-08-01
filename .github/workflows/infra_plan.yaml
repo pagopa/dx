@@ -145,7 +145,7 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | tee tf_plan_stdout.txt
+          terraform plan -lock-timeout=3000s -no-color -out=plan.out 2>&1 | grep -v "hidden-link:" | tee tf_plan_stdout.txt
           terraform show -no-color plan.out > full_plan.txt
 
           # Extracts only the diff section from the Plan by skipping everything before the resource changes,
