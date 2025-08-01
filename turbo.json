@@ -27,6 +27,21 @@
       ],
       "outputs": ["coverage"],
       "outputLogs": "errors-only"
+    },
+    "tf-init": {
+      "inputs": ["*.tf"],
+      "outputs": [".terraform"],
+      "outputLogs": "errors-only"
+    },
+    "tf-validate": {
+      "dependsOn": ["tf-init"],
+      "inputs": ["*.tf"],
+      "outputLogs": "errors-only"
+    },
+    "tf-plan": {
+      "dependsOn": ["tf-validate", "tf-init"],
+      "outputLogs": "hash-only",
+      "cache": false
     }
   }
 }
