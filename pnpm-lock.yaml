@@ -72,7 +72,7 @@ importers:
   actions/incremental-rollout-appservice:
     devDependencies:
       prettier:
-        specifier: 3.6.2
+        specifier: 'catalog:'
         version: 3.6.2
 
   actions/pr-comment:
