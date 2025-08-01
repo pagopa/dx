@@ -1,0 +1,79 @@
+name: Publish Lambda Version
+description: Publish a new Lambda version and update an alias to point to it
+
+inputs:
+  function_name:
+    description: 'The name of the Lambda function'
+    required: true
+  alias_name:
+    description: 'The name of the alias to move to the new version'
+    required: true
+  aws_region:
+    description: 'The AWS region where the lambda is deployed'
+    required: false
+    default: 'eu-south-1'
+  description:
+    description: 'Optional description for the version'
+    required: false
+
+outputs:
+  version:
+    description: 'The published version number'
+    value: ${{ steps.publish_version.outputs.version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Publish new Lambda version
+      shell: bash
+      id: publish_version
+      run: |
+        echo "Publishing new version for Lambda function: ${{ inputs.function_name }}"
+
+        if [ -n "${{ inputs.description }}" ]; then
+          DESCRIPTION_ARG="--description '${{ inputs.description }}'"
+        else
+          DESCRIPTION_ARG=""
+        fi
+
+        VERSION=$(aws lambda publish-version \
+          --function-name ${{ inputs.function_name }} \
+          --region ${{ inputs.aws_region }} \
+          $DESCRIPTION_ARG \
+          --query 'Version' --output text)
+
+        echo "Published version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
+
+    - name: Update alias to new version
+      shell: bash
+      run: |
+        echo "Updating alias '${{ inputs.alias_name }}' to point to version ${{ env.NEW_VERSION }}"
+
+        aws lambda update-alias \
+          --function-name ${{ inputs.function_name }} \
+          --name ${{ inputs.alias_name }} \
+          --function-version ${{ env.NEW_VERSION }} \
+          --region ${{ inputs.aws_region }}
+
+        echo "Alias updated successfully"
+
+    - name: Verify alias update
+      shell: bash
+      run: |
+        echo "Verifying alias configuration..."
+
+        ALIAS_INFO=$(aws lambda get-alias \
+          --function-name ${{ inputs.function_name }} \
+          --name ${{ inputs.alias_name }} \
+          --region ${{ inputs.aws_region }})
+
+        CURRENT_VERSION=$(echo "$ALIAS_INFO" | jq -r '.FunctionVersion')
+
+        if [ "$CURRENT_VERSION" = "${{ env.NEW_VERSION }}" ]; then
+          echo "✅ Alias '${{ inputs.alias_name }}' successfully points to version ${{ env.NEW_VERSION }}"
+        else
+          echo "❌ Alias update failed. Expected: ${{ env.NEW_VERSION }}, Actual: $CURRENT_VERSION"
+          exit 1
+        fi
