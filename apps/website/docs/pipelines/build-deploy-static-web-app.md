@@ -18,28 +18,28 @@ The workflow is divided into two distinct jobs to separate build and deployment
 concerns:
 
 1. **`build` Job**:
-    - Runs on a standard `ubuntu-latest` runner.
-    - Uses `turbo prune` to create a minimal, isolated copy of the monorepo
-      containing only the code and dependencies required for the specified
-      `workspace_name`.
-    - Dynamically detects the package manager (`npm`, `yarn`, or `pnpm`) and
-      uses the appropriate "clean install" command for reproducible builds.
-    - Runs the `build` script for the target workspace using Turborepo.
-    - Locates the resulting build output directory (e.g., `build` or `dist`) and
-      uploads it as an artifact, making it available for the deployment job.
+   - Runs on a standard `ubuntu-latest` runner.
+   - Uses `turbo prune` to create a minimal, isolated copy of the monorepo
+     containing only the code and dependencies required for the specified
+     `workspace_name`.
+   - Dynamically detects the package manager (`npm`, `yarn`, or `pnpm`) and uses
+     the appropriate "clean install" command for reproducible builds.
+   - Runs the `build` script for the target workspace using Turborepo.
+   - Locates the resulting build output directory (e.g., `build` or `dist`) and
+     uploads it as an artifact, making it available for the deployment job.
 
 2. **`deploy` Job**:
-    - Waits for the `build` job to complete successfully.
-    - Runs on a configurable runner (public or self-hosted) based on input
-      parameters.
-    - Downloads the build artifact.
-    - Logs into Azure using OIDC credentials configured as GitHub secrets.
-    - Retrieves the **deployment token** (API key) from the target Azure Static
-      Web App. This token is used to authorize the deployment.
-    - Calls the official `Azure/static-web-apps-deploy@v1` action to handle the
-      final deployment, uploading the pre-built application assets. This action
-      also automatically handles the creation and management of **preview
-      environments** for Pull Requests.
+   - Waits for the `build` job to complete successfully.
+   - Runs on a configurable runner (public or self-hosted) based on input
+     parameters.
+   - Downloads the build artifact.
+   - Logs into Azure using OIDC credentials configured as GitHub secrets.
+   - Retrieves the **deployment token** (API key) from the target Azure Static
+     Web App. This token is used to authorize the deployment.
+   - Calls the official `Azure/static-web-apps-deploy@v1` action to handle the
+     final deployment, uploading the pre-built application assets. This action
+     also automatically handles the creation and management of **preview
+     environments** for Pull Requests.
 
 ## Usage
 
@@ -78,15 +78,15 @@ jobs:
 ### Important Notes
 
 1. **Trigger Configuration**: The calling workflow must be triggered on `push`
-    and `pull_request` events for the preview environment functionality to work
-    correctly.
+   and `pull_request` events for the preview environment functionality to work
+   correctly.
 2. **Workspace Name**: Ensure the `workspace_name` input matches the `name`
-    field in the `package.json` of the application you want to deploy, not its
-    directory path.
+   field in the `package.json` of the application you want to deploy, not its
+   directory path.
 3. **Permissions & Secrets**: The calling workflow must have the necessary
-    permissions (`id-token: write`, `contents: read`) and secrets (e.g., for
-    Azure login) available. Using `secrets: inherit` is the easiest way to pass
-    them down.
+   permissions (`id-token: write`, `contents: read`, `pull-requests: write`) and
+   secrets (e.g., for Azure login) available. Using `secrets: inherit` is the
+   easiest way to pass them down.
 4. **Monorepo Structure**: This workflow is optimized for a monorepo managed
-    with Turborepo. It assumes your applications are located in workspaces
-    (under an `apps/` directory).
+   with Turborepo. It assumes your applications are located in workspaces (under
+   an `apps/` directory).
