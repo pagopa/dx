@@ -24,4 +24,5 @@ onlyBuiltDependencies:
 
 packageImportMethod: clone-or-copy
 
-preferWorkspacePackages: true
+# Include local packages when running "pnpm deploy"
+injectWorkspacePackages: true
