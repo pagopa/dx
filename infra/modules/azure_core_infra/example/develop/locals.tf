@@ -23,6 +23,6 @@ locals {
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
     Source         = "https://github.com/pagopa/dx/modules/azure_core_infra/examples/develop"
-    hidden-link = "test_value"
+    hidden-link    = "test_value"
   }
 }
