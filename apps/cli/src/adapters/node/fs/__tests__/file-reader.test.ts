@@ -6,7 +6,6 @@ import { z } from "zod/v4";
 import { fileExists, readFile, readFileAndDecode } from "../file-reader.js";
 
 vi.mock("node:fs/promises");
-vi.mock("node:fs");
 
 describe("readFileAndDecode", () => {
   const testSchema = z.object({
@@ -21,7 +20,6 @@ describe("readFileAndDecode", () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     vol.reset();
     vol.fromJSON(
       {
@@ -68,7 +66,6 @@ describe("readFileAndDecode", () => {
 
 describe("readFile", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vol.reset();
     vol.fromJSON(
       {
@@ -97,7 +94,6 @@ describe("readFile", () => {
 
 describe("fileExists", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     vol.reset();
     vol.fromJSON(
       {
