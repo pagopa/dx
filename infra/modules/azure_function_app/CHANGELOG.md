@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 2.0.1
+
+### Patch Changes
+
+- 8d5600c: Ignore "health_check_eviction_time_in_min" changes
+
 ## 2.0.0
 
 ### Major Changes
