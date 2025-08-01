@@ -10,7 +10,7 @@ locals {
       description          = blob.description
     }
   ]
-  blob_assignments = { for assignment in local.norm_blobs : "${assignment.storage_account_name}|${assignment.container_name}|${assignment.role}" => assignment }
+  blob_assignments = merge([for key, item in local.norm_blobs : { for role_name in local.role_definition_name.blob[lower(item.role)] : "${item.storage_account_name}|${item.container_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name }) }]...)
 
 
   norm_tables = [
@@ -24,7 +24,7 @@ locals {
       description          = table.description
     }
   ]
-  table_assignments = { for assignment in local.norm_tables : "${assignment.storage_account_name}|${assignment.table_name}|${assignment.role}" => assignment }
+  table_assignments = merge([for key, item in local.norm_tables : { for role_name in local.role_definition_name.table[lower(item.role)] : "${item.storage_account_name}|${item.table_name}|${item.role}|${role_name}" => merge(item, { role_definition_name = role_name }) }]...)
 
 
   norm_queues = [
@@ -42,15 +42,15 @@ locals {
 
   role_definition_name = {
     blob = {
-      reader = "Storage Blob Data Reader",
-      writer = "Storage Blob Data Contributor",
-      owner  = "Storage Blob Data Owner"
+      reader = ["Storage Blob Data Reader"],
+      writer = ["Storage Blob Data Contributor", "PagoPA Storage Blob Tags Contributor"],
+      owner  = ["Storage Blob Data Owner"]
     }
 
     table = {
-      reader = "Storage Table Data Reader",
-      writer = "Storage Table Data Contributor",
-      owner  = "Storage Table Data Contributor"
+      reader = ["Storage Table Data Reader"],
+      writer = ["Storage Table Data Contributor"],
+      owner  = ["Storage Table Data Contributor"]
     }
 
     queue = {
