@@ -105,7 +105,7 @@ describe("getInfo", () => {
     it("should return the node version", async () => {
       const mockDependencies = makeMockDependencies();
       mockDependencies.repositoryReader.readFile.mockReturnValue(
-        okAsync("22.0.0"),
+        okAsync("\n22.0.0\n"),
       );
 
       const config = makeMockConfig();

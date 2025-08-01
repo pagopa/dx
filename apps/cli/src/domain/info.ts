@@ -45,13 +45,16 @@ const detectPackageManager = async (
 
 const detectNodeVersion = async (
   { repositoryReader }: Pick<Dependencies, "repositoryReader">,
-  nodeVersionFilePath: string,
+  nodeVersionFilePath: `${string}/.node-version`,
 ): Promise<string | undefined> =>
-  await repositoryReader.readFile(nodeVersionFilePath).unwrapOr(undefined);
+  await repositoryReader
+    .readFile(nodeVersionFilePath)
+    .map((nodeVersion) => nodeVersion.trim())
+    .unwrapOr(undefined);
 
 const detectTerraformVersion = async (
-  { repositoryReader }: Dependencies,
-  terraformVersionFilePath: string,
+  { repositoryReader }: Pick<Dependencies, "repositoryReader">,
+  terraformVersionFilePath: `${string}/.terraform-version`,
 ): Promise<string | undefined> =>
   await repositoryReader
     .readFile(terraformVersionFilePath)
@@ -68,7 +71,7 @@ export const getInfo = async (
   ),
   packageManager: await detectPackageManager(dependencies, config),
   terraform: await detectTerraformVersion(
-    dependencies,
+    { repositoryReader: dependencies.repositoryReader },
     `${config.repository.root}/.terraform-version`,
   ),
 });
