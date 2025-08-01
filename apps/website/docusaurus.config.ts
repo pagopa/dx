@@ -40,6 +40,16 @@ const config: Config = {
         language: ["en"],
       },
     ],
+    [
+      "@microsoft/docusaurus-plugin-application-insights",
+      {
+        config: {
+          instrumentationKey:
+            process.env.APPLICATION_INSIGHTS_INSTRUMENTATION_KEY || "",
+        },
+        enableClickAnalytics: false,
+      },
+    ],
   ],
 
   presets: [
