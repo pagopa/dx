@@ -8,20 +8,13 @@ packages:
   - actions/*
 
 catalog:
-  prettier: 3.6.2
-  eslint: ^9.31.0
-  typescript: ~5.8.3
-  tsup: ^8.5.0
-  vitest: ^3.2.4
-  '@vitest/coverage-v8': ^3.2.4
   '@tsconfig/node22': 22.0.2
   '@types/node': ^22.16.2
-
-linkWorkspacePackages: true
+  prettier: 3.6.2
+  tsup: ^8.5.0
+  typescript: ~5.8.3
 
 onlyBuiltDependencies:
   - esbuild
 
-packageImportMethod: clone-or-copy
-
-preferWorkspacePackages: true
+pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs
