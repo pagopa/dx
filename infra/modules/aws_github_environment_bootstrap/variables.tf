@@ -19,16 +19,11 @@ variable "repository" {
   type = object({
     owner                    = optional(string, "pagopa")
     name                     = string
-    description              = string
-    topics                   = list(string)
     reviewers_teams          = list(string)
-    default_branch_name      = optional(string, "main")
     infra_cd_policy_branches = optional(set(string), ["main"])
     app_cd_policy_branches   = optional(set(string), ["main"])
     infra_cd_policy_tags     = optional(set(string), [])
     app_cd_policy_tags       = optional(set(string), [])
-    jira_boards_ids          = optional(list(string), [])
-    configure                = optional(bool, true)
     create_environments      = optional(bool, true)
   })
 
