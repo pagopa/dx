@@ -17,11 +17,6 @@ on:
         description: Environment where the artifact will be deployed.
         type: string
         required: true
-      use_staging_slot:
-        description: Use a staging slot for the deployment.
-        type: boolean
-        required: false
-        default: true
       disable_auto_staging_deploy:
         description: Disable automatic deployments to the staging slot.
         type: boolean
@@ -127,10 +122,53 @@ jobs:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
 
+  validate:
+    name: Validate Web App
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [build]
+    if: ${{ !github.event.act }}
+    environment: ${{ inputs.environment }}-ci
+
+    permissions:
+      id-token: write
+
+    outputs:
+      use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
+
+    steps:
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Check for existing staging slot
+        id: query-staging-slot
+        run: |
+          echo "Checking for existing deployment slots..."
+          USE_STAGING_SLOT=$(az webapp deployment slot list \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --query 'length([?name == `staging`]) > `0`')
+          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+
+      - name: Check if the custom warm-up is configured
+        run: |
+          IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`])' < `2`)
+          if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
+            exit 1
+          fi
+
   deploy:
     name: Deploy
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [build]
+    needs: [validate]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-cd
 
@@ -154,7 +192,7 @@ jobs:
 
       - name: Deploy
         env:
-          USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
+          USE_STAGING_SLOT: ${{ needs.validate.outputs.use_staging_slot }}
         run: |
           cmd=(
               "az" "webapp" "deploy"
@@ -166,8 +204,8 @@ jobs:
           )
 
           if [[ "$USE_STAGING_SLOT" == "true" ]]; then
-              echo "Deploying to staging slot"
-              cmd+=("--slot" "staging")
+              echo "Deploying to slot: $SLOT_NAME"
+              cmd+=("--slot" "$SLOT_NAME")
           else
               echo "Deploying to production (no slot)"
           fi
@@ -177,9 +215,9 @@ jobs:
   auto_approve_staging_deploy:
     name: Approve Staging Deployment
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [validate]
 
-    if: ${{ !github.event.act && inputs.use_staging_slot && !inputs.disable_auto_staging_deploy }}
+    if: ${{ !github.event.act && needs.validate.outputs.use_staging_slot && !inputs.disable_auto_staging_deploy }}
 
     steps:
       - name: Approve deployment
@@ -226,8 +264,8 @@ jobs:
   swap_staging_production:
     name: Swap slots
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [deploy]
-    if: ${{ !github.event.act && inputs.use_staging_slot }}
+    needs: [validate]
+    if: ${{ !github.event.act && needs.validate.outputs.use_staging_slot }}
     environment: ${{ inputs.environment }}-cd
 
     permissions:
