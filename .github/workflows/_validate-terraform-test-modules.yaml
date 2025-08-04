@@ -74,7 +74,7 @@ jobs:
         run: |
           set -euo
 
-          terraform init
+          terraform init -input=false
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}

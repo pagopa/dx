@@ -140,7 +140,7 @@ jobs:
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform init
+          terraform init -input=false
 
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -193,7 +193,7 @@ jobs:
       - name: Terraform Init
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
         run: |
-          terraform init
+          terraform init -input=false
 
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
