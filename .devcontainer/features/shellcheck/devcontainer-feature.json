@@ -1,0 +1,10 @@
+{
+  "id": "shellcheck",
+  "version": "1.0.0",
+  "name": "ShellCheck",
+  "description": "Installs ShellCheck",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/shellcheck",
+  "installsAfter": [
+    "ghcr.io/devcontainers/features/common-utils"
+  ]
+}
