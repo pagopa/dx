@@ -40,6 +40,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  TF_IN_AUTOMATION: true
 
 jobs:
   get-terraform-version:
@@ -135,7 +136,7 @@ jobs:
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform init
+          terraform init -input=false
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
@@ -147,6 +148,7 @@ jobs:
         run: |
           terraform plan \
             -lock-timeout=120s \
+            -input=false \
             -no-color \
             -out=plan.out 2>&1 | \
             grep -v "hidden-link:" | \
