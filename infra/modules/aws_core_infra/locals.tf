@@ -27,7 +27,6 @@ locals {
     environment     = var.environment.env_short,
     region          = local.region_short,
     name            = var.environment.app_name,
-    domain          = var.environment.domain,
     instance_number = tonumber(var.environment.instance_number),
   }
 

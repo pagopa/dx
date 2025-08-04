@@ -28,7 +28,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | List of availability zones | `list(string)` | n/a | yes |
 | <a name="input_isolated_subnet_cidrs"></a> [isolated\_subnet\_cidrs](#input\_isolated\_subnet\_cidrs) | List of CIDR blocks for isolated subnets | `list(string)` | `[]` | no |
-| <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Configuration for resource naming convention | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    region          = string<br/>    name            = string<br/>    domain          = optional(string)<br/>    instance_number = number<br/>  })</pre> | n/a | yes |
+| <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Configuration for resource naming convention | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    region          = string<br/>    name            = string<br/>    instance_number = number<br/>  })</pre> | n/a | yes |
 | <a name="input_private_subnet_cidrs"></a> [private\_subnet\_cidrs](#input\_private\_subnet\_cidrs) | List of CIDR blocks for private subnets | `list(string)` | n/a | yes |
 | <a name="input_public_subnet_cidrs"></a> [public\_subnet\_cidrs](#input\_public\_subnet\_cidrs) | List of CIDR blocks for public subnets | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to resources | `map(any)` | n/a | yes |

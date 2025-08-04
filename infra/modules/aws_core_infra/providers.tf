@@ -33,5 +33,4 @@ provider "dx" {
   prefix      = var.environment.prefix
   environment = var.environment.env_short
   region      = local.region_short
-  domain      = var.environment.domain
 }

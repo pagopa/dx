@@ -13,7 +13,6 @@ variable "environment" {
     env_short       = string
     region          = string
     app_name        = string
-    domain          = optional(string, "core")
     instance_number = string
   })
 

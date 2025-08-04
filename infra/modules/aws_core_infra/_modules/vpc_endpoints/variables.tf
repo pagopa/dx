@@ -4,7 +4,6 @@ variable "naming_config" {
     environment     = string
     region          = string
     name            = string
-    domain          = optional(string)
     instance_number = number
   })
   description = "Configuration object for generating consistent resource names"

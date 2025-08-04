@@ -29,7 +29,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_internet_gateway_id"></a> [internet\_gateway\_id](#input\_internet\_gateway\_id) | ID of the Internet Gateway | `string` | n/a | yes |
 | <a name="input_isolated_subnet_ids"></a> [isolated\_subnet\_ids](#input\_isolated\_subnet\_ids) | List of isolated subnet IDs | `list(string)` | `[]` | no |
-| <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Configuration for resource naming convention | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    region          = string<br/>    name            = string<br/>    domain          = optional(string)<br/>    instance_number = number<br/>  })</pre> | n/a | yes |
+| <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Configuration for resource naming convention | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    region          = string<br/>    name            = string<br/>    instance_number = number<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_gateway_ids"></a> [nat\_gateway\_ids](#input\_nat\_gateway\_ids) | List of NAT Gateway IDs | `list(string)` | `[]` | no |
 | <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | List of private subnet IDs | `list(string)` | n/a | yes |
 | <a name="input_public_subnet_ids"></a> [public\_subnet\_ids](#input\_public\_subnet\_ids) | List of public subnet IDs | `list(string)` | n/a | yes |
