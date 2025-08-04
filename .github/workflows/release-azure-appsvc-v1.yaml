@@ -152,17 +152,27 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Deploy (${{ env.SLOT }})
+      - name: Deploy
         env:
-          SLOT: ${{ inputs.use_staging_slot && 'staging' || 'production' }}
+          USE_STAGING_SLOT: ${{ inputs.use_staging_slot }}
         run: |
-          az webapp deploy \
-            --resource-group "$RESOURCE_GROUP_NAME" \
-            --name "$WEB_APP_NAME" \
-            --src-path "$BUNDLE_NAME.zip" \
-            --type zip \
-            --async false \
-            --slot "$SLOT"
+          cmd=(
+              "az" "webapp" "deploy"
+              "--resource-group" "$RESOURCE_GROUP_NAME"
+              "--name" "$WEB_APP_NAME"
+              "--src-path" "$BUNDLE_NAME.zip"
+              "--type" "zip"
+              "--async" "false"
+          )
+
+          if [[ "$USE_STAGING_SLOT" == "true" ]]; then
+              echo "Deploying to staging slot"
+              cmd+=("--slot" "staging")
+          else
+              echo "Deploying to production (no slot)"
+          fi
+
+          "${cmd[@]}"
 
   auto_approve_staging_deploy:
     name: Approve Staging Deployment
