@@ -115,7 +115,13 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -uo pipefail
-          terraform plan -lock=false -no-color -detailed-exitcode -out=plan.tfplan | grep -v "hidden-link:"
+          terraform plan \
+            -lock=false \
+            -no-color \
+            -input=false \
+            -detailed-exitcode \
+            -out=plan.tfplan | \
+            grep -v "hidden-link:"
 
           EXIT_CODE=${PIPESTATUS[0]}
           if [ "$EXIT_CODE" -eq 1 ]; then

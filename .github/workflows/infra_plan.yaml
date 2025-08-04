@@ -148,6 +148,7 @@ jobs:
         run: |
           terraform plan \
             -lock-timeout=120s \
+            -input=false \
             -no-color \
             -out=plan.out 2>&1 | \
             grep -v "hidden-link:" | \
