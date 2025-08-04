@@ -151,7 +151,7 @@ jobs:
           # Extracts only the diff section from the Plan by skipping everything before the resource changes,
           # and filters out non-essential log lines like state refreshes and reads.
           if [ -s full_plan.txt ]; then
-            sed -n '/^  #/,$p' full_plan.txt | grep -Ev "Refreshing state|state lock|Reading|Read" > filtered_plan.txt || echo "No changes detected." > filtered_plan.txt
+            sed -n '/^  #/,$p' full_plan.txt | grep -Ev "hidden-link:|Refreshing state|state lock|Reading|Read" > filtered_plan.txt || echo "No changes detected." > filtered_plan.txt
           else
             echo "No plan output available." > filtered_plan.txt
           fi

@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.1.2
+
+### Patch Changes
+
+- 808481e: Update default values for container vCPU and Memory
+
 ## 1.1.1
 
 ### Patch Changes
