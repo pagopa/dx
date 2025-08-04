@@ -53,10 +53,6 @@ run "validate_github_id_app" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -177,10 +173,6 @@ run "validate_github_id_infra" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -412,10 +404,6 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -486,10 +474,6 @@ run "validate_rbac_entraid" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -569,10 +553,6 @@ run "validate_github_id_opex" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -666,10 +646,6 @@ run "validate_rgs_iam" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {

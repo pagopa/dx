@@ -10,6 +10,7 @@ run "validate_github_repository" {
       name               = "dx-test-monorepo-starter-pack"
       description        = "Devex repository for shared tools and pipelines."
       topics             = ["developer-experience"]
+      reviewers_teams     = ["engineering-team-devex"]
     }
   }
 
@@ -73,6 +74,7 @@ run "validate_github_default_branch_override" {
       description         = "Devex repository for shared tools and pipelines."
       topics              = ["developer-experience"]
       default_branch_name = "master"
+      reviewers_teams      = ["engineering-team-devex"]
     }
   }
 

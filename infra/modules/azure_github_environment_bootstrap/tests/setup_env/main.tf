@@ -91,11 +91,7 @@ output "terraform_storage_account" {
 
 output "repository" {
   value = {
-    name               = local.repository.name
-    description        = local.repository.description
-    topics             = local.repository.topics
-    reviewers_teams    = local.repository.reviewers_teams
-    app_cd_policy_tags = local.repository.app_cd_policy_tags
+    name = local.repository.name
   }
 }
 

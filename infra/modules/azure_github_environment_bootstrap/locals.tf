@@ -95,7 +95,6 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 
   app_cd = {
@@ -103,7 +102,6 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 
   opex_cd = {
@@ -111,6 +109,5 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 }

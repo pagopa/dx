@@ -91,18 +91,11 @@ variable "tenant_id" {
 
 variable "repository" {
   type = object({
-    owner                    = optional(string, "pagopa")
-    name                     = string
-    reviewers_teams          = list(string)
-    infra_cd_policy_branches = optional(set(string), ["main"])
-    opex_cd_policy_branches  = optional(set(string), ["main"])
-    app_cd_policy_branches   = optional(set(string), ["main"])
-    infra_cd_policy_tags     = optional(set(string), [])
-    opex_cd_policy_tags      = optional(set(string), [])
-    app_cd_policy_tags       = optional(set(string), [])
+    owner = optional(string, "pagopa")
+    name  = string
   })
 
-  description = "Details about the GitHub repository, including owner, name, branch/tag policies."
+  description = "Details about the GitHub repository, including owner and name."
 }
 
 variable "github_private_runner" {
