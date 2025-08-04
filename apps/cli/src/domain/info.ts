@@ -3,12 +3,13 @@ import { join } from "node:path";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
-import { PackageManager } from "./package-json.js";
+import { DependencyName, PackageJson, PackageManager } from "./package-json.js";
 
 export type InfoResult = {
   node?: string;
   packageManager: PackageManager;
   terraform?: string;
+  turbo?: string;
 };
 
 const detectFromLockFile = async (
@@ -61,6 +62,9 @@ const detectTerraformVersion = async (
     .map((tfVersion) => tfVersion.trim())
     .unwrapOr(undefined);
 
+const detectTurboVersion = ({ devDependencies }: PackageJson) =>
+  devDependencies.get("turbo" as DependencyName)?.trim();
+
 export const getInfo = async (
   dependencies: Dependencies,
   config: Config,
@@ -74,6 +78,7 @@ export const getInfo = async (
     { repositoryReader: dependencies.repositoryReader },
     `${config.repository.root}/.terraform-version`,
   ),
+  turbo: detectTurboVersion(dependencies.packageJson),
 });
 
 export const printInfo = (result: InfoResult): void => {
