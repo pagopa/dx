@@ -6,22 +6,18 @@ This GitHub Action enables incremental rollouts for Azure App Service deployment
 
 ```yaml
 - name: Incremental Rollout and Swap
-  uses: ./.github/actions/incremental-rollout-appservice
+  uses: ./.github/actions/incremental-rollout-appsvc
   with:
     resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
     web_app_name: ${{ env.WEB_APP_NAME }}
-    script_language: "typescript (npm)"
-    script_name: "canary-check"
 ```
 
 ## Inputs
 
-| Input               | Description                                                | Required | Default            |
-| ------------------- | ---------------------------------------------------------- | -------- | ------------------ |
-| resource_group_name | Azure Resource Group name                                  | Yes      |                    |
-| web_app_name        | Azure Web App name                                         | Yes      |                    |
-| script_language     | Script language: 'typescript (npm)' or 'typescript (yarn)' | Yes      | 'typescript (npm)' |
-| script_name         | Script name to execute during canary deployment            | Yes      |                    |
+| Input               | Description               | Required | Default |
+| ------------------- | ------------------------- | -------- | ------- |
+| resource_group_name | Azure Resource Group name | Yes      |         |
+| web_app_name        | Azure Web App name        | Yes      |         |
 
 ## How It Works
 
@@ -33,22 +29,20 @@ The canary script must output JSON with the following fields:
 
 - `nextPercentage`: (number) The next percentage of traffic to shift to staging.
 - `afterMs`: (number) How long to wait (in milliseconds) before the next increment.
-- `swap`: (boolean, optional) If true, immediately shift all traffic to staging and proceed to swap.
 
 ## Example Canary Script Output
 
 ```json
 {
   "nextPercentage": 50,
-  "afterMs": 30000,
-  "swap": false
+  "afterMs": 30000
 }
 ```
 
 ## Requirements
 
 - The action requires `jq` and Azure CLI (`az`) to be available in the runner environment.
-- The script referenced by `script_name` must be available and executable in the workflow context.
+- There must be a bash script named `canary-monitor.sh` in the root directory, which will be executed at each traffic increment. It takes the resource group name, web app name, and current traffic percentage as arguments.
 
 ## Example Workflow
 
@@ -65,10 +59,8 @@ steps:
         --async false
 
   - name: Incremental Rollout and Swap
-    uses: pagopa/dx/actions/incremental-rollout-appservice@main
+    uses: pagopa/dx/actions/incremental-rollout-appsvc@main
     with:
       resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
       web_app_name: ${{ env.WEB_APP_NAME }}
-      script_language: "typescript (npm)"
-      script_name: "canary-check"
 ```
