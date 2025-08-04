@@ -149,7 +149,7 @@ jobs:
           IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
             --resource-group "$RESOURCE_GROUP_NAME" \
             --name "$WEB_APP_NAME" \
-            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) < `2`')
+            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
           if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
             echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
             exit 1
