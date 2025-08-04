@@ -230,6 +230,8 @@ importers:
 
   containers/self-hosted-runner: {}
 
+  infra/modules/aws_core_infra: {}
+
   infra/modules/azure_api_management: {}
 
   infra/modules/azure_app_service: {}
