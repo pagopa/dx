@@ -147,7 +147,7 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform plan \
-            -parallelism=5 \
+            -parallelism=13 \
             -lock-timeout=120s \
             -input=false \
             -no-color \
