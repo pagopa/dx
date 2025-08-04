@@ -42,6 +42,7 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
+  TF_IN_AUTOMATION: true
 
 jobs:
   terraform_driftdetection_job:

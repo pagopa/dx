@@ -40,6 +40,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  TF_IN_AUTOMATION: true
 
 jobs:
   get-terraform-version:
