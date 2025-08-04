@@ -4,17 +4,18 @@ export type ValidationCheck = FailedCheck | SuccessfulCheck;
 
 export type ValidationCheckResult = Result<ValidationCheck, Error>;
 
-export interface ValidationReporter {
+export type ValidationReporter = {
+  reportCheckResult(result: ValidationCheck): void;
   reportValidationResult(result: ValidationCheckResult): void;
-}
+};
 
-interface FailedCheck extends Pick<SuccessfulCheck, "checkName"> {
+type FailedCheck = Pick<SuccessfulCheck, "checkName"> & {
   errorMessage: string;
   isValid: false;
-}
+};
 
-interface SuccessfulCheck {
+type SuccessfulCheck = {
   checkName: string;
   isValid: true;
   successMessage: string;
-}
+};

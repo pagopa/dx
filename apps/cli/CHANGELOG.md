@@ -1,5 +1,69 @@
 # @pagopa/dx-cli
 
+## 0.4.2
+
+### Patch Changes
+
+- e4d46cb: Remove whitespaces from the `node` version printed in the `info` command.
+
+## 0.4.1
+
+### Patch Changes
+
+- 9599934: Check the version of Node.JS, by checking the `.node-version` file in the root of the project.
+
+  If the file does not exist, then it returns `undefined`.
+
+- beadc6c: Remove `private` property from `package.json`.
+
+  The CLI is going to be available as NPM package.
+
+- eefa19c: Extract `readFile` function and add it to `RepositoryReader` interface
+- 62c24ce: Check the version of Terraform, by checking the `.terraform-version` file in the root of the project.
+
+## 0.4.0
+
+### Minor Changes
+
+- c1506a5: Show `packageManager` in `info` command
+
+  This command should show some information about the project.
+  For now, it prints the `packageManager` detected.
+
+### Patch Changes
+
+- bf472f4: Refactor on the `detectPackageManager` to improve readability
+- f971dbd: Refactor the `doctor` command logic call the functions from the domain.
+
+  The business logic hasn't changed.
+
+- 9ce560b: Remove redundant functions
+
+  Remove `existsPreCommitConfig`, `existsTurboConfig` and replace them with the `fileExists` function.
+
+  Pass the `Config` object to `checkTurboConfig`, `checkPreCommitConfig` and `checkMonorepoScripts` where the repository root path is available.
+
+  Remove the call to `findRepositoryRoot` in the `runDoctor` function, because the repository root path is passed in the `Config` object.
+
+## 0.3.2
+
+### Patch Changes
+
+- 35645df: Convert the functions of the RepositoryReader interface to async
+
+  This change was made to ensure all file system operations are handled asynchronously, improving performance and consistency across the codebase.
+
+## 0.3.1
+
+### Patch Changes
+
+- 51fcd3b: Enhance CLI code
+
+  Move some objects (and decoder) to the domain layer.
+  Simplify assertions in the unit tests
+  Extract a readFile function to favor reuse
+  Set `node` engine minimum version to 22: we are using some new API introduced in Node v22
+
 ## 0.3.0
 
 ### Minor Changes

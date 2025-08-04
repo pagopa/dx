@@ -1,8 +1,7 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.3.0",
+  "version": "0.4.2",
   "type": "module",
-  "private": true,
   "description": "A CLI useful to manage DX tools.",
   "repository": {
     "type": "git",
@@ -22,6 +21,7 @@
   "dependencies": {
     "@logtape/logtape": "^1.0.0",
     "commander": "^14.0.0",
+    "core-js": "^3.44.0",
     "neverthrow": "^8.2.0",
     "semver": "^7.7.2",
     "zod": "^3.25.28"
@@ -31,12 +31,12 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "^7.7.0",
-    "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
+    "@vitest/coverage-v8": "catalog:dx",
+    "eslint": "catalog:dx",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
+    "vitest": "catalog:dx",
     "vitest-mock-extended": "^3.1.0"
   },
   "scripts": {
@@ -48,5 +48,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest --coverage"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

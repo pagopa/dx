@@ -12,9 +12,6 @@ catalogs:
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
-    '@vitest/coverage-v8':
-      specifier: ^3.2.4
-      version: 3.2.4
     eslint:
       specifier: ^9.30.1
       version: 9.30.1
@@ -33,9 +30,18 @@ catalogs:
     typescript:
       specifier: ~5.8.3
       version: 5.8.3
+  dx:
+    '@vitest/coverage-v8':
+      specifier: ^3.2.4
+      version: 3.2.4
+    eslint:
+      specifier: ^9.30.0
+      version: 9.30.1
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
+
+pnpmfileChecksum: sha256-BlnOEZNG60x2Uv6FoEX6QqFFdaEqRm+Wcy5iYNYvT6Q=
 
 importers:
 
@@ -48,10 +54,10 @@ importers:
         specifier: ^0.79.0
         version: 0.79.0
       '@vitest/coverage-v8':
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@24.0.13)(jiti@1.21.7)(terser@5.39.0))
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       plop:
         specifier: 'catalog:'
@@ -66,7 +72,7 @@ importers:
         specifier: 'catalog:'
         version: 5.8.3
       vitest:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.0.13)(jiti@1.21.7)(terser@5.39.0)
 
   actions/detect-node-package-manager:
@@ -94,10 +100,10 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       '@vitest/coverage-v8':
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0))
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -109,7 +115,7 @@ importers:
         specifier: 'catalog:'
         version: 5.8.3
       vitest:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)
       vitest-mock-extended:
         specifier: ^3.1.0
@@ -123,6 +129,9 @@ importers:
       commander:
         specifier: ^14.0.0
         version: 14.0.0
+      core-js:
+        specifier: ^3.44.0
+        version: 3.45.0
       neverthrow:
         specifier: ^8.2.0
         version: 8.2.0
@@ -146,10 +155,10 @@ importers:
         specifier: ^7.7.0
         version: 7.7.0
       '@vitest/coverage-v8':
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0))
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -161,7 +170,7 @@ importers:
         specifier: 'catalog:'
         version: 5.8.3
       vitest:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)
       vitest-mock-extended:
         specifier: ^3.1.0
@@ -222,7 +231,7 @@ importers:
         specifier: ^18.0.38
         version: 18.3.20
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -232,6 +241,8 @@ importers:
         version: 5.8.3
 
   containers/self-hosted-runner: {}
+
+  infra/modules/aws_core_infra: {}
 
   infra/modules/azure_api_management: {}
 
@@ -328,7 +339,7 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       tsup:
         specifier: 'catalog:'
@@ -362,11 +373,13 @@ importers:
         version: 8.35.1(eslint@9.30.1(jiti@1.21.7))(typescript@5.8.3)
     devDependencies:
       eslint:
-        specifier: 'catalog:'
+        specifier: catalog:dx
         version: 9.30.1(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
+
+  packages/pnpm-plugin-pagopa: {}
 
   packages/typescript-base-generator:
     dependencies:
@@ -466,6 +479,8 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
+
+  providers/aws: {}
 
   providers/azure: {}
 
@@ -2006,16 +2021,8 @@ packages:
   '@jridgewell/gen-mapping@0.3.12':
     resolution: {integrity: sha512-OuLGC46TjB5BbN1dH8JULVVZY4WTdkF7tV9Ys6wLL1rubZnCMstOhNHueU5bLCrnRuDhKPDM4g6sw4Bel5Gzqg==}
 
-  '@jridgewell/gen-mapping@0.3.8':
-    resolution: {integrity: sha512-imAbBGkb+ebQyxKgzv5Hu2nmROxoDOXHh80evxdoXNOrvAnVx7zimzc1Oo5h9RlfV4vPXaE2iM5pOFbvOCClWA==}
-    engines: {node: '>=6.0.0'}
-
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
-    engines: {node: '>=6.0.0'}
-
-  '@jridgewell/set-array@1.2.1':
-    resolution: {integrity: sha512-R8gLRTZeyp03ymzP/6Lil/28tGeGEzhx1q2k703KGWRAI1VdvPIXdG70VJc2pAMw3NA6JKL5hhFu1sJX0Mnn/A==}
     engines: {node: '>=6.0.0'}
 
   '@jridgewell/source-map@0.3.6':
@@ -3738,8 +3745,8 @@ packages:
   core-js-pure@3.41.0:
     resolution: {integrity: sha512-71Gzp96T9YPk63aUvE5Q5qP+DryB4ZloUZPSOebGM88VNw8VNfvdA7z6kGA8iGOTEzAomsRidp4jXSmUIJsL+Q==}
 
-  core-js@3.41.0:
-    resolution: {integrity: sha512-SJ4/EHwS36QMJd6h/Rg+GyR4A5xE0FSI3eZ+iBVpfqf1x0eTSg1smWLHrA+2jQThZSh97fmSgFSU8B61nxosxA==}
+  core-js@3.45.0:
+    resolution: {integrity: sha512-c2KZL9lP4DjkN3hk/an4pWn5b5ZefhRJnAc42n6LJ19kSnbeRbdQZE5dSeE2LBol1OwJD3X1BQvFTAsa8ReeDA==}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -9271,7 +9278,7 @@ snapshots:
       cli-table3: 0.6.5
       combine-promises: 1.2.0
       commander: 5.1.0
-      core-js: 3.41.0
+      core-js: 3.45.0
       detect-port: 1.6.1
       escape-html: 1.0.3
       eta: 2.2.0
@@ -10337,15 +10344,7 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.4
       '@jridgewell/trace-mapping': 0.3.29
 
-  '@jridgewell/gen-mapping@0.3.8':
-    dependencies:
-      '@jridgewell/set-array': 1.2.1
-      '@jridgewell/sourcemap-codec': 1.5.4
-      '@jridgewell/trace-mapping': 0.3.29
-
   '@jridgewell/resolve-uri@3.1.2': {}
-
-  '@jridgewell/set-array@1.2.1': {}
 
   '@jridgewell/source-map@0.3.6':
     dependencies:
@@ -12329,7 +12328,7 @@ snapshots:
 
   core-js-pure@3.41.0: {}
 
-  core-js@3.41.0: {}
+  core-js@3.45.0: {}
 
   core-util-is@1.0.3: {}
 
@@ -16261,7 +16260,7 @@ snapshots:
 
   sucrase@3.35.0:
     dependencies:
-      '@jridgewell/gen-mapping': 0.3.8
+      '@jridgewell/gen-mapping': 0.3.12
       commander: 4.1.1
       glob: 10.4.5
       lines-and-columns: 1.2.4

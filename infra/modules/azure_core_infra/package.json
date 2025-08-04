@@ -1,6 +1,6 @@
 {
   "name": "azure_core_infra",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "provider": "azurerm",
   "description": "Sets up the core Azure infrastructure including VNet, DNS zones, and Key Vault. Useful to bootstrap production or development environments."

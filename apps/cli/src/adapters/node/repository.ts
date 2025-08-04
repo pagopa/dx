@@ -1,55 +1,25 @@
-import { err, ok, Result } from "neverthrow";
-import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { ResultAsync } from "neverthrow";
+import { join } from "node:path";
 
 import { RepositoryReader } from "../../domain/repository.js";
+import { fileExists, readFile } from "./fs/file-reader.js";
 
-const findRoot = (dir: string): Result<string, Error> => {
+const findRepositoryRoot = (
+  dir = process.cwd(),
+): ResultAsync<string, Error> => {
   const gitPath = join(dir, ".git");
-  if (existsSync(gitPath)) return ok(dir);
-
-  const parent = dirname(dir);
-  if (dir === parent) {
-    return err(
-      new Error(
-        "Could not find repository root. Make sure to have the repo initialized.",
-      ),
-    );
-  }
-
-  return findRoot(parent);
-};
-
-const existsPreCommitConfig = (repoRoot: string): Result<boolean, Error> => {
-  const fileName = ".pre-commit-config.yaml";
-  const preCommitPath = join(repoRoot, fileName);
-  if (existsSync(preCommitPath)) {
-    return ok(true);
-  }
-
-  return err(
-    new Error(
-      `${fileName} not found in repository root. Make sure to have pre-commit configured for the repository.`,
-    ),
-  );
-};
-
-const existsTurboConfig = (repoRoot: string): Result<boolean, Error> => {
-  const fileName = "turbo.json";
-  const turboPath = join(repoRoot, fileName);
-  if (existsSync(turboPath)) {
-    return ok(true);
-  }
-
-  return err(
-    new Error(
-      `${fileName} not found in repository root. Make sure to have Turbo configured for the monorepo.`,
-    ),
-  );
+  return fileExists(gitPath)
+    .mapErr(
+      () =>
+        new Error(
+          "Could not find repository root. Make sure to have the repo initialized.",
+        ),
+    )
+    .map(() => dir);
 };
 
 export const makeRepositoryReader = (): RepositoryReader => ({
-  existsPreCommitConfig: existsPreCommitConfig,
-  existsTurboConfig: existsTurboConfig,
-  findRepositoryRoot: findRoot,
+  fileExists,
+  findRepositoryRoot,
+  readFile,
 });
