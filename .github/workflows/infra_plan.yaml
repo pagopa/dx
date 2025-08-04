@@ -138,6 +138,45 @@ jobs:
         run: |
           terraform init -input=false
 
+      - name: Generate Cache Key
+        if: github.event_name == 'pull_request'
+        id: cache-key
+        run: |
+          # Get current epoch time rounded to 10-minute window (600 seconds)
+          TIME_WINDOW=$(( $(date +%s) / 600 ))
+          echo "cache-key=pr-tfplan-${{ github.event.pull_request.number }}-${TIME_WINDOW}" >> $GITHUB_OUTPUT
+
+      # Restore PR TFPlan Cache (miss = first run or >10 minutes, hit = within 10 minutes)
+      - name: Restore PR Plan Cache
+        if: github.event_name == 'pull_request'
+        id: pr-tfplan-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ steps.directory.outputs.dir }}/.pr_plan_marker
+          key: ${{ steps.cache-key.outputs.cache-key }}
+
+      - name: Set Terraform Plan Refresh Flag
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          if [ "${{ steps.pr-tfplan-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "TF_PLAN_REFRESH_FLAG=-refresh=false" >> $GITHUB_ENV
+            echo "::notice::State will not be refreshed"
+          else
+            echo "TF_PLAN_REFRESH_FLAG=" >> $GITHUB_ENV
+            echo "::notice::State will be refreshed"
+
+            echo "$(date)" > ./.pr_plan_marker
+          fi
+
+      # Save PR Plan Cache (only on cache miss to persist the marker for next runs)
+      # - name: Save PR Plan Cache
+      #   if: github.event_name == 'pull_request' && steps.pr-tfplan-cache.outputs.cache-hit != 'true'
+      #   uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      #   with:
+      #     path: ${{ steps.directory.outputs.dir }}/.pr_plan_marker
+      #     key: ${{ steps.cache-key.outputs.cache-key }}
+
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
       # The step never fails but the result is checked in the next step
@@ -150,6 +189,7 @@ jobs:
             -lock-timeout=120s \
             -input=false \
             -no-color \
+            $TF_PLAN_REFRESH_FLAG \
             -out=plan.out 2>&1 | \
             grep -v "hidden-link:" | \
             tee tf_plan_stdout.txt
