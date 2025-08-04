@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.4.2
+
+### Patch Changes
+
+- e4d46cb: Remove whitespaces from the `node` version printed in the `info` command.
+
 ## 0.4.1
 
 ### Patch Changes

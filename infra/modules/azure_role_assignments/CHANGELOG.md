@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.2.1
+
+### Patch Changes
+
+- 1d4d60f: Add permissions to write tags to blobs
+
 ## 1.2.0
 
 ### Minor Changes

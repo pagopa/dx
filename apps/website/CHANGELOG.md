@@ -1,5 +1,11 @@
 # docs
 
+## 0.4.1
+
+### Patch Changes
+
+- 4142f1a: Document custom roles
+
 ## 0.4.0
 
 ### Minor Changes
