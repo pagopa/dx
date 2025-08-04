@@ -147,7 +147,7 @@ jobs:
           set -o pipefail
 
           terraform plan \
-            -lock-timeout=3000s \
+            -lock-timeout=120s \
             -out=tfplan-${{ github.sha }} \
             -input=false \
             | grep -v "hidden-link:"
@@ -200,7 +200,7 @@ jobs:
           set -o pipefail
 
           terraform apply \
-            -lock-timeout=3000s \
+            -lock-timeout=120s \
             -auto-approve \
             -input=false \
             tfplan-${{ github.sha }} \
