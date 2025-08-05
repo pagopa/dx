@@ -27,6 +27,11 @@ output "identities" {
   description = "Details of the user-assigned identities for app, infra, and opex, including IDs and names."
   value = {
     app = {
+      ci = {
+        id           = azurerm_user_assigned_identity.app_ci.id
+        name         = azurerm_user_assigned_identity.app_ci.name
+        principal_id = azurerm_user_assigned_identity.app_ci.principal_id
+      }
       cd = {
         id           = azurerm_user_assigned_identity.app_cd.id
         name         = azurerm_user_assigned_identity.app_cd.name
