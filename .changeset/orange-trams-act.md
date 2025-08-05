@@ -40,22 +40,6 @@ To migrate from the previous version, you need to split the configuration betwee
 module "bootstrapper" {
   source = "../_modules/bootstrapper"
 
-  environment = {
-    prefix          = "dx"
-    env_short       = "d"
-    location        = "italynorth"
-    domain          = "test"
-    app_name        = "monorepo_starter_pack"
-    instance_number = "02"
-  }
-
-  core_state = {
-    resource_group_name  = "terraform-state-rg"
-    storage_account_name = "tfstatedx"
-    container_name       = "terraform-state"
-    key                  = "dx.core.dev.tfstate"
-  }
-
   repository = {
     name                     = "dx"                                               # required
     configure                = true                                              # optional
@@ -71,6 +55,8 @@ module "bootstrapper" {
     opex_cd_policy_branches  = ["main"]                                         # optional
     app_cd_policy_branches   = ["main"]                                         # optional
   }
+
+  ... # other variables remain unchanged
 
   tags = local.tags
 }
