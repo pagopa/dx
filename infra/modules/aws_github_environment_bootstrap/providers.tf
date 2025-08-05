@@ -27,5 +27,5 @@ provider "aws" {
 provider "dx" {
   prefix      = var.environment.prefix
   environment = var.environment.env_short
-  region      = local.region_short
+  region      = var.environment.region
 }
