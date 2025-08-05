@@ -18,7 +18,7 @@ set_traffic() {
   local staging_percentage="$1"
   local production_percentage=$((100 - staging_percentage))
 
-  echo "::notice::Setting traffic distribution: ${staging_percentage}% staging, ${production_percentage}% production"
+  echo "::debug::Setting traffic distribution: ${staging_percentage}% staging, ${production_percentage}% production"
   az webapp traffic-routing set \
     --resource-group "$resource_group_name" \
     --name "$web_app_name" \
@@ -58,7 +58,7 @@ while [[ -r ./canary-monitor.sh ]]; do
     revert_traffic "nextPercentage ($nextPercentage) must be between 0 and 100"
   fi
 
-  echo "::notice::Next traffic percentage: $nextPercentage% to staging"
+  echo "::debug::Next traffic percentage: $nextPercentage% to staging"
 
   # Set traffic distribution
   set_traffic "$nextPercentage"
@@ -67,20 +67,20 @@ while [[ -r ./canary-monitor.sh ]]; do
 
   # Check if rollout is complete
   if [ "$currentPercentage" -ge 100 ]; then
-    echo "::notice::Successfully shifted 100% traffic to staging slot"
+    echo "::debug::Successfully shifted 100% traffic to staging slot"
     break
   else
     delaySeconds=$((afterMs / 1000))
-    echo "::notice::Waiting for $delaySeconds seconds..."
+    echo "::debug::Waiting for $delaySeconds seconds..."
     sleep "$delaySeconds"
   fi
 done
 
-echo "::notice::Finalizing rollout by setting traffic to 100% production"
+echo "::debug::Finalizing rollout by setting traffic to 100% production"
 
 set_traffic 0
 
-echo "::notice::Swapping staging slot to production"
+echo "::debug::Swapping staging slot to production"
 
 az webapp deployment slot swap \
   --resource-group "$resource_group_name" \
@@ -88,5 +88,5 @@ az webapp deployment slot swap \
   --slot staging \
   --target-slot production
 
-echo "::notice::Rollout completed successfully. Traffic is now fully on production."
+echo "::debug::Rollout completed successfully. Traffic is now fully on production."
 
