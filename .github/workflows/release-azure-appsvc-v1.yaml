@@ -282,15 +282,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Swap Staging and Production Slots
-        uses: pagopa/dx/actions/incremental-rollout-appsvc@863dafe8310c2d5f2338fffb64748e32c22c2e0d
+        uses: pagopa/dx/actions/swap-appsvc-slot@fd126a351a70c7dba692e743ed6ae7a73396b759
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           web_app_name: ${{ env.WEB_APP_NAME }}
-
-      - name: Swap Staging and Production Slots
-        run: |
-          az webapp deployment slot swap \
-            --resource-group "$RESOURCE_GROUP_NAME" \
-            --name "$WEB_APP_NAME" \
-            --slot staging \
-            --target-slot production
