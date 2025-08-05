@@ -158,24 +158,6 @@ resource "aws_iam_policy" "custom_app_policy" {
 }
 ```
 
-### Creating Additional GitHub Environments
-
-If you need additional GitHub environments beyond the standard ones:
-
-```hcl
-resource "github_repository_environment" "staging" {
-  repository  = var.repository.name
-  environment = "staging"
-}
-
-resource "github_actions_environment_secret" "staging_role" {
-  repository       = var.repository.name
-  environment      = github_repository_environment.staging.environment
-  secret_name      = "STAGING_ROLE_ARN"
-  plaintext_value  = module.aws_github_bootstrap.identities.app.cd.id
-}
-```
-
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 
