@@ -41,6 +41,7 @@ env:
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
   TF_IN_AUTOMATION: true
+  REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
 
 jobs:
   get-terraform-version:
@@ -138,6 +139,41 @@ jobs:
         run: |
           terraform init -input=false
 
+      - name: Generate Cache Key
+        if: github.event_name == 'pull_request'
+        id: cache-key
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Get current epoch time rounded to chosen window
+          TIME_WINDOW=$(( $(date +%s) / $REFRESH_STATE_EVERY_SECONDS ))
+          echo "cache-key=tfplan-pr${PR_NUMBER}-${TIME_WINDOW}s" >> $GITHUB_OUTPUT
+
+      # Restore PR TFPlan Cache (miss = first run or >10 minutes, hit = within 10 minutes)
+      - name: Check for Cache
+        if: github.event_name == 'pull_request'
+        id: tfplan-pr-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ steps.directory.outputs.dir }}/.pr_plan_marker
+          key: ${{ steps.cache-key.outputs.cache-key }}
+
+      - name: Set Terraform Refresh Flag
+        if: github.event_name == 'pull_request'
+        working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          CACHE_HIT: ${{ steps.tfplan-pr-cache.outputs.cache-hit }}
+        run: |
+          if [ "$CACHE_HIT" == "true" ]; then
+            echo "TF_PLAN_REFRESH_FLAG=-refresh=false" >> $GITHUB_ENV
+            echo "::notice::State will NOT be refreshed"
+          else
+            echo "TF_PLAN_REFRESH_FLAG=" >> $GITHUB_ENV
+            echo "::notice::State will be refreshed"
+
+            echo "$(date)" > ./.pr_plan_marker
+          fi
+
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
       # The step never fails but the result is checked in the next step
@@ -150,6 +186,7 @@ jobs:
             -lock-timeout=120s \
             -input=false \
             -no-color \
+            $TF_PLAN_REFRESH_FLAG \
             -out=plan.out 2>&1 | \
             grep -v "hidden-link:" | \
             tee tf_plan_stdout.txt
