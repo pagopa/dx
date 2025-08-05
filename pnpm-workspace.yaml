@@ -8,11 +8,13 @@ packages:
   - actions/*
 
 catalog:
+  inquirer: ^9.2.12
+  plop: ^4.0.1
   '@tsconfig/node22': 22.0.2
   '@types/node': ^22.16.2
   prettier: 3.6.2
-  tsup: ^8.5.0
   typescript: ~5.8.3
+  tsup: ^8.5.0
 
 onlyBuiltDependencies:
   - esbuild

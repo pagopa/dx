@@ -1,0 +1,51 @@
+{
+  "name": "@pagopa/typescript-generator",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shared core functionality for TypeScript package generators",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/typescript-generator"
+  },
+  "keywords": [
+    "plop",
+    "generator",
+    "typescript",
+    "turborepo",
+    "core"
+  ],
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "dependencies": {
+    "inquirer": "catalog:",
+    "plop": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
