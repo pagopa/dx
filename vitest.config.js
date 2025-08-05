@@ -12,5 +12,6 @@ export default defineConfig({
         "**/build/**",
       ],
     },
+    projects: ["apps/*"]
   },
 });
