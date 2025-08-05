@@ -33,7 +33,6 @@ run "validate_github_id_app" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -151,7 +150,6 @@ run "validate_github_id_infra" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -372,7 +370,6 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -442,7 +439,6 @@ run "validate_rbac_entraid" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -521,7 +517,6 @@ run "validate_github_id_opex" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -614,7 +609,6 @@ run "validate_rgs_iam" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
