@@ -1,5 +1,5 @@
 {
-  "name": "incremental-rollout-appsvc",
+  "name": "swap-appsvc-slot",
   "version": "0.0.0",
   "type": "module",
   "private": true,

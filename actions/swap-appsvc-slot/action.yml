@@ -1,4 +1,4 @@
-name: "Incremental Rollout for App Service"
+name: "Swap App Service Slot"
 description: "Incrementally shift traffic to staging slot, run canary script, shift traffic and finalize with slot swap."
 
 inputs:
