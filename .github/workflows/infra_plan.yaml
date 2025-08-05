@@ -142,10 +142,12 @@ jobs:
       - name: Generate Cache Key
         if: github.event_name == 'pull_request'
         id: cache-key
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           # Get current epoch time rounded to chosen window
           TIME_WINDOW=$(( $(date +%s) / $CACHE_EXPIRATION_SECONDS ))
-          echo "cache-key=tfplan-pr${{ github.event.pull_request.number }}-${TIME_WINDOW}s" >> $GITHUB_OUTPUT
+          echo "cache-key=tfplan-pr${PR_NUMBER}-${TIME_WINDOW}s" >> $GITHUB_OUTPUT
 
       # Restore PR TFPlan Cache (miss = first run or >10 minutes, hit = within 10 minutes)
       - name: Check for Cache
