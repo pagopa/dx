@@ -161,8 +161,10 @@ jobs:
       - name: Set Terraform Refresh Flag
         if: github.event_name == 'pull_request'
         working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          CACHE_HIT: ${{ steps.tfplan-pr-cache.outputs.cache-hit }}
         run: |
-          if [ "${{ steps.tfplan-pr-cache.outputs.cache-hit }}" == "true" ]; then
+          if [ "$CACHE_HIT" == "true" ]; then
             echo "TF_PLAN_REFRESH_FLAG=-refresh=false" >> $GITHUB_ENV
             echo "::notice::State will NOT be refreshed"
           else
