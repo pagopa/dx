@@ -83,6 +83,13 @@ locals {
     }
   }
 
+  app_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+    }
+  }
+
   opex_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_ci.client_id
