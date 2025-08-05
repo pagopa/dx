@@ -7,6 +7,7 @@ output "repository" {
 
 output "identities" {
   description = "Details of the IAM roles for app, infra, including ARNs and names."
+  sensitive   = true
   value = {
     app = {
       ci = {
