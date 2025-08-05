@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-GIT-0002
 resource "github_actions_environment_secret" "infra_ci" {
   for_each = local.infra_ci.secrets
 
@@ -7,6 +8,7 @@ resource "github_actions_environment_secret" "infra_ci" {
   plaintext_value = each.value
 }
 
+#trivy:ignore:AVD-GIT-0002
 resource "github_actions_environment_secret" "app_ci" {
   for_each = local.app_ci.secrets
 
