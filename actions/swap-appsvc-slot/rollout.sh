@@ -5,12 +5,46 @@ web_app_name=$2
 
 set -euo pipefail
 
+log_canary_event() {
+  local staging_percentage="$1"
+  jq -nr \
+    --argjson canary $staging_percentage \
+    --arg time "$(date -u +'%H:%M:%SZ')" \
+    '{canary: $canary, time: $time}' >> events.json
+}
+
+post_gh_summary() {
+  local message=$1
+
+  local x_axis=$(jq -src [.[].time] events.json)
+  local y_axis=$(jq -src [.[].canary] events.json)
+
+  cat <<EOF > $GITHUB_STEP_SUMMARY
+### Canary Deployment Rollout
+$message
+
+\`\`\`mermaid
+---
+config:
+  theme: dark
+---
+xychart-beta
+    title "Phased rollout of the new version"
+    x-axis $x_axis
+    y-axis "Canary %" 0 --> 100
+    line $y_axis
+\`\`\`
+EOF
+}
+
 revert_traffic() {
   local reason="$1"
   echo "::error::$reason. Reverting traffic to production."
   az webapp traffic-routing clear \
     --resource-group "$resource_group_name" \
     --name "$web_app_name"
+  log_canary_event 0
+  post_gh_summary "Rollout failed ❌. $reason. Traffic reverted to production."
   exit 1
 }
 
@@ -19,13 +53,18 @@ set_traffic() {
   local production_percentage=$((100 - staging_percentage))
 
   echo "::debug::Setting traffic distribution: ${staging_percentage}% staging, ${production_percentage}% production"
+
   az webapp traffic-routing set \
     --resource-group "$resource_group_name" \
     --name "$web_app_name" \
     --distribution "staging=${staging_percentage}"
+
+  log_canary_event "$staging_percentage"
 }
 
 currentPercentage=0
+
+log_canary_event 0
 
 while [[ -r ./canary-monitor.sh ]]; do
   echo "::debug::Current percentage: $currentPercentage%"
@@ -89,4 +128,7 @@ az webapp deployment slot swap \
   --target-slot production
 
 echo "::debug::Rollout completed successfully. Traffic is now fully on production."
+log_canary_event 100
+
+post_gh_summary "Rollout completed successfully ✅ Traffic is now fully on production."
 

@@ -6,7 +6,7 @@ This GitHub Action enables incremental rollouts for Azure App Service deployment
 
 ```yaml
 - name: Incremental Rollout and Swap
-  uses: ./.github/actions/incremental-rollout-appsvc
+  uses: ./.github/actions/swap-appsvc-slot
   with:
     resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
     web_app_name: ${{ env.WEB_APP_NAME }}
@@ -59,7 +59,7 @@ steps:
         --async false
 
   - name: Incremental Rollout and Swap
-    uses: pagopa/dx/actions/incremental-rollout-appsvc@main
+    uses: pagopa/dx/actions/swap-appsvc-slot@main
     with:
       resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
       web_app_name: ${{ env.WEB_APP_NAME }}
