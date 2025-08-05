@@ -2,6 +2,7 @@ import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { getInfo } from "../info.js";
+import { DependencyName } from "../package-json.js";
 import {
   makeMockConfig,
   makeMockDependencies,
@@ -43,16 +44,6 @@ describe("getInfo", () => {
       );
     });
 
-    it("should return the packageManager when present in the package.json", async () => {
-      const mockDependencies = makeMockDependencies();
-      const config = makeMockConfig();
-      mockDependencies.repositoryReader.readFile.mockReturnValue(
-        okAsync("22.0.0"),
-      );
-      const result = await getInfo(mockDependencies, config);
-      expect(result.packageManager).toStrictEqual("pnpm");
-    });
-
     it("should return yarn when yarn.lock is present", async () => {
       const mockPackageJson = makeMockPackageJson({
         packageManager: undefined,
@@ -88,63 +79,49 @@ describe("getInfo", () => {
     });
   });
 
-  describe("node", () => {
-    it("should not return node version if .node-version file does not exist", async () => {
-      const mockDependencies = makeMockDependencies();
-      mockDependencies.repositoryReader.readFile.mockReturnValue(
-        errAsync(new Error("File not found")),
-      );
-
-      const config = makeMockConfig();
-      const result = await getInfo(mockDependencies, config);
-      expect(result.node).toBeUndefined();
-      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
-        "a/repo/root/.node-version",
-      );
+  it("should return all info", async () => {
+    const mockPackageJson = makeMockPackageJson({
+      devDependencies: new Map([["turbo" as DependencyName, "^2.5.0"]]),
     });
-    it("should return the node version", async () => {
-      const mockDependencies = makeMockDependencies();
-      mockDependencies.repositoryReader.readFile.mockReturnValue(
-        okAsync("\n22.0.0\n"),
-      );
+    const config = makeMockConfig();
+    const mockDependencies = {
+      ...makeMockDependencies(),
+      packageJson: mockPackageJson,
+    };
 
-      const config = makeMockConfig();
-      const result = await getInfo(mockDependencies, config);
-      expect(result.node).toStrictEqual("22.0.0");
+    mockDependencies.repositoryReader.readFile
+      .mockReturnValueOnce(okAsync("\n22.0.0\n"))
+      .mockReturnValueOnce(okAsync("1.0.0\n"));
+
+    const result = await getInfo(mockDependencies, config);
+    expect(result).toStrictEqual({
+      node: "22.0.0",
+      packageManager: "pnpm",
+      terraform: "1.0.0",
+      turbo: "^2.5.0",
     });
+    expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
+      "a/repo/root/.node-version",
+    );
+    expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
+      "a/repo/root/.terraform-version",
+    );
   });
 
-  describe("terraform", () => {
-    it("should return undefined when .terraform-version file does not exist", async () => {
-      const mockDependencies = makeMockDependencies();
-      const config = makeMockConfig();
+  it("should only required information", async () => {
+    const config = makeMockConfig();
+    const mockDependencies = makeMockDependencies();
 
-      mockDependencies.repositoryReader.readFile.mockReturnValue(
-        errAsync(new Error("File not found")),
-      );
+    mockDependencies.repositoryReader.readFile.mockReturnValue(
+      errAsync(new Error("File not found")),
+    );
 
-      const result = await getInfo(mockDependencies, config);
-      expect(result.terraform).toBeUndefined();
-
-      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
-        "a/repo/root/.terraform-version",
-      );
-    });
-
-    it("should return the terraform version when .terraform-version file exists", async () => {
-      const mockDependencies = makeMockDependencies();
-      const config = makeMockConfig();
-
-      mockDependencies.repositoryReader.readFile.mockReturnValue(
-        okAsync("1.0.0\n"),
-      );
-
-      const result = await getInfo(mockDependencies, config);
-      expect(result.terraform).toStrictEqual("1.0.0");
-
-      expect(mockDependencies.repositoryReader.readFile).toHaveBeenCalledWith(
-        "a/repo/root/.terraform-version",
-      );
+    const result = await getInfo(mockDependencies, config);
+    expect(result).toStrictEqual({
+      node: undefined,
+      packageManager: "pnpm",
+      terraform: undefined,
+      turbo: undefined,
     });
   });
 });
