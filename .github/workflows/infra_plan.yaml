@@ -165,7 +165,7 @@ jobs:
           CACHE_HIT: ${{ steps.tfplan-pr-cache.outputs.cache-hit }}
         run: |
           if [ "$CACHE_HIT" == "true" ]; then
-            echo "TF_PLAN_REFRESH_FLAG=-refresh=false" >> $GITHUB_ENV
+            echo "TF_PLAN_REFRESH_FLAG=-refresh=false -lock=false" >> $GITHUB_ENV
             echo "::notice::State will NOT be refreshed"
           else
             echo "TF_PLAN_REFRESH_FLAG=" >> $GITHUB_ENV
@@ -186,7 +186,6 @@ jobs:
             -lock-timeout=120s \
             -input=false \
             -no-color \
-            -lock=false \
             $TF_PLAN_REFRESH_FLAG \
             -out=plan.out 2>&1 | \
             grep -v "hidden-link:" | \
