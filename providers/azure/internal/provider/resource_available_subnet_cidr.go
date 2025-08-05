@@ -229,7 +229,7 @@ func findAvailableCidrBlock(ctx context.Context, vnetID string, prefixLength int
 	}
 
 	// --- Setup Azure Client ---
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	cred, err := azidentity.NewAzureCLICredential(nil)
 	if err != nil {
 		diagnostics.AddError(
 			"Azure Authentication Failed",
