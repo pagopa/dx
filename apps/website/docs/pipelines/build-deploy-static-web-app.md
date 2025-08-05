@@ -14,8 +14,7 @@ previews**.
 
 ## How It Works
 
-The workflow is divided into two distinct jobs to separate build and deployment
-concerns:
+The workflow automates the entire deployment process from build to release.
 
 1. Automatically identifies the package manager used in the project (pnpm, yarn,
    or npm), configures the runner accordingly and builds the application using
