@@ -27,7 +27,7 @@ set_traffic() {
 
 currentPercentage=0
 
-while true; do
+while [[ -r ./canary-monitor.sh ]]; do
   echo "::debug::Current percentage: $currentPercentage%"
 
   # Run monitoring script with error handling
@@ -75,3 +75,18 @@ while true; do
     sleep "$delaySeconds"
   fi
 done
+
+echo "::notice::Finalizing rollout by setting traffic to 100% production"
+
+set_traffic 0
+
+echo "::notice::Swapping staging slot to production"
+
+az webapp deployment slot swap \
+  --resource-group "$resource_group_name" \
+  --name "$web_app_name" \
+  --slot staging \
+  --target-slot production
+
+echo "::notice::Rollout completed successfully. Traffic is now fully on production."
+
