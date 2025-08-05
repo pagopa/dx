@@ -204,8 +204,8 @@ jobs:
           )
 
           if [[ "$USE_STAGING_SLOT" == "true" ]]; then
-              echo "Deploying to slot: $SLOT_NAME"
-              cmd+=("--slot" "$SLOT_NAME")
+              echo "Deploying to staging slot"
+              cmd+=("--slot" "staging")
           else
               echo "Deploying to production (no slot)"
           fi
@@ -280,6 +280,12 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Swap Staging and Production Slots
+        uses: pagopa/dx/actions/incremental-rollout-appsvc@863dafe8310c2d5f2338fffb64748e32c22c2e0d
+        with:
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          web_app_name: ${{ env.WEB_APP_NAME }}
 
       - name: Swap Staging and Production Slots
         run: |
