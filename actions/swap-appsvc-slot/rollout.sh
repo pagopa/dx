@@ -22,7 +22,7 @@ set_traffic() {
   az webapp traffic-routing set \
     --resource-group "$resource_group_name" \
     --name "$web_app_name" \
-    --distribution "staging=${staging_percentage},production=${production_percentage}"
+    --distribution "staging=${staging_percentage}"
 }
 
 currentPercentage=0
