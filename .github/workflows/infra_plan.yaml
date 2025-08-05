@@ -146,6 +146,9 @@ jobs:
         id: plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
+          unset $(env | grep RUNNER | cut -d= -f1)
+          unset $(env | grep GITHUB | cut -d= -f1)
+
           terraform plan \
             -lock-timeout=120s \
             -input=false \
