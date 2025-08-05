@@ -14,7 +14,7 @@ locals {
     "p" = "prod"
   }
 
-  env_long = local.envs[var.environment.env_short]
+  env_name = local.envs[var.environment.env_short]
 
   repo_secrets = {}
 
