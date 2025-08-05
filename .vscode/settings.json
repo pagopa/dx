@@ -1,9 +1,4 @@
 {
-  "github.copilot.chat.codeGeneration.instructions": [
-    {
-      "file": ".github/instructions/code.instructions.md"
-    }
-  ],
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
       "file": ".github/instructions/commit-message.instructions.md"
@@ -19,11 +14,6 @@
       "file": ".github/instructions/review.instructions.md"
     }
   ],
-  "github.copilot.chat.testGeneration.instructions": [
-    {
-      "file": ".github/instructions/test.instructions.md"
-    }
-  ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "[terraform]": {
@@ -35,4 +25,5 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
+  "githubPullRequests.codingAgent.uiIntegration": true
 }
