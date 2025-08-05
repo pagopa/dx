@@ -1,7 +1,6 @@
 output "repository" {
-  description = "Details of the GitHub repository, including ID and name."
+  description = "Details of the GitHub repository."
   value = {
-    id   = try(module.github_repository["repo"].id, null)
     name = var.repository.name
   }
 }
@@ -10,6 +9,10 @@ output "identities" {
   description = "Details of the IAM roles for app, infra, including ARNs and names."
   value = {
     app = {
+      ci = {
+        id   = aws_iam_role.app_ci.arn
+        name = aws_iam_role.app_ci.name
+      }
       cd = {
         id   = aws_iam_role.app_cd.arn
         name = aws_iam_role.app_cd.name

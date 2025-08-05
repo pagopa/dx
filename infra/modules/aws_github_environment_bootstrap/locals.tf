@@ -1,6 +1,12 @@
 locals {
-  prefix = "${var.environment.prefix}-${var.prefix.env_short}-${var.environment.location}-${var.environment.domain}"
-  suffix = var.environment.instance_number
+  # Naming configuration for dx provider
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    region          = var.environment.region,
+    name            = var.repository.name,
+    instance_number = tonumber(var.environment.instance_number),
+  }
 
   envs = {
     "d" = "dev"
@@ -15,6 +21,12 @@ locals {
   infra_ci = {
     secrets = {
       "INFRA_CI_ROLE_ARN" = aws_iam_role.infra_ci.arn
+    }
+  }
+
+  app_ci = {
+    secrets = {
+      "APP_CI_ROLE_ARN" = aws_iam_role.app_ci.arn
     }
   }
 

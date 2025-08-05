@@ -1,5 +1,9 @@
 resource "aws_iam_role" "infra_ci" {
-  name        = "${local.prefix}-infra-github-ci-role-${local.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = var.environment.domain
+    name          = "infra-github-ci"
+    resource_type = "iam_role"
+  }))
   description = "Role to assume to run CI on the infrastructure via GitHub Actions"
 
   assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
@@ -11,7 +15,11 @@ resource "aws_iam_role_policy_attachment" "infra_ci_ro" {
 }
 
 resource "aws_iam_role" "infra_cd" {
-  name        = "${local.prefix}-infra-github-cd-role-${local.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = var.environment.domain
+    name          = "infra-github-cd"
+    resource_type = "iam_role"
+  }))
   description = "Role to assume to run CD on the infrastructure via GitHub Actions"
 
   assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
