@@ -13,5 +13,5 @@ resource "azurerm_role_assignment" "app_ci_subscription_pagopa_iac_reader" {
   scope                = each.value
   role_definition_name = "PagoPA IaC Reader"
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
-  description          = "Allow ${var.repository.name} App CI identity to read resources configuration at resource group scope. Allows to read AppServices and Function Apps configuration"
+  description          = "Allow ${var.repository.name} App CI identity to read resources configuration at resource group scope. Allows to read AppServices and Function Apps configuration."
 }
