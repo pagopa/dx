@@ -276,7 +276,7 @@ jobs:
     name: Swap slots
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [validate, deploy]
-    if: ${{ !github.event.act && needs.validate.outputs.use_staging_slot }}
+    if: ${{ !github.event.act && fromJson(needs.validate.outputs.use_staging_slot) }}
     environment: ${{ inputs.environment }}-cd
 
     permissions:
