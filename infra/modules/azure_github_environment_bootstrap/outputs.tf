@@ -8,9 +8,10 @@ output "resource_group" {
 }
 
 output "repository" {
-  description = "GitHub repository name."
+  description = "GitHub repository name and owner."
   value = {
-    name = var.repository.name
+    owner = var.repository.owner
+    name  = var.repository.name
   }
 }
 

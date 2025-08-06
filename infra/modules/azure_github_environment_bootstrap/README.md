@@ -276,6 +276,6 @@ This module includes practical examples to help you get started quickly:
 |------|-------------|
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
-| <a name="output_repository"></a> [repository](#output\_repository) | Details of the GitHub repository. |
+| <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |
 | <a name="output_resource_group"></a> [resource\_group](#output\_resource\_group) | Details of the main resource group, including ID, name, and location. |
 <!-- END_TF_DOCS -->
