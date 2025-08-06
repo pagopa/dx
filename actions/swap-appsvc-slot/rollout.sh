@@ -48,7 +48,7 @@ revert_traffic() {
     --resource-group "$resource_group_name" \
     --name "$web_app_name"
   log_canary_event 0
-  post_gh_summary "Rollout failed ❌. $reason. Traffic reverted to production."
+  post_canary_gh_summary "Rollout failed ❌. $reason. Traffic reverted to production."
   exit 1
 }
 
