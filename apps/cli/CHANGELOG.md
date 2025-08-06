@@ -1,5 +1,14 @@
 # @pagopa/dx-cli
 
+## 0.4.3
+
+### Patch Changes
+
+- 1278fca: When running the `info` command, if `turbo` is configured, it shows its version.
+- 394f5aa: Verify the monorepo's workspaces
+
+  When running the `doctor` command, the CLI will check the workspaces are properly configured.
+
 ## 0.4.2
 
 ### Patch Changes

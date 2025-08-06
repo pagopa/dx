@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.3
+
+### Patch Changes
+
+- 9f719dd: Fix auth method for CIDR resource from Default to AzureCLI
+
 ## 0.6.2
 
 ### Patch Changes
