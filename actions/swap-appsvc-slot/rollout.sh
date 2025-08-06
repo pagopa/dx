@@ -17,7 +17,8 @@ log_canary_event() {
 post_canary_gh_summary() {
   local message=$1
 
-  local x_axis, y_axis
+  local x_axis
+  local y_axis
 
   x_axis=$(jq -src [.[].time] events.json)
   y_axis=$(jq -src [.[].canary] events.json)
