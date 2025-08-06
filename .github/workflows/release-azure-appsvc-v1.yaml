@@ -201,7 +201,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Deploy
+      - name: ${{ format('Deploying to {}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
         env:
           USE_STAGING_SLOT: ${{ needs.validate.outputs.use_staging_slot }}
         run: |
@@ -213,14 +213,12 @@ jobs:
               "--type" "zip"
               "--async" "false"
           )
-
           if [[ "$USE_STAGING_SLOT" == "true" ]]; then
-              echo "Deploying to staging slot"
+              echo "::debug::Deploying to staging slot"
               cmd+=("--slot" "staging")
           else
-              echo "Deploying to production (no slot)"
+              echo "::debug::Deploying to production (no slot)"
           fi
-
           "${cmd[@]}"
 
   auto_approve_staging_deploy:
