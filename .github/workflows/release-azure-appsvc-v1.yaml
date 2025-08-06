@@ -177,7 +177,7 @@ jobs:
           fi
 
   deploy:
-    name: Deploy
+    name: ${{ format('Deploy to {0}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [validate]
     if: ${{ !github.event.act }}
@@ -201,7 +201,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: ${{ format('Deploying to {}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
+      - name: Deploy
         env:
           USE_STAGING_SLOT: ${{ needs.validate.outputs.use_staging_slot }}
         run: |
