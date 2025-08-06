@@ -1,0 +1,7 @@
+{
+  "name": "aws_core_values_exporter",
+  "version": "0.0.0",
+  "private": true,
+  "provider": "aws",
+  "description": "Allow to output the main core values of configurations deployed via aws-core-infra module"
+}
