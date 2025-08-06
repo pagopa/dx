@@ -155,7 +155,7 @@ jobs:
           echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
           if [ "$USE_STAGING_SLOT" == "true" ]; then
             echo "### Staging slot found ✅" >> $GITHUB_STEP_SUMMARY
-            echo "A staging slot is already configured for this web app. The deployment will proceed to the staging slot." >> $GITHUB_STEP_SUMMARY
+            echo "The deployment will proceed to the staging slot." >> $GITHUB_STEP_SUMMARY
           else
             echo "### No staging slot found" >> $GITHUB_STEP_SUMMARY
             echo "No staging slot is configured for this web app. The deployment will proceed to the production slot." >> $GITHUB_STEP_SUMMARY
