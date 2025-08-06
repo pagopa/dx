@@ -293,7 +293,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Swap Staging and Production Slots
-        uses: pagopa/dx/actions/swap-appsvc-slot@9a32406ca134364199f93bc5b8075ebcb760df2a
+        uses: pagopa/dx/actions/swap-appsvc-slot@d40bbc0d5636f5ff5692e6bb0f72504c7d029944
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           web_app_name: ${{ env.WEB_APP_NAME }}
