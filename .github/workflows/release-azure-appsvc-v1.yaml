@@ -253,7 +253,7 @@ jobs:
             exit 1
           fi
 
-          $current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
+          current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
 
           if [ "$current_user_can_approve" != true ]; then
             GITHUB_USER=$(gh api user | jq -r '.login')
@@ -262,7 +262,7 @@ jobs:
             exit 1
           fi
 
-          $env_id=$(echo "$deployments" | jq -r '.[].environment.id')
+          env_id=$(echo "$deployments" | jq -r '.[].environment.id')
 
           gh api \
             --method POST \
