@@ -111,7 +111,7 @@ required permissions stored in your GitHub repository.
    ```hcl
    data "azurerm_key_vault_secret" "gh_token_deployment_approval" {
      name         = "gh-token-deployment-approval"
-     key_vault_id = data.azurerm_key_vault.kv.id
+     key_vault_id = module.core_values.common_key_vault.id
    }
 
    resource "github_actions_secret" "gh_token_deployment_approval" {
