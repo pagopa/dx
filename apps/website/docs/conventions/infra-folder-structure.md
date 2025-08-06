@@ -16,7 +16,7 @@ repository. This folder should contain multiple Terraform configurations:
   module to manage the repository settings.
 - `bootstrapper`: This folder contains the definition of the
   [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-  (or similarly for other cloud providers) to create:
+  (or [aws-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/azurerm/latest)) to create:
   - A private GitHub runner, which can be used to perform operations against
     network-isolated resources.
   - The identities used by the GitHub Actions workflows to perform operations
