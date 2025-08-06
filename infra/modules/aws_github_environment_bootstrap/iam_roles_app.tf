@@ -9,9 +9,19 @@ resource "aws_iam_role" "app_ci" {
   assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
 }
 
-resource "aws_iam_role_policy_attachment" "app_ci_ro" {
+resource "aws_iam_role_policy_attachment" "app_ci_ro_lambda" {
   role       = aws_iam_role.app_ci.name
-  policy_arn = data.aws_iam_policy.read_only_access.arn
+  policy_arn = data.aws_iam_policy.lambda_read_only_access.arn
+}
+
+resource "aws_iam_policy" "ro_ecs" {
+  name   = "ECSReadOnlyAccess"
+  policy = data.aws_iam_policy_document.ecs_read_only_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "app_ci_ro_ecs" {
+  role       = aws_iam_role.app_ci.name
+  policy_arn = aws_iam_policy.ro_ecs.arn
 }
 
 resource "aws_iam_role" "app_cd" {
@@ -25,7 +35,12 @@ resource "aws_iam_role" "app_cd" {
   assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
 }
 
-resource "aws_iam_role_policy_attachment" "app_cd_admin" {
+resource "aws_iam_role_policy_attachment" "app_cd_admin_lambda" {
   role       = aws_iam_role.app_cd.name
-  policy_arn = data.aws_iam_policy.admin_access.arn
+  policy_arn = data.aws_iam_policy.lambda_admin_access.arn
+}
+
+resource "aws_iam_role_policy_attachment" "app_cd_admin_ecs" {
+  role       = aws_iam_role.app_cd.name
+  policy_arn = data.aws_iam_policy.ecs_admin_access.arn
 }

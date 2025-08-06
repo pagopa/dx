@@ -6,6 +6,30 @@ data "aws_iam_policy" "read_only_access" {
   name = "ReadOnlyAccess"
 }
 
+data "aws_iam_policy" "lambda_read_only_access" {
+  name = "AWSLambda_ReadOnlyAccess"
+}
+
+data "aws_iam_policy_document" "ecs_read_only_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecs:List*",
+      "ecs:Get*",
+      "ecs:Describe*",
+    ]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy" "lambda_admin_access" {
+  name = "AWSLambda_FullAccess"
+}
+
+data "aws_iam_policy" "ecs_admin_access" {
+  name = "AmazonECS_FullAccess"
+}
+
 data "aws_iam_policy_document" "github_assume_role_policy" {
   statement {
     effect  = "Allow"
