@@ -1,4 +1,13 @@
 locals {
+  tags = merge(
+    var.tags,
+    {
+      ModuleSource  = "DX",
+      ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"),
+      ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
+    }
+  )
+
   project = "${var.environment.prefix}-${var.environment.env_short}"
   domain  = var.environment.domain == null ? "-" : "-${var.environment.domain}-"
 
