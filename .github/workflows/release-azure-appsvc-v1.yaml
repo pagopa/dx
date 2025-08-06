@@ -84,8 +84,6 @@ jobs:
       - name: Make artifact
         id: make-artifact
         env:
-          YARN_NODE_LINKER: node-modules
-          YARN_NM_HOISTING_LIMITS: workspaces
           PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
         working-directory: ${{ steps.get-workspace-path.outputs.path }}
         run: |
