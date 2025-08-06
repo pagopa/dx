@@ -8,7 +8,7 @@ output "resource_group" {
 }
 
 output "repository" {
-  description = "Details of the GitHub repository."
+  description = "GitHub repository name."
   value = {
     name = var.repository.name
   }
