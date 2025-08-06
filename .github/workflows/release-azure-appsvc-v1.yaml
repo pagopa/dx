@@ -144,7 +144,25 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
+      - name: Check for existing staging slot
+        id: query-staging-slot
+        run: |
+          echo "::debug::Checking for existing deployment slots..."
+          USE_STAGING_SLOT=$(az webapp deployment slot list \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --query 'length([?name == `staging`]) > `0`')
+          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+          if [ "$USE_STAGING_SLOT" == "true" ]; then
+            echo "### Staging slot found ✅" >> $GITHUB_STEP_SUMMARY
+            echo "A staging slot is already configured for this web app. The deployment will proceed to the staging slot." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### No staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "No staging slot is configured for this web app. The deployment will proceed to the production slot." >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Check if the custom warm-up is configured
+        if: ${{ steps.query-staging-slot.outputs.use_staging_slot == 'true' }}
         run: |
           IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
             --resource-group "$RESOURCE_GROUP_NAME" \
@@ -152,18 +170,11 @@ jobs:
             --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
           if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
             echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
+            echo "### Custom warm-up configuration needed ❌" >> $GITHUB_STEP_SUMMARY
+            echo "The custom warm-up configuration is not set for the staging slot. This is required to ensure a smooth swap between slots." >> $GITHUB_STEP_SUMMARY
+            echo "Check out the [documentation](https://pagopa.github.io/dx/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
-
-      - name: Check for existing staging slot
-        id: query-staging-slot
-        run: |
-          echo "Checking for existing deployment slots..."
-          USE_STAGING_SLOT=$(az webapp deployment slot list \
-            --resource-group "$RESOURCE_GROUP_NAME" \
-            --name "$WEB_APP_NAME" \
-            --query 'length([?name == `staging`]) > `0`')
-          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Deploy
