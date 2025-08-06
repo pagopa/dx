@@ -90,7 +90,7 @@ jobs:
         working-directory: ${{ steps.get-workspace-path.outputs.path }}
         run: |
           if grep -rq --include='next.config.*' 'output: "standalone"' .; then
-            echo "::debug:: the workspace contains a Next.js standalone app"
+            echo "::debug::The workspace contains a Next.js standalone app"
             mv .next/static .next/standalone/.next
             cd .next/standalone && zip -r $BUNDLE_NAME.zip .
             echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
@@ -98,6 +98,7 @@ jobs:
           fi
 
           if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
+            echo "::debug::The workspace uses pnpm"
             pnpm --filter $WORKSPACE_NAME deploy --prod bundle
             cd bundle && zip -r $BUNDLE_NAME.zip .
             echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
@@ -105,6 +106,7 @@ jobs:
           fi
 
           if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+            echo "::debug::The workspace uses yarn"
             yarn config set nodeLinker node-modules
             yarn config set nmHoistingLimits workspaces
             yarn workspaces focus --production
@@ -113,7 +115,7 @@ jobs:
             exit 0
           fi
 
-          echo "Unsupported package manager: $PACKAGE_MANAGER"
+          echo "::error::Unsupported package manager: $PACKAGE_MANAGER"
           exit 1
 
       - name: Upload Artifact
