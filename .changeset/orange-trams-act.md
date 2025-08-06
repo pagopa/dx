@@ -36,7 +36,7 @@ To migrate from the previous version, you need to split the configuration betwee
 ### Before (v2.x.x)
 
 ```hcl
-# infra/bootstrapper/<env>/<env>.tf
+# infra/bootstrapper/<env>/main.tf
 module "bootstrapper" {
   source = "../_modules/bootstrapper"
 
@@ -89,7 +89,7 @@ module "github_repository" {
 ```
 
 ```hcl
-# infra/bootstrapper/<env>/<env>.tf (UPDATED)
+# infra/bootstrapper/<env>/main.tf (UPDATED)
 module "bootstrapper" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 3.0"
