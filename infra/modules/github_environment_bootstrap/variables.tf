@@ -14,6 +14,7 @@ variable "repository" {
     jira_boards_ids          = optional(list(string), [])
     pages_enabled            = optional(bool, false)
     has_downloads            = optional(bool, false)
+    has_issues               = optional(bool, false)
     has_projects             = optional(bool, false)
     homepage_url             = optional(string, null)
     pull_request_bypassers   = optional(list(string), [])
