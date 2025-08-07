@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.0
+
+### Minor Changes
+
+- dbfcec2: Add has_issues flag to enable issues on the repository
+
 ## 1.0.0
 
 ### Major Changes
