@@ -6,3 +6,10 @@ terraform {
     }
   }
 }
+
+provider "aws" {
+  region = var.environment.region
+  default_tags {
+    tags = local.tags
+  }
+}
