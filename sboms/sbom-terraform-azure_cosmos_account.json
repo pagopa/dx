@@ -1,0 +1,5415 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:8d857ca5-c0a8-403e-90a2-a85f4ae04ef9",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2025-08-08T10:58:16+02:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "author": "anchore",
+          "name": "syft",
+          "version": "1.29.1"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "af63bd4c8601b7f1",
+      "type": "file",
+      "name": "."
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:golang/github.com/azure/azure-sdk-for-go@v66.0.0%2Bincompatible?package-id=3877d75afdd840fb",
+      "type": "library",
+      "name": "github.com/Azure/azure-sdk-for-go",
+      "version": "v66.0.0+incompatible",
+      "cpe": "cpe:2.3:a:Azure:azure-sdk-for-go:v66.0.0\\+incompatible:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/azure-sdk-for-go@v66.0.0%2Bincompatible",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:azure_sdk_for_go:v66.0.0\\+incompatible:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/azure-sdk-for-go@v1.18.0?package-id=746bc6fa5ac37032#sdk/azcore",
+      "type": "library",
+      "name": "github.com/Azure/azure-sdk-for-go/sdk/azcore",
+      "version": "v1.18.0",
+      "cpe": "cpe:2.3:a:Azure:azure-sdk-for-go\\/sdk\\/azcore:v1.18.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/azure-sdk-for-go@v1.18.0#sdk/azcore",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:azure_sdk_for_go\\/sdk\\/azcore:v1.18.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:Gt0j3wceWMwPmiazCa8MzMA0MfhmPIz0Qp0FJ6qcM0U="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/azure-sdk-for-go@v1.9.0?package-id=cf0e20b19a171aa7#sdk/azidentity",
+      "type": "library",
+      "name": "github.com/Azure/azure-sdk-for-go/sdk/azidentity",
+      "version": "v1.9.0",
+      "cpe": "cpe:2.3:a:Azure:azure-sdk-for-go\\/sdk\\/azidentity:v1.9.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/azure-sdk-for-go@v1.9.0#sdk/azidentity",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:azure_sdk_for_go\\/sdk\\/azidentity:v1.9.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:OVoM452qUFBrX+URdH3VpR299ma4kfom0yB0URYky9g="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/azure-sdk-for-go@v1.11.1?package-id=6f164615c4621bac#sdk/internal",
+      "type": "library",
+      "name": "github.com/Azure/azure-sdk-for-go/sdk/internal",
+      "version": "v1.11.1",
+      "cpe": "cpe:2.3:a:Azure:azure-sdk-for-go\\/sdk\\/internal:v1.11.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/azure-sdk-for-go@v1.11.1#sdk/internal",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:azure_sdk_for_go\\/sdk\\/internal:v1.11.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:FPKJS1T+clwv+OLGt13a8UjqeRuh0O4SJ3lUriThc+4="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/azure-sdk-for-go@v1.1.0?package-id=1101c01920b5ee7b#sdk/resourcemanager/network/armnetwork",
+      "type": "library",
+      "name": "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:Azure:azure-sdk-for-go\\/sdk\\/resourcemanager\\/network\\/armnetwork:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/azure-sdk-for-go@v1.1.0#sdk/resourcemanager/network/armnetwork",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:azure_sdk_for_go\\/sdk\\/resourcemanager\\/network\\/armnetwork:v1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:QM6sE5k2ZT/vI5BEe0r7mqjsUSnhVBFbOsVkEuaEfiA="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.11.30?package-id=7c8bb1261a7f5001#autorest",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/autorest",
+      "version": "v0.11.30",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/autorest:v0.11.30:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.11.30#autorest",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/autorest:v0.11.30:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.9.24?package-id=b547b5cb93385508#autorest/adal",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/autorest/adal",
+      "version": "v0.9.24",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/autorest\\/adal:v0.9.24:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.9.24#autorest/adal",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/autorest\\/adal:v0.9.24:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.3.1?package-id=eabdd7887f0e0b80#autorest/date",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/autorest/date",
+      "version": "v0.3.1",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/autorest\\/date:v0.3.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.3.1#autorest/date",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/autorest\\/date:v0.3.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.4.0?package-id=db958fb689962312#autorest/to",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/autorest/to",
+      "version": "v0.4.0",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/autorest\\/to:v0.4.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.4.0#autorest/to",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/autorest\\/to:v0.4.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.3.1?package-id=6e78669607adf31c#autorest/validation",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/autorest/validation",
+      "version": "v0.3.1",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/autorest\\/validation:v0.3.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.3.1#autorest/validation",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/autorest\\/validation:v0.3.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.2.2?package-id=7f579b6be7f73614#logger",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/logger",
+      "version": "v0.2.2",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/logger:v0.2.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.2.2#logger",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/logger:v0.2.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azure/go-autorest@v0.6.1?package-id=726626f6402aef9e#tracing",
+      "type": "library",
+      "name": "github.com/Azure/go-autorest/tracing",
+      "version": "v0.6.1",
+      "cpe": "cpe:2.3:a:Azure:go-autorest\\/tracing:v0.6.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/Azure/go-autorest@v0.6.1#tracing",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:Azure:go_autorest\\/tracing:v0.6.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/azuread/microsoft-authentication-library-for-go@v1.4.2?package-id=03aac36fd8870e5f",
+      "type": "library",
+      "name": "github.com/AzureAD/microsoft-authentication-library-for-go",
+      "version": "v1.4.2",
+      "cpe": "cpe:2.3:a:AzureAD:microsoft-authentication-library-for-go:v1.4.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/AzureAD/microsoft-authentication-library-for-go@v1.4.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:AzureAD:microsoft_authentication_library_for_go:v1.4.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:oygO0locgZJe7PpYPXT5A29ZkwJaPqcva7BVeemZOZs="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/protonmail/go-crypto@v1.1.6?package-id=69cd37dd272a084b",
+      "type": "library",
+      "name": "github.com/ProtonMail/go-crypto",
+      "version": "v1.1.6",
+      "cpe": "cpe:2.3:a:ProtonMail:go-crypto:v1.1.6:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/ProtonMail/go-crypto@v1.1.6",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:ProtonMail:go_crypto:v1.1.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/agext/levenshtein@v1.2.3?package-id=e1bdcfa7b4fdb7bd",
+      "type": "library",
+      "name": "github.com/agext/levenshtein",
+      "version": "v1.2.3",
+      "cpe": "cpe:2.3:a:agext:levenshtein:v1.2.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/agext/levenshtein@v1.2.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/apparentlymart/go-cidr@v1.1.0?package-id=0af46c26ca5920da",
+      "type": "library",
+      "name": "github.com/apparentlymart/go-cidr",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:apparentlymart:go-cidr:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/apparentlymart/go-cidr@v1.1.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:apparentlymart:go_cidr:v1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:2mAhrMoF+nhXqxTzSZMUzDHkLjmIHC+Zzn4tdgBZjnU="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/apparentlymart/go-textseg@v15.0.0?package-id=091ca092313fb37f#v15",
+      "type": "library",
+      "name": "github.com/apparentlymart/go-textseg/v15",
+      "version": "v15.0.0",
+      "cpe": "cpe:2.3:a:apparentlymart:go-textseg\\/v15:v15.0.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/apparentlymart/go-textseg@v15.0.0#v15",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:apparentlymart:go_textseg\\/v15:v15.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/btubbs/datetime@v0.1.1?package-id=b539ef8dff689a93",
+      "type": "library",
+      "name": "github.com/btubbs/datetime",
+      "version": "v0.1.1",
+      "cpe": "cpe:2.3:a:btubbs:datetime:v0.1.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/btubbs/datetime@v0.1.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/cloudflare/circl@v1.6.1?package-id=9046fd0abb5b53bb",
+      "type": "library",
+      "name": "github.com/cloudflare/circl",
+      "version": "v1.6.1",
+      "cpe": "cpe:2.3:a:cloudflare:circl:v1.6.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/cloudflare/circl@v1.6.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/fatih/color@v1.18.0?package-id=60c30d0d4c402428",
+      "type": "library",
+      "name": "github.com/fatih/color",
+      "version": "v1.18.0",
+      "cpe": "cpe:2.3:a:fatih:color:v1.18.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/fatih/color@v1.18.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/fatih/color@v1.18.0?package-id=42c65f4d20582b26",
+      "type": "library",
+      "name": "github.com/fatih/color",
+      "version": "v1.18.0",
+      "cpe": "cpe:2.3:a:fatih:color:v1.18.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/fatih/color@v1.18.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/gofrs/uuid@v4.4.0%2Bincompatible?package-id=11327b8c1a5562a5",
+      "type": "library",
+      "name": "github.com/gofrs/uuid",
+      "version": "v4.4.0+incompatible",
+      "cpe": "cpe:2.3:a:gofrs:uuid:v4.4.0\\+incompatible:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/gofrs/uuid@v4.4.0%2Bincompatible",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/golang-jwt/jwt@v4.5.2?package-id=09443a80ef1e6f6c#v4",
+      "type": "library",
+      "name": "github.com/golang-jwt/jwt/v4",
+      "version": "v4.5.2",
+      "cpe": "cpe:2.3:a:golang-jwt:jwt\\/v4:v4.5.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/golang-jwt/jwt@v4.5.2#v4",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:golang_jwt:jwt\\/v4:v4.5.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:golang:jwt\\/v4:v4.5.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/golang-jwt/jwt@v5.2.2?package-id=5815d7565ace7c2c#v5",
+      "type": "library",
+      "name": "github.com/golang-jwt/jwt/v5",
+      "version": "v5.2.2",
+      "cpe": "cpe:2.3:a:golang-jwt:jwt\\/v5:v5.2.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/golang-jwt/jwt@v5.2.2#v5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:golang_jwt:jwt\\/v5:v5.2.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:golang:jwt\\/v5:v5.2.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/golang/protobuf@v1.5.4?package-id=f4c00968d27978ab",
+      "type": "library",
+      "name": "github.com/golang/protobuf",
+      "version": "v1.5.4",
+      "cpe": "cpe:2.3:a:golang:protobuf:v1.5.4:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/golang/protobuf@v1.5.4",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/golang/protobuf@v1.5.4?package-id=0bbe225b0cff8eb1",
+      "type": "library",
+      "name": "github.com/golang/protobuf",
+      "version": "v1.5.4",
+      "cpe": "cpe:2.3:a:golang:protobuf:v1.5.4:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/golang/protobuf@v1.5.4",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/google/go-cmp@v0.7.0?package-id=90920c772139637a",
+      "type": "library",
+      "name": "github.com/google/go-cmp",
+      "version": "v0.7.0",
+      "cpe": "cpe:2.3:a:google:go-cmp:v0.7.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/google/go-cmp@v0.7.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:google:go_cmp:v0.7.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/google/uuid@v1.6.0?package-id=328b255d4ad60c08",
+      "type": "library",
+      "name": "github.com/google/uuid",
+      "version": "v1.6.0",
+      "cpe": "cpe:2.3:a:google:uuid:v1.6.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/google/uuid@v1.6.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/google/uuid@v1.6.0?package-id=3b20fb3f7aba6036",
+      "type": "library",
+      "name": "github.com/google/uuid",
+      "version": "v1.6.0",
+      "cpe": "cpe:2.3:a:google:uuid:v1.6.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/google/uuid@v1.6.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/errwrap@v1.1.0?package-id=a5ad4840f58c5cf6",
+      "type": "library",
+      "name": "github.com/hashicorp/errwrap",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:hashicorp:errwrap:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/errwrap@v1.1.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-azure-helpers@v0.73.0?package-id=a621dd3b5913c09e",
+      "type": "library",
+      "name": "github.com/hashicorp/go-azure-helpers",
+      "version": "v0.73.0",
+      "cpe": "cpe:2.3:a:hashicorp:go-azure-helpers:v0.73.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-azure-helpers@v0.73.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_azure_helpers:v0.73.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250728.1144148?package-id=6af7526d0b18946d#resource-manager",
+      "type": "library",
+      "name": "github.com/hashicorp/go-azure-sdk/resource-manager",
+      "version": "v0.20250728.1144148",
+      "cpe": "cpe:2.3:a:hashicorp:go-azure-sdk\\/resource-manager:v0.20250728.1144148:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250728.1144148#resource-manager",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_azure_sdk\\/resource_manager:v0.20250728.1144148:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250731.1142049?package-id=2354b7128a688d01#sdk",
+      "type": "library",
+      "name": "github.com/hashicorp/go-azure-sdk/sdk",
+      "version": "v0.20250731.1142049",
+      "cpe": "cpe:2.3:a:hashicorp:go-azure-sdk\\/sdk:v0.20250731.1142049:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250731.1142049#sdk",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_azure_sdk\\/sdk:v0.20250731.1142049:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-checkpoint@v0.5.0?package-id=20dd9572e340aff1",
+      "type": "library",
+      "name": "github.com/hashicorp/go-checkpoint",
+      "version": "v0.5.0",
+      "cpe": "cpe:2.3:a:hashicorp:go-checkpoint:v0.5.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-checkpoint@v0.5.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_checkpoint:v0.5.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-cleanhttp@v0.5.2?package-id=3e35c80ef7db93d3",
+      "type": "library",
+      "name": "github.com/hashicorp/go-cleanhttp",
+      "version": "v0.5.2",
+      "cpe": "cpe:2.3:a:hashicorp:go-cleanhttp:v0.5.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-cleanhttp@v0.5.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_cleanhttp:v0.5.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-cty@v1.5.0?package-id=b69301c97767b142",
+      "type": "library",
+      "name": "github.com/hashicorp/go-cty",
+      "version": "v1.5.0",
+      "cpe": "cpe:2.3:a:hashicorp:go-cty:v1.5.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-cty@v1.5.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_cty:v1.5.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3?package-id=fa6381c5f4c896e4",
+      "type": "library",
+      "name": "github.com/hashicorp/go-hclog",
+      "version": "v1.6.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-hclog:v1.6.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_hclog:v1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3?package-id=9113e0f60fde95f0",
+      "type": "library",
+      "name": "github.com/hashicorp/go-hclog",
+      "version": "v1.6.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-hclog:v1.6.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_hclog:v1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:Qr2kF+eVWjTiYmU7Y31tYlP1h0q/X3Nl3tPGdaB11/k="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-multierror@v1.1.1?package-id=7fbc34dd122fbc3c",
+      "type": "library",
+      "name": "github.com/hashicorp/go-multierror",
+      "version": "v1.1.1",
+      "cpe": "cpe:2.3:a:hashicorp:go-multierror:v1.1.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-multierror@v1.1.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_multierror:v1.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3?package-id=da78c53e5f3dda06",
+      "type": "library",
+      "name": "github.com/hashicorp/go-plugin",
+      "version": "v1.6.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-plugin:v1.6.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_plugin:v1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3?package-id=99d8e76878dca0f1",
+      "type": "library",
+      "name": "github.com/hashicorp/go-plugin",
+      "version": "v1.6.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-plugin:v1.6.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_plugin:v1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:xgHB+ZUSYeuJi96WtxEjzi23uh7YQpznjGh0U0UUrwg="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-retryablehttp@v0.7.7?package-id=98ce8a04b91cf622",
+      "type": "library",
+      "name": "github.com/hashicorp/go-retryablehttp",
+      "version": "v0.7.7",
+      "cpe": "cpe:2.3:a:hashicorp:retryablehttp:v0.7.7:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-retryablehttp@v0.7.7",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3?package-id=9bbaabf66ecc3847",
+      "type": "library",
+      "name": "github.com/hashicorp/go-uuid",
+      "version": "v1.0.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-uuid:v1.0.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_uuid:v1.0.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3?package-id=b630a0006fa273aa",
+      "type": "library",
+      "name": "github.com/hashicorp/go-uuid",
+      "version": "v1.0.3",
+      "cpe": "cpe:2.3:a:hashicorp:go-uuid:v1.0.3:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_uuid:v1.0.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:2gKiV6YVmrJ1i2CKKa9obLvRieoRGviZFL26PcT/Co8="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/go-version@v1.7.0?package-id=a28e03e43f3a7c80",
+      "type": "library",
+      "name": "github.com/hashicorp/go-version",
+      "version": "v1.7.0",
+      "cpe": "cpe:2.3:a:hashicorp:go-version:v1.7.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/go-version@v1.7.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:go_version:v1.7.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/hc-install@v0.9.2?package-id=7d5a4149262ba710",
+      "type": "library",
+      "name": "github.com/hashicorp/hc-install",
+      "version": "v0.9.2",
+      "cpe": "cpe:2.3:a:hashicorp:hc-install:v0.9.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/hc-install@v0.9.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:hc_install:v0.9.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/hcl@v2.23.0?package-id=d3b61eb885981f81#v2",
+      "type": "library",
+      "name": "github.com/hashicorp/hcl/v2",
+      "version": "v2.23.0",
+      "cpe": "cpe:2.3:a:hashicorp:hcl\\/v2:v2.23.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/hcl@v2.23.0#v2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/logutils@v1.0.0?package-id=0145062ed7893d94",
+      "type": "library",
+      "name": "github.com/hashicorp/logutils",
+      "version": "v1.0.0",
+      "cpe": "cpe:2.3:a:hashicorp:logutils:v1.0.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/logutils@v1.0.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-exec@v0.23.0?package-id=37fc1adfb3db005b",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-exec",
+      "version": "v0.23.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-exec:v0.23.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-exec@v0.23.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_exec:v0.23.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-json@v0.25.0?package-id=2e63e21aa8cbdab4",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-json",
+      "version": "v0.25.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-json:v0.25.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-json@v0.25.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_json:v0.25.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.14.1?package-id=fc4c83d734c261d0",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-framework",
+      "version": "v1.14.1",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-framework:v1.14.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.14.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_framework:v1.14.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:jaT1yvU/kEKEsxnbrn4ZHlgcxyIfjvZ41BLdlLk52fY="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.15.0?package-id=c96dac8c12e949fa",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-framework",
+      "version": "v1.15.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-framework:v1.15.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.15.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_framework:v1.15.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.17.0?package-id=3623ab7a8a39dc98",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-framework-validators",
+      "version": "v0.17.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-framework-validators:v0.17.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.17.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_framework_validators:v0.17.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:0uYQcqqgW3BMyyve07WJgpKorXST3zkpzvrOnf3mpbg="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.18.0?package-id=e35f6bad7f605d52",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-framework-validators",
+      "version": "v0.18.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-framework-validators:v0.18.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.18.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_framework_validators:v0.18.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.26.0?package-id=d9b5f6a2e4d62997",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-go",
+      "version": "v0.26.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-go:v0.26.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.26.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_go:v0.26.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:cuIzCv4qwigug3OS7iKhpGAbZTiypAfFQmw8aE65O2M="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.27.0?package-id=b0a45504de077fbc",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-go",
+      "version": "v0.27.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-go:v0.27.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.27.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_go:v0.27.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0?package-id=9e8a9d18787d943c",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-log",
+      "version": "v0.9.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-log:v0.9.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_log:v0.9.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0?package-id=95a031f99e8d4783",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-log",
+      "version": "v0.9.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-log:v0.9.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_log:v0.9.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:i7hOA+vdAItN1/7UrfBqBwvYPQ9TFvymaRGZED3FCV0="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-mux@v0.19.0-alpha.1?package-id=74f7ffff3480abff",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-mux",
+      "version": "v0.19.0-alpha.1",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-mux:v0.19.0-alpha.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-mux@v0.19.0-alpha.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_mux:v0.19.0-alpha.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-sdk@v2.37.0?package-id=a656fdb57c10d9fc#v2",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-sdk/v2",
+      "version": "v2.37.0",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-sdk\\/v2:v2.37.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-sdk@v2.37.0#v2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_sdk\\/v2:v2.37.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-plugin-testing@v1.13.1?package-id=730d4ab119390797",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-plugin-testing",
+      "version": "v1.13.1",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-plugin-testing:v1.13.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-plugin-testing@v1.13.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_plugin_testing:v1.13.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-provider-azurerm?package-id=6596cd2d2af23afa",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-provider-azurerm",
+      "version": "UNKNOWN",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-provider-azurerm:*:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-provider-azurerm",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_provider_azurerm:*:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.4?package-id=48041243fba903a2",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-registry-address",
+      "version": "v0.2.4",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-registry-address:v0.2.4:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.4",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_registry_address:v0.2.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:JXu/zHB2Ymg/TGVCRu10XqNa4Sh2bWcqCNyKWjnCPJA="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.5?package-id=db0b6f817d70df8a",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-registry-address",
+      "version": "v0.2.5",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-registry-address:v0.2.5:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_registry_address:v0.2.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1?package-id=63579f0a469d6fda",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-svchost",
+      "version": "v0.1.1",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-svchost:v0.1.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_svchost:v0.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1?package-id=cef30d7d7a21293c",
+      "type": "library",
+      "name": "github.com/hashicorp/terraform-svchost",
+      "version": "v0.1.1",
+      "cpe": "cpe:2.3:a:hashicorp:terraform-svchost:v0.1.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:hashicorp:terraform_svchost:v0.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:EZZimZ1GxdqFRinZ1tpJwVxxt49xc/S52uzrw4x0jKQ="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/yamux@v0.1.1?package-id=4ca37b2b9f176b0b",
+      "type": "library",
+      "name": "github.com/hashicorp/yamux",
+      "version": "v0.1.1",
+      "cpe": "cpe:2.3:a:hashicorp:yamux:v0.1.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/yamux@v0.1.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/hashicorp/yamux@v0.1.2?package-id=a92c410193640bd0",
+      "type": "library",
+      "name": "github.com/hashicorp/yamux",
+      "version": "v0.1.2",
+      "cpe": "cpe:2.3:a:hashicorp:yamux:v0.1.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/hashicorp/yamux@v0.1.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:XtB8kyFOyHXYVFnwT5C3+Bdo8gArse7j2AQ0DA0Uey8="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/iancoleman/strcase@v0.3.0?package-id=c068bbbf719be828",
+      "type": "library",
+      "name": "github.com/iancoleman/strcase",
+      "version": "v0.3.0",
+      "cpe": "cpe:2.3:a:iancoleman:strcase:v0.3.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/iancoleman/strcase@v0.3.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/jackofallops/giovanni@v0.28.0?package-id=37facb885fc0a895",
+      "type": "library",
+      "name": "github.com/jackofallops/giovanni",
+      "version": "v0.28.0",
+      "cpe": "cpe:2.3:a:jackofallops:giovanni:v0.28.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/jackofallops/giovanni@v0.28.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/jackofallops/kermit@v0.20241010.1180132?package-id=c8464ddf49a7ea79",
+      "type": "library",
+      "name": "github.com/jackofallops/kermit",
+      "version": "v0.20241010.1180132",
+      "cpe": "cpe:2.3:a:jackofallops:kermit:v0.20241010.1180132:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/jackofallops/kermit@v0.20241010.1180132",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/kylelemons/godebug@v1.1.0?package-id=7249c2ba3c7fd057",
+      "type": "library",
+      "name": "github.com/kylelemons/godebug",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:kylelemons:godebug:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/kylelemons/godebug@v1.1.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mattn/go-colorable@v0.1.14?package-id=869a23f0b3e189ad",
+      "type": "library",
+      "name": "github.com/mattn/go-colorable",
+      "version": "v0.1.14",
+      "cpe": "cpe:2.3:a:mattn:go-colorable:v0.1.14:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mattn/go-colorable@v0.1.14",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mattn:go_colorable:v0.1.14:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mattn/go-colorable@v0.1.14?package-id=962f5836fda5ab6b",
+      "type": "library",
+      "name": "github.com/mattn/go-colorable",
+      "version": "v0.1.14",
+      "cpe": "cpe:2.3:a:mattn:go-colorable:v0.1.14:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mattn/go-colorable@v0.1.14",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mattn:go_colorable:v0.1.14:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mattn/go-isatty@v0.0.20?package-id=0158b44a170ff9a3",
+      "type": "library",
+      "name": "github.com/mattn/go-isatty",
+      "version": "v0.0.20",
+      "cpe": "cpe:2.3:a:mattn:go-isatty:v0.0.20:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.20",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mattn:go_isatty:v0.0.20:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mattn/go-isatty@v0.0.20?package-id=30ace6ec6f1e5a42",
+      "type": "library",
+      "name": "github.com/mattn/go-isatty",
+      "version": "v0.0.20",
+      "cpe": "cpe:2.3:a:mattn:go-isatty:v0.0.20:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.20",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mattn:go_isatty:v0.0.20:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/copystructure@v1.2.0?package-id=095e126ed6420178",
+      "type": "library",
+      "name": "github.com/mitchellh/copystructure",
+      "version": "v1.2.0",
+      "cpe": "cpe:2.3:a:mitchellh:copystructure:v1.2.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/copystructure@v1.2.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1?package-id=a071eecf310e6599",
+      "type": "library",
+      "name": "github.com/mitchellh/go-testing-interface",
+      "version": "v1.14.1",
+      "cpe": "cpe:2.3:a:mitchellh:go-testing-interface:v1.14.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mitchellh:go_testing_interface:v1.14.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1?package-id=f9c0b60236c1e888",
+      "type": "library",
+      "name": "github.com/mitchellh/go-testing-interface",
+      "version": "v1.14.1",
+      "cpe": "cpe:2.3:a:mitchellh:go-testing-interface:v1.14.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mitchellh:go_testing_interface:v1.14.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:jrgshOhYAUVNMAJiKbEu7EqAwgJJ2JqpQmpLJOu07cU="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/go-wordwrap@v1.0.1?package-id=d49a377d15cb8bb5",
+      "type": "library",
+      "name": "github.com/mitchellh/go-wordwrap",
+      "version": "v1.0.1",
+      "cpe": "cpe:2.3:a:mitchellh:go-wordwrap:v1.0.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/go-wordwrap@v1.0.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:mitchellh:go_wordwrap:v1.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/mapstructure@v1.5.0?package-id=ef5a500d16af9ca9",
+      "type": "library",
+      "name": "github.com/mitchellh/mapstructure",
+      "version": "v1.5.0",
+      "cpe": "cpe:2.3:a:mitchellh:mapstructure:v1.5.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/mapstructure@v1.5.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/mitchellh/reflectwalk@v1.0.2?package-id=640c8b586f1fe350",
+      "type": "library",
+      "name": "github.com/mitchellh/reflectwalk",
+      "version": "v1.0.2",
+      "cpe": "cpe:2.3:a:mitchellh:reflectwalk:v1.0.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/mitchellh/reflectwalk@v1.0.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/oklog/run@v1.1.0?package-id=95758449b29988bc",
+      "type": "library",
+      "name": "github.com/oklog/run",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:oklog:run:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/oklog/run@v1.1.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/oklog/run@v1.1.0?package-id=ef934c266515febe",
+      "type": "library",
+      "name": "github.com/oklog/run",
+      "version": "v1.1.0",
+      "cpe": "cpe:2.3:a:oklog:run:v1.1.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/oklog/run@v1.1.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:GEenZ1cK0+q0+wsJew9qUg/DyD8k3JzYsZAi5gYi2mA="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/pagopa-dx/terraform-provider-azure@v0.0.0-20250806110324-13e8193932ca?package-id=4dd730949e98726e",
+      "type": "library",
+      "name": "github.com/pagopa-dx/terraform-provider-azure",
+      "version": "v0.0.0-20250806110324-13e8193932ca",
+      "cpe": "cpe:2.3:a:pagopa-dx:terraform-provider-azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/pagopa-dx/terraform-provider-azure@v0.0.0-20250806110324-13e8193932ca",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa-dx:terraform_provider_azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa_dx:terraform-provider-azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa_dx:terraform_provider_azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa:terraform-provider-azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa:terraform_provider_azure:v0.0.0-20250806110324-13e8193932ca:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/pkg/browser@v0.0.0-20240102092130-5ac0b6a4141c?package-id=27ec34b5a903d27d",
+      "type": "library",
+      "name": "github.com/pkg/browser",
+      "version": "v0.0.0-20240102092130-5ac0b6a4141c",
+      "cpe": "cpe:2.3:a:pkg:browser:v0.0.0-20240102092130-5ac0b6a4141c:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/pkg/browser@v0.0.0-20240102092130-5ac0b6a4141c",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:+mdjkGKdHQG3305AYmdv1U2eRNDiU2ErMBj1gwrq8eQ="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/rickb777/date@v1.12.5-0.20200422084442-6300e543c4d9?package-id=fa4dce7a99d8414f",
+      "type": "library",
+      "name": "github.com/rickb777/date",
+      "version": "v1.12.5-0.20200422084442-6300e543c4d9",
+      "cpe": "cpe:2.3:a:rickb777:date:v1.12.5-0.20200422084442-6300e543c4d9:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/rickb777/date@v1.12.5-0.20200422084442-6300e543c4d9",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/rickb777/plural@v1.4.1?package-id=78d8624e644580e0",
+      "type": "library",
+      "name": "github.com/rickb777/plural",
+      "version": "v1.4.1",
+      "cpe": "cpe:2.3:a:rickb777:plural:v1.4.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/rickb777/plural@v1.4.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/vmihailenco/msgpack@v4.0.4%2Bincompatible?package-id=40357e78d2609103",
+      "type": "library",
+      "name": "github.com/vmihailenco/msgpack",
+      "version": "v4.0.4+incompatible",
+      "cpe": "cpe:2.3:a:vmihailenco:msgpack:v4.0.4\\+incompatible:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/vmihailenco/msgpack@v4.0.4%2Bincompatible",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1?package-id=25fab8869171cfde#v5",
+      "type": "library",
+      "name": "github.com/vmihailenco/msgpack/v5",
+      "version": "v5.4.1",
+      "cpe": "cpe:2.3:a:vmihailenco:msgpack\\/v5:v5.4.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1#v5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1?package-id=5f962cfc1203b33a#v5",
+      "type": "library",
+      "name": "github.com/vmihailenco/msgpack/v5",
+      "version": "v5.4.1",
+      "cpe": "cpe:2.3:a:vmihailenco:msgpack\\/v5:v5.4.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1#v5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0?package-id=083b32139a5d6529#v2",
+      "type": "library",
+      "name": "github.com/vmihailenco/tagparser/v2",
+      "version": "v2.0.0",
+      "cpe": "cpe:2.3:a:vmihailenco:tagparser\\/v2:v2.0.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0#v2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0?package-id=71efc06b2c78d8b6#v2",
+      "type": "library",
+      "name": "github.com/vmihailenco/tagparser/v2",
+      "version": "v2.0.0",
+      "cpe": "cpe:2.3:a:vmihailenco:tagparser\\/v2:v2.0.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0#v2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/zclconf/go-cty@v1.16.2?package-id=85a2936fcdfa1744",
+      "type": "library",
+      "name": "github.com/zclconf/go-cty",
+      "version": "v1.16.2",
+      "cpe": "cpe:2.3:a:zclconf:go-cty:v1.16.2:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/github.com/zclconf/go-cty@v1.16.2",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:zclconf:go_cty:v1.16.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/crypto@v0.36.0?package-id=822551e97ebcff67",
+      "type": "library",
+      "name": "golang.org/x/crypto",
+      "version": "v0.36.0",
+      "cpe": "cpe:2.3:a:go:ssh:v0.36.0:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/golang.org/x/crypto@v0.36.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:AnAEvhDddvBdpY+uR+MyHmuZzzNqXSe/GvuDeob5L34="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/crypto@v0.40.0?package-id=c30064112f3e6fb1",
+      "type": "library",
+      "name": "golang.org/x/crypto",
+      "version": "v0.40.0",
+      "cpe": "cpe:2.3:a:go:ssh:v0.40.0:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/golang.org/x/crypto@v0.40.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/mod@v0.26.0?package-id=e87b1ade037295a6",
+      "type": "library",
+      "name": "golang.org/x/mod",
+      "version": "v0.26.0",
+      "cpe": "cpe:2.3:a:golang:x\\/mod:v0.26.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/mod@v0.26.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/net@v0.38.0?package-id=0e038c23c57712b5",
+      "type": "library",
+      "name": "golang.org/x/net",
+      "version": "v0.38.0",
+      "cpe": "cpe:2.3:a:golang:networking:v0.38.0:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/golang.org/x/net@v0.38.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:vRMAPTMaeGqVhG5QyLJHqNDwecKTomGeqbnfZyKlBI8="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/net@v0.42.0?package-id=55e2638419e49d55",
+      "type": "library",
+      "name": "golang.org/x/net",
+      "version": "v0.42.0",
+      "cpe": "cpe:2.3:a:golang:networking:v0.42.0:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/golang.org/x/net@v0.42.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/oauth2@v0.30.0?package-id=0b28946f74475c7a",
+      "type": "library",
+      "name": "golang.org/x/oauth2",
+      "version": "v0.30.0",
+      "cpe": "cpe:2.3:a:golang:x\\/oauth2:v0.30.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/oauth2@v0.30.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/sys@v0.31.0?package-id=a5e3119e602abb29",
+      "type": "library",
+      "name": "golang.org/x/sys",
+      "version": "v0.31.0",
+      "cpe": "cpe:2.3:a:golang:x\\/sys:v0.31.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/sys@v0.31.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:ioabZlmFYtWhL+TRYpcnNlLwhyxaM9kWTDEmfnprqik="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/sys@v0.34.0?package-id=f99cea987e66e965",
+      "type": "library",
+      "name": "golang.org/x/sys",
+      "version": "v0.34.0",
+      "cpe": "cpe:2.3:a:golang:x\\/sys:v0.34.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/sys@v0.34.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/text@v0.23.0?package-id=e6b1098e2eec3c43",
+      "type": "library",
+      "name": "golang.org/x/text",
+      "version": "v0.23.0",
+      "cpe": "cpe:2.3:a:golang:text:v0.23.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/text@v0.23.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:D71I7dUrlY+VX0gQShAThNGHFxZ13dGLBHQLVl1mJlY="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/text@v0.27.0?package-id=97241df473ce41fc",
+      "type": "library",
+      "name": "golang.org/x/text",
+      "version": "v0.27.0",
+      "cpe": "cpe:2.3:a:golang:text:v0.27.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/golang.org/x/text@v0.27.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250218202821-56aae31c358a?package-id=ab95902dd98e785c#rpc",
+      "type": "library",
+      "name": "google.golang.org/genproto/googleapis/rpc",
+      "version": "v0.0.0-20250218202821-56aae31c358a",
+      "cpe": "cpe:2.3:a:google:genproto:v0.0.0-20250218202821-56aae31c358a:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250218202821-56aae31c358a#rpc",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250313205543-e70fdf4c4cb4?package-id=57b1bd09659d26be#rpc",
+      "type": "library",
+      "name": "google.golang.org/genproto/googleapis/rpc",
+      "version": "v0.0.0-20250313205543-e70fdf4c4cb4",
+      "cpe": "cpe:2.3:a:google:genproto:v0.0.0-20250313205543-e70fdf4c4cb4:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250313205543-e70fdf4c4cb4#rpc",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:iK2jbkWL86DXjEx0qiHcRE9dE4/Ahua5k6V8OWFb//c="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/grpc@v1.71.0?package-id=972b4e390639e6b3",
+      "type": "library",
+      "name": "google.golang.org/grpc",
+      "version": "v1.71.0",
+      "cpe": "cpe:2.3:a:google:grpc:v1.71.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/grpc@v1.71.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:kF77BGdPTQ4/JZWMlb9VpJ5pa25aqvVqogsxNHHdeBg="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/grpc@v1.72.1?package-id=c9ba2b922202d9f7",
+      "type": "library",
+      "name": "google.golang.org/grpc",
+      "version": "v1.72.1",
+      "cpe": "cpe:2.3:a:google:grpc:v1.72.1:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/grpc@v1.72.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/protobuf@v1.36.5?package-id=a62dff601c35a28f",
+      "type": "library",
+      "name": "google.golang.org/protobuf",
+      "version": "v1.36.5",
+      "cpe": "cpe:2.3:a:google:protobuf:v1.36.5:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/protobuf@v1.36.5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        },
+        {
+          "name": "syft:metadata:h1Digest",
+          "value": "h1:tPhr+woSbjfYvY6/GPufUoYizxw1cF/yFoxJ2fmpwlM="
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/pagopa-dx/terraform-provider-azure"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/google.golang.org/protobuf@v1.36.6?package-id=188241989a8bfd1e",
+      "type": "library",
+      "name": "google.golang.org/protobuf",
+      "version": "v1.36.6",
+      "cpe": "cpe:2.3:a:google:protobuf:v1.36.6:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/google.golang.org/protobuf@v1.36.6",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/gopkg.in/yaml.v3@v3.0.1?package-id=0c98266cda458ccc",
+      "type": "library",
+      "name": "gopkg.in/yaml.v3",
+      "version": "v3.0.1",
+      "cpe": "cpe:2.3:a:yaml_project:yaml:v3.0.1:*:*:*:*:go:*:*",
+      "purl": "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "3039b7b9df241056",
+      "type": "library",
+      "name": "registry.terraform.io/hashicorp/azurerm",
+      "version": "4.38.1",
+      "cpe": "cpe:2.3:a:hashicorp:azurerm:4.38.1:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "terraform-lock-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "terraform"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "terraform-lock-provider-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform.lock.hcl"
+        }
+      ]
+    },
+    {
+      "bom-ref": "41e91d3666a1476b",
+      "type": "library",
+      "name": "registry.terraform.io/pagopa-dx/azure",
+      "version": "0.6.3",
+      "cpe": "cpe:2.3:a:pagopa-dx:azure:0.6.3:*:*:*:*:*:*:*",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "terraform-lock-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "terraform"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "terraform-lock-provider-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa_dx:azure:0.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:pagopa:azure:0.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform.lock.hcl"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/software.sslmate.com/src/go-pkcs12@v0.4.0?package-id=9ed479ca5862b507",
+      "type": "library",
+      "name": "software.sslmate.com/src/go-pkcs12",
+      "version": "v0.4.0",
+      "cpe": "cpe:2.3:a:src:go-pkcs12:v0.4.0:*:*:*:*:*:*:*",
+      "purl": "pkg:golang/software.sslmate.com/src/go-pkcs12@v0.4.0",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:cpe23",
+          "value": "cpe:2.3:a:src:go_pkcs12:v0.4.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:architecture",
+          "value": "arm64"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        },
+        {
+          "name": "syft:metadata:mainModule",
+          "value": "github.com/hashicorp/terraform-provider-azurerm"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/stdlib@1.23.4?package-id=52b7f45a66ebc3e1",
+      "type": "library",
+      "name": "stdlib",
+      "version": "go1.23.4",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:golang:go:1.23.4:-:*:*:*:*:*:*",
+      "purl": "pkg:golang/stdlib@1.23.4",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/pagopa-dx/azure/0.6.3/darwin_arm64/terraform-provider-azure_v0.6.3"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.23.4"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/stdlib@1.24.5?package-id=5130a85a6fde8c85",
+      "type": "library",
+      "name": "stdlib",
+      "version": "go1.24.5",
+      "licenses": [
+        {
+          "license": {
+            "id": "BSD-3-Clause"
+          }
+        }
+      ],
+      "cpe": "cpe:2.3:a:golang:go:1.24.5:-:*:*:*:*:*:*",
+      "purl": "pkg:golang/stdlib@1.24.5",
+      "properties": [
+        {
+          "name": "syft:package:foundBy",
+          "value": "go-module-binary-cataloger"
+        },
+        {
+          "name": "syft:package:language",
+          "value": "go"
+        },
+        {
+          "name": "syft:package:type",
+          "value": "go-module"
+        },
+        {
+          "name": "syft:package:metadataType",
+          "value": "go-module-buildinfo-entry"
+        },
+        {
+          "name": "syft:location:0:path",
+          "value": "/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.38.1/darwin_arm64/terraform-provider-azurerm_v4.38.1_x5"
+        },
+        {
+          "name": "syft:metadata:goCompiledVersion",
+          "value": "go1.24.5"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:golang/github.com/hashicorp/terraform-provider-azurerm?package-id=6596cd2d2af23afa",
+      "dependsOn": [
+        "pkg:golang/github.com/agext/levenshtein@v1.2.3?package-id=e1bdcfa7b4fdb7bd",
+        "pkg:golang/github.com/apparentlymart/go-textseg@v15.0.0?package-id=091ca092313fb37f#v15",
+        "pkg:golang/github.com/azure/azure-sdk-for-go@v66.0.0%2Bincompatible?package-id=3877d75afdd840fb",
+        "pkg:golang/github.com/azure/go-autorest@v0.11.30?package-id=7c8bb1261a7f5001#autorest",
+        "pkg:golang/github.com/azure/go-autorest@v0.2.2?package-id=7f579b6be7f73614#logger",
+        "pkg:golang/github.com/azure/go-autorest@v0.3.1?package-id=6e78669607adf31c#autorest/validation",
+        "pkg:golang/github.com/azure/go-autorest@v0.3.1?package-id=eabdd7887f0e0b80#autorest/date",
+        "pkg:golang/github.com/azure/go-autorest@v0.4.0?package-id=db958fb689962312#autorest/to",
+        "pkg:golang/github.com/azure/go-autorest@v0.6.1?package-id=726626f6402aef9e#tracing",
+        "pkg:golang/github.com/azure/go-autorest@v0.9.24?package-id=b547b5cb93385508#autorest/adal",
+        "pkg:golang/github.com/btubbs/datetime@v0.1.1?package-id=b539ef8dff689a93",
+        "pkg:golang/github.com/cloudflare/circl@v1.6.1?package-id=9046fd0abb5b53bb",
+        "pkg:golang/github.com/fatih/color@v1.18.0?package-id=60c30d0d4c402428",
+        "pkg:golang/github.com/gofrs/uuid@v4.4.0%2Bincompatible?package-id=11327b8c1a5562a5",
+        "pkg:golang/github.com/golang-jwt/jwt@v4.5.2?package-id=09443a80ef1e6f6c#v4",
+        "pkg:golang/github.com/golang/protobuf@v1.5.4?package-id=f4c00968d27978ab",
+        "pkg:golang/github.com/google/go-cmp@v0.7.0?package-id=90920c772139637a",
+        "pkg:golang/github.com/google/uuid@v1.6.0?package-id=328b255d4ad60c08",
+        "pkg:golang/github.com/hashicorp/errwrap@v1.1.0?package-id=a5ad4840f58c5cf6",
+        "pkg:golang/github.com/hashicorp/go-azure-helpers@v0.73.0?package-id=a621dd3b5913c09e",
+        "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250728.1144148?package-id=6af7526d0b18946d#resource-manager",
+        "pkg:golang/github.com/hashicorp/go-azure-sdk@v0.20250731.1142049?package-id=2354b7128a688d01#sdk",
+        "pkg:golang/github.com/hashicorp/go-checkpoint@v0.5.0?package-id=20dd9572e340aff1",
+        "pkg:golang/github.com/hashicorp/go-cleanhttp@v0.5.2?package-id=3e35c80ef7db93d3",
+        "pkg:golang/github.com/hashicorp/go-cty@v1.5.0?package-id=b69301c97767b142",
+        "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3?package-id=fa6381c5f4c896e4",
+        "pkg:golang/github.com/hashicorp/go-multierror@v1.1.1?package-id=7fbc34dd122fbc3c",
+        "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3?package-id=da78c53e5f3dda06",
+        "pkg:golang/github.com/hashicorp/go-retryablehttp@v0.7.7?package-id=98ce8a04b91cf622",
+        "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3?package-id=9bbaabf66ecc3847",
+        "pkg:golang/github.com/hashicorp/go-version@v1.7.0?package-id=a28e03e43f3a7c80",
+        "pkg:golang/github.com/hashicorp/hc-install@v0.9.2?package-id=7d5a4149262ba710",
+        "pkg:golang/github.com/hashicorp/hcl@v2.23.0?package-id=d3b61eb885981f81#v2",
+        "pkg:golang/github.com/hashicorp/logutils@v1.0.0?package-id=0145062ed7893d94",
+        "pkg:golang/github.com/hashicorp/terraform-exec@v0.23.0?package-id=37fc1adfb3db005b",
+        "pkg:golang/github.com/hashicorp/terraform-json@v0.25.0?package-id=2e63e21aa8cbdab4",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.18.0?package-id=e35f6bad7f605d52",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.15.0?package-id=c96dac8c12e949fa",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.27.0?package-id=b0a45504de077fbc",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0?package-id=9e8a9d18787d943c",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-mux@v0.19.0-alpha.1?package-id=74f7ffff3480abff",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-sdk@v2.37.0?package-id=a656fdb57c10d9fc#v2",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-testing@v1.13.1?package-id=730d4ab119390797",
+        "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.5?package-id=db0b6f817d70df8a",
+        "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1?package-id=63579f0a469d6fda",
+        "pkg:golang/github.com/hashicorp/yamux@v0.1.1?package-id=4ca37b2b9f176b0b",
+        "pkg:golang/github.com/iancoleman/strcase@v0.3.0?package-id=c068bbbf719be828",
+        "pkg:golang/github.com/jackofallops/giovanni@v0.28.0?package-id=37facb885fc0a895",
+        "pkg:golang/github.com/jackofallops/kermit@v0.20241010.1180132?package-id=c8464ddf49a7ea79",
+        "pkg:golang/github.com/mattn/go-colorable@v0.1.14?package-id=869a23f0b3e189ad",
+        "pkg:golang/github.com/mattn/go-isatty@v0.0.20?package-id=0158b44a170ff9a3",
+        "pkg:golang/github.com/mitchellh/copystructure@v1.2.0?package-id=095e126ed6420178",
+        "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1?package-id=a071eecf310e6599",
+        "pkg:golang/github.com/mitchellh/go-wordwrap@v1.0.1?package-id=d49a377d15cb8bb5",
+        "pkg:golang/github.com/mitchellh/mapstructure@v1.5.0?package-id=ef5a500d16af9ca9",
+        "pkg:golang/github.com/mitchellh/reflectwalk@v1.0.2?package-id=640c8b586f1fe350",
+        "pkg:golang/github.com/oklog/run@v1.1.0?package-id=95758449b29988bc",
+        "pkg:golang/github.com/protonmail/go-crypto@v1.1.6?package-id=69cd37dd272a084b",
+        "pkg:golang/github.com/rickb777/date@v1.12.5-0.20200422084442-6300e543c4d9?package-id=fa4dce7a99d8414f",
+        "pkg:golang/github.com/rickb777/plural@v1.4.1?package-id=78d8624e644580e0",
+        "pkg:golang/github.com/vmihailenco/msgpack@v4.0.4%2Bincompatible?package-id=40357e78d2609103",
+        "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1?package-id=25fab8869171cfde#v5",
+        "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0?package-id=083b32139a5d6529#v2",
+        "pkg:golang/github.com/zclconf/go-cty@v1.16.2?package-id=85a2936fcdfa1744",
+        "pkg:golang/golang.org/x/crypto@v0.40.0?package-id=c30064112f3e6fb1",
+        "pkg:golang/golang.org/x/mod@v0.26.0?package-id=e87b1ade037295a6",
+        "pkg:golang/golang.org/x/net@v0.42.0?package-id=55e2638419e49d55",
+        "pkg:golang/golang.org/x/oauth2@v0.30.0?package-id=0b28946f74475c7a",
+        "pkg:golang/golang.org/x/sys@v0.34.0?package-id=f99cea987e66e965",
+        "pkg:golang/golang.org/x/text@v0.27.0?package-id=97241df473ce41fc",
+        "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250218202821-56aae31c358a?package-id=ab95902dd98e785c#rpc",
+        "pkg:golang/google.golang.org/grpc@v1.72.1?package-id=c9ba2b922202d9f7",
+        "pkg:golang/google.golang.org/protobuf@v1.36.6?package-id=188241989a8bfd1e",
+        "pkg:golang/gopkg.in/yaml.v3@v3.0.1?package-id=0c98266cda458ccc",
+        "pkg:golang/software.sslmate.com/src/go-pkcs12@v0.4.0?package-id=9ed479ca5862b507",
+        "pkg:golang/stdlib@1.24.5?package-id=5130a85a6fde8c85"
+      ]
+    },
+    {
+      "ref": "pkg:golang/github.com/pagopa-dx/terraform-provider-azure@v0.0.0-20250806110324-13e8193932ca?package-id=4dd730949e98726e",
+      "dependsOn": [
+        "pkg:golang/github.com/apparentlymart/go-cidr@v1.1.0?package-id=0af46c26ca5920da",
+        "pkg:golang/github.com/azure/azure-sdk-for-go@v1.1.0?package-id=1101c01920b5ee7b#sdk/resourcemanager/network/armnetwork",
+        "pkg:golang/github.com/azure/azure-sdk-for-go@v1.11.1?package-id=6f164615c4621bac#sdk/internal",
+        "pkg:golang/github.com/azure/azure-sdk-for-go@v1.18.0?package-id=746bc6fa5ac37032#sdk/azcore",
+        "pkg:golang/github.com/azure/azure-sdk-for-go@v1.9.0?package-id=cf0e20b19a171aa7#sdk/azidentity",
+        "pkg:golang/github.com/azuread/microsoft-authentication-library-for-go@v1.4.2?package-id=03aac36fd8870e5f",
+        "pkg:golang/github.com/fatih/color@v1.18.0?package-id=42c65f4d20582b26",
+        "pkg:golang/github.com/golang-jwt/jwt@v5.2.2?package-id=5815d7565ace7c2c#v5",
+        "pkg:golang/github.com/golang/protobuf@v1.5.4?package-id=0bbe225b0cff8eb1",
+        "pkg:golang/github.com/google/uuid@v1.6.0?package-id=3b20fb3f7aba6036",
+        "pkg:golang/github.com/hashicorp/go-hclog@v1.6.3?package-id=9113e0f60fde95f0",
+        "pkg:golang/github.com/hashicorp/go-plugin@v1.6.3?package-id=99d8e76878dca0f1",
+        "pkg:golang/github.com/hashicorp/go-uuid@v1.0.3?package-id=b630a0006fa273aa",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-framework-validators@v0.17.0?package-id=3623ab7a8a39dc98",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-framework@v1.14.1?package-id=fc4c83d734c261d0",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-go@v0.26.0?package-id=d9b5f6a2e4d62997",
+        "pkg:golang/github.com/hashicorp/terraform-plugin-log@v0.9.0?package-id=95a031f99e8d4783",
+        "pkg:golang/github.com/hashicorp/terraform-registry-address@v0.2.4?package-id=48041243fba903a2",
+        "pkg:golang/github.com/hashicorp/terraform-svchost@v0.1.1?package-id=cef30d7d7a21293c",
+        "pkg:golang/github.com/hashicorp/yamux@v0.1.2?package-id=a92c410193640bd0",
+        "pkg:golang/github.com/kylelemons/godebug@v1.1.0?package-id=7249c2ba3c7fd057",
+        "pkg:golang/github.com/mattn/go-colorable@v0.1.14?package-id=962f5836fda5ab6b",
+        "pkg:golang/github.com/mattn/go-isatty@v0.0.20?package-id=30ace6ec6f1e5a42",
+        "pkg:golang/github.com/mitchellh/go-testing-interface@v1.14.1?package-id=f9c0b60236c1e888",
+        "pkg:golang/github.com/oklog/run@v1.1.0?package-id=ef934c266515febe",
+        "pkg:golang/github.com/pkg/browser@v0.0.0-20240102092130-5ac0b6a4141c?package-id=27ec34b5a903d27d",
+        "pkg:golang/github.com/vmihailenco/msgpack@v5.4.1?package-id=5f962cfc1203b33a#v5",
+        "pkg:golang/github.com/vmihailenco/tagparser@v2.0.0?package-id=71efc06b2c78d8b6#v2",
+        "pkg:golang/golang.org/x/crypto@v0.36.0?package-id=822551e97ebcff67",
+        "pkg:golang/golang.org/x/net@v0.38.0?package-id=0e038c23c57712b5",
+        "pkg:golang/golang.org/x/sys@v0.31.0?package-id=a5e3119e602abb29",
+        "pkg:golang/golang.org/x/text@v0.23.0?package-id=e6b1098e2eec3c43",
+        "pkg:golang/google.golang.org/genproto/googleapis@v0.0.0-20250313205543-e70fdf4c4cb4?package-id=57b1bd09659d26be#rpc",
+        "pkg:golang/google.golang.org/grpc@v1.71.0?package-id=972b4e390639e6b3",
+        "pkg:golang/google.golang.org/protobuf@v1.36.5?package-id=a62dff601c35a28f",
+        "pkg:golang/stdlib@1.23.4?package-id=52b7f45a66ebc3e1"
+      ]
+    }
+  ]
+}

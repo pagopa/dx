@@ -16,6 +16,18 @@ repos:
         language: script
         pass_filenames: false
         verbose: true
+      - id: generate_sboms
+        name: Generate SBOMs for all resources
+        entry: infra/scripts/generate-sboms.sh
+        language: script
+        pass_filenames: false
+        verbose: true
+      - id: validate_sboms
+        name: Validate all SBOMs
+        entry: infra/scripts/validate-sboms.sh
+        language: script
+        pass_filenames: false
+        verbose: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:
