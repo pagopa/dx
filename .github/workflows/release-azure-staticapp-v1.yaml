@@ -97,7 +97,7 @@ jobs:
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-cd
+    environment: ${{ inputs.environment }}-ci #-cd
     permissions:
       id-token: write
       contents: read
