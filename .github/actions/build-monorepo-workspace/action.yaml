@@ -1,0 +1,98 @@
+# .github/actions/build-monorepo-workspace/action.yml
+name: 'Build Monorepo Workspace'
+description: 'Builds a workspace in a monorepo, handles dependencies, and creates a deployment artifact.'
+
+inputs:
+  workspace_name:
+    description: 'The name of the workspace to build.'
+    required: true
+  packaging_method:
+    description: "The packaging method to use: 'app-service' for zipped standalone apps, or 'static' for static site output directories."
+    required: true
+  output_dir:
+    description: 'For static packaging, the name of the build output directory.'
+    required: false
+    default: 'dist'
+
+outputs:
+  artifact-path:
+    description: 'The path to the created artifact.'
+    value: ${{ steps.make-artifact.outputs.artifact-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      id: node-setup
+      uses: pagopa/dx/.github/actions/node-setup@main
+
+    - name: Install dependencies (pnpm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
+      shell: bash
+      run: pnpm --filter ${{ inputs.workspace_name }} install
+
+    - name: Install dependencies (yarn)
+      if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Install dependencies (npm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'npm' }}
+      shell: bash
+      run: npm ci
+
+    - name: Build
+      shell: bash
+      run: npx turbo build --filter=${{ inputs.workspace_name }}
+
+    - name: Create Artifact
+      id: make-artifact
+      shell: bash
+      env:
+        PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+        PACKAGING_METHOD: ${{ inputs.packaging_method }}
+        OUTPUT_DIR: ${{ inputs.output_dir }}
+      run: |
+        # Get the workspace path relative to the root of the repository
+        WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+        cd $WORKSPACE_PATH
+
+        # Packaging logic for 'app-service'
+        if [[ "$PACKAGING_METHOD" == "app-service" ]]; then
+          if grep -rq --include='next.config.*' 'output: "standalone"' .; then
+            echo "::debug::The workspace contains a Next.js standalone app"
+            mv .next/static .next/standalone/.next
+            cd .next/standalone && zip -r $WORKSPACE_NAME.zip .
+            echo "artifact-path=$(realpath $WORKSPACE_NAME.zip)" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
+            echo "::debug::The workspace uses pnpm"
+            pnpm deploy --prod ../../bundle
+            cd ../../bundle && zip -r $WORKSPACE_NAME.zip .
+            echo "artifact-path=$(realpath $WORKSPACE_NAME.zip)" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+            echo "::debug::The workspace uses yarn"
+            yarn config set nodeLinker node-modules
+            yarn config set nmHoistingLimits workspaces
+            yarn workspaces focus --production
+            zip -r $WORKSPACE_NAME.zip .
+            echo "artifact-path=$(realpath $WORKSPACE_NAME.zip)" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+        fi
+
+        # Packaging logic for 'static'
+        if [[ "$PACKAGING_METHOD" == "static" ]]; then
+          echo "::debug::Packaging for static deployment"
+          echo "artifact-path=$(realpath ./$OUTPUT_DIR)" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        echo "::error::Unsupported packaging method or package manager."
+        exit 1

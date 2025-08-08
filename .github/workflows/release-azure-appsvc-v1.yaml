@@ -60,67 +60,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Install dependencies (pnpm)
-        if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
-        run: pnpm --filter $WORKSPACE_NAME install
-
-      - name: Install dependencies (yarn)
-        if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
-        run: yarn install --immutable
-
-      - name: Build
-        run: npx turbo build --filter $WORKSPACE_NAME
-
-      - name: Get workspace path
-        id: get-workspace-path
-        run: |
-          WORKSPACE_PATH=$(npx turbo ls --output=json |
-            jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
-          echo "path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
-
-      - name: Make artifact
-        id: make-artifact
-        env:
-          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
-        working-directory: ${{ steps.get-workspace-path.outputs.path }}
-        run: |
-          if grep -rq --include='next.config.*' 'output: "standalone"' .; then
-            echo "::debug::The workspace contains a Next.js standalone app"
-            mv .next/static .next/standalone/.next
-            cd .next/standalone && zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
-            echo "::debug::The workspace uses pnpm"
-            pnpm --filter $WORKSPACE_NAME deploy --prod bundle
-            cd bundle && zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          if [ "$PACKAGE_MANAGER" = "yarn" ]; then
-            echo "::debug::The workspace uses yarn"
-            yarn config set nodeLinker node-modules
-            yarn config set nmHoistingLimits workspaces
-            yarn workspaces focus --production
-            zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "::error::Unsupported package manager: $PACKAGE_MANAGER"
-          exit 1
+      - name: Build and Package
+        id: build-package
+        uses: pagopa/dx/.github/actions/build-monorepo-workspace@main
+        with:
+          workspace_name: ${{ inputs.workspace_name }}
+          packaging_method: 'app-service'
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          file_path: ${{ steps.make-artifact.outputs.artifact-path }}
+          file_path: ${{ steps.build-package.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
 
   validate:

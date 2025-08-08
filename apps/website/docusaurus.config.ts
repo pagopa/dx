@@ -6,7 +6,7 @@ import { themes as prismThemes } from "prism-react-renderer";
 const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/dx/",
+  baseUrl: "/", // "/dx/",
   favicon: "img/favicon.ico",
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -21,7 +21,7 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "pagopa", // Usually your GitHub org/user name.
+  // organizationName: "pagopa", // Usually your GitHub org/user name.
   plugins: [
     [
       "@docusaurus/plugin-client-redirects",
@@ -64,7 +64,7 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-  projectName: "dx", // Usually your repo name.
+  // projectName: "dx", // Usually your repo name.
 
   tagline: "Welcome to the DX documentation!",
 
@@ -130,7 +130,7 @@ const config: Config = {
   title: "DX",
 
   // Set the production url of your site here
-  url: "https://pagopa.github.io",
+  url: "https://blue-pond-091797b03.2.azurestaticapps.net", // "https://pagopa.github.io",
 };
 
 export default config;
