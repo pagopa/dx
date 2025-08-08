@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:69a20d45-bd48-4902-aec9-7831be992b42",
+  "serialNumber": "urn:uuid:06d58d59-983b-4cca-921f-d50a6b51488d",
   "version": 1,
   "metadata": {
-    "timestamp": "2025-08-08T10:57:58+02:00",
+    "timestamp": "2025-08-08T11:13:30+02:00",
     "tools": {
       "components": [
         {
