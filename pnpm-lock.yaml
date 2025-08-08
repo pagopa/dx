@@ -109,6 +109,12 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(typescript@5.8.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0))
 
+  actions/swap-appsvc-slot:
+    devDependencies:
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
+
   apps/cli:
     dependencies:
       '@logtape/logtape':
@@ -12657,7 +12663,7 @@ snapshots:
 
   history@4.10.1:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.2
       loose-envify: 1.4.0
       resolve-pathname: 3.0.0
       tiny-invariant: 1.3.3
