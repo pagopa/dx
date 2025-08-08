@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if [[ "$GITHUB_ACTIONS" == "true" ]]; then
+    echo "Skipping SBOM generation in GitHub Actions environment."
+    exit 0
+fi
+
 REPO_ROOT=$(git rev-parse --show-toplevel)
 CURRENT_DIR=$(pwd)
 OUTPUT_DIR="sboms"
@@ -38,16 +43,12 @@ echo "--- Starting SBOM generation for the dx repository ---"
 # Check each command and exit if not found #
 ############################################
 
-echo "▶️  Checking for required commands (trivy, syft, terraform, jq)..."
+echo "▶️  Checking for required commands (syft, terraform, jq)..."
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-if ! command_exists trivy; then
-    echo "❌ Error: 'trivy' is not installed or not in PATH. Please install it."
-    exit 1
-fi
 if ! command_exists syft; then
     echo "❌ Error: 'syft' is not installed or not in PATH. Please install it."
     exit 1

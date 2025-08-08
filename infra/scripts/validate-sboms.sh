@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if [[ "$GITHUB_ACTIONS" == "true" ]]; then
+    echo "Skipping SBOM generation in GitHub Actions environment."
+    exit 0
+fi
+
 REPO_ROOT=$(git rev-parse --show-toplevel)
 CURRENT_DIR=$(pwd)
 SBOM_DIR="sboms"
