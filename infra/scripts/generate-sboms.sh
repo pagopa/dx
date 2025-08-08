@@ -4,6 +4,7 @@ set -e
 REPO_ROOT=$(git rev-parse --show-toplevel)
 CURRENT_DIR=$(pwd)
 OUTPUT_DIR="sboms"
+CHANGED_FILES=$(git diff --name-only origin/main)
 
 # Default value "owned-by-package"
 # Ref.: https://github.com/anchore/syft/wiki/file-selection
@@ -13,6 +14,23 @@ if [ "$REPO_ROOT" != "$CURRENT_DIR" ]; then
     echo "Skipping hook because it's not run from repo root."
     exit 0
 fi
+
+# Check if there are any changes in the repository
+run_workspace_sbom=false
+changed_modules=()
+changed_providers=()
+
+while IFS= read -r file; do
+    if [[ "$file" == infra/modules/* ]]; then
+        module_name=$(echo "$file" | cut -d'/' -f3)
+        changed_modules+=("$module_name")
+    elif [[ "$file" == providers/* ]]; then
+        provider_name=$(echo "$file" | cut -d'/' -f2)
+        changed_providers+=("$provider_name")
+    elif [[ "$file" == apps/* || "$file" == pnpm-* ]]; then
+        run_workspace_sbom=true
+    fi
+done <<< "$CHANGED_FILES"
 
 echo "--- Starting SBOM generation for the dx repository ---"
 
@@ -60,17 +78,21 @@ fi
 ##################################################################
 # Some directories and file types are excluded
 # Ref.: https://github.com/anchore/syft/wiki/excluding-file-paths
+workspace_filename="${OUTPUT_DIR}/sbom-npm-workspace.json"
 
-echo "▶️  Generating SBOM for Node.js (pnpm) dependencies and Go providers in ./providers/..."
-syft . -o cyclonedx-json \
-    --exclude ./infra \
-    --exclude **/.terraform \
-    --exclude ./.github \
-    --exclude ./providers \
-    --exclude '**/*.md' \
-    | jq . | sed "s|${CURRENT_DIR}/|./|g" > "${OUTPUT_DIR}/sbom-npm-workspace.json"
-echo "✅ Created: ${OUTPUT_DIR}/sbom-npm-workspace.json"
-
+if [[ ! -f "$workspace_filename" || "$run_workspace_sbom" == true ]]; then
+    echo "▶️  Generating SBOM for Node.js (pnpm) dependencies and Go providers in ./providers/..."
+    syft . -o cyclonedx-json \
+        --exclude ./infra \
+        --exclude **/.terraform \
+        --exclude ./.github \
+        --exclude ./actions \
+        --exclude ./providers \
+        --exclude '**/*.md' \
+        --exclude '**/*.png' \
+        | jq . | sed "s|${CURRENT_DIR}/|./|g" > "$workspace_filename"
+    echo "✅ Created: $workspace_filename"
+fi
 ##########################################################
 # Generate SBOMs for Terraform providers in ./providers/ #
 ##########################################################
@@ -85,13 +107,16 @@ for provider_dir in providers/*; do
         output_filename="${OUTPUT_DIR}/sbom-go-${provider_name}.json"
 
         echo "    -> Found Provider: ${provider_name}."
-        echo "    -> Generating SBOM for ${provider_name}..."
 
-        (
-            cd "${provider_dir}" && syft . -o cyclonedx-json
-        ) | jq . | sed "s|${CURRENT_DIR}/|./|g" > "${output_filename}"
-
-        echo "✅ Created: ${output_filename}"
+        if [[ ! -f "$output_filename" || " ${changed_providers[@]} " =~ " ${provider_name} " ]]; then
+            echo "    -> Generating SBOM for ${provider_name}..."
+            (
+                cd "${provider_dir}" && syft . -o cyclonedx-json
+            ) | jq . | sed "s|${CURRENT_DIR}/|./|g" > "${output_filename}"
+            echo "✅ Created: ${output_filename}"
+        else
+            echo "✅ SBOM already updated for provider: $provider_name"
+        fi
     fi
 done
 
@@ -110,21 +135,25 @@ for module_dir in infra/modules/*; do
 
         echo "    -> Found Terraform module: ${module_name}."
 
-        # Check if 'terraform init' has already been run
-        if [ ! -d "${module_dir}/.terraform" ]; then
-            echo "        -> '.terraform' directory not found. Running 'terraform init'..."
-            # Run terraform init in a subshell to avoid changing the current directory
-            (cd "${module_dir}" && terraform init -upgrade)
+        if [[ ! -f "$output_filename" || " ${changed_modules[@]} " =~ " ${module_name} " ]]; then
+            # Check if 'terraform init' has already been run
+            if [ ! -d "${module_dir}/.terraform" ]; then
+                echo "        -> '.terraform' directory not found. Running 'terraform init'..."
+                # Run terraform init in a subshell to avoid changing the current directory
+                (cd "${module_dir}" && terraform init -upgrade)
+            else
+                echo "        -> '.terraform' directory already exists. Skipping 'terraform init'."
+            fi
+
+            echo "    -> Generating SBOM for ${module_name}..."
+            (
+                cd "${module_dir}" && syft . -o cyclonedx-json
+            ) | jq . | sed "s|${CURRENT_DIR}/|./|g" > "${output_filename}"
+
+            echo "✅ Created: ${output_filename}"
         else
-            echo "        -> '.terraform' directory already exists. Skipping 'terraform init'."
+            echo "✅ SBOM already updated for module: $module_name"
         fi
-
-        echo "    -> Generating SBOM for ${module_name}..."
-        (
-            cd "${module_dir}" && syft . -o cyclonedx-json
-        ) | jq . | sed "s|${CURRENT_DIR}/|./|g" > "${output_filename}"
-
-        echo "✅ Created: ${output_filename}"
     fi
 done
 
