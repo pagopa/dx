@@ -11,6 +11,8 @@
       "installTerraformDocs": true
     },
     "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
+    "ghcr.io/pagopa/devcontainer-features/syft:1": {},
+    "ghcr.io/pagopa/devcontainer-features/grype:1": {},
     "ghcr.io/pagopa/devcontainer-features/plantuml:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "${templateOption:nodeVersion}",

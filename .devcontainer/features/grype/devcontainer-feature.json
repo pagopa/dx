@@ -1,0 +1,8 @@
+{
+  "id": "grype",
+  "version": "0.97.1",
+  "name": "Grype",
+  "description": "Installs Grype",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/grype",
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}
