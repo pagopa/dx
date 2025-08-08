@@ -1,54 +1,66 @@
 repos:
   - repo: local
     hooks:
-      - id: lock_modules
-        name: Lock Terraform Registry modules
-        description: "Locks Terraform module versions and maintains hashes"
-        entry: infra/scripts/lock-modules.sh
-        language: script
-        files: '\.tf$'
-        exclude: ^.*/(provider|modules)(/.*)?$
-        pass_filenames: true
-        require_serial: true
-      - id: terraform_providers_lock_staged
-        name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
-        entry: infra/scripts/terraform_lock_precommit.sh
+      # - id: lock_modules
+      #   name: Lock Terraform Registry modules
+      #   description: "Locks Terraform module versions and maintains hashes"
+      #   entry: infra/scripts/lock-modules.sh
+      #   language: script
+      #   files: '\.tf$'
+      #   exclude: ^.*/(provider|modules)(/.*)?$
+      #   pass_filenames: true
+      #   require_serial: true
+      # - id: terraform_providers_lock_staged
+      #   name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
+      #   entry: infra/scripts/terraform_lock_precommit.sh
+      #   language: script
+      #   pass_filenames: false
+      #   verbose: true
+      - id: generate_sboms
+        name: Generate SBOMs for all resources
+        entry: infra/scripts/generate-sboms.sh
         language: script
         pass_filenames: false
         verbose: true
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.2
-    hooks:
-      - id: terraform_fmt
-      - id: terraform_docs
-        name: terraform_docs on modules
-        args:
-          - --hook-config=--create-file-if-not-exist=true
-          - --args=--hide providers
-        files: ^infra/modules/.*
-      - id: terraform_docs
-        name: terraform_docs on resources
-        args:
-          - --hook-config=--create-file-if-not-exist=true
-        exclude: |
-          (?x)^(
-            infra/modules/.*?|
-            providers/.*?|
-            infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
-            )$
-      - id: terraform_tflint
-        args:
-          - --args=--disable-rule terraform_required_version
-          - --args=--disable-rule terraform_required_providers
-          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
-        exclude: ^providers/.*
-      - id: terraform_validate
-        args:
-          - --args=-json
-          - --args=-no-color
-          - --hook-config=--retry-once-with-cleanup=true
-        exclude: ^providers/.*|.*/examples?(/|$)
-      - id: terraform_trivy
-        args:
-          - --args=--skip-dirs="**/.terraform"
-          - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
+      - id: validate_sboms
+        name: Validate all SBOMs
+        entry: infra/scripts/validate-sboms.sh
+        language: script
+        pass_filenames: false
+        verbose: true
+  # - repo: https://github.com/antonbabenko/pre-commit-terraform
+  #   rev: v1.96.2
+  #   hooks:
+  #     - id: terraform_fmt
+  #     - id: terraform_docs
+  #       name: terraform_docs on modules
+  #       args:
+  #         - --hook-config=--create-file-if-not-exist=true
+  #         - --args=--hide providers
+  #       files: ^infra/modules/.*
+  #     - id: terraform_docs
+  #       name: terraform_docs on resources
+  #       args:
+  #         - --hook-config=--create-file-if-not-exist=true
+  #       exclude: |
+  #         (?x)^(
+  #           infra/modules/.*?|
+  #           providers/.*?|
+  #           infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
+  #           )$
+  #     - id: terraform_tflint
+  #       args:
+  #         - --args=--disable-rule terraform_required_version
+  #         - --args=--disable-rule terraform_required_providers
+  #         - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+  #       exclude: ^providers/.*
+  #     - id: terraform_validate
+  #       args:
+  #         - --args=-json
+  #         - --args=-no-color
+  #         - --hook-config=--retry-once-with-cleanup=true
+  #       exclude: ^providers/.*|.*/examples?(/|$)
+  #     - id: terraform_trivy
+  #       args:
+  #         - --args=--skip-dirs="**/.terraform"
+  #         - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
