@@ -36,7 +36,7 @@ run "apim_is_correct_plan" {
     tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "csot_optimized"
+    use_case            = "cost_optimized"
 
     publisher_email = "example@pagopa.it"
     publisher_name  = "Example Publisher"
