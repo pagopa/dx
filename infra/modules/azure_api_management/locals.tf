@@ -13,17 +13,16 @@ locals {
   # is not "apim" or a domain is specified, to avoid redundant naming logic.
   apim = {
     name           = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management" })), "-apim-apim-", "-apim-")
-    autoscale_name = contains(["l", "xl"], var.tier) ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management_autoscale" })), "-apim-apim-", "-apim-") : null
-    zones          = var.tier == "xl" ? ["1", "2", "3"] : var.tier == "l" ? ["1", "2"] : null
+    autoscale_name = contains(["high_load"], var.use_case) ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management_autoscale" })), "-apim-apim-", "-apim-") : null
+    zones          = var.use_case == "high_load" ? ["1", "2"] : null
     sku_name = lookup(
       {
-        "s"  = "Developer_1",
-        "m"  = "Standard_1",
-        "l"  = "Premium_2",
-        "xl" = "Premium_3"
+        "development"    = "Developer_1",
+        "cost_optimized" = "StandardV2_1",
+        "high_load"      = "Premium_2",
       },
-      var.tier,
-      "Premium_1" # Default
+      var.use_case,
+      "StandardV2"
     )
 
     log_category_groups = ["allLogs", "audit"]

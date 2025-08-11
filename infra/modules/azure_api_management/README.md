@@ -15,14 +15,13 @@ This module deploys an Azure API Management instance with optional configuration
 - **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
 - **Metric Alerts**: Set up alerts for monitoring API Management metrics.
 
-## Tiers and Configurations
+## Use Cases and Configurations
 
 | Tier | Description                                                                                                                        | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
-| `s`  | Developer Tier, for development and testing.                                                                                       | None | Limited          | No          | No                | Disabled      |
-| `m`  | Standard Tier, for production workloads.                                                                                           | Yes  | Moderate         | No          | No                | Enabled       |
-| `l`  | Premium Tier, designed for large-scale production workloads.                                                                       | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
-| `xl` | Premium Tier, optimized for large-scale production workloads requiring maximum scalability, resilience, and multi-zone redundancy. | Yes  | High (Autoscale) | Yes         | `["1", "2", "3"]` | Enabled       |
+| `development`  | Developer Tier, for development and testing.                                                                                       | None | Limited          | No          | No                | Disabled      |
+| `cost_optimized`  | Standard Tier, for production workloads.                                                                                           | Yes  | Moderate         | No          | No                | Enabled       |
+| `high_load`  | Premium Tier, designed for large-scale production workloads.                                                                       | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
 
 ## Monitoring
 
@@ -103,7 +102,7 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | The ID of the subnet that will be used for the API Management. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'. | `string` | `"s"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the API Management. Allowed values are 'cost\_optimized', 'high\_load', and 'development'. | `string` | `"cost_optimized"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_virtual_network_type_internal"></a> [virtual\_network\_type\_internal](#input\_virtual\_network\_type\_internal) | Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet\_id; otherwise, it will be None. | `bool` | `true` | no |
 | <a name="input_xml_content"></a> [xml\_content](#input\_xml\_content) | XML content for all API policies. | `string` | `null` | no |

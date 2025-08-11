@@ -24,7 +24,7 @@ module "azure_apim" {
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
-  tier                = "l"
+  use_case            = "high_load"
 
   # Change this values
   publisher_email = "example@pagopa.it"
