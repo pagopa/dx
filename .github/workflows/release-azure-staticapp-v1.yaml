@@ -78,7 +78,7 @@ jobs:
 
       - name: Build and Package
         id: build-package
-        uses: pagopa/dx/.github/actions/build-monorepo-workspace@feat-define-aciton-for-workspace-build
+        uses: pagopa/dx/.github/actions/build-monorepo-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           packaging_method: 'static'
@@ -97,7 +97,7 @@ jobs:
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [build]
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-ci #-cd
+    environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
       contents: read
