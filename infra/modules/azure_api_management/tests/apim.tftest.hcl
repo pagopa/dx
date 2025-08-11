@@ -70,7 +70,7 @@ run "apim_is_correct_plan" {
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.zones) == 0
+    condition     = azurerm_api_management.this.zones == null
     error_message = "The APIM zones are incorrect, they should be []"
   }
 
