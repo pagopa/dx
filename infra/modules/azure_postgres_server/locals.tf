@@ -10,27 +10,30 @@ locals {
   }
 
   db = {
-    name         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql" }))
-    replica_name = var.tier == "l" ? provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" })) : null
+    name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql" }))
     sku_name = lookup(
       {
-        "s" = "B_Standard_B1ms",
-        "m" = "GP_Standard_D2ds_v5",
-        "l" = "GP_Standard_D4ds_v5"
+        "default" = "GP_Standard_D2ds_v5",
       },
-      var.tier,
-      "GP_Standard_D2ds_v5" # Default
+      var.use_case,
+      "GP_Standard_D2ds_v5"
     )
+  }
+
+  replica = {
+    create   = var.use_case != "development" && var.create_replica == true
+    name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" }))
+    location = var.replica_location != null ? var.replica_location : var.environment.location
   }
 
   # Backup
   # Geo redundant backup is not available in Italy North
   # ZoneRedundant HA is not available in West Europe
-  geo_redundant_backup_enabled = (var.tier == "m" || var.tier == "l") && lower(var.environment.location) != "italynorth"
-  high_availability_enabled    = var.high_availability_override ? true : (var.tier == "m" || var.tier == "l") && lower(var.environment.location) != "westeurope"
-  auto_grow_enabled            = var.tier == "m" || var.tier == "l"
+  geo_redundant_backup_enabled = (var.use_case == "default") && lower(var.environment.location) != "italynorth"
+  high_availability_enabled    = var.high_availability_override ? true : (var.use_case == "default") && lower(var.environment.location) != "westeurope"
+  auto_grow_enabled            = var.use_case == "default"
 
   # Monitoring
   metric_alerts         = var.custom_metric_alerts != null ? var.custom_metric_alerts : var.default_metric_alerts
-  replica_metric_alerts = var.tier == "l" ? local.metric_alerts : {}
+  replica_metric_alerts = var.use_case == "default" && local.replica.create ? local.metric_alerts : {}
 }
