@@ -51,8 +51,8 @@ run "postgres_is_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_postgresql_flexible_server.this.sku_name == "GP_Standard_D4ds_v5"
-    error_message = "The PostgreSQL Flexible Server must use the correct SKU (GP_Standard_D4ds_v5)"
+    condition     = azurerm_postgresql_flexible_server.this.sku_name == "GP_Standard_D2ds_v5"
+    error_message = "The PostgreSQL Flexible Server must use the correct SKU (GP_Standard_D2ds_v5)"
   }
 
   assert {
