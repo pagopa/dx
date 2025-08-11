@@ -8,7 +8,7 @@ This module deploys an Azure API Management instance with optional configuration
 
 - **Azure API Management Instance**: Manage APIs, policies, and configurations.
 - **Application Insights Integration**: Enable logging and monitoring of API requests and responses.
-- **Autoscaling**: Configure autoscaling for Premium tier instances based on capacity metrics.
+- **Autoscaling**: Configure autoscaling for non development use cases instances based on capacity metrics.
 - **Private DNS A Records**: Create DNS records for internal API Management endpoints.
 - **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
 - **Management Lock**: Prevent accidental deletion of the API Management instance.
@@ -17,11 +17,11 @@ This module deploys an Azure API Management instance with optional configuration
 
 ## Use Cases and Configurations
 
-| Tier | Description                                                                                                                        | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
-| `development`  | Developer Tier, for development and testing.                                                                                       | None | Limited          | No          | No                | Disabled      |
-| `cost_optimized`  | Standard Tier, for production workloads.                                                                                           | Yes  | Moderate         | No          | No                | Enabled       |
-| `high_load`  | Premium Tier, designed for large-scale production workloads.                                                                       | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
+| Use case          | Description                                                                                               | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
+| ----------------- | --------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
+| `development`     | For development and testing purposes.                                                                     | None | Limited          | No          | No                | Disabled      |
+| `cost_optimized`  | The default use case, for production workloads.                                                           | Yes  | Moderate         | No          | No                | Enabled       |
+| `high_load`       | Designed for large-scale production workloads.                                                            | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
 
 ## Monitoring
 
@@ -96,7 +96,7 @@ No modules.
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Enable collecting resources to send to Azure Monitor into AzureDiagnostics table | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = string<br/><br/>    logs = optional(object({<br/>      enabled    = bool<br/>      groups     = optional(list(string), [])<br/>      categories = optional(list(string), [])<br/>    }), { enabled = false, groups = [], categories = [] })<br/><br/>    metrics = optional(object({<br/>      enabled = bool<br/>    }), { enabled = false })<br/><br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_notification_sender_email"></a> [notification\_sender\_email](#input\_notification\_sender\_email) | The email address from which notifications will be sent. | `string` | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name of the private DNS zone. This is only required when the resource group name differs from the VNet resource group. | `string` | `null` | no |
-| <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id) | The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network. | `string` | `null` | no |
+| <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id) | The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the non development use cases when deployed in a virtual network. | `string` | `null` | no |
 | <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email) | The email address of the publisher or company. | `string` | n/a | yes |
 | <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name) | The name of the publisher or company. | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the resources will be deployed. | `string` | n/a | yes |

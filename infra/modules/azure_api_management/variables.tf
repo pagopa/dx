@@ -107,7 +107,7 @@ variable "enable_public_network_access" {
 
 variable "public_ip_address_id" {
   type        = string
-  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
+  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the non development use cases when deployed in a virtual network."
   default     = null
 }
 
