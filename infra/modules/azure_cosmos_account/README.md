@@ -14,12 +14,12 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 - **Serverless Mode**: Enables serverless mode for cost-efficient, on-demand scaling.
 - **Role Assignment**: Assigns SQL role permissions (Reader or Contributor) to specified principal IDs, enabling fine-grained access control.
 
-## Tiers and Configurations
+## Use cases and Configurations
 
-| Tier  | Description                                                                                        | Serverless Mode |
-|-------|----------------------------------------------------------------------------------------------------|-----------------|
-| `s`   | Recommended for development or testing environments where cost efficiency and flexibility are key. | Enabled         |
-| `l`   | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled        |
+| Use case      | Description                                                                                        | Serverless Mode |
+|---------------|----------------------------------------------------------------------------------------------------|-----------------|
+| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. | Enabled         |
+| `default`     | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled        |
 
 ## Usage Example
 
@@ -66,7 +66,7 @@ No modules.
 | <a name="input_secondary_geo_locations"></a> [secondary\_geo\_locations](#input\_secondary\_geo\_locations) | Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used. | <pre>list(object({<br/>    location          = optional(string, null)<br/>    failover_priority = optional(number, null)<br/>    zone_redundant    = optional(bool, true)<br/>  }))</pre> | `[]` | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | The offer type for the Cosmos DB account. Valid values are 's' and 'l'. | `string` | `"l"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Cosmos Acocount. Allowed values are 'default' and 'development'. | `string` | `"default"` | no |
 
 ## Outputs
 

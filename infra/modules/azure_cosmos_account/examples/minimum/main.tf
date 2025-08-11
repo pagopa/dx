@@ -12,7 +12,7 @@ module "cosmos_db" {
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  tier = "s"
+  use_case = "development"
 
   subnet_pep_id = data.azurerm_subnet.pep.id
 

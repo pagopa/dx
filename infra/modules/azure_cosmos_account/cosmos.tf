@@ -48,7 +48,7 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   dynamic "capabilities" {
-    for_each = var.tier == "s" ? [1] : []
+    for_each = var.use_case == "development" ? [1] : []
 
     content {
       name = "EnableServerless"

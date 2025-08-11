@@ -28,16 +28,15 @@ variable "subnet_pep_id" {
   description = "The ID of the subnet designated for private endpoints."
 }
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "The offer type for the Cosmos DB account. Valid values are 's' and 'l'."
-  default     = "l"
+  description = "Specifies the use case for the Cosmos Acocount. Allowed values are 'default' and 'development'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "l"], var.tier)
-    error_message = "Valid values for tier are 's' and 'l'."
+    condition     = contains(["default", "development"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", or \"development\"."
   }
-
 }
 
 variable "private_dns_zone_resource_group_name" {
