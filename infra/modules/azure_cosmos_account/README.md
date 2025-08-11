@@ -66,7 +66,7 @@ No modules.
 | <a name="input_secondary_geo_locations"></a> [secondary\_geo\_locations](#input\_secondary\_geo\_locations) | Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used. | <pre>list(object({<br/>    location          = optional(string, null)<br/>    failover_priority = optional(number, null)<br/>    zone_redundant    = optional(bool, true)<br/>  }))</pre> | `[]` | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Cosmos Acocount. Allowed values are 'default' and 'development'. | `string` | `"default"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Cosmos DB Account. Allowed values are 'default' and 'development'. | `string` | `"default"` | no |
 
 ## Outputs
 

@@ -30,7 +30,7 @@ variable "subnet_pep_id" {
 
 variable "use_case" {
   type        = string
-  description = "Specifies the use case for the Cosmos Acocount. Allowed values are 'default' and 'development'."
+  description = "Specifies the use case for the Cosmos DB Account. Allowed values are 'default' and 'development'."
   default     = "default"
 
   validation {
