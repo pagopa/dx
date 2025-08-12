@@ -13,13 +13,11 @@ This Terraform module provisions an Azure Event Hub namespace, event hubs, consu
 - **Private Endpoint**: Creates a private endpoint for secure access to the Event Hub namespace.
 - **Monitoring**: Configures metric alerts for monitoring Event Hub health.
 
-## Tiers and Configurations
+## Use cases and Configurations
 
-| Tier | Description                                                                   | Capacity | Auto Inflate | Maximum Throughput Units |
-|------|-------------------------------------------------------------------------------|----------|--------------|--------------------------|
-| `s`  | Designed for test and development environments with limited requirements.     | N/A      | No           | N/A                      |
-| `m`  | Suitable for production environments with low to moderate demands.            | 1        | No           | N/A                      |
-| `l`  | Ideal for high-demand production environments with auto-scaling capabilities. | 2        | Yes          | 15                       |
+| Use case  | Description                                                          | Capacity | Auto Inflate | Maximum Throughput Units |
+|-----------|----------------------------------------------------------------------|----------|--------------|--------------------------|
+| `default` | Suitable for production environments with low to moderate demands.   | 1        | No           | N/A                      |
 
 ### Usage Example
 
@@ -63,7 +61,7 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'. | `string` | `"s"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Event Hub. Allowed value is 'default'. | `string` | `"default"` | no |
 
 ## Outputs
 

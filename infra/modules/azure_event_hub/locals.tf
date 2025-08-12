@@ -10,17 +10,19 @@ locals {
   }
   eventhub = {
     name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "eventhub_namespace" }))
-    sku_name = lookup(
-      {
-        "s" = "Standard",
-        "m" = "Standard",
-        "l" = "Premium"
-      },
-      var.tier,
-      "Premium" # Default
-    )
-    # Note: Basic SKU does not support private access
   }
+
+  # Note: Basic SKU does not support private access
+  use_cases = {
+    default = {
+      sku_name             = "Standard"
+      capacity             = 1
+      auto_inflate_enabled = false
+      alerts               = true
+    }
+  }
+
+  use_case_features = local.use_cases[var.use_case]
 
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
@@ -41,7 +43,5 @@ locals {
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name == null ? var.resource_group_name : var.private_dns_zone_resource_group_name
 
   # Autoscaling
-  auto_inflate_enabled     = var.tier == "l" ? true : false
-  maximum_throughput_units = local.auto_inflate_enabled ? 15 : null
-  capacity                 = var.tier == "m" ? 1 : var.tier == "l" ? 2 : null
+  maximum_throughput_units = local.use_case_features.auto_inflate_enabled ? 15 : null
 }

@@ -19,9 +19,9 @@ resource "azurerm_eventhub_namespace" "this" {
   name                          = local.eventhub.name
   location                      = var.environment.location
   resource_group_name           = var.resource_group_name
-  sku                           = local.eventhub.sku_name
-  capacity                      = local.capacity
-  auto_inflate_enabled          = local.auto_inflate_enabled
+  sku                           = local.use_case_features.sku_name
+  capacity                      = local.use_case_features.capacity
+  auto_inflate_enabled          = local.use_case_features.auto_inflate_enabled
   maximum_throughput_units      = local.maximum_throughput_units
   public_network_access_enabled = length(var.allowed_sources.subnet_ids) > 0 || length(var.allowed_sources.ips) > 0 ? true : false
 
@@ -57,11 +57,10 @@ resource "azurerm_eventhub_namespace" "this" {
 resource "azurerm_eventhub" "events" {
   for_each = local.hubs
 
-  name                = each.key
-  namespace_name      = azurerm_eventhub_namespace.this.name
-  resource_group_name = var.resource_group_name
-  partition_count     = each.value.partitions
-  message_retention   = each.value.message_retention_days
+  name              = each.key
+  namespace_id      = azurerm_eventhub_namespace.this.id
+  partition_count   = each.value.partitions
+  message_retention = each.value.message_retention_days
 }
 
 resource "azurerm_eventhub_consumer_group" "consumer_group" {
