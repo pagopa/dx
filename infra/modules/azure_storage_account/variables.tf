@@ -23,13 +23,14 @@ variable "resource_group_name" {
 }
 
 # ------------ STORAGE ACCOUNT ------------ #
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Storage account tier depending on demanding workload. Allowed values: 's', 'l'."
+  description = "Storage account use case. Allowed values: 'default', 'audit', 'delegated_access', 'development', 'archive'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\" or \"l\"."
+    condition     = contains(["default", "audit", "delegated_access", "development", "archive"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", \"audit\", \"delegated_access\", \"development\", or \"archive\"."
   }
 }
 
@@ -39,7 +40,7 @@ variable "subnet_pep_id" {
   default     = null
 
   validation {
-    condition     = var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+    condition     = var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
     error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
   }
 }
@@ -54,6 +55,11 @@ variable "customer_managed_key" {
   })
   description = "Configures customer-managed keys (CMK) for encryption. Supports only 'kv' (Key Vault)."
   default     = { enabled = false }
+
+  validation {
+    condition     = var.use_case != "audit" || var.customer_managed_key.enabled
+    error_message = "Customer-managed key (BYOK) must be enabled when the use case is 'audit'."
+  }
 }
 
 variable "force_public_network_access_enabled" {

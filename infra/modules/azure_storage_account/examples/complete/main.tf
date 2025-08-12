@@ -30,7 +30,7 @@ module "azure_storage_account" {
   source = "../../"
 
   environment         = local.environment
-  tier                = "l"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
