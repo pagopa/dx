@@ -19,7 +19,6 @@ locals {
       account_tier               = "Standard"
       replication_type           = "LRS"
     }
-
     default = {
       alerts                     = true
       advanced_threat_protection = false
