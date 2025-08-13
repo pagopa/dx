@@ -2,7 +2,7 @@
 
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-service-bus-namespace/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-service-bus-namespace%2Fazurerm%2Flatest)
 
-This Terraform module deploys an Azure Service Bus namespace. It supports `Standard` and `Premium` SKUs only.
+This Terraform module deploys an Azure Service Bus namespace. Currently it supports `Premium` SKUs only.
 
 ## Features
 
@@ -13,10 +13,8 @@ This Terraform module deploys an Azure Service Bus namespace. It supports `Stand
 ## Use cases and Configurations
 
 | Use case | Description                                                  | Security                                                                      |
-|------|--------------------------------------------------------------|-------------------------------------------------------------------------------|
-| default    | High-load production environments and all features available | Access via Private Endpoints only                                             |
-
-**WARNING**: It is strongly encouraged to use the `Premium` SKU (default) due to the mentioned security concerns of the `Standard` SKU.
+|----------|--------------------------------------------------------------|-------------------------------------------------------------------------------|
+| default  | High-load production environments and all features available | Access via Private Endpoints only                                             |
 
 ## Best Practices
 
