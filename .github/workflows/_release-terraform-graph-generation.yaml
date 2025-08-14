@@ -186,7 +186,7 @@ jobs:
                 echo "Skipping: README.md not found at $readme_file"
                 continue
               fi
-              if ! grep -q "<!-- START_MD_TF_GRAPH -->" "$readme_file"; then
+              if ! grep -q "<!-- START_TF_GRAPH -->" "$readme_file"; then
                 echo "Skipping: Start tag not found in $readme_file"
                 continue
               fi
@@ -226,5 +226,5 @@ jobs:
       - name: Upload Artifact - TEST
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          bundle_name: diagram-${{ strategy.job-index }}
-          file_path: "./infra/modules/azure_role_assignment"
+          bundle_name: test-bundle
+          file_path: "infra/modules/azure_role_assignments"
