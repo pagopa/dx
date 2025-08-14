@@ -50,7 +50,7 @@ jobs:
 
     strategy:
       matrix:
-        dot_file: ${{ github.event.inputs.dot_path == '' && fromJson(needs.find-changed-dots.outputs.changed_files) || format('["{0}"]', fromJson(github.event.inputs.dot_path)) }}
+        dot_file: ${{ github.event.inputs.dot_path == '' && fromJson(needs.find-changed-dots.outputs.changed_files) || fromJson(format('["{0}"]', github.event.inputs.dot_path)) }}
 
     steps:
       - name: Checkout PR branch
