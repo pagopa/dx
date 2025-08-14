@@ -41,7 +41,7 @@ jobs:
 
   dot-to-mermaid:
     needs: find-changed-dots
-    if: ${{ (needs.find-changed-dots.outputs.changed_files != '[]' && needs.find-changed-dots.outputs.changed_files != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.dot_path != '') }}
+    if: ${{ needs.find-changed-dots.outputs.changed_files != '[]' && needs.find-changed-dots.outputs.changed_files != '' }}
     name: Convert DOT to Mermaid
     runs-on: ubuntu-latest
     permissions:
@@ -50,7 +50,7 @@ jobs:
 
     strategy:
       matrix:
-        dot_file: ${{ github.event.inputs.dot_path == '' && fromJson(needs.find-changed-dots.outputs.changed_files) || inputs.dot_path }}
+        dot_file: ${{ github.event.inputs.dot_path == '' && fromJson(needs.find-changed-dots.outputs.changed_files) || format('["{0}"]', fromJson(github.event.inputs.dot_path)) }}
 
     steps:
       - name: Checkout PR branch
