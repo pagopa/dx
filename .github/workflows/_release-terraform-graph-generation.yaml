@@ -244,8 +244,9 @@ jobs:
               echo "Converting $graph_file to SVG..."
               puppeteer_config="$(mktemp)"
               echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
-              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
-              echo "✅ Successfully converted $graph_file to $dest_dir/graph.svg"
+              # mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
+              mmdc -i $readme_file -o $readme_file -t dark -b transparent -p "$puppeteer_config"
+              echo "✅ Successfully converted into svg"
             fi
           done
           echo "Files organized."
