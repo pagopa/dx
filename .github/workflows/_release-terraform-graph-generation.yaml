@@ -133,7 +133,7 @@ jobs:
           # jq -r '.choices[0].message.content' "$RESPONSE_FILE" > "$MD_FILE_PATH"
 
           cat > $MD_FILE_PATH <<'EOF'
-          \`\`\`mermaid
+          ```mermaid
           graph LR
             subgraph Key Vault
               KVPolicy["Key Vault Access Policy"]
@@ -161,7 +161,7 @@ jobs:
             RedisPolicy["Redis Cache Access Policy Assignment"]
 
             KVPolicy --> ClientConfig
-          \`\`\`
+          ```
           EOF
 
           echo "Mermaid file created at: $MD_FILE_PATH"
@@ -223,18 +223,22 @@ jobs:
                 echo "Skipping: Start tag not found in $readme_file"
                 continue
               fi
+              if ! grep -q "<!-- END_TF_GRAPH -->" "$readme_file"; then
+                echo "Skipping: End tag not found in $readme_file"
+                continue
+              fi
 
-              # Inject Mermaid in README.md
-              sed -i "/<!-- START_TF_GRAPH -->/,/<!-- END_TF_GRAPH -->/{
-                /<!-- START_TF_GRAPH -->/{
-                  p
-                  r $graph_file
+              # Inject Mermaid in README.md (replace existing block)
+              awk -v f="$graph_file" '
+                BEGIN {
+                  while ((getline line < f) > 0) graph = graph line "\n"
                 }
-                /<!-- END_TF_GRAPH -->/p
-                d
-              }" "$readme_file"
-              
-              echo "Successfully updated $readme_file"
+                /<!-- START_TF_GRAPH -->/ { print; print graph; skip=1; next }
+                /<!-- END_TF_GRAPH -->/ { skip=0 }
+                !skip
+              ' "$readme_file" > "$readme_file.tmp" && mv "$readme_file.tmp" "$readme_file"
+
+              echo "✅ Successfully updated $readme_file"
 
               # Convert .md to .svg
               mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent 
