@@ -41,7 +41,7 @@ jobs:
 
   dot-to-mermaid:
     needs: find-changed-dots
-    if: ${{ needs.find-changed-dots.outputs.changed_files != '[]' && needs.find-changed-dots.outputs.changed_files != '' }}
+    if: ${{ (needs.find-changed-dots.outputs.changed_files != '[]' && needs.find-changed-dots.outputs.changed_files != '') || (github.event_name == 'workflow_dispatch' && github.event.inputs.dot_path != '') }}
     name: Convert DOT to Mermaid
     runs-on: ubuntu-latest
     permissions:
