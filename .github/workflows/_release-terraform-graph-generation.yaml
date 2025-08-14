@@ -175,10 +175,11 @@ jobs:
               dir_encoded_name="${filename%.md}"
               dest_dir=$(echo "$dir_encoded_name" | tr '-' '/')
               readme_file="$dest_dir/README.md"
+              graph_file="$dest_dir/graph.md"
               
               # Move the .md file to the correct directory
-              mv "$filepath" "$dest_dir/graph.md"
-              echo "Moved $filename to $dest_dir/graph.md"
+              mv "$filepath" "$graph_file"
+              echo "Moved $filename to $graph_file"
 
               # Check if README.md exists in the destination directory
               echo "Processing $filename for $readme_file"
@@ -192,7 +193,7 @@ jobs:
               fi
 
               # Inject Mermaid in README.md
-              mermaid_block=$(cat "$filepath")
+              mermaid_block=$(cat "$graph_file")
 
               sed -i '' "/<!-- START_TF_GRAPH -->/,/<!-- END_TF_GRAPH -->/{
                 /<!-- START_TF_GRAPH -->/{
@@ -208,8 +209,8 @@ jobs:
               echo "Successfully updated $readme_file"
 
               # Convert .md to .svg
-              mmdc -i "$dest_dir/graph.md" -o "$dest_dir/graph.svg" -t dark -b transparent 
-              echo "Converted $dest_dir/graph.md to $dest_dir/graph.svg"
+              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent 
+              echo "Converted $graph_file to $dest_dir/graph.svg"
             fi
           done
           echo "Files organized."
