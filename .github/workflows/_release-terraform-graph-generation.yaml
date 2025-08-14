@@ -241,8 +241,9 @@ jobs:
               echo "✅ Successfully updated $readme_file"
 
               # Convert .md to .svg
-              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent 
-              echo "Converted $graph_file to $dest_dir/graph.svg"
+              echo "Converting $graph_file to SVG..."
+              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent --no-sandbox
+              echo "✅ Successfully converted $graph_file to $dest_dir/graph.svg"
             fi
           done
           echo "Files organized."
