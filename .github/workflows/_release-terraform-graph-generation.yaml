@@ -240,13 +240,13 @@ jobs:
 
               echo "✅ Successfully updated $readme_file"
 
-              # Convert .md to .svg
-              echo "Converting $graph_file to SVG..."
-              puppeteer_config="$(mktemp)"
-              echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
-              # mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
-              mmdc -i $readme_file -o $readme_file -t dark -b transparent -p "$puppeteer_config"
-              echo "✅ Successfully converted into svg"
+              # # Convert .md to .svg
+              # echo "Converting $graph_file to SVG..."
+              # puppeteer_config="$(mktemp)"
+              # echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
+              # # mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
+              # mmdc -i $readme_file -o $readme_file -t dark -b transparent -p "$puppeteer_config"
+              # echo "✅ Successfully converted into svg"
             fi
           done
           echo "Files organized."
@@ -259,6 +259,11 @@ jobs:
       #     commit_user_name: "dx-pagopa-bot"
       #     commit_user_email: "dx-pagopa-github-bot@pagopa.it"
       #     commit_author: "dx-pagopa-bot <dx-pagopa-github-bot@pagopa.it>"
+
+      - name: Convert into SVG - TEST
+        uses: pagopa/dx/.github/actions/convert-mermaid-into-svg@feat-add-graph-generation
+        with:
+          file_path: "infra/modules/azure_role_assignments/README.md"
 
       - name: Upload Artifact - TEST
         uses: pagopa/dx/.github/actions/upload-artifact@main
