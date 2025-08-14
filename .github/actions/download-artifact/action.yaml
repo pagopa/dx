@@ -6,8 +6,8 @@ description: "Download an artifact from a previous job"
 
 inputs:
   bundle_name:
-    description: "Name of the bundle to download"
-    required: true
+    description: "Name of the bundle to download, if not specified it will download all artifacts in the workflow run"
+    required: false
   file_path:
     description: "Path to the directory where the artifact will be downloaded. You can also rename the artifact by specifying a different name in the path."
     required: false
