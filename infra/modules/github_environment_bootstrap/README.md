@@ -35,6 +35,10 @@ This example demonstrates how to use the module to create a GitHub repository wi
 
 For additional support, refer to the [GitHub Provider Documentation](https://registry.terraform.io/providers/integrations/github/latest/docs).
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

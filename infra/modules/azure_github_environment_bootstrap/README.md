@@ -151,6 +151,10 @@ This module includes practical examples to help you get started quickly:
 - **Mono-environment example**: You can find a simple mono-environment setup example in the `examples/` folder of this module, which demonstrates basic usage for a single environment configuration.
 - **Multi-environment example**: For a complete, production-ready multi-environment setup, check out the live example in the [DX bootstrapper](https://github.com/pagopa/dx/tree/main/infra/bootstrapper), which shows how to manage multiple environments (dev, prod, etc.) using this module.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

@@ -27,6 +27,7 @@ This Terraform module provisions an Azure PostgreSQL Flexible Server along with 
 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-postgres-server/tree/main/example/complete) directory.
 
+## Diagram
 <!-- START_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 

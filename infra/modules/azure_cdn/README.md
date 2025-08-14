@@ -104,6 +104,10 @@ In these cases, you must provide custom certificate information through the cust
 
 A complete example of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) directory.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

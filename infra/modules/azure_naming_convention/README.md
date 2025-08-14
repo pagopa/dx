@@ -35,6 +35,10 @@ output "resource_name" {
 
 This configuration will generate a resource name like `dx-d-itn-web-app-example-01`.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

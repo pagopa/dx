@@ -24,6 +24,10 @@ This module deploys an AppService with a strong opinionated configuration in ter
 
 For a complete example of how to use this module, refer to the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-exposed/tree/main/examples/complete) folder in the module repository.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

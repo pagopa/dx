@@ -165,6 +165,10 @@ module "aws_core_infra" {
 - VPC endpoints are always enabled as they reduce data transfer costs for S3 and DynamoDB access at no additional charge
 - NAT Gateway costs can be significant - consider using 1 NAT Gateway for non-production environments
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

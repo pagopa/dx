@@ -42,6 +42,10 @@ Currently, it is not possible to create a new Azure API Management instance with
 If you need to disable public network access, you must first create the APIM with `enable_public_network_access = true`.  
 After that, submit a new _Pull Request_ to update the variable to `false` and apply the changes.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

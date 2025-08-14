@@ -55,7 +55,7 @@ jobs:
           fetch-depth: 0
 
       - name: Convert graph into SVG
-        uses: pagopa/dx/.github/actions/convert-mermaid-into-svg@feat-add-graph-generation
+        uses: pagopa/dx/.github/actions/convert-mermaid-into-svg@main
         with:
           file_path: "infra/modules/${{ matrix.module }}/README.md"
 

@@ -29,6 +29,10 @@ When working with private endpoints (currently in preview), the `terraform destr
 4. Manually remove the connection between the private endpoint and the container app environment.
 5. Re-run the `terraform destroy` command.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

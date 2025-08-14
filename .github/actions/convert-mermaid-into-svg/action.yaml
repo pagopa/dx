@@ -23,6 +23,11 @@ runs:
       env:
         MD_FILE: ${{ inputs.file_path }}
       run: |
+        if [ ! -f "$MD_FILE" ]; then
+          echo "Skipping: $MD_FILE not found"
+          continue
+        fi
+
         # Convert .md to .svg
         echo "Converting $MD_FILE to SVG..."
         puppeteer_config="$(mktemp)"
@@ -30,6 +35,6 @@ runs:
         
         # This command will convert the Mermaid diagrams in the .md file to SVG format
         # creating a new .svg file and overwriting the original .md file adding the image url.
-        
+
         mmdc -i $MD_FILE -o $MD_FILE -t dark -b transparent -p "$puppeteer_config"
         echo "✅ Successfully converted into svg"

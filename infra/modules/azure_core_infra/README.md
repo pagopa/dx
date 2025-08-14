@@ -21,6 +21,10 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 - A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example/complete) that demonstrates all features and provisions the core infrastructure.
 - A [develop example](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example/develop) that extends the basic infrastructure with additional resources to bootstrap a development environment on Azure.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

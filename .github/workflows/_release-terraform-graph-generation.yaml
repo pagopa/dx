@@ -127,45 +127,13 @@ jobs:
           ENCODED_NAME=$(echo "$DOT_DIR" | tr '/' '-')
           MD_FILE_PATH="${ENCODED_NAME}.md"
 
-          # curl -s -X POST "https://dx-d-sdc-test-aif-01.cognitiveservices.azure.com/openai/deployments/o4-mini/chat/completions?api-version=2025-01-01-preview" \
-          #   -H "Content-Type: application/json" \
-          #   -H "Authorization: Bearer $AZURE_API_KEY" \
-          #   -d @${{ steps.prepare_json.outputs.json_payload_path }} \
-          #   -o "$RESPONSE_FILE"
+          curl -s -X POST "https://dx-d-sdc-test-aif-01.cognitiveservices.azure.com/openai/deployments/o4-mini/chat/completions?api-version=2025-01-01-preview" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $AZURE_API_KEY" \
+            -d @${{ steps.prepare_json.outputs.json_payload_path }} \
+            -o "$RESPONSE_FILE"
 
-          # jq -r '.choices[0].message.content' "$RESPONSE_FILE" > "$MD_FILE_PATH"
-
-          cat > $MD_FILE_PATH <<'EOF'
-          ```mermaid
-          graph LR
-            subgraph Key Vault
-              KVPolicy["Key Vault Access Policy"]
-              ClientConfig["Client Config"]
-              CertRA["Role Assignment - Certificates"]
-              KeyRA["Role Assignment - Keys"]
-              SecretRA["Role Assignment - Secrets"]
-            end
-
-            subgraph Service Bus
-              SBQueuesRA["Role Assignment - Queues"]
-              SBSubsRA["Role Assignment - Subscriptions"]
-              SBTopicsRA["Role Assignment - Topics"]
-            end
-
-            subgraph Storage Account
-              SA_Blob_RA["Role Assignment - Blob"]
-              SA_Queue_RA["Role Assignment - Queue"]
-              SA_Table_RA["Role Assignment - Table"]
-            end
-
-            APIM_RA["Role Assignment"]
-            CosmosDBSQL_RA["Cosmos DB SQL Role Assignment"]
-            EventHub_RA["Role Assignment"]
-            RedisPolicy["Redis Cache Access Policy Assignment"]
-
-            KVPolicy --> ClientConfig
-          ```
-          EOF
+          jq -r '.choices[0].message.content' "$RESPONSE_FILE" > "$MD_FILE_PATH"
 
           echo "Mermaid file created at: $MD_FILE_PATH"
           echo "md_file_path=$MD_FILE_PATH" >> $GITHUB_OUTPUT
@@ -247,22 +215,11 @@ jobs:
           done
           echo "Files organized."
 
-      # - name: Commit and push all graph files
-      #   uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
-      #   with:
-      #     commit_message: "docs: ✨ Generate Mermaid diagrams from all .dot files ✨"
-      #     file_pattern: '**/README.md **/graph.svg'
-      #     commit_user_name: "dx-pagopa-bot"
-      #     commit_user_email: "dx-pagopa-github-bot@pagopa.it"
-      #     commit_author: "dx-pagopa-bot <dx-pagopa-github-bot@pagopa.it>"
-
-      - name: Convert into SVG - TEST
-        uses: pagopa/dx/.github/actions/convert-mermaid-into-svg@feat-add-graph-generation
+      - name: Commit and push all graph files
+        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
         with:
-          file_path: "infra/modules/azure_role_assignments/README.md"
-
-      - name: Upload Artifact - TEST
-        uses: pagopa/dx/.github/actions/upload-artifact@main
-        with:
-          bundle_name: test-bundle
-          file_path: "infra/modules/azure_role_assignments"
+          commit_message: "docs: ✨ Generate Mermaid diagrams from all .dot files ✨"
+          file_pattern: '**/README.md'
+          commit_user_name: "dx-pagopa-bot"
+          commit_user_email: "dx-pagopa-github-bot@pagopa.it"
+          commit_author: "dx-pagopa-bot <dx-pagopa-github-bot@pagopa.it>"

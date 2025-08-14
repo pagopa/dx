@@ -28,6 +28,10 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 - A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/complete) demonstrating all features.
 - A [minimum example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/minimum) for basic configurations.
 
+## Diagram
+<!-- START_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
