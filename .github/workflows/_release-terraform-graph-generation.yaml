@@ -8,9 +8,9 @@ on:
     paths:
       - '**/graph.dot'
   workflow_dispatch:
-  push:
-    branches:
-      - feat-add-graph-generation
+  # push:
+  #   branches:
+  #     - feat-add-graph-generation
 
 jobs:
   find-changed-dots:
@@ -28,7 +28,7 @@ jobs:
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
         with:
           files: '**/graph.dot'
-          base_sha: ${{ github.event_name == 'workflow_dispatch' && github.base_ref || '' }}
+          base_sha: ${{ github.event_name == 'workflow_dispatch' && 'main' || '' }}
           sha: ${{ github.event_name == 'workflow_dispatch' && github.ref_name || '' }}
           matrix: true
       
