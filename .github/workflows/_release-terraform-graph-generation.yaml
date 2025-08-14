@@ -124,13 +124,45 @@ jobs:
           ENCODED_NAME=$(echo "$DOT_DIR" | tr '/' '-')
           MD_FILE_PATH="${ENCODED_NAME}.md"
 
-          curl -s -X POST "https://dx-d-sdc-test-aif-01.cognitiveservices.azure.com/openai/deployments/o4-mini/chat/completions?api-version=2025-01-01-preview" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $AZURE_API_KEY" \
-            -d @${{ steps.prepare_json.outputs.json_payload_path }} \
-            -o "$RESPONSE_FILE"
+          # curl -s -X POST "https://dx-d-sdc-test-aif-01.cognitiveservices.azure.com/openai/deployments/o4-mini/chat/completions?api-version=2025-01-01-preview" \
+          #   -H "Content-Type: application/json" \
+          #   -H "Authorization: Bearer $AZURE_API_KEY" \
+          #   -d @${{ steps.prepare_json.outputs.json_payload_path }} \
+          #   -o "$RESPONSE_FILE"
 
-          jq -r '.choices[0].message.content' "$RESPONSE_FILE" > "$MD_FILE_PATH"
+          # jq -r '.choices[0].message.content' "$RESPONSE_FILE" > "$MD_FILE_PATH"
+
+          cat > $MD_FILE_PATH <<'EOF'
+          \`\`\`mermaid
+          graph LR
+            subgraph Key Vault
+              KVPolicy["Key Vault Access Policy"]
+              ClientConfig["Client Config"]
+              CertRA["Role Assignment - Certificates"]
+              KeyRA["Role Assignment - Keys"]
+              SecretRA["Role Assignment - Secrets"]
+            end
+
+            subgraph Service Bus
+              SBQueuesRA["Role Assignment - Queues"]
+              SBSubsRA["Role Assignment - Subscriptions"]
+              SBTopicsRA["Role Assignment - Topics"]
+            end
+
+            subgraph Storage Account
+              SA_Blob_RA["Role Assignment - Blob"]
+              SA_Queue_RA["Role Assignment - Queue"]
+              SA_Table_RA["Role Assignment - Table"]
+            end
+
+            APIM_RA["Role Assignment"]
+            CosmosDBSQL_RA["Cosmos DB SQL Role Assignment"]
+            EventHub_RA["Role Assignment"]
+            RedisPolicy["Redis Cache Access Policy Assignment"]
+
+            KVPolicy --> ClientConfig
+          \`\`\`
+          EOF
 
           echo "Mermaid file created at: $MD_FILE_PATH"
           echo "md_file_path=$MD_FILE_PATH" >> $GITHUB_OUTPUT
@@ -193,17 +225,13 @@ jobs:
               fi
 
               # Inject Mermaid in README.md
-              mermaid_block=$(cat "$graph_file")
-
               sed -i '' "/<!-- START_TF_GRAPH -->/,/<!-- END_TF_GRAPH -->/{
-                /<!-- START_TF_GRAPH -->/{
-                  p
-                  r $mermaid_block
-                  a\\
-
-                }
-                /<!-- END_TF_GRAPH -->/p
-                d
+                  /<!-- START_TF_GRAPH -->/{
+                      p
+                      r $graph_file
+                  }
+                  /<!-- END_TF_GRAPH -->/p
+                  d
               }" "$readme_file"
               
               echo "Successfully updated $readme_file"
