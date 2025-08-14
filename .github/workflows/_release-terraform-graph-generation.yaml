@@ -225,13 +225,13 @@ jobs:
               fi
 
               # Inject Mermaid in README.md
-              sed -i '' "/<!-- START_TF_GRAPH -->/,/<!-- END_TF_GRAPH -->/{
-                  /<!-- START_TF_GRAPH -->/{
-                      p
-                      r $graph_file
-                  }
-                  /<!-- END_TF_GRAPH -->/p
-                  d
+              sed -i "/<!-- START_TF_GRAPH -->/,/<!-- END_TF_GRAPH -->/{
+                /<!-- START_TF_GRAPH -->/{
+                  p
+                  r $graph_file
+                }
+                /<!-- END_TF_GRAPH -->/p
+                d
               }" "$readme_file"
               
               echo "Successfully updated $readme_file"
