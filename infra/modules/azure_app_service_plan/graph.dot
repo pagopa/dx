@@ -1,0 +1,5 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "azurerm_service_plan.this" [label="azurerm_service_plan.this"];
+}

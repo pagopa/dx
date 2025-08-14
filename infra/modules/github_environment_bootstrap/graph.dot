@@ -1,0 +1,37 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.github_organization_teams.all" [label="data.github_organization_teams.all"];
+  "github_actions_repository_permissions.repo" [label="github_actions_repository_permissions.repo"];
+  "github_branch_default.main" [label="github_branch_default.main"];
+  "github_branch_protection.main" [label="github_branch_protection.main"];
+  "github_repository.this" [label="github_repository.this"];
+  "github_repository_autolink_reference.jira_board" [label="github_repository_autolink_reference.jira_board"];
+  "github_repository_environment.app_cd" [label="github_repository_environment.app_cd"];
+  "github_repository_environment.app_ci" [label="github_repository_environment.app_ci"];
+  "github_repository_environment.infra_cd" [label="github_repository_environment.infra_cd"];
+  "github_repository_environment.infra_ci" [label="github_repository_environment.infra_ci"];
+  "github_repository_environment.opex_cd" [label="github_repository_environment.opex_cd"];
+  "github_repository_environment.opex_ci" [label="github_repository_environment.opex_ci"];
+  "github_repository_environment_deployment_policy.app_cd_branch" [label="github_repository_environment_deployment_policy.app_cd_branch"];
+  "github_repository_environment_deployment_policy.app_cd_tag" [label="github_repository_environment_deployment_policy.app_cd_tag"];
+  "github_repository_environment_deployment_policy.infra_cd_branch" [label="github_repository_environment_deployment_policy.infra_cd_branch"];
+  "github_repository_environment_deployment_policy.infra_cd_tag" [label="github_repository_environment_deployment_policy.infra_cd_tag"];
+  "github_repository_environment_deployment_policy.opex_cd_branch" [label="github_repository_environment_deployment_policy.opex_cd_branch"];
+  "github_repository_environment_deployment_policy.opex_cd_tag" [label="github_repository_environment_deployment_policy.opex_cd_tag"];
+  "null_resource.workflow_permissions" [label="null_resource.workflow_permissions"];
+  "github_actions_repository_permissions.repo" -> "github_repository.this";
+  "github_branch_default.main" -> "github_repository.this";
+  "github_branch_protection.main" -> "github_repository.this";
+  "github_repository_autolink_reference.jira_board" -> "github_repository.this";
+  "github_repository_environment.app_cd" -> "data.github_organization_teams.all";
+  "github_repository_environment.infra_cd" -> "data.github_organization_teams.all";
+  "github_repository_environment.opex_cd" -> "data.github_organization_teams.all";
+  "github_repository_environment_deployment_policy.app_cd_branch" -> "github_repository_environment.app_cd";
+  "github_repository_environment_deployment_policy.app_cd_tag" -> "github_repository_environment.app_cd";
+  "github_repository_environment_deployment_policy.infra_cd_branch" -> "github_repository_environment.infra_cd";
+  "github_repository_environment_deployment_policy.infra_cd_tag" -> "github_repository_environment.infra_cd";
+  "github_repository_environment_deployment_policy.opex_cd_branch" -> "github_repository_environment.opex_cd";
+  "github_repository_environment_deployment_policy.opex_cd_tag" -> "github_repository_environment.opex_cd";
+  "null_resource.workflow_permissions" -> "github_repository.this";
+}

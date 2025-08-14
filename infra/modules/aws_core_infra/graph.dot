@@ -1,0 +1,61 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.aws_availability_zones.available" [label="data.aws_availability_zones.available"];
+  subgraph "cluster_module.nat_gateway" {
+    label = "module.nat_gateway"
+    fontname = "sans-serif"
+    "module.nat_gateway.aws_eip.nat" [label="aws_eip.nat"];
+    "module.nat_gateway.aws_nat_gateway.main" [label="aws_nat_gateway.main"];
+  }
+  subgraph "cluster_module.networking" {
+    label = "module.networking"
+    fontname = "sans-serif"
+    "module.networking.aws_internet_gateway.main" [label="aws_internet_gateway.main"];
+    "module.networking.aws_subnet.isolated" [label="aws_subnet.isolated"];
+    "module.networking.aws_subnet.private" [label="aws_subnet.private"];
+    "module.networking.aws_subnet.public" [label="aws_subnet.public"];
+    "module.networking.aws_vpc.main" [label="aws_vpc.main"];
+  }
+  subgraph "cluster_module.routing" {
+    label = "module.routing"
+    fontname = "sans-serif"
+    "module.routing.aws_route_table.isolated" [label="aws_route_table.isolated"];
+    "module.routing.aws_route_table.private" [label="aws_route_table.private"];
+    "module.routing.aws_route_table.public" [label="aws_route_table.public"];
+    "module.routing.aws_route_table_association.isolated" [label="aws_route_table_association.isolated"];
+    "module.routing.aws_route_table_association.private" [label="aws_route_table_association.private"];
+    "module.routing.aws_route_table_association.public" [label="aws_route_table_association.public"];
+  }
+  subgraph "cluster_module.vpc_endpoints" {
+    label = "module.vpc_endpoints"
+    fontname = "sans-serif"
+    "module.vpc_endpoints.data.aws_vpc.main" [label="data.aws_vpc.main"];
+    "module.vpc_endpoints.aws_security_group.vpc_endpoints" [label="aws_security_group.vpc_endpoints"];
+    "module.vpc_endpoints.aws_vpc_endpoint.dynamodb" [label="aws_vpc_endpoint.dynamodb"];
+    "module.vpc_endpoints.aws_vpc_endpoint.s3" [label="aws_vpc_endpoint.s3"];
+  }
+  "module.nat_gateway.aws_nat_gateway.main" -> "module.nat_gateway.aws_eip.nat";
+  "module.nat_gateway.aws_nat_gateway.main" -> "module.networking.aws_subnet.public";
+  "module.networking.aws_internet_gateway.main" -> "module.networking.aws_vpc.main";
+  "module.networking.aws_subnet.isolated" -> "data.aws_availability_zones.available";
+  "module.networking.aws_subnet.isolated" -> "module.networking.aws_vpc.main";
+  "module.networking.aws_subnet.private" -> "data.aws_availability_zones.available";
+  "module.networking.aws_subnet.private" -> "module.networking.aws_vpc.main";
+  "module.networking.aws_subnet.public" -> "data.aws_availability_zones.available";
+  "module.networking.aws_subnet.public" -> "module.networking.aws_vpc.main";
+  "module.routing.aws_route_table.isolated" -> "module.networking.aws_subnet.isolated";
+  "module.routing.aws_route_table.private" -> "module.nat_gateway.aws_nat_gateway.main";
+  "module.routing.aws_route_table.private" -> "module.networking.aws_subnet.private";
+  "module.routing.aws_route_table.public" -> "module.networking.aws_internet_gateway.main";
+  "module.routing.aws_route_table_association.isolated" -> "module.routing.aws_route_table.isolated";
+  "module.routing.aws_route_table_association.private" -> "module.routing.aws_route_table.private";
+  "module.routing.aws_route_table_association.public" -> "module.networking.aws_subnet.public";
+  "module.routing.aws_route_table_association.public" -> "module.routing.aws_route_table.public";
+  "module.vpc_endpoints.data.aws_vpc.main" -> "module.networking.aws_vpc.main";
+  "module.vpc_endpoints.aws_security_group.vpc_endpoints" -> "module.vpc_endpoints.data.aws_vpc.main";
+  "module.vpc_endpoints.aws_vpc_endpoint.dynamodb" -> "module.routing.aws_route_table.isolated";
+  "module.vpc_endpoints.aws_vpc_endpoint.dynamodb" -> "module.routing.aws_route_table.private";
+  "module.vpc_endpoints.aws_vpc_endpoint.s3" -> "module.routing.aws_route_table.isolated";
+  "module.vpc_endpoints.aws_vpc_endpoint.s3" -> "module.routing.aws_route_table.private";
+}

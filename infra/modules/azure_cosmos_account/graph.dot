@@ -1,0 +1,13 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_private_dns_zone.cosmos" [label="data.azurerm_private_dns_zone.cosmos"];
+  "azurerm_cosmosdb_account.this" [label="azurerm_cosmosdb_account.this"];
+  "azurerm_cosmosdb_sql_role_assignment.principal_role_assignments" [label="azurerm_cosmosdb_sql_role_assignment.principal_role_assignments"];
+  "azurerm_monitor_metric_alert.cosmos_db_provisioned_throughput_exceeded" [label="azurerm_monitor_metric_alert.cosmos_db_provisioned_throughput_exceeded"];
+  "azurerm_private_endpoint.sql" [label="azurerm_private_endpoint.sql"];
+  "azurerm_cosmosdb_sql_role_assignment.principal_role_assignments" -> "azurerm_cosmosdb_account.this";
+  "azurerm_monitor_metric_alert.cosmos_db_provisioned_throughput_exceeded" -> "azurerm_cosmosdb_account.this";
+  "azurerm_private_endpoint.sql" -> "data.azurerm_private_dns_zone.cosmos";
+  "azurerm_private_endpoint.sql" -> "azurerm_cosmosdb_account.this";
+}

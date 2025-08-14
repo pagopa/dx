@@ -1,0 +1,18 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_private_dns_zone.this" [label="data.azurerm_private_dns_zone.this"];
+  "data.azurerm_virtual_network.this" [label="data.azurerm_virtual_network.this"];
+  "azurerm_container_app_environment.this" [label="azurerm_container_app_environment.this"];
+  "azurerm_management_lock.cae_lock" [label="azurerm_management_lock.cae_lock"];
+  "azurerm_management_lock.identity_lock" [label="azurerm_management_lock.identity_lock"];
+  "azurerm_private_endpoint.this" [label="azurerm_private_endpoint.this"];
+  "azurerm_subnet.this" [label="azurerm_subnet.this"];
+  "azurerm_user_assigned_identity.cae_identity" [label="azurerm_user_assigned_identity.cae_identity"];
+  "azurerm_container_app_environment.this" -> "azurerm_subnet.this";
+  "azurerm_management_lock.cae_lock" -> "azurerm_container_app_environment.this";
+  "azurerm_management_lock.identity_lock" -> "azurerm_user_assigned_identity.cae_identity";
+  "azurerm_private_endpoint.this" -> "data.azurerm_private_dns_zone.this";
+  "azurerm_private_endpoint.this" -> "azurerm_container_app_environment.this";
+  "azurerm_subnet.this" -> "data.azurerm_virtual_network.this";
+}

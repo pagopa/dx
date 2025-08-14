@@ -1,0 +1,9 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_linux_function_app.function_apps" [label="data.azurerm_linux_function_app.function_apps"];
+  "data.azurerm_linux_web_app.app_services" [label="data.azurerm_linux_web_app.app_services"];
+  "azurerm_monitor_autoscale_setting.this" [label="azurerm_monitor_autoscale_setting.this"];
+  "azurerm_monitor_autoscale_setting.this" -> "data.azurerm_linux_function_app.function_apps";
+  "azurerm_monitor_autoscale_setting.this" -> "data.azurerm_linux_web_app.app_services";
+}

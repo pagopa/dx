@@ -1,0 +1,11 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_private_dns_zone.this" [label="data.azurerm_private_dns_zone.this"];
+  "azurerm_monitor_autoscale_setting.this" [label="azurerm_monitor_autoscale_setting.this"];
+  "azurerm_private_endpoint.service_bus_pep" [label="azurerm_private_endpoint.service_bus_pep"];
+  "azurerm_servicebus_namespace.this" [label="azurerm_servicebus_namespace.this"];
+  "azurerm_monitor_autoscale_setting.this" -> "azurerm_servicebus_namespace.this";
+  "azurerm_private_endpoint.service_bus_pep" -> "data.azurerm_private_dns_zone.this";
+  "azurerm_private_endpoint.service_bus_pep" -> "azurerm_servicebus_namespace.this";
+}

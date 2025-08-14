@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+if [[ "$GITHUB_ACTIONS" == "true" ]]; then
+    echo "Skipping SBOM generation in GitHub Actions environment."
+    exit 0
+fi
+
 if ! command -v dot &> /dev/null; then
     echo "Please install Graphviz, for MAC use the command:"
     echo "  - brew install graphviz"
