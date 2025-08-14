@@ -242,7 +242,9 @@ jobs:
 
               # Convert .md to .svg
               echo "Converting $graph_file to SVG..."
-              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent --no-sandbox
+              puppeteer_config="$(mktemp)"
+              echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
+              mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
               echo "✅ Successfully converted $graph_file to $dest_dir/graph.svg"
             fi
           done
