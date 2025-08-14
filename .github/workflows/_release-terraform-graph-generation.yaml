@@ -8,12 +8,15 @@ on:
     paths:
       - '**/graph.dot'
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - feat-add-graph-generation
+    inputs:
+      dot_path:
+        description: "Path to the .dot file to convert"
+        default: ""
+        required: false
 
 jobs:
   find-changed-dots:
+    name: Find Changed .dot Files
     runs-on: ubuntu-latest
     outputs:
       changed_files: ${{ steps.changed-files.outputs.all_changed_files }}
@@ -39,7 +42,7 @@ jobs:
   dot-to-mermaid:
     needs: find-changed-dots
     if: ${{ needs.find-changed-dots.outputs.changed_files != '[]' && needs.find-changed-dots.outputs.changed_files != '' }}
-    
+    name: Convert DOT to Mermaid
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -47,7 +50,7 @@ jobs:
 
     strategy:
       matrix:
-        dot_file: ${{ fromJson(needs.find-changed-dots.outputs.changed_files) }}
+        dot_file: ${{ github.event.inputs.dot_path == '' && fromJson(needs.find-changed-dots.outputs.changed_files) || inputs.dot_path }}
 
     steps:
       - name: Checkout PR branch
@@ -176,6 +179,7 @@ jobs:
   commit-changes:
     runs-on: ubuntu-latest
     needs: dot-to-mermaid
+    name: Commit Mermaid Diagrams
     permissions:
       contents: write
       pull-requests: write
@@ -239,14 +243,6 @@ jobs:
               ' "$readme_file" > "$readme_file.tmp" && mv "$readme_file.tmp" "$readme_file"
 
               echo "✅ Successfully updated $readme_file"
-
-              # # Convert .md to .svg
-              # echo "Converting $graph_file to SVG..."
-              # puppeteer_config="$(mktemp)"
-              # echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
-              # # mmdc -i "$graph_file" -o "$dest_dir/graph.svg" -t dark -b transparent -p "$puppeteer_config"
-              # mmdc -i $readme_file -o $readme_file -t dark -b transparent -p "$puppeteer_config"
-              # echo "✅ Successfully converted into svg"
             fi
           done
           echo "Files organized."
