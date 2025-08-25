@@ -18,6 +18,7 @@ locals {
       shared_access_key_enabled  = true
       account_tier               = "Standard"
       replication_type           = "LRS"
+      secondary_replication      = false
     }
     default = {
       alerts                     = true
@@ -26,6 +27,7 @@ locals {
       shared_access_key_enabled  = true
       account_tier               = "Standard"
       replication_type           = "ZRS"
+      secondary_replication      = false
     }
     audit = {
       alerts                     = true
@@ -33,7 +35,8 @@ locals {
       immutability_policy        = true
       shared_access_key_enabled  = true
       account_tier               = "Standard"
-      replication_type           = "GZRS"
+      replication_type           = "ZRS"
+      secondary_replication      = true
     }
     delegated_access = {
       alerts                     = true
@@ -42,6 +45,7 @@ locals {
       shared_access_key_enabled  = false
       account_tier               = "Standard"
       replication_type           = "ZRS"
+      secondary_replication      = false
     }
     archive = {
       alerts                     = false
@@ -49,7 +53,8 @@ locals {
       immutability_policy        = true
       shared_access_key_enabled  = true
       account_tier               = "Standard"
-      replication_type           = "GZRS"
+      replication_type           = "ZRS"
+      secondary_replication      = true
     }
   }
 

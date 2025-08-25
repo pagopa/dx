@@ -188,3 +188,15 @@ variable "custom_domain" {
     use_subdomain = false
   }
 }
+
+variable "secondary_location" {
+  type        = string
+  description = "Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication_type like GRS or GZRS."
+  default     = "spaincentral"
+}
+
+variable "replication_container_names" {
+  description = "A list of container names to be replicated."
+  type        = list(string)
+  default     = []
+}

@@ -303,8 +303,8 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.account_replication_type == "GZRS"
-    error_message = "The Storage Account must use the correct Account Replication Type (GZRS)"
+    condition     = azurerm_storage_account.this.account_replication_type == "ZRS"
+    error_message = "The Storage Account must use the correct Account Replication Type (ZRS)"
   }
 
   assert {
@@ -315,6 +315,11 @@ run "audit_storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_management_policy.lifecycle_audit[0].rule[0].name == "audit-log-lifecycle-policy"
     error_message = "The Storage Account must have a lifecycle management policy for audit"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.secondary_replica[0] != null
+    error_message = "The Storage Account must have a secondary replica"
   }
 }
 
@@ -349,8 +354,8 @@ run "archive_storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.account_replication_type == "GZRS"
-    error_message = "The Storage Account must use the correct Account Replication Type (GZRS)"
+    condition     = azurerm_storage_account.this.account_replication_type == "ZRS"
+    error_message = "The Storage Account must use the correct Account Replication Type (ZRS)"
   }
 
   assert {
@@ -361,6 +366,11 @@ run "archive_storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_management_policy.lifecycle_archive[0].rule[0].name == "archive-storage-lifecycle-policy"
     error_message = "The Storage Account must have a lifecycle management policy for archive"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.secondary_replica[0] != null
+    error_message = "The Storage Account must have a secondary replica"
   }
 }
 
