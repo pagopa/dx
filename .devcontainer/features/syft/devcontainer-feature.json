@@ -1,8 +1,0 @@
-{
-  "id": "syft",
-  "version": "1.29.1",
-  "name": "Syft",
-  "description": "Installs Syft",
-  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/syft",
-  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
-}
