@@ -31,9 +31,9 @@ output "primary_web_host" {
 
 output "secondary_replica" {
   value = !local.tier_features.secondary_replication ? {} : {
-    name                      = azurerm_storage_account.secondary_replica[0].name
-    id                        = azurerm_storage_account.secondary_replica[0].id
-    principal_id              = azurerm_storage_account.secondary_replica[0].identity[0].principal_id
-    primary_web_host          = azurerm_storage_account.secondary_replica[0].primary_web_host
+    name             = azurerm_storage_account.secondary_replica[0].name
+    id               = azurerm_storage_account.secondary_replica[0].id
+    principal_id     = azurerm_storage_account.secondary_replica[0].identity[0].principal_id
+    primary_web_host = azurerm_storage_account.secondary_replica[0].primary_web_host
   }
 }
