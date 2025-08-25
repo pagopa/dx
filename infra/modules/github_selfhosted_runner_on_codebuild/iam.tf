@@ -80,7 +80,7 @@ resource "aws_iam_policy" "vpc_connection" {
         ]
         Effect = "Allow"
         Resource = [
-          "arn:aws:ec2:${var.environment.location}:${data.aws_caller_identity.current.account_id}:network-interface/*"
+          "arn:aws:ec2:${var.environment.region}:${data.aws_caller_identity.current.account_id}:network-interface/*"
         ]
         Condition = {
           StringEquals = {
@@ -116,8 +116,8 @@ resource "aws_iam_policy" "cloudwatch" {
         ]
         Effect = "Allow"
         Resource = [
-          "arn:aws:logs:${var.environment.location}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:*",
-          "arn:aws:logs:${var.environment.location}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:log-stream:${local.cloudwatch_log_stream}/*"
+          "arn:aws:logs:${var.environment.region}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:*",
+          "arn:aws:logs:${var.environment.region}:${data.aws_caller_identity.current.account_id}:log-group:${local.cloudwatch_log_group}:log-stream:${local.cloudwatch_log_stream}/*"
         ]
       }
     ]
