@@ -388,3 +388,54 @@ run "integration_test_consistency_performance" {
     error_message = "Cosmos DB endpoint should be a valid Azure Cosmos endpoint"
   }
 }
+
+# Test serverless tier basic configuration
+run "integration_test_serverless_tier" {
+  command = apply
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "serverless"
+      instance_number = "01"
+    }
+
+    tags = {
+      Environment = "Test"
+      Owner       = "DevEx"
+      TestType    = "Integration"
+    }
+
+    tier                = "s"
+    resource_group_name = run.setup_integration_tests.resource_group_name
+    subnet_pep_id      = run.setup_integration_tests.pep_id
+    
+    consistency_policy = {
+      consistency_preset = "Default"
+    }
+    
+    alerts = {
+      enabled = false
+    }
+  }
+
+  # Test serverless capability is enabled
+  assert {
+    condition     = length([for cap in azurerm_cosmosdb_account.this.capabilities : cap if cap.name == "EnableServerless"]) == 1
+    error_message = "Serverless capability should be enabled for 's' tier"
+  }
+
+  # Test basic account properties for serverless
+  assert {
+    condition     = azurerm_cosmosdb_account.this.offer_type == "Standard"
+    error_message = "The Cosmos DB offer type must be Standard even for serverless"
+  }
+
+  assert {
+    condition     = azurerm_cosmosdb_account.this.kind == "GlobalDocumentDB"
+    error_message = "The Cosmos DB account must support DocumentDB API"
+  }
+}
