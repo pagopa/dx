@@ -159,3 +159,20 @@ run "consistency_preset_default_session" {
     error_message = "Default preset must map to Session consistency"
   }
 }
+
+run "valid_cmk" {
+  command = plan
+
+  variables {
+    customer_managed_key = {
+      enabled                   = true
+      user_assigned_identity_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-mi/providers/Microsoft.ManagedIdentity/userAssignedIdentities/mi-test"
+      key_vault_key_id          = "https://kv-test.vault.azure.net/keys/key-test"
+    }
+  }
+
+  assert {
+    condition     = azurerm_cosmosdb_account.this.default_identity_type == "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity_id}"
+    error_message = "default_identity_type must reference the provided user-assigned identity"
+  }
+}
