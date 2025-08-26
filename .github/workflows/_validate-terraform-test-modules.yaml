@@ -76,9 +76,11 @@ jobs:
 
           terraform init -input=false
 
-      - name: Terraform Test
+      - name: Terraform Test (Unit and Contract)
         working-directory: infra/modules/${{ matrix.module }}
         run: |
           set -euo
 
-          terraform test
+          # Run unit and contract tests only for PR validation
+          # These are fast tests that don't require real infrastructure
+          terraform test -filter=unit.tftest.hcl,contract.tftest.hcl || terraform test
