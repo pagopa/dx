@@ -15,6 +15,31 @@ variable "environment" {
   })
 
   description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+
+  validation {
+    condition     = can(regex("^[a-z0-9]+$", var.environment.prefix))
+    error_message = "environment.prefix must contain only lowercase letters and numbers."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z]$", var.environment.env_short))
+    error_message = "environment.env_short must be a single lowercase letter."
+  }
+
+  validation {
+    condition     = contains(["italynorth", "westeurope", "northeurope", "eastus", "westus2", "centralus", "southcentralus"], var.environment.location)
+    error_message = "environment.location must be a valid Azure region."
+  }
+
+  validation {
+    condition     = can(regex("^[a-z0-9]+$", var.environment.app_name))
+    error_message = "environment.app_name must contain only lowercase letters and numbers."
+  }
+
+  validation {
+    condition     = can(regex("^[0-9]{2}$", var.environment.instance_number))
+    error_message = "environment.instance_number must be a two-digit number (e.g., '01', '02')."
+  }
 }
 
 variable "resource_group_name" {
@@ -26,6 +51,11 @@ variable "resource_group_name" {
 variable "subnet_pep_id" {
   type        = string
   description = "The ID of the subnet designated for private endpoints."
+
+  validation {
+    condition     = can(regex("^/subscriptions/[a-fA-F0-9-]{36}/resourceGroups/.+/providers/Microsoft.Network/virtualNetworks/.+/subnets/.+$", var.subnet_pep_id))
+    error_message = "subnet_pep_id must be a valid Azure subnet resource ID."
+  }
 }
 
 variable "tier" {
@@ -67,6 +97,19 @@ variable "secondary_geo_locations" {
   }))
   description = "Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used."
   default     = []
+
+  validation {
+    condition     = length(var.secondary_geo_locations) <= 5
+    error_message = "Maximum of 5 secondary geo locations are allowed."
+  }
+
+  validation {
+    condition = alltrue([
+      for geo in var.secondary_geo_locations :
+      geo.failover_priority == null || (geo.failover_priority >= 1 && geo.failover_priority <= 5)
+    ])
+    error_message = "failover_priority must be between 1 and 5 when specified."
+  }
 }
 
 variable "customer_managed_key" {
@@ -156,5 +199,18 @@ variable "authorized_teams" {
   default = {
     writers = []
     readers = []
+  }
+
+  validation {
+    condition = alltrue([
+      for principal_id in concat(var.authorized_teams.readers, var.authorized_teams.writers) :
+      can(regex("^[a-fA-F0-9-]{36}$", principal_id))
+    ])
+    error_message = "All principal IDs must be valid UUIDs (Azure AD object IDs)."
+  }
+
+  validation {
+    condition     = length(concat(var.authorized_teams.readers, var.authorized_teams.writers)) <= 20
+    error_message = "Maximum of 20 total principal IDs are allowed across readers and writers."
   }
 }
