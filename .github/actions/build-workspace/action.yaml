@@ -10,6 +10,9 @@ outputs:
   package-manager:
     description: 'The package manager used in the monorepo (npm, yarn, or pnpm).'
     value: ${{ steps.node-setup.outputs.package-manager }}
+  workspace-path:
+    description: 'The path to the built workspace.'
+    value: ${{ steps.get-workspace-path.outputs.workspace-path }}
 
 runs:
   using: "composite"
@@ -38,5 +41,14 @@ runs:
     - name: Build
       shell: bash
       run: npx turbo build --filter $WORKSPACE_NAME
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Get Workspace path
+      id: get-workspace-path
+      shell: bash
+      run: |
+        WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+        echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}

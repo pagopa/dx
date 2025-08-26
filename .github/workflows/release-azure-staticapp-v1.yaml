@@ -86,15 +86,12 @@ jobs:
       
       - name: Get Artifact path
         id: get-artifact-path
+        working-directory: ${{ steps.build-package.outputs.workspace-path }}
         run: |
-          WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
-          cd $WORKSPACE_PATH
-
           echo "::debug::Packaging for static deployment"
           echo "artifact-path=$(realpath ./$OUTPUT_DIR)" >> $GITHUB_OUTPUT
         env:
           OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
-          WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
