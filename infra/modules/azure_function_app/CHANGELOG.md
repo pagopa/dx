@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 2.0.2
+
+### Patch Changes
+
+- 8276c0d: Fix Function App Health Check alert name typo
+
 ## 2.0.1
 
 ### Patch Changes
