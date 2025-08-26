@@ -3,7 +3,7 @@ resource "azurerm_storage_account" "this" {
   name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
   resource_group_name             = var.resource_group_name
   location                        = var.environment.location
-  account_kind                    = "StorageV2"
+  account_kind                    = local.tier_features.account_kind
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = local.tier_features.replication_type
   access_tier                     = var.access_tier
@@ -12,8 +12,8 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   blob_properties {
-    versioning_enabled            = var.blob_features.versioning
-    change_feed_enabled           = var.blob_features.change_feed.enabled
+    versioning_enabled            = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
+    change_feed_enabled           = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled ? true : var.blob_features.change_feed.enabled
     change_feed_retention_in_days = var.blob_features.change_feed.enabled && var.blob_features.change_feed.retention_in_days > 0 ? var.blob_features.change_feed.retention_in_days : null
     last_access_time_enabled      = var.blob_features.last_access_time
 
@@ -25,7 +25,7 @@ resource "azurerm_storage_account" "this" {
     }
 
     dynamic "restore_policy" {
-      for_each = (var.blob_features.restore_policy_days > 0 ? [1] : [])
+      for_each = (var.blob_features.restore_policy_days > 0 && !local.tier_features.immutability_policy && !var.blob_features.immutability_policy.enabled) ? [1] : []
       content {
         days = var.blob_features.restore_policy_days
       }
@@ -73,7 +73,7 @@ resource "azurerm_security_center_storage_defender" "this" {
   storage_account_id = azurerm_storage_account.this.id
 }
 
-# Blob lifecycle management policy for Audit (Hot -> Cool -> Archive -> Delete)
+# Blob lifecycle management policy for Audit (Hot -> Cool -> Cold -> Delete)
 resource "azurerm_storage_management_policy" "lifecycle_audit" {
   count = var.use_case == "audit" ? 1 : 0
 
@@ -91,8 +91,8 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
       base_blob {
         # Tier to Cool after 30 days of inactivity (no modification)
         tier_to_cool_after_days_since_modification_greater_than = 30
-        # Tier to Archive after 90 days of inactivity (no modification)
-        tier_to_archive_after_days_since_modification_greater_than = 90
+        # Tier to Cold after 90 days of inactivity (no modification)
+        tier_to_cold_after_days_since_modification_greater_than = 90
         # Delete after 1095 days (3 years) of inactivity (no modification)
         delete_after_days_since_modification_greater_than = 1095
       }
@@ -109,6 +109,7 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
 }
 
 # Blob lifecycle management policy for Archive (Any -> Archive)
+## Note: The archive access tier can only be set if storage account kind is BlobStorage and replication is LRS.
 resource "azurerm_storage_management_policy" "lifecycle_archive" {
   count = var.use_case == "archive" ? 1 : 0
 

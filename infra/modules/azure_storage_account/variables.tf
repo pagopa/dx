@@ -125,6 +125,11 @@ variable "blob_features" {
     condition     = var.blob_features.restore_policy_days == 0 || (var.blob_features.restore_policy_days >= 1 && var.blob_features.restore_policy_days <= 365)
     error_message = "Restore policy days must be 0 to disable the policy or between 1 and 365."
   }
+
+  validation {
+    condition     = !(contains(["archive", "audit"], var.use_case)) || (var.blob_features.delete_retention_days == 0 && var.blob_features.restore_policy_days == 0)
+    error_message = "For 'archive' and 'audit' use cases, delete_retention_days and restore_policy_days must be 0."
+  }
 }
 
 variable "network_rules" {
@@ -192,7 +197,7 @@ variable "custom_domain" {
 variable "secondary_location" {
   type        = string
   description = "Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication_type like GRS or GZRS."
-  default     = "spaincentral"
+  default     = "westeurope"
 }
 
 variable "replication_container_names" {

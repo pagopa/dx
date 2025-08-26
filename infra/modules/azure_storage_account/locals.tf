@@ -17,6 +17,7 @@ locals {
       immutability_policy        = false
       shared_access_key_enabled  = true
       account_tier               = "Standard"
+      account_kind               = "StorageV2"
       replication_type           = "LRS"
       secondary_replication      = false
     }
@@ -26,6 +27,7 @@ locals {
       immutability_policy        = false
       shared_access_key_enabled  = true
       account_tier               = "Standard"
+      account_kind               = "StorageV2"
       replication_type           = "ZRS"
       secondary_replication      = false
     }
@@ -35,6 +37,7 @@ locals {
       immutability_policy        = true
       shared_access_key_enabled  = true
       account_tier               = "Standard"
+      account_kind               = "StorageV2"
       replication_type           = "ZRS"
       secondary_replication      = true
     }
@@ -44,6 +47,7 @@ locals {
       immutability_policy        = false
       shared_access_key_enabled  = false
       account_tier               = "Standard"
+      account_kind               = "StorageV2"
       replication_type           = "ZRS"
       secondary_replication      = false
     }
@@ -53,7 +57,8 @@ locals {
       immutability_policy        = true
       shared_access_key_enabled  = true
       account_tier               = "Standard"
-      replication_type           = "ZRS"
+      account_kind               = "BlobStorage"
+      replication_type           = "LRS"
       secondary_replication      = true
     }
   }

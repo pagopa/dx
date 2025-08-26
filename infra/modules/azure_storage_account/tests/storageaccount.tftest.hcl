@@ -354,8 +354,8 @@ run "archive_storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.account_replication_type == "ZRS"
-    error_message = "The Storage Account must use the correct Account Replication Type (ZRS)"
+    condition     = azurerm_storage_account.this.account_replication_type == "LRS"
+    error_message = "The Storage Account must use the correct Account Replication Type (LRS)"
   }
 
   assert {
