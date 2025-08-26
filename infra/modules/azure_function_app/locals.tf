@@ -31,7 +31,7 @@ locals {
     has_existing_subnet    = var.subnet_id != null
     pep_sites              = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_private_endpoint" }))
     pep_sites_staging      = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_slot_private_endpoint" }))
-    alert                  = "${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))}] Health Check Failed"
+    alert                  = "[${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))}] Health Check Failed"
     worker_process_count   = local.worker_process_count_mapping[local.tier]
     has_durable            = var.has_durable_functions ? 1 : 0
   }
