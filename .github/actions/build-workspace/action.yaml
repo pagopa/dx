@@ -1,4 +1,4 @@
-name: 'Build Monorepo Workspace'
+name: 'Build Workspace'
 description: 'Builds a workspace in a monorepo and handles dependencies.'
 
 inputs:

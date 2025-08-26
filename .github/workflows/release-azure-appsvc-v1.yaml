@@ -62,7 +62,7 @@ jobs:
 
       - name: Build Package
         id: build-package
-        uses: pagopa/dx/.github/actions/build-monorepo-workspace@main
+        uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
 
