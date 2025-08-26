@@ -83,4 +83,5 @@ jobs:
 
           # Run unit and contract tests only for PR validation
           # These are fast tests that don't require real infrastructure
-          terraform test -filter=unit.tftest.hcl,contract.tftest.hcl || terraform test
+          terraform test tests/unit.tftest.hcl
+          terraform test tests/contract.tftest.hcl
