@@ -16,6 +16,9 @@
     "code-review": "turbo run typecheck format:check lint:check //#test:coverage",
     "version": "changeset version && pnpm i --lockfile-only",
     "release": "pnpm build && changeset publish",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "sbom-generate": "sh sbom.sh",
+    "sbom-force-generate": "sh sbom.sh --force-generate",
+    "sbom-validate": "sh sbom.sh --validate"
   }
 }

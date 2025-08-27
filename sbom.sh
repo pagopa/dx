@@ -17,9 +17,10 @@ show_help() {
     echo "Manages the generation and validation of SBOMs."
     echo ""
     echo "Options:"
-    echo "  -g, --generate    Run the SBOM generation process (default action)."
-    echo "  -v, --validate    Run validation on existing SBOM files."
-    echo "  -h, --help        Show this help message and exit."
+    echo "  -g, --generate        Run the SBOM generation process (default action)."
+    echo "  -f, --force-generate  Force regeneration of all existing SBOM files."
+    echo "  -v, --validate        Run validation on existing SBOM files."
+    echo "  -h, --help            Show this help message and exit."
     echo ""
     echo "If no option is provided, the script will run the SBOM generation by default."
 }
@@ -29,12 +30,17 @@ show_help() {
 # ==============================================================================
 
 generate_sboms() {
-    echo "--- Start SBOMs generation process ---"
+    FORCE_MODE=$1
+    if [[ "$FORCE_MODE" == "force" ]]; then
+        echo "--- Starting SBOMs generation process (Forced) ---"
+    else
+        echo "--- Starting SBOMs generation process ---"
+    fi
+
     # Default value "owned-by-package"
     # Ref.: https://github.com/anchore/syft/wiki/file-selection
     export SYFT_FILE_METADATA_SELECTION="none"
 
-    echo "--- Starting SBOM generation for the dx repository ---"
     #########################################################
     # Create the output directory only if it does not exist #
     #########################################################
@@ -53,7 +59,7 @@ generate_sboms() {
     # Ref.: https://github.com/anchore/syft/wiki/excluding-file-paths
     workspace_filename="${SBOM_DIR}/sbom-npm-workspace.json"
 
-    if [[ ! -f "$workspace_filename" || "$run_workspace_sbom" == true ]]; then
+    if [[ "$FORCE_MODE" == "force" || ! -f "$workspace_filename" ]]; then
         echo "▶️  Generating SBOM for Node.js (pnpm) dependencies and Go providers in ./providers/..."
         syft . -o cyclonedx-json \
             --exclude ./infra \
@@ -65,7 +71,10 @@ generate_sboms() {
             --exclude '**/*.png' \
             | jq . | sed "s|${CURRENT_DIR}/|./|g" > "$workspace_filename"
         echo "✅ Created: $workspace_filename"
+    else
+        echo "✅ SBOM for workspace already exists. Skipping."
     fi
+
     ##########################################################
     # Generate SBOMs for Terraform providers in ./providers/ #
     ##########################################################
@@ -81,7 +90,7 @@ generate_sboms() {
 
             echo "    -> Found Provider: ${provider_name}."
 
-            if [[ ! -f "$output_filename" || " ${changed_providers[@]} " =~ " ${provider_name} " ]]; then
+            if [[ "$FORCE_MODE" == "force" || ! -f "$output_filename" ]]; then
                 echo "    -> Generating SBOM for ${provider_name}..."
                 (
                     cd "${provider_dir}" && syft . -o cyclonedx-json
@@ -108,7 +117,7 @@ generate_sboms() {
 
             echo "    -> Found Terraform module: ${module_name}."
 
-            if [[ ! -f "$output_filename" || " ${changed_modules[@]} " =~ " ${module_name} " ]]; then
+            if [[ "$FORCE_MODE" == "force" || ! -f "$output_filename" ]]; then
                 # Check if 'terraform init' has already been run
                 if [ ! -d "${module_dir}/.terraform" ]; then
                     echo "        -> '.terraform' directory not found. Running 'terraform init'..."
@@ -134,7 +143,6 @@ generate_sboms() {
     echo ""
     echo "--- 🎉 Process complete! ---"
     echo "All SBOMs have been saved to the directory: ./${SBOM_DIR}"
-    ls -l ${SBOM_DIR}
 }
 
 # ==============================================================================
@@ -177,6 +185,9 @@ echo "✅ All required commands are present."
 case "$1" in
     -g|--generate)
         generate_sboms
+        ;;
+    -f|--force-generate)
+        generate_sboms "force"
         ;;
     -v|--validate)
         validate_sboms

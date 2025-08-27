@@ -44,7 +44,7 @@ dist
 node_modules
 .turbo
 
-sboms
+sboms/
 
 # vitest
 coverage
