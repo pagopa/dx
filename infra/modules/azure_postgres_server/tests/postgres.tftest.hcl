@@ -159,8 +159,6 @@ run "postgres_replica_location_correct_plan" {
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "default"
 
-    replica_location = "westeurope"
-
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
@@ -172,7 +170,7 @@ run "postgres_replica_location_correct_plan" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_postgresql_flexible_server.replica[0].location == "westeurope"
-    error_message = "The PostgreSQL Flexible Server replica must be created in the specified location (westeurope)"
+    condition     = azurerm_postgresql_flexible_server.replica[0].location == "spaincentral"
+    error_message = "The PostgreSQL Flexible Server replica must be created in the default location (spaincentral)"
   }
 }

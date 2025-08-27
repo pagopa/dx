@@ -121,8 +121,8 @@ variable "create_replica" {
 
 variable "replica_location" {
   type        = string
-  description = "The location where the replica PostgreSQL Flexible Server should be created. Defaults to the same as the primary server."
-  default     = null
+  description = "The location where the replica PostgreSQL Flexible Server should be created. Defaults to another region to improve Disaster Recovery."
+  default     = "spaincentral"
 }
 
 #-------------------#

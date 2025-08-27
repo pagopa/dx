@@ -7,7 +7,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 
   name                = local.replica.name
   resource_group_name = var.resource_group_name
-  location            = local.replica.location
+  location            = var.replica_location
   version             = var.db_version
 
   # Network
