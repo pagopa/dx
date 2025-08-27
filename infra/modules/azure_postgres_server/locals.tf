@@ -21,7 +21,7 @@ locals {
   }
 
   replica = {
-    create   = var.use_case != "development" && var.create_replica == true
+    create   = var.create_replica == true
     name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" }))
     location = var.replica_location != null ? var.replica_location : var.environment.location
   }
