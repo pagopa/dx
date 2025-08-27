@@ -60,11 +60,9 @@ You can override this behavior using the `--force-generate` flag.
 
 ### Usage
 
-The script can be run directly or through Turborepo task aliases.
-
 #### Using the Shell Script
 
-You can execute the script directly from your terminal.
+You can execute the script directly from your terminal:
 
 - **To generate or update all SBOMs** (this is the default action):
 
@@ -92,7 +90,8 @@ sh ./sbom.sh
 
 #### Using Turborepo
 
-You can also run the script using the predefined Turborepo task aliases.
+You can also run the script using the predefined Turborepo tasks defined in the
+`package.json` file:
 
 - **To generate or update all SBOMs**:
 
