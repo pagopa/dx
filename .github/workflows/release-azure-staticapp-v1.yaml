@@ -76,51 +76,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: Prune
-        run: npx turbo prune --scope=$WORKSPACE
-        env:
-          WORKSPACE: ${{ inputs.workspace_name }}
-
-      - name: Node Setup
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+      - name: Build Package
+        id: build-package
+        uses: pagopa/dx/.github/actions/build-workspace@main
         with:
-          working_dir: ./out
-      
-      - name: Install dependencies (npm)
-        if: steps.node-setup.outputs.package-manager == 'npm'
-        run: npm ci
-        working-directory: ./out
-
-      - name: Install dependencies (yarn)
-        if: steps.node-setup.outputs.package-manager == 'yarn'
-        run: yarn install --immutable
-        working-directory: ./out
-
-      - name: Install dependencies (pnpm)
-        if: steps.node-setup.outputs.package-manager == 'pnpm'
-        run: pnpm install
-        working-directory: ./out
-
-      - name: Build project
-        run: npx turbo build
-        working-directory: ./out
-
-      - name: Find build output directory path
-        id: find_package
+          workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
-          TURBO_PRINT_VERSION_DISABLED: 1
-          WORKSPACE: ${{ inputs.workspace_name }}
+          WORKSPACE_NAME: ${{ inputs.workspace_name }}
+      
+      - name: Get Artifact path
+        id: get-artifact-path
+        working-directory: ${{ steps.build-package.outputs.workspace-path }}
         run: |
-          packages_path=$(npx turbo ls --output json | jq -sr --arg WORKSPACE "$WORKSPACE" '.[].packages.items[] | select(.name==$WORKSPACE).path')
-          echo "Found $OUTPUT_DIR directory at: ./out/$packages_path/$OUTPUT_DIR"
-          echo "packages_path=./out/$packages_path/$OUTPUT_DIR" >> $GITHUB_OUTPUT
+          echo "::debug::Packaging for static deployment"
+          echo "artifact-path=$(realpath ./$OUTPUT_DIR)" >> $GITHUB_OUTPUT
+        env:
+          OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
-          file_path: ${{ steps.find_package.outputs.packages_path }}
+          file_path: ${{ steps.get-artifact-path.outputs.artifact-path }}
 
   deploy:
     name: Deploy

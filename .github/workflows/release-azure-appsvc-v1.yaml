@@ -60,33 +60,17 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup Node.js
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Install dependencies (pnpm)
-        if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
-        run: pnpm --filter $WORKSPACE_NAME install
-
-      - name: Install dependencies (yarn)
-        if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
-        run: yarn install --immutable
-
-      - name: Build
-        run: npx turbo build --filter $WORKSPACE_NAME
-
-      - name: Get workspace path
-        id: get-workspace-path
-        run: |
-          WORKSPACE_PATH=$(npx turbo ls --output=json |
-            jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
-          echo "path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
+      - name: Build Package
+        id: build-package
+        uses: pagopa/dx/.github/actions/build-workspace@main
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
 
       - name: Make artifact
         id: make-artifact
         env:
-          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
-        working-directory: ${{ steps.get-workspace-path.outputs.path }}
+          PACKAGE_MANAGER: ${{ steps.build-package.outputs.package-manager }}
+        working-directory: ${{ steps.build-package.outputs.workspace-path }}
         run: |
           if grep -rq --include='next.config.*' 'output: "standalone"' .; then
             echo "::debug::The workspace contains a Next.js standalone app"
