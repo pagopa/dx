@@ -1,5 +1,11 @@
 name: Generate Mermaid Diagrams for Terraform modules
 
+# Trigger the workflow on pull requests that modify .dot files or manually via workflow_dispatch
+# For workflow_dispatch, an optional input 'dot_path' can be provided to specify a single .dot file to convert
+# If 'dot_path' is not provided, all changed .dot files in the PR will be processed
+# The workflow will create or update corresponding Mermaid diagrams in README.md files within the same directories
+# The generated diagrams will be committed back to the PR branch
+
 on:
   pull_request:
     types:
