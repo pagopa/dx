@@ -33,6 +33,7 @@ No modules.
 |------|-------------|
 | <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
 | <a name="output_dynamodb_endpoint_id"></a> [dynamodb\_endpoint\_id](#output\_dynamodb\_endpoint\_id) | The ID of the DynamoDB VPC endpoint |
+| <a name="output_github_personal_access_token_ssm_parameter_name"></a> [github\_personal\_access\_token\_ssm\_parameter\_name](#output\_github\_personal\_access\_token\_ssm\_parameter\_name) | SSM parameter name for the GitHub personal access token |
 | <a name="output_internet_gateway_id"></a> [internet\_gateway\_id](#output\_internet\_gateway\_id) | The ID of the Internet Gateway |
 | <a name="output_isolated_route_table_ids"></a> [isolated\_route\_table\_ids](#output\_isolated\_route\_table\_ids) | List of IDs of the isolated route tables |
 | <a name="output_isolated_subnet_ids"></a> [isolated\_subnet\_ids](#output\_isolated\_subnet\_ids) | List of IDs of the isolated subnets |
