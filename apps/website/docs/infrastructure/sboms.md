@@ -11,15 +11,6 @@ software components and dependencies contained in an application. It provides a
 detailed list of all the libraries, frameworks, and modules that make up the
 software, along with their versions and licenses.
 
-SBOMs are crucial for modern software development because they:
-
-- **Enhance Security**: By providing a clear view of all dependencies, you can
-  quickly identify components with known vulnerabilities.
-- **Ensure Compliance**: Many regulations and industry standards now require a
-  detailed software inventory.
-- **Improve Transparency**: They offer a clear and auditable record of what's
-  inside your software supply chain.
-
 ## SBOM Management Script
 
 To streamline the process of handling SBOMs, this project includes a
@@ -55,8 +46,8 @@ When you run the generation command, the script performs the following actions:
 3. **Stores the SBOMs**: All generated JSON files are stored inside the `sboms`
    directory for easy access and validation.
 
-By default, the script will not regenerate an SBOM file if it already exists.
-You can override this behavior using the `--force-generate` flag.
+By default, the script will regenerate all SBOM files also if it already exists.
+You can override this behavior using the `--update` flag that generate only new sboms.
 
 ### Usage
 
@@ -64,17 +55,20 @@ You can override this behavior using the `--force-generate` flag.
 
 You can execute the script directly from your terminal:
 
-- **To generate or update all SBOMs** (this is the default action):
+- **To generate all SBOMs**, overwriting existing ones (this is the default action):
 
   ```sh
   sh ./sbom.sh --generate
+
+  # or
+  # sh ./sbom.sh
   ```
 
-Or simply:
+- **To generate only missing SBOMs** :
 
-```sh
-sh ./sbom.sh
-```
+  ```sh
+  sh ./sbom.sh --update
+  ```
 
 - **To validate existing SBOMs** for vulnerabilities:
 
@@ -82,18 +76,14 @@ sh ./sbom.sh
   sh ./sbom.sh --validate
   ```
 
-- **To force regenerate all SBOMs**, overwriting existing ones:
 
-  ```sh
-  sh ./sbom.sh --force-generate
-  ```
 
 #### Using Turborepo
 
 You can also run the script using the predefined Turborepo tasks defined in the
 `package.json` file:
 
-- **To generate or update all SBOMs**:
+- **To generate all SBOMs**:
 
   ```sh
   turbo sbom-generate
@@ -104,9 +94,4 @@ You can also run the script using the predefined Turborepo tasks defined in the
   ```sh
   turbo sbom-validate
   ```
-
-- **To force regenerate all SBOMs**:
-
-  ```sh
-  turbo sbom-generate -- --force-generate
-  ```
+  
