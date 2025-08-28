@@ -16,7 +16,7 @@ This module creates a Container App Job to be used as a GitHub self-hosted runne
 A usage example can be found in the [examples](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app/tree/main/examples/basic) directory.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

@@ -3,7 +3,7 @@
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-function-app/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-function-app%2Fazurerm%2Flatest)
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

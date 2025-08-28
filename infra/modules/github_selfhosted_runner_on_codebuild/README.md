@@ -157,7 +157,7 @@ Common issues and solutions:
    - Consider using a larger tier for resource-intensive workflows
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

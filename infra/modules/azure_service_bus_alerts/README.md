@@ -14,7 +14,7 @@ This Terraform module provisions alerts to monitor the amount of messages in bot
 An example of how to use this module can be found in the [example/simple](https://github.com/pagopa-dx/terraform-azurerm-azure-service-bus-dlq-alert/tree/main/example/simple) directory.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

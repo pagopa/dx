@@ -22,7 +22,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 - A [develop example](https://github.com/pagopa-dx/terraform-azurerm-azure-core-infra/tree/main/example/develop) that extends the basic infrastructure with additional resources to bootstrap a development environment on Azure.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

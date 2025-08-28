@@ -52,7 +52,7 @@ module "service_bus_01" {
 - A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-services-bus-namespace/tree/main/examples/complete) demonstrates all features.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

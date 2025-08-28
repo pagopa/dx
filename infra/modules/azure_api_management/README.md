@@ -43,7 +43,7 @@ If you need to disable public network access, you must first create the APIM wit
 After that, submit a new _Pull Request_ to update the variable to `false` and apply the changes.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

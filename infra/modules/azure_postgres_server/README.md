@@ -28,46 +28,7 @@ This Terraform module provisions an Azure PostgreSQL Flexible Server along with 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-postgres-server/tree/main/example/complete) directory.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
-```mermaid
-graph LR
-
-subgraph Primary Server
-  PrimaryServer["PostgreSQL Flexible Server"]
-  PgbouncerConfig["Configuration - PgBouncer"]
-  PrivateEndpoint["Private Endpoint"]
-  DiagnosticSettingPrimary["Diagnostic Setting"]
-  MetricAlertPrimary["Metric Alert"]
-  ManagementLock["Management Lock"]
-end
-
-subgraph Replica Server
-  ReplicaServer["PostgreSQL Flexible Server Replica"]
-  PgbouncerConfigReplica["Configuration - PgBouncer Replica"]
-  PrivateEndpointReplica["Private Endpoint Replica"]
-  DiagnosticSettingReplica["Diagnostic Setting Replica"]
-  MetricAlertReplica["Metric Alert Replica"]
-  VirtualEndpoint["Virtual Endpoint"]
-end
-
-PrivateDNSZone["Private DNS Zone - postgre_dns_zone"]
-
-ManagementLock --> PrimaryServer
-DiagnosticSettingPrimary --> PrimaryServer
-MetricAlertPrimary --> PrimaryServer
-PgbouncerConfig --> PrimaryServer
-PrivateEndpoint --> PrimaryServer
-
-DiagnosticSettingReplica --> ReplicaServer
-MetricAlertReplica --> ReplicaServer
-PgbouncerConfigReplica --> ReplicaServer
-PrivateEndpointReplica --> ReplicaServer
-VirtualEndpoint --> ReplicaServer
-
-ReplicaServer --> PrimaryServer
-PrimaryServer --> PrivateDNSZone
-```
-
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

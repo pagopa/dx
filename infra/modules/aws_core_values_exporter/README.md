@@ -4,7 +4,7 @@ This Terraform module enables the standardized export and sharing of core AWS in
 It is designed to harmonize the configuration of cloud resources by exposing key outputs such as security groups, network details, and shared service endpoints from the main `aws-core-infra` state, making them easily consumable by dependent modules and project-specific stacks.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

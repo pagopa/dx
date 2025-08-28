@@ -26,7 +26,7 @@ This Terraform module provisions an Azure Event Hub namespace, event hubs, consu
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-event-hub/tree/main/example/complete) folder in the module repository.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

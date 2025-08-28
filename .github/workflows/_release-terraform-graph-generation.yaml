@@ -197,7 +197,7 @@ jobs:
                 echo "Skipping: README.md not found at $readme_file"
                 continue
               fi
-              if ! grep -q "<!-- START_TF_GRAPH -->" "$readme_file"; then
+              if ! grep -q "<!-- BEGIN_TF_GRAPH -->" "$readme_file"; then
                 echo "Skipping: Start tag not found in $readme_file"
                 continue
               fi
@@ -211,7 +211,7 @@ jobs:
                 BEGIN {
                   while ((getline line < f) > 0) graph = graph line "\n"
                 }
-                /<!-- START_TF_GRAPH -->/ { print; print graph; skip=1; next }
+                /<!-- BEGIN_TF_GRAPH -->/ { print; print graph; skip=1; next }
                 /<!-- END_TF_GRAPH -->/ { skip=0 }
                 !skip
               ' "$readme_file" > "$readme_file.tmp" && mv "$readme_file.tmp" "$readme_file"

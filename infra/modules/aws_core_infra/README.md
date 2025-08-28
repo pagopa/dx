@@ -166,7 +166,7 @@ module "aws_core_infra" {
 - NAT Gateway costs can be significant - consider using 1 NAT Gateway for non-production environments
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

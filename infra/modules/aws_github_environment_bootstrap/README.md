@@ -159,7 +159,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 ```
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

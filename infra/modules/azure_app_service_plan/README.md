@@ -50,7 +50,7 @@ module "app_service_plan" {
 This example creates an App Service Plan in the `italynorth` region with a small (`s`) tier.
 
 ## Diagram
-<!-- START_TF_GRAPH -->
+<!-- BEGIN_TF_GRAPH -->
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->
