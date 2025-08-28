@@ -79,7 +79,6 @@ export type PackageJsonReader = {
 
 export type PackageManager = z.infer<typeof packageManagerSchema>;
 
-export type RootRequiredScript = Pick<Script, "name">;
 export type Script = z.infer<typeof scriptSchema>;
 
 const findMissingScripts = (
