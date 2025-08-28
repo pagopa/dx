@@ -15,6 +15,14 @@ An example of how to use this module can be found in the [example/simple](https:
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Monitor Metric Alerts
+    MonitorMetricAlertActive["Monitor Metric Alert - Active"]
+    MonitorMetricAlertDLQ["Monitor Metric Alert - DLQ"]
+  end
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

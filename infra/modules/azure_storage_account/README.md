@@ -31,6 +31,52 @@ A complete example of how to use this module can be found in the [example/comple
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph Data Sources
+  KVData["Key Vault"]
+  DNSZone["Private DNS Zone - Storage Account"]
+  Subscription["Subscription"]
+end
+
+subgraph Key Vault
+  KVKey["Key Vault Key"]
+  KVAccessPolicy["Key Vault Access Policy"]
+  RoleAssignment["Role Assignment"]
+end
+
+subgraph Storage Account Resources
+  StorageAccount["Storage Account"]
+  NetworkRules["Storage Account Network Rules"]
+  CustomerManagedKey["Storage Account Customer Managed Key"]
+  MetricAlert["Storage Account Health Check Alert"]
+  StorageDefender["Security Center Storage Defender"]
+  PrivateEndpoint["Private Endpoint"]
+end
+
+KVAccessPolicy --> KVData
+KVAccessPolicy --> Subscription
+KVAccessPolicy --> StorageAccount
+
+RoleAssignment --> KVData
+RoleAssignment --> Subscription
+RoleAssignment --> StorageAccount
+
+KVKey --> KVAccessPolicy
+
+CustomerManagedKey --> KVKey
+
+MetricAlert --> StorageAccount
+
+PrivateEndpoint --> DNSZone
+PrivateEndpoint --> StorageAccount
+
+StorageDefender --> StorageAccount
+
+NetworkRules --> StorageAccount
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

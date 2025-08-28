@@ -63,6 +63,35 @@ module "azure_federated_identity_with_github" {
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Continuous Deployment
+    CD_RG["CD Resource Group"]
+    CD_GitHub_FedCred["CD GitHub Federated Identity Credential"]
+    CD_Identity["CD User Assigned Identity"]
+    CD_RA_RG["Role Assignment: Resource Group"]
+    CD_RA_Sub["Role Assignment: Subscription"]
+  end
+
+  subgraph Continuous Integration
+    CI_RG["CI Resource Group"]
+    CI_GitHub_FedCred["CI GitHub Federated Identity Credential"]
+    CI_Identity["CI User Assigned Identity"]
+    CI_RA_RG["Role Assignment: Resource Group"]
+    CI_RA_Sub["Role Assignment: Subscription"]
+  end
+
+  CD_GitHub_FedCred --> CD_Identity
+  CD_RA_RG --> CD_RG
+  CD_RA_RG --> CD_Identity
+  CD_RA_Sub --> CD_Identity
+
+  CI_GitHub_FedCred --> CI_Identity
+  CI_RA_RG --> CI_RG
+  CI_RA_RG --> CI_Identity
+  CI_RA_Sub --> CI_Identity
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

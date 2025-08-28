@@ -160,6 +160,82 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph Identity Provider
+  OIDCProvider["OpenID Connect Provider"]
+end
+
+subgraph Policy Documents
+  GitHubAssumePolicy["GitHub Assume Role Policy"]
+  ECSReadOnlyDoc["ECS Read-Only Policy Document"]
+end
+
+subgraph AWS Managed Policies
+  AdminAccess["Administrator Access"]
+  ECSAdminAccess["ECS Admin Access"]
+  LambdaAdminAccess["Lambda Admin Access"]
+  LambdaReadOnlyAccess["Lambda Read-Only Access"]
+  ReadOnlyAccess["Read-Only Access"]
+end
+
+subgraph Custom IAM Policies
+  RoEcsPolicy["Ro ECS Policy"]
+end
+
+subgraph IAM Roles
+  AppCD["App CD Role"]
+  AppCI["App CI Role"]
+  InfraCD["Infra CD Role"]
+  InfraCI["Infra CI Role"]
+end
+
+subgraph Role Attachments
+  AppCDAdminECS["App CD Admin ECS Attachment"]
+  AppCDAdminLambda["App CD Admin Lambda Attachment"]
+  AppCIRoECS["App CI Read-Only ECS Attachment"]
+  AppCIRoLambda["App CI Read-Only Lambda Attachment"]
+  InfraCDAdmin["Infra CD Administrator Attachment"]
+  InfraCIRo["Infra CI Read-Only Attachment"]
+end
+
+subgraph GitHub Environment Secrets
+  AppCDSecret["App CD Environment Secret"]
+  AppCISecret["App CI Environment Secret"]
+  InfraCDSecret["Infra CD Environment Secret"]
+  InfraCISecret["Infra CI Environment Secret"]
+end
+
+GitHubAssumePolicy --> OIDCProvider
+AppCD --> GitHubAssumePolicy
+AppCI --> GitHubAssumePolicy
+InfraCD --> GitHubAssumePolicy
+InfraCI --> GitHubAssumePolicy
+
+RoEcsPolicy --> ECSReadOnlyDoc
+
+AppCDAdminECS --> ECSAdminAccess
+AppCDAdminECS --> AppCD
+AppCDAdminLambda --> LambdaAdminAccess
+AppCDAdminLambda --> AppCD
+
+AppCIRoECS --> RoEcsPolicy
+AppCIRoECS --> AppCI
+AppCIRoLambda --> LambdaReadOnlyAccess
+AppCIRoLambda --> AppCI
+
+InfraCDAdmin --> AdminAccess
+InfraCDAdmin --> InfraCD
+InfraCIRo --> ReadOnlyAccess
+InfraCIRo --> InfraCI
+
+AppCDSecret --> AppCD
+AppCISecret --> AppCI
+InfraCDSecret --> InfraCD
+InfraCISecret --> InfraCI
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

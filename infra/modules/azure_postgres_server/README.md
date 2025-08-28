@@ -32,40 +32,43 @@ A complete example of how to use this module can be found in the [example/comple
 ```mermaid
 graph LR
 
-subgraph Primary Server
-  PrimaryServer["PostgreSQL Flexible Server"]
-  PgbouncerConfig["Configuration - PgBouncer"]
-  PrivateEndpoint["Private Endpoint"]
-  DiagnosticSettingPrimary["Diagnostic Setting"]
-  MetricAlertPrimary["Metric Alert"]
+subgraph PostgreSQL Servers
+  PostgresPrimary["PostgreSQL Flexible Server (Primary)"]
+  PostgresReplica["PostgreSQL Flexible Server (Replica)"]
+end
+
+subgraph Monitoring
   ManagementLock["Management Lock"]
+  DSPrimary["Diagnostic Setting (Primary)"]
+  MAPrimary["Metric Alert (Primary)"]
+  DSReplica["Diagnostic Setting (Replica)"]
+  MAReplica["Metric Alert (Replica)"]
 end
 
-subgraph Replica Server
-  ReplicaServer["PostgreSQL Flexible Server Replica"]
-  PgbouncerConfigReplica["Configuration - PgBouncer Replica"]
-  PrivateEndpointReplica["Private Endpoint Replica"]
-  DiagnosticSettingReplica["Diagnostic Setting Replica"]
-  MetricAlertReplica["Metric Alert Replica"]
-  VirtualEndpoint["Virtual Endpoint"]
+subgraph Configurations
+  ConfigPrimary["PgBouncer Configuration (Primary)"]
+  ConfigReplica["PgBouncer Configuration (Replica)"]
 end
 
-PrivateDNSZone["Private DNS Zone - postgre_dns_zone"]
+subgraph Networking
+  PrivateEndpointPrimary["Private Endpoint (Primary)"]
+  PrivateEndpointReplica["Private Endpoint (Replica)"]
+  VirtualEndpoint["Flexible Server Virtual Endpoint"]
+  DNSZone["Private DNS Zone"]
+end
 
-ManagementLock --> PrimaryServer
-DiagnosticSettingPrimary --> PrimaryServer
-MetricAlertPrimary --> PrimaryServer
-PgbouncerConfig --> PrimaryServer
-PrivateEndpoint --> PrimaryServer
-
-DiagnosticSettingReplica --> ReplicaServer
-MetricAlertReplica --> ReplicaServer
-PgbouncerConfigReplica --> ReplicaServer
-PrivateEndpointReplica --> ReplicaServer
-VirtualEndpoint --> ReplicaServer
-
-ReplicaServer --> PrimaryServer
-PrimaryServer --> PrivateDNSZone
+ManagementLock --> PostgresPrimary
+DSPrimary --> PostgresPrimary
+MAPrimary --> PostgresPrimary
+DSReplica --> PostgresReplica
+MAReplica --> PostgresReplica
+PostgresReplica --> PostgresPrimary
+PostgresPrimary --> DNSZone
+ConfigPrimary --> PostgresPrimary
+ConfigReplica --> PostgresReplica
+VirtualEndpoint --> PostgresReplica
+PrivateEndpointPrimary --> PostgresPrimary
+PrivateEndpointReplica --> PostgresReplica
 ```
 
 <!-- END_TF_GRAPH -->

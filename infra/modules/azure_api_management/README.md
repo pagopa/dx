@@ -44,6 +44,58 @@ After that, submit a new _Pull Request_ to update the variable to `false` and ap
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph "API Management"
+    APIMService["API Management Service"]
+    APIMCert["API Management Certificate"]
+    KVCert["Key Vault Certificate"]
+    APIMPolicy["API Management Policy"]
+    APIMLogger["API Management Logger"]
+    APIMDiag["API Management Diagnostic"]
+    AutoScale["Autoscale Setting"]
+    DMSetting["Diagnostic Setting"]
+    MetricAlert["Metric Alert"]
+  end
+
+  subgraph "Virtual Network"
+    VNet["Virtual Network"]
+    NSG["Network Security Group"]
+    NSGAssoc["Subnet NSG Association"]
+  end
+
+  subgraph "Private DNS"
+    DNSZoneAPI["Private DNS Zone - azure-api.net"]
+    DNSZoneMgmt["Private DNS Zone - management.azure-api.net"]
+    DNSZoneSCM["Private DNS Zone - scm.azure-api.net"]
+    DNSRecAPI["A Record - apim.azure-api.net"]
+    DNSRecMgmt["A Record - apim.management.azure-api.net"]
+    DNSRecSCM["A Record - apim.scm.azure-api.net"]
+  end
+
+  APIMCert --> KVCert
+  APIMCert --> APIMService
+  APIMDiag --> APIMLogger
+  APIMLogger --> APIMService
+  APIMPolicy --> APIMService
+  AutoScale --> APIMService
+  DMSetting --> APIMService
+  MetricAlert --> APIMService
+
+  DNSRecAPI --> DNSZoneAPI
+  DNSRecAPI --> APIMService
+  DNSRecMgmt --> DNSZoneMgmt
+  DNSRecMgmt --> APIMService
+  DNSRecSCM --> DNSZoneSCM
+  DNSRecSCM --> APIMService
+
+  DNSZoneAPI --> VNet
+  DNSZoneMgmt --> VNet
+  DNSZoneSCM --> VNet
+  NSG --> VNet
+  NSGAssoc --> NSG
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

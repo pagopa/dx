@@ -5,6 +5,11 @@ It is designed to harmonize the configuration of cloud resources by exposing key
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  remoteStateCore["Terraform Remote State Core"]
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

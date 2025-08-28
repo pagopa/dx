@@ -4,6 +4,60 @@
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Function Apps
+    FuncApp["Linux Function App"]
+    FuncAppSlot["Linux Function App Slot"]
+  end
+
+  subgraph Service Plan
+    ServicePlan["Service Plan"]
+  end
+
+  subgraph Storage Accounts
+    DurableStorage["Storage Account - Durable Function"]
+    Storage["Storage Account"]
+  end
+
+  subgraph Prod Role Assignments
+    RA_Blob["Role Assignment - Durable Function Storage Blob Data Contributor"]
+    RA_Queue["Role Assignment - Durable Function Storage Queue Data Contributor"]
+    RA_Table["Role Assignment - Durable Function Storage Table Data Contributor"]
+    RA_Account["Role Assignment - Function Storage Account Contributor"]
+    RA_BlobOwner["Role Assignment - Function Storage Blob Data Owner"]
+    RA_QueueContrib["Role Assignment - Function Storage Queue Data Contributor"]
+  end
+
+  subgraph Staging Role Assignments
+    SRA_Blob["Role Assignment - Staging Durable Function Storage Blob Data Contributor"]
+    SRA_Queue["Role Assignment - Staging Durable Function Storage Queue Data Contributor"]
+    SRA_Table["Role Assignment - Staging Durable Function Storage Table Data Contributor"]
+    SRA_Account["Role Assignment - Staging Function Storage Account Contributor"]
+    SRA_BlobOwner["Role Assignment - Staging Function Storage Blob Data Owner"]
+    SRA_QueueContrib["Role Assignment - Staging Function Storage Queue Data Contributor"]
+  end
+
+  FuncApp --> ServicePlan
+  FuncApp --> DurableStorage
+  FuncApp --> Storage
+  FuncAppSlot --> FuncApp
+
+  RA_Blob --> FuncApp
+  RA_Queue --> FuncApp
+  RA_Table --> FuncApp
+  RA_Account --> FuncApp
+  RA_BlobOwner --> FuncApp
+  RA_QueueContrib --> FuncApp
+
+  SRA_Blob --> FuncAppSlot
+  SRA_Queue --> FuncAppSlot
+  SRA_Table --> FuncAppSlot
+  SRA_Account --> FuncAppSlot
+  SRA_BlobOwner --> FuncAppSlot
+  SRA_QueueContrib --> FuncAppSlot
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

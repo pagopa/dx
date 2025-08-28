@@ -28,6 +28,37 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+  subgraph Key Vault
+    KeyVaultAccessPolicy["Key Vault Access Policy"]
+    ClientConfig["Client Config"]
+    RoleAssignmentCertificates["Role Assignment - Certificates"]
+    RoleAssignmentKeys["Role Assignment - Keys"]
+    RoleAssignmentSecrets["Role Assignment - Secrets"]
+  end
+
+  KeyVaultAccessPolicy --> ClientConfig
+
+  subgraph Service Bus
+    RoleAssignmentQueues["Role Assignment - Queues"]
+    RoleAssignmentSubscriptions["Role Assignment - Subscriptions"]
+    RoleAssignmentTopics["Role Assignment - Topics"]
+  end
+
+  subgraph Storage Account
+    RoleAssignmentBlob["Role Assignment - Blob"]
+    RoleAssignmentQueue["Role Assignment - Queue"]
+    RoleAssignmentTable["Role Assignment - Table"]
+  end
+
+  RedisCacheAccessPolicyAssignment["Redis Cache Access Policy Assignment"]
+  EventHubRoleAssignment["Event Hub Role Assignment"]
+  APIManagementRoleAssignment["API Management Role Assignment"]
+  CosmosDBSQLRoleAssignment["CosmosDB SQL Role Assignment"]
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

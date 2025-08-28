@@ -153,6 +153,217 @@ This module includes practical examples to help you get started quickly:
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph Federated Identity Credentials
+  GitHubAppCd["GitHub App CD"]
+  GitHubAppCi["GitHub App CI"]
+  GitHubInfraCd["GitHub Infra CD"]
+  GitHubInfraCi["GitHub Infra CI"]
+  GitHubOpexCd["GitHub Opex CD"]
+  GitHubOpexCi["GitHub Opex CI"]
+end
+
+subgraph Key Vault Access Policies
+  InfraCdKVCommon["Key Vault Access Policy - Infra CD"]
+  InfraCiKVCommon["Key Vault Access Policy - Infra CI"]
+end
+
+subgraph Role Assignments - Resource Groups
+  AdminsGroupRGs["Admins Group - RGs"]
+  AdminsGroupRGsKVAdmin["Admins Group - KV Admin"]
+  AdminsGroupRGsKVData["Admins Group - KV Data"]
+  DevsGroupRGs["Devs Group - RGs"]
+  DevsGroupTFRGsKVSecret["Devs Group - TF RG KV Secret"]
+  ExternalsGroupRGs["Externals Group - RGs"]
+end
+
+subgraph Role Assignments - App CD
+  AppCDBlobContributor["Blob Data Contributor"]
+  AppCDCAEContributor["CAE Contributor"]
+  AppCDCdnProfileContributor["CDN Profile Contributor"]
+  AppCDWebsiteContributor["Website Contributor"]
+  AppCDSubscriptionReader["Subscription Reader"]
+  AppCDTFRGBlobContributor["TF RG Blob Contributor"]
+end
+
+subgraph Role Assignments - App CI
+  AppCISubscriptionPagopaIACReader["Subscription Pagopa IaC Reader"]
+  AppCISubscriptionReader["Subscription Reader"]
+end
+
+subgraph Role Assignments - Infra CD
+  InfraCDAPIMServiceContributor["APIM Service Contributor"]
+  InfraCDLogAnalyticsContributor["Log Analytics Workspace Contributor"]
+  InfraCDNatGwNetworkContributor["NAT GW Network Contributor"]
+  InfraCDNetworkContributor["Network Contributor"]
+  InfraCDPrivateDNSZoneContributor["Private DNS Zone Contributor"]
+  InfraCDRGsCAContributor["RGs CA Contributor"]
+  InfraCDRGsContributor["RGs Contributor"]
+  InfraCDRGsKVCert["RGs KV Certificate Contributor"]
+  InfraCDRGsKVCrypto["RGs KV Cryptography Contributor"]
+  InfraCDRGsKVSecret["RGs KV Secret Contributor"]
+  InfraCDRGsStBlobContributor["RGs Storage Blob Contributor"]
+  InfraCDRGsUserAccessAdmin["RGs User Access Administrator"]
+  InfraCDSBNSContributor["SBNS Contributor"]
+  InfraCDSTTFBlobContributor["ST TF Blob Contributor"]
+  InfraCDSubscriptionRBACAdmin["Subscription RBAC Administrator"]
+  InfraCDSubscriptionReader["Subscription Reader"]
+  InfraCDVNetNetworkContributor["VNet Network Contributor"]
+end
+
+subgraph Role Assignments - Infra CI
+  InfraCIRGsCAOperator["RGs CA Operator"]
+  InfraCIRGsCosmosContributor["RGs Cosmos DB Contributor"]
+  InfraCIRGsKVCert["RGs KV Certificate"]
+  InfraCIRGsKVCrypto["RGs KV Cryptography"]
+  InfraCIRGsKVSecret["RGs KV Secret"]
+  InfraCIRGsSTBlobReader["ST Blob Reader"]
+  InfraCIRGsSTQueueContributor["ST Queue Contributor"]
+  InfraCIRGsSTQueueReader["ST Queue Reader"]
+  InfraCIRGsSTTableContributor["ST Table Contributor"]
+  InfraCIRGsSTTableReader["ST Table Reader"]
+  InfraCISubscriptionAPIMSecrets["Subscription APIM Secrets"]
+  InfraCISubscriptionDataAccess["Subscription Data Access"]
+  InfraCISubscriptionPagopaIACReader["Subscription Pagopa IaC Reader"]
+  InfraCISubscriptionReader["Subscription Reader"]
+  InfraCITFSTBlobContributor["TF ST Blob Contributor"]
+end
+
+subgraph Role Assignments - Opex CD
+  OpexCDRGMonitoringContributor["RG Monitoring Contributor"]
+  OpexCDRGOpexContributor["RG Opex Contributor"]
+  OpexCDSubscriptionReader["Subscription Reader"]
+  OpexCDTFRGBlobContributor["TF RG Blob Contributor"]
+  OpexCDTFRGBlobDataAccess["TF RG Blob Data Access"]
+end
+
+subgraph Role Assignments - Opex CI
+  OpexCISubscriptionDataAccess["Subscription Data Access"]
+  OpexCISubscriptionReader["Subscription Reader"]
+  OpexCITFRGBlobContributor["TF RG Blob Contributor"]
+end
+
+subgraph User Assigned Identities
+  AppCDIdentity["App CD"]
+  AppCIIdentity["App CI"]
+  InfraCDIdentity["Infra CD"]
+  InfraCIIdentity["Infra CI"]
+  OpexCDIdentity["Opex CD"]
+  OpexCIIdentity["Opex CI"]
+end
+
+subgraph GitHub Actions Secrets
+  GHSecretAppCD["Env Secret - App CD"]
+  GHSecretAppCI["Env Secret - App CI"]
+  GHSecretInfraCD["Env Secret - Infra CD"]
+  GHSecretInfraCI["Env Secret - Infra CI"]
+  GHSecretOpexCD["Env Secret - Opex CD"]
+  GHSecretOpexCI["Env Secret - Opex CI"]
+end
+
+subgraph GitHub Runner
+  CurrentClientConfig["Current Client Config"]
+  GitHubRunnerJob["GitHub Runner Job"]
+  KVAccessPolicyContainerApp["Key Vault Access Policy - Container App"]
+  RAKeyVaultContainerApp["Role Assignment - Container App Key Vault"]
+end
+
+MainRG["Resource Group - Main"]
+
+GitHubAppCd --> AppCDIdentity
+GitHubAppCi --> AppCIIdentity
+GitHubInfraCd --> InfraCDIdentity
+GitHubInfraCi --> InfraCIIdentity
+GitHubOpexCd --> OpexCDIdentity
+GitHubOpexCi --> OpexCIIdentity
+
+InfraCdKVCommon --> InfraCDIdentity
+InfraCiKVCommon --> InfraCIIdentity
+
+AdminsGroupRGs --> MainRG
+AdminsGroupRGsKVAdmin --> MainRG
+AdminsGroupRGsKVData --> MainRG
+DevsGroupRGs --> MainRG
+DevsGroupTFRGsKVSecret --> MainRG
+ExternalsGroupRGs --> MainRG
+
+AppCDIdentity --> MainRG
+AppCIIdentity --> MainRG
+InfraCDIdentity --> MainRG
+InfraCIIdentity --> MainRG
+OpexCDIdentity --> MainRG
+OpexCIIdentity --> MainRG
+
+AppCDBlobContributor --> AppCDIdentity
+AppCDCAEContributor --> AppCDIdentity
+AppCDCdnProfileContributor --> AppCDIdentity
+AppCDWebsiteContributor --> AppCDIdentity
+AppCDSubscriptionReader --> AppCDIdentity
+AppCDTFRGBlobContributor --> AppCDIdentity
+
+AppCISubscriptionPagopaIACReader --> AppCIIdentity
+AppCISubscriptionReader --> AppCIIdentity
+
+InfraCDAPIMServiceContributor --> InfraCDIdentity
+InfraCDLogAnalyticsContributor --> InfraCDIdentity
+InfraCDNatGwNetworkContributor --> InfraCDIdentity
+InfraCDNetworkContributor --> InfraCDIdentity
+InfraCDPrivateDNSZoneContributor --> InfraCDIdentity
+InfraCDRGsCAContributor --> InfraCDIdentity
+InfraCDRGsContributor --> InfraCDIdentity
+InfraCDRGsKVCert --> InfraCDIdentity
+InfraCDRGsKVCrypto --> InfraCDIdentity
+InfraCDRGsKVSecret --> InfraCDIdentity
+InfraCDRGsStBlobContributor --> InfraCDIdentity
+InfraCDRGsUserAccessAdmin --> InfraCDIdentity
+InfraCDSBNSContributor --> InfraCDIdentity
+InfraCDSTTFBlobContributor --> InfraCDIdentity
+InfraCDSubscriptionRBACAdmin --> InfraCDIdentity
+InfraCDSubscriptionReader --> InfraCDIdentity
+InfraCDVNetNetworkContributor --> InfraCDIdentity
+
+InfraCIRGsCAOperator --> InfraCIIdentity
+InfraCIRGsCosmosContributor --> InfraCIIdentity
+InfraCIRGsKVCert --> InfraCIIdentity
+InfraCIRGsKVCrypto --> InfraCIIdentity
+InfraCIRGsKVSecret --> InfraCIIdentity
+InfraCIRGsSTBlobReader --> InfraCIIdentity
+InfraCIRGsSTQueueContributor --> InfraCIIdentity
+InfraCIRGsSTQueueReader --> InfraCIIdentity
+InfraCIRGsSTTableContributor --> InfraCIIdentity
+InfraCIRGsSTTableReader --> InfraCIIdentity
+InfraCISubscriptionAPIMSecrets --> InfraCIIdentity
+InfraCISubscriptionDataAccess --> InfraCIIdentity
+InfraCISubscriptionPagopaIACReader --> InfraCIIdentity
+InfraCISubscriptionReader --> InfraCIIdentity
+InfraCITFSTBlobContributor --> InfraCIIdentity
+
+OpexCDRGMonitoringContributor --> OpexCDIdentity
+OpexCDRGOpexContributor --> OpexCDIdentity
+OpexCDSubscriptionReader --> OpexCDIdentity
+OpexCDTFRGBlobContributor --> OpexCDIdentity
+OpexCDTFRGBlobDataAccess --> OpexCDIdentity
+
+OpexCISubscriptionDataAccess --> OpexCIIdentity
+OpexCISubscriptionReader --> OpexCIIdentity
+OpexCITFRGBlobContributor --> OpexCIIdentity
+
+GHSecretAppCD --> AppCDIdentity
+GHSecretAppCI --> AppCIIdentity
+GHSecretInfraCD --> InfraCDIdentity
+GHSecretInfraCI --> InfraCIIdentity
+GHSecretOpexCD --> OpexCDIdentity
+GHSecretOpexCI --> OpexCIIdentity
+
+KVAccessPolicyContainerApp --> CurrentClientConfig
+KVAccessPolicyContainerApp --> GitHubRunnerJob
+RAKeyVaultContainerApp --> CurrentClientConfig
+RAKeyVaultContainerApp --> GitHubRunnerJob
+GitHubRunnerJob --> MainRG
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

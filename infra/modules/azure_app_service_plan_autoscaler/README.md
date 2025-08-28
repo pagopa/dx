@@ -20,6 +20,21 @@ For an example of how to use this module with multiple services in a shared plan
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Monitoring
+    AutoscaleSetting["Monitor Autoscale Setting"]
+  end
+
+  subgraph App Services
+    LinuxFunctionApp["Linux Function App"]
+    LinuxWebApp["Linux Web App"]
+  end
+
+  AutoscaleSetting --> LinuxFunctionApp
+  AutoscaleSetting --> LinuxWebApp
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

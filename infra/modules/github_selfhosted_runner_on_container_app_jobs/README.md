@@ -17,6 +17,22 @@ A usage example can be found in the [examples](https://github.com/pagopa-dx/terr
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Key Vault
+    kv_access_policy["Key Vault Access Policy - keyvault_containerapp"]
+    role_assignment["Role Assignment - keyvault_containerapp"]
+  end
+
+  client_config["Client Config"]
+  container_app_job["Container App Job - GitHub Runner"]
+
+  kv_access_policy --> client_config
+  kv_access_policy --> container_app_job
+  role_assignment --> client_config
+  role_assignment --> container_app_job
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

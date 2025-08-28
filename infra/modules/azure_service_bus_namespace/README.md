@@ -53,6 +53,21 @@ module "service_bus_01" {
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Service Bus
+    ServiceBusNamespace["Service Bus Namespace"]
+    MonitorAutoscaleSetting["Monitor Autoscale Setting"]
+    ServiceBusPrivateEndpoint["Service Bus Private Endpoint"]
+  end
+
+  PrivateDNSZone["Private DNS Zone"]
+
+  MonitorAutoscaleSetting --> ServiceBusNamespace
+  ServiceBusPrivateEndpoint --> ServiceBusNamespace
+  ServiceBusPrivateEndpoint --> PrivateDNSZone
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

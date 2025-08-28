@@ -26,6 +26,18 @@ For a complete example of how to use this module, refer to the [examples/complet
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph App Service
+    LinuxWebApp["Linux Web App"]
+    LinuxWebAppSlot["Linux Web App Slot"]
+    ServicePlan["Service Plan"]
+  end
+
+  LinuxWebAppSlot --> LinuxWebApp
+  LinuxWebApp --> ServicePlan
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

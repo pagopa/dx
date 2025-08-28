@@ -30,6 +30,26 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph Cosmos DB
+  cosmosDBAccount["Cosmos DB Account"]
+  sqlRoleAssignment["Cosmos DB SQL Role Assignment"]
+  metricAlert["Monitor Metric Alert - Cosmos DB Provisioned Throughput Exceeded"]
+end
+
+subgraph Networking
+  privateEndpointSQL["Private Endpoint - SQL"]
+  privateDnsZoneCosmos["Private DNS Zone - Cosmos"]
+end
+
+sqlRoleAssignment --> cosmosDBAccount
+metricAlert --> cosmosDBAccount
+privateEndpointSQL --> privateDnsZoneCosmos
+privateEndpointSQL --> cosmosDBAccount
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

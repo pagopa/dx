@@ -37,6 +37,55 @@ For additional support, refer to the [GitHub Provider Documentation](https://reg
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph "Repository Configuration"
+  Repo["GitHub Repository"]
+  BranchDefault["Default Branch (main)"]
+  BranchProtection["Branch Protection (main)"]
+  ActionsPermissions["Actions Repository Permissions"]
+  Autolink["Autolink Reference (Jira Board)"]
+  WorkflowPermissions["Workflow Permissions"]
+end
+
+subgraph "Environments"
+  AppCD["Environment: app_cd"]
+  AppCI["Environment: app_ci"]
+  InfraCD["Environment: infra_cd"]
+  InfraCI["Environment: infra_ci"]
+  OpexCD["Environment: opex_cd"]
+  OpexCI["Environment: opex_ci"]
+  AppCDBranchPolicy["Deployment Policy (app_cd_branch)"]
+  AppCDTagPolicy["Deployment Policy (app_cd_tag)"]
+  InfraCDBranchPolicy["Deployment Policy (infra_cd_branch)"]
+  InfraCDTagPolicy["Deployment Policy (infra_cd_tag)"]
+  OpexCDBranchPolicy["Deployment Policy (opex_cd_branch)"]
+  OpexCDTagPolicy["Deployment Policy (opex_cd_tag)"]
+end
+
+subgraph "Data Sources"
+  AllTeams["GitHub Organization Teams"]
+end
+
+ActionsPermissions --> Repo
+BranchDefault --> Repo
+BranchProtection --> Repo
+Autolink --> Repo
+WorkflowPermissions --> Repo
+
+AppCD --> AllTeams
+InfraCD --> AllTeams
+OpexCD --> AllTeams
+
+AppCDBranchPolicy --> AppCD
+AppCDTagPolicy --> AppCD
+InfraCDBranchPolicy --> InfraCD
+InfraCDTagPolicy --> InfraCD
+OpexCDBranchPolicy --> OpexCD
+OpexCDTagPolicy --> OpexCD
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

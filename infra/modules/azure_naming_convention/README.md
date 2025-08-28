@@ -37,6 +37,10 @@ This configuration will generate a resource name like `dx-d-itn-web-app-example-
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

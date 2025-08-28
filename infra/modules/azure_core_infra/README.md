@@ -23,6 +23,113 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Application Insights
+    AI["Application Insights"]
+    KVSecret["AppInsights Instrumentation Key"]
+  end
+  subgraph DNS
+    PDZ["Private DNS Zone"]
+    PDZLink["Private DNS Zone VNet Link"]
+  end
+  subgraph GitHub Runner
+    CAE["Container App Environment"]
+    Lock["Management Lock"]
+  end
+  subgraph Key Vault
+    KV["Key Vault"]
+    PEV["Private Endpoint"]
+  end
+  subgraph NAT Gateway
+    NGW["NAT Gateway"]
+    PIPA["IP Prefix Association"]
+    IPP["Public IP Prefix"]
+  end
+  subgraph Network
+    VNet["Virtual Network"]
+    S1["DNS Forwarder Subnet"]
+    S2["PEP Subnet"]
+    S3["Runner Subnet"]
+    S4["Test Subnet"]
+    S5["VPN Subnet"]
+    C1["DNS Forwarder CIDR"]
+    C2["PEP CIDR"]
+    C3["Runner CIDR"]
+    C4["Test CIDR"]
+    C5["VPN CIDR"]
+  end
+  subgraph "VPN DNS Forwarder"
+    CG["Container Group"]
+    ST["Secret Trigger"]
+    CF["Corefile"]
+  end
+  subgraph VPN
+    LNG["Local Network Gateway"]
+    PIP["Public IP"]
+    VGate["Virtual Network Gateway"]
+    VConn["Gateway Connection"]
+    DNSRS["DNS Random String"]
+    MDS1["Diagnostic Setting GW PIP"]
+    MDS2["Diagnostic Setting Sec GW Logs"]
+  end
+
+  RG_Common["Resource Group Common"]
+  RG_Network["Resource Group Network"]
+  RG_GH["Resource Group GH Runner"]
+  RG_Opex["Resource Group Opex"]
+  RG_Test["Resource Group Test"]
+  ClientConfig["Client Config"]
+  LogAnalytics["Log Analytics Workspace"]
+  AzureADApp["VPN AzureAD Application"]
+
+  AI --> LogAnalytics
+  KVSecret --> AI
+  KVSecret --> KV
+  LogAnalytics --> RG_Common
+  PDZ --> RG_Network
+  PDZLink --> PDZ
+  PDZLink --> VNet
+  CAE --> RG_GH
+  CAE --> LogAnalytics
+  CAE --> S3
+  Lock --> CAE
+  KV --> ClientConfig
+  KV --> RG_Common
+  PEV --> PDZ
+  PEV --> KV
+  PEV --> S2
+  NGW --> S4
+  PIPA --> NGW
+  PIPA --> IPP
+  IPP --> S4
+  S1 --> C1
+  S2 --> C2
+  S3 --> C3
+  S4 --> C4
+  S5 --> C5
+  VNet --> RG_Network
+  C1 --> S5
+  C2 --> VNet
+  C3 --> S2
+  C4 --> S1
+  C5 --> S3
+  CG --> S1
+  CG --> ST
+  ST --> CF
+  LNG --> RG_Network
+  MDS1 --> PIP
+  MDS2 --> VGate
+  PIP --> RG_Network
+  PIP --> DNSRS
+  VGate --> ClientConfig
+  VGate --> S5
+  VGate --> AzureADApp
+  VGate --> PIP
+  VConn --> LNG
+  VConn --> VGate
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

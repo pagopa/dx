@@ -27,6 +27,35 @@ For a complete example of how to use this module, refer to the [examples/complet
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Application
+    WebApp["Linux Web App"]
+    WebAppSlot["Linux Web App Slot"]
+    ServicePlan["Service Plan"]
+  end
+
+  subgraph Networking
+    Subnet["Subnet"]
+    VNet["Virtual Network"]
+  end
+
+  subgraph "Private Connectivity"
+    PrivateDNS["Private DNS Zone - App Service"]
+    PEProd["Private Endpoint - App Service Sites"]
+    PEStg["Private Endpoint - Staging App Service Sites"]
+  end
+
+  WebApp --> ServicePlan
+  WebApp --> Subnet
+  WebAppSlot --> WebApp
+  PEProd --> PrivateDNS
+  PEProd --> WebApp
+  PEStg --> PrivateDNS
+  PEStg --> WebAppSlot
+  Subnet --> VNet
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

@@ -4,6 +4,121 @@
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+  subgraph Application
+    LinuxApp["Linux Function App"]
+    AppSlot["Linux Function App Slot"]
+    ServicePlan["Service Plan"]
+  end
+
+  subgraph Storage
+    StorageAccount["Storage Account"]
+    DurableStorage["Durable Function Storage Account"]
+    SANR_ST["Storage Account Network Rules ST Network Rules"]
+    SANR_STD["Storage Account Network Rules STD Network Rules"]
+  end
+
+  subgraph PrivateEndpoints
+    PE_FuncSites["Private Endpoint Function Sites"]
+    PE_StBlob["Private Endpoint ST Blob"]
+    PE_StFile["Private Endpoint ST File"]
+    PE_StQueue["Private Endpoint ST Queue"]
+    PE_StagingFuncSites["Private Endpoint Staging Function Sites"]
+    PE_STD_Blob["Private Endpoint STD Blob"]
+    PE_STD_File["Private Endpoint STD File"]
+    PE_STD_Queue["Private Endpoint STD Queue"]
+    PE_STD_Table["Private Endpoint STD Table"]
+  end
+
+  subgraph DNSZones
+    DNS_FuncApp["Private DNS Zone - Function App"]
+    DNS_StorageBlob["Private DNS Zone - Storage Account Blob"]
+    DNS_StorageFile["Private DNS Zone - Storage Account File"]
+    DNS_StorageQueue["Private DNS Zone - Storage Account Queue"]
+    DNS_StorageTable["Private DNS Zone - Storage Account Table"]
+  end
+
+  subgraph Roles
+    Role_D_F_SB_DC["Role Assignment Durable Function Storage Blob Data Contributor"]
+    Role_D_F_SQ_DC["Role Assignment Durable Function Storage Queue Data Contributor"]
+    Role_D_F_ST_DC["Role Assignment Durable Function Storage Table Data Contributor"]
+    Role_F_SA_C["Role Assignment Function Storage Account Contributor"]
+    Role_F_SB_DO["Role Assignment Function Storage Blob Data Owner"]
+    Role_F_SQ_DC["Role Assignment Function Storage Queue Data Contributor"]
+    Role_Stg_D_F_SB_DC["Role Assignment Staging Durable Function Storage Blob Data Contributor"]
+    Role_Stg_D_F_SQ_DC["Role Assignment Staging Durable Function Storage Queue Data Contributor"]
+    Role_Stg_D_F_ST_DC["Role Assignment Staging Durable Function Storage Table Data Contributor"]
+    Role_Stg_F_SA_C["Role Assignment Staging Function Storage Account Contributor"]
+    Role_Stg_F_SB_DO["Role Assignment Staging Function Storage Blob Data Owner"]
+    Role_Stg_F_SQ_DC["Role Assignment Staging Function Storage Queue Data Contributor"]
+  end
+
+  subgraph Monitoring
+    Alert_FuncApp["Monitor Metric Alert - Function App Health Check"]
+    Alert_Storage["Monitor Metric Alert - Storage Account Health Check"]
+  end
+
+  subgraph Networking
+    Subnet["Subnet"]
+    VirtualNetwork["Virtual Network"]
+  end
+
+  LinuxApp --> ServicePlan
+  LinuxApp --> DurableStorage
+  LinuxApp --> Subnet
+  LinuxApp --> PE_StBlob
+  LinuxApp --> PE_StFile
+  LinuxApp --> PE_StQueue
+
+  AppSlot --> LinuxApp
+
+  Alert_FuncApp --> LinuxApp
+  Alert_Storage --> StorageAccount
+
+  PE_FuncSites --> DNS_FuncApp
+  PE_FuncSites --> LinuxApp
+
+  PE_StBlob --> DNS_StorageBlob
+  PE_StBlob --> StorageAccount
+  PE_StFile --> DNS_StorageFile
+  PE_StFile --> StorageAccount
+  PE_StQueue --> DNS_StorageQueue
+  PE_StQueue --> StorageAccount
+
+  PE_StagingFuncSites --> DNS_FuncApp
+  PE_StagingFuncSites --> AppSlot
+
+  PE_STD_Blob --> DNS_StorageBlob
+  PE_STD_Blob --> DurableStorage
+  PE_STD_File --> DNS_StorageFile
+  PE_STD_File --> DurableStorage
+  PE_STD_Queue --> DNS_StorageQueue
+  PE_STD_Queue --> DurableStorage
+  PE_STD_Table --> DNS_StorageTable
+  PE_STD_Table --> DurableStorage
+
+  Role_D_F_SB_DC --> LinuxApp
+  Role_D_F_SQ_DC --> LinuxApp
+  Role_D_F_ST_DC --> LinuxApp
+  Role_F_SA_C --> LinuxApp
+  Role_F_SB_DO --> LinuxApp
+  Role_F_SQ_DC --> LinuxApp
+
+  Role_Stg_D_F_SB_DC --> AppSlot
+  Role_Stg_D_F_SQ_DC --> AppSlot
+  Role_Stg_D_F_ST_DC --> AppSlot
+  Role_Stg_F_SA_C --> AppSlot
+  Role_Stg_F_SB_DO --> AppSlot
+  Role_Stg_F_SQ_DC --> AppSlot
+
+  SANR_ST --> LinuxApp
+  SANR_STD --> LinuxApp
+
+  Subnet --> VirtualNetwork
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

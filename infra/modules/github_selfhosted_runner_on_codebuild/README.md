@@ -158,6 +158,61 @@ Common issues and solutions:
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+  subgraph Data Sources
+    CallerIdentityCurrent["Caller Identity (Current)"]
+    SSMParameterPersonalAccessToken["SSM Parameter (Personal Access Token)"]
+  end
+
+  subgraph CodeBuild
+    CodeBuildProjectGithubRunner["CodeBuild Project (Github Runner)"]
+    SourceCredentialCodeconnection["Source Credential (Codeconnection)"]
+    SourceCredentialSSM["Source Credential (SSM)"]
+    SourceCredentialString["Source Credential (String)"]
+    CodeBuildWebhook["CodeBuild Webhook (Github Webhook)"]
+  end
+
+  subgraph IAM
+    IAMPolicyCloudwatch["IAM Policy (CloudWatch)"]
+    IAMPolicyGithubConnection["IAM Policy (Github Connection)"]
+    IAMPolicyVpcConnection["IAM Policy (VPC Connection)"]
+    IAMRoleCodebuildRole["IAM Role (CodeBuild Role)"]
+    RoleAttachmentCloudwatch["Role Policy Attachment (CloudWatch)"]
+    RoleAttachmentCodebuildPolicy["Role Policy Attachment (CodeBuild Policy)"]
+    RoleAttachmentGithubConnection["Role Policy Attachment (Github Connection)"]
+    RoleAttachmentVpcConnection["Role Policy Attachment (VPC Connection)"]
+  end
+
+  subgraph Security
+    SecurityGroupCodebuild["Security Group (CodeBuild)"]
+    SecurityGroupRuleEgress["Security Group Rule (CodeBuild Egress)"]
+  end
+
+  CodeBuildProjectGithubRunner --> IAMRoleCodebuildRole
+  CodeBuildProjectGithubRunner --> SecurityGroupCodebuild
+  SourceCredentialSSM --> SSMParameterPersonalAccessToken
+  CodeBuildWebhook       --> CodeBuildProjectGithubRunner
+  CodeBuildWebhook       --> SourceCredentialCodeconnection
+  CodeBuildWebhook       --> SourceCredentialSSM
+  CodeBuildWebhook       --> SourceCredentialString
+  CodeBuildWebhook       --> RoleAttachmentGithubConnection
+
+  IAMPolicyCloudwatch    --> CallerIdentityCurrent
+  IAMPolicyVpcConnection --> CallerIdentityCurrent
+
+  RoleAttachmentCloudwatch         --> IAMPolicyCloudwatch
+  RoleAttachmentCloudwatch         --> IAMRoleCodebuildRole
+  RoleAttachmentCodebuildPolicy    --> IAMRoleCodebuildRole
+  RoleAttachmentGithubConnection   --> IAMPolicyGithubConnection
+  RoleAttachmentGithubConnection   --> IAMRoleCodebuildRole
+  RoleAttachmentVpcConnection      --> IAMPolicyVpcConnection
+  RoleAttachmentVpcConnection      --> IAMRoleCodebuildRole
+
+  SecurityGroupRuleEgress --> CodeBuildProjectGithubRunner
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

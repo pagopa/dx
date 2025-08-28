@@ -31,6 +31,34 @@ When working with private endpoints (currently in preview), the `terraform destr
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+  subgraph Container Apps
+    CAE["Container App Environment"]
+    UAI["User Assigned Identity"]
+  end
+
+  subgraph Networking
+    PE["Private Endpoint"]
+    SN["Subnet"]
+    VN["Virtual Network"]
+    PDZ["Private DNS Zone"]
+  end
+
+  subgraph Management Locks
+    CL["CAE Lock"]
+    IL["Identity Lock"]
+  end
+
+  CAE --> SN
+  SN --> VN
+  PE --> PDZ
+  PE --> CAE
+  CL --> CAE
+  IL --> UAI
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

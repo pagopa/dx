@@ -74,6 +74,11 @@ A complete usage example can be found in the [example/complete](https://github.c
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  ContainerApp["Container App"]
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

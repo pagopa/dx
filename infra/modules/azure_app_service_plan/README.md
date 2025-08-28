@@ -51,6 +51,11 @@ This example creates an App Service Plan in the `italynorth` region with a small
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+servicePlan["App Service Plan"]
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

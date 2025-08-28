@@ -106,6 +106,63 @@ A complete example of how to use this module can be found in the [examples/basic
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph "CDN Frontdoor"
+    Profile["CDN Frontdoor Profile"]
+    Endpoint["CDN Frontdoor Endpoint"]
+    Origin["CDN Frontdoor Origin"]
+    OriginGroup["CDN Frontdoor Origin Group"]
+    Route["CDN Frontdoor Route"]
+    RuleSet["CDN Frontdoor Rule Set"]
+    CustomDomain["CDN Frontdoor Custom Domain"]
+    CustomDomainAssoc["CDN Frontdoor Custom Domain Association"]
+    SecretCert["CDN Frontdoor Secret (Certificate)"]
+    Diagnostic["Diagnostic Setting (CDN Profile)"]
+  end
+
+  subgraph "DNS Zone"
+    ARecord["DNS A Record"]
+    CNAMERecord["DNS CNAME Record"]
+    TXTRecord["DNS TXT Validation Record"]
+  end
+
+  subgraph "Data Sources"
+    ClientConfig["Client Config"]
+    KeyVaultData["Key Vault"]
+  end
+
+  subgraph "Access Control"
+    AccessPolicy["Key Vault Access Policy"]
+    RoleAssignment["Role Assignment"]
+  end
+
+  CustomDomain --> SecretCert
+  CustomDomainAssoc --> Route
+  Endpoint --> Profile
+  Origin --> OriginGroup
+  OriginGroup --> Profile
+  Route --> CustomDomain
+  Route --> Endpoint
+  Route --> Origin
+  Route --> RuleSet
+  RuleSet --> Profile
+  SecretCert --> Profile
+
+  ARecord --> Endpoint
+  CNAMERecord --> Endpoint
+  TXTRecord --> CustomDomain
+
+  AccessPolicy --> ClientConfig
+  AccessPolicy --> KeyVaultData
+  AccessPolicy --> Profile
+
+  Diagnostic --> Profile
+
+  RoleAssignment --> KeyVaultData
+  RoleAssignment --> Profile
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->

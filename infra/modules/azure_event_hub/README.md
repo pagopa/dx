@@ -27,6 +27,29 @@ For a complete example of how to use this module, refer to the [example/complete
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+  subgraph Event Hub
+    Namespace["Event Hub Namespace"]
+    Events["Event Hub"]
+    AuthRule["Authorization Rule"]
+    ConsumerGroup["Consumer Group"]
+    MetricAlert["Metric Alert"]
+  end
+  
+  subgraph Networking
+    PrivateEndpoint["Private Endpoint"]
+    PrivateDNSZone["Private DNS Zone"]
+  end
+  
+  Events --> Namespace
+  AuthRule --> Events
+  ConsumerGroup --> Events
+  MetricAlert --> Namespace
+  PrivateEndpoint --> PrivateDNSZone
+  PrivateEndpoint --> Namespace
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- markdownlint-disable -->

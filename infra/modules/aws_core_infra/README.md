@@ -167,6 +167,70 @@ module "aws_core_infra" {
 
 ## Diagram
 <!-- START_TF_GRAPH -->
+```mermaid
+graph LR
+
+subgraph NAT Gateway
+  NatGateway["NAT Gateway"]
+  EIPNat["NAT Elastic IP"]
+end
+
+subgraph Networking
+  VPC["VPC"]
+  InternetGateway["Internet Gateway"]
+  PublicSubnet["Public Subnet"]
+  PrivateSubnet["Private Subnet"]
+  IsolatedSubnet["Isolated Subnet"]
+end
+
+subgraph Routing
+  PublicRouteTable["Public Route Table"]
+  PrivateRouteTable["Private Route Table"]
+  IsolatedRouteTable["Isolated Route Table"]
+  PublicRouteAssoc["Public Route Table Association"]
+  PrivateRouteAssoc["Private Route Table Association"]
+  IsolatedRouteAssoc["Isolated Route Table Association"]
+end
+
+subgraph VPC Endpoints
+  VPCData["VPC Data"]
+  VPCEndpointsSG["VPC Endpoints Security Group"]
+  DynamoDBEndpoint["DynamoDB VPC Endpoint"]
+  S3Endpoint["S3 VPC Endpoint"]
+end
+
+AvailabilityZones["Availability Zones"]
+
+NatGateway --> EIPNat
+NatGateway --> PublicSubnet
+
+InternetGateway --> VPC
+
+IsolatedSubnet --> AvailabilityZones
+IsolatedSubnet --> VPC
+PrivateSubnet --> AvailabilityZones
+PrivateSubnet --> VPC
+PublicSubnet --> AvailabilityZones
+PublicSubnet --> VPC
+
+IsolatedRouteTable --> IsolatedSubnet
+PrivateRouteTable --> NatGateway
+PrivateRouteTable --> PrivateSubnet
+PublicRouteTable --> InternetGateway
+
+IsolatedRouteAssoc --> IsolatedRouteTable
+PrivateRouteAssoc --> PrivateRouteTable
+PublicRouteAssoc --> PublicSubnet
+PublicRouteAssoc --> PublicRouteTable
+
+VPCData --> VPC
+VPCEndpointsSG --> VPCData
+DynamoDBEndpoint --> IsolatedRouteTable
+DynamoDBEndpoint --> PrivateRouteTable
+S3Endpoint --> IsolatedRouteTable
+S3Endpoint --> PrivateRouteTable
+```
+
 <!-- END_TF_GRAPH -->
 
 <!-- BEGIN_TF_DOCS -->
