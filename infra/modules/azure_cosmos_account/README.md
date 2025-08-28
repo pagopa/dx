@@ -18,7 +18,7 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 
 | Use case      | Description                                                                                        | Serverless Mode |
 |---------------|----------------------------------------------------------------------------------------------------|-----------------|
-| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. | Enabled         |
+| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. Do not use in production. | Enabled         |
 | `default`     | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled        |
 
 ## Usage Example
