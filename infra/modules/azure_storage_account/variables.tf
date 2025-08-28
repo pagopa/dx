@@ -200,8 +200,17 @@ variable "secondary_location" {
   default     = "westeurope"
 }
 
-variable "replication_container_names" {
-  description = "A list of container names to be replicated."
-  type        = list(string)
-  default     = []
+variable "containers" {
+  description = "Containers to be created."
+  type = object({
+    name        = string
+    access_type = optional(string, "private")
+  })
+
+  default = {}
+
+  validation {
+    condition     = alltrue([for c in var.containers : contains(["private", "blob", "container"], c.access_type)])
+    error_message = "Container access_type must be one of 'private', 'blob', or 'container'."
+  }
 }

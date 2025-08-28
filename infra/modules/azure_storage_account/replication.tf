@@ -44,14 +44,23 @@ resource "azurerm_storage_account" "secondary_replica" {
   tags = local.tags
 }
 
+# Container replication (Geo-replication)
+resource "azurerm_storage_container" "container_replica" {
+  for_each = { for c in var.containers : c.name => c }
+
+  name                  = each.value.name
+  storage_account_id    = azurerm_storage_account.secondary_replica.id
+  container_access_type = each.value.access_type
+}
+
 resource "azurerm_storage_object_replication" "geo_replication_policy" {
-  count = local.tier_features.secondary_replication && length(var.replication_container_names) > 0 ? 1 : 0
+  count = local.tier_features.secondary_replication && length([ for c in var.containers : c.name ]) > 0 ? 1 : 0
 
   source_storage_account_id      = azurerm_storage_account.this.id
   destination_storage_account_id = azurerm_storage_account.secondary_replica[0].id
 
   dynamic "rules" {
-    for_each = toset(var.replication_container_names)
+    for_each = toset([ for c in var.containers : c.name ])
     content {
       source_container_name      = rules.value
       destination_container_name = rules.value
@@ -62,6 +71,8 @@ resource "azurerm_storage_object_replication" "geo_replication_policy" {
   depends_on = [
     azurerm_storage_account.this,
     azurerm_storage_account.secondary_replica,
+    azurerm_storage_container.container,
+    azurerm_storage_container.container_replica
   ]
 }
 

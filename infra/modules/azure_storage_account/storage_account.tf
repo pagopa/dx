@@ -108,6 +108,15 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
   }
 }
 
+# Containers
+resource "azurerm_storage_container" "container" {
+  for_each = { for c in var.containers : c.name => c }
+
+  name                  = each.value.name
+  storage_account_id    = azurerm_storage_account.this.id
+  container_access_type = each.value.access_type
+}
+
 # Blob lifecycle management policy for Archive (Any -> Archive)
 ## Note: The archive access tier can only be set if storage account kind is BlobStorage and replication is LRS.
 resource "azurerm_storage_management_policy" "lifecycle_archive" {
