@@ -47,7 +47,8 @@ When you run the generation command, the script performs the following actions:
    directory for easy access and validation.
 
 By default, the script will regenerate all SBOM files also if it already exists.
-You can override this behavior using the `--update` flag that generate only new sboms.
+You can override this behavior using the `--update` flag that generate only new
+sboms.
 
 ### Usage
 
@@ -55,7 +56,8 @@ You can override this behavior using the `--update` flag that generate only new 
 
 You can execute the script directly from your terminal:
 
-- **To generate all SBOMs**, overwriting existing ones (this is the default action):
+- **To generate all SBOMs**, overwriting existing ones (this is the default
+  action):
 
   ```sh
   sh ./sbom.sh --generate
@@ -76,8 +78,6 @@ You can execute the script directly from your terminal:
   sh ./sbom.sh --validate
   ```
 
-
-
 #### Using Turborepo
 
 You can also run the script using the predefined Turborepo tasks defined in the
@@ -94,4 +94,3 @@ You can also run the script using the predefined Turborepo tasks defined in the
   ```sh
   turbo sbom-validate
   ```
-  
