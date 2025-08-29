@@ -1,102 +1,143 @@
-import { readFile } from "node:fs/promises";
+import { vol } from "memfs";
+import { err, ok } from "neverthrow";
+import fs from "node:fs/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makePackageJsonReader } from "../package-json.js";
+import { makeMockPackageJson } from "./data.js";
 
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn(),
-}));
+vi.mock("node:fs/promises");
 
 describe("makePackageJsonReader", () => {
+  const mockPackageJson = makeMockPackageJson();
+  const rootDir = "/some/dir";
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  const directory = "/some/dir";
-
-  it("parses scripts from package.json", async () => {
-    const mockPackageJson = JSON.stringify({
-      name: "test-package",
-      scripts: {
-        build: "aScript",
-        "code-review": "aCodeReviewScript",
+    vol.reset();
+    vol.fromJSON(
+      {
+        "./package.json": JSON.stringify(mockPackageJson),
       },
+      rootDir,
+    );
+  });
+
+  describe("getScripts", () => {
+    it("should parse scripts from package.json", async () => {
+      const spy = vi.spyOn(fs, "readFile");
+
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getScripts(rootDir);
+
+      expect(result).toStrictEqual(
+        ok(new Map().set("build", "tsc").set("code-review", "eslint .")),
+      );
+      expect(spy).toHaveBeenCalledWith(`${rootDir}/package.json`, "utf-8");
     });
 
-    (readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      mockPackageJson,
-    );
-
-    const packageJsonReader = makePackageJsonReader();
-    const result = await packageJsonReader.getScripts(directory);
-
-    expect(result.isOk()).toBe(true);
-
-    if (result.isOk()) {
-      const scripts = result.value;
-      expect(scripts).toStrictEqual([
+    it("should return an empty array when no scripts exist", async () => {
+      vol.fromJSON(
         {
-          name: "build",
-          script: "aScript",
+          "./package.json": JSON.stringify(
+            makeMockPackageJson({ scripts: undefined }),
+          ),
         },
-        {
-          name: "code-review",
-          script: "aCodeReviewScript",
-        },
-      ]);
-    }
+        rootDir,
+      );
 
-    expect(readFile).toHaveBeenCalledWith(`${directory}/package.json`, "utf-8");
-  });
+      const spy = vi.spyOn(fs, "readFile");
 
-  it("should return an empty array when no scripts exist", async () => {
-    const mockPackageJson = JSON.stringify({
-      name: "test-package",
-      version: "1.0.0",
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getScripts(rootDir);
+
+      expect(result).toStrictEqual(ok(new Map()));
+      expect(spy).toHaveBeenCalledWith(`${rootDir}/package.json`, "utf-8");
     });
 
-    (readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      mockPackageJson,
-    );
+    it("should return an error when package.json does not exist", async () => {
+      vol.reset();
 
-    const packageJsonReader = makePackageJsonReader();
-    const result = await packageJsonReader.getScripts(directory);
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getScripts(rootDir);
 
-    expect(result.isOk()).toBe(true);
+      expect(result).toStrictEqual(
+        err(new Error("Failed to read file: /some/dir/package.json")),
+      );
+    });
 
-    if (result.isOk()) {
-      const scripts = result.value;
-      expect(scripts).toStrictEqual([]);
-    }
+    it("should return an error when package.json is invalid JSON", async () => {
+      vol.fromJSON(
+        {
+          "./package.json": "invalid json content",
+        },
+        rootDir,
+      );
+
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getScripts(rootDir);
+
+      expect(result).toStrictEqual(err(new Error("Failed to parse JSON")));
+    });
   });
 
-  it("should return an error when package.json does not exist", async () => {
-    (readFile as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-      new Error("No such file or directory"),
-    );
+  describe("getDependencies", () => {
+    it("should parse devDependencies from package.json", async () => {
+      const spy = vi.spyOn(fs, "readFile");
 
-    const packageJsonReader = makePackageJsonReader();
-    const result = await packageJsonReader.getScripts(directory);
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getDependencies(rootDir, "dev");
 
-    expect(result.isErr()).toBe(true);
+      expect(result).toStrictEqual(
+        ok(new Map().set("turbo", "^2.5.2").set("typescript", "^5.0.0")),
+      );
 
-    if (result.isErr()) {
-      expect(result.error.message).toContain("Failed to read package.json");
-    }
-  });
+      expect(spy).toHaveBeenCalledWith(`${rootDir}/package.json`, "utf-8");
+    });
 
-  it("should return an error when package.json is invalid JSON", async () => {
-    (readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      "invalid json content",
-    );
+    it("should parse dependencies from package.json", async () => {
+      const spy = vi.spyOn(fs, "readFile");
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getDependencies(rootDir, "prod");
 
-    const packageJsonReader = makePackageJsonReader();
-    const result = await packageJsonReader.getScripts(directory);
+      expect(result).toStrictEqual(
+        ok(
+          new Map()
+            .set("aDependency", "^4.17.21")
+            .set("anotherDependency", "^8.0.0"),
+        ),
+      );
 
-    expect(result.isErr()).toBe(true);
+      expect(spy).toHaveBeenCalledWith(`${rootDir}/package.json`, "utf-8");
+    });
 
-    if (result.isErr()) {
-      expect(result.error.message).toContain("Failed to parse JSON");
-    }
+    it("should return an empty array when no dependencies exist", async () => {
+      vol.reset();
+      vol.fromJSON(
+        {
+          "./package.json": JSON.stringify(
+            makeMockPackageJson({
+              dependencies: undefined,
+              devDependencies: undefined,
+            }),
+          ),
+        },
+        rootDir,
+      );
+
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getDependencies(rootDir, "dev");
+
+      expect(result).toStrictEqual(ok(new Map()));
+    });
+
+    it("should return an error when package.json does not exist for dependencies", async () => {
+      vol.reset();
+
+      const packageJsonReader = makePackageJsonReader();
+      const result = await packageJsonReader.getDependencies(rootDir, "dev");
+
+      expect(result).toStrictEqual(
+        err(new Error("Failed to read file: /some/dir/package.json")),
+      );
+    });
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.4.4",
+  "version": "0.4.6",
   "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "repository": {
@@ -48,9 +48,9 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node20": "catalog:",
+    "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
+    "eslint": "catalog:dx",
     "tsup": "catalog:",
     "typescript": "catalog:"
   },

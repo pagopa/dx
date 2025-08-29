@@ -1,0 +1,150 @@
+name: Deploy Static Site to Azure
+
+# This reusable workflow builds a static application from a monorepo workspace,
+# uploads the assets to an Azure Static Web App, and deploys them.
+# It is designed to be called by other workflows.
+
+# NOTE: use as trigger
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - "apps/my-static-app/**" # Trigger only when this app changes
+#   pull_request:
+#     types: [opened, synchronize, reopened, closed]
+#     branches:
+#       - main
+#     paths:
+#       - "apps/my-static-app/**"
+# To be sure that during a PR the preview will be triggered
+
+on:
+  workflow_call:
+    inputs:
+      workspace_name:
+        description: The name of the workspace to create the artifact for.
+        type: string
+        required: true
+      output_dir:
+        description: The name of the build output directory.
+        type: string
+        required: false
+        default: 'dist'
+      static_web_app_name:
+        description: Azure Static Web App name where the assets will be deployed.
+        type: string
+        required: true
+      resource_group_name:
+        description: Resource group name for the Azure Static Web App.
+        type: string
+        required: true
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: false
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+env:
+  BUNDLE_NAME: bundle
+  OUTPUT_DIR: ${{ inputs.output_dir }}
+
+jobs:
+  build:
+    name: Build Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Build Package
+        id: build-package
+        uses: pagopa/dx/.github/actions/build-workspace@main
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+        env:
+          WORKSPACE_NAME: ${{ inputs.workspace_name }}
+      
+      - name: Get Artifact path
+        id: get-artifact-path
+        working-directory: ${{ steps.build-package.outputs.workspace-path }}
+        run: |
+          echo "::debug::Packaging for static deployment"
+          echo "artifact-path=$(realpath ./$OUTPUT_DIR)" >> $GITHUB_OUTPUT
+        env:
+          OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
+
+      - name: Upload Artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: ${{ steps.get-artifact-path.outputs.artifact-path }}
+
+  deploy:
+    name: Deploy
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [build]
+    if: ${{ !github.event.act }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+          file_path: "./${{ env.OUTPUT_DIR }}"
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Find API Key
+        id: find_api_key
+        run: |
+          api_key=$(az staticwebapp secrets list --name $STATIC_WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME | jq -r '.properties.apiKey')
+          echo "::add-mask::$api_key"
+          echo "sensitive-value=$api_key" >> $GITHUB_OUTPUT
+        env:
+          STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+
+      - name: Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.sensitive-value }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "./${{ env.OUTPUT_DIR }}"

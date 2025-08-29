@@ -3,8 +3,7 @@ description: An action to keep the repository alive.
 
 inputs:
   bot_token:
-    description: 'GitHub token to use for bot authentication'
-    type: string
+    description: "GitHub token to use for bot authentication"
     required: false
     default: ${{ github.token }}
 
@@ -21,10 +20,10 @@ runs:
       run: |
         git config --local user.email "dx-pagopa-github-bot@pagopa.it"
         git config --local user.name "dx-pagopa-bot"
-        
+
         git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
         COMMIT_STATUS=$?
-        
+
         if [ $COMMIT_STATUS -eq 0 ]; then
           echo "Commit created successfully, attempting to push..."
           git push

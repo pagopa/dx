@@ -1,0 +1,14 @@
+{
+  "name": "swap-appsvc-slot",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:check": "shellcheck rollout.sh"
+  }
+}

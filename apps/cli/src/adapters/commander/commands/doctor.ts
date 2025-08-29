@@ -1,46 +1,23 @@
-import { getLogger } from "@logtape/logtape";
 import { Command } from "commander";
 import * as process from "node:process";
 
+import { Config } from "../../../config.js";
 import { Dependencies } from "../../../domain/dependencies.js";
-import { checkMonorepoScripts } from "../../../domain/package-json.js";
-import { checkPreCommitConfig } from "../../../domain/repository.js";
-
-type DoctorDependencies = Pick<
-  Dependencies,
-  "packageJsonReader" | "repositoryReader" | "validationReporter"
->;
+import { printDoctorResult, runDoctor } from "../../../domain/doctor.js";
 
 export const makeDoctorCommand = (
-  dependencies: DoctorDependencies,
-): Command => {
-  const logger = getLogger(["dx-cli", "doctor"]);
-
-  return new Command()
+  dependencies: Dependencies,
+  config: Config,
+): Command =>
+  new Command()
     .name("doctor")
     .description(
       "Verify the repository setup according to the DevEx guidelines",
     )
     .action(async () => {
-      const { repositoryReader, validationReporter } = dependencies;
+      const result = await runDoctor(dependencies, config);
+      printDoctorResult(dependencies, result);
 
-      const repoRootResult = repositoryReader.findRepositoryRoot(process.cwd());
-      if (repoRootResult.isErr()) {
-        logger.error(`❌ ${repoRootResult.error.message}`);
-        process.exit(1);
-      }
-
-      const { value: repoRoot } = repoRootResult;
-
-      logger.info("Checking pre-commit configuration...");
-      const preCommitResult = await checkPreCommitConfig(repoRoot)({
-        repositoryReader,
-      });
-      validationReporter.reportValidationResult(preCommitResult);
-
-      logger.info("Checking monorepo scripts...");
-      const result = await checkMonorepoScripts(repoRoot)(dependencies);
-
-      validationReporter.reportValidationResult(result);
+      const exitCode = result.hasErrors ? 1 : 0;
+      process.exit(exitCode);
     });
-};

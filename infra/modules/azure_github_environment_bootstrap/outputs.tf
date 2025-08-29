@@ -8,10 +8,10 @@ output "resource_group" {
 }
 
 output "repository" {
-  description = "Details of the GitHub repository, including ID and name."
+  description = "GitHub repository name and owner."
   value = {
-    id   = try(module.github_repository["repo"].id, null)
-    name = local.repository_name
+    owner = var.repository.owner
+    name  = var.repository.name
   }
 }
 
@@ -28,6 +28,11 @@ output "identities" {
   description = "Details of the user-assigned identities for app, infra, and opex, including IDs and names."
   value = {
     app = {
+      ci = {
+        id           = azurerm_user_assigned_identity.app_ci.id
+        name         = azurerm_user_assigned_identity.app_ci.name
+        principal_id = azurerm_user_assigned_identity.app_ci.principal_id
+      }
       cd = {
         id           = azurerm_user_assigned_identity.app_cd.id
         name         = azurerm_user_assigned_identity.app_cd.name

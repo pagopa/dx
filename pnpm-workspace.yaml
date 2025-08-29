@@ -8,18 +8,15 @@ packages:
   - actions/*
 
 catalog:
+  '@tsconfig/node22': 22.0.2
+  '@types/node': ^22.16.2
   prettier: 3.6.2
-  eslint: ^9.30.1
-  typescript: ~5.8.3
   tsup: ^8.5.0
-  vitest: ^3.2.4
-  '@vitest/coverage-v8': ^3.2.4
-  '@tsconfig/node20': ^20.1.6
-  '@types/node': ^20.19.4
+  typescript: ~5.8.3
 
-catalogMode: strict
+cleanupUnusedCatalogs: true
 
 onlyBuiltDependencies:
   - esbuild
 
-packageImportMethod: clone-or-copy
+pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs

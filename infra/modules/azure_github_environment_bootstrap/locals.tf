@@ -21,8 +21,6 @@ locals {
     location = var.environment.location
   }
 
-  repository_name = var.repository.configure ? module.github_repository["repo"].name : var.repository.name
-
   resource_group_ids = merge(
     {
       "main" = azurerm_resource_group.main.id
@@ -85,6 +83,13 @@ locals {
     }
   }
 
+  app_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+    }
+  }
+
   opex_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_ci.client_id
@@ -97,7 +102,6 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 
   app_cd = {
@@ -105,7 +109,6 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 
   opex_cd = {
@@ -113,6 +116,5 @@ locals {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_cd.client_id
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
-    reviewers_teams = var.repository.reviewers_teams
   }
 }

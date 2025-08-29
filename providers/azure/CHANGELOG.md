@@ -1,5 +1,17 @@
 # provider-azure
 
+## 0.6.3
+
+### Patch Changes
+
+- 9f719dd: Fix auth method for CIDR resource from Default to AzureCLI
+
+## 0.6.2
+
+### Patch Changes
+
+- 2b778d0: Add tests to Azure DX Provider for resource name generation and validation.
+
 ## 0.6.1
 
 ### Patch Changes

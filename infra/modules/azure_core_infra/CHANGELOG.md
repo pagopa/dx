@@ -1,5 +1,17 @@
 # azure_core_infra
 
+## 2.1.1
+
+### Patch Changes
+
+- 9ffff21: Resolved typos inside examples
+
+## 2.1.0
+
+### Minor Changes
+
+- c93e73f: Add application insights resource
+
 ## 2.0.0
 
 ### Major Changes

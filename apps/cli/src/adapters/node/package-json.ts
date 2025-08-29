@@ -1,45 +1,37 @@
-import { Result, ResultAsync } from "neverthrow";
-import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import * as process from "node:process";
 
 import {
   PackageJsonReader,
-  RootRequiredScript,
-  Script,
+  packageJsonSchema,
 } from "../../domain/package-json.js";
-import { packageJsonSchema, scriptsArraySchema } from "./codec.js";
-
-const toJSON = Result.fromThrowable(
-  JSON.parse,
-  () => new Error("Failed to parse JSON"),
-);
-
-const toPackageJson = Result.fromThrowable(
-  packageJsonSchema.parse,
-  () => new Error("Invalid package.json format"),
-);
-
-const toScriptsArray = Result.fromThrowable(
-  scriptsArraySchema.parse,
-  () => new Error("Failed to validate scripts array"),
-);
+import { readFileAndDecode } from "./fs/file-reader.js";
 
 export const makePackageJsonReader = (): PackageJsonReader => ({
-  getRootRequiredScripts: (): RootRequiredScript[] => [
-    { name: "code-review" as Script["name"] },
-  ],
+  getDependencies: (cwd = process.cwd(), type) => {
+    const packageJsonPath = join(cwd, "package.json");
+
+    return readFileAndDecode(packageJsonPath, packageJsonSchema).map(
+      (packageJson) => {
+        const key = type === "dev" ? "devDependencies" : "dependencies";
+        return packageJson[key];
+      },
+    );
+  },
+
+  getRootRequiredScripts: () => new Map().set("code-review", "eslint ."),
 
   getScripts: (cwd = process.cwd()) => {
     const packageJsonPath = join(cwd, "package.json");
 
-    return ResultAsync.fromPromise(
-      readFile(packageJsonPath, "utf-8"),
-      () => new Error("Failed to read package.json"),
-    )
-      .andThen(toJSON)
-      .andThen(toPackageJson)
-      .map(({ scripts }) => scripts)
-      .andThen(toScriptsArray);
+    return readFileAndDecode(packageJsonPath, packageJsonSchema).map(
+      ({ scripts }) => scripts,
+    );
+  },
+
+  readPackageJson: (cwd = process.cwd()) => {
+    const packageJsonPath = join(cwd, "package.json");
+
+    return readFileAndDecode(packageJsonPath, packageJsonSchema);
   },
 });
