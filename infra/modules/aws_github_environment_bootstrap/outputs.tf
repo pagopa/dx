@@ -31,3 +31,17 @@ output "identities" {
     }
   }
 }
+
+output "github_private_runner" {
+  description = "Details of the GitHub private runner, including security group and IAM role."
+  value = {
+    security_group = {
+      id   = module.github_runner.security_group.id
+      name = module.github_runner.security_group.name
+    }
+    iam_role = {
+      arn  = module.github_runner.iam_role.arn
+      name = module.github_runner.iam_role.name
+    }
+  }
+}
