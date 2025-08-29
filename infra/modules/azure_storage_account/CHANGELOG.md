@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 1.0.1
+
+### Patch Changes
+
+- d5aecdf: Ignore customer_managed_key value as per [documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) to avoid removing CMK already instantiated created via the azurerm_storage_account_customer_managed_key resource
+
 ## 1.0.0
 
 ### Major Changes
