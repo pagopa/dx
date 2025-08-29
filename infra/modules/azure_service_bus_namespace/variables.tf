@@ -32,40 +32,40 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
 
   validation {
-    condition     = var.tier == "l" || (var.tier == "m" && var.private_dns_zone_resource_group_name == null)
-    error_message = "The \"private_dns_zone_resource_group_name\" variable can be used if \"tier\" is \"l\" and should not be used otherwise."
+    condition     = local.use_case_features.private_enpoint && var.private_dns_zone_resource_group_name != null
+    error_message = "The \"private_dns_zone_resource_group_name\" variable can be used if \"use_case\" need it."
   }
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet designated for private endpoints. Mandatory if \"tier\" is \"m\"."
+  description = "The ID of the subnet designated for private endpoints. Use only if private endpoints are enabled."
   default     = null
 
   validation {
-    condition     = (var.tier == "l" && var.subnet_pep_id != null) || (var.tier == "m" && var.subnet_pep_id == null)
-    error_message = "The \"subnet_pep_id\" variable is mandatory if \"tier\" is \"l\" and should not be used otherwise."
+    condition     = local.use_case_features.private_enpoint && var.subnet_pep_id != null
+    error_message = "The \"subnet_pep_id\" variable is mandatory if \"sku\" is \"Premium\" (or when private endpoints are enabled) and should not be used otherwise."
   }
 }
 
 variable "allowed_ips" {
   type        = list(string)
-  description = "A list of IP addresses or CIDR blocks to allow access to the Service Bus Namespace. Mandatory if \"tier\" is \"m\", while not used for \"l\"."
+  description = "A list of IP addresses or CIDR blocks to allow access to the Service Bus Namespace. Use only if \"use_case\" is not \"default\"."
   default     = null
 
   validation {
-    condition     = (var.tier == "m" && try(length(var.allowed_ips) > 0, false)) || (var.tier == "l" && var.allowed_ips == null)
-    error_message = "The \"allowed_ips\" variable is mandatory if \"tier\" is \"m\" and should not be used otherwise."
+    condition     = (var.use_case != "default" && try(length(var.allowed_ips) > 0, false)) || (var.use_case == "default" && var.allowed_ips == null)
+    error_message = "The \"allowed_ips\" variable is mandatory if \"use_case\" is not \"default\" and should not be used otherwise."
   }
 }
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on demanding workload and security considerations. Allowed values are 'm', 'l'."
-  default     = "l"
+  description = "Specifies the use case for the Service Bus. Allowed value is 'default'."
+  default     = "default"
 
   validation {
-    condition     = contains(["m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"m\", or \"l\"."
+    condition     = contains(["default"], var.use_case)
+    error_message = "Allowed value for \"use_case\" is \"default\"."
   }
 }
