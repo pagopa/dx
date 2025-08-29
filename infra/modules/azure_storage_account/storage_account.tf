@@ -3,7 +3,7 @@ resource "azurerm_storage_account" "this" {
   name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
   resource_group_name             = var.resource_group_name
   location                        = var.environment.location
-  account_kind                    = local.tier_features.account_kind
+  account_kind                    = "StorageV2"
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = local.tier_features.replication_type
   access_tier                     = var.access_tier
@@ -109,12 +109,26 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
 }
 
 # Containers
-resource "azurerm_storage_container" "container" {
+resource "azurerm_storage_container" "this" {
   for_each = { for c in var.containers : c.name => c }
 
   name                  = each.value.name
   storage_account_id    = azurerm_storage_account.this.id
   container_access_type = each.value.access_type
+}
+
+# Tables
+resource "azurerm_storage_table" "this" {
+  for_each             = var.subservices_enabled.table ? toset(var.tables) : []
+  name                 = each.value
+  storage_account_name = azurerm_storage_account.this.id
+}
+
+# Queues
+resource "azurerm_storage_queue" "this" {
+  for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
+  name                 = each.value
+  storage_account_name = azurerm_storage_account.this.id
 }
 
 # Blob lifecycle management policy for Archive (Any -> Archive)

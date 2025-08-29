@@ -97,6 +97,27 @@ run "storage_account_is_correct_plan" {
       use_subdomain = true
     }
 
+    containers = [
+      {
+        name        = "container1"
+        access_type = "private"
+      },
+      {
+        name        = "container2"
+        access_type = "private"
+      }
+    ]
+
+    tables = [
+      "table1",
+      "table2"
+    ]
+
+    queues = [
+      "queue1",
+      "queue2"
+    ]
+
   }
 
   # Checks some assertions
@@ -153,6 +174,11 @@ run "storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
     error_message = "The Storage Account must have immutability policy"
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container.this) == 2 && length(azurerm_storage_table.this) == 2 && length(azurerm_storage_queue.this) == 2
+    error_message = "The Storage Account must have 2 containers, 2 tables and 2 queues created"
   }
 }
 

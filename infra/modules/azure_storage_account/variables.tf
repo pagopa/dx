@@ -202,15 +202,28 @@ variable "secondary_location" {
 
 variable "containers" {
   description = "Containers to be created."
-  type = object({
+  type = list(object({
     name        = string
     access_type = optional(string, "private")
-  })
+  }))
 
-  default = {}
+  default = []
 
   validation {
     condition     = alltrue([for c in var.containers : contains(["private", "blob", "container"], c.access_type)])
     error_message = "Container access_type must be one of 'private', 'blob', or 'container'."
   }
+}
+
+variable "tables" {
+  description = "Tables to be created."
+  type        = list(string)
+  default     = []
+}
+
+variable "queues" {
+  description = "Queues to be created."
+  type        = list(string)
+  default     = []
+
 }
