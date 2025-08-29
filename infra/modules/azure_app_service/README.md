@@ -25,6 +25,38 @@ This module deploys an AppService with a strong opinionated configuration in ter
 
 For a complete example of how to use this module, refer to the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service/tree/main/examples/complete) folder in the module repository.
 
+## Testing
+
+This module includes a comprehensive test suite following HashiCorp's testing framework guidelines. The tests are organized using the testing pyramid approach:
+
+- **Unit tests** - Fast, isolated tests of individual components
+- **Integration tests** - Tests that verify how components work together  
+- **Validation tests** - Tests that verify input validation and error conditions
+
+To run the tests, see the [tests/README.md](./tests/README.md) for detailed instructions.
+
+```bash
+# Run all tests
+terraform test
+
+# Run specific test categories
+terraform test -filter=unit-*
+terraform test -filter=integration-*
+terraform test -filter=validation-*
+```
+
+## Testing Coverage
+
+The test suite covers:
+- All tier configurations (s, m, l, xl) and legacy mappings
+- Technology stacks (Node.js, Java) with version management
+- Networking scenarios (subnets, service endpoints, private endpoints)
+- Security configurations (TLS, HTTPS, network access)
+- Application settings and Application Insights integration
+- Staging slot creation and configuration
+- Input validation and error conditions
+- Module outputs verification
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
