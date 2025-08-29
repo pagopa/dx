@@ -8,27 +8,30 @@ This module deploys an Azure API Management instance with optional configuration
 
 - **Azure API Management Instance**: Manage APIs, policies, and configurations.
 - **Application Insights Integration**: Enable logging and monitoring of API requests and responses.
-- **Autoscaling**: Configure autoscaling for Premium tier instances based on capacity metrics.
+- **Autoscaling**: Configure autoscaling for non development use cases instances based on capacity metrics.
 - **Private DNS A Records**: Create DNS records for internal API Management endpoints.
 - **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
 - **Management Lock**: Prevent accidental deletion of the API Management instance.
 - **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
 - **Metric Alerts**: Set up alerts for monitoring API Management metrics.
 
-## Tiers and Configurations
+## Use Cases and Configurations
 
-| Tier | Description                                                                                                                        | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
-| `s`  | Developer Tier, for development and testing.                                                                                       | None | Limited          | No          | No                | Disabled      |
-| `m`  | Standard Tier, for production workloads.                                                                                           | Yes  | Moderate         | No          | No                | Enabled       |
-| `l`  | Premium Tier, designed for large-scale production workloads.                                                                       | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
-| `xl` | Premium Tier, optimized for large-scale production workloads requiring maximum scalability, resilience, and multi-zone redundancy. | Yes  | High (Autoscale) | Yes         | `["1", "2", "3"]` | Enabled       |
+| Use case          | Description                                                                                               | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
+| ----------------- | --------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
+| `development`     | For development and testing purposes.                                                                     | None | Limited          | No          | No                | Disabled      |
+| `cost_optimized`  | The default use case, for production workloads.                                                           | Yes  | Moderate         | No          | No                | Enabled       |
+| `high_load`       | Designed for large-scale production workloads.                                                            | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
 
 ## Monitoring
 
 Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
 Since Azure can take some time to create those resources, you may not see the logs immediately after the deployment.
+
+## ⚠️ Note about `cost_optimized` use case ⚠️
+
+The `cost_optimized` use case is designed to balance cost and performance for production workloads. However, it is important to note that it does not support **Backup and Restore** features ([Official documentation](https://learn.microsoft.com/en-us/azure/api-management/v2-service-tiers-overview#classic-feature-availability)).
 
 ## Usage Example
 
@@ -97,13 +100,13 @@ No modules.
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Enable collecting resources to send to Azure Monitor into AzureDiagnostics table | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = string<br/><br/>    logs = optional(object({<br/>      enabled    = bool<br/>      groups     = optional(list(string), [])<br/>      categories = optional(list(string), [])<br/>    }), { enabled = false, groups = [], categories = [] })<br/><br/>    metrics = optional(object({<br/>      enabled = bool<br/>    }), { enabled = false })<br/><br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_notification_sender_email"></a> [notification\_sender\_email](#input\_notification\_sender\_email) | The email address from which notifications will be sent. | `string` | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name of the private DNS zone. This is only required when the resource group name differs from the VNet resource group. | `string` | `null` | no |
-| <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id) | The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network. | `string` | `null` | no |
+| <a name="input_public_ip_address_id"></a> [public\_ip\_address\_id](#input\_public\_ip\_address\_id) | The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the non development use cases when deployed in a virtual network. | `string` | `null` | no |
 | <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email) | The email address of the publisher or company. | `string` | n/a | yes |
 | <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name) | The name of the publisher or company. | `string` | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | The ID of the subnet that will be used for the API Management. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'. | `string` | `"s"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the API Management. Allowed values are 'cost\_optimized', 'high\_load', and 'development'. | `string` | `"cost_optimized"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network in which to create the subnet. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_virtual_network_type_internal"></a> [virtual\_network\_type\_internal](#input\_virtual\_network\_type\_internal) | Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet\_id; otherwise, it will be None. | `bool` | `true` | no |
 | <a name="input_xml_content"></a> [xml\_content](#input\_xml\_content) | XML content for all API policies. | `string` | `null` | no |
