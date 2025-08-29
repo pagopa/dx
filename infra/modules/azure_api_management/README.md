@@ -31,7 +31,7 @@ Since Azure can take some time to create those resources, you may not see the lo
 
 ## ⚠️ Note about `cost_optimized` use case ⚠️
 
-The `cost_optimized` use case is designed to balance cost and performance for production workloads. It use the `StandardV2` tier, is important to know that does not support **Backup and Restore** feature ([Official documentation](https://learn.microsoft.com/en-us/azure/api-management/v2-service-tiers-overview#classic-feature-availability)).
+The `cost_optimized` use case is designed to balance cost and performance for production workloads. However, it is important to note that it does not support **Backup and Restore** features ([Official documentation](https://learn.microsoft.com/en-us/azure/api-management/v2-service-tiers-overview#classic-feature-availability)).
 
 ## Usage Example
 
