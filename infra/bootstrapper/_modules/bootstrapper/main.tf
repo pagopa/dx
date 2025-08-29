@@ -7,7 +7,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment = var.environment
 
@@ -94,7 +94,7 @@ module "roles_cd" {
 
 resource "azurerm_role_assignment" "storage_blob_contributor" {
   count                = var.environment.env_short == "d" ? 1 : 0
-  scope                = data.azurerm_resource_group.tfstate.id
+  scope                = data.azurerm_resource_group.tfstate[0].id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
@@ -104,10 +104,4 @@ resource "azurerm_role_assignment" "contributor" {
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
-}
-
-resource "github_actions_secret" "codecov_token" {
-  repository      = var.repository.name
-  secret_name     = "CODECOV_TOKEN"
-  plaintext_value = data.azurerm_key_vault_secret.codecov_token.value
 }
