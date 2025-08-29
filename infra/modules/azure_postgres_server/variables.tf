@@ -65,14 +65,14 @@ variable "delegated_subnet_id" {
 # Administration #
 #----------------#
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
-  default     = "s"
+  description = "Specifies the use case for the PostgreSQL Server. Allowed value are 'default'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values are 's', 'm', or 'l'."
+    condition     = contains(["default"], var.use_case)
+    error_message = "Allowed value for \"use_case\" are \"default\"."
   }
 }
 
@@ -111,6 +111,18 @@ variable "replica_zone" {
   type        = string
   description = "Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
   default     = null
+}
+
+variable "create_replica" {
+  type        = bool
+  description = "Indicates whether a replica PostgreSQL Flexible Server should be created. Defaults to true."
+  default     = true
+}
+
+variable "replica_location" {
+  type        = string
+  description = "The location where the replica PostgreSQL Flexible Server should be created. Defaults to another region to improve Disaster Recovery."
+  default     = "spaincentral"
 }
 
 #-------------------#
