@@ -30,7 +30,7 @@ module "azure_storage_account" {
   source = "../../"
 
   environment         = local.environment
-  tier                = "l"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
@@ -86,6 +86,27 @@ module "azure_storage_account" {
     name          = "example.com"
     use_subdomain = true
   }
+
+  containers = [
+    {
+      name        = "container1"
+      access_type = "private"
+    },
+    {
+      name        = "container2"
+      access_type = "private"
+    }
+  ]
+
+  tables = [
+    "table1",
+    "table2"
+  ]
+
+  queues = [
+    "queue1",
+    "queue2"
+  ]
 
   tags = local.tags
 }
