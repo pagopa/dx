@@ -1,0 +1,216 @@
+on:
+  workflow_call:
+    inputs:
+      bundle_name:
+        description: The name of the workspace to create the artifact for.
+        type: string
+        required: true
+      resource_group_name:
+        description: Web App resource group name.
+        type: string
+        required: true
+      web_app_name:
+        description: Web App name.
+        type: string
+        required: true
+      environment:
+        description: Environment where the artifact will be deployed.
+        type: string
+        required: true
+      disable_auto_staging_deploy:
+        description: Disable automatic deployments to the staging slot.
+        type: boolean
+        required: false
+        default: false
+      use_private_agent:
+        description: Use a private agent to deploy the built artifact.
+        type: boolean
+        required: false
+        default: true
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
+
+env:
+  BUNDLE_NAME: ${{ inputs.bundle_name }}
+  RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+  WEB_APP_NAME: ${{ inputs.web_app_name }}
+  ARM_USE_OIDC: true
+
+jobs:
+  validate:
+    name: Validate Web App
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    if: ${{ !github.event.act }}
+    environment: ${{ inputs.environment }}-ci
+
+    permissions:
+      id-token: write
+
+    outputs:
+      use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
+
+    steps:
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Check for existing staging slot
+        id: query-staging-slot
+        run: |
+          echo "::debug::Checking for existing deployment slots..."
+          USE_STAGING_SLOT=$(az webapp deployment slot list \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --query 'length([?name == `staging`]) > `0`')
+          echo "use_staging_slot=$USE_STAGING_SLOT" >> "$GITHUB_OUTPUT"
+          if [ "$USE_STAGING_SLOT" == "true" ]; then
+            echo "### Staging slot found ✅" >> $GITHUB_STEP_SUMMARY
+            echo "The deployment will proceed to the staging slot." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### No staging slot found" >> $GITHUB_STEP_SUMMARY
+            echo "No staging slot is configured for this web app. The deployment will proceed to the production slot." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check if the custom warm-up is configured
+        if: ${{ steps.query-staging-slot.outputs.use_staging_slot == 'true' }}
+        run: |
+          IS_WARMUP_CONFIGURED=$(az webapp config appsettings list \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$WEB_APP_NAME" \
+            --query 'length([?name==`WEBSITE_SWAP_WARMUP_PING_STATUSES`||name==`WEBSITE_SWAP_WARMUP_PING_PATH`]) == `2`')
+          if [ "$IS_WARMUP_CONFIGURED" == "false" ]; then
+            echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
+            echo "### Custom warm-up configuration needed ❌" >> $GITHUB_STEP_SUMMARY
+            echo "The custom warm-up configuration is not set for the staging slot. This is required to ensure a smooth swap between slots." >> $GITHUB_STEP_SUMMARY
+            echo "Check out the [documentation](https://pagopa.github.io/dx/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+  deploy:
+    name: ${{ format('Deploy to {0}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [validate]
+    if: ${{ !github.event.act }}
+    environment: ${{ inputs.environment }}-cd
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: ${{ env.BUNDLE_NAME }}
+
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Deploy
+        env:
+          USE_STAGING_SLOT: ${{ needs.validate.outputs.use_staging_slot }}
+        run: |
+          cmd=(
+              "az" "webapp" "deploy"
+              "--resource-group" "$RESOURCE_GROUP_NAME"
+              "--name" "$WEB_APP_NAME"
+              "--src-path" "$BUNDLE_NAME.zip"
+              "--type" "zip"
+              "--async" "false"
+          )
+          if [[ "$USE_STAGING_SLOT" == "true" ]]; then
+              echo "::debug::Deploying to staging slot"
+              cmd+=("--slot" "staging")
+          else
+              echo "::debug::Deploying to production (no slot)"
+          fi
+          "${cmd[@]}"
+
+  auto_approve_staging_deploy:
+    name: Approve Staging Deployment
+    runs-on: ubuntu-latest
+    needs: [validate]
+
+    if: ${{ !github.event.act && fromJSON(needs.validate.outputs.use_staging_slot) && !inputs.disable_auto_staging_deploy }}
+
+    steps:
+      - name: Approve deployment
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }}
+          REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set."
+            exit 1
+          fi
+
+          deployments=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
+
+          environment=$(echo "$deployments" | jq -r '.[].environment.name')
+
+          if [ "$environment" != "$REQUIRED_ENVIRONMENT" ]; then
+            echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
+            echo "::warning::Check if the deployment was already approved by one of the reviewers."
+            exit 1
+          fi
+
+          current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
+
+          if [ "$current_user_can_approve" != true ]; then
+            GITHUB_USER=$(gh api user | jq -r '.login')
+            echo "::error::$GITHUB_USER is not a reviewer"
+            echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
+            exit 1
+          fi
+
+          env_id=$(echo "$deployments" | jq -r '.[].environment.id')
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
+            -F "environment_ids[]=$env_id" \
+            -f "state=approved" \
+            -f "comment=Approved automatically by the workflow."
+
+  swap_staging_production:
+    name: Swap slots
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    needs: [validate, deploy]
+    if: ${{ !github.event.act && fromJson(needs.validate.outputs.use_staging_slot) }}
+    environment: ${{ inputs.environment }}-cd
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Swap Staging and Production Slots
+        uses: pagopa/dx/actions/swap-appsvc-slot@main
+        with:
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          web_app_name: ${{ env.WEB_APP_NAME }}
