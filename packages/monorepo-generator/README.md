@@ -5,3 +5,10 @@ A package that will generate a monorepo, following DX conventions, from a templa
 ## Overview
 
 The `@pagopa/monorepo-generator` is a tool designed to streamline the creation of new monorepos that adhere to PagoPA's DX conventions. It provides a standardized way to bootstrap new projects with consistent structure, configuration, and best practices.
+
+> [!NOTE]
+> This is a work in progress
+
+## Required Parameters
+
+- {{repoName}}: the name of the monorepo. This will be the name set as `name` property in the `package.json` file in the root of your repository.
