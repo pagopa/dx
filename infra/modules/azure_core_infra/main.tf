@@ -108,6 +108,7 @@ module "nat_gateway" {
 
   project             = local.project
   location            = var.environment.location
+  instance_number     = var.environment.instance_number
   resource_group_name = azurerm_resource_group.network.name
 
   tags = local.tags
@@ -120,8 +121,10 @@ module "vpn" {
 
   source = "./_modules/vpn"
 
+  prefix              = var.environment.prefix
   project             = local.project
   location            = var.environment.location
+  instance_number     = var.environment.instance_number
   resource_group_name = azurerm_resource_group.network.name
   env_short           = var.environment.env_short
 
