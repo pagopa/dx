@@ -9,9 +9,7 @@
 
 ## Providers
 
-| Name | Version |
-|------|---------|
-| <a name="provider_github"></a> [github](#provider\_github) | 6.6.0 |
+No providers.
 
 ## Modules
 
@@ -21,9 +19,7 @@
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [github_actions_secret.codecov_token](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
+No resources.
 
 ## Inputs
 

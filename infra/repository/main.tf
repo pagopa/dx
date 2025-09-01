@@ -19,15 +19,3 @@ module "github_repository" {
     jira_boards_ids        = ["CES"]
   }
 }
-
-resource "github_actions_secret" "codecov_token" {
-  repository      = "dx"
-  secret_name     = "CODECOV_TOKEN"
-  plaintext_value = "REPLACE_ME"
-
-  lifecycle {
-    ignore_changes = [
-      plaintext_value
-    ]
-  }
-}
