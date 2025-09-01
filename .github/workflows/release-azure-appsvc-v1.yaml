@@ -53,20 +53,47 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
 
+    # Ensure only one build for the same workspace runs at a time within the same run
+    concurrency:
+      group: ${{ format('{0}-build-{1}', github.run_id, inputs.workspace_name) }}
+      cancel-in-progress: false
+
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
     steps:
+      - name: Check if artifact already exists in this run
+        id: check-artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "::debug::Checking for existing artifact named '${BUNDLE_NAME}' in current run ${GITHUB_RUN_ID}"
+          names=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts \
+            -q '.artifacts[].name' || true)
+          if echo "${names}" | grep -qx "${BUNDLE_NAME}"; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "### Artifact '${BUNDLE_NAME}' already exists ✅" >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipping build and upload in this invocation." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check out repository
+        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Build Package
+        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         id: build-package
         uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
 
       - name: Make artifact
+        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         id: make-artifact
         env:
           PACKAGE_MANAGER: ${{ steps.build-package.outputs.package-manager }}
@@ -102,6 +129,7 @@ jobs:
           exit 1
 
       - name: Upload Artifact
+        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
