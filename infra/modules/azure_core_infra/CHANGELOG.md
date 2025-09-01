@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.1.2
+
+### Patch Changes
+
+- 8635473: Disable purge protection on KeyVault created in non-prod environment
+
 ## 2.1.1
 
 ### Patch Changes
