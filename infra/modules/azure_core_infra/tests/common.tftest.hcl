@@ -57,7 +57,7 @@ run "core_is_correct_plan" {
 
   assert {
     condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-d-itn-ng-${run.setup_tests.environment.instance_number}"
-    error_message = "The NET Gateway name configuration must be correct"
+    error_message = "The NAT Gateway name configuration must be correct"
   }
 
   assert {
