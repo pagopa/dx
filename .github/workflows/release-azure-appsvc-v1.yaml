@@ -138,7 +138,6 @@ jobs:
   validate:
     name: Validate Web App
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [build]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-ci
 
@@ -191,7 +190,7 @@ jobs:
   deploy:
     name: ${{ format('Deploy to {0}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [validate]
+    needs: [validate, build]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-cd
 
