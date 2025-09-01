@@ -39,7 +39,7 @@ on:
         default: ""
 
 concurrency:
-  group: ${{ github.workflow }}-cd
+  group: ${{ github.workflow }}-${{ inputs.web_app_name }}-cd
   cancel-in-progress: true
 
 env:
