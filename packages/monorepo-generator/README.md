@@ -8,7 +8,3 @@ The `@pagopa/monorepo-generator` is a tool designed to streamline the creation o
 
 > [!NOTE]
 > This is a work in progress
-
-## Required Parameters
-
-- {{repoName}}: the name of the monorepo. This will be the name set as `name` property in the `package.json` file in the root of your repository.
