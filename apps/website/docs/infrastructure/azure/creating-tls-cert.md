@@ -2,10 +2,10 @@
 
 ## Overview
 
-Creating and manaing a TLS certificate can be a demanding and challenging task
+Creating and managing a TLS certificate can be a demanding and challenging task
 for developers who want to quickly create a new hostname for their applications.
 This guide provides step-by-step instructions on how to add a new TLS
-certificate and its automatic renewal pipeline using a combination of toosl such
+certificate and its automatic renewal pipeline using a combination of tools such
 as Terraform, PowerShell and Azure KeyVault.
 
 ## How-To Create a new TLS Certificate
