@@ -15,14 +15,7 @@ run "core_is_correct_plan" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
+    environment = run.setup_tests.environment
 
     tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
@@ -53,8 +46,18 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["dx-d-itn-common-vnet-01", "dx-d-itn-pep-snet-01", "dx-d-itn-ng-01"]
-    error_message = "The VNET names configuration must be correct"
+    condition     = module.network.vnet.name == "dx-d-itn-common-vnet-${run.setup_tests.environment.instance_number}"
+    error_message = "VNet name is not correct"
+  }
+
+  assert {
+    condition     = module.network.pep_snet.name == "dx-d-itn-pep-snet-${run.setup_tests.environment.instance_number}"
+    error_message = "Pep subnet name is not correct"
+  }
+
+  assert {
+    condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-d-itn-ng-${run.setup_tests.environment.instance_number}"
+    error_message = "The NET Gateway name configuration must be correct"
   }
 
   assert {
