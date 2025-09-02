@@ -18,9 +18,9 @@ this soon.
 
 :::
 
-We encapsulate an Azure DevOps pipeline capable of creating and renewing TLS
-certificates in the Terraform module
-`azuredevops_build_definition_tls_cert_federated`, available in the repository
+An Azure DevOps pipeline capable of creating and renewing TLS certificates is
+available as Terraform module
+(`azuredevops_build_definition_tls_cert_federated`) in the repository
 [pagopa/azuredevops-tf-modules](https://github.com/pagopa/azuredevops-tf-modules).
 
 This workflow uses managed identities to access the given KeyVault, checks if

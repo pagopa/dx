@@ -25,11 +25,12 @@ with the following characteristics:
 resource "azurerm_key_vault" "this" {
   ...
 
-  enable_rbac_authorization = true
-  enabled_for_disk_encryption = true
-  soft_delete_retention_days  = 30
-  purge_protection_enabled    = true
-  public_network_access_enabled = true # TODO: when TLS cert workflow is moved to GitHub, set this to false
+  enable_rbac_authorization     = true
+  enabled_for_disk_encryption   = true
+  soft_delete_retention_days    = 30
+  purge_protection_enabled      = true
+  # TODO: when pipeliens will be moved to GitHub, set this to false. Ref: creating-tls-cert.md##how-to-create-a-new-tls-certificate
+  public_network_access_enabled = true
 
   network_acls {
     bypass         = "AzureServices"
