@@ -3,4 +3,4 @@
 "github_environment_bootstrap": patch
 ---
 
-Move relevant sections between azure-github-environment-bootstrap and github-environment-bootstrap modules documentation
+Move relevant documentation sections between azure-github-environment-bootstrap and github-environment-bootstrap modules documentation
