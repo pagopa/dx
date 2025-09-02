@@ -87,6 +87,13 @@ module "iam_tlscert_kv_admins" {
 If your KeyVault uses RBAC and the certificate already exists, add it to App
 Gateway with Az PowerShell:
 
+:::note
+
+If you don't have PowerShell installed, you can use the Azure Cloud Shell
+through the Azure Portal
+
+:::
+
 ```powershell
 
 Connect-AzAccount -SubscriptionName "<subscription-name>"
@@ -132,3 +139,5 @@ alerts:
 - Select "Resolve Azure Key Vault issue for your Application Gateway" in the
   recommendation type
 - Select your action group or create a new one
+
+![azure advisor](app-gateway-tls-cert/advisor.png)
