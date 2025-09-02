@@ -6,9 +6,6 @@ AVD-GIT-0001
 # GitHub branch protection does not require signed commits.
 AVD-GIT-0004
 
-# The minimum TLS version for Storage Accounts should be TLS1_2
-AVD-AZU-0011
-
 # LOW: Secret should have an expiry date specified
 AVD-AZU-0017
 
