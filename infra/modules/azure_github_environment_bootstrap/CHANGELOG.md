@@ -180,6 +180,9 @@
 
   **Important**: The GitHub environments and deployment policies that were previously managed by the Azure module are now handled by the GitHub module. Make sure to import all existing environments to avoid recreating them.
 
+  ### Troubleshooting
+  - If you encounter issues applying `github_environment_deployment_policy` resources, please use the GitHub UI to remove them manually. This is a known issue with the GitHub provider. To do so, navigate to the repository's "Settings" > "Environments", select the environment, and delete the deployment policy ("Deployment branches and tags" section). On the next `terraform apply`, the resource will be recreated without issues.
+
 ## 2.4.4
 
 ### Patch Changes
