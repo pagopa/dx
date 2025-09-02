@@ -53,21 +53,68 @@
   ### Upgrade Notes
 
   This change updates the names of the Storage Account Private Endpoints created by the module. The change was necessary to avoid conflicts with the Private Endpoints names create by the `azurerm_storage_account` resource. To change the name, it is required to recreate the Private Endpoints following these steps:
-  - Using Azure Portal, navigate to the Storage Account associated with the Function App
-  - Remove the lock on the Storage Account if it is present
-  - Select the `Networking` tab
-  - Under `Firewalls and Virtual Networks`, select `Enabled from selected virtual networks and IP addresses`
-  - Tick the option `Add your client IP address ('<ip>')`
-  - Select `Add existing virtual network`
-  - Add the Function App's subnet
-  - Azure Portal will warn to enable service endpoints for the subnet, click `Enable` to proceed
-  - Click `Add` to add the subnet
-  - Click `Save` to apply the changes
-  - Wait for the changes to be applied and propagated (~10 minutes)
-  - Move to the `Private endpoint connections` section, find the existing Private endpoints (ignore eventual Data Factory associated resources)
-  - Delete each of them by click on each resource and selecting `Delete`
-  - Create the Private Endpoints again using the new module. This operation will also restore the configuration changed by Azure Portal
-  - Disable the service endpoint previously enabled on the Function App's subnet by navigating to the `Subnets` section of the Virtual Network, selecting the Function App's subnet, and unchecking the `Microsoft.Storage` service endpoint
+  1. Enabling Service Endpoint for Function App subnet
+     - Using Azure Portal, navigate to the Function App's subnet
+     - In the right hand side pane, in `Service Endpoints` section, enable the `Microsoft.Storage` service endpoint
+  2. Updating Storage Account networking configuration
+     - Navigate to the Storage Account associated with the Function App
+     - Remove the lock on the Storage Account if present
+     - Select the `Networking` tab
+     - Under `Public Access`, select `Manage`
+       - For `Public network access` option select `Enable`
+       - For `Public network access scope` option select `Enable from selected networks`
+     - Add the Function App's subnet
+     - (Optional) Tick the option `Add your client IPv4 address ('<ip>')`
+     - Click `Save` to apply the changes
+     - Wait for the changes to be applied and propagated (~10 minutes)
+  3. Deleting Private Endpoints
+     - Navigate to the Storage Account associated with the Function App
+     - Remove the lock on the Storage Account if present
+     - Select the `Networking` tab
+     - Under `Private endpoints`:
+       - Take note of the existing Private Endpoints subresources (e.g. `blob`, `file`, `queue`, `table`)
+       - Delete each of them by click on each resource and selecting `Delete` (ignore eventual Data Factory or external teams' resources)
+  4. Creating Private Endpoints:
+     - For each of the private endpoint subresources noted before, create a new Private Endpoint with the following commands:
+       - `az network private-endpoint create -n "<private-endpoint-name>" -g "<function-app-resource-group>" --subnet <subnet-id> --private-connection-resource-id <storage-account-resource-id> --group-id <subresource-name> --connection-name <connection-name> -l <location>`
+         - Replace `<private-endpoint-name>` with the name of the Private Endpoint to create (e.g. `pe<function-app-name><subresource-name>`). Get the **value from the Terraform plan**
+         - Replace `<function-app-resource-group>` with the resource group of the Function App
+         - Replace `<subnet-id>` with the id of the Function App's subnet
+         - Replace `<storage-account-resource-id>` with the resource ID of the Storage Account associated with the Function App
+         - Replace `<subresource-name>` with the name of the subresource (e.g. `blob`, `file`, `queue`, `table`)
+         - Replace `<connection-name>` with a name for the connection (e.g. `conn<function-app-name><subresource-name>`)
+         - Replace `<location>` with the Azure region of the Function App
+     - `az network private-endpoint dns-zone-group create -g <function-app-resource-group> --endpoint-name <private-endpoint-name> -n "privatelink.<sub>.core.windows.net" --private-dns-zone "<private-dns-zone-id>"`
+       - Replace `<function-app-resource-group>` with the resource group of the Function App
+       - Replace `<private-endpoint-name>` with the name of the Private Endpoint created before
+       - Replace `<sub>` with the subresource name (e.g. `blob`, `file`, `queue`, `table`)
+       - Replace `<private-dns-zone-id>` with the resource id of the Private DNS Zone associated with the Storage Account (e.g. `/subscriptions/<subscription-id>/resourceGroups/<dns-zone-resource-group>/providers/Microsoft.Network/privateDnsZones/privatelink.<sub>.core.windows.net`)
+  5. Removing Private Endpoints from Terraform state
+     - Run the following commands for each of the Private Endpoints created before:
+       - `terraform state rm "module.<your-module-name>.module.<function-app-module>.azurerm_private_endpoint.st_<subresource>"`
+       - Replace `<your-module-name>` and `function-app-module>` with module names given in your code of the Private Endpoint created before
+       - Replace `<subresource>` with the name of the subresource (e.g. `blob`, `file`, `queue`, `table`)
+  6. Importing new resources in Terraform state
+     - For each of the private endpoint created before, define the following blocks in your Terraform source code (do not apply the changes yet):
+
+       ```hcl
+       import {
+        id = "<private-endpoint-id>"
+        to = "module.<your-module-name>.module.<function-app-module>.azurerm_private_endpoint.st_<subresource>"
+       }
+       module "function_app" {
+        source  = "pagopa-dx/azure-function-app/azurerm"
+        version = "~> 2.0"
+       }
+       ```
+
+       - Replace `<private-endpoint-id>` with the id of the private endpoints created
+       - Replace `<your-module-name>` and `function-app-module>` with module names given in your code of the Private Endpoint created before
+       - Replace `<subresource>` with the name of the subresource (e.g. `blob`, `file`, `queue`, `table`)
+
+  7. Reverting previous changes
+     - Revert the changes done in step `1` and `2`
+  8. Run `terraform plan` to verify that no changes are required
 
 ## 1.0.1
 
