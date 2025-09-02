@@ -2,71 +2,79 @@
 "azure_storage_account": major
 ---
 
-# Breaking Change
+# Major Changes
 
-Replace the `tier` variable with a new `use_case` variable for tiering configuration. The previous values (`s`, `l`) have been replaced by five new options: `development` (formerly `s`), `default` (formerly `l`),  `audit`, `delegated_access` and `archive`. This change simplifies and clarifies the selection of Storage Account.
+1. Replace the `tier` variable with a new `use_case` variable for tiering configuration.
+2. Add new variables for container, queue and tables creation.
+
+## Upgrade Notes
+
+| Old Value | New Value         | Description                                                       |
+|-----------|-------------------|-------------------------------------------------------------------|
+| s         | development       | Used only for `development` and `testing` purposes                |
+| l         | default           | Ideal for `production` environments                               |
+| *none*    | audit             | For storing audit logs with high security and long-term retention |
+| *none*    | delegated_access  | For sharing files externally, forcing secure access patterns      |
+| *none*    | archive           | For long-term, low-cost backup and data archiving                 |
+
+This change simplifies and clarifies the selection of Storage Account.
 
 - The `audit` use case now requires Customer-Managed Key (BYOK) encryption to be enabled.
 - For the `delegated_access` use case, `shared_access_key_enabled` is now set to false.
 - Microsoft Defender for Storage (`advanced_threat_protection`) is now consistently enabled for use cases exposed to higher risks, such as `delegated_access`.
 
-Add new variables for container, queue and tables creation.
-
-## Migration Path
-
 To migrate to this new major version:
 
 1. Update the module version to `~> 2.0` in your Terraform configuration.
-2. Update your `module` configuration to use the new `use_case` variable instead of `tier`. Check the README to choose correctly the best `use_case`, you can use `development` if you are using `s`, or `default` if `l`.
+2. Update your `module` configuration to use the new `use_case` variable instead of `tier`.
 3. Optionally, configure the new `containers`, `queues`, and `tables` variables to create the desired resources within the Storage Account.
-4. Refer to the README and module documentation for updated examples and guidance.
 
-### Example
+For Example:
 
-#### Before
+- **Before**
 
-```hcl
-module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm
-  version = "~> 1.0"
-  tier    = "l"
-  # ...other variables...
-}
-```
+  ```hcl
+  module "storage_account" {
+    source  = "pagopa-dx/azure-storage-account/azurerm
+    version = "~> 1.0"
+    tier    = "l"
+    # ...other variables...
+  }
+  ```
 
-#### After
+- **After**
 
-```hcl
-module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm
-  version = "~> 2.0"
-  
-  use_case = "default"
+  ```hcl
+  module "storage_account" {
+    source  = "pagopa-dx/azure-storage-account/azurerm
+    version = "~> 2.0"
+    
+    use_case = "default"
 
-  containers = [
-    {
-      name        = "container1"
-      access_type = "private"
-    },
-    {
-      name        = "container2"
-      access_type = "private"
-    }
-  ]
+    containers = [
+      {
+        name        = "container1"
+        access_type = "private"
+      },
+      {
+        name        = "container2"
+        access_type = "private"
+      }
+    ]
 
-  tables = [
-    "table1",
-    "table2"
-  ]
+    tables = [
+      "table1",
+      "table2"
+    ]
 
-  queues = [
-    "queue1",
-    "queue2"
-  ]
+    queues = [
+      "queue1",
+      "queue2"
+    ]
 
-  # ...other variables remain unchanged...
-}
-```
+    # ...other variables remain unchanged...
+  }
+  ```
 
 ### Note for already existing resources
 
