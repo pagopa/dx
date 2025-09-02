@@ -11,7 +11,7 @@ deployments via the
 
 ## Option 1: Create Azure Static Web App with Terraform
 
-You can provision the resource using the official
+You can provision the needed cloud services using the official
 [azurerm_static_web_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/static_web_app)
 Terraform resource.
 
