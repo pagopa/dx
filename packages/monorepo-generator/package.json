@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
