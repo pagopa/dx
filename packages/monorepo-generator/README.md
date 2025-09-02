@@ -8,3 +8,4 @@ The `@pagopa/monorepo-generator` is a tool designed to streamline the creation o
 
 > [!NOTE]
 > This is a work in progress
+
