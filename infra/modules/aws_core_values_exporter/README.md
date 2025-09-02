@@ -3,6 +3,47 @@
 This Terraform module enables the standardized export and sharing of core AWS infrastructure values across projects and environments.  
 It is designed to harmonize the configuration of cloud resources by exposing key outputs such as security groups, network details, and shared service endpoints from the main `aws-core-infra` state, making them easily consumable by dependent modules and project-specific stacks.
 
+## Supported Backends
+
+This module supports both **S3** (AWS) and **Azure Storage** backends for Terraform remote state:
+
+- **S3 Backend**: Traditional AWS S3 bucket with optional DynamoDB state locking
+- **Azure Storage Backend**: Azure Storage Account containers for state storage
+
+**Auto-Detection**: The backend type is automatically detected based on which fields are populated in the `core_state` variable. No need to specify `backend_type` manually!
+
+## Usage Examples
+
+### S3 Backend (AWS) - Backward Compatible
+
+```hcl
+module "core_values" {
+  source = "./aws_core_values_exporter"
+
+  core_state = {
+    bucket         = "my-terraform-state-bucket"
+    key            = "core/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-lock"
+  }
+}
+```
+
+### Azure Storage Backend
+
+```hcl
+module "core_values" {
+  source = "./aws_core_values_exporter"
+
+  core_state = {
+    storage_account_name = "myterraformstate"
+    container_name       = "tfstate"
+    key                  = "core/terraform.tfstate"
+    resource_group_name  = "rg-terraform-state"
+  }
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -20,12 +61,13 @@ No modules.
 | Name | Type |
 |------|------|
 | [terraform_remote_state.core](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+| [terraform_remote_state.core_azure](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state where aws-core-infra module is deployed. | <pre>object({<br/>    bucket         = string<br/>    key            = string<br/>    region         = string<br/>    dynamodb_table = optional(string, null)<br/>  })</pre> | n/a | yes |
+| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state. Supports both S3 (AWS) and Azure Storage backends. | <pre>object({<br/>    key = string<br/><br/>    # S3 backend configuration (AWS)<br/>    bucket         = optional(string, null)<br/>    region         = optional(string, null)<br/>    dynamodb_table = optional(string, null)<br/><br/>    # Azure Storage backend configuration<br/>    storage_account_name = optional(string, null)<br/>    container_name       = optional(string, null)<br/>    resource_group_name  = optional(string, null)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

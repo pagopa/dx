@@ -3,6 +3,47 @@
 This Terraform module enables the standardized export and sharing of core Azure infrastructure values across projects and environments.  
 It is designed to harmonize the configuration of cloud resources by exposing key outputs such as resource group names, network details, and shared service endpoints from the main `azure-core-infra` state, making them easily consumable by dependent modules and project-specific stacks.
 
+## Supported Backends
+
+This module supports both **Azure Storage** and **S3** (AWS) backends for Terraform remote state:
+
+- **Azure Storage Backend**: Traditional Azure Storage Account containers for state storage
+- **S3 Backend**: Cross-cloud support for organizations using AWS S3 for state storage
+
+**Auto-Detection**: The backend type is automatically detected based on which fields are populated in the `core_state` variable. No need to specify `backend_type` manually!
+
+## Usage Examples
+
+### Azure Storage Account (Default)
+
+```hcl
+module "azure_core_values_exporter" {
+  source = "path/to/module"
+
+  core_state = {
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "stterraformstate"
+    container_name       = "tfstate"
+    key                  = "azure/core/terraform.tfstate"
+  }
+}
+```
+
+### AWS S3 Backend
+
+```hcl
+module "azure_core_values_exporter" {
+  source = "path/to/module"
+
+  core_state = {
+    bucket         = "my-terraform-state-bucket"
+    key            = "azure/core/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-state-lock"  # optional
+  }
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -19,13 +60,14 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [terraform_remote_state.core](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+| [terraform_remote_state.core_azurerm](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
+| [terraform_remote_state.core_s3](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state where azure-core-infra module is deployed. | <pre>object({<br/>    resource_group_name  = string<br/>    storage_account_name = string<br/>    container_name       = string<br/>    key                  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state. Supports both S3 (AWS) and Azure Storage backends. | <pre>object({<br/>    key = string<br/><br/>    # Azure Storage backend configuration<br/>    storage_account_name = optional(string, null)<br/>    container_name       = optional(string, null)<br/>    resource_group_name  = optional(string, null)<br/><br/>    # S3 backend configuration (AWS)<br/>    bucket         = optional(string, null)<br/>    region         = optional(string, null)<br/>    dynamodb_table = optional(string, null)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
