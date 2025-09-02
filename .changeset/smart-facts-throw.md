@@ -1,41 +1,43 @@
 ---
-"azure_event_hub": major
+"azure_event_hub": patch
 ---
 
-## Breaking Change
+# Patch Changes
 
-Replace the `tier` variable with a new `use_case` variable for tiering configuration. The previous values (`s`,`m`, `l`) have been replaced by a new option: `default` (formerly `m`). This change simplifies and clarifies the selection of EventHub.
+Replace the `tier` variable with a new `use_case` variable for tiering configuration.
 
-## Migration Path
+## Upgrade Notes
 
-To migrate to this new major version:
+| Old Value | New Value  |
+|-----------|------------|
+| s         | *none*     |
+| m         | `default`  |
+| l         | *none*     |
 
-1. Update the module version to `~> 1.0` in your Terraform configuration.
-2. Update your `module` configuration to use the new `use_case` variable instead of `tier`. Only `default` is supported.
-3. Refer to the README and module documentation for updated examples and guidance.
+This change simplifies and clarifies the selection of EventHub.
 
-### Example
+For Example:
 
-#### Before
+- **Before**
 
-```hcl
-module "eventhub" {
-  source  = "pagopa-dx/azure-event-hub/azurerm"
-  version = "~> 0.0"
+  ```hcl
+  module "eventhub" {
+    source  = "pagopa-dx/azure-event-hub/azurerm"
+    version = "~> 0.0"
 
-  tier    = "m"
-  # ...other variables...
-}
-```
+    tier    = "m"
+    # ...other variables...
+  }
+  ```
 
-#### After
+- **After**
 
-```hcl
-module "eventhub" {
-  source  = "pagopa-dx/azure-event-hub/azurerm"
-  version = "~> 1.0"
-  
-  use_case = "default"
-  # ...other variables remain unchanged...
-}
-```
+  ```hcl
+  module "eventhub" {
+    source  = "pagopa-dx/azure-event-hub/azurerm"
+    version = "~> 0.0"
+    
+    use_case = "default"
+    # ...other variables remain unchanged...
+  }
+  ```
