@@ -14,7 +14,9 @@
     "dx",
     "pagopa"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "plop": "^4.0.1"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
