@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.1
+
+### Patch Changes
+
+- 1b59a77: Move relevant documentation sections between azure-github-environment-bootstrap and github-environment-bootstrap modules documentation
+
 ## 1.1.0
 
 ### Minor Changes

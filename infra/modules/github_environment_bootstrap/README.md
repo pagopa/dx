@@ -18,6 +18,27 @@ For more information on setting up and managing infrastructure in a monoreposito
 ### Usage Example
 
 ```hcl
+terraform {
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
+  }
+
+  backend "azurerm" {
+    resource_group_name  = "" # Set the terraform state's storage account resource group name
+    storage_account_name = "" # Set the terraform state's storage account name
+    container_name       = "terraform-state"
+    key                  = "<repository name>.repository.tfstate"
+  }
+}
+
+# GitHub provider configuration
+provider "github" {
+  owner = "pagopa"
+}
+
 module "github_environment_bootstrap" {
   source = "./modules/github_environment_bootstrap"
 
@@ -34,6 +55,58 @@ module "github_environment_bootstrap" {
 This example demonstrates how to use the module to create a GitHub repository with a custom name, description, topics, and Jira board integrations.
 
 For additional support, refer to the [GitHub Provider Documentation](https://registry.terraform.io/providers/integrations/github/latest/docs).
+
+## Gotchas
+
+### Import GitHub repository in the Terraform state file
+
+Remember to import the GitHub repository you are using in the Terraform
+state:
+
+```hcl
+import {
+  id = "<repository-name>"
+  to = module.repo.module.github_repository.github_repository.this
+}
+```
+
+### Set up GitHub Environments Policies and Default Branch Name
+
+You can customize deployment policies on `x-cd` GitHub environment by using the
+optional properties of the `repository` variable:
+
+- `infra_cd_policy_branches`
+- `opex_cd_policy_branches`
+- `app_cd_policy_branches`
+- `infra_cd_policy_tags`
+- `opex_cd_policy_tags`
+- `app_cd_policy_tags`
+
+The default branch name can be changed via the `default_branch_name` property.
+
+### Customizing GitHub configuration
+
+If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module.
+For example, if you need a `release`
+GitHub environment with a special deployment policy you can add:
+
+```hcl
+resource "github_repository_environment" "release" {
+  environment = "release"
+  repository  = module.repo.repository.name
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
+resource "github_repository_environment_deployment_policy" "release_branch" {
+  repository     = module.repo.repository.name
+  environment    = github_repository_environment.release.environment
+  branch_pattern = "main"
+}
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
