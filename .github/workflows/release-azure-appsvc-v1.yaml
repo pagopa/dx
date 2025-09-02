@@ -75,7 +75,7 @@ jobs:
             -q '.artifacts[].name' || true)
           if echo "${names}" | grep -qx "${BUNDLE_NAME}"; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "### Artifact '${BUNDLE_NAME}' already exists ✅" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Artifact `${BUNDLE_NAME}` already exists ✅" >> "$GITHUB_STEP_SUMMARY"
             echo "Skipping build and upload in this invocation." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
