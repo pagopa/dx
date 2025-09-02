@@ -12,14 +12,3 @@ module "core" {
 
   tags = local.tags
 }
-
-
-module "core_aws" {
-  source = "../../modules/aws_core_infra"
-
-  environment = local.aws_environment
-  vpc_cidr = "10.51.0.0/16"
-  nat_gateway_count = 0
-
-  tags = local.tags
-}
