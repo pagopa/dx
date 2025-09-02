@@ -5,7 +5,11 @@
 
 1. Replace the `tier` variable with a new `use_case` variable for tiering configuration.
 
-2. Some variables with tier dependencies have been updated with new validation rules to ensure they are only used when appropriate (`subnet_pep_id`, `private_dns_zone_resource_group_name`, `allowed_ips`).
+2. Some variables with tier dependencies have been updated with new validation rules to ensure they are only used when appropriate 
+
+    - `allowed_ips`: Now it can be defined only if use_case is default
+    - `subnet_pep_id`: Now it can be defined only when private_enpoint will be created (in this case only when use_case is default)
+    - `private_dns_zone_resource_group_name`: As subnet pep id now it can be defined only when private_enpoint will be created
 
 ## Upgrade Notes
 
