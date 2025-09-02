@@ -4,7 +4,7 @@
 
 # Patch Changes
 
-Replaced the `tier` variable with a new `use_case` variable for tiering configuration.
+Replace the `tier` variable with a new `use_case` variable for tiering configuration.
 
 ## Upgrade Notes
 
@@ -23,7 +23,7 @@ For Example:
   module "cosmos" {
     source  = "pagopa-dx/azure-cosmos-account/azurerm
     version = "~> 0.0"
-    
+
     tier    = "l"
     
     # ...other variables...
