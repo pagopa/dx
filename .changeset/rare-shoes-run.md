@@ -13,7 +13,7 @@ Replaced the `tier` variable with a new `use_case` variable for tiering configur
 | s         | development    | Ideal `development` and `testing` purposess                            |
 | m         | cost_optimized | Ideal for `production` environments purposes, now using StandardV2 SKU |
 | l         | high_load      | Ideal for large-scale production workloads                             |
-| xl        | *none**        | Now don't exist                                                        |
+| xl        | *none*         | Now don't exist                                                        |
 
 This change simplifies and clarifies the selection of API Management tiers.
 
