@@ -3,7 +3,8 @@ locals {
     prefix          = "dx"
     env_short       = "d"
     region          = "eu-south-1"
-    domain          = "test"
+    domain          = "modules"
+    app_name        = "test"
     instance_number = "01"
   }
 
