@@ -115,6 +115,8 @@ resource "azurerm_storage_container" "this" {
   name                  = each.value.name
   storage_account_id    = azurerm_storage_account.this.id
   container_access_type = each.value.access_type
+
+  metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
 
 # Tables
@@ -129,6 +131,8 @@ resource "azurerm_storage_queue" "this" {
   for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
   name                 = each.value
   storage_account_name = azurerm_storage_account.this.id
+
+  metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
 
 # Blob lifecycle management policy for Archive (Any -> Archive)
