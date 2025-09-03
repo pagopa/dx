@@ -74,6 +74,7 @@
      - (Optional) Tick the option `Add your client IPv4 address ('<ip>')`
      - Click `Save` to apply the changes
      - Wait for the changes to be applied and propagated (~5 minutes)
+
   4. Deleting Private Endpoints
      - Navigate to the Storage Account associated with the Function App
      - Remove the lock on the Storage Account if present
