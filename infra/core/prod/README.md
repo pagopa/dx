@@ -18,7 +18,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_core"></a> [core](#module\_core) | pagopa-dx/azure-core-infra/azurerm | ~> 2.0 |
+| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 2.0 |
 
 ## Resources
 

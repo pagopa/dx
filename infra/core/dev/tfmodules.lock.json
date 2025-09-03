@@ -1,5 +1,11 @@
 {
-  "core": {
+  "aws": {
+    "hash": "f2b75a44bc0296b0fb098bc473097e22a33b49c75386a2785b94c29f5f1df9f6",
+    "version": "0.0.2",
+    "name": "aws_core_infra",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-infra/aws/0.0.2"
+  },
+  "azure": {
     "hash": "09954755eac0f0b64c1c7ecd6e594642b1884de91a8de8d177889438424ffd77",
     "version": "2.1.3",
     "name": "azure_core_infra",
