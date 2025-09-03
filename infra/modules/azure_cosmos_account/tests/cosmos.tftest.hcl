@@ -44,7 +44,7 @@ run "cosmos_is_correct_plan" {
       TestName       = "Create Cosmos account for test"
     }
 
-    tier = "s"
+    use_case = "development"
 
     resource_group_name = run.setup_tests.resource_group_name
 
