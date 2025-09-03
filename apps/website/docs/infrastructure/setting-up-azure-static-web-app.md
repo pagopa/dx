@@ -4,7 +4,7 @@ sidebar_position: 51
 
 # How to Set Up Azure Static Web App for CI/CD Workflow
 
-This guide explains how to manually create an **Azure Static Web App** resource,
+This guide explains how to create an **Azure Static Web App** resource,
 either using Terraform or directly from the Azure Portal, to enable automated
 deployments via the
 [Build and Deploy Static Site to Azure Static Web App Workflow](../pipelines/build-deploy-static-web-app.md).
