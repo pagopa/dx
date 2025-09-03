@@ -19,7 +19,7 @@ variables {
     TestName       = "Cosmos unit tests"
   }
 
-  tier = "l"
+  use_case = "default"
 
   // These will be provided by the mocked setup module call
   resource_group_name                  = "rg-test"
@@ -92,7 +92,7 @@ run "cosmos_account_basics" {
 
   assert {
     condition     = length(azurerm_cosmosdb_account.this.capabilities) == 0
-    error_message = "Cosmos DB must not enable Serverless capability when tier = 'l'"
+    error_message = "Cosmos DB must not enable Serverless capability when use_case = 'default'"
   }
 }
 
@@ -100,12 +100,12 @@ run "cosmos_account_serverless" {
   command = plan
 
   variables {
-    tier = "s"
+    use_case = "development"
   }
 
   assert {
     condition     = [for c in azurerm_cosmosdb_account.this.capabilities : c.name][0] == "EnableServerless"
-    error_message = "Cosmos DB must enable Serverless capability when tier = 's'"
+    error_message = "Cosmos DB must enable Serverless capability when use_case = 'development'"
   }
 }
 

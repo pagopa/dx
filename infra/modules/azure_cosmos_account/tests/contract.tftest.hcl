@@ -21,7 +21,7 @@ variables {
     zone_redundant = true
   }
 
-  tier = "l"
+  use_case = "default"
 
   consistency_policy = {
     consistency_preset      = "Custom"
@@ -50,15 +50,15 @@ override_data {
   }
 }
 
-run "invalid_tier" {
+run "invalid_use_case" {
   command = plan
 
   variables {
-    tier = "x"
+    use_case = "m"
   }
 
   expect_failures = [
-    var.tier,
+    var.use_case,
   ]
 }
 
