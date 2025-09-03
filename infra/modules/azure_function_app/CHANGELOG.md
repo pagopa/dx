@@ -52,7 +52,7 @@
 
   ### Upgrade Notes
 
-  This change updates the names of the Storage Account Private Endpoints created by the module. The change was necessary to avoid conflicts with the Private Endpoints names create by the `azurerm_storage_account` resource. To change the name, it is required to recreate the Private Endpoints. To avoi any downtime, following these steps (approximately 15 minutes):
+  This change updates the names of the Storage Account Private Endpoints created by the module. The change was necessary to avoid conflicts with the Private Endpoints names created by the `azurerm_storage_account` resource. To change the name, it is required to recreate the Private Endpoints. To avoid any downtime, follow these steps (approximately 15 minutes):
   1. Connecto to VNet VPN
   2. Enabling Service Endpoint for Function App subnet:
 
