@@ -14,6 +14,10 @@
     "dx",
     "pagopa"
   ],
+  "files": [
+    "dist",
+    "templates"
+  ],
   "dependencies": {
     "plop": "^4.0.1"
   },
@@ -28,6 +32,7 @@
     "build": "tsc",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "pnpm build && plop --plopfile=dist/plopfile.js"
   }
 }
