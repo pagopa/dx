@@ -1,5 +1,5 @@
 ---
-"azure_cosmos_account": patch
+"azure_cosmos_account": minor
 ---
 
 # Patch Changes
