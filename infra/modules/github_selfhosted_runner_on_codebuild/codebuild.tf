@@ -50,7 +50,7 @@ resource "aws_codebuild_project" "github_runner" {
     }
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "aws_codebuild_source_credential" "string" {
