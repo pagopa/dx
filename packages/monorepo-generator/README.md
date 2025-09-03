@@ -9,3 +9,11 @@ The `@pagopa/monorepo-generator` is a tool designed to streamline the creation o
 > [!NOTE]
 > This is a work in progress
 
+## Usage
+
+Recommended (from repository root):
+
+```sh
+# run the package script which builds and runs plop
+pnpm --filter @pagopa/monorepo-generator run generate
+```
