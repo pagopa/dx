@@ -103,3 +103,8 @@ output "project" {
   description = "Project naming convention"
   value       = local.core_outputs.values.project
 }
+
+output "github_personal_access_token_ssm_parameter_name" {
+  description = "SSM parameter name for the GitHub personal access token"
+  value       = data.terraform_remote_state.core.outputs.values.github_personal_access_token_ssm_parameter_name
+}

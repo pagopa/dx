@@ -1,4 +1,13 @@
 locals {
+  tags = merge(
+    var.tags,
+    {
+      ModuleSource  = "DX",
+      ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"),
+      ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
+    }
+  )
+
   # Naming configuration for dx provider
   naming_config = {
     prefix          = var.environment.prefix,
@@ -20,25 +29,25 @@ locals {
 
   infra_ci = {
     secrets = {
-      "INFRA_CI_ROLE_ARN" = aws_iam_role.infra_ci.arn
+      "ROLE_ARN" = aws_iam_role.infra_ci.arn
     }
   }
 
   app_ci = {
     secrets = {
-      "APP_CI_ROLE_ARN" = aws_iam_role.app_ci.arn
+      "ROLE_ARN" = aws_iam_role.app_ci.arn
     }
   }
 
   infra_cd = {
     secrets = {
-      "INFRA_CD_ROLE_ARN" = aws_iam_role.infra_cd.arn
+      "ROLE_ARN" = aws_iam_role.infra_cd.arn
     }
   }
 
   app_cd = {
     secrets = {
-      "APP_CD_ROLE_ARN" = aws_iam_role.app_cd.arn
+      "ROLE_ARN" = aws_iam_role.app_cd.arn
     }
   }
 }
