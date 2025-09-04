@@ -12,7 +12,6 @@ locals {
     name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "eventhub_namespace" }))
   }
 
-  # Note: Basic SKU does not support private access
   use_cases = {
     default = {
       sku_name             = "Standard"
