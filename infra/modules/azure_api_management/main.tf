@@ -23,7 +23,7 @@ resource "azurerm_api_management" "this" {
   publisher_email               = var.publisher_email
   notification_sender_email     = var.notification_sender_email
   sku_name                      = local.apim.sku_name
-  zones                         = var.use_case == "high_load" ? local.apim.zones : null
+  zones                         = local.apim.zones
   public_network_access_enabled = var.use_case == "high_load" ? var.enable_public_network_access : false
   public_ip_address_id          = var.use_case == "high_load" && var.virtual_network_type_internal ? var.public_ip_address_id : null
 
