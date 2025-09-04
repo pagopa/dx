@@ -1,8 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ActionType, NodePlopAPI } from "plop";
+import { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 
-const getPrompts = () => [
+const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
     message: "Where do you want to create the repository?",
