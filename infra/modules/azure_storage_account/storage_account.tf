@@ -65,6 +65,12 @@ resource "azurerm_storage_account" "this" {
   }
 
   tags = local.tags
+
+  lifecycle {
+    ignore_changes = [
+      customer_managed_key
+    ]
+  }
 }
 
 resource "azurerm_security_center_storage_defender" "this" {

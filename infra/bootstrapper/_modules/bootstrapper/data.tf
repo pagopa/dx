@@ -15,10 +15,12 @@ data "azuread_group" "externals" {
 }
 
 data "azurerm_resource_group" "tfstate" {
-  name = "dx-d-itn-tfstate-rg-01"
+  count = var.environment.env_short == "d" ? 1 : 0
+  name  = "dx-d-itn-tfstate-rg-01"
 }
 
 data "azurerm_key_vault_secret" "codecov_token" {
+  count        = var.environment.env_short == "p" ? 1 : 0
   name         = "codecov-token"
   key_vault_id = module.core_values.common_key_vault.id
 }

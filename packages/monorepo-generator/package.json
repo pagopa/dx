@@ -1,0 +1,31 @@
+{
+  "name": "@pagopa/monorepo-generator",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A package that will generate a monorepo, following DX conventions, from a template",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/monorepo-generator"
+  },
+  "keywords": [
+    "monorepo",
+    "generator",
+    "dx",
+    "pagopa"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:dx",
+    "typescript": "catalog:"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "typecheck": "tsc --noEmit"
+  }
+}

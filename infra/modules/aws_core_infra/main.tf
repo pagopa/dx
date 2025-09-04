@@ -74,3 +74,19 @@ module "vpc_endpoints" {
 
   tags = local.tags
 }
+
+# SSM parameter for personal access token
+
+resource "aws_ssm_parameter" "personal_access_token" {
+  name        = "/core/github/personal_access_token"
+  description = "Personal access token for GitHub"
+  type        = "SecureString"
+  value       = "Fill in the bot's personal access token here"
+
+  lifecycle {
+    ignore_changes = [
+      insecure_value,
+      value
+    ]
+  }
+}

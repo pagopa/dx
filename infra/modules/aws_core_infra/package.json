@@ -1,6 +1,6 @@
 {
   "name": "aws_core_infra",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "provider": "aws",
   "description": "Sets up the core AWS infrastructure including all necessary networking resources. Useful to bootstrap production or development environments."
