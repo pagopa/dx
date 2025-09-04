@@ -22,7 +22,7 @@ locals {
         "high_load"      = "Premium_2",
       },
       var.use_case,
-      "StandardV2"
+      "StandardV2_1"
     )
 
     log_category_groups = ["allLogs", "audit"]
