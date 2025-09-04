@@ -16,7 +16,7 @@ catalogs:
       specifier: 3.6.2
       version: 3.6.2
     tsup:
-      specifier: ^8.5.0
+      specifier: 8.5.0
       version: 8.5.0
     typescript:
       specifier: ~5.8.3
@@ -404,6 +404,9 @@ importers:
       eslint:
         specifier: catalog:dx
         version: 9.32.0(jiti@1.21.7)
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.0(jiti@1.21.7)(postcss@8.5.6)(typescript@5.8.3)(yaml@2.8.0)
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
