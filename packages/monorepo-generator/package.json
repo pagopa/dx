@@ -18,6 +18,7 @@
     "dist",
     "templates"
   ],
+  "main": "dist/index.js",
   "dependencies": {
     "plop": "^4.0.1"
   },
