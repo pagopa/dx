@@ -1,17 +1,16 @@
 # @pagopa/monorepo-generator
 
-A package that will generate a monorepo, following DX conventions, from a template.
+A package that generates a monorepo scaffold following PagoPA DX conventions.
 
 ## Overview
 
-The `@pagopa/monorepo-generator` is a tool designed to streamline the creation of new monorepos that adhere to PagoPA's DX conventions. It provides a standardized way to bootstrap new projects with consistent structure, configuration, and best practices.
+The `@pagopa/monorepo-generator` provides a plop-based generator and templates to bootstrap a new monorepo with the repository layout, configuration and files used across the DX initiative.
 
-> [!NOTE]
-> This is a work in progress
+> Work in progress — expect improvements to templates and prompts.
 
-## Usage
+## Recommended usage (from repository root)
 
-Recommended (from repository root):
+Run the package script from the monorepo root so workspace dependencies and filtered scripts are resolved:
 
 ```sh
 # run the package script which builds and runs plop
