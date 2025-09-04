@@ -1,5 +1,21 @@
 # azure_core_infra
 
+## 2.1.3
+
+### Patch Changes
+
+- d75ce50: Address two issues with generated names:
+  - `instance_number` variable was not used to generate resource name, causing all instances to have the same name when multiple instances were created
+    - affected components: VPN Gateway and NAT Gateway
+  - the Entra ID application name was not using the `prefix` variable, replaced by `dx` hardcoded value
+    - affected components: VPN Gateway
+
+## 2.1.2
+
+### Patch Changes
+
+- 8635473: Disable purge protection on KeyVault created in non-prod environment
+
 ## 2.1.1
 
 ### Patch Changes

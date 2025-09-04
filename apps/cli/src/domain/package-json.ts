@@ -12,10 +12,8 @@ export const scriptSchema = z.object({
   script: z.string(),
 });
 
-const DependencyName = z.string().brand<"DependencyName">();
-
 export const dependencySchema = z.object({
-  name: DependencyName,
+  name: z.string(),
   version: z.string(),
 });
 
@@ -39,17 +37,14 @@ const scriptsSchema = z
 
 const dependenciesSchema = z
   // An object where keys are Dependency["name"] and values are their versions (string for now, but we could type them as well)
-  .record(DependencyName, z.string())
+  .record(z.string(), z.string())
   .optional()
   // Transform the record into a Map<Dependency["name"], Dependency["version"]>
   .transform(
     (obj) =>
       new Map<Dependency["name"], Dependency["version"]>(
         obj
-          ? Object.entries(obj).map(([name, version]) => [
-              DependencyName.parse(name),
-              version,
-            ])
+          ? Object.entries(obj).map(([name, version]) => [name, version])
           : [],
       ),
   );
@@ -69,7 +64,6 @@ export const packageJsonSchema = z.object({
 });
 
 export type Dependency = z.infer<typeof dependencySchema>;
-export type DependencyName = z.infer<typeof DependencyName>;
 export type PackageJson = z.infer<typeof packageJsonSchema>;
 export type PackageJsonReader = {
   getDependencies(
@@ -85,7 +79,6 @@ export type PackageJsonReader = {
 
 export type PackageManager = z.infer<typeof packageManagerSchema>;
 
-export type RootRequiredScript = Pick<Script, "name">;
 export type Script = z.infer<typeof scriptSchema>;
 
 const findMissingScripts = (

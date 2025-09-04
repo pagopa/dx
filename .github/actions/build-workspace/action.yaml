@@ -1,0 +1,54 @@
+name: 'Build Workspace'
+description: 'Builds a workspace in a monorepo and handles dependencies.'
+
+inputs:
+  workspace_name:
+    description: 'The name of the workspace to build.'
+    required: true
+
+outputs:
+  package-manager:
+    description: 'The package manager used in the monorepo (npm, yarn, or pnpm).'
+    value: ${{ steps.node-setup.outputs.package-manager }}
+  workspace-path:
+    description: 'The path to the built workspace.'
+    value: ${{ steps.get-workspace-path.outputs.workspace-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      id: node-setup
+      uses: pagopa/dx/.github/actions/node-setup@main
+
+    - name: Install dependencies (pnpm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
+      shell: bash
+      run: pnpm --filter $WORKSPACE_NAME install
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Install dependencies (yarn)
+      if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Install dependencies (npm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'npm' }}
+      shell: bash
+      run: npm ci
+
+    - name: Build
+      shell: bash
+      run: npx turbo build --filter $WORKSPACE_NAME
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Get Workspace path
+      id: get-workspace-path
+      shell: bash
+      run: |
+        WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+        echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}

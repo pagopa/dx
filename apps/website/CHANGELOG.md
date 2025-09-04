@@ -1,5 +1,12 @@
 # docs
 
+## 0.5.1
+
+### Patch Changes
+
+- 13dd586: Add sbom documentation
+- 3b5d55d: Update cdn deploy workflow url
+
 ## 0.5.0
 
 ### Minor Changes
