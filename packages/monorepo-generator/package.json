@@ -15,10 +15,10 @@
     "pagopa"
   ],
   "files": [
-    "dist/index.js",
+    "dist/plopfile.js",
     "templates"
   ],
-  "main": "dist/index.js",
+  "main": "dist/plopfile.js",
   "dependencies": {
     "plop": "^4.0.1"
   },
