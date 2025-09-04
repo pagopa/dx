@@ -8,11 +8,22 @@ The `@pagopa/monorepo-generator` provides a plop-based generator and templates t
 
 > Work in progress — expect improvements to templates and prompts.
 
-## Recommended usage (from repository root)
+## Recommended usage
 
-Run the package script from the monorepo root so workspace dependencies and filtered scripts are resolved:
+Install the dependencies:
 
-```sh
-# run the package script which builds and runs plop
-pnpm --filter @pagopa/monorepo-generator run generate
+```shell
+pnpm install
+```
+
+Compile everything:
+
+```shell
+pnpm build
+```
+
+Run the generator, referencing the `plopfile.js` file:
+
+```shell
+pnpm plop --plopfile ./dist/plopfile.js
 ```
