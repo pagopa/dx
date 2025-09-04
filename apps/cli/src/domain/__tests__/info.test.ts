@@ -2,7 +2,6 @@ import { errAsync, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { getInfo } from "../info.js";
-import { DependencyName } from "../package-json.js";
 import {
   makeMockConfig,
   makeMockDependencies,
@@ -81,7 +80,7 @@ describe("getInfo", () => {
 
   it("should return all info", async () => {
     const mockPackageJson = makeMockPackageJson({
-      devDependencies: new Map([["turbo" as DependencyName, "^2.5.0"]]),
+      devDependencies: new Map([["turbo", "^2.5.0"]]),
     });
     const config = makeMockConfig();
     const mockDependencies = {

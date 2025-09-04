@@ -12,7 +12,6 @@ The module performs the following actions:
   2. Applications.
   3. Opex dashboards.
 - Assigns **IAM roles** to allow workflows to work properly.
-- Sets up the **GitHub repository settings** following best practices.
 - Creates an Azure **resource group** tied with the Cloud Resources defined
   within the repository.
 
@@ -49,59 +48,9 @@ provider "azurerm" {
 }
 ```
 
-### Import GitHub repository in the Terraform state file
-
-Remember to import the GitHub repository you are using in the Terraform
-state:
-
-```hcl
-import {
-  id = "<repository-name>"
-  to = module.repo.module.github_repository.github_repository.this
-}
-```
-
-### Set up GitHub Environments Policies and Default Branch Name
-
-You can customize deployment policies on `x-cd` GitHub environment by using the
-optional properties of the `repository` variable:
-
-- `infra_cd_policy_branches`
-- `opex_cd_policy_branches`
-- `app_cd_policy_branches`
-- `infra_cd_policy_tags`
-- `opex_cd_policy_tags`
-- `app_cd_policy_tags`
-
-The default branch name can be changed via the `default_branch_name` property.
-
 ## Extending the module for custom needs
 
 The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to new needs. In fact, the module export all the ids and names of the resources that creates, so it is straightforward to add further resources.
-
-### Customizing GitHub configuration
-
-If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module.
-For example, if you need a `release`
-GitHub environment with a special deployment policy you can add:
-
-```hcl
-resource "github_repository_environment" "release" {
-  environment = "release"
-  repository  = module.repo.repository.name
-
-  deployment_branch_policy {
-    protected_branches     = false
-    custom_branch_policies = true
-  }
-}
-
-resource "github_repository_environment_deployment_policy" "release_branch" {
-  repository     = module.repo.repository.name
-  environment    = github_repository_environment.release.environment
-  branch_pattern = "main"
-}
-```
 
 ### Managing multiple resource groups
 

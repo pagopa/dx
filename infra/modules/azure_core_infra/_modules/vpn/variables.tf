@@ -1,6 +1,16 @@
+variable "prefix" {
+  type        = string
+  description = "Project prefix"
+}
+
 variable "project" {
   type        = string
-  description = "env prefix, short environment and short location"
+  description = "Env prefix, short environment and short location"
+}
+
+variable "instance_number" {
+  type        = string
+  description = "The instance number of the resource, used to differentiate multiple instances of the same resource type within the same project and environment."
 }
 
 variable "resource_group_name" {

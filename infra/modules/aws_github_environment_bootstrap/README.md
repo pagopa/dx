@@ -50,14 +50,12 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.INFRA_CD_ROLE_ARN }}
-          aws-region: us-east-1
+          role-to-assume: ${{ secrets.ROLE_ARN }}
+          aws-region: eu-south-1
 
       - name: Deploy with Terraform
         run: |
-          terraform init
-          terraform plan
-          terraform apply -auto-approve
+          ...
 ```
 
 ## Usage Examples
@@ -72,7 +70,7 @@ module "aws_github_bootstrap" {
   environment = {
     prefix          = "myapp"
     env_short       = "d"
-    region          = "us-east-1"
+    region          = "eu-south-1"
     domain          = "core"
     instance_number = "01"
   }
@@ -170,7 +168,9 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-codebuild/aws | ~> 1.0 |
 
 ## Resources
 
@@ -205,14 +205,17 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for the GitHub self-hosted runner, including tier, code connection ARN, personal access token, environment variables, and secrets. Either codeconnection\_arn or personal\_access\_token must be set, but not both. | <pre>object({<br/>    tier               = optional(string, "m")<br/>    codeconnection_arn = optional(string, null)<br/>    personal_access_token = optional(object({<br/>      ssm_parameter_name = optional(string, null)<br/>      value              = optional(string, null)<br/>    }), null)<br/>    env_variables = optional(map(string), {})<br/>    secrets = map(object({<br/>      ssm_parameter_name   = optional(string, null)<br/>      secrets_manager_name = optional(string, null)<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner and name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
+| <a name="input_vpc"></a> [vpc](#input\_vpc) | The VPC used to deploy the resources | <pre>object({<br/>    id              = string<br/>    private_subnets = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including security group and IAM role. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the IAM roles for app, infra, including ARNs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | Details of the GitHub repository. |
 <!-- END_TF_DOCS -->
