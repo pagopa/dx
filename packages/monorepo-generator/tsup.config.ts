@@ -4,7 +4,7 @@ export default defineConfig({
   bundle: true,
   clean: true,
   dts: true,
-  entry: ["src", "!src/index.ts"],
+  entry: ["src/plopfile.ts"],
   external: ["plop"],
   format: ["esm", "cjs"],
   platform: "node",
