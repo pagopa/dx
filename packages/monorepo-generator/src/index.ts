@@ -27,8 +27,8 @@ const getActions = (templatesPath: string): ActionType[] => [
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
-  const thisFileDir = path.dirname(fileURLToPath(import.meta.url));
-  const templatesPath = path.join(thisFileDir, "..", "templates", "monorepo");
+  const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
+  const templatesPath = path.join(entryPointDirectory, "monorepo");
 
   const prompts = getPrompts();
   const actions = getActions(templatesPath);
