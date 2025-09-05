@@ -1,0 +1,53 @@
+locals {
+  tags = merge(
+    var.tags,
+    {
+      ModuleSource  = "DX",
+      ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"),
+      ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
+    }
+  )
+
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    instance_number = tonumber(var.environment.instance_number),
+    name            = "${var.environment.app_name}-vpn"
+  }
+
+  use_cases = {
+    default           = { vpn_connections_number = 1 }
+    high_availability = { vpn_connections_number = 2 }
+  }
+
+  aws_region_short = {
+    "eu-west-1"  = "eu"
+    "eu-south-1" = "eus1"
+  }
+
+  aws = {
+    bgp_asn = 65000
+    name    = "${var.environment.prefix}-${var.environment.env_short}-${local.aws_region_short[var.aws.region]}-awsvpn-${var.environment.instance_number}"
+    # First level key is the VPN connection index, second level key is the tunnel index
+    inside_cidrs = {
+      0 = {
+        0 = "169.254.21.0/30"
+        1 = "169.254.22.0/30"
+      },
+      1 = {
+        0 = "169.254.21.4/30"
+        1 = "169.254.22.4/30"
+      }
+    }
+  }
+
+  azure_location_short = {
+    "westeurope" = "weu"
+    "italynorth" = "itn"
+  }
+
+  azure = {
+    bgp_asn = 65010
+    name    = "${var.environment.prefix}-${var.environment.env_short}-${local.azure_location_short[var.azure.location]}-awsvpn-${var.environment.instance_number}"
+  }
+}
