@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.4
+
+### Patch Changes
+
+- 9f34ae2: Add site-to-site VPN resources abbreviations
+
 ## 0.6.3
 
 ### Patch Changes
