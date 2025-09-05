@@ -1,6 +1,7 @@
 resource "azurerm_public_ip" "this" {
   count = local.use_cases[var.vpn_use_case].vpn_connections_number
   name = "${provider::dx::resource_name(merge(var.naming_config, {
+    name          = "vpn"
     resource_type = "public_ip"
   }))}-${count.index + 1}"
   location            = var.location
@@ -16,6 +17,7 @@ resource "time_sleep" "wait_public_ips" {
 
 resource "azurerm_virtual_network_gateway" "this" {
   name = provider::dx::resource_name(merge(var.naming_config, {
+    name          = "vpn"
     resource_type = "virtual_network_gateway"
   }))
   location            = var.location
