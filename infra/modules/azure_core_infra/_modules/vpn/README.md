@@ -35,7 +35,5 @@ No requirements.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_virtual_network_gateway_id"></a> [virtual\_network\_gateway\_id](#output\_virtual\_network\_gateway\_id) | The ID of the Virtual Network Gateway |
+No outputs.
 <!-- END_TF_DOCS -->
