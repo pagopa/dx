@@ -14,16 +14,24 @@
     "dx",
     "pagopa"
   ],
-  "dependencies": {},
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "main": "dist/plopfile.js",
+  "dependencies": {
+    "plop": "^4.0.2"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:dx",
+    "tsup": "catalog:",
     "typescript": "catalog:"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
