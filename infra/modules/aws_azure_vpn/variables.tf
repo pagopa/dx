@@ -33,8 +33,9 @@ variable "use_case" {
 #-----#
 variable "aws" {
   type = object({
-    region = string
-    vpc_id = string
+    region          = string
+    vpc_id          = string
+    route_table_ids = list(string)
   })
 }
 

@@ -38,3 +38,14 @@ resource "aws_vpn_connection" "this" {
     }))
   }, var.tags)
 }
+
+#---------#
+# Routing #
+#---------#
+
+# Routes to Azure networks through VPN gateway
+resource "aws_vpn_gateway_route_propagation" "this" {
+  count          = length(var.aws.route_table_ids)
+  route_table_id = var.aws.route_table_ids[count.index]
+  vpn_gateway_id = aws_vpn_gateway.this.id
+}

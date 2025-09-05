@@ -156,6 +156,7 @@ module "aws_azure_vpn_ha" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
+| <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.0 |
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
@@ -170,6 +171,7 @@ No modules.
 | [aws_customer_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/customer_gateway) | resource |
 | [aws_vpn_connection.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_connection) | resource |
 | [aws_vpn_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway) | resource |
+| [aws_vpn_gateway_route_propagation.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway_route_propagation) | resource |
 | [azurerm_local_network_gateway.tunnel1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/local_network_gateway) | resource |
 | [azurerm_local_network_gateway.tunnel2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/local_network_gateway) | resource |
 | [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
@@ -182,7 +184,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws"></a> [aws](#input\_aws) | -----# AWS # -----# | <pre>object({<br/>    region = string<br/>    vpc_id = string<br/>  })</pre> | n/a | yes |
+| <a name="input_aws"></a> [aws](#input\_aws) | -----# AWS # -----# | <pre>object({<br/>    region          = string<br/>    vpc_id          = string<br/>    route_table_ids = list(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_azure"></a> [azure](#input\_azure) | -------# Azure # -------# | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vpn_snet_id         = string<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
