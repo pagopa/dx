@@ -268,6 +268,8 @@ importers:
 
   containers/self-hosted-runner: {}
 
+  infra/modules/aws_azure_vpn: {}
+
   infra/modules/aws_core_infra: {}
 
   infra/modules/aws_core_values_exporter: {}

@@ -82,6 +82,14 @@ output "common_vpn_snet" {
   }
 }
 
+output "common_vpn_snet" {
+  description = "Details of the VPN subnet, including its name and ID."
+  value = {
+    name = local.core_outputs.values.common_vpn_snet.name
+    id   = local.core_outputs.values.common_vpn_snet.id
+  }
+}
+
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value       = local.core_outputs.values.common_nat_gateways
