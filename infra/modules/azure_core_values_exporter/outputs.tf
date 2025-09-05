@@ -110,3 +110,18 @@ output "application_insights" {
     resource_group_name                = local.core_outputs.values.application_insights.resource_group_name
   }
 }
+
+output "vpn_gateway_id" {
+  description = "The ID of the virtual network gateway."
+  value       = local.core_outputs.values.vpn_gateway_id
+}
+
+output "vpn_fqdn" {
+  description = "The fqdn for virtual network gateway."
+  value       = local.core_outputs.values.vpn_fqdn
+}
+
+output "vpn_public_ips" {
+  description = "The public IP addresses associated with the virtual network gateway."
+  value       = local.core_outputs.values.vpn_public_ips
+}
