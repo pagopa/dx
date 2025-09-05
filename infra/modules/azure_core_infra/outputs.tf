@@ -74,14 +74,6 @@ output "common_test_snet" {
   }
 }
 
-output "common_vpn_snet" {
-  description = "Details of the VPN subnet, including its name and ID."
-  value = {
-    name = module.network.vpn_snet.name
-    id   = module.network.vpn_snet.id
-  }
-}
-
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value = flatten([
@@ -92,11 +84,6 @@ output "common_nat_gateways" {
       }
     ]
   ])
-}
-
-output "virtual_network_gateway_id" {
-  description = "The ID of the Virtual Network Gateway"
-  value       = var.vpn_enabled ? module.vpn.virtual_network_gateway_id : null
 }
 
 # Key Vault
