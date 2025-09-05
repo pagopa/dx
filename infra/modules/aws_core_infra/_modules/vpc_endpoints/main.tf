@@ -45,7 +45,7 @@ resource "aws_security_group" "vpc_endpoints" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.main.cidr_block]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {
@@ -53,7 +53,7 @@ resource "aws_security_group" "vpc_endpoints" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.main.cidr_block]
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = merge(var.tags, {
@@ -62,9 +62,4 @@ resource "aws_security_group" "vpc_endpoints" {
       resource_type = "security_group"
     }))
   })
-}
-
-# Data source for VPC information
-data "aws_vpc" "main" {
-  id = var.vpc_id
 }
