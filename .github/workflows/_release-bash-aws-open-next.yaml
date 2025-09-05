@@ -8,20 +8,20 @@ on:
         required: true
         description: The name of the workspace to create the artifact for.
       environment:
-        description: 'Choose environment'
+        description: "Choose environment"
         type: string
         required: true
         default: dev
       app_path:
-        description: 'Path to the Next.js application'
+        description: "Path to the Next.js application"
         type: string
         required: true
       project_prefix:
-        description: 'Project name for OpenNext deployment. Es. dx-d-itn-devp-auth'
+        description: "Project name for OpenNext deployment. Es. dx-d-itn-devp-auth"
         type: string
         required: false
       aws_region:
-        description: 'AWS region for deployment'
+        description: "AWS region for deployment"
         type: string
         default: eu-south-1
         required: false
@@ -31,14 +31,14 @@ on:
         required: false
         default: false
       cloudfront_distribution_id:
-        description: 'CloudFront distribution ID for OpenNext deployment'
+        description: "CloudFront distribution ID for OpenNext deployment"
         type: string
         required: true
 
 # Global environment variables - customize these for your project
 env:
   PROJECT_PREFIX: ${{ vars.PROJECT_PREFIX || inputs.project_prefix }}
-  AWS_REGION : ${{ inputs.aws_region  }}
+  AWS_REGION: ${{ inputs.aws_region  }}
   CLOUDFRONT_DISTRIBUTION_ID: ${{ inputs.cloudfront_distribution_id }}
   BUNDLE_NAME: "bundle"
 
@@ -113,7 +113,7 @@ jobs:
     runs-on: ${{ inputs.use_private_agent && format('{0}-runner', vars.PROJECT_PREFIX || inputs.project_prefix) || 'ubuntu-latest' }}
 
     continue-on-error: false
-    environment: ${{ inputs.environment }}
+    environment: app-${{ inputs.environment }}-cd
 
     env:
       TURBO_CACHE_DIR: .turbo-cache
@@ -127,7 +127,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: pagopa/dx/.github/actions/aws-login@opennext-module
         with:
-          role_to_assume: ${{ secrets.APP_CD_ROLE_ARN }}
+          role_to_assume: ${{ secrets.ROLE_ARN }}
           aws_region: ${{ inputs.aws_region }}
 
       - name: Download OpenNext Artifact
