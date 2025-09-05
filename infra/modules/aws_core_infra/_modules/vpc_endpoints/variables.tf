@@ -14,11 +14,6 @@ variable "vpc_id" {
   description = "The ID of the VPC where endpoints will be created"
 }
 
-variable "vpc_cidr" {
-  type        = string
-  description = "The CIDR block of the VPC where endpoints will be created"
-}
-
 variable "region" {
   type        = string
   description = "AWS region for service endpoints"
