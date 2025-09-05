@@ -87,11 +87,6 @@ output "common_nat_gateways" {
   value       = local.core_outputs.values.common_nat_gateways
 }
 
-output "virtual_network_gateway_id" {
-  description = "The ID of the Virtual Network Gateway"
-  value       = local.core_outputs.values.virtual_network_gateway_id
-}
-
 output "vpn_gateway_id" {
   description = "The ID of the virtual network gateway."
   value       = local.core_outputs.values.vpn_gateway_id
