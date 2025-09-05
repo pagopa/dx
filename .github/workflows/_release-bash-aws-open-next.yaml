@@ -30,16 +30,11 @@ on:
         type: boolean
         required: false
         default: false
-      cloudfront_distribution_id:
-        description: "CloudFront distribution ID for OpenNext deployment"
-        type: string
-        required: true
 
 # Global environment variables - customize these for your project
 env:
   PROJECT_PREFIX: ${{ vars.PROJECT_PREFIX || inputs.project_prefix }}
   AWS_REGION: ${{ inputs.aws_region  }}
-  CLOUDFRONT_DISTRIBUTION_ID: ${{ inputs.cloudfront_distribution_id }}
   BUNDLE_NAME: "bundle"
 
 concurrency:
@@ -82,13 +77,13 @@ jobs:
       # we fall back to node-moules, even in case pnp is configured, in order to avoid bundling dependencies
       - name: Install dependencies
         run: |
-          yarn config set nodeLinker node-modules
-          yarn config set nmHoistingLimits workspaces
-          yarn install --immutable
+          pnpm config set nodeLinker node-modules
+          pnpm config set nmHoistingLimits workspaces
+          pnpm install --immutable
         working-directory: ./out
 
       - name: Build
-        run: yarn build
+        run: pnpm build
         working-directory: ./out
 
       - name: Build the Function App Artifact
@@ -125,6 +120,7 @@ jobs:
 
     steps:
       - name: Configure AWS Credentials
+        id: aws-login
         uses: pagopa/dx/.github/actions/aws-login@opennext-module
         with:
           role_to_assume: ${{ secrets.ROLE_ARN }}
@@ -144,13 +140,13 @@ jobs:
         working-directory: ./opennext-deployment
         run: |
           aws s3 sync ./.open-next/assets \
-            s3://${{ env.PROJECT_PREFIX }}-website-opnext-assets-01/_assets \
+            s3://${{ env.PROJECT_PREFIX }}-opnext-assets-01/_assets \
 
       - name: Sync Cache to S3
         working-directory: ./opennext-deployment
         run: |
           aws s3 sync ./.open-next/cache \
-            s3://${{ env.PROJECT_PREFIX }}-website-opnext-assets-01/_cache \
+            s3://${{ env.PROJECT_PREFIX }}-opnext-assets-01/_cache \
 
       - name: Clean up config files
         working-directory: ./opennext-deployment/.open-next
@@ -160,72 +156,80 @@ jobs:
       - name: Deploy Lambda Server Function
         uses: ./.github/actions/deploy-lambda
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-server-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-server-lambda-01
           working_directory: ./opennext-deployment/.open-next/server-functions/default
-          s3_bucket: ${{ env.PROJECT_PREFIX }}-website-opennext-lambda-code-01
+          s3_bucket: ${{ env.PROJECT_PREFIX }}-opennext-lambda-code-01
           aws_region: ${{ inputs.aws_region }}
 
       - name: Deploy Lambda Image Optimization Function
         uses: ./.github/actions/deploy-lambda
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-img-opt-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-img-opt-lambda-01
           working_directory: ./opennext-deployment/.open-next/image-optimization-function
-          s3_bucket: ${{ env.PROJECT_PREFIX }}-website-opennext-lambda-code-01
+          s3_bucket: ${{ env.PROJECT_PREFIX }}-opennext-lambda-code-01
           aws_region: ${{ inputs.aws_region }}
 
       - name: Deploy Lambda DynamoDB Provider Function
         uses: ./.github/actions/deploy-lambda
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-init-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-init-lambda-01
           working_directory: ./opennext-deployment/.open-next/dynamodb-provider
-          s3_bucket: ${{ env.PROJECT_PREFIX }}-website-opennext-lambda-code-01
+          s3_bucket: ${{ env.PROJECT_PREFIX }}-opennext-lambda-code-01
           aws_region: ${{ inputs.aws_region }}
 
       - name: Deploy Lambda Revalidation Function
         uses: ./.github/actions/deploy-lambda
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-isr-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-isr-lambda-01
           working_directory: ./opennext-deployment/.open-next/revalidation-function
-          s3_bucket: ${{ env.PROJECT_PREFIX }}-website-opennext-lambda-code-01
+          s3_bucket: ${{ env.PROJECT_PREFIX }}-opennext-lambda-code-01
           aws_region: ${{ inputs.aws_region }}
 
       - name: Initialize DynamoDB Provider
         run: |
           aws lambda invoke \
-            --function-name ${{ env.PROJECT_PREFIX }}-website-opnext-init-lambda-01 \
+            --function-name ${{ env.PROJECT_PREFIX }}-opnext-init-lambda-01 \
             --payload '{}' \
             response.json
 
       - name: Publish Lambda version - Server Function
         uses: ./.github/actions/publish-lambda-version
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-server-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-server-lambda-01
           alias_name: production
           aws_region: ${{ inputs.aws_region }}
 
       - name: Publish Lambda version - Image Optimization Function
         uses: ./.github/actions/publish-lambda-version
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-img-opt-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-img-opt-lambda-01
           alias_name: production
           aws_region: ${{ inputs.aws_region }}
 
       - name: Publish Lambda version - Revalidation Function
         uses: ./.github/actions/publish-lambda-version
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-isr-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-isr-lambda-01
           alias_name: production
           aws_region: ${{ inputs.aws_region }}
 
       - name: Publish Lambda version - DynamoDB Provider Function
         uses: ./.github/actions/publish-lambda-version
         with:
-          function_name: ${{ env.PROJECT_PREFIX }}-website-opnext-init-lambda-01
+          function_name: ${{ env.PROJECT_PREFIX }}-opnext-init-lambda-01
           alias_name: production
           aws_region: ${{ inputs.aws_region }}
 
       - name: Invalidate CloudFront cache
         run: |
+          # Find the CloudFront distribution ID by filtering distributions with the specific tag
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[].Id" --output text \
+          | xargs -n1 -I {} sh -c '
+            aws cloudfront list-tags-for-resource --resource arn:aws:cloudfront::${{ steps.aws-login.outputs.aws-account-id }}:distribution/{} \
+            --query "Tags.Items[?Key==\`DistributionName\` && Value==\`${{ env.PROJECT_PREFIX }}-opnext-cloudfront\`].Value" --output text \
+            | grep -q . && echo {}'
+          )
+
           aws cloudfront create-invalidation \
-            --distribution-id ${{ env.cloudfront_distribution_id }} \
+            --distribution-id $DISTRIBUTION_ID \
             --paths "/*" \
