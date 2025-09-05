@@ -256,6 +256,9 @@ The following table lists the resource types and their abbreviations used in the
 | dns_private_resolver                   |      dnspr       |
 | dns_private_resolver_inbound_endpoint  |        in        |
 | dns_private_resolver_outbound_endpoint |       out        |
+| virtual_network_gateway                |       vgw        |
+| local_network_gateway                  |       lgw        |
+| virtual_network_gateway_connection     |      vgwcn       |
 
 ## Example Configuration
 

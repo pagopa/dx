@@ -156,6 +156,8 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"subnet":              "snet",
 		"vpc":                 "vpc",
 		"vpc_endpoint":        "vpce",
+		"customer_gateway":    "cgw",
+		"vpn_connection":      "vpn",
 
 		// Resource Management
 		"resource_group": "rg",

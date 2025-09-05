@@ -158,6 +158,8 @@ The following table lists the resource types and their abbreviations used in the
 | subnet                                 |         snet          |
 | vpc                                    |          vpc          |
 | vpc_endpoint                           |         vpce          |
+| customer_gateway                       |          cgw          |
+| vpn_connection                         |          vpn          |
 | **Resource Management**                |                       |
 | resource_group                         |          rg           |
 | **Security**                           |                       |
