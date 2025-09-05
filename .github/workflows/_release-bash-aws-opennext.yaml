@@ -1,35 +1,6 @@
 name: Deploy OpenNext Application
 
 on:
-  workflow_call:
-    inputs:
-      workspace_name:
-        type: string
-        required: true
-        description: The name of the workspace to create the artifact for.
-      environment:
-        description: "Choose environment"
-        type: string
-        required: true
-        default: dev
-      app_path:
-        description: "Path to the Next.js application"
-        type: string
-        required: true
-      project_prefix:
-        description: "Project name for OpenNext deployment. Es. dx-d-itn-devp-auth"
-        type: string
-        required: false
-      aws_region:
-        description: "AWS region for deployment"
-        type: string
-        default: eu-south-1
-        required: false
-      use_private_agent:
-        description: Use a private agent to deploy the built artifact.
-        type: boolean
-        required: false
-        default: false
   workflow_dispatch:
     inputs:
       workspace_name:
