@@ -31,7 +31,7 @@ resource "aws_lambda_function" "function" {
       CACHE_BUCKET_REGION                = var.assets_bucket.region,
       CACHE_BUCKET_KEY_PREFIX            = "_cache",
       CACHE_DYNAMO_TABLE                 = var.isr_tags_ddb.name,
-      REVALIDATION_QUEUE_REGION          = var.environment.location,
+      REVALIDATION_QUEUE_REGION          = var.environment.region,
       REVALIDATION_QUEUE_URL             = var.isr_queue.url
       OPEN_NEXT_FORCE_NON_EMPTY_RESPONSE = "true"
       },

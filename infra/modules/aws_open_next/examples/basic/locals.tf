@@ -2,7 +2,7 @@ locals {
   environment = {
     prefix          = "dx"
     env_short       = "d"
-    location        = "eu-south-1"
+    region          = "eu-south-1"
     domain          = "modules"
     app_name        = "test"
     instance_number = "01"
