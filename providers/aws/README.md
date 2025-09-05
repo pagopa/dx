@@ -218,6 +218,8 @@ The following table lists the resource types and their abbreviations used in the
 | security_group            |      sg      |
 | network_acl               |     nacl     |
 | vpc_endpoint              |     vpce     |
+| customer_gateway          |     cgw      |
+| vpn_connection            |     vpn      |
 | elastic_load_balancer     |     elb      |
 | application_load_balancer |     alb      |
 | network_load_balancer     |     nlb      |
