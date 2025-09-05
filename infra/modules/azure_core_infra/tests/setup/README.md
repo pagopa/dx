@@ -21,5 +21,7 @@ No inputs.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 <!-- END_TF_DOCS -->

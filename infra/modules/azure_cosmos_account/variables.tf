@@ -28,16 +28,15 @@ variable "subnet_pep_id" {
   description = "The ID of the subnet designated for private endpoints."
 }
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "The offer type for the Cosmos DB account. Valid values are 's' and 'l'."
-  default     = "l"
+  description = "Specifies the use case for the Cosmos DB Account. Allowed values are 'default' and 'development'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "l"], var.tier)
-    error_message = "Valid values for tier are 's' and 'l'."
+    condition     = contains(["default", "development"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", or \"development\"."
   }
-
 }
 
 variable "private_dns_zone_resource_group_name" {
@@ -83,7 +82,7 @@ variable "customer_managed_key" {
       (!var.customer_managed_key.enabled) ||
       (var.customer_managed_key.enabled && var.customer_managed_key.user_assigned_identity_id != null && var.customer_managed_key.key_vault_key_id != null)
     )
-    error_message = "Either 'user_assigned_identity_id' or 'key_vault_key_id' must be provided when 'enabled' is set to true."
+    error_message = "When 'customer_managed_key.enabled' is true, both 'user_assigned_identity_id' and 'key_vault_key_id' must be provided."
   }
 }
 
@@ -103,7 +102,7 @@ variable "consistency_policy" {
   })
 
   validation {
-    condition     = contains(["Default", "HighConsistency", "HighPerformance", "BalancedStaleness", "Custom"], var.consistency_policy.consistency_preset)
+    condition     = (var.consistency_policy.consistency_preset == null) || contains(["Default", "HighConsistency", "HighPerformance", "BalancedStaleness", "Custom"], var.consistency_policy.consistency_preset)
     error_message = "Valid values for consistency_preset are: Default, HighConsistency, HighPerformance, BalancedStaleness, Custom."
   }
 
@@ -141,10 +140,8 @@ variable "alerts" {
   default     = { enabled = true }
 
   validation {
-    condition = (var.alerts.enabled && (
-      alltrue([for threshold in var.alerts.thresholds : threshold != null])) || !var.alerts.enabled
-    )
-    error_message = "When alerts are enabled, all thresholds must be set."
+    condition     = (!var.alerts.enabled) || (try(var.alerts.thresholds.provisioned_throughput_exceeded, null) != null)
+    error_message = "When alerts are enabled, thresholds.provisioned_throughput_exceeded must be set."
   }
 }
 variable "authorized_teams" {

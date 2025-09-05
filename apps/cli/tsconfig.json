@@ -4,7 +4,8 @@
     "outDir": "./bin",
     "rootDir": "./src",
     "moduleResolution": "NodeNext",
-    "module": "NodeNext"
+    "module": "NodeNext",
+    "target": "ES2022"
   },
   "include": ["src"]
 }

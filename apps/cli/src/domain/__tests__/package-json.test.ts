@@ -1,15 +1,11 @@
-import { errAsync, okAsync } from "neverthrow";
+import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import {
-  checkMonorepoScripts,
-  RootRequiredScript,
-  Script,
-} from "../package-json.js";
-import { makeMockDependencies } from "./data.js";
+import { checkMonorepoScripts } from "../package-json.js";
+import { makeMockConfig, makeMockDependencies } from "./data.js";
 
 describe("checkMonorepoScripts", () => {
-  const monorepoDir = "/path/to/monorepo";
+  const config = makeMockConfig();
 
   it("should return error result when getScripts fails", async () => {
     const deps = makeMockDependencies();
@@ -19,7 +15,7 @@ describe("checkMonorepoScripts", () => {
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, config);
 
     expect(result.isErr()).toBe(true);
   });
@@ -27,56 +23,41 @@ describe("checkMonorepoScripts", () => {
   it("should return ok result with successful validation when all required scripts are present", async () => {
     const deps = makeMockDependencies();
 
-    const scripts = [
-      {
-        name: "build",
-        script: "eslint .",
-      },
-      {
-        name: "code-review",
-        script: "eslint .",
-      },
-    ] as Script[];
+    const scripts = new Map()
+      .set("build", "eslint .")
+      .set("code-review", "eslint .");
     deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(scripts));
-    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
-      { name: "code-review" as Script["name"] },
-    ] as RootRequiredScript[]);
+    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce(
+      new Map().set("code-review", "eslint ."),
+    );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, config);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(true);
-      expect(validation.checkName).toBe("Monorepo Scripts");
-      if (validation.isValid) {
-        expect(validation.successMessage).toBe(
-          "Monorepo scripts are correctly set up",
-        );
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Monorepo Scripts",
+        isValid: true,
+        successMessage: "Monorepo scripts are correctly set up",
+      }),
+    );
   });
 
   it("should return ok result with failed validation when required scripts are missing", async () => {
     const deps = makeMockDependencies();
 
-    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync([]));
-    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce([
-      { name: "code-review" as Script["name"] },
-    ] as RootRequiredScript[]);
+    deps.packageJsonReader.getScripts.mockReturnValueOnce(okAsync(new Map()));
+    deps.packageJsonReader.getRootRequiredScripts.mockReturnValueOnce(
+      new Map().set("code-review", "eslint ."),
+    );
 
-    const result = await checkMonorepoScripts(monorepoDir)(deps);
+    const result = await checkMonorepoScripts(deps, config);
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      const validation = result.value;
-      expect(validation.isValid).toBe(false);
-      expect(validation.checkName).toBe("Monorepo Scripts");
-      if (!validation.isValid) {
-        expect(validation.errorMessage).toContain(
-          "Missing required scripts: code-review",
-        );
-      }
-    }
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Monorepo Scripts",
+        errorMessage: "Missing required scripts: code-review",
+        isValid: false,
+      }),
+    );
   });
 });

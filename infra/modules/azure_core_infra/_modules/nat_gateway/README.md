@@ -21,6 +21,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_instance_number"></a> [instance\_number](#input\_instance\_number) | The instance number of the resource, used to differentiate multiple instances of the same resource type within the same project and environment. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location | `string` | n/a | yes |
 | <a name="input_ng_number"></a> [ng\_number](#input\_ng\_number) | Number of nat gateways to deploy | `number` | `1` | no |
 | <a name="input_project"></a> [project](#input\_project) | env prefix, short environment and short location | `string` | n/a | yes |

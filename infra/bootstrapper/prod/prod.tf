@@ -1,7 +1,7 @@
-module "bootstrapper" {
-  source = "../_modules/bootstrapper"
+module "azure" {
+  source = "../_modules/azure"
 
-  environment = local.environment
+  environment = local.azure_environment
 
   core_state = {
     resource_group_name  = "dx-p-itn-tfstate-rg-01"
@@ -11,17 +11,8 @@ module "bootstrapper" {
   }
 
   repository = {
-    name                   = "dx"
-    configure              = false
-    description            = "Devex repository for shared tools and pipelines."
-    topics                 = ["developer-experience"]
-    reviewers_teams        = ["engineering-team-devex"]
-    pages_enabled          = true
-    has_downloads          = true
-    has_projects           = true
-    has_issues             = true
-    homepage_url           = "https://pagopa.github.io/dx/docs/"
-    pull_request_bypassers = ["/dx-pagopa-bot"]
+    owner = "pagopa"
+    name  = "dx"
   }
 
   tags = local.tags

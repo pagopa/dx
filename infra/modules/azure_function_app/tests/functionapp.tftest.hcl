@@ -34,7 +34,7 @@ run "function_app_is_correct_plan" {
       instance_number = "01"
     }
 
-    tags  = {
+    tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
       Environment    = "Dev"
@@ -61,7 +61,9 @@ run "function_app_is_correct_plan" {
     slot_app_settings = {}
 
     health_check_path = "/health"
-
+    action_group_ids = [
+      run.setup_tests.action_group_appi_id
+    ]
   }
 
   # Checks some assertions
@@ -166,7 +168,7 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition = azurerm_storage_account.durable_function == []
+    condition     = azurerm_storage_account.durable_function == []
     error_message = "The Durable Function App Storage Account should not be created"
   }
 
@@ -178,6 +180,16 @@ run "function_app_is_correct_plan" {
   assert {
     condition     = length(azurerm_subnet.this) == 1
     error_message = "Subnet should be created"
+  }
+
+  assert {
+    condition     = contains([for action in azurerm_monitor_metric_alert.function_app_health_check[0].action : action.action_group_id], run.setup_tests.action_group_appi_id)
+    error_message = "The alert group should be set"
+  }
+
+  assert {
+    condition     = contains([for action in azurerm_monitor_metric_alert.storage_account_health_check[0].action : action.action_group_id], run.setup_tests.action_group_appi_id)
+    error_message = "The alert group should be set"
   }
 }
 
@@ -194,7 +206,7 @@ run "function_app_custom_subnet" {
       instance_number = "01"
     }
 
-    tags  = {
+    tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
       Environment    = "Dev"
@@ -242,7 +254,7 @@ run "function_app_ai_instrumentation_key" {
       instance_number = "01"
     }
 
-    tags  = {
+    tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
       Environment    = "Dev"
@@ -292,7 +304,7 @@ run "function_app_with_durable_function" {
       instance_number = "01"
     }
 
-    tags  = {
+    tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
       Environment    = "Dev"

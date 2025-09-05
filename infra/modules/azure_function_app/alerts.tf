@@ -19,9 +19,9 @@ resource "azurerm_monitor_metric_alert" "function_app_health_check" {
   }
 
   dynamic "action" {
-    for_each = var.action_group_id == null ? [] : ["dummy"]
+    for_each = var.action_group_ids
     content {
-      action_group_id = var.action_group_id
+      action_group_id = action.value
     }
   }
 
@@ -52,9 +52,9 @@ resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
   }
 
   dynamic "action" {
-    for_each = var.action_group_id == null ? [] : ["dummy"]
+    for_each = var.action_group_ids
     content {
-      action_group_id = var.action_group_id
+      action_group_id = action.value
     }
   }
 

@@ -1,8 +1,8 @@
-module "core" {
+module "azure" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
   version = "~> 2.0"
 
-  environment = local.environment
+  environment = local.azure_environment
 
   vpn_enabled  = true
   nat_enabled  = true

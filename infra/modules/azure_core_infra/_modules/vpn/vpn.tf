@@ -1,13 +1,13 @@
 ## VPN
 
 data "azuread_application" "vpn_app" {
-  display_name = "dx-${var.env_short}-app-vpn"
+  display_name = "${var.prefix}-${var.env_short}-app-vpn"
 }
 
 module "vpn" {
   source = "github.com/pagopa/terraform-azurerm-v4//vpn_gateway?ref=v1.9.0"
 
-  name                  = "${var.project}-vgw-01"
+  name                  = "${var.project}-vgw-${var.instance_number}"
   location              = var.location
   resource_group_name   = var.resource_group_name
   sku                   = "VpnGw1"
@@ -35,7 +35,7 @@ module "vpn" {
 ## DNS FORWARDR
 module "dns_forwarder" {
   source              = "github.com/pagopa/terraform-azurerm-v4//dns_forwarder?ref=v1.9.0"
-  name                = "${var.project}-dns-forwarder-ci-01"
+  name                = "${var.project}-dns-forwarder-ci-${var.instance_number}"
   location            = var.location
   resource_group_name = var.resource_group_name
   subnet_id           = var.dnsforwarder_subnet_id

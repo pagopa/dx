@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.environment.location
+  region = var.environment.region
 }
 
 # Minimal network or other resources needed for tests

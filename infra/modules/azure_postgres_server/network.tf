@@ -1,4 +1,6 @@
 resource "azurerm_private_endpoint" "postgre_pep" {
+  count = var.delegated_subnet_id == null ? 1 : 0
+
   name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgre_private_endpoint" }))
   location            = var.environment.location
   resource_group_name = var.resource_group_name
@@ -19,12 +21,19 @@ resource "azurerm_private_endpoint" "postgre_pep" {
   tags = local.tags
 }
 
+# For backward compatibility, we keep the old output structure.
+# Remove this in the next major version.
+moved {
+  from = azurerm_private_endpoint.postgre_pep
+  to   = azurerm_private_endpoint.postgre_pep[0]
+}
+
 #--------------------------#
 # Replica Private Endpoint #
 #--------------------------#
 
 resource "azurerm_private_endpoint" "replica_postgre_pep" {
-  count = var.tier == "l" ? 1 : 0
+  count = var.tier == "l" && var.delegated_subnet_id == null ? 1 : 0
 
   name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgre_replica_private_endpoint" }))
   location            = var.environment.location

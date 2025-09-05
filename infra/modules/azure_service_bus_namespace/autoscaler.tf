@@ -1,5 +1,5 @@
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count = local.sku_name == "Premium" ? 1 : 0
+  count = local.use_case_features.autoscale ? 1 : 0
 
   name                = local.autoscaler_name
   resource_group_name = var.resource_group_name

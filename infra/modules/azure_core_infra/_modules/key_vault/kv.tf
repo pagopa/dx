@@ -1,4 +1,5 @@
 #tfsec:ignore:AVD-AZU-0013
+#tfsec:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "common" {
   name = provider::dx::resource_name(merge(
     var.naming_config,
@@ -13,8 +14,8 @@ resource "azurerm_key_vault" "common" {
   sku_name            = "standard"
 
   enabled_for_disk_encryption = true
-  purge_protection_enabled    = true
-  soft_delete_retention_days  = 7
+  purge_protection_enabled    = local.secrets_protection_enabled
+  soft_delete_retention_days  = local.secrets_protection_enabled ? 14 : 7
   enable_rbac_authorization   = true
 
   network_acls {

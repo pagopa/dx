@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.2.0
+
+### Minor Changes
+
+- 75e1f98: Make core values exporter modules support other CSP backend
+
 ## 0.1.0
 
 ### Minor Changes

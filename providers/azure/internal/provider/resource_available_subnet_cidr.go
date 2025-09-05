@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/apparentlymart/go-cidr/cidr"
@@ -228,14 +229,29 @@ func findAvailableCidrBlock(ctx context.Context, vnetID string, prefixLength int
 		return "", diagnostics
 	}
 
-	// --- Setup Azure Client ---
-	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	// --- Setup Azure Client with Fallback ---
+	var cred azcore.TokenCredential
+
+	// First try Azure CLI credential
+	cliCred, err := azidentity.NewAzureCLICredential(nil)
 	if err != nil {
-		diagnostics.AddError(
-			"Azure Authentication Failed",
-			fmt.Sprintf("Unable to create Azure credential: %s", err),
-		)
-		return "", diagnostics
+		tflog.Warn(ctx, "Azure CLI credential failed, falling back to DefaultAzureCredential", map[string]interface{}{"error": err.Error()})
+
+		// If CLI credential fails, fall back to DefaultAzureCredential
+		defaultCred, err := azidentity.NewDefaultAzureCredential(nil)
+		if err != nil {
+			diagnostics.AddError(
+				"Azure Authentication Failed",
+				fmt.Sprintf("Unable to create Azure credential with any method: %s", err),
+			)
+			return "", diagnostics
+		}
+
+		// Use DefaultAzureCredential if CLI credential is not available
+		cred = defaultCred
+	} else {
+		// Use Azure CLI credential if available
+		cred = cliCred
 	}
 
 	// --- Get VNet Details ---

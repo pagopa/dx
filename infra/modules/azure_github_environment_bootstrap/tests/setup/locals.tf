@@ -5,7 +5,6 @@ locals {
     location        = "italynorth"
     location_short  = "itn"
     domain          = "test"
-    app_name        = "monorepo_starter_pack"
     instance_number = "02"
   }
 

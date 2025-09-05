@@ -42,6 +42,7 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
+  TF_IN_AUTOMATION: true
 
 jobs:
   terraform_driftdetection_job:
@@ -103,7 +104,7 @@ jobs:
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform init
+          terraform init -input=false
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
@@ -114,7 +115,13 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -uo pipefail
-          terraform plan -lock=false -no-color -detailed-exitcode -out=plan.tfplan | grep -v "hidden-link:"
+          terraform plan \
+            -lock=false \
+            -no-color \
+            -input=false \
+            -detailed-exitcode \
+            -out=plan.tfplan | \
+            grep -v "hidden-link:"
 
           EXIT_CODE=${PIPESTATUS[0]}
           if [ "$EXIT_CODE" -eq 1 ]; then

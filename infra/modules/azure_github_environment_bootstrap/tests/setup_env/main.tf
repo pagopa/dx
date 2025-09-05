@@ -61,7 +61,6 @@ output "environment" {
     env_short       = local.environment.env_short
     location        = local.environment.location
     domain          = local.environment.domain
-    app_name        = local.environment.app_name
     instance_number = local.environment.instance_number
   }
 }
@@ -91,11 +90,7 @@ output "terraform_storage_account" {
 
 output "repository" {
   value = {
-    name               = local.repository.name
-    description        = local.repository.description
-    topics             = local.repository.topics
-    reviewers_teams    = local.repository.reviewers_teams
-    app_cd_policy_tags = local.repository.app_cd_policy_tags
+    name = local.repository.name
   }
 }
 

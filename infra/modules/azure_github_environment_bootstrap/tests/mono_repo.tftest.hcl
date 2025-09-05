@@ -33,7 +33,6 @@ run "validate_github_id_app" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -53,10 +52,6 @@ run "validate_github_id_app" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -157,7 +152,6 @@ run "validate_github_id_infra" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -177,10 +171,6 @@ run "validate_github_id_infra" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -392,7 +382,6 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -412,10 +401,6 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -466,7 +451,6 @@ run "validate_rbac_entraid" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -486,10 +470,6 @@ run "validate_rbac_entraid" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -549,7 +529,6 @@ run "validate_github_id_opex" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -569,10 +548,6 @@ run "validate_github_id_opex" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {
@@ -646,7 +621,6 @@ run "validate_rgs_iam" {
       env_short       = run.setup_tests.environment.env_short
       location        = run.setup_tests.environment.location
       domain          = run.setup_tests.environment.domain
-      app_name        = run.setup_tests.environment.app_name
       instance_number = run.setup_tests.environment.instance_number
     }
 
@@ -666,10 +640,6 @@ run "validate_rgs_iam" {
 
     repository = {
       name               = run.setup_tests.repository.name
-      description        = run.setup_tests.repository.description
-      topics             = run.setup_tests.repository.topics
-      reviewers_teams    = run.setup_tests.repository.reviewers_teams
-      app_cd_policy_tags = run.setup_tests.repository.app_cd_policy_tags
     }
 
     github_private_runner = {

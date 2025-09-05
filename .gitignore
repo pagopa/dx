@@ -44,7 +44,13 @@ dist
 node_modules
 .turbo
 
+sboms/
+
 # vitest
 coverage
 
 .pnpm-store
+
+# Go build artifacts
+terraform-provider-azure
+providers/azure/terraform-provider-azure

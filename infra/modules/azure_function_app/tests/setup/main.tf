@@ -31,9 +31,18 @@ locals {
     }))
   }
 }
+
 data "azurerm_virtual_network" "vnet" {
   name                = local.virtual_network.name
   resource_group_name = local.virtual_network.resource_group_name
+}
+
+data "azurerm_monitor_action_group" "appi" {
+  name = "Application Insights Smart Detection"
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "common",
+    resource_type = "resource_group"
+  }))
 }
 
 data "azurerm_subnet" "pep" {
@@ -65,4 +74,8 @@ output "vnet" {
     name                = data.azurerm_virtual_network.vnet.name
     resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
+}
+
+output "action_group_appi_id" {
+  value = data.azurerm_monitor_action_group.appi.id
 }

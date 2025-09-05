@@ -16,6 +16,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [azurerm_monitor_action_group.appi](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_action_group) | data source |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
@@ -30,6 +31,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_action_group_appi_id"></a> [action\_group\_appi\_id](#output\_action\_group\_appi\_id) | n/a |
 | <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_vnet"></a> [vnet](#output\_vnet) | n/a |

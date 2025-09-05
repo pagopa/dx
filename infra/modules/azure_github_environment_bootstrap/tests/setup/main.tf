@@ -61,7 +61,6 @@ output "environment" {
     env_short       = local.environment.env_short
     location        = local.environment.location
     domain          = local.environment.domain
-    app_name        = local.environment.app_name
     instance_number = local.environment.instance_number
   }
 }

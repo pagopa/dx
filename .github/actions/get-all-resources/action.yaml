@@ -5,12 +5,11 @@ inputs:
   resource_type:
     description: "Specify if the resource to check is a provider or module. Possible values: 'provider', 'module'. Default is 'module'."
     required: false
-    type: string
     default: "module"
 
 outputs:
   resources:
-    description: "List of all resources in the format [\"name1\", \"name2\"]"
+    description: 'List of all resources in the format ["name1", "name2"]'
     value: ${{ steps.get-all-resources.outputs.resources }}
 
 runs:

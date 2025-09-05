@@ -170,10 +170,10 @@ variable "subnet_service_endpoints" {
   default     = null
 }
 
-variable "action_group_id" {
-  type        = string
-  description = "The ID of the Action Group to invoke when an alert is triggered for the Function App."
-  default     = null
+variable "action_group_ids" {
+  type        = set(string)
+  description = "The ID of the Action Groups to invoke when an alert is triggered for the Function App."
+  default     = []
 }
 
 variable "application_insights_key" {

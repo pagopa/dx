@@ -4,7 +4,6 @@ description: Retrieve the Terraform version from the `.terraform-version` file o
 inputs:
   override_version:
     description: "Specify the Terraform version. If omitted, the version will be read from the .terraform-version file. This value takes precedence over default_version if the file is absent."
-    type: string
     required: false
   default_version:
     description: "Default Terraform version to use if the `.terraform-version` file is not found and override_version is not provided."
@@ -31,7 +30,7 @@ runs:
           # Check for the .terraform-version file
           if [ -f ".terraform-version" ]; then
               TERRAFORM_VERSION=$(cat .terraform-version)
-              
+
               # Validate the version format
               if [[ "$TERRAFORM_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                   echo "Terraform version found in .terraform-version file: ${TERRAFORM_VERSION}"

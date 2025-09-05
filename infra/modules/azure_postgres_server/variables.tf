@@ -47,6 +47,18 @@ variable "private_dns_zone_resource_group_name" {
 variable "subnet_pep_id" {
   type        = string
   description = "The ID of the subnet used for private endpoints."
+  default     = null
+
+  validation {
+    condition     = (var.subnet_pep_id != null) != (var.delegated_subnet_id != null)
+    error_message = "'subnet_pep_id' is the default if applicable. You must specify exactly one of 'subnet_pep_id' or 'delegated_subnet_id'."
+  }
+}
+
+variable "delegated_subnet_id" {
+  type        = string
+  description = "The ID of the subnet to which the PostgreSQL Flexible Server will be delegated."
+  default     = null
 }
 
 #----------------#
