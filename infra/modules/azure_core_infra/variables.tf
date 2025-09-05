@@ -45,3 +45,20 @@ variable "vpn_enabled" {
   description = "A boolean flag to enable or disable the creation of a VPN."
   default     = false
 }
+
+variable "aws_vpn_enabled" {
+  type        = bool
+  description = "A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS."
+  default     = false
+}
+
+variable "vpn_use_case" {
+  type        = string
+  description = "Site-to-Site VPN use case. Allowed values: 'default', 'high_availability'."
+  default     = "default"
+
+  validation {
+    condition     = contains(["default", "high_availability"], var.vpn_use_case)
+    error_message = "vpn_use_case must be either 'default' or 'high_availability'."
+  }
+}

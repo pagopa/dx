@@ -117,7 +117,7 @@ module "nat_gateway" {
 }
 
 module "vpn" {
-  count = var.vpn_enabled ? 1 : 0
+  count = var.vpn_enabled || var.aws_vpn_enabled ? 1 : 0
 
   source = "./_modules/vpn"
 
@@ -127,11 +127,16 @@ module "vpn" {
   instance_number     = var.environment.instance_number
   resource_group_name = azurerm_resource_group.network.name
   env_short           = var.environment.env_short
+  naming_config       = local.naming_config
 
   tenant_id = data.azurerm_client_config.current.tenant_id
 
   vpn_subnet_id          = module.network.vpn_snet.id
   dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
+
+  vpn_enabled     = var.vpn_enabled
+  aws_vpn_enabled = var.aws_vpn_enabled
+  vpn_use_case    = var.vpn_use_case
 
   tags = local.tags
 }
