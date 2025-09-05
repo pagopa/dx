@@ -90,7 +90,6 @@ No modules.
 | <a name="output_opex_resource_group_name"></a> [opex\_resource\_group\_name](#output\_opex\_resource\_group\_name) | The name of the OPEX resource group. |
 | <a name="output_test_resource_group_id"></a> [test\_resource\_group\_id](#output\_test\_resource\_group\_id) | The ID of the test resource group (null if testing is disabled). |
 | <a name="output_test_resource_group_name"></a> [test\_resource\_group\_name](#output\_test\_resource\_group\_name) | The name of the test resource group (null if testing is disabled). |
-| <a name="output_virtual_network_gateway_id"></a> [virtual\_network\_gateway\_id](#output\_virtual\_network\_gateway\_id) | The ID of the Virtual Network Gateway |
 | <a name="output_vpn_fqdns"></a> [vpn\_fqdns](#output\_vpn\_fqdns) | The fqdn for virtual network gateway. |
 | <a name="output_vpn_gateway_id"></a> [vpn\_gateway\_id](#output\_vpn\_gateway\_id) | The ID of the virtual network gateway. |
 | <a name="output_vpn_public_ips"></a> [vpn\_public\_ips](#output\_vpn\_public\_ips) | The public IP addresses associated with the virtual network gateway. |
