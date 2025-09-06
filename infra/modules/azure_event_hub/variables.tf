@@ -75,14 +75,14 @@ variable "allowed_sources" {
 # Administration #
 #----------------#
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
-  default     = "s"
+  description = "Specifies the use case for the Event Hub. Allowed value is 'default'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", or \"l\"."
+    condition     = contains(["default"], var.use_case)
+    error_message = "Allowed value for \"use_case\" is \"default\"."
   }
 }
 
