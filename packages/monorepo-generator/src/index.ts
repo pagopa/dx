@@ -29,6 +29,7 @@ const getActions = (templatesPath: string): ActionType[] => [
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
+  // The bundled templates are in the "monorepo" subdirectory
   const templatesPath = path.join(entryPointDirectory, "monorepo");
 
   const prompts = getPrompts();
