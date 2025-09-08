@@ -59,7 +59,7 @@ resource "azurerm_monitor_diagnostic_setting" "apim" {
 }
 
 resource "azurerm_monitor_metric_alert" "this" {
-  for_each = var.tier != "s" ? var.metric_alerts : {}
+  for_each = var.use_case != "development" ? var.metric_alerts : {}
 
   name                = "${azurerm_api_management.this.name}-${upper(each.key)}"
   description         = each.value.description
