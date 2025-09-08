@@ -1,6 +1,7 @@
+import type { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {

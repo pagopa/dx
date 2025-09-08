@@ -18,11 +18,12 @@
     "dist",
     "templates"
   ],
-  "main": "dist/plopfile.js",
-  "dependencies": {
-    "plop": "^4.0.2"
+  "main": "dist/index.js",
+  "peerDependencies": {
+    "plop": "catalog:"
   },
   "devDependencies": {
+    "plop": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",

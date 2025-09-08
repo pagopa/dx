@@ -12,6 +12,9 @@ catalogs:
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
+    plop:
+      specifier: ^4.0.2
+      version: 4.0.2
     prettier:
       specifier: 3.6.2
       version: 3.6.2
@@ -387,10 +390,6 @@ importers:
         version: 3.6.2
 
   packages/monorepo-generator:
-    dependencies:
-      plop:
-        specifier: ^4.0.2
-        version: 4.0.2
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
@@ -404,6 +403,9 @@ importers:
       eslint:
         specifier: catalog:dx
         version: 9.32.0(jiti@1.21.7)
+      plop:
+        specifier: 'catalog:'
+        version: 4.0.2
       tsup:
         specifier: 'catalog:'
         version: 8.5.0(jiti@1.21.7)(postcss@8.5.6)(typescript@5.8.3)(yaml@2.8.0)
@@ -11757,7 +11759,7 @@ snapshots:
     dependencies:
       ansi-align: 3.0.1
       camelcase: 7.0.1
-      chalk: 5.4.1
+      chalk: 5.6.0
       cli-boxes: 3.0.0
       string-width: 5.1.2
       type-fest: 2.19.0
