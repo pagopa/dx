@@ -2,4 +2,4 @@
 "@pagopa/monorepo-generator": minor
 ---
 
-Create a function to generate a monorepo scaffold
+Create a `plop` generator to scaffold a new monorepo
