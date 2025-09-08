@@ -53,3 +53,4 @@ repos:
           - --args=--skip-dirs="**/.terraform"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
           - --args=--cache-dir=__GIT_WORKING_DIR__/terraform/.trivy-cache
+          - --hook-config=--parallelism-limit=1
