@@ -10,6 +10,7 @@ module "azure" {
 
   virtual_network_cidr = "10.51.0.0/16"
 
+
   tags = local.tags
 }
 
