@@ -10,20 +10,46 @@ The `@pagopa/monorepo-generator` provides a plop-based generator and templates t
 
 ## Recommended usage
 
-Install the dependencies:
+This package exports the generator function. To use it, you can create your own plopfile (`plopfile.js`) and register the generator.
 
-```shell
-pnpm install
+1) Install plop and the generator package in the consumer repository (plop must be provided by the consumer):
+
+```sh
+pnpm add -D plop
+pnpm add @pagopa/monorepo-generator
 ```
 
-Compile everything:
+2) Example repository-level plopfile (JavaScript)
 
-```shell
-pnpm build
+Create a top-level plopfile.js in your repo:
+
+```js
+// plopfile.js
+const scaffoldMonorepo = require('@pagopa/monorepo-generator');
+
+module.exports = function (plop) {
+  // register the generator exported by the package
+  scaffoldMonorepo(plop);
+};
 ```
 
-Run the generator, referencing the `plopfile.js` file:
+Or TypeScript plopfile (plopfile.ts)
 
-```shell
-pnpm plop --plopfile ./dist/plopfile.js
+```ts
+import scaffoldMonorepo from '@pagopa/monorepo-generator';
+
+export default function (plop) {
+  scaffoldMonorepo(plop);
+}
 ```
+
+3) Run plop from your repository root to use the registered generator:
+
+```sh
+pnpm plop
+```
+
+Select the "monorepo" generator and follow prompts.
+
+> [!NOTE]
+> This package declares `plop` as a peer dependency, so you will have to install plop in your project.
