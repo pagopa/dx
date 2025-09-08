@@ -1,6 +1,6 @@
 # https://avd.aquasec.com/misconfig/azure/
 
-# Github repository shouldn’t be public.
+# GitHub repository shouldn’t be public.
 AVD-GIT-0001
 
 # GitHub branch protection does not require signed commits.
