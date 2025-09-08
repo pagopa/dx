@@ -338,5 +338,5 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
-  tags = merge(var.tags, "DistributionName" = local.app_prefix)
+  tags = merge(var.tags, { DistributionName = local.app_prefix })
 }
