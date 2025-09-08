@@ -175,3 +175,7 @@ terraform.rc
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,intellij+all,visualstudiocode,terraform,turbo
+
+# Terraform lock files for modules
+**/modules/**/.terraform.lock.hcl
+**/_modules/**/.terraform.lock.hcl
