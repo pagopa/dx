@@ -1,5 +1,5 @@
 ---
-"azure_core_infra": minor
+"azure_core_infra": major
 "azure_core_values_exporter": patch
 ---
 
