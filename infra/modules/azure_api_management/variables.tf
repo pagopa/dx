@@ -113,7 +113,7 @@ variable "virtual_network_type_internal" {
 variable "enable_public_network_access" {
   type        = bool
   description = "Specifies whether public network access is enabled."
-  default     = false
+  default     = null
 }
 
 variable "public_ip_address_id" {

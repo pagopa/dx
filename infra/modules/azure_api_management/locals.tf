@@ -54,5 +54,6 @@ locals {
   use_case_features = local.use_cases[var.use_case]
 
   virtual_netowork_type                = var.virtual_network_type_internal != null ? var.virtual_network_type_internal : local.use_case_features.internal_virtual_network
+  public_network                       = var.enable_public_network_access != null ? var.enable_public_network_access : local.use_case_features.public_network
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
 }

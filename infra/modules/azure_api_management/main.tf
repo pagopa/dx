@@ -24,7 +24,7 @@ resource "azurerm_api_management" "this" {
   notification_sender_email     = var.notification_sender_email
   sku_name                      = local.use_case_features.sku
   zones                         = local.use_case_features.zones
-  public_network_access_enabled = local.use_case_features.public_network ? var.enable_public_network_access : false
+  public_network_access_enabled = local.public_network
   public_ip_address_id          = local.use_case_features.public_network && local.virtual_netowork_type ? var.public_ip_address_id : null
 
   min_api_version = "2021-08-01"
