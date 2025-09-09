@@ -38,7 +38,7 @@ resource "azurerm_api_management" "this" {
 
   # subnet
   dynamic "virtual_network_configuration" {
-    for_each = local.virtual_netowork_type ? ["dummy"] : []
+    for_each = local.virtual_netowork_type || var.use_case == "cost_optimized" ? ["dummy"] : []
     content {
       subnet_id = var.subnet_id
     }

@@ -54,6 +54,7 @@ run "apim_is_correct_plan" {
     }
 
     subnet_id                     = run.setup_tests.subnet_id
+    subnet_pep_id                 = run.setup_tests.subnet_pip_id
     enable_public_network_access  = true
     virtual_network_type_internal = true
   }
