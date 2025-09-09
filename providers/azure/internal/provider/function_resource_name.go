@@ -105,6 +105,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"container_app_private_endpoint":   "cae-pep",
 		"key_vault_private_endpoint":       "kv-pep",
 		"servicebus_private_endpoint":      "sbns-pep",
+		"apim_private_endpoint":            "apim-pep",
 
 		// Public IPs
 		"public_ip": "pip",

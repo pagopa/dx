@@ -30,14 +30,14 @@ variable "resource_group_name" {
   description = "The name of the resource group where the resources will be deployed."
 }
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l', 'xl'."
-  default     = "s"
+  description = "Specifies the use case for the API Management. Allowed values are 'cost_optimized', 'high_load', and 'development'."
+  default     = "cost_optimized"
 
   validation {
-    condition     = contains(["s", "m", "l", "xl"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\" or \"xl\"."
+    condition     = contains(["cost_optimized", "high_load", "development"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"cost_optimized\", \"high_load\", or \"development\"."
   }
 }
 
@@ -107,7 +107,7 @@ variable "enable_public_network_access" {
 
 variable "public_ip_address_id" {
   type        = string
-  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the Premium and Developer tiers when deployed in a virtual network."
+  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the non development use cases when deployed in a virtual network."
   default     = null
 }
 
