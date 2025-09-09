@@ -34,7 +34,7 @@ resource "azurerm_api_management" "this" {
     type = "SystemAssigned"
   }
 
-  virtual_network_type = local.virtual_netowork_type ? "Internal" : "None"
+  virtual_network_type = local.virtual_netowork_type ? "Internal" : "External"
 
   # subnet
   dynamic "virtual_network_configuration" {
