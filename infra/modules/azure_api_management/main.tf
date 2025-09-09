@@ -44,11 +44,14 @@ resource "azurerm_api_management" "this" {
     }
   }
 
-  sign_up {
-    enabled = false
-    terms_of_service {
-      enabled          = false
-      consent_required = false
+  dynamic "sign_up" {
+    for_each = var.use_case != "cost_optimized" ? ["dummy"] : []
+    content {
+      enabled = false
+      terms_of_service {
+        enabled          = false
+        consent_required = false
+      }
     }
   }
 
