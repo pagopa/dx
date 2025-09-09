@@ -1,7 +1,9 @@
 import { ResultAsync } from "neverthrow";
 
+import { InfoResult } from "./info.js";
+
 export type Codemod = {
-  apply: () => ResultAsync<void, Error>;
+  apply: (info: InfoResult) => Promise<void>;
   description: string;
   id: string;
 };

@@ -8,8 +8,16 @@ import { listCodemods } from "../list-codemods.js";
 describe("listCodemods", () => {
   it("returns codemods from the registry", async () => {
     const codemods: Codemod[] = [
-      { apply: vi.fn(() => okAsync(undefined)), description: "a", id: "a" },
-      { apply: vi.fn(() => okAsync(undefined)), description: "b", id: "b" },
+      {
+        apply: vi.fn().mockResolvedValue(undefined),
+        description: "a",
+        id: "a",
+      },
+      {
+        apply: vi.fn().mockResolvedValue(undefined),
+        description: "b",
+        id: "b",
+      },
     ];
 
     const registry: CodemodRegistry = {
