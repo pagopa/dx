@@ -13,6 +13,10 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the repository name?",
     name: "repoName",
   },
+  {
+    message: "What is the repository description?",
+    name: "repoDescription",
+  },
 ];
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
