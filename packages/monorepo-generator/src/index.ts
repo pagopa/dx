@@ -21,9 +21,12 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
   {
-    path: "{{repoSrc}}/{{repoName}}/.editorconfig",
-    templateFile: path.join(templatesPath, ".editorconfig"),
-    type: "add",
+    abortOnFail: true,
+    base: templatesPath,
+    destination: "{{repoSrc}}/{{repoName}}",
+    globOptions: { dot: true, onlyFiles: true },
+    templateFiles: path.join(templatesPath, ".*"),
+    type: "addMany",
   },
 ];
 
