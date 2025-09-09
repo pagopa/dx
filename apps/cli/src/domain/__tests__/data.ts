@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
@@ -27,6 +28,8 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = () => ({
+  applyCodemod: vi.fn(),
+  listCodemods: vi.fn(),
   packageJson: makeMockPackageJson(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
