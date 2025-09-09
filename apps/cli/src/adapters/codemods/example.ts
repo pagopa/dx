@@ -1,11 +1,9 @@
-import { okAsync } from "neverthrow";
-
 import { Codemod } from "../../domain/codemod.js";
 
-const apply = () => {
+const apply = async () => {
   // eslint-disable-next-line no-console
   console.log("Hello from example codemod!");
-  return okAsync(void 0);
+  return undefined;
 };
 
 export default {

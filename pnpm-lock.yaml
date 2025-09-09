@@ -140,6 +140,9 @@ importers:
       core-js:
         specifier: ^3.44.0
         version: 3.44.0
+      execa:
+        specifier: ^9.6.0
+        version: 9.6.0
       glob:
         specifier: ^11.0.3
         version: 11.0.3
@@ -149,6 +152,9 @@ importers:
       node-plop:
         specifier: ^0.32.1
         version: 0.32.1
+      replace-in-file:
+        specifier: ^8.3.0
+        version: 8.3.0
       semver:
         specifier: 'catalog:'
         version: 7.7.2
@@ -7363,6 +7369,11 @@ packages:
   repeat-string@1.6.1:
     resolution: {integrity: sha512-PV0dzCYDNfRi1jCDbJzpW7jNNDRuCOG/jI5ctQcGKt/clZD+YcPS3yIlWuTJMmESC8aevCFmWJy5wjAFgNqN6w==}
     engines: {node: '>=0.10'}
+
+  replace-in-file@8.3.0:
+    resolution: {integrity: sha512-4VhddQiMCPIuypiwHDTM+XHjZoVu9h7ngBbSCnwGRcwdHwxltjt/m//Ep3GDwqaOx1fDSrKFQ+n7uo4uVcEz9Q==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -17347,6 +17358,12 @@ snapshots:
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
+
+  replace-in-file@8.3.0:
+    dependencies:
+      chalk: 5.6.0
+      glob: 10.4.5
+      yargs: 17.7.2
 
   require-directory@2.1.1: {}
 

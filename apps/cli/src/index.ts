@@ -8,6 +8,7 @@ import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
+import { getInfo } from "./domain/info.js";
 import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
 
@@ -56,8 +57,6 @@ if (repoPackageJson.isErr()) {
 const packageJson = repoPackageJson.value;
 
 const deps: Dependencies = {
-  applyCodemodById: applyCodemodById(codemodRegistry),
-  listCodemods: listCodemods(codemodRegistry),
   packageJson,
   packageJsonReader,
   repositoryReader,
@@ -66,6 +65,11 @@ const deps: Dependencies = {
 
 const config = getConfig(repositoryRoot);
 
-const program = makeCli(deps, config);
+const useCases = {
+  applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps, config)),
+  listCodemods: listCodemods(codemodRegistry),
+};
+
+const program = makeCli(deps, config, useCases);
 
 program.parse();

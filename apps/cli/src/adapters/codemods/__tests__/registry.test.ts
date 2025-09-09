@@ -1,4 +1,4 @@
-import { ok, okAsync } from "neverthrow";
+import { ok } from "neverthrow";
 import { describe, expect, it, vi } from "vitest";
 
 import type { Codemod } from "../../../domain/codemod.js";
@@ -7,7 +7,7 @@ import { LocalCodemodRegistry } from "../registry.js";
 
 describe("LocalCodemodRegistry", () => {
   const makeCodemod = (id: string, description = id): Codemod => ({
-    apply: vi.fn(() => okAsync(undefined)),
+    apply: vi.fn().mockResolvedValue(undefined),
     description,
     id,
   });

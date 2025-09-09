@@ -65,21 +65,22 @@ const detectTerraformVersion = async (
 const detectTurboVersion = ({ devDependencies }: PackageJson) =>
   devDependencies.get("turbo")?.trim();
 
-export const getInfo = async (
-  dependencies: Dependencies,
-  config: Config,
-): Promise<InfoResult> => ({
-  node: await detectNodeVersion(
-    { repositoryReader: dependencies.repositoryReader },
-    `${config.repository.root}/.node-version`,
-  ),
-  packageManager: await detectPackageManager(dependencies, config),
-  terraform: await detectTerraformVersion(
-    { repositoryReader: dependencies.repositoryReader },
-    `${config.repository.root}/.terraform-version`,
-  ),
-  turbo: detectTurboVersion(dependencies.packageJson),
-});
+export type GetInfo = () => Promise<InfoResult>;
+
+export const getInfo =
+  (dependencies: Dependencies, config: Config): GetInfo =>
+  async (): Promise<InfoResult> => ({
+    node: await detectNodeVersion(
+      { repositoryReader: dependencies.repositoryReader },
+      `${config.repository.root}/.node-version`,
+    ),
+    packageManager: await detectPackageManager(dependencies, config),
+    terraform: await detectTerraformVersion(
+      { repositoryReader: dependencies.repositoryReader },
+      `${config.repository.root}/.terraform-version`,
+    ),
+    turbo: detectTurboVersion(dependencies.packageJson),
+  });
 
 export const printInfo = (result: InfoResult): void => {
   const logger = getLogger("json");
