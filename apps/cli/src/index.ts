@@ -1,12 +1,15 @@
 import "core-js/actual/set/index.js";
 import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
 
+import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
+import { applyCodemod } from "./use-cases/apply-codemod.js";
+import { listCodemods } from "./use-cases/list-codemods.js";
 
 await configure({
   loggers: [
@@ -51,7 +54,10 @@ if (repoPackageJson.isErr()) {
   process.exit(1);
 }
 const packageJson = repoPackageJson.value;
+
 const deps: Dependencies = {
+  applyCodemod: applyCodemod(codemodRegistry),
+  listCodemods: listCodemods(codemodRegistry),
   packageJson,
   packageJsonReader,
   repositoryReader,
