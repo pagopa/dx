@@ -28,6 +28,16 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
     templateFiles: path.join(templatesPath, ".*"),
     type: "addMany",
   },
+  {
+    path: "{{repoSrc}}/{{repoName}}/.gitignore",
+    transform: (content) =>
+      content
+        .trimEnd()
+        .concat(
+          "\n# Terraform lock files for modules\n**/modules/**/.terraform.lock.hcl\n**/_modules/**/.terraform.lock.hcl\n",
+        ),
+    type: "modify",
+  },
 ];
 
 const getActions = (templatesPath: string): ActionType[] => [
