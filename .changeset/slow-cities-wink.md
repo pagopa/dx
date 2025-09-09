@@ -24,4 +24,6 @@ Fix `azure_api_management` module behavior for `cost_optimized` use case
 
 - Virtual network configuration is now created when `virtual_network_type` is set to `Internal` (as before) or when is `External` and `cost_optimized`.
 
+- Variable `enable_public_network_access` work as an override: if not set, defaults are applied based on use case; if set, its value is used.
+
 These changes have no breaking changes for module consumers.
