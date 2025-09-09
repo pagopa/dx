@@ -12,7 +12,11 @@ import { makeVersionCommand } from "./commands/version.js";
 
 export type CliDependencies = CodemodCommandDependencies;
 
-export const makeCli = (deps: Dependencies, config: Config) => {
+export const makeCli = (
+  deps: Dependencies,
+  config: Config,
+  cliDeps: CliDependencies,
+) => {
   const program = new Command();
 
   program
@@ -23,7 +27,7 @@ export const makeCli = (deps: Dependencies, config: Config) => {
   program.addCommand(makeDoctorCommand(deps, config));
 
   if (process.env.ENABLE_CODEMODS) {
-    program.addCommand(makeCodemodCommand(deps));
+    program.addCommand(makeCodemodCommand(cliDeps));
   }
 
   program.addCommand(makeVersionCommand());
