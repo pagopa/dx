@@ -1,0 +1,48 @@
+name: 'Run and Filter Terraform Plan'
+description: 'Execute `terraform plan` and filter sensitive information from the output.'
+
+inputs:
+  base-path:
+    description: 'The directory where terraform plan will be executed. (Defaults to the root of the repository)'
+    required: false
+    default: '.'
+
+outputs:
+  filtered_plan:
+    description: "The filtered output of the `terraform plan` command."
+    value: ${{ steps.plan.outputs.filtered_plan }}
+  exit_code:
+    description: "The exit code from the `terraform plan` command. 0 = Success/No Changes, 1 = Error, 2 = Success/With Changes."
+    value: ${{ steps.plan.outputs.exit_code }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Terraform Plan and Filter Output
+      id: plan
+      shell: bash
+      run: |
+        set -eo pipefail
+
+        echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
+        cd $WORKING_DIRECTORY
+
+        PLAN_FILE="filtered_plan.txt"
+        python3 $GITHUB_ACTION_PATH/run_plan.py "$PLAN_FILE"
+        PLAN_EXIT_CODE=$?
+
+        echo "--- Plan executed with exit code: $PLAN_EXIT_CODE ---"
+
+        echo "exit_code=$PLAN_EXIT_CODE" >> $GITHUB_OUTPUT
+
+        EOF_MARKER=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
+        echo "filtered_plan<<$EOF_MARKER" >> $GITHUB_OUTPUT
+        cat "$PLAN_FILE" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT # Ensure a trailing newline before the marker
+        echo "$EOF_MARKER" >> $GITHUB_OUTPUT
+
+        echo "--- Cleaning up temporary file ---"
+        rm "$PLAN_FILE"
+      env:
+        WORKING_DIRECTORY: ${{ inputs.base-path }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
