@@ -30,8 +30,17 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
+const getMonorepoFiles = (templatesPath: string): ActionType[] => [
+  {
+    path: "{{repoSrc}}/{{repoName}}/package.json",
+    templateFile: path.join(templatesPath, "package.json.hbs"),
+    type: "add",
+  },
+];
+
 const getActions = (templatesPath: string): ActionType[] => [
   ...getDotFiles(templatesPath),
+  ...getMonorepoFiles(templatesPath),
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
