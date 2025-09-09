@@ -34,11 +34,11 @@ resource "azurerm_api_management" "this" {
     type = "SystemAssigned"
   }
 
-  virtual_network_type = local.virtual_netowork_type ? "Internal" : "External"
+  virtual_network_type = local.virtual_netowork_type
 
   # subnet
   dynamic "virtual_network_configuration" {
-    for_each = local.virtual_netowork_type || var.use_case == "cost_optimized" ? ["dummy"] : []
+    for_each = local.virtual_network_configuration_enabled ? ["dummy"] : []
     content {
       subnet_id = var.subnet_id
     }

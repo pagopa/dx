@@ -23,37 +23,38 @@ locals {
 
   use_cases = {
     development = {
-      sku                      = "Developer_1"
-      internal_virtual_network = true
-      public_network           = false
-      autoscale                = false
-      alerts                   = false
-      private_endpoint         = false
-      zones                    = null
+      sku                  = "Developer_1"
+      virtual_network_type = "Internal"
+      public_network       = false
+      autoscale            = false
+      alerts               = false
+      private_endpoint     = false
+      zones                = null
     }
     cost_optimized = {
-      sku                      = "StandardV2_1"
-      internal_virtual_network = false
-      public_network           = false
-      autoscale                = false
-      alerts                   = true
-      private_endpoint         = true
-      zones                    = null
+      sku                  = "StandardV2_1"
+      virtual_network_type = "External"
+      public_network       = false
+      autoscale            = false
+      alerts               = true
+      private_endpoint     = true
+      zones                = null
     }
     high_load = {
-      sku                      = "Premium_2"
-      internal_virtual_network = true
-      public_network           = true
-      autoscale                = true
-      alerts                   = true
-      private_endpoint         = false
-      zones                    = ["1", "2"]
+      sku                  = "Premium_2"
+      virtual_network_type = "Internal"
+      public_network       = true
+      autoscale            = true
+      alerts               = true
+      private_endpoint     = false
+      zones                = ["1", "2"]
     }
   }
 
   use_case_features = local.use_cases[var.use_case]
 
-  virtual_netowork_type                = var.virtual_network_type_internal != null ? var.virtual_network_type_internal : local.use_case_features.internal_virtual_network
-  public_network                       = var.enable_public_network_access != null ? var.enable_public_network_access : local.use_case_features.public_network
-  private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
+  virtual_netowork_type                 = var.virtual_network_type_internal != null ? "Internal" : local.use_case_features.internal_virtual_network
+  virtual_network_configuration_enabled = local.virtual_netowork_type == "Internal" || var.use_case == "cost_optimized" ? true : false
+  public_network                        = var.enable_public_network_access != null ? var.enable_public_network_access : local.use_case_features.public_network
+  private_dns_zone_resource_group_name  = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
 }
