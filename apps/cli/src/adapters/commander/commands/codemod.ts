@@ -29,7 +29,7 @@ export const makeCodemodCommand = ({
     .addCommand(
       new Command("apply")
         .argument("<id>", "The id of the codemod to apply")
-        .description("Apply migrations scripts to the repository")
+        .description("Apply migration scripts to the repository")
         .action(async function (id) {
           await applyCodemod(id)
             .andTee(() => {
