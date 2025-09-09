@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.5
+
+### Patch Changes
+
+- cfc44d1: Add APIM pep value for naming convention function
+
 ## 0.6.4
 
 ### Patch Changes
