@@ -25,7 +25,7 @@ resource "azurerm_api_management" "this" {
   sku_name                      = local.use_case_features.sku
   zones                         = local.use_case_features.zones
   public_network_access_enabled = local.public_network
-  public_ip_address_id          = local.public_network && local.virtual_netowork_type == "Internal" ? var.public_ip_address_id : null
+  public_ip_address_id          = local.public_network && local.virtual_network_type == "Internal" ? var.public_ip_address_id : null
 
   min_api_version = "2021-08-01"
 
@@ -34,7 +34,7 @@ resource "azurerm_api_management" "this" {
     type = "SystemAssigned"
   }
 
-  virtual_network_type = local.virtual_netowork_type
+  virtual_network_type = local.virtual_network_type
 
   # subnet
   dynamic "virtual_network_configuration" {
