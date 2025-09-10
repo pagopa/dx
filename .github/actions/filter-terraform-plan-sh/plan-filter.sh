@@ -25,12 +25,6 @@ filter_output() {
     # -e 's/your_regex/your_replacement/I' \
 }
 
-# --- Execution ---
-# Execute terraform plan and pipe its output.
-# 'set -o pipefail' ensures that if any command in the pipeline fails,
-# the pipeline's exit code will reflect that failure.
-set -o pipefail
-
 echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
 cd $WORKING_DIRECTORY
 
