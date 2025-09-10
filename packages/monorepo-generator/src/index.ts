@@ -188,7 +188,7 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
+const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
@@ -217,6 +217,29 @@ const selectBackendPartial =
     return `Loaded ${csp} backend state partial`;
   };
 
+const getTerraformDefaultEnvironmentFiles = (
+  templatesPath: string,
+): ActionType[] => [
+  {
+    abortOnFail: true,
+    base: `${templatesPath}/infra/resources/prod`,
+    destination: "{{repoSrc}}/{{repoName}}/infra/resources/prod",
+    templateFiles: path.join(
+      templatesPath,
+      "infra",
+      "resources",
+      "prod",
+      "*.tf.hbs",
+    ),
+    type: "addMany",
+  },
+];
+
+const getInfraFiles = (templatesPath: string): ActionType[] => [
+  ...getTerraformRepositoryFiles(templatesPath),
+  ...getTerraformDefaultEnvironmentFiles(templatesPath),
+];
+
 const getActions = ({
   octokitClient,
   plopApi,
@@ -230,12 +253,13 @@ const getActions = ({
   getLatestNodeVersion(),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
-  ...getTerraformRepositoryFile(templatesPath),
+  ...getInfraFiles(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
   installRootDependencies,
   configureChangesets,
   configureDevContainer,
+
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
