@@ -32,13 +32,5 @@ module "vpn" {
   tags = var.tags
 }
 
-## DNS FORWARDR
-module "dns_forwarder" {
-  source              = "github.com/pagopa/terraform-azurerm-v4//dns_forwarder?ref=v1.9.0"
-  name                = "${var.project}-dns-forwarder-ci-${var.instance_number}"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  subnet_id           = var.dnsforwarder_subnet_id
-
-  tags = var.tags
-}
+## DNS FORWARDER - moved to separate file
+# See dns_forwarder.tf for implementation

@@ -133,6 +133,10 @@ module "vpn" {
   vpn_subnet_id          = module.network.vpn_snet.id
   dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
 
+  # Cross-cloud DNS configuration
+  cross_cloud_dns_enabled = var.cross_cloud_dns_enabled
+  cross_cloud_dns_config  = var.cross_cloud_dns_config
+
   tags = local.tags
 }
 
