@@ -28,5 +28,5 @@ runs:
       run: node ${{ github.action_path }}/index.js
       env:
         # Pass inputs to the script as environment variables
-        INPUT_BASE_PATH: ${{ inputs.base-path }}
+        WORKING_DIRECTORY: ${{ inputs.base-path }}
 
