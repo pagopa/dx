@@ -202,6 +202,7 @@ jobs:
 
       - name: Set Plan Output
         id: set-plan-output
+        if: always()
         env:
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
@@ -214,12 +215,16 @@ jobs:
           echo "<summary>Show Plan</summary>" >> message_body.txt
           echo "" >> message_body.txt
 
-          echo "\`\`\`hcl" >> message_body.txt
-          cat plan_output.txt >> message_body.txt
-          echo "\`\`\`" >> message_body.txt
+          if [ $PLAN_OUTCOME != 'success' ]; then
+            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          else
+            echo "\`\`\`hcl" >> message_body.txt
+            cat plan_output.txt >> message_body.txt
+            echo "\`\`\`" >> message_body.txt
 
-          if [ $COMPLETE_PLAN == 'false' ]; then
-            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            if [ $COMPLETE_PLAN == 'false' ]; then
+              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            fi
           fi
 
           echo "" >> message_body.txt

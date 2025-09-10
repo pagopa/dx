@@ -62,7 +62,7 @@ module "cosmos" {
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
   # tier                = "s"
-  use_case            = "development"
+  use_case            = "developments"
 
   subnet_pep_id = module.core.common_pep_snet.id
 
