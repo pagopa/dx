@@ -49,7 +49,3 @@ echo "$EOF_MARKER" >> $GITHUB_OUTPUT
 # Remove the temporary plan file to avoid clutter.
 echo "--- Cleaning up temporary file ---"
 rm "$PLAN_FILE"
-
-# Exit the script with the exit code from Terraform.
-# This allows the calling action to know the result of the plan.
-exit $PLAN_EXIT_CODE
