@@ -41,3 +41,4 @@ export const fetchLatestRelease = ({
     }),
     () => new Error(`Failed to fetch latest release for ${owner}/${repo}`),
   ).map(({ data }) => semverParse(data.tag_name));
+};
