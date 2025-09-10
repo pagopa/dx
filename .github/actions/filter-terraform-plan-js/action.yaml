@@ -1,0 +1,32 @@
+# Name and description for your Action
+name: 'Run and Filter Terraform Plan'
+description: 'Execute `terraform plan` with a simple JS script and filter sensitive information.'
+
+# Define the inputs that the action can accept
+inputs:
+  base-path:
+    description: 'The directory where terraform plan will be executed. (Defaults to the root of the repository)'
+    required: false
+    default: '.'
+
+# Define and map the outputs the action will produce
+outputs:
+  filtered_plan:
+    description: "The filtered output of the `terraform plan` command."
+    value: ${{ steps.plan.outputs.filtered_plan }}
+  exit_code:
+    description: "The exit code from the `terraform plan` command. 0 = Success/No Changes, 1 = Error, 2 = Success/With Changes."
+    value: ${{ steps.plan.outputs.exit_code }}
+
+# Defines how the action is executed
+runs:
+  using: "composite"
+  steps:
+    - name: Run Terraform Plan and Filter Output
+      id: plan
+      shell: bash
+      run: node ${{ github.action_path }}/index.js
+      env:
+        # Pass inputs to the script as environment variables
+        INPUT_BASE_PATH: ${{ inputs.base-path }}
+
