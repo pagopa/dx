@@ -12,12 +12,18 @@ catalogs:
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
+    '@types/semver':
+      specifier: ^7.7.0
+      version: 7.7.0
     plop:
       specifier: ^4.0.2
       version: 4.0.2
     prettier:
       specifier: 3.6.2
       version: 3.6.2
+    semver:
+      specifier: ^7.7.2
+      version: 7.7.2
     tsup:
       specifier: ^8.5.0
       version: 8.5.0
@@ -130,7 +136,7 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       semver:
-        specifier: ^7.7.2
+        specifier: 'catalog:'
         version: 7.7.2
       yaml:
         specifier: ^2.8.0
@@ -149,7 +155,7 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       '@types/semver':
-        specifier: ^7.7.0
+        specifier: 'catalog:'
         version: 7.7.0
       '@vitest/coverage-v8':
         specifier: catalog:dx
@@ -392,7 +398,7 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       semver:
-        specifier: ^7.7.2
+        specifier: 'catalog:'
         version: 7.7.2
     devDependencies:
       '@pagopa/eslint-config':
@@ -405,7 +411,7 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       '@types/semver':
-        specifier: ^7.7.0
+        specifier: 'catalog:'
         version: 7.7.0
       eslint:
         specifier: catalog:dx
