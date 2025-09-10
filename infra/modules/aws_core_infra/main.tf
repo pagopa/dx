@@ -75,6 +75,27 @@ module "vpc_endpoints" {
   tags = local.tags
 }
 
+#--------------#
+# DNS Forwarder #
+#--------------#
+
+module "dns_forwarder" {
+  count  = var.cross_cloud_dns_enabled ? 1 : 0
+  source = "./_modules/dns_forwarder"
+
+  environment = var.environment
+  project     = local.project
+
+  subnet_id = module.networking.private_subnet_ids[0]
+  vpc_id    = module.networking.vpc_id
+  vpc_cidr  = var.vpc_cidr
+
+  cross_cloud_dns_config = var.cross_cloud_dns_config
+  static_private_ip      = var.dns_forwarder_static_ip
+
+  tags = local.tags
+}
+
 # SSM parameter for personal access token
 
 resource "aws_ssm_parameter" "personal_access_token" {

@@ -148,3 +148,15 @@ output "application_insights" {
     resource_group_name                = module.application_insights.resource_group_name
   }
 }
+
+# DNS Forwarder
+output "dns_forwarder" {
+  description = "DNS forwarder configuration and endpoints"
+  value = var.vpn_enabled ? {
+    endpoint            = module.vpn[0].dns_forwarder_endpoint
+    subnet_id           = module.network.dns_forwarder_snet.id
+    private_ip          = module.vpn[0].dns_forwarder_private_ip
+    resource_group      = azurerm_resource_group.network.name
+    cross_cloud_enabled = var.cross_cloud_dns_enabled
+  } : null
+}
