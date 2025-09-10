@@ -33,7 +33,8 @@ module "apim" {
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  tier                = "s"
+  # tier                = "s"
+  use_case            = "development"
 
   publisher_email = "common-dx@pagopa.it"
   publisher_name  = "Common DX"
@@ -60,7 +61,8 @@ module "cosmos" {
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  tier                = "s"
+  # tier                = "s"
+  use_case            = "development"
 
   subnet_pep_id = module.core.common_pep_snet.id
 
