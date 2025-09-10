@@ -1,114 +1,96 @@
-// Import built-in Node.js modules. No external dependencies needed.
-const { spawn } = require('child_process');
-const { appendFileSync, writeFileSync, rmSync } = require('fs');
-const path = require('path');
+#!/usr/bin/env node
 
-// ==============================================================================
-//  FILTER RULES LIST
-// ==============================================================================
+const { spawn } = require('child_process');
+const { appendFileSync } = require('fs');
+const { randomBytes } = require('crypto');
+
+// --- Filter Rules ---
 const FILTER_RULES = [
-  // --- Azure Rules ---
-  { regex: /("?hidden-link"?\s*[:=]\s*)".*?"/gi, replacement: '$1"[SENSITIVE_VALUE]"' },
-  { regex: /("?APPINSIGHTS_INSTRUMENTATIONKEY"?\s*[:=]\s*)".*?"/gi, replacement: '$1"[SENSITIVE_VALUE]"' },
+    { regex: /("?hidden-link"?\s*[:=]\s*)".*?"/gi, replacement: '$1"[SENSITIVE_VALUE]"' },
+    { regex: /("?APPINSIGHTS_INSTRUMENTATIONKEY"?\s*[:=]\s*)".*?"/gi, replacement: '$1"[SENSITIVE_VALUE]"' },
 ];
 
-/**
- * Applies all filter rules to a single line of text.
- * @param {string} line The line to filter.
- * @returns {string} The filtered line.
- */
 function filter(line) {
-  let filteredLine = line;
-  for (const rule of FILTER_RULES) {
-    filteredLine = filteredLine.replace(rule.regex, rule.replacement);
-  }
-  return filteredLine;
-}
-
-/**
- * Manually sets an action output by writing to the GITHUB_OUTPUT file.
- * @param {string} name The name of the output.
- * @param {string} value The value of the output.
- */
-function setOutput(name, value) {
-  const GITHUB_OUTPUT = process.env.GITHUB_OUTPUT;
-  if (!GITHUB_OUTPUT) {
-    throw new Error('GITHUB_OUTPUT environment variable not set');
-  }
-  // For multiline outputs, we use a heredoc syntax
-  const eof = `EOF_${Math.random().toString(36).substring(2)}`;
-  appendFileSync(GITHUB_OUTPUT, `${name}<<${eof}\n`);
-  appendFileSync(GITHUB_OUTPUT, `${value}\n`);
-  appendFileSync(GITHUB_OUTPUT, `${eof}\n`);
-}
-
-/**
- * Main function to run the terraform plan.
- */
-async function run() {
-  try {
-    // Get the base path from the environment variable set in action.yml
-    const basePath = process.env.INPUT_BASE_PATH || '.';
-    const PLAN_FILE = 'redacted_plan.txt';
-
-    // Clear the temp file if it exists
-    writeFileSync(PLAN_FILE, '', 'utf-8');
-
-    console.log(`--- Executing Plan in: ${basePath} ---`);
-
-    const command = 'terraform';
-    const args = ['plan', '-no-color', '-input=false'];
-
-    const processPromise = new Promise((resolve, reject) => {
-      const tfProcess = spawn(command, args, {
-        cwd: basePath,
-        stdio: ['inherit', 'pipe', 'pipe'],
-      });
-
-      // Handle stdout and stderr streams
-      const handleStream = (stream) => {
-        stream.on('data', (data) => {
-          const line = data.toString();
-          const filteredLine = filter(line);
-          // 1. Log to console for real-time output
-          process.stdout.write(filteredLine);
-          // 2. Append to the temporary file
-          appendFileSync(PLAN_FILE, filteredLine, 'utf-8');
-        });
-      };
-
-      handleStream(tfProcess.stdout);
-      handleStream(tfProcess.stderr);
-
-      tfProcess.on('close', (code) => {
-        resolve(code ?? 1);
-      });
-
-      tfProcess.on('error', (err) => {
-        reject(new Error(`Failed to start terraform subprocess: ${err.message}`));
-      });
-    });
-
-    const exitCode = await processPromise;
-    console.log(`--- Plan executed with exit code: ${exitCode} ---`);
-
-    // Read the entire content of the temp file
-    const planOutput = require('fs').readFileSync(PLAN_FILE, 'utf-8');
-
-    // Set the action outputs manually
-    const GITHUB_OUTPUT = process.env.GITHUB_OUTPUT;
-    if (GITHUB_OUTPUT) {
-      appendFileSync(GITHUB_OUTPUT, `exit_code=${exitCode}\n`);
-      setOutput('redacted_plan', planOutput);
+    let filteredLine = line;
+    for (const rule of FILTER_RULES) {
+        filteredLine = filteredLine.replace(rule.regex, rule.replacement);
     }
-
-    // Clean up the temporary file
-    rmSync(PLAN_FILE);
-
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
+    return filteredLine;
 }
 
-run();
+/**
+ * Runs terraform plan and returns a promise that resolves with the exit code and full output.
+ * This ensures the script waits for the child process to complete.
+ */
+function runPlan() {
+    return new Promise((resolve, reject) => {
+        const workingDir = process.env.WORKING_DIRECTORY || '.';
+        const command = 'terraform';
+        const args = ['plan', '-no-color', '-input=false'];
+
+        const child = spawn(command, args, { cwd: workingDir });
+
+        let bufferedOutput = '';
+
+        // Handle stdout
+        child.stdout.on('data', (data) => {
+            const filteredLine = filter(data.toString());
+            process.stdout.write(filteredLine); // For real-time logging
+            bufferedOutput += filteredLine;   // Buffer in memory
+        });
+
+        // Handle stderr (also filter and buffer it)
+        child.stderr.on('data', (data) => {
+            const filteredLine = filter(data.toString());
+            process.stderr.write(filteredLine); // For real-time logging
+            bufferedOutput += filteredLine;   // Buffer in memory
+        });
+
+        child.on('error', (error) => {
+            reject(error);
+        });
+
+        child.on('close', (code) => {
+            // The process has finished, resolve the promise with the results
+            resolve({ exitCode: code, plan: bufferedOutput });
+        });
+    });
+}
+
+/**
+ * Main async execution block
+ */
+async function main() {
+    try {
+        // Await the promise to ensure the script waits for terraform to finish
+        const { exitCode, plan } = await runPlan();
+
+        console.log(`\n--- Terraform process finished with exit code: ${exitCode} ---`);
+
+        const githubOutput = process.env.GITHUB_OUTPUT;
+        if (!githubOutput) {
+            throw new Error('GITHUB_OUTPUT env var not set');
+        }
+
+        // Set the exit code output
+        appendFileSync(githubOutput, `exit_code=${exitCode}\n`);
+
+        // Set the multiline plan output directly, without a temp file
+        const eofMarker = randomBytes(16).toString('hex');
+        appendFileSync(githubOutput, `filtered_plan<<${eofMarker}\n`);
+        appendFileSync(githubOutput, plan);
+        appendFileSync(githubOutput, `\n${eofMarker}\n`);
+
+        // The script itself must exit with 0 so the composite step does not fail.
+        // The real result of the plan is communicated via the `exit_code` output.
+        process.exit(0);
+
+    } catch (error) {
+        console.error("Error running the script:", error);
+        process.exit(1);
+    }
+}
+
+// Start the main execution
+main();
+
