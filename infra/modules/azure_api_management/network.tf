@@ -121,3 +121,28 @@ resource "azurerm_subnet_network_security_group_association" "snet_nsg" {
   subnet_id                 = var.subnet_id
   network_security_group_id = azurerm_network_security_group.nsg_apim.id
 }
+
+# For StandardV2
+
+resource "azurerm_private_endpoint" "apim_pep" {
+  count = local.use_case_features.private_endpoint ? 1 : 0
+
+  name                = local.apim.pep_name
+  location            = var.environment.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.subnet_pep_id
+
+  private_service_connection {
+    name                           = local.apim.pep_name
+    private_connection_resource_id = azurerm_api_management.this.id
+    is_manual_connection           = false
+    subresource_names              = ["Gateway"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.apim[0].id]
+  }
+
+  tags = local.tags
+}
