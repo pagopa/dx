@@ -1,4 +1,4 @@
-import { ActionType } from "plop";
+import type { ActionType } from "plop";
 
 import {
   fetchLatestRelease,
