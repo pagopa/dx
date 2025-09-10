@@ -4,7 +4,9 @@
 
 ## Requirements
 
-No requirements.
+| Name                                                               | Version |
+| ------------------------------------------------------------------ | ------- |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | >= 4.0  |
 
 ## Modules
 

@@ -210,6 +210,7 @@ The GitHub PAT must have the following permissions to work with AWS CodeBuild:
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_dns_forwarder"></a> [dns\_forwarder](#module\_dns\_forwarder) | ./_modules/dns_forwarder | n/a |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./_modules/nat_gateway | n/a |
 | <a name="module_networking"></a> [networking](#module\_networking) | ./_modules/networking | n/a |
 | <a name="module_routing"></a> [routing](#module\_routing) | ./_modules/routing | n/a |
@@ -227,6 +228,9 @@ The GitHub PAT must have the following permissions to work with AWS CodeBuild:
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_cross_cloud_dns_config"></a> [cross\_cloud\_dns\_config](#input\_cross\_cloud\_dns\_config) | Cross-cloud DNS configuration for Azure integration. Required when cross\_cloud\_dns\_enabled is true. | <pre>object({<br/>    azure_coredns_ip = string<br/>    azure_vnet_cidr  = string<br/>  })</pre> | <pre>{<br/>  "azure_coredns_ip": "",<br/>  "azure_vnet_cidr": ""<br/>}</pre> | no |
+| <a name="input_cross_cloud_dns_enabled"></a> [cross\_cloud\_dns\_enabled](#input\_cross\_cloud\_dns\_enabled) | Enable cross-cloud DNS resolution with Azure. | `bool` | `false` | no |
+| <a name="input_dns_forwarder_static_ip"></a> [dns\_forwarder\_static\_ip](#input\_dns\_forwarder\_static\_ip) | Static private IP address for the DNS forwarder instance. If empty, will be calculated automatically. | `string` | `""` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_gateway_count"></a> [nat\_gateway\_count](#input\_nat\_gateway\_count) | Number of NAT gateways to create. Set to 0 to disable NAT gateways, 1 for development environment, 3 for high availability in production environment. | `number` | `3` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
@@ -237,6 +241,7 @@ The GitHub PAT must have the following permissions to work with AWS CodeBuild:
 | Name | Description |
 |------|-------------|
 | <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
+| <a name="output_dns_forwarder"></a> [dns\_forwarder](#output\_dns\_forwarder) | DNS forwarder configuration and endpoints |
 | <a name="output_dynamodb_endpoint_id"></a> [dynamodb\_endpoint\_id](#output\_dynamodb\_endpoint\_id) | The ID of the DynamoDB VPC endpoint |
 | <a name="output_github_personal_access_token_ssm_parameter_name"></a> [github\_personal\_access\_token\_ssm\_parameter\_name](#output\_github\_personal\_access\_token\_ssm\_parameter\_name) | SSM parameter name for the GitHub personal access token |
 | <a name="output_internet_gateway_id"></a> [internet\_gateway\_id](#output\_internet\_gateway\_id) | The ID of the Internet Gateway |

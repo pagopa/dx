@@ -138,6 +138,10 @@ module "vpn" {
   aws_vpn_enabled = var.aws_vpn_enabled
   vpn_use_case    = var.vpn_use_case
 
+  # Cross-cloud DNS configuration
+  cross_cloud_dns_enabled = var.cross_cloud_dns_enabled
+  cross_cloud_dns_config  = var.cross_cloud_dns_config
+
   tags = local.tags
 }
 

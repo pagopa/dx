@@ -37,3 +37,28 @@ variable "nat_gateway_count" {
   }
 }
 
+# Cross-cloud DNS configuration
+variable "cross_cloud_dns_enabled" {
+  type        = bool
+  description = "Enable cross-cloud DNS resolution with Azure."
+  default     = false
+}
+
+variable "cross_cloud_dns_config" {
+  type = object({
+    azure_coredns_ip = string
+    azure_vnet_cidr  = string
+  })
+  description = "Cross-cloud DNS configuration for Azure integration. Required when cross_cloud_dns_enabled is true."
+  default = {
+    azure_coredns_ip = ""
+    azure_vnet_cidr  = ""
+  }
+}
+
+variable "dns_forwarder_static_ip" {
+  type        = string
+  description = "Static private IP address for the DNS forwarder instance. If empty, will be calculated automatically."
+  default     = ""
+}
+
