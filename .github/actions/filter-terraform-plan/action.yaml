@@ -1,5 +1,5 @@
 name: 'Run and Filter Terraform Plan'
-description: 'Execute `terraform plan` and filter sensitive information from the output.'
+description: 'Executes `terraform plan`, removes sensitive information from the output, and strips all unnecessary log lines.'
 
 inputs:
   base-path:
@@ -34,10 +34,8 @@ runs:
       run: |
         if [ "$NO_REFRESH" == "true" ]; then
           echo "TF_PLAN_REFRESH_FLAG=-refresh=false -lock=false" >> $GITHUB_ENV
-          echo "::notice::State will NOT be refreshed"
         else
           echo "TF_PLAN_REFRESH_FLAG=" >> $GITHUB_ENV
-          echo "::notice::State will be refreshed"
         fi
       env:
         NO_REFRESH: ${{ inputs.no-refresh }}
