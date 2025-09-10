@@ -45,3 +45,22 @@ variable "vpn_enabled" {
   description = "A boolean flag to enable or disable the creation of a VPN."
   default     = false
 }
+
+# Cross-cloud DNS configuration
+variable "cross_cloud_dns_enabled" {
+  type        = bool
+  description = "Enable cross-cloud DNS resolution with AWS."
+  default     = false
+}
+
+variable "cross_cloud_dns_config" {
+  type = object({
+    aws_coredns_ip = string
+    aws_vpc_cidr   = string
+  })
+  description = "Cross-cloud DNS configuration for AWS integration. Required when cross_cloud_dns_enabled is true."
+  default = {
+    aws_coredns_ip = ""
+    aws_vpc_cidr   = ""
+  }
+}
