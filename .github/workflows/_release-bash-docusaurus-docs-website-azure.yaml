@@ -1,0 +1,25 @@
+name: Deploy DX Website to Azure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/website/**" # Trigger only when this app changes
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    paths:
+      - "apps/website/**"
+
+jobs:
+  deploy_to_static_web_app:
+    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
+    secrets: inherit
+    with:
+      workspace_name: "docs" # The 'name' from the app's package.json
+      output_dir: "build" # The build output directory name
+      static_web_app_name: "dx-p-itn-website-stapp-01"
+      resource_group_name: "dx-p-itn-common-rg-01"
+      environment: "app-dev"
