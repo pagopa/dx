@@ -15,6 +15,9 @@ catalogs:
     '@types/semver':
       specifier: ^7.7.1
       version: 7.7.1
+    neverthrow:
+      specifier: ^8.2.0
+      version: 8.2.0
     plop:
       specifier: ^4.0.2
       version: 4.0.2
@@ -133,7 +136,7 @@ importers:
         specifier: ^11.0.3
         version: 11.0.3
       neverthrow:
-        specifier: ^8.2.0
+        specifier: 'catalog:'
         version: 8.2.0
       semver:
         specifier: 'catalog:'
@@ -392,7 +395,7 @@ importers:
   packages/monorepo-generator:
     dependencies:
       neverthrow:
-        specifier: ^8.2.0
+        specifier: 'catalog:'
         version: 8.2.0
       octokit:
         specifier: ^5.0.3
