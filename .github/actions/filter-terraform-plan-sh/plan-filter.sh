@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
-
 # --- Script Usage ---
 # Checks if the output filename argument is provided.
 if [ -z "$1" ]; then
