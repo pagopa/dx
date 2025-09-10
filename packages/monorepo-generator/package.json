@@ -40,6 +40,9 @@
   "peerDependencies": {
     "plop": "catalog:"
   },
+  "peerDependencies": {
+    "plop": "catalog:"
+  },
   "scripts": {
     "build": "tsup",
     "lint": "eslint --fix src",
@@ -47,10 +50,5 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
-  },
-  "dependencies": {
-    "neverthrow": "^8.2.0",
-    "octokit": "^5.0.3",
-    "semver": "^7.7.2"
   }
 }
