@@ -1,0 +1,15 @@
+terraform {
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      version = "~> {{ githubTfProviderVersion}}"
+    }
+  }
+
+  // TODO: Add the backend configuration
+}
+
+# GitHub provider configuration
+provider "github" {
+  owner = "pagopa"
+}
