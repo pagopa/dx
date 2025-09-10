@@ -1,5 +1,5 @@
 #!/bin/bash
-set +e
+set -e
 
 # --- Script Usage ---
 # Checks if the output filename argument is provided.
@@ -51,15 +51,13 @@ echo "$EOF_MARKER" >> $GITHUB_OUTPUT
 echo "--- Cleaning up temporary file ---"
 rm "$PLAN_FILE"
 
-set -e
-
 if [ $PLAN_EXIT_CODE -eq 0 ]; then
   echo "No changes to infrastructure."
   exit 0
 elif [ $PLAN_EXIT_CODE -eq 1 ]; then
   echo "Error during 'terraform plan' execution." >&2
   exit 1
-else
+elif [ $PLAN_EXIT_CODE -eq 2 ]; then
   echo "Changes to infrastructure detected."
   exit 0
 fi
