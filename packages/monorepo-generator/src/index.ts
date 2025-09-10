@@ -44,7 +44,7 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
+const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
@@ -54,12 +54,35 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
   },
 ];
 
+const getTerraformDefaultEnvironmentFiles = (
+  templatesPath: string,
+): ActionType[] => [
+  {
+    abortOnFail: true,
+    base: `${templatesPath}/infra/resources/prod`,
+    destination: "{{repoSrc}}/{{repoName}}/infra/resources/prod",
+    templateFiles: path.join(
+      templatesPath,
+      "infra",
+      "resources",
+      "prod",
+      "*.tf.hbs",
+    ),
+    type: "addMany",
+  },
+];
+
+const getInfraFiles = (templatesPath: string): ActionType[] => [
+  ...getTerraformRepositoryFiles(templatesPath),
+  ...getTerraformDefaultEnvironmentFiles(templatesPath),
+];
+
 const getActions = (templatesPath: string): ActionType[] => [
   getGitHubTerraformProviderLatestRelease,
   getDxGitHubBootstrapLatestTag,
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
-  ...getTerraformRepositoryFile(templatesPath),
+  ...getInfraFiles(templatesPath),
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
