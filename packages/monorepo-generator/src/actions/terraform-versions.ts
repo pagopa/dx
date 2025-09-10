@@ -34,11 +34,11 @@ export const getDxGitHubBootstrapLatestTag: ActionType = async (answers) => {
   });
 
   if (bootstrapProviderTagResult.isOk()) {
-    answers.githubTfProviderVersion = `${bootstrapProviderTagResult.value?.major ?? 1}.${bootstrapProviderTagResult.value?.minor ?? 1}`;
-    return `Fetched latest ${owner}/${repo} version ${answers.githubTfProviderVersion}`;
+    answers.dxGithubEnvironmentBootstrapVersion = `${bootstrapProviderTagResult.value?.major ?? 1}.${bootstrapProviderTagResult.value?.minor ?? 1}`;
+    return `Fetched latest ${owner}/${repo} version ${answers.dxGithubEnvironmentBootstrapVersion}`;
   }
 
   const fallback = "1.1";
-  answers.githubTfProviderVersion = fallback;
+  answers.dxGithubEnvironmentBootstrapVersion = fallback;
   return `Failed to fetch latest ${owner}/${repo} version: ${bootstrapProviderTagResult.error?.message ?? "unknown"}. Using fallback ${fallback}`;
 };
