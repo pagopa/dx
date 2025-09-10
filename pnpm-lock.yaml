@@ -543,13 +543,13 @@ importers:
   packages/monorepo-generator:
     dependencies:
       neverthrow:
-        specifier: ^8.2.0
+        specifier: 'catalog:'
         version: 8.2.0
       octokit:
         specifier: ^5.0.3
         version: 5.0.3
       semver:
-        specifier: ^7.7.2
+        specifier: 'catalog:'
         version: 7.7.2
     devDependencies:
       '@pagopa/eslint-config':
