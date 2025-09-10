@@ -15,7 +15,6 @@ locals {
     name           = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management" })), "-apim-apim-", "-apim-")
     pep_name       = local.use_case_features.private_endpoint ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "apim_private_endpoint" })), "-apim-apim-", "-apim-") : null
     autoscale_name = local.use_case_features.autoscale ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management_autoscale" })), "-apim-apim-", "-apim-") : null
-    zones          = local.use_case_features.zones
 
     log_category_groups = ["allLogs", "audit"]
     log_category_types  = ["DeveloperPortalAuditLogs", "GatewayLogs", "WebSocketConnectionLogs"]
