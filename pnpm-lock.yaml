@@ -401,13 +401,13 @@ importers:
   packages/monorepo-generator:
     dependencies:
       neverthrow:
-        specifier: 'catalog:'
+        specifier: ^8.2.0
         version: 8.2.0
       octokit:
         specifier: ^5.0.3
         version: 5.0.3
       semver:
-        specifier: 'catalog:'
+        specifier: ^7.7.2
         version: 7.7.2
     devDependencies:
       '@pagopa/eslint-config':
@@ -10360,7 +10360,7 @@ snapshots:
   '@eslint/config-array@0.21.0':
     dependencies:
       '@eslint/object-schema': 2.1.6
-      debug: 4.4.1
+      debug: 4.4.3
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -10374,7 +10374,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1
+      debug: 4.4.3
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -12924,7 +12924,7 @@ snapshots:
   detect-port@1.6.1:
     dependencies:
       address: 1.2.2
-      debug: 4.4.1
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -13162,7 +13162,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.1
+      debug: 4.4.3
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
@@ -16752,7 +16752,7 @@ snapshots:
       cac: 6.7.14
       chokidar: 4.0.3
       consola: 3.4.2
-      debug: 4.4.1
+      debug: 4.4.3
       esbuild: 0.25.2
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
@@ -16993,7 +16993,7 @@ snapshots:
   vite-node@3.2.4(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.1
+      debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
       vite: 7.0.2(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0)
@@ -17043,7 +17043,7 @@ snapshots:
       '@vitest/spy': 3.2.4
       '@vitest/utils': 3.2.4
       chai: 5.2.0
-      debug: 4.4.1
+      debug: 4.4.3
       expect-type: 1.2.2
       magic-string: 0.30.17
       pathe: 2.0.3
