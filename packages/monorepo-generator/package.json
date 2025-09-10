@@ -19,28 +19,28 @@
     "templates"
   ],
   "main": "dist/index.js",
-  "peerDependencies": {
-    "plop": "catalog:"
+  "dependencies": {
+    "neverthrow": "^8.2.0",
+    "octokit": "^5.0.3",
+    "semver": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@types/semver": "^7.7.0",
+    "@types/semver": "catalog:",
     "eslint": "catalog:dx",
     "plop": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "plop": "catalog:"
   },
   "scripts": {
     "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "neverthrow": "^8.2.0",
-    "octokit": "^5.0.3",
-    "semver": "^7.7.2"
   }
 }
