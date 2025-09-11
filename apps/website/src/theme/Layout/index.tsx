@@ -6,9 +6,13 @@ import { createRoot } from "react-dom/client";
 
 import CookieConsent from "../../components/CookieConsent";
 import CookiePreferences from "../../components/CookiePreferences";
+import { useSearchTracking } from "../../hooks/useSearchTracking";
 
 export default function LayoutWrapper(props: Props): JSX.Element {
   const [showCookieBanner, setShowCookieBanner] = useState(false);
+
+  // Initialize search tracking
+  useSearchTracking();
 
   useEffect(() => {
     // Check cookie consent status once at app level
@@ -34,13 +38,13 @@ export default function LayoutWrapper(props: Props): JSX.Element {
     if (container && !container.hasChildNodes()) {
       const root = createRoot(container);
       root.render(
-        <CookiePreferences 
+        <CookiePreferences
           onConsentChange={() => {
             // When consent changes from footer, hide banner and recheck consent
             setShowCookieBanner(false);
             setTimeout(checkCookieConsent, 100); // Small delay to ensure localStorage is updated
-          }} 
-        />
+          }}
+        />,
       );
     }
   }, []);

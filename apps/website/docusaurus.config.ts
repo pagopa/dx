@@ -44,7 +44,6 @@ const config: Config = {
       require.resolve("./src/plugins/analytics-with-consent.ts"),
       {
         config: {
-          connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
           disableFetchTracking: false,
           disableTelemetry: false, // Will be controlled by cookie consent
           enableAjaxErrorStatusText: true,
@@ -55,6 +54,8 @@ const config: Config = {
           enableRequestHeaderTracking: true,
           enableResponseHeaderTracking: true,
           enableUnhandledPromiseRejectionTracking: true,
+          instrumentationKey:
+            process.env.APPLICATIONINSIGHTS_INSTRUMENTATION_KEY,
         },
         enableClickAnalytics: false,
       },

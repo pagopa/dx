@@ -28,14 +28,12 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
   });
 
   const handleConsentGiven = () => {
-    console.log("CookieConsent: Consent given, notifying parent");
     if (onConsentGiven) {
       onConsentGiven();
     }
   };
 
   const acceptAll = () => {
-    console.log("CookieConsent: Accepting all cookies");
     const allAccepted: CookiePreferences = {
       analytics: true,
       necessary: true,
@@ -48,7 +46,6 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
   };
 
   const acceptNecessary = () => {
-    console.log("CookieConsent: Accepting necessary only");
     const necessaryOnly: CookiePreferences = {
       analytics: false,
       necessary: true,
@@ -56,10 +53,10 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
     localStorage.setItem("cookieConsent", JSON.stringify(necessaryOnly));
     setPreferences(necessaryOnly);
     setShowPreferences(false);
-    
+
     // Disable analytics and delete existing cookies
     disableAnalytics();
-    
+
     initializeAnalytics(necessaryOnly);
     handleConsentGiven();
   };
@@ -68,14 +65,14 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
     console.log("CookieConsent: Saving preferences:", preferences);
     localStorage.setItem("cookieConsent", JSON.stringify(preferences));
     setShowPreferences(false);
-    
+
     // Enable or disable analytics based on user choice
     if (preferences.analytics) {
       enableAnalytics();
     } else {
       disableAnalytics();
     }
-    
+
     initializeAnalytics(preferences);
     handleConsentGiven();
   };
@@ -95,9 +92,10 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
             <div className={styles.cookieText}>
               <h3>Cookie Settings</h3>
               <p>
-                This website uses cookies to improve your browsing experience. 
-                Essential cookies are always active to ensure the website functions properly. 
-                You can choose whether to also accept analytics cookies to help us improve the site.
+                This website uses cookies to improve your browsing experience.
+                Essential cookies are always active to ensure the website
+                functions properly. You can choose whether to also accept
+                analytics cookies to help us improve the site.
               </p>
               <p>
                 For more information, please see our{" "}
@@ -162,8 +160,9 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
                   </label>
                 </div>
                 <p>
-                  These cookies help us understand how visitors interact with the
-                  website by collecting and reporting anonymous information via Azure Application Insights.
+                  These cookies help us understand how visitors interact with
+                  the website by collecting and reporting anonymous information
+                  via Azure Application Insights.
                 </p>
               </div>
             </div>
