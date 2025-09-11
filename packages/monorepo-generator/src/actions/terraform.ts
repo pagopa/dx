@@ -22,6 +22,7 @@ export const getGitHubTerraformProviderLatestRelease =
         (semver) =>
           // If semver is null, it means that the latest release tag is not a valid semver
           semver === null &&
+          // eslint-disable-next-line no-console
           console.warn(
             `Could not fetch latest release for ${owner}/${repo}, using fallback version ${fallbackVersion}`,
           ),
@@ -29,13 +30,13 @@ export const getGitHubTerraformProviderLatestRelease =
       // Make sure to have a non-null version
       .map((semver) => semver ?? fallbackVersion)
       .match(
-        (semver) => {
-          answers.githubTfProviderVersion = `${semver.major}.${semver.minor}`;
+        ({ major, minor }) => {
+          answers.githubTfProviderVersion = `${major}.${minor}`;
           return `Fetched latest ${owner}/${repo} version ${answers.githubTfProviderVersion}`;
         },
-        () => {
+        ({ message }) => {
           answers.githubTfProviderVersion = `${fallbackVersion.major}.${fallbackVersion.minor}`;
-          return `Failed to fetch latest release for ${owner}/${repo}, using fallback version ${answers.githubTfProviderVersion}`;
+          return `${message}, using fallback version ${answers.githubTfProviderVersion}`;
         },
       );
   };
@@ -54,13 +55,13 @@ export const getDxGitHubBootstrapLatestTag =
     })
       .map((semver) => semver ?? fallbackVersion)
       .match(
-        (semver) => {
-          answers.dxGithubEnvironmentBootstrapVersion = `${semver.major}.${semver.minor}`;
+        ({ major, minor }) => {
+          answers.dxGithubEnvironmentBootstrapVersion = `${major}.${minor}`;
           return `Fetched latest ${owner}/${repo} tag ${answers.dxGithubEnvironmentBootstrapVersion}`;
         },
-        () => {
+        ({ message }) => {
           answers.dxGithubEnvironmentBootstrapVersion = `${fallbackVersion.major}.${fallbackVersion.minor}`;
-          return `Failed to fetch latest tag for ${owner}/${repo}, using fallback version ${answers.dxGithubEnvironmentBootstrapVersion}`;
+          return `${message}, using fallback version ${answers.dxGithubEnvironmentBootstrapVersion}`;
         },
       );
   };
