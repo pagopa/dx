@@ -58,6 +58,11 @@ on:
         type: string
         required: false
         default: ""
+      build_env_vars:
+        description: Comma-separated list of environment variable names to pass from the GitHub environment to the build step (e.g., "APPLICATIONINSIGHTS_INSTRUMENTATION_KEY,NODE_ENV,API_URL")
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -73,18 +78,31 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-ci
 
-    env:
-      WORKSPACE_NAME: ${{ inputs.workspace_name }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Prepare Build Environment Variables
+        id: prepare-env
+        run: |
+          if [ -n "${{ inputs.build_env_vars }}" ]; then
+            IFS=',' read -ra VARS <<< "${{ inputs.build_env_vars }}"
+            for var in "${VARS[@]}"; do
+              var=$(echo "$var" | xargs) # trim whitespace
+              if [ -n "${!var:-}" ]; then
+                echo "${var}=${!var}" >> $GITHUB_ENV
+              fi
+            done
+          fi
+        if: ${{ inputs.build_env_vars != '' }}
 
       - name: Build Package
         id: build-package
         uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
+        env:
+          WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
       - name: Get Artifact path
         id: get-artifact-path
