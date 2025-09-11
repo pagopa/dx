@@ -68,7 +68,7 @@ S.p.A. at: info@pagopa.it
 ## Privacy
 
 For information on personal data processing, see the
-[Privacy Policy](/dx/privacy-policy).
+[Privacy Policy](/privacy-policy).
 
 ---
 
