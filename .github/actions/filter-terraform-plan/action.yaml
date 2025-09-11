@@ -64,9 +64,9 @@ runs:
           # Anything that looks like a private key block (keep - very specific)
           -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[REDACTED]/gI"
 
-          # # Named secret/key assignments: only redact when the left-hand side is a known secret name
-          # # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
-          # -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
+          # Named secret/key assignments: only redact when the left-hand side is a known secret name
+          # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
+          -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
 
           # # JWT-like tokens (three dot-separated base64url parts). Only redact tokens that look like a JWT
           # # Appearing after a separator '=' or ':' or inside quotes.
