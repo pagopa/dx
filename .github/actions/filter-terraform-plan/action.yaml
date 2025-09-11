@@ -61,14 +61,19 @@ runs:
 
         # --- Add generic regex filters for high-risk patterns ---
         SED_EXPRESSIONS+=(
-          # Anything that looks like a private key block
+          # Anything that looks like a private key block (keep - very specific)
           -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[REDACTED]/gI"
-          # Long base64-like strings (≥ 40 chars)
-          -e "s/[A-Za-z0-9+\/=]{40,}/[REDACTED]/g"
-          # UUID-like values
-          -e "s/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[REDACTED]/g"
-          # Azure resource keys / connection strings often have '=' followed by long tokens
-          -e "s/(=)[A-Za-z0-9\/\+]{20,}/\\1[REDACTED]/g"
+
+          # Named secret/key assignments: only redact when the left-hand side is a known secret name
+          # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
+          -e "s/(\"?[^\"[:space:]]*(SharedAccessKey|AccountKey|SharedAccessKeyName|Password|secret|access_key|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
+
+          # JWT-like tokens (three dot-separated base64url parts). Only redact tokens that look like a JWT
+          # Appearing after a separator '=' or ':' or inside quotes.
+          -e "s/([:=]\s*\"?)([A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})/\\1[REDACTED]/gI"
+
+          # SAS-like query params and common signed parameters (sig, se, sv, sp): redact their values
+          -e "s/((sig|se|sp|sv)[\"']?\s*=\s*)[A-Za-z0-9%_\-\.\+]{8,}/\\1[REDACTED]/Ig"
         )
 
         echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
