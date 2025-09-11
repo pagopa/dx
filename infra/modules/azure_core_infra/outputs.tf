@@ -74,6 +74,14 @@ output "common_test_snet" {
   }
 }
 
+output "common_vpn_snet" {
+  description = "Details of the VPN subnet, including its name and ID."
+  value = {
+    name = module.network.vpn_snet.name
+    id   = module.network.vpn_snet.id
+  }
+}
+
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value = flatten([
@@ -84,6 +92,21 @@ output "common_nat_gateways" {
       }
     ]
   ])
+}
+
+output "vpn_gateway_id" {
+  description = "The ID of the virtual network gateway."
+  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].gateway_id : null
+}
+
+output "vpn_fqdns" {
+  description = "The FQDNs for virtual network gateway."
+  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].fqdns : null
+}
+
+output "vpn_public_ips" {
+  description = "The public IP addresses associated with the virtual network gateway."
+  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].public_ips : null
 }
 
 # Key Vault
