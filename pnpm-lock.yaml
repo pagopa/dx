@@ -35,7 +35,7 @@ catalogs:
       specifier: ^3.2.4
       version: 3.2.4
 
-pnpmfileChecksum: sha256-BlnOEZNG60x2Uv6FoEX6QqFFdaEqRm+Wcy5iYNYvT6Q=
+pnpmfileChecksum: sha256-OJouNBndqt4Cp0CqbnjFSTzKffvO5ZIbhBx14jMkk9k=
 
 importers:
 
