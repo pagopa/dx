@@ -94,6 +94,22 @@ const config: Config = {
           ],
           title: "Blog",
         },
+        {
+          items: [
+            {
+              label: "Informativa Privacy",
+              to: "/informativa-privacy",
+            },
+            {
+              label: "Note Legali",
+              to: "/note-legali",
+            },
+            {
+              html: '<div id="cookie-preferences-link"></div>',
+            },
+          ],
+          title: "Legal",
+        },
       ],
       style: "dark",
       // copyright: `Copyright © ${new Date().getFullYear()} PagoPA. Built with Docusaurus.`,
