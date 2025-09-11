@@ -189,7 +189,7 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
-          if [ "$(wc -c < ${PLAN_FILE_PATH#"${{ steps.directory.outputs.dir }}/"})" -gt 60000 ]; then
+          if [ "$(wc -c < ${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"})" -gt 60000 ]; then
             echo "${SUMMARY_LINE}" > plan_output.txt
             echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
@@ -199,6 +199,7 @@ jobs:
         env:
           SUMMARY_LINE: ${{ steps.plan.outputs.summary_line }}
           PLAN_FILE_PATH: ${{ steps.plan.outputs.filtered_plan_path }}
+          WORKING_DIRECTORY: ${{ steps.directory.outputs.dir }}
 
       - name: Set Plan Output
         id: set-plan-output
