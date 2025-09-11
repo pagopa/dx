@@ -103,6 +103,7 @@ jobs:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
           WORKSPACE_NAME: ${{ inputs.workspace_name }}
+          APPLICATIONINSIGHTS_INSTRUMENTATION_KEY: ${{ env.APPLICATIONINSIGHTS_INSTRUMENTATION_KEY }}
 
       - name: Get Artifact path
         id: get-artifact-path
