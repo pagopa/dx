@@ -16,6 +16,8 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
+import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
+
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
@@ -104,6 +106,8 @@ const getActions = ({
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
+  enablePnpm,
+  addPagoPaPnpmPlugin,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
