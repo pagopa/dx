@@ -59,6 +59,18 @@ runs:
           fi
         done
 
+        # --- Add generic regex filters for high-risk patterns ---
+        SED_EXPRESSIONS+=(
+          # Anything that looks like a private key block
+          -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[SENSITIVE BLOCK]/gI"
+          # Long base64-like strings (≥ 40 chars)
+          -e "s/[A-Za-z0-9+\/=]{40,}/[SENSITIVE STRING]/g"
+          # UUID-like values
+          -e "s/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[SENSITIVE UUID]/g"
+          # Azure resource keys / connection strings often have '=' followed by long tokens
+          -e "s/(=)[A-Za-z0-9\/\+]{20,}/\\1[SENSITIVE TOKEN]/g"
+        )
+
         echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
         cd "$WORKING_DIRECTORY"
 
