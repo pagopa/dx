@@ -22,4 +22,4 @@ jobs:
       output_dir: "build" # The build output directory name
       static_web_app_name: "dx-p-itn-website-stapp-01"
       resource_group_name: "dx-p-itn-common-rg-01"
-      environment: "app-dev"
+      environment: "app-prod"
