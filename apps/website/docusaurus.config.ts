@@ -40,6 +40,25 @@ const config: Config = {
         language: ["en"],
       },
     ],
+    [
+      require.resolve("./src/plugins/analytics-with-consent.ts"),
+      {
+        config: {
+          connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+          disableFetchTracking: false,
+          disableTelemetry: false, // Will be controlled by cookie consent
+          enableAjaxErrorStatusText: true,
+          enableAjaxPerfTracking: true,
+          enableAutoRouteTracking: true,
+          enableCookieSuggestion: false,
+          enableCorsCorrelation: true,
+          enableRequestHeaderTracking: true,
+          enableResponseHeaderTracking: true,
+          enableUnhandledPromiseRejectionTracking: true,
+        },
+        enableClickAnalytics: false,
+      },
+    ],
   ],
 
   presets: [
@@ -97,12 +116,12 @@ const config: Config = {
         {
           items: [
             {
-              label: "Informativa Privacy",
-              to: "/informativa-privacy",
+              label: "Privacy Policy",
+              to: "/privacy-policy",
             },
             {
-              label: "Note Legali",
-              to: "/note-legali",
+              label: "Legal Notes",
+              to: "/legal-notes",
             },
             {
               html: '<div id="cookie-preferences-link"></div>',

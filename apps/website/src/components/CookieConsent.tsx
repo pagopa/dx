@@ -1,83 +1,91 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
+import { disableAnalytics, enableAnalytics } from "../utils/analytics-consent";
 import styles from "./CookieConsent.module.css";
 
-const CookieConsent: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(false);
+interface CookieConsentProps {
+  onConsentGiven?: () => void;
+}
+
+interface CookiePreferences {
+  analytics: boolean;
+  necessary: boolean;
+}
+
+const initializeAnalytics = (prefs: CookiePreferences) => {
+  if (prefs.analytics) {
+    enableAnalytics();
+  } else {
+    disableAnalytics();
+  }
+};
+
+const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
   const [showPreferences, setShowPreferences] = useState(false);
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<CookiePreferences>({
     analytics: false,
-    marketing: false,
     necessary: true, // Always true, cannot be changed
   });
 
-  useEffect(() => {
-    // Check if user has already made a choice
-    const consent = localStorage.getItem("cookieConsent");
-    if (!consent) {
-      setIsVisible(true);
-    } else {
-      const storedPreferences = JSON.parse(consent);
-      setPreferences(storedPreferences);
+  const handleConsentGiven = () => {
+    console.log("CookieConsent: Consent given, notifying parent");
+    if (onConsentGiven) {
+      onConsentGiven();
     }
-  }, []);
+  };
 
   const acceptAll = () => {
-    const allAccepted = {
+    console.log("CookieConsent: Accepting all cookies");
+    const allAccepted: CookiePreferences = {
       analytics: true,
-      marketing: true,
       necessary: true,
     };
     localStorage.setItem("cookieConsent", JSON.stringify(allAccepted));
     setPreferences(allAccepted);
-    setIsVisible(false);
     setShowPreferences(false);
-    // Initialize analytics and marketing cookies here
-    initializeCookies(allAccepted);
+    initializeAnalytics(allAccepted);
+    handleConsentGiven();
   };
 
   const acceptNecessary = () => {
-    const necessaryOnly = {
+    console.log("CookieConsent: Accepting necessary only");
+    const necessaryOnly: CookiePreferences = {
       analytics: false,
-      marketing: false,
       necessary: true,
     };
     localStorage.setItem("cookieConsent", JSON.stringify(necessaryOnly));
     setPreferences(necessaryOnly);
-    setIsVisible(false);
     setShowPreferences(false);
-    initializeCookies(necessaryOnly);
+    
+    // Disable analytics and delete existing cookies
+    disableAnalytics();
+    
+    initializeAnalytics(necessaryOnly);
+    handleConsentGiven();
   };
 
   const savePreferences = () => {
+    console.log("CookieConsent: Saving preferences:", preferences);
     localStorage.setItem("cookieConsent", JSON.stringify(preferences));
-    setIsVisible(false);
     setShowPreferences(false);
-    initializeCookies(preferences);
+    
+    // Enable or disable analytics based on user choice
+    if (preferences.analytics) {
+      enableAnalytics();
+    } else {
+      disableAnalytics();
+    }
+    
+    initializeAnalytics(preferences);
+    handleConsentGiven();
   };
 
-  const initializeCookies = (prefs: typeof preferences) => {
-    // Initialize analytics cookies if accepted
-    if (prefs.analytics) {
-      // Add Google Analytics or other analytics initialization
-      // console.log("Analytics cookies initialized");
-    }
-
-    // Initialize marketing cookies if accepted
-    if (prefs.marketing) {
-      // Add marketing cookies initialization
-      // console.log("Marketing cookies initialized");
-    }
-  };
-
-  const handlePreferenceChange = (type: "analytics" | "marketing") => {
+  const handlePreferenceChange = (type: "analytics") => {
     setPreferences((prev) => ({
       ...prev,
       [type]: !prev[type],
     }));
   };
-
-  if (!isVisible) return null;
 
   return (
     <div className={styles.cookieConsent}>
@@ -85,21 +93,20 @@ const CookieConsent: React.FC = () => {
         {!showPreferences ? (
           <>
             <div className={styles.cookieText}>
-              <h3>Informativa sui Cookie</h3>
+              <h3>Cookie Settings</h3>
               <p>
-                Questo sito utilizza cookie per migliorare la tua esperienza di
-                navigazione. I cookie necessari sono sempre attivi per garantire
-                il funzionamento del sito. Puoi scegliere di accettare tutti i
-                cookie o personalizzare le tue preferenze.
+                This website uses cookies to improve your browsing experience. 
+                Essential cookies are always active to ensure the website functions properly. 
+                You can choose whether to also accept analytics cookies to help us improve the site.
               </p>
               <p>
-                Per maggiori informazioni, consulta la nostra{" "}
+                For more information, please see our{" "}
                 <a
-                  href="/dx/informativa-privacy"
+                  href="/dx/privacy-policy"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Informativa Privacy
+                  Privacy Policy
                 </a>
                 .
               </p>
@@ -109,23 +116,23 @@ const CookieConsent: React.FC = () => {
                 className={styles.buttonSecondary}
                 onClick={acceptNecessary}
               >
-                Solo Necessari
+                Essential Only
               </button>
               <button
                 className={styles.buttonSecondary}
                 onClick={() => setShowPreferences(true)}
               >
-                Personalizza
+                Customize
               </button>
               <button className={styles.buttonPrimary} onClick={acceptAll}>
-                Accetta Tutti
+                Accept All
               </button>
             </div>
           </>
         ) : (
           <>
             <div className={styles.cookieText}>
-              <h3>Personalizza Cookie</h3>
+              <h3>Customize Cookies</h3>
               <div className={styles.cookieCategory}>
                 <div className={styles.categoryHeader}>
                   <label>
@@ -134,12 +141,12 @@ const CookieConsent: React.FC = () => {
                       disabled
                       type="checkbox"
                     />
-                    <strong>Cookie Necessari</strong>
+                    <strong>Essential Cookies</strong>
                   </label>
                 </div>
                 <p>
-                  Questi cookie sono essenziali per il funzionamento del sito e
-                  non possono essere disabilitati.
+                  These cookies are essential for the website to function and
+                  cannot be disabled.
                 </p>
               </div>
 
@@ -151,31 +158,12 @@ const CookieConsent: React.FC = () => {
                       onChange={() => handlePreferenceChange("analytics")}
                       type="checkbox"
                     />
-                    <strong>Cookie Analitici</strong>
+                    <strong>Analytics Cookies</strong>
                   </label>
                 </div>
                 <p>
-                  Questi cookie ci aiutano a capire come i visitatori
-                  interagiscono con il sito raccogliendo e riportando
-                  informazioni anonime.
-                </p>
-              </div>
-
-              <div className={styles.cookieCategory}>
-                <div className={styles.categoryHeader}>
-                  <label>
-                    <input
-                      checked={preferences.marketing}
-                      onChange={() => handlePreferenceChange("marketing")}
-                      type="checkbox"
-                    />
-                    <strong>Cookie di Marketing</strong>
-                  </label>
-                </div>
-                <p>
-                  Questi cookie sono utilizzati per tracciare i visitatori
-                  attraverso i siti web per mostrare annunci pertinenti e
-                  coinvolgenti.
+                  These cookies help us understand how visitors interact with the
+                  website by collecting and reporting anonymous information via Azure Application Insights.
                 </p>
               </div>
             </div>
@@ -184,13 +172,13 @@ const CookieConsent: React.FC = () => {
                 className={styles.buttonSecondary}
                 onClick={() => setShowPreferences(false)}
               >
-                Indietro
+                Back
               </button>
               <button
                 className={styles.buttonPrimary}
                 onClick={savePreferences}
               >
-                Salva Preferenze
+                Save Preferences
               </button>
             </div>
           </>

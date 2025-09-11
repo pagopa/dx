@@ -97,6 +97,8 @@
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
+  color: #1c1e21;
+  font-weight: 500;
 }
 
 .categoryHeader input[type="checkbox"] {
@@ -181,4 +183,8 @@
 
 [data-theme="dark"] .cookieCategory p {
   color: #b4b4b4;
+}
+
+[data-theme="dark"] .categoryHeader label {
+  color: #e3e3e3;
 }

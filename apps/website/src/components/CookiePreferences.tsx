@@ -2,13 +2,24 @@ import React, { useState } from "react";
 
 import CookieConsent from "./CookieConsent";
 
-const CookiePreferences: React.FC = () => {
+interface CookiePreferencesProps {
+  onConsentChange?: () => void;
+}
+
+const CookiePreferences: React.FC<CookiePreferencesProps> = ({ onConsentChange }) => {
   const [showConsent, setShowConsent] = useState(false);
 
   const openPreferences = () => {
     // Clear stored consent to trigger the banner again
     localStorage.removeItem("cookieConsent");
     setShowConsent(true);
+  };
+
+  const handleConsentGiven = () => {
+    setShowConsent(false);
+    if (onConsentChange) {
+      onConsentChange();
+    }
   };
 
   return (
@@ -26,11 +37,11 @@ const CookiePreferences: React.FC = () => {
         }}
         type="button"
       >
-        Preferenze Cookie
+        Cookie Preferences
       </button>
       {showConsent && (
         <div style={{ display: "block" }}>
-          <CookieConsent />
+          <CookieConsent onConsentGiven={handleConsentGiven} />
         </div>
       )}
     </>
