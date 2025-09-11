@@ -10,7 +10,7 @@ interface GitHubReleaseParam {
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-export const fetchLatestTag = async ({ owner, repo }: GitHubReleaseParam) =>
+export const fetchLatestTag = ({ owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(
     // Get repository tags
     octokit.request("GET /repos/{owner}/{repo}/tags", {
@@ -29,7 +29,7 @@ export const fetchLatestTag = async ({ owner, repo }: GitHubReleaseParam) =>
     // Get the latest tag
     .map((tags) => tags.pop());
 
-export const fetchLatestRelease = async ({ owner, repo }: GitHubReleaseParam) =>
+export const fetchLatestRelease = ({ owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(
     // Get the latest release for a repository
     octokit.request("GET /repos/{owner}/{repo}/releases/latest", {

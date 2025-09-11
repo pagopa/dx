@@ -4,41 +4,63 @@ import {
   fetchLatestRelease,
   fetchLatestTag,
 } from "../adapters/octokit/index.js";
+import { Config } from "../config.js";
 
-export const getGitHubTerraformProviderLatestRelease: ActionType = async (
-  answers,
-) => {
-  const owner = "integrations";
-  const repo = "terraform-provider-github";
-  const githubTerraformProviderReleaseResult = await fetchLatestRelease({
-    owner,
-    repo,
-  });
+export const getGitHubTerraformProviderLatestRelease =
+  (
+    fallbackVersion: Config["terraform"]["providers"]["github"]["fallbackVersion"],
+  ): ActionType =>
+  async (answers) => {
+    const owner = "integrations";
+    const repo = "terraform-provider-github";
 
-  if (githubTerraformProviderReleaseResult.isOk()) {
-    answers.githubTfProviderVersion = `${githubTerraformProviderReleaseResult.value?.major ?? 1}.${githubTerraformProviderReleaseResult.value?.minor ?? 1}`;
-    return `Fetched latest ${owner}/${repo} version ${answers.githubTfProviderVersion}`;
-  }
+    return await fetchLatestRelease({
+      owner,
+      repo,
+    })
+      .andTee(
+        (semver) =>
+          // If semver is null, it means that the latest release tag is not a valid semver
+          semver === null &&
+          console.warn(
+            `Could not fetch latest release for ${owner}/${repo}, using fallback version ${fallbackVersion}`,
+          ),
+      )
+      // Make sure to have a non-null version
+      .map((semver) => semver ?? fallbackVersion)
+      .match(
+        (semver) => {
+          answers.githubTfProviderVersion = `${semver.major}.${semver.minor}`;
+          return `Fetched latest ${owner}/${repo} version ${answers.githubTfProviderVersion}`;
+        },
+        () => {
+          answers.githubTfProviderVersion = `${fallbackVersion.major}.${fallbackVersion.minor}`;
+          return `Failed to fetch latest release for ${owner}/${repo}, using fallback version ${answers.githubTfProviderVersion}`;
+        },
+      );
+  };
 
-  const fallback = "1.0";
-  answers.githubTfProviderVersion = fallback;
-  return `Failed to fetch latest ${owner}/${repo} version: ${githubTerraformProviderReleaseResult.error?.message ?? "unknown"}. Using fallback ${fallback}`;
-};
+export const getDxGitHubBootstrapLatestTag =
+  (
+    fallbackVersion: Config["terraform"]["dxModules"]["githubEnvironmentBootstrap"]["fallbackVersion"],
+  ): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-github-github-environment-bootstrap";
 
-export const getDxGitHubBootstrapLatestTag: ActionType = async (answers) => {
-  const owner = "pagopa-dx";
-  const repo = "terraform-github-github-environment-bootstrap";
-  const bootstrapProviderTagResult = await fetchLatestTag({
-    owner,
-    repo,
-  });
-
-  if (bootstrapProviderTagResult.isOk()) {
-    answers.dxGithubEnvironmentBootstrapVersion = `${bootstrapProviderTagResult.value?.major ?? 1}.${bootstrapProviderTagResult.value?.minor ?? 1}`;
-    return `Fetched latest ${owner}/${repo} version ${answers.dxGithubEnvironmentBootstrapVersion}`;
-  }
-
-  const fallback = "1.1";
-  answers.dxGithubEnvironmentBootstrapVersion = fallback;
-  return `Failed to fetch latest ${owner}/${repo} version: ${bootstrapProviderTagResult.error?.message ?? "unknown"}. Using fallback ${fallback}`;
-};
+    return await fetchLatestTag({
+      owner,
+      repo,
+    })
+      .map((semver) => semver ?? fallbackVersion)
+      .match(
+        (semver) => {
+          answers.dxGithubEnvironmentBootstrapVersion = `${semver.major}.${semver.minor}`;
+          return `Fetched latest ${owner}/${repo} tag ${answers.dxGithubEnvironmentBootstrapVersion}`;
+        },
+        () => {
+          answers.dxGithubEnvironmentBootstrapVersion = `${fallbackVersion.major}.${fallbackVersion.minor}`;
+          return `Failed to fetch latest tag for ${owner}/${repo}, using fallback version ${answers.dxGithubEnvironmentBootstrapVersion}`;
+        },
+      );
+  };
