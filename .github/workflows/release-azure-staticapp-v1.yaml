@@ -73,6 +73,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-ci
 
+    env:
+      WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -82,8 +85,6 @@ jobs:
         uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
-        env:
-          WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
       - name: Get Artifact path
         id: get-artifact-path
