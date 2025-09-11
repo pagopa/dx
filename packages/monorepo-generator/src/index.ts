@@ -19,7 +19,7 @@ interface ActionsDependencies {
 import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
-} from "./actions/terraform-versions.js";
+} from "./actions/terraform.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
