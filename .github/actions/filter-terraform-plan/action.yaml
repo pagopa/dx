@@ -67,13 +67,6 @@ runs:
           # Named secret/key assignments: only redact when the left-hand side is a known secret name
           # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
           -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
-
-          # JWT-like tokens (three dot-separated base64url parts). Only redact tokens that look like a JWT
-          # Appearing after a separator '=' or ':' or inside quotes.
-          -e "s/([:=]\s*\"?)([A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})/\\1[REDACTED]/gI"
-
-          # # SAS-like query params and common signed parameters (sig, se, sv, sp): redact their values
-          # -e "s/((sig|se|sp|sv)[\"']?\s*=\s*)[A-Za-z0-9%_\-\.\+]{8,}/\\1[REDACTED]/Ig"
         )
 
         echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
