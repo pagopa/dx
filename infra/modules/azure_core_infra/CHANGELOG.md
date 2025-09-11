@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.2.0
+
+### Minor Changes
+
+- eb14f05: Rewrite VPN and DNS forwarder IaC from external module to plain resources
+
 ## 2.1.4
 
 ### Patch Changes
