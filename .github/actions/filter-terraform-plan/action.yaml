@@ -55,20 +55,20 @@ runs:
         for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
           trimmed_key=$(echo "$key" | xargs)
           if [[ -n "$trimmed_key" ]]; then
-            SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\".*?\"/\\1\"[SENSITIVE VALUE]\"/I")
+            SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\".*?\"/\\1\"[REDACTED]\"/I")
           fi
         done
 
         # --- Add generic regex filters for high-risk patterns ---
         SED_EXPRESSIONS+=(
           # Anything that looks like a private key block
-          -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[SENSITIVE BLOCK]/gI"
+          -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[REDACTED]/gI"
           # Long base64-like strings (≥ 40 chars)
-          -e "s/[A-Za-z0-9+\/=]{40,}/[SENSITIVE STRING]/g"
+          -e "s/[A-Za-z0-9+\/=]{40,}/[REDACTED]/g"
           # UUID-like values
-          -e "s/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[SENSITIVE UUID]/g"
+          -e "s/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[REDACTED]/g"
           # Azure resource keys / connection strings often have '=' followed by long tokens
-          -e "s/(=)[A-Za-z0-9\/\+]{20,}/\\1[SENSITIVE TOKEN]/g"
+          -e "s/(=)[A-Za-z0-9\/\+]{20,}/\\1[REDACTED]/g"
         )
 
         echo "--- Executing Plan in: $WORKING_DIRECTORY ---"
