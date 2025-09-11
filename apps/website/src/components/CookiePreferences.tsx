@@ -6,7 +6,9 @@ interface CookiePreferencesProps {
   onConsentChange?: () => void;
 }
 
-const CookiePreferences: React.FC<CookiePreferencesProps> = ({ onConsentChange }) => {
+const CookiePreferences: React.FC<CookiePreferencesProps> = ({
+  onConsentChange,
+}) => {
   const [showConsent, setShowConsent] = useState(false);
 
   const openPreferences = () => {

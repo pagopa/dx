@@ -35,7 +35,7 @@ export default function pluginApplicationInsightsWithConsent(
       }
 
       const configJson = JSON.stringify(options);
-      
+
       return {
         headTags: [
           {

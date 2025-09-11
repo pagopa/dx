@@ -19,7 +19,7 @@ export default function LayoutWrapper(props: Props): JSX.Element {
     const checkCookieConsent = () => {
       try {
         const consent = localStorage.getItem("cookieConsent");
-        
+
         if (!consent) {
           setShowCookieBanner(true);
         } else {

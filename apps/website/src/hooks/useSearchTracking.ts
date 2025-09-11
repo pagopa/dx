@@ -76,13 +76,13 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
             const results = resultsContainer.querySelectorAll(
               '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
             );
-            
+
             // Extract result data
             const searchResults = extractSearchResults(resultsContainer);
-            
+
             // Clear any pending debounced tracking since we have real results now
             clearPendingTimeout();
-            
+
             // Track search with results - this is the MAIN tracking event
             trackSearchEvent(
               searchInput.value,
@@ -138,10 +138,10 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
             const resultElements = newDropdown.querySelectorAll(
               '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
             );
-            
+
             // Extract result data
             const searchResultTitles = extractSearchResults(newDropdown);
-            
+
             clearPendingTimeout();
             trackSearchEvent(
               searchInput.value,

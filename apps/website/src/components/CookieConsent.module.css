@@ -121,7 +121,7 @@
     flex-direction: row;
     align-items: flex-start;
   }
-  
+
   .cookieButtons {
     justify-content: flex-end;
     flex-shrink: 0;
@@ -132,7 +132,7 @@
   .cookieButtons {
     justify-content: stretch;
   }
-  
+
   .cookieButtons button {
     flex: 1;
     min-width: 120px;

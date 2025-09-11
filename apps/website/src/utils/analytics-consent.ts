@@ -26,20 +26,20 @@ export function disableAnalytics(): void {
 
   try {
     const typedWindow = window as WindowWithAnalytics;
-    
+
     // Get the Application Insights configuration
     const config = typedWindow.appInsightsPluginConfig;
     if (config) {
       // Disable telemetry
       config.config.disableTelemetry = true;
-      
+
       // If Application Insights is already loaded, update its configuration
       const appInsights = typedWindow.appInsights;
       if (appInsights) {
         appInsights.config.disableTelemetry = true;
       }
     }
-    
+
     // Delete Application Insights cookies
     deleteApplicationInsightsCookies();
   } catch {
@@ -56,19 +56,19 @@ function deleteApplicationInsightsCookies(): void {
   }
 
   // List of Application Insights cookie names
-  const aiCookies = ['ai_user', 'ai_session', 'ai_authUser'];
-  
+  const aiCookies = ["ai_user", "ai_session", "ai_authUser"];
+
   // Get current domain and all possible domain variations
   const hostname = window.location.hostname;
   const domains = [
     hostname,
     `.${hostname}`,
-    hostname.startsWith('www.') ? hostname.substring(4) : `www.${hostname}`,
-    `.${hostname.startsWith('www.') ? hostname.substring(4) : hostname}`,
+    hostname.startsWith("www.") ? hostname.substring(4) : `www.${hostname}`,
+    `.${hostname.startsWith("www.") ? hostname.substring(4) : hostname}`,
   ];
 
-  aiCookies.forEach(cookieName => {
-    domains.forEach(domain => {
+  aiCookies.forEach((cookieName) => {
+    domains.forEach((domain) => {
       // Delete cookie for each domain variation
       document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
       document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
@@ -86,20 +86,20 @@ export function enableAnalytics(): void {
 
   try {
     const typedWindow = window as WindowWithAnalytics;
-    
+
     // Get the Application Insights configuration
     const config = typedWindow.appInsightsPluginConfig;
     if (config) {
       // Enable telemetry
       config.config.disableTelemetry = false;
-      
+
       // If Application Insights is already loaded, update its configuration
       const appInsights = typedWindow.appInsights;
       if (appInsights) {
         appInsights.config.disableTelemetry = false;
       }
     }
-    
+
     // Initialize Application Insights if not already done
     const globalWindow = window as any;
     if (globalWindow.initializeAnalytics && !globalWindow.appInsights) {
@@ -120,13 +120,13 @@ export function hasAnalyticsConsent(): boolean {
 
   try {
     const consent = localStorage.getItem("cookieConsent");
-    
+
     if (!consent) {
       return false;
     }
 
     const preferences = JSON.parse(consent);
-    
+
     return preferences.analytics === true;
   } catch {
     return false;
