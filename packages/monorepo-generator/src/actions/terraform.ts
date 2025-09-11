@@ -8,6 +8,7 @@ import {
   fetchLatestRelease,
   fetchLatestTag,
 } from "../adapters/octokit/index.js";
+import { Config } from "../config.js";
 
 interface TerraformActionsDependencies {
   octokitClient: Octokit;
