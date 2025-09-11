@@ -3,6 +3,8 @@ import type { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
+
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
@@ -74,6 +76,8 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
 const getActions = (templatesPath: string): ActionType[] => [
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
+  enablePnpm,
+  addPagoPaPnpmPlugin,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
