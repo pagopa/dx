@@ -178,7 +178,7 @@ jobs:
       # Run Terraform Plan
       - name: Terraform Plan
         id: plan
-        uses: pagopa/dx/.github/actions/filter-terraform-plan@feat-terraform-plan-action # main
+        uses: pagopa/dx/.github/actions/filter-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
