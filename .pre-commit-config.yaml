@@ -35,6 +35,7 @@ repos:
             infra/modules/.*?|
             providers/.*?|
             infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
+            infra\/resources\/(?:.*\/)?(?:_?modules)\/.*
             )$
       - id: terraform_tflint
         args:
