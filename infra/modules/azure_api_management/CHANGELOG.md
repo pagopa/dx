@@ -1,5 +1,74 @@
 # azure_api_management
 
+## 2.0.1
+
+### Patch Changes
+
+- 77519e0: # Patch Changes
+
+  Fix `azure_api_management` module behavior for `cost_optimized` use case
+
+  ## Upgrade Notes
+  - Resolved an issue where terraform apply failed when using `StandardV2` SKU with `virtual_network_type = Internal`, which is not supported.
+    - The default `virtual_network_type` is now set to `External` only for the `cost_optimized` use case, while remaining `Internal` for all other cases.
+
+  - The variable `virtual_network_type_internal`, which previously defaulted to `true`, now defaults to `null` and acts as an override:
+    - If not set, defaults are applied (`Internal` for all, `External` for cost_optimized).
+    - If explicitly set, its value overrides the default behavior.
+
+  - Added support for a Private Endpoint in the `cost_optimized` scenario to enable private connectivity.
+  - `sign_up` configuration is disabled only for `cost_optimized` use case because it is not supported by consumption and V2 tier.
+  - Virtual network configuration is now created when `virtual_network_type` is set to `Internal` (as before) or when is `External` and `cost_optimized`.
+  - Variable `enable_public_network_access` work as an override: if not set, defaults are applied based on use case; if set, its value is used.
+
+  These changes have no breaking changes for module consumers.
+
+## 2.0.0
+
+### Major Changes
+
+- e379345: # Major Changes
+
+  Replaced the `tier` variable with a new `use_case` variable for tiering configuration.
+
+  ## Upgrade Notes
+
+  | Old Value | New Value      | Description                                                            |
+  | --------- | -------------- | ---------------------------------------------------------------------- |
+  | s         | development    | Ideal `development` and `testing` purposess                            |
+  | m         | cost_optimized | Ideal for `production` environments purposes, now using StandardV2 SKU |
+  | l         | high_load      | Ideal for large-scale production workloads                             |
+  | xl        | _none_         | Now don't exist                                                        |
+
+  This change simplifies and clarifies the selection of API Management tiers.
+
+  For Example:
+  - **Before**
+
+    ```hcl
+    module "apim" {
+      source  = "pagopa-dx/azure-api-management/azurerm
+      version = "~> 1.0"
+
+      tier    = "m"
+
+      # ...other variables...
+    }
+    ```
+
+  - **After**
+
+    ```hcl
+    module "apim" {
+      source  = "pagopa-dx/azure-api-management/azurerm
+      version = "~> 2.0"
+
+      use_case = "cost_optimized"
+
+      # ...other variables remain unchanged...
+    }
+    ```
+
 ## 1.2.2
 
 ### Patch Changes

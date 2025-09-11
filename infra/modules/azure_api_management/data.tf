@@ -20,3 +20,10 @@ data "azurerm_private_dns_zone" "scm_azure_api_net" {
   name                = "scm.azure-api.net"
   resource_group_name = local.private_dns_zone_resource_group_name
 }
+
+data "azurerm_private_dns_zone" "apim" {
+  count = local.use_case_features.private_endpoint ? 1 : 0
+
+  name                = "privatelink.azure-api.net"
+  resource_group_name = local.private_dns_zone_resource_group_name
+}

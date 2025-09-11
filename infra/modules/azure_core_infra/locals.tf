@@ -32,5 +32,6 @@ locals {
     "management_azure_api_net" = "management.azure-api.net"
     "scm_azure_api_net"        = "scm.azure-api.net"
     "container_app"            = "privatelink.italynorth.azurecontainerapps.io"
+    "apim"                     = "privatelink.azure-api.net"
   }
 }

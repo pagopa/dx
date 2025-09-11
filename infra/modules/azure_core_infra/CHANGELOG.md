@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.1.4
+
+### Patch Changes
+
+- b3293b3: Add DNS Private Zone for API Management
+
 ## 2.1.3
 
 ### Patch Changes
