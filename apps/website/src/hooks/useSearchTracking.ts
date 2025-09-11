@@ -45,10 +45,8 @@ const trackSearchEvent = (
         url: window.location.href,
       },
     });
-  } catch (error) {
-    // Error tracking - keeping for debugging but can be removed in production
-    // eslint-disable-next-line no-console
-    console.error("❌ Error tracking search event:", error);
+  } catch {
+    // Silent error handling for production
   }
 };
 
@@ -264,7 +262,17 @@ const extractLinkedResults = (resultsContainer: Element): string[] => {
       const element = link as HTMLAnchorElement;
       const href = element.href;
 
-      if (href && !href.startsWith("javascript:")) {
+      // Check for safe URL schemes only
+      const isSafeUrl =
+        href &&
+        (href.startsWith("http://") ||
+          href.startsWith("https://") ||
+          href.startsWith("/") ||
+          href.startsWith("./") ||
+          href.startsWith("../") ||
+          href.startsWith("#"));
+
+      if (isSafeUrl) {
         let title = element.textContent?.trim() || "";
 
         if (!title) {

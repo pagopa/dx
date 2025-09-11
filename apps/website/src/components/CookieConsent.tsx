@@ -62,7 +62,6 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
   };
 
   const savePreferences = () => {
-    console.log("CookieConsent: Saving preferences:", preferences);
     localStorage.setItem("cookieConsent", JSON.stringify(preferences));
     setShowPreferences(false);
 
