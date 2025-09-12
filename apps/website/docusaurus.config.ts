@@ -54,8 +54,7 @@ const config: Config = {
           enableRequestHeaderTracking: true,
           enableResponseHeaderTracking: true,
           enableUnhandledPromiseRejectionTracking: true,
-          instrumentationKey:
-            process.env.APPLICATIONINSIGHTS_INSTRUMENTATION_KEY,
+          instrumentationKey: "e0ff8094-78fa-45e5-a21d-e62b453dc5d1",
         },
         enableClickAnalytics: false,
       },
