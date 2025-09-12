@@ -1,4 +1,4 @@
-import { okAsync } from "neverthrow";
+import { ok, okAsync } from "neverthrow";
 import { describe, expect, it, vi } from "vitest";
 
 import type { Codemod } from "../../../domain/codemod.js";
@@ -17,11 +17,7 @@ describe("LocalCodemodRegistry", () => {
 
     const result = await registry.getAll();
 
-    expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      expect(Array.isArray(result.value)).toBe(true);
-      expect(result.value).toHaveLength(0);
-    }
+    expect(result).toStrictEqual(ok([]));
   });
 
   it("adds codemods and lists them via getAll", async () => {
