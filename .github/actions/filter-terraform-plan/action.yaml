@@ -50,11 +50,15 @@ runs:
         fi
 
         # --- Dynamically build the sed filter expressions ---
+        # Builds an array of sed filter expressions from the comma-separated SENSITIVE_KEYS.
+
         SED_EXPRESSIONS=()
 
         for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
           trimmed_key=$(echo "$key" | xargs)
           if [[ -n "$trimmed_key" ]]; then
+            # Matches an optional-quoted key followed by : or =, then a quoted value;
+            # it captures the left side and replaces the value with "[REDACTED]" (non-greedy match, case-insensitive).
             SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\".*?\"/\\1\"[REDACTED]\"/I")
           fi
         done

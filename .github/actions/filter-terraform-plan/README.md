@@ -1,7 +1,3 @@
----
-sidebar_position: 50
----
-
 # Filter Terraform Plan Action
 
 ## Purpose
@@ -12,7 +8,7 @@ on PRs or optionally upload as an artifact. It's intended for CI workflows that
 need a readable, sanitized plan to help reviewers understand infrastructure
 changes without leaking secrets.
 
-## How it works (high level)
+## How it works
 
 - Accepts a working directory and a comma-separated list of sensitive keys.
 - Optionally disables state refresh to speed up repeated runs.
