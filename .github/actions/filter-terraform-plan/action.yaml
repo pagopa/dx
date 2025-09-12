@@ -1,5 +1,5 @@
 name: "Run and Filter Terraform Plan"
-description: "Executes `terraform plan`, removes sensitive information from the output, and strips all unnecessary log lines."
+description: "Executes terraform plan, removes sensitive information from the output, and strips all unnecessary log lines."
 
 inputs:
   base-path:
@@ -103,16 +103,16 @@ runs:
         # --- Reduce file size ---
         # Extracts only the diff section from the Plan by skipping everything before the resource changes,
         # and filters out non-essential log lines like state refreshes and reads.
-        if [ -s $PLAN_FILE ]; then
-          sed -n '/^  #/,$p' $PLAN_FILE | grep -Ev "Refreshing state|state lock|Reading|Read" > ${PLAN_FILE}.tmp || echo "No changes detected." > ${PLAN_FILE}.tmp
+        if [ -s "$PLAN_FILE" ]; then
+          sed -n '/^  #/,$p' "$PLAN_FILE" | grep -Ev "Refreshing state|state lock|Reading|Read" > "${PLAN_FILE}.tmp" || echo "No changes detected." > "${PLAN_FILE}.tmp"
         else
-          echo "No plan output available." > ${PLAN_FILE}.tmp
+          echo "No plan output available." > "${PLAN_FILE}.tmp"
         fi
-        mv ${PLAN_FILE}.tmp $PLAN_FILE
+        mv "${PLAN_FILE}.tmp" "$PLAN_FILE"
 
         # --- Extract Summary Line ---
         # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
-        SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" $PLAN_FILE || echo "No changes.")
+        SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" "$PLAN_FILE" || echo "No changes.")
 
         # --- Define outputs ---
         echo "filtered_plan_path=$WORKING_DIRECTORY/$PLAN_FILE" >> $GITHUB_OUTPUT
