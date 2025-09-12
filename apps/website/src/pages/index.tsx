@@ -5,7 +5,7 @@ export default function Home() {
   const history = useHistory();
 
   useEffect(() => {
-    history.replace("/dx/docs/");
+    history.replace("/docs/");
   }, [history]);
 
   return null;

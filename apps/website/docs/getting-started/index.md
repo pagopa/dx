@@ -78,7 +78,7 @@ All DX Terraform modules are available on
 under the `pagopa-dx` organization.
 
 Of course,
-[everyone can contribute](https://pagopa.github.io/dx/docs/infrastructure/contributing-to-dx-terraform-modules/)
+[everyone can contribute](https://dx.pagopa.it/docs/infrastructure/contributing-to-dx-terraform-modules/)
 to improve them.
 
 ### GitHub Workflows
@@ -105,7 +105,7 @@ If DX tooling is appreciated, there's much more to discover on this website:
 - **Infrastructure**: DX tooling for cloud-related topics.
 - **Pipelines**: DX tooling for GitHub Actions.
 
-Stay up to date with DX [blog](https://pagopa.github.io/dx/blog/)!
+Stay up to date with DX [blog](https://dx.pagopa.it/blog/)!
 
 ## Contributing
 

@@ -100,7 +100,7 @@ We're glad you're interested! You may stay updated watching our
 
 We will publish a blog post with a changelog every time we release a new
 significant feature or update. You'll find these posts on our
-[documentation website](https://pagopa.github.io/dx/).
+[documentation website](https://dx.pagopa.it/).
 
 ## How to contribute
 
