@@ -62,7 +62,7 @@ a full integration; this snippet shows the essential call:
 ```yaml
 - name: Terraform Plan
   id: plan
-  uses: pagopa/dx/.github/actions/filter-terraform-plan@main
+  uses: pagopa/dx/infra/actions/filter-terraform-plan@main
   with:
     base-path: infra/resources/prod
     sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -89,7 +89,7 @@ fail the run depending on its policies.
   attach the full sanitized plan as an artifact.
 
 For implementation details and exact behavior refer to
-[dx/.github/actions/filter-terraform-plan/action.yaml](https://github.com/pagopa/dx/blob/main/.github/actions/filter-terraform-plan/action.yaml),
+[dx/.github/actions/filter-terraform-plan/action.yaml](https://github.com/pagopa/dx/blob/main/actions/filter-terraform-plan/action.yaml),
 or the
 [infra_plan.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml)
 in this repository.

@@ -1,0 +1,19 @@
+{
+  "name": "filter-terraform-plan",
+  "description": "A GitHub action to run and filter terraform plan.",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "github",
+    "action",
+    "terraform",
+    "plan"
+  ],
+  "scripts": {
+    "lint": "shellcheck filter-plan.sh"
+  },
+  "devDependencies": {
+    "shellcheck": "^0.9.0"
+  }
+}

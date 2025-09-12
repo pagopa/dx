@@ -1,0 +1,65 @@
+name: "Run and Filter Terraform Plan"
+description: "Executes terraform plan, removes sensitive information from the output, and strips all unnecessary log lines."
+
+inputs:
+  base-path:
+    description: "The directory where terraform plan will be executed. (Defaults to the root of the repository)"
+    required: false
+    default: "."
+  no-refresh:
+    description: "If true, the terraform plan will be executed with the -refresh=false and -lock=false flags."
+    required: false
+    default: "false"
+  sensitive-keys:
+    description: "A comma-separated list of sensitive keys to filter from the plan output."
+    required: true
+  upload-artifact:
+    description: "If true, the filtered plan will be uploaded as an artifact."
+    required: false
+    default: "false"
+
+outputs:
+  summary_line:
+    description: "A summary line indicating the number of resources to be added, changed, or destroyed."
+    value: ${{ steps.plan.outputs.summary_line }}
+  filtered_plan_path:
+    description: "The path to the file containing the filtered output of the `terraform plan` command."
+    value: ${{ steps.plan.outputs.filtered_plan_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Terraform Refresh
+      shell: bash
+      run: |
+        if [ "$NO_REFRESH" == "true" ]; then
+          echo "ADDITIONAL_FLAGS=-refresh=false -lock=false" >> $GITHUB_ENV
+        else
+          echo "ADDITIONAL_FLAGS=" >> $GITHUB_ENV
+        fi
+      env:
+        NO_REFRESH: ${{ inputs.no-refresh }}
+
+    - name: Run Terraform Plan and Filter Output
+      id: plan
+      shell: bash
+      working_directory: ${{ inputs.base-path }}
+      run: |
+        sh $GITHUB_ACTION_PATH/run_plan.sh
+
+        # --- Define outputs ---
+        echo "filtered_plan_path=$WORKING_DIRECTORY/$PLAN_FILE" >> $GITHUB_OUTPUT
+      env:
+        WORKING_DIRECTORY: ${{ inputs.base-path }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        SENSITIVE_KEYS: ${{ inputs.sensitive-keys }}
+        PLAN_FILE: filtered_plan.txt
+
+    - name: Upload Artifact
+      if: ${{ inputs.upload-artifact == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: filtered-terraform-plan
+        path: ${{ steps.plan.outputs.filtered_plan_path }}
+        if-no-files-found: error
+        retention-days: 7
