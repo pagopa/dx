@@ -43,7 +43,7 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
-# --- 3. Final validation of required parameters ---
+# --- Validation of required parameters ---
 if [[ -z "$SENSITIVE_KEYS" || -z "$PLAN_FILE" ]]; then
   echo "::error::The following parameters are required (via arguments or environment variables): --working-directory, --plan-file, --sensitive-keys"
   usage
