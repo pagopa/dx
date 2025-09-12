@@ -11,7 +11,7 @@
     "plan"
   ],
   "scripts": {
-    "lint": "shellcheck filter-plan.sh"
+    "lint": "shellcheck run_plan.sh"
   },
   "devDependencies": {
     "shellcheck": "^0.9.0"
