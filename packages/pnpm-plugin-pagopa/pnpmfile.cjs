@@ -4,6 +4,7 @@ module.exports = {
       config.workspacePackagePatterns ??= ["apps/*", "packages/*"];
       config.linkWorkspacePackages ??= true;
       config.packageImportMethod ??= "clone-or-copy";
+      config.cleanupUnusedCatalogs ??= true;
       config.catalogs ??= {};
       config.catalogs.dx = {
         "@pagopa/eslint-config": "^5.0.0",
