@@ -15,9 +15,5 @@ locals {
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
     Source         = "https://github.com/pagopa/dx/modules/azure_core_infra/examples/complete"
-
-    hidden-link = "https://example.com/hidden-link"
-    testPassword = "testPasswordtest"
-    APPINSIGHTS_INSTRUMENTATIONKEY = "12345-abcde-67890-fghij"
   }
 }
