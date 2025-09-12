@@ -8,7 +8,7 @@ import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
-import { applyCodemod } from "./use-cases/apply-codemod.js";
+import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
 
 await configure({
@@ -56,7 +56,7 @@ if (repoPackageJson.isErr()) {
 const packageJson = repoPackageJson.value;
 
 const deps: Dependencies = {
-  applyCodemod: applyCodemod(codemodRegistry),
+  applyCodemodById: applyCodemodById(codemodRegistry),
   listCodemods: listCodemods(codemodRegistry),
   packageJson,
   packageJsonReader,

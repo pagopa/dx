@@ -2,11 +2,11 @@ import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 import { CodemodRegistry } from "../domain/codemod.js";
 
-export type ApplyCodemod = (id: string) => ResultAsync<void, Error>;
+export type ApplyCodemodById = (id: string) => ResultAsync<void, Error>;
 
-export const applyCodemod =
-  (registry: CodemodRegistry): ApplyCodemod =>
-  (id: string) =>
+export const applyCodemodById =
+  (registry: CodemodRegistry): ApplyCodemodById =>
+  (id) =>
     registry
       .getById(id)
       .andThen((codemod) =>

@@ -1,15 +1,15 @@
 import { Command } from "commander";
 
-import { ApplyCodemod } from "../../../use-cases/apply-codemod.js";
+import { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
 import { ListCodemods } from "../../../use-cases/list-codemods.js";
 
 export type CodemodCommandDependencies = {
-  applyCodemod: ApplyCodemod;
+  applyCodemodById: ApplyCodemodById;
   listCodemods: ListCodemods;
 };
 
 export const makeCodemodCommand = ({
-  applyCodemod,
+  applyCodemodById,
   listCodemods,
 }: CodemodCommandDependencies) =>
   new Command("codemod")
@@ -31,7 +31,7 @@ export const makeCodemodCommand = ({
         .argument("<id>", "The id of the codemod to apply")
         .description("Apply migration scripts to the repository")
         .action(async function (id) {
-          await applyCodemod(id)
+          await applyCodemodById(id)
             .andTee(() => {
               // eslint-disable-next-line no-console
               console.log("Codemod applied successfully ✅");
