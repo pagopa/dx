@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Codemod, CodemodRegistry } from "../../domain/codemod.js";
 
-import { applyCodemod } from "../apply-codemod.js";
+import { applyCodemodById } from "../apply-codemod.js";
 
-describe("applyCodemod", () => {
+describe("applyCodemodById", () => {
   it("applies the codemod when found", async () => {
     const apply: Codemod["apply"] = vi.fn(() => okAsync(undefined));
 
@@ -22,7 +22,7 @@ describe("applyCodemod", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(codemod)),
     };
 
-    const result = await applyCodemod(registry)("foo");
+    const result = await applyCodemodById(registry)("foo");
 
     expect(result.isOk()).toBe(true);
     expect(apply).toHaveBeenCalledTimes(1);
@@ -36,7 +36,7 @@ describe("applyCodemod", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(undefined)),
     };
 
-    const result = await applyCodemod(registry)("missing-id");
+    const result = await applyCodemodById(registry)("missing-id");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -54,7 +54,7 @@ describe("applyCodemod", () => {
         .mockReturnValue(errAsync<Codemod | undefined, Error>(registryError)),
     };
 
-    const result = await applyCodemod(registry)("foo");
+    const result = await applyCodemodById(registry)("foo");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -77,7 +77,7 @@ describe("applyCodemod", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(codemod)),
     };
 
-    const result = await applyCodemod(registry)("foo");
+    const result = await applyCodemodById(registry)("foo");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
