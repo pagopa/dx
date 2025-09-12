@@ -45,7 +45,7 @@ runs:
       shell: bash
       run: |
         cd $WORKING_DIRECTORY
-        sh $GITHUB_ACTION_PATH/run_plan.sh
+        bash $GITHUB_ACTION_PATH/run_plan.sh
 
         # --- Define outputs ---
         echo "filtered_plan_path=$WORKING_DIRECTORY/$PLAN_FILE" >> $GITHUB_OUTPUT
