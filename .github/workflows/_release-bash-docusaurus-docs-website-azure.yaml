@@ -15,7 +15,7 @@ on:
 
 jobs:
   deploy_to_static_web_app:
-    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@add-cookie-and-privacy-policy-dx-website # Path to the reusable workflow
+    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
     secrets: inherit
     with:
       workspace_name: "docs" # The 'name' from the app's package.json
@@ -23,4 +23,3 @@ jobs:
       static_web_app_name: "dx-p-itn-website-stapp-01"
       resource_group_name: "dx-p-itn-common-rg-01"
       environment: "app-prod"
-      build_env_vars: "APPLICATIONINSIGHTS_INSTRUMENTATION_KEY"
