@@ -28,7 +28,7 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = () => ({
-  applyCodemod: vi.fn(),
+  applyCodemodById: vi.fn(),
   listCodemods: vi.fn(),
   packageJson: makeMockPackageJson(),
   packageJsonReader: mock<PackageJsonReader>(),
