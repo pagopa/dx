@@ -62,7 +62,7 @@ a full integration; this snippet shows the essential call:
 ```yaml
 - name: Terraform Plan
   id: plan
-  uses: pagopa/dx/infra/actions/filter-terraform-plan@main
+  uses: pagopa/dx/actions/filter-terraform-plan@main
   with:
     base-path: infra/resources/prod
     sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
