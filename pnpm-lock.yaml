@@ -72,6 +72,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.2
 
+  actions/filter-terraform-plan: {}
+
   actions/pr-comment:
     dependencies:
       '@actions/core':

@@ -10,10 +10,6 @@
     "terraform",
     "plan"
   ],
-  "scripts": {
-    "lint": "shellcheck run_plan.sh"
-  },
-  "devDependencies": {
-    "shellcheck": "^0.9.0"
-  }
+  "scripts": {},
+  "devDependencies": {}
 }
