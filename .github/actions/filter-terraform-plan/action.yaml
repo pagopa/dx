@@ -1,22 +1,22 @@
-name: 'Run and Filter Terraform Plan'
-description: 'Executes `terraform plan`, removes sensitive information from the output, and strips all unnecessary log lines.'
+name: "Run and Filter Terraform Plan"
+description: "Executes `terraform plan`, removes sensitive information from the output, and strips all unnecessary log lines."
 
 inputs:
   base-path:
-    description: 'The directory where terraform plan will be executed. (Defaults to the root of the repository)'
+    description: "The directory where terraform plan will be executed. (Defaults to the root of the repository)"
     required: false
-    default: '.'
+    default: "."
   no-refresh:
-    description: 'If true, the terraform plan will be executed with the -refresh=false and -lock=false flags.'
+    description: "If true, the terraform plan will be executed with the -refresh=false and -lock=false flags."
     required: false
-    default: 'false'
+    default: "false"
   sensitive-keys:
-    description: 'A comma-separated list of sensitive keys to filter from the plan output.'
+    description: "A comma-separated list of sensitive keys to filter from the plan output."
     required: true
   upload-artifact:
-    description: 'If true, the filtered plan will be uploaded as an artifact.'
+    description: "If true, the filtered plan will be uploaded as an artifact."
     required: false
-    default: 'false'
+    default: "false"
 
 outputs:
   summary_line:
