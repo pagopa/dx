@@ -45,7 +45,7 @@ runs:
       shell: bash
       run: |
         if [[ -z "$SENSITIVE_KEYS" ]]; then
-          echo "Error: The 'sensitive-keys' input is required."
+          echo "::error::The 'sensitive-keys' input is required."
           exit 1
         fi
 
