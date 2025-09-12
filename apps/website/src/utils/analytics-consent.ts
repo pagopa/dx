@@ -9,11 +9,16 @@ interface ApplicationInsightsInstance {
   config: {
     disableTelemetry: boolean;
   };
+  trackEvent: (event: {
+    name: string;
+    properties: Record<string, unknown>;
+  }) => void;
 }
 
 interface WindowWithAnalytics extends Window {
   appInsights?: ApplicationInsightsInstance;
   appInsightsPluginConfig?: ApplicationInsightsConfig;
+  initializeAnalytics?: () => void;
 }
 
 /**
@@ -25,7 +30,7 @@ export function disableAnalytics(): void {
   }
 
   try {
-    const typedWindow = window as WindowWithAnalytics;
+    const typedWindow = window as unknown as WindowWithAnalytics;
 
     // Get the Application Insights configuration
     const config = typedWindow.appInsightsPluginConfig;
@@ -44,6 +49,62 @@ export function disableAnalytics(): void {
     deleteApplicationInsightsCookies();
   } catch {
     // Silently handle errors
+  }
+}
+
+/**
+ * Enable analytics tracking by updating the Application Insights configuration
+ */
+export function enableAnalytics(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const typedWindow = window as unknown as WindowWithAnalytics;
+
+    // Get the Application Insights configuration
+    const config = typedWindow.appInsightsPluginConfig;
+    if (config) {
+      // Enable telemetry
+      config.config.disableTelemetry = false;
+
+      // If Application Insights is already loaded, update its configuration
+      const appInsights = typedWindow.appInsights;
+      if (appInsights) {
+        appInsights.config.disableTelemetry = false;
+      }
+    }
+
+    // Initialize Application Insights if not already done
+    if (typedWindow.initializeAnalytics && !typedWindow.appInsights) {
+      typedWindow.initializeAnalytics();
+    }
+  } catch {
+    // Silently handle errors
+  }
+}
+
+/**
+ * Utility to check if analytics cookies are consented to
+ */
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    const consent = localStorage.getItem("cookieConsent");
+
+    if (!consent) {
+      return false;
+    }
+
+    const preferences = JSON.parse(consent);
+
+    return preferences.analytics === true;
+  } catch {
+    return false;
   }
 }
 
@@ -74,61 +135,4 @@ function deleteApplicationInsightsCookies(): void {
       document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     });
   });
-}
-
-/**
- * Enable analytics tracking by updating the Application Insights configuration
- */
-export function enableAnalytics(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    const typedWindow = window as WindowWithAnalytics;
-
-    // Get the Application Insights configuration
-    const config = typedWindow.appInsightsPluginConfig;
-    if (config) {
-      // Enable telemetry
-      config.config.disableTelemetry = false;
-
-      // If Application Insights is already loaded, update its configuration
-      const appInsights = typedWindow.appInsights;
-      if (appInsights) {
-        appInsights.config.disableTelemetry = false;
-      }
-    }
-
-    // Initialize Application Insights if not already done
-    const globalWindow = window as any;
-    if (globalWindow.initializeAnalytics && !globalWindow.appInsights) {
-      globalWindow.initializeAnalytics();
-    }
-  } catch {
-    // Silently handle errors
-  }
-}
-
-/**
- * Utility to check if analytics cookies are consented to
- */
-export function hasAnalyticsConsent(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  try {
-    const consent = localStorage.getItem("cookieConsent");
-
-    if (!consent) {
-      return false;
-    }
-
-    const preferences = JSON.parse(consent);
-
-    return preferences.analytics === true;
-  } catch {
-    return false;
-  }
 }

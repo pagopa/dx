@@ -10,15 +10,12 @@ import { ApplicationInsights } from "@microsoft/applicationinsights-web";
 
 import { hasAnalyticsConsent } from "../utils/analytics-consent";
 
-interface WindowWithAppInsights extends Window {
+interface GlobalWindow extends Window {
+  appInsights?: ApplicationInsights;
   appInsightsPluginConfig?: {
     config: Record<string, unknown>;
     enableClickAnalytics?: boolean;
   };
-  appInsights?: ApplicationInsights;
-}
-
-interface GlobalWindow extends Window {
   initializeAnalytics?: () => void;
 }
 
@@ -28,7 +25,7 @@ let appInsights: ApplicationInsights;
 function initializeAppInsights() {
   if (typeof window === "undefined") return;
 
-  const typedWindow = window as WindowWithAppInsights;
+  const typedWindow = window as unknown as GlobalWindow;
   const pluginConfig = typedWindow.appInsightsPluginConfig;
 
   if (!pluginConfig || appInsights) return; // Already initialized or no config
@@ -41,8 +38,7 @@ function initializeAppInsights() {
     appInsights.loadAppInsights();
 
     // Make appInsights globally available
-    const globalWindow = window as any;
-    globalWindow.appInsights = appInsights;
+    typedWindow.appInsights = appInsights;
 
     // Track initial page view
     appInsights.trackPageView({
@@ -54,17 +50,13 @@ function initializeAppInsights() {
 }
 
 // Make the initialization function globally available
-interface GlobalWindow extends Window {
-  initializeAnalytics?: () => void;
-}
-
 if (typeof window !== "undefined") {
-  const globalWindow = window as GlobalWindow;
+  const globalWindow = window as unknown as GlobalWindow;
   globalWindow.initializeAnalytics = initializeAppInsights;
 }
 
 if (typeof window !== "undefined") {
-  const typedWindow = window as WindowWithAppInsights;
+  const typedWindow = window as unknown as GlobalWindow;
   const pluginConfig = typedWindow.appInsightsPluginConfig;
 
   if (pluginConfig) {
@@ -83,27 +75,19 @@ if (typeof window !== "undefined") {
 
         appInsights.loadAppInsights();
 
-        const globalWindow = window as any;
-        globalWindow.appInsights = appInsights;
+        typedWindow.appInsights = appInsights;
 
-        // Only track page view if user has consented
-        try {
-          appInsights.trackPageView({
-            name: window.location.pathname + window.location.search,
-          });
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.error("❌ Error tracking initial page view:", error);
-        }
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error("❌ Error initializing Application Insights:", error);
+        // Track initial page view
+        appInsights.trackPageView({
+          name: window.location.pathname + window.location.search,
+        });
+      } catch {
+        // Silent error handling for production
       }
     } else {
       // User has not consented - don't initialize Application Insights at all
       // This prevents any cookies from being created
-      const globalWindow = window as any;
-      globalWindow.appInsights = null;
+      typedWindow.appInsights = undefined;
     }
   }
 }
@@ -126,8 +110,8 @@ const clientModule: ClientModule = {
           appInsights.trackPageView({
             name: pageName,
           });
-        } catch (error) {
-          console.error("❌ Error tracking page view:", error);
+        } catch {
+          // Silent error handling for production
         }
       }
     }
