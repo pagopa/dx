@@ -43,8 +43,8 @@ runs:
     - name: Run Terraform Plan and Filter Output
       id: plan
       shell: bash
-      working_directory: ${{ inputs.base-path }}
       run: |
+        cd $WORKING_DIRECTORY
         sh $GITHUB_ACTION_PATH/run_plan.sh
 
         # --- Define outputs ---
