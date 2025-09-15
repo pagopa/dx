@@ -171,8 +171,13 @@ const apply: Codemod["apply"] = async (info) => {
 
   // Import lockfile
   logger.info("Importing yarn.lock to pnpm-lock.yaml...");
-  await $`corepack pnpm import yarn.lock`;
-  await removeFiles("yarn.lock");
+  try {
+    await fs.access("yarn.lock");
+    await $`corepack pnpm import yarn.lock`;
+    await removeFiles("yarn.lock");
+  } catch {
+    logger.info("No yarn.lock file found, skipping import.");
+  }
 
   // Replace yarn occurrences in files and update workflows
   logger.info("Replacing yarn occurrences in files...");
