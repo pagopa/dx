@@ -28,6 +28,14 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
     templateFiles: path.join(templatesPath, ".*"),
     type: "addMany",
   },
+  {
+    abortOnFail: true,
+    base: `${templatesPath}/.github/workflows`,
+    destination: "{{repoSrc}}/{{repoName}}/.github/workflows",
+    globOptions: { dot: true, onlyFiles: true },
+    templateFiles: path.join(templatesPath, ".github", "workflows", "*"),
+    type: "addMany",
+  },
 ];
 
 const getMonorepoFiles = (templatesPath: string): ActionType[] => [
