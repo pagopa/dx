@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.2.1
+
+### Patch Changes
+
+- 330fce6: Fix virtual network gateway generation and sku
+
 ## 2.2.0
 
 ### Minor Changes
