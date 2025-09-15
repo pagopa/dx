@@ -165,7 +165,7 @@ const config: Config = {
   title: "DX",
 
   // Set the production url of your site here
-  url: "https://pagopa.github.io",
+  url: "https://dx.pagopa.it",
 };
 
 export default config;
