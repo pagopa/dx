@@ -40,6 +40,11 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
 
 const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   {
+    path: "{{repoSrc}}/{{repoName}}/turbo.json",
+    templateFile: path.join(templatesPath, "turbo.json"),
+    type: "add",
+  },
+  {
     path: "{{repoSrc}}/{{repoName}}/package.json",
     templateFile: path.join(templatesPath, "package.json.hbs"),
     type: "add",
