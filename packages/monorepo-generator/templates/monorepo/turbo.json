@@ -14,11 +14,11 @@
     },
     "format:check": {},
     "test": {
-      "dependsOn": ["^test"],
+      "dependsOn": ["^build"],
       "inputs": [],
       "outputLogs": "errors-only"
     },
-    "//#test:coverage": {
+    "test:coverage": {
       "dependsOn": ["^build"],
       "inputs": [],
       "outputs": ["coverage"],
