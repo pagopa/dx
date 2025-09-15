@@ -27,7 +27,7 @@ export const fetchLatestTag = ({ owner, repo }: GitHubReleaseParam) =>
     // Sort tags in ascending order
     .map(semverSort)
     // Get the latest tag
-    .map((tags) => tags.pop());
+    .map((tags) => tags.pop() ?? null);
 
 export const fetchLatestRelease = ({ owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(

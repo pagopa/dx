@@ -8,7 +8,6 @@ import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
 } from "./actions/terraform.js";
-import { defaultConfig } from "./config.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -89,13 +88,8 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
 ];
 
 const getActions = (templatesPath: string): ActionType[] => [
-  getGitHubTerraformProviderLatestRelease(
-    defaultConfig.terraform.providers.github.fallbackVersion,
-  ),
-  getDxGitHubBootstrapLatestTag(
-    defaultConfig.terraform.dxModules.githubEnvironmentBootstrap
-      .fallbackVersion,
-  ),
+  getGitHubTerraformProviderLatestRelease(),
+  getDxGitHubBootstrapLatestTag(),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
