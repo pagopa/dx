@@ -93,16 +93,27 @@ variable "subnet_id" {
   description = "The ID of the subnet that will be used for the API Management."
 }
 
+variable "subnet_pep_id" {
+  type        = string
+  description = "ID of the subnet hosting private endpoints."
+  default     = null
+
+  validation {
+    condition     = local.use_case_features.private_endpoint != true || var.subnet_pep_id != null
+    error_message = "You must provide a subnet_pep_id when use_case use StandardV2 SKU."
+  }
+}
+
 variable "virtual_network_type_internal" {
   type        = bool
   description = "Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet_id; otherwise, it will be None."
-  default     = true
+  default     = null
 }
 
 variable "enable_public_network_access" {
   type        = bool
   description = "Specifies whether public network access is enabled."
-  default     = false
+  default     = null
 }
 
 variable "public_ip_address_id" {

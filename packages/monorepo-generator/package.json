@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -14,16 +14,25 @@
     "dx",
     "pagopa"
   ],
-  "dependencies": {},
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "main": "dist/index.js",
+  "peerDependencies": {
+    "plop": "catalog:"
+  },
   "devDependencies": {
+    "plop": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:dx",
+    "tsup": "catalog:",
     "typescript": "catalog:"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
