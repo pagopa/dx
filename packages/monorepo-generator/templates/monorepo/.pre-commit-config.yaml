@@ -1,13 +1,13 @@
 repos:
   - repo: https://github.com/pagopa/dx
-    rev: pre_commit_scripts@0.1.0 # TODO: use a variable here
+    rev: pre_commit_scripts@0.1.0 # TODO: use a variable here: https://pagopa.atlassian.net/browse/CES-1276
     hooks:
       - id: terraform_providers_lock_staged
       - id: lock_modules
         exclude: ^.*/(_modules|modules|\.terraform)(/.*)?$
         files: infra/(resources/prod|repository)
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.100.0 # TODO: use a variable here
+    rev: v1.100.0 # TODO: use a variable here: https://pagopa.atlassian.net/browse/CES-1276
     hooks:
       - id: terraform_tflint
         args:
@@ -32,3 +32,4 @@ repos:
         args:
           - --args=--skip-dirs="**/.terraform"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
+# TODO: add pnpm code-review when available https://pagopa.atlassian.net/browse/CES-1277
