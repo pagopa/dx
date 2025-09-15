@@ -27,8 +27,8 @@ resource "azurerm_virtual_network_gateway" "this" {
   vpn_type      = "RouteBased"
   active_active = local.use_cases[var.vpn_use_case].vpn_connections_number > 1 ? true : false
   enable_bgp    = var.aws_vpn_enabled
-  sku           = var.vpn_use_case == "high_availability" ? "VpnGw2" : "VpnGw1"
-  generation    = "Generation2"
+  sku           = local.use_cases[var.vpn_use_case].sku
+  generation    = "Generation${local.use_cases[var.vpn_use_case].generation}"
 
   dynamic "ip_configuration" {
     for_each = azurerm_public_ip.this
