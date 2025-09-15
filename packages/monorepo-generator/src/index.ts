@@ -20,7 +20,6 @@ import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
 } from "./actions/terraform.js";
-import { defaultConfig } from "./config.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {

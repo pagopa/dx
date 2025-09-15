@@ -8,7 +8,27 @@ import {
   fetchLatestRelease,
   fetchLatestTag,
 } from "../adapters/octokit/index.js";
-import { Config } from "../config.js";
+
+const fetchLatestSemver = (
+  fetchSemverFn: () => ResultAsync<null | SemVer, Error>,
+  answers: Record<string, unknown>,
+  answerKey: string,
+) =>
+  fetchSemverFn()
+    .andThen((semver) =>
+      semver ? okAsync(semver) : errAsync(new Error("Invalid version found")),
+    )
+    .match(
+      ({ major, minor }) => {
+        answers[answerKey] = `${major}.${minor}`;
+        return `Fetched latest version: ${answers[answerKey]}`;
+      },
+      ({ message }) => {
+        // eslint-disable-next-line no-console
+        console.warn(`Could not fetch latest version`);
+        throw new Error(message);
+      },
+    );
 
 interface TerraformActionsDependencies {
   octokitClient: Octokit;
