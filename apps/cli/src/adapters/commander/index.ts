@@ -8,6 +8,7 @@ import {
 } from "./commands/codemod.js";
 import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
+import { makeInitCommand } from "./commands/init.js";
 import { makeVersionCommand } from "./commands/version.js";
 
 export type CliDependencies = CodemodCommandDependencies;
@@ -28,6 +29,7 @@ export const makeCli = (deps: Dependencies, config: Config) => {
 
   program.addCommand(makeVersionCommand());
   program.addCommand(makeInfoCommand(deps, config));
+  program.addCommand(makeInitCommand());
 
   return program;
 };
