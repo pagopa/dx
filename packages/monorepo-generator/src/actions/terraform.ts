@@ -30,7 +30,7 @@ const fetchLatestSemver = (
       ({ message }) => {
         // eslint-disable-next-line no-console
         console.warn(`Could not fetch latest version`);
-        // Plop handle the Promise rejection or exception thrown as a failure
+        // Plop handles the Promise rejection or exception thrown as a failure
         throw new Error(message);
       },
     );
