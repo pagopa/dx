@@ -4,16 +4,15 @@ import semverParse from "semver/functions/parse.js";
 import semverSort from "semver/functions/sort.js";
 
 interface GitHubReleaseParam {
+  client: Octokit;
   owner: string;
   repo: string;
 }
 
-const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
-export const fetchLatestTag = ({ owner, repo }: GitHubReleaseParam) =>
+export const fetchLatestTag = ({ client, owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(
     // Get repository tags
-    octokit.request("GET /repos/{owner}/{repo}/tags", {
+    client.request("GET /repos/{owner}/{repo}/tags", {
       owner,
       repo,
     }),
@@ -29,10 +28,14 @@ export const fetchLatestTag = ({ owner, repo }: GitHubReleaseParam) =>
     // Get the latest tag
     .map((tags) => tags.pop() ?? null);
 
-export const fetchLatestRelease = ({ owner, repo }: GitHubReleaseParam) =>
+export const fetchLatestRelease = ({
+  client,
+  owner,
+  repo,
+}: GitHubReleaseParam) =>
   ResultAsync.fromPromise(
     // Get the latest release for a repository
-    octokit.request("GET /repos/{owner}/{repo}/releases/latest", {
+    client.request("GET /repos/{owner}/{repo}/releases/latest", {
       owner,
       repo,
     }),
