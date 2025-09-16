@@ -1,12 +1,17 @@
 import type { ActionType } from "plop";
 
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { Octokit } from "octokit";
 import { SemVer } from "semver";
 
 import {
   fetchLatestRelease,
   fetchLatestTag,
 } from "../adapters/octokit/index.js";
+
+interface TerraformActionsDependencies {
+  octokitClient: Octokit;
+}
 
 const fetchLatestSemver = (
   fetchSemverFn: () => ResultAsync<null | SemVer, Error>,
@@ -25,29 +30,32 @@ const fetchLatestSemver = (
       ({ message }) => {
         // eslint-disable-next-line no-console
         console.warn(`Could not fetch latest version`);
+        // Plop handle the Promise rejection or exception thrown as a failure
         throw new Error(message);
       },
     );
 
 export const getGitHubTerraformProviderLatestRelease =
-  (): ActionType => async (answers) => {
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
     const owner = "integrations";
     const repo = "terraform-provider-github";
 
     return fetchLatestSemver(
-      () => fetchLatestRelease({ owner, repo }),
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
       answers,
       "githubTfProviderVersion",
     );
   };
 
 export const getDxGitHubBootstrapLatestTag =
-  (): ActionType => async (answers) => {
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
     const owner = "pagopa-dx";
     const repo = "terraform-github-github-environment-bootstrap";
 
     return fetchLatestSemver(
-      () => fetchLatestTag({ owner, repo }),
+      () => fetchLatestTag({ client: octokitClient, owner, repo }),
       answers,
       "dxGithubEnvironmentBootstrapVersion",
     );
