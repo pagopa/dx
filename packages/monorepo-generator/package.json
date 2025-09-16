@@ -29,12 +29,12 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "@vitest/coverage-v8": "catalog:dx",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "catalog:dx",
     "plop": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:dx",
+    "vitest": "^3.2.4",
     "vitest-mock-extended": "^3.1.0"
   },
   "peerDependencies": {

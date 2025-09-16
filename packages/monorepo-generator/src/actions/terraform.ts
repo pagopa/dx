@@ -13,27 +13,25 @@ interface TerraformActionsDependencies {
   octokitClient: Octokit;
 }
 
-const fetchLatestSemver = (
+const fetchLatestSemver = async (
   fetchSemverFn: () => ResultAsync<null | SemVer, Error>,
   answers: Record<string, unknown>,
   answerKey: string,
-) =>
-  fetchSemverFn()
+) => {
+  const version = await fetchSemverFn()
     .andThen((semver) =>
       semver ? okAsync(semver) : errAsync(new Error("Invalid version found")),
     )
-    .match(
-      ({ major, minor }) => {
-        answers[answerKey] = `${major}.${minor}`;
-        return `Fetched latest version: ${answers[answerKey]}`;
-      },
-      ({ message }) => {
-        // eslint-disable-next-line no-console
-        console.warn(`Could not fetch latest version`);
-        // Plop handles the Promise rejection or exception thrown as a failure
-        throw new Error(message);
-      },
-    );
+    .map(({ major, minor }) => `${major}.${minor}`);
+
+  if (version.isErr()) {
+    // eslint-disable-next-line no-console
+    console.warn(`Could not fetch latest version`);
+    throw new Error("Could not fetch latest version", { cause: version.error });
+  }
+  answers[answerKey] = version.value;
+  return `Fetched latest version: ${answers[answerKey]}`;
+};
 
 export const getGitHubTerraformProviderLatestRelease =
   ({ octokitClient }: TerraformActionsDependencies): ActionType =>
