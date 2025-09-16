@@ -1,7 +1,7 @@
 resource "azurerm_public_ip" "this" {
   count = local.use_cases[var.use_case].vpn_connections_number
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
-    name          = "${local.naming_config.name}-${count.index + 1}"
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
+    name          = "${local.azure_naming_config.name}-${count.index + 1}"
     resource_type = "public_ip"
   }))
   location            = var.azure.location
@@ -17,7 +17,7 @@ resource "time_sleep" "wait_public_ips" {
 
 resource "azurerm_virtual_network_gateway" "this" {
   count = var.azure.vpn.virtual_network_gateway_id == null ? 1 : 0
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
     resource_type = "virtual_network_gateway"
   }))
   location            = var.azure.location
@@ -61,8 +61,8 @@ resource "azurerm_virtual_network_gateway" "this" {
 
 resource "azurerm_local_network_gateway" "tunnel1" {
   count = local.use_cases[var.use_case].vpn_connections_number
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
-    name          = "${local.naming_config.name}-${count.index + 1}-tunnel-1"
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
+    name          = "${local.azure_naming_config.name}-${count.index + 1}-tunnel-1"
     resource_type = "local_network_gateway"
   }))
   location            = var.azure.location
@@ -78,8 +78,8 @@ resource "azurerm_local_network_gateway" "tunnel1" {
 }
 resource "azurerm_local_network_gateway" "tunnel2" {
   count = local.use_cases[var.use_case].vpn_connections_number
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
-    name          = "${local.naming_config.name}-${count.index + 1}-tunnel-2"
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
+    name          = "${local.azure_naming_config.name}-${count.index + 1}-tunnel-2"
     resource_type = "local_network_gateway"
   }))
   location            = var.azure.location
@@ -96,8 +96,8 @@ resource "azurerm_local_network_gateway" "tunnel2" {
 
 resource "azurerm_virtual_network_gateway_connection" "tunnel1" {
   count = local.use_cases[var.use_case].vpn_connections_number
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
-    name          = "${local.naming_config.name}-${count.index + 1}-tunnel-1"
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
+    name          = "${local.azure_naming_config.name}-${count.index + 1}-tunnel-1"
     resource_type = "virtual_network_gateway_connection"
   }))
   location            = var.azure.location
@@ -114,8 +114,8 @@ resource "azurerm_virtual_network_gateway_connection" "tunnel1" {
 
 resource "azurerm_virtual_network_gateway_connection" "tunnel2" {
   count = local.use_cases[var.use_case].vpn_connections_number
-  name = provider::azuredx::resource_name(merge(local.naming_config, {
-    name          = "${local.naming_config.name}-${count.index + 1}-tunnel-2"
+  name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
+    name          = "${local.azure_naming_config.name}-${count.index + 1}-tunnel-2"
     resource_type = "virtual_network_gateway_connection"
   }))
   location            = var.azure.location

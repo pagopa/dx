@@ -68,6 +68,11 @@ cat > /etc/coredns/Corefile << 'EOF'
     log
 }
 
+*.azure.net {
+    forward . ${azure_coredns_ip}
+    log
+}
+
 # AWS local zones and everything else - forward to VPC DNS
 . {
     forward . ${vpc_dns_ip}

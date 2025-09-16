@@ -141,3 +141,8 @@ output "application_insights" {
     resource_group_name                = local.core_outputs.values.application_insights.resource_group_name
   }
 }
+
+output "private_dns_zones" {
+  description = "List of private DNS zones linked to the virtual network."
+  value       = local.core_outputs.values.private_dns_zones
+}

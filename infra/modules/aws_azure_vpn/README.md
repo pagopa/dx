@@ -168,7 +168,14 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [aws_cloudwatch_log_group.resolver_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_customer_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/customer_gateway) | resource |
+| [aws_route53_resolver_endpoint.outbound](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_endpoint) | resource |
+| [aws_route53_resolver_query_log_config.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_query_log_config) | resource |
+| [aws_route53_resolver_query_log_config_association.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_query_log_config_association) | resource |
+| [aws_route53_resolver_rule.azure_zones](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_rule) | resource |
+| [aws_route53_resolver_rule_association.azure_zones](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_resolver_rule_association) | resource |
+| [aws_security_group.resolver](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_vpn_connection.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_connection) | resource |
 | [aws_vpn_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway) | resource |
 | [aws_vpn_gateway_route_propagation.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway_route_propagation) | resource |
@@ -184,11 +191,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws"></a> [aws](#input\_aws) | -----# AWS # -----# | <pre>object({<br/>    region          = string<br/>    vpc_id          = string<br/>    route_table_ids = list(string)<br/>  })</pre> | n/a | yes |
-| <a name="input_azure"></a> [azure](#input\_azure) | -------# Azure # -------# | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vpn_snet_id         = string<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>  })</pre> | n/a | yes |
+| <a name="input_aws"></a> [aws](#input\_aws) | -----# AWS # -----# | <pre>object({<br/>    region              = string<br/>    vpc_id              = string<br/>    vpc_cidr            = string<br/>    route_table_ids     = list(string)<br/>    isolated_subnet_ids = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_azure"></a> [azure](#input\_azure) | -------# Azure # -------# | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vnet_cidr           = string<br/>    vpn_snet_id         = string<br/>    dns_forwarder_ip    = string<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>    private_dns_zones = list(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | SitetoSite VPN use case. Allowed values: 'default', 'high\_availability'. | `string` | n/a | yes |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | SitetoSite VPN use case. Allowed values: 'default', 'high\_availability'. | `string` | `"default"` | no |
 
 ## Outputs
 
@@ -200,6 +207,5 @@ No modules.
 | <a name="output_azure_local_network_gateways"></a> [azure\_local\_network\_gateways](#output\_azure\_local\_network\_gateways) | Azure Local Network Gateway details |
 | <a name="output_azure_public_ips"></a> [azure\_public\_ips](#output\_azure\_public\_ips) | Azure Public IP addresses for VPN Gateway |
 | <a name="output_azure_virtual_network_gateway"></a> [azure\_virtual\_network\_gateway](#output\_azure\_virtual\_network\_gateway) | Azure Virtual Network Gateway details |
-| <a name="output_azure_vpn_connections"></a> [azure\_vpn\_connections](#output\_azure\_vpn\_connections) | Azure VPN Connection details |
 | <a name="output_vpn_configuration"></a> [vpn\_configuration](#output\_vpn\_configuration) | VPN configuration summary |
 <!-- END_TF_DOCS -->
