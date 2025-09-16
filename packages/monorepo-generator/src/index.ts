@@ -16,11 +16,6 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
-import {
-  getDxGitHubBootstrapLatestTag,
-  getGitHubTerraformProviderLatestRelease,
-} from "./actions/terraform.js";
-
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
