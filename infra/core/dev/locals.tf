@@ -16,6 +16,14 @@ locals {
     instance_number = "01"
   }
 
+  aws = {
+    vpc_cidr = "10.0.0.0/16"
+  }
+
+  azure = {
+    vnet_cidr = "10.51.0.0/16"
+  }
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"

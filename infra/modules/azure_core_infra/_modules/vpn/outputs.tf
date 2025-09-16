@@ -15,10 +15,10 @@ output "public_ips" {
 
 output "dns_forwarder_endpoint" {
   description = "DNS forwarder endpoint"
-  value       = module.dns_forwarder.dns_forwarder_endpoint
+  value       = azurerm_container_group.this.fqdn
 }
 
 output "dns_forwarder_private_ip" {
   description = "DNS forwarder private IP address"
-  value       = module.dns_forwarder.dns_forwarder_private_ip
+  value       = azurerm_container_group.this.ip_address
 }

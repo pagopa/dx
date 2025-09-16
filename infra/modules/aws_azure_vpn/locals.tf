@@ -8,9 +8,18 @@ locals {
     }
   )
 
-  naming_config = {
+  azure_naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
+    location        = var.azure.location,
+    instance_number = tonumber(var.environment.instance_number),
+    name            = "${var.environment.app_name}-vpn"
+  }
+
+  aws_naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    region          = var.aws.region,
     instance_number = tonumber(var.environment.instance_number),
     name            = "${var.environment.app_name}-vpn"
   }
@@ -39,6 +48,7 @@ locals {
         1 = "169.254.22.4/30"
       }
     }
+    dns_resolver_subnet_ids = slice(var.aws.isolated_subnet_ids, 0, 2)
   }
 
   azure_location_short = {
@@ -47,7 +57,7 @@ locals {
   }
 
   azure = {
-    bgp_asn = 65010
+    bgp_asn = 64512
     name    = "${var.environment.prefix}-${var.environment.env_short}-${local.azure_location_short[var.azure.location]}-awsvpn-${var.environment.instance_number}"
   }
 }

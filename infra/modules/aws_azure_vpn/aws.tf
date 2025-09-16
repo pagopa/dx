@@ -11,8 +11,8 @@ resource "aws_customer_gateway" "this" {
   type       = "ipsec.1"
 
   tags = merge({
-    Name = provider::awsdx::resource_name(merge(local.naming_config, {
-      name          = "${local.naming_config.name}-${count.index + 1}"
+    Name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
+      name          = "${local.aws_naming_config.name}-${count.index + 1}"
       resource_type = "customer_gateway"
     }))
   }, var.tags)
@@ -32,8 +32,8 @@ resource "aws_vpn_connection" "this" {
   tunnel2_inside_cidr = local.aws.inside_cidrs[count.index][1]
 
   tags = merge({
-    Name = provider::awsdx::resource_name(merge(local.naming_config, {
-      name          = "${local.naming_config.name}-${count.index + 1}"
+    Name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
+      name          = "${local.aws_naming_config.name}-${count.index + 1}"
       resource_type = "vpn_connection"
     }))
   }, var.tags)

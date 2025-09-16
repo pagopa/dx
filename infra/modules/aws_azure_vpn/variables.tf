@@ -21,7 +21,7 @@ variable "environment" {
 variable "use_case" {
   type        = string
   description = "SitetoSite VPN use case. Allowed values: 'default', 'high_availability'."
-
+  default     = "default"
   validation {
     condition     = contains(["default", "high_availability"], var.use_case)
     error_message = "use_case must be either 'default' or 'high_availability'."
@@ -33,9 +33,11 @@ variable "use_case" {
 #-----#
 variable "aws" {
   type = object({
-    region          = string
-    vpc_id          = string
-    route_table_ids = list(string)
+    region              = string
+    vpc_id              = string
+    vpc_cidr            = string
+    route_table_ids     = list(string)
+    isolated_subnet_ids = optional(list(string), [])
   })
 }
 
@@ -48,10 +50,13 @@ variable "azure" {
     location            = string
     vnet_id             = string
     vnet_name           = string
+    vnet_cidr           = string
     vpn_snet_id         = string
+    dns_forwarder_ip    = string
     vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created
       virtual_network_gateway_id = string
       public_ips                 = list(string)
     }), { virtual_network_gateway_id = null, public_ips = [] })
+    private_dns_zones = list(string)
   })
 }
