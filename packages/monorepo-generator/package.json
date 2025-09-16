@@ -23,11 +23,11 @@
     "plop": "catalog:"
   },
   "devDependencies": {
-    "plop": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:dx",
+    "plop": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   },
