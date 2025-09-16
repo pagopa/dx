@@ -10,10 +10,13 @@ on:
       - "infra/resources/**"
 
 jobs:
-  release_prod:
+{{#each environments}}
+  release_{{this}}:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-    name: Release Infrastructure
+    name: Release Infrastructure ({{this}})
     secrets: inherit
     with:
-      environment: prod
+      environment: '{{this}}'
       base_path: infra/resources
+
+{{/each}}
