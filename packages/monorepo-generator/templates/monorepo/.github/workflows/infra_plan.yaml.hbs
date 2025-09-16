@@ -15,11 +15,13 @@ on:
       - ".github/workflows/infra_plan.yaml"
 
 jobs:
-  code_review_prod:
+{{#each environments}}
+  code_review_{{this}}:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    name: Code Review Infrastructure Plan
+    name: Code Review Infrastructure Plan ({{this}})
     secrets: inherit
     with:
-      environment: prod
+      environment: '{{this}}'
       base_path: infra/resources
 
+{{/each}}
