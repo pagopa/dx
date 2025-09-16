@@ -17,6 +17,16 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the repository description?",
     name: "repoDescription",
   },
+  {
+    choices: [
+      { name: "AWS", value: "aws" },
+      { name: "Azure", value: "azure" },
+    ],
+    default: "azure",
+    message: "What Cloud Provider would you like to use?",
+    name: "csp",
+    type: "list",
+  },
 ];
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
