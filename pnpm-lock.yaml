@@ -131,6 +131,9 @@ importers:
       '@logtape/logtape':
         specifier: ^1.0.0
         version: 1.0.4
+      '@pagopa/monorepo-generator':
+        specifier: ^0.2.0
+        version: 0.2.0(plop@4.0.2)
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -143,6 +146,9 @@ importers:
       neverthrow:
         specifier: 'catalog:'
         version: 8.2.0
+      node-plop:
+        specifier: ^0.32.1
+        version: 0.32.1
       semver:
         specifier: 'catalog:'
         version: 7.7.2
@@ -2694,6 +2700,11 @@ packages:
   '@opentelemetry/winston-transport@0.15.0':
     resolution: {integrity: sha512-2i4A/Alevdtc4j/vAqOxbb+P48BOHNl9b0mcleq9h1ie9wQ768KmT3Z3TFzUHA8MWs8CrdDerySXtcvhn8jCSA==}
     engines: {node: ^18.19.0 || >=20.6.0}
+
+  '@pagopa/monorepo-generator@0.2.0':
+    resolution: {integrity: sha512-4xtXjsl9IIdQwjUFAGOrAclm84hdztruIEgadSM/DC/TeVA3kSSdd1uqRHcG3OuLINalz4mSUjRFalGWvymiHA==}
+    peerDependencies:
+      plop: ^4.0.2
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -11433,6 +11444,10 @@ snapshots:
     dependencies:
       '@opentelemetry/api-logs': 0.204.0
       winston-transport: 4.9.0
+
+  '@pagopa/monorepo-generator@0.2.0(plop@4.0.2)':
+    dependencies:
+      plop: 4.0.2
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
