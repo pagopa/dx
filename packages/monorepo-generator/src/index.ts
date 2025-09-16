@@ -19,8 +19,8 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   },
   {
     choices: [
-      { name: "AWS", value: "aws" },
-      { name: "Azure", value: "azure" },
+      { name: "Amazon Web Services", value: "aws" },
+      { name: "Microsoft Azure", value: "azure" },
     ],
     default: "azure",
     message: "What Cloud Provider would you like to use?",
