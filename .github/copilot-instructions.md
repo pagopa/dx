@@ -50,7 +50,7 @@ pnpm --filter @pagopa/dx-cli run test
 
 - **Node.js**: Use version specified in `.node-version` file
 - **pnpm**: Use version configured via corepack (run `corepack enable`)
-- **Terraform**: Use version specified in `.terraform-version` file  
+- **Terraform**: Use version specified in `.terraform-version` file
 - **Turbo**: 2+ (specified in CLI config, installed as dev dependency)
 - **Tool versions**: Run `@pagopa/dx-cli info` after build to get current tool versions
 
