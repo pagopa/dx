@@ -8,8 +8,8 @@ This is the **DevEx Initiative** repository by PagoPA, containing shared tools, 
 - **Type**: TypeScript/JavaScript monorepo with Terraform infrastructure modules
 - **Size**: ~42 workspace packages across apps, packages, infrastructure modules, providers, and actions
 - **Languages**: TypeScript, JavaScript, HCL (Terraform), Shell, Go
-- **Target runtimes**: Node.js 22.17.0, Terraform 1.13.1
-- **Package manager**: pnpm 10.16.1 with Turborepo for task orchestration
+- **Target runtimes**: Use versions specified in `.node-version` and `.terraform-version` files
+- **Package manager**: pnpm with Turborepo for task orchestration
 
 ## Build and Validation Commands
 
@@ -48,10 +48,11 @@ pnpm --filter @pagopa/dx-cli run test
 
 ### Critical Build Requirements
 
-- **Node.js**: 22.17.0 (specified in `.node-version`)
-- **pnpm**: 10.16.1+ (managed via corepack)
-- **Terraform**: 1.13.1 (specified in `.terraform-version`)
+- **Node.js**: Use version specified in `.node-version` file
+- **pnpm**: Use version configured via corepack (run `corepack enable`)
+- **Terraform**: Use version specified in `.terraform-version` file  
 - **Turbo**: 2+ (specified in CLI config, installed as dev dependency)
+- **Tool versions**: Run `@pagopa/dx-cli info` after build to get current tool versions
 
 ### Build and Validation Errors
 
@@ -184,7 +185,7 @@ turbo.json            # Turborepo task configuration
 ## Critical Notes for Agents
 
 1. **ALWAYS run `pnpm install` first** - the build will fail without dependencies
-2. **Use exact Node.js version 22.17.0** - specified in `.node-version`
+2. **Use repository-specified tool versions** - check `.node-version`, `.terraform-version` files or run `@pagopa/dx-cli info`
 3. **Respect workspace structure** - don't modify files outside your target workspace unless necessary
 4. **Pre-commit hooks are mandatory** for Terraform changes - they will run in CI
 5. **Code coverage is enforced** - minimum 80% coverage required
