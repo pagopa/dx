@@ -86,9 +86,11 @@ Help improve DX infrastructure tools:
 - **Issues with modules?** Open an issue on the
   [DX repository](https://github.com/pagopa/dx/issues)
 - **Feature requests** We welcome suggestions for new modules
-- **Questions?** Check existing
-  [discussions](https://github.com/pagopa/dx/discussions) or start a new one
 
-:::tip **Infrastructure as Code Best Practices** Follow our
+:::tip **Infrastructure as Code Best Practices**
+
+Follow our
 [Infrastructure as Code guidelines](../conventions/infra-folder-structure.md) to
-ensure consistency across projects and teams. :::
+ensure consistency across projects and teams.
+
+:::

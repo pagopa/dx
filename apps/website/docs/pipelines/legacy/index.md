@@ -127,6 +127,4 @@ The DX team provides migration support:
 1. **[Review current pipelines documentation](../index.md)** to understand
    modern alternatives
 2. **[Open a migration issue](https://github.com/pagopa/dx/issues/new)** to get
-   personalized guidance
-3. **[Join our discussions](https://github.com/pagopa/dx/discussions)** to ask
-   questions and share experiences
+   personalized guidance or to ask questions and share experiences

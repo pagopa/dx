@@ -51,10 +51,15 @@ this section may save you from getting stuck later 🫷.
 
 ### Mono Repository: Yes Please!
 
+:::warning **Mono Repository Required**
+
 Using a mono repository is a prerequisite to adopt DX tooling.
 
-[Mono repos offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
-and DX tools are designed with them in mind.
+:::
+
+[Mono repositories offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
+and DX tools are designed with this in mind. We recommend using a mono
+repository, even for a single project or workspace.
 
 To start adopting DX tools, define boundaries for team services and plan how to
 split team projects. Once ready, ensure you have a mono-repository on GitHub and
@@ -73,13 +78,6 @@ teams are expected to follow.
 Technology Radar recommendations are thoughtfully designed to foster
 consistency, efficiency, and alignment across projects, ensuring a streamlined
 development experience.
-
-:::info
-
-Currently, we support Azure and TypeScript. We are actively working on adding
-support for AWS and Java as well.
-
-:::
 
 ### Conventions
 
@@ -158,7 +156,11 @@ We encourage you to contribute to the DX project! Start by reviewing our
 [contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md)
 to understand how you can get involved and make a meaningful impact.
 
-:::tip **Need help deciding?** Not sure which path to take? Check out our
+:::tip **Need help deciding?**
+
+Not sure which path to take? Check out our
 [conventions overview](../conventions/index.md) to understand how we organize
 work at PagoPA, or reach out to the DX team on
-[GitHub](https://github.com/pagopa/dx/issues). :::
+[GitHub](https://github.com/pagopa/dx/issues).
+
+:::

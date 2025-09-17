@@ -110,8 +110,6 @@ current workflows documented above. :::
 - **Workflow issues?** Open an issue on the
   [DX repository](https://github.com/pagopa/dx/issues)
 - **Feature requests** We welcome suggestions for new workflows
-- **Questions?** Check existing
-  [discussions](https://github.com/pagopa/dx/discussions)
 
 :::tip **Pipeline Best Practices** Follow our
 [Git conventions](../conventions/git/index.md) and

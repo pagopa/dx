@@ -62,7 +62,7 @@ Consistent conventions across teams enable:
 
 ### Git Workflow
 
-1. Create feature branch: `feature/description` or `fix/description`
+1. Create feature branch: `feats/description` or `fixes/description`
 2. Write [conventional commits](./git/commit-message.md)
 3. Open PR with [proper format](./pull-requests/format.md)
 4. Address code review feedback
@@ -129,7 +129,10 @@ You can adopt conventions incrementally:
 - **Suggest improvements** We welcome feedback on existing conventions
 - **Request new conventions** for scenarios not yet covered
 
-:::tip **Convention Benefits** Teams that follow DX conventions report 40%
-faster onboarding and 60% fewer infrastructure issues. The upfront investment in
-consistency pays dividends in reduced maintenance and improved collaboration.
+:::tip **Convention Benefits**
+
+Teams that follow DX conventions report faster onboarding and fewer
+infrastructure issues. The upfront investment in consistency pays dividends in
+reduced maintenance and improved collaboration.
+
 :::
