@@ -148,31 +148,31 @@ pnpm --filter @pagopa/dx-cli run test
 ### Root Directory Files
 
 ```
-.actrc                     # GitHub Actions CLI config
-.changeset/               # Changesets for release management
-.devcontainer/            # Development container configuration
-.editorconfig            # Editor configuration
-.github/                 # GitHub workflows and templates
-.gitignore              # Git ignore rules
-.node-version           # Node.js version specification
-.pre-commit-config.yaml # Pre-commit hook configuration
-.prettierignore         # Prettier ignore rules
-.terraform-version      # Terraform version specification
-.tflint.hcl            # Terraform linting configuration
-.trivyignore           # Trivy security scanner ignore rules
-.vscode/               # VS Code workspace settings
-CODEOWNERS             # GitHub code ownership
-CODE_OF_CONDUCT.md     # Community guidelines
-CONTRIBUTING.md        # Contribution guidelines
-README.md              # Repository documentation
-codecov.yml            # Code coverage configuration
-go.work                # Go workspace configuration
-package.json           # Root package.json with scripts
-pnpm-lock.yaml         # Dependency lock file
-pnpm-workspace.yaml    # Workspace configuration
-renovate.json          # Dependency update automation
-sbom.sh               # Security bill of materials script
-turbo.json            # Turborepo task configuration
+.actrc                      # GitHub Actions CLI config
+.changeset/                 # Changesets for release management
+.devcontainer/              # Development container configuration
+.editorconfig               # Editor configuration
+.github/                    # GitHub workflows and templates
+.gitignore                  # Git ignore rules
+.node-version               # Node.js version specification
+.pre-commit-config.yaml     # Pre-commit hook configuration
+.prettierignore             # Prettier ignore rules
+.terraform-version          # Terraform version specification
+.tflint.hcl                 # Terraform linting configuration
+.trivyignore                # Trivy security scanner ignore rules
+.vscode/                    # VS Code workspace settings
+CODEOWNERS                  # GitHub code ownership
+CODE_OF_CONDUCT.md          # Community guidelines
+CONTRIBUTING.md             # Contribution guidelines
+README.md                   # Repository documentation
+codecov.yml                 # Code coverage configuration
+go.work                     # Go workspace configuration
+package.json                # Root package.json with scripts
+pnpm-lock.yaml              # Dependency lock file
+pnpm-workspace.yaml         # Workspace configuration
+renovate.json               # Dependency update automation
+sbom.sh                     # Security bill of materials script
+turbo.json                  # Turborepo task configuration
 ```
 
 ### Key Scripts and Conventions
