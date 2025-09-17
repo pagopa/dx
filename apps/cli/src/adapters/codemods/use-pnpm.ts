@@ -134,8 +134,6 @@ async function updateDXWorkflows(): Promise<void> {
 
 async function writePnpmWorkspaceFile(workspaces: string[]): Promise<void> {
   const pnpmWorkspace = {
-    linkWorkspacePackages: true,
-    packageImportMethod: "clone-or-copy",
     packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
   };
   const yamlContent = YAML.stringify(pnpmWorkspace);
@@ -173,11 +171,13 @@ const apply: Codemod["apply"] = async (info) => {
   logger.info("Importing yarn.lock to pnpm-lock.yaml...");
   try {
     await fs.access("yarn.lock");
-    await $`corepack pnpm import yarn.lock`;
+    await $`corepack pnpm@latest import yarn.lock`;
     await removeFiles("yarn.lock");
   } catch {
     logger.info("No yarn.lock file found, skipping import.");
   }
+
+  await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
 
   // Replace yarn occurrences in files and update workflows
   logger.info("Replacing yarn occurrences in files...");
