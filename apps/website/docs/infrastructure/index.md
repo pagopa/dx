@@ -11,11 +11,15 @@ applications on Azure.
 
 ## Infrastructure for Application Developers
 
-As a software engineer, you'll need to deploy infrastructure for your applications. Start here:
+As a software engineer, you'll need to deploy infrastructure for your
+applications. Start here:
 
-1. **[Learn about our Terraform modules](./using-terraform-registry-modules.md)** - Use our production-ready modules
-2. **[Deploy Azure resources](./azure/index.md)** - Deploy secure, scalable infrastructure for your applications
-3. **[Automate deployments](../pipelines/infra-apply.md)** - Set up CI/CD for infrastructure
+1. **[Learn about our Terraform modules](./using-terraform-registry-modules.md)** -
+   Use our production-ready modules
+2. **[Deploy Azure resources](./azure/index.md)** - Deploy secure, scalable
+   infrastructure for your applications
+3. **[Automate deployments](../pipelines/infra-apply.md)** - Set up CI/CD for
+   infrastructure
 
 ## Available Tools
 

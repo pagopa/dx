@@ -18,9 +18,10 @@ If you're building APIs, web applications, or services:
    Configure your workspace for PagoPA development
 2. **[Understand our conventions](../conventions/index.md)** - Learn our Git
    workflows, naming conventions, and code standards
-3. **[Deploy applications](../pipelines/index.md)** - Automate your
-   deployments with GitHub Actions
-4. **[Deploy infrastructure](../infrastructure/index.md)** - Use Terraform modules to deploy Azure resources
+3. **[Deploy applications](../pipelines/index.md)** - Automate your deployments
+   with GitHub Actions
+4. **[Deploy infrastructure](../infrastructure/index.md)** - Use Terraform
+   modules to deploy Azure resources
 
 **Quick wins:**
 
@@ -30,7 +31,8 @@ If you're building APIs, web applications, or services:
   collaboration
 - Deploy apps with our
   [TypeScript deployment workflows](../pipelines/release-azure-appsvc.md)
-- Deploy infrastructure with our [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
+- Deploy infrastructure with our
+  [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
 
 ### 🆕 New Team Members
 
