@@ -43,6 +43,7 @@
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "esbenp.prettier-vscode",
+        "unifiedjs.vscode-mdx",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
         "vitest.explorer",
