@@ -1,0 +1,276 @@
+---
+title: "Migrating to PNPM: What's Next for the PagoPA DX Toolchain"
+slug: migrating-to-pnpm
+hide_table_of_contents: false
+date: 2025-10-03T08:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+draft: true
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+Big news for the PagoPA developer community! 🎉
+
+We're officially moving from Yarn to
+[PNPM](https://pagopa.github.io/technology-radar/tools/pnpm.html) for our
+dependency management. This change is a significant step forward for the PagoPA
+DX Toolchain, bringing improvements in speed, consistency and security to our
+development workflow.
+
+:::warning Deprecation notice We understand that a change of this magnitude
+requires a smooth transition. That's why Yarn will continue to be fully
+supported and integrated into our toolchain until **January 16th, 2026**, after
+which it will be officially deprecated. :::
+
+## Why PNPM?
+
+You might be asking why we're making this switch. Here are a few key reasons:
+
+- **Faster and More Efficient**: PNPM's unique approach to dependency
+  management, using a content-addressable store, avoids the need for duplicated
+  packages. This means faster installations and less disk space consumption.
+
+- **A Safer Dependency Tree**: PNPM creates a strict, non-flat node_modules
+  structure, which helps prevent accidental access to dependencies that are not
+  explicitly declared in your package.json. This makes our dependency trees more
+  predictable and secure. This is particularly beneficial for our monorepo
+  setups, as it will prevent ghost dependencies issues before the deployment.
+
+## Getting Started
+
+We've already updated the PagoPA DX Toolchain to include PNPM support. To make
+the migration as smooth as possible, we've created a migration script accessible
+via our DX CLI.
+
+To run the migration script, use the following command in your project's root
+directory:
+
+```shell
+npx @pagopa/dx-cli codemod apply use-pnpm
+```
+
+This script will import your existing `yarn.lock` and it will automatically
+replace Yarn commands in your CI/CD workflows with their PNPM equivalents.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) version 20 or higher with `corepack` enabled.
+
+  :::note Corepack is included by default with Node.js versions 16.9.0 and
+  above, but you'll need to enable it manually for version 20 and above. You can
+  do this by running:
+
+  ```shell
+  corepack enable
+  ```
+
+  :::
+
+- Your project should use the PagoPA DX workflows for code review and
+  deployment. The migration script will update only the following workflows:
+  - [js_code_review.yaml](../docs/pipelines/code-review.md)
+  - [web_app_deploy.yaml](../docs/pipelines/web-app-deploy.md)
+  - [function_app_deploy.yaml](../docs/pipelines/function-app-deploy.md)
+
+:::tip Need help? For any questions or assistance you need during the migration
+process, you can reach out to the PagoPA DX team on Slack in the
+`#team_devex_help` channel. :::
+
+## Quick Guide: Using PNPM
+
+To help you get started, here's a quick reference guide on how to perform common
+tasks with PNPM, compared to their Yarn equivalents.
+
+### Install dependencies
+
+<Tabs>
+  <TabItem value="yarn" label="Yarn" default>
+    ```shell title="shell"
+      # Install dependencies
+      yarn install
+
+      # Don't alter the lockfile
+      yarn install --immutable
+
+      # Add a new dependency to root package
+      yarn add express
+
+      # Add a development dependency to root package
+      yarn add -D typescript
+    ```
+
+  </TabItem>
+  <TabItem value="pnpm" label="PNPM">
+    ```shell title="shell"
+      # Install dependencies
+      pnpm install
+
+      # Don't alter the lockfile.
+      # In CI is the default behavior, even without this flag.
+      pnpm install --frozen-lockfile
+
+      # Add a new dependency to root package
+      # By default, it does not allow adding dependencies to root packages
+      # unless the -w (workspace) flag is used
+      pnpm add -w express
+
+      # Add a development dependency to root package
+      pnpm add -w -D typescript
+    ```
+
+  </TabItem>
+</Tabs>
+
+### Multi-projects support
+
+Both Yarn and PNPM support managing multiple projects within a single
+repository. Yarn requires that packages are defined in the `workspaces` field of
+the root `package.json`, while PNPM uses a dedicated `pnpm-workspace.yaml` file.
+
+<Tabs>
+  <TabItem value="yarn" label="Yarn" default>
+    ```json title="package.json"
+      {
+        "name": "my-monorepo",
+        "private": true,
+        // highlight-next-line
+        "workspaces": [
+          "apps/*"
+        ]
+      }
+    ```
+
+    ```shell title="shell"
+      # Add a new dependency to my-app package
+      yarn workspace my-app add express
+    ```
+
+  </TabItem>
+  <TabItem value="pnpm" label="PNPM">
+    ```yaml title="pnpm-workspace.yaml"
+      // highlight-next-line
+      packages:
+        - 'apps/*'
+    ```
+
+    ```shell title="shell"
+      # Add a new dependency to my-app package
+      pnpm --filter my-app add express
+
+      # Note that filters, supports wildcards and complex expressions
+      # Example: Add a new dependency to all packages starting with "my-"
+      pnpm --filter "my-*" add express
+
+      # Examples: Install dependencies only in packages that have changed
+      # relative to the main branch
+      pnpm --filter "...[origin/main]" install
+
+      # The --filter syntax is the same used by Turbo
+    ```
+
+  </TabItem>
+</Tabs>
+
+### Run scripts
+
+Both Yarn and PNPM allow you to run scripts defined in your `package.json`
+files.
+
+<Tabs>
+  <TabItem value="yarn" label="Yarn" default>
+    ```shell title="shell"
+      # Run the build script in the current package
+      yarn build
+
+      # Run the build script in the my-app package
+      yarn workspace my-app build
+
+      # Run the build script in all packages
+      yarn workspaces foreach --all run build
+    ```
+
+  </TabItem>
+  <TabItem value="pnpm" label="PNPM">
+    ```shell title="shell"
+      # Run the build script in the current package
+      pnpm build
+
+      # Run the build script in the my-app package
+      pnpm --filter my-app build
+
+      # Run the build script in all packages
+      pnpm -r build
+    ```
+
+  </TabItem>
+</Tabs>
+
+### Other features
+
+PNPM offers unique features that help us manage dependencies at scale. Here are
+some examples.
+
+#### Catalogs
+
+[Catalogs](https://pnpm.io/catalogs) are a workspaces feature for defining
+dependency version ranges as reusable constants.
+
+Imagine you have multiple packages that depend on `react` and `react-dom`.
+Instead of specifying the version in each package, you can define a catalog in
+the root `pnpm-workspace.yaml` file.
+
+```yaml title="pnpm-workspace.yaml"
+packages:
+  - "apps/*"
+  - "packages/*"
+
+catalogs:
+  react: ^18.0.0
+  react-dom: ^18.0.0
+```
+
+Then, in each package's `package.json`, you can reference the catalog:
+
+```json title="apps/my-app/package.json"
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
+```
+
+```json title="packages/my-library/package.json"
+{
+  "name": "my-library",
+  "version": "1.0.0",
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}
+```
+
+When you run `pnpm install`, PNPM will resolve the `catalog:` references to the
+versions defined in the `pnpm-workspace.yaml` file. This ensures that all
+packages use the same version of `react` and `react-dom`, making it easier to
+manage and update dependencies across the monorepo.
+
+#### Security
+
+PNPM has built-in security features that help protect your projects from
+vulnerabilities.
+
+- **Post Install Scripts Control**: PNPM allows you to control the execution of
+  post-install scripts, which can be a vector for supply chain attacks. You can
+  disable these scripts globally or on a per-package basis.
+- **minimumReleaseAge**: This setting allows you to specify a minimum age for
+  package releases. This can help avoid using newly published packages that
+  might not have been thoroughly used yet.
+
+For a complete list of PNPM features and commands, check out the
+[official PNPM documentation](https://pnpm.io/).
