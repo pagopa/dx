@@ -14,9 +14,11 @@ This is the **DevEx Initiative** repository by PagoPA, containing shared tools, 
 ## Build and Validation Commands
 
 ### Prerequisites
+
 **ALWAYS** run `pnpm install` before any other commands. Dependencies are managed via pnpm with workspace support.
 
 ### Core Commands (run in repository root)
+
 1. **Install dependencies**: `pnpm install` (REQUIRED before any other commands)
 2. **Build all packages**: `pnpm run build` or `pnpm build` (takes ~40s)
 3. **Code review validation**: `pnpm run code-review` (runs typecheck, format:check, lint:check, test:coverage - takes ~23s)
@@ -26,14 +28,17 @@ This is the **DevEx Initiative** repository by PagoPA, containing shared tools, 
 7. **Testing**: `pnpm turbo test:coverage`
 
 ### Terraform Commands
+
 - **Validate Terraform**: Use pre-commit hooks via `pre-commit run -a` (requires pre-commit installation)
 - **Module locking**: `infra/scripts/lock-modules.sh` for Terraform module version management
 
 ### SBOM Commands
+
 - **Generate SBOMs**: `pnpm sbom-generate` (requires syft, grype, terraform, jq tools)
 - **Validate SBOMs**: `pnpm sbom-validate`
 
 ### Workspace-specific Commands
+
 ```bash
 # Target specific workspace
 pnpm --filter WORKSPACE_NAME run COMMAND
@@ -42,12 +47,14 @@ pnpm --filter @pagopa/dx-cli run test
 ```
 
 ### Critical Build Requirements
+
 - **Node.js**: 22.17.0 (specified in `.node-version`)
 - **pnpm**: 10.16.1+ (managed via corepack)
 - **Terraform**: 1.13.1 (specified in `.terraform-version`)
 - **Turbo**: 2+ (specified in CLI config, installed as dev dependency)
 
 ### Build and Validation Errors
+
 - **Format checking**: Prettier will fail if code is not properly formatted. Run `pnpm turbo format` to fix issues
 - **Linting**: ESLint will fail on code style violations. Most issues can be auto-fixed
 - **Type checking**: TypeScript compilation errors will cause build failure
@@ -58,6 +65,7 @@ pnpm --filter @pagopa/dx-cli run test
 ## Project Layout and Architecture
 
 ### Monorepo Structure
+
 ```
 /
 ├── apps/                    # Main applications
@@ -85,6 +93,7 @@ pnpm --filter @pagopa/dx-cli run test
 ```
 
 ### Configuration Files
+
 - **Build**: `turbo.json` (task definitions), `package.json` (root workspace config)
 - **TypeScript**: Individual `tsconfig.json` per workspace
 - **Linting**: `packages/eslint-config/` (shared config), `.prettierignore`
@@ -95,6 +104,7 @@ pnpm --filter @pagopa/dx-cli run test
 ### CI/CD Pipeline Structure
 
 #### Primary Workflows (in `.github/workflows/`)
+
 1. **TypeScript Code Review** (`_validate-typescript-code-review.yaml`):
    - Triggers on PR (opened, synchronize) for `apps/**`, `packages/**`, `actions/**`
    - Uses `js_code_review.yaml` reusable workflow
@@ -112,12 +122,14 @@ pnpm --filter @pagopa/dx-cli run test
    - Runs `terraform test` for each module
 
 #### Validation Requirements
+
 - **Pre-commit hooks**: Must pass terraform validation, formatting, documentation generation
 - **Code coverage**: Minimum 80% coverage required (configured in `codecov.yml`)
 - **Linting**: ESLint and Prettier checks must pass
 - **Type checking**: TypeScript compilation must succeed
 
 ### Dependencies and Hidden Requirements
+
 - **Turbo**: Required for workspace task orchestration
 - **Pre-commit**: Required for Terraform validation (includes multiple tools)
 - **Azure CLI**: Required for Terraform module testing (Azure login)
@@ -125,13 +137,15 @@ pnpm --filter @pagopa/dx-cli run test
 - **Container runtime**: Docker/Podman for devcontainer support
 
 ### Timing Expectations
+
 - **Full build**: ~40 seconds (all packages) - much faster with Turbo cache (~256ms)
-- **Code review**: ~23 seconds (typecheck + lint + test + coverage) 
+- **Code review**: ~23 seconds (typecheck + lint + test + coverage)
 - **Dependency installation**: ~8-10 seconds (clean install), ~5-6 seconds (with cache)
 - **Individual workspace builds**: 1-6 seconds each with `--filter`
 - **Documentation build**: ~30 seconds (Docusaurus website)
 
 ### Root Directory Files
+
 ```
 .actrc                     # GitHub Actions CLI config
 .changeset/               # Changesets for release management
@@ -161,6 +175,7 @@ turbo.json            # Turborepo task configuration
 ```
 
 ### Key Scripts and Conventions
+
 - **npm script naming**: Follow standard conventions (`build`, `test`, `lint`, `format`, `typecheck`)
 - **Release management**: Use changesets (`pnpm changeset`) for version bumping
 - **Module documentation**: Auto-generated via terraform-docs pre-commit hook
