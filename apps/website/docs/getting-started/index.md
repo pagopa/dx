@@ -34,16 +34,6 @@ If you're building APIs, web applications, or services:
 - Deploy infrastructure with our
   [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
 
-### 🆕 New Team Members
-
-Just joined PagoPA? Start here:
-
-1. **Read this overview** - Understand our philosophy and approach
-2. **[Set up your workspace](./monorepository-setup.md)** - Get your development
-   environment ready
-3. **[Learn our conventions](../conventions/index.md)** - Understand how we work
-   together
-
 ## Getting Started with DX
 
 Getting started with DX tooling can sometimes feel overwhelming, as it covers a

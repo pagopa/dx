@@ -25,9 +25,12 @@ Whether you're shipping your first API or architecting complex distributed
 systems, the PagoPA Developer Experience (DX) initiative provides **golden
 paths** and **battle-tested tools** to help you build with confidence.
 
-:::tip **Ready to start building?** Jump to our
-[Quick Start Guides](#quick-start-guides) tailored for your role, or explore our
-[featured tools](#featured-tools) below. :::
+:::tip **Ready to start building?**
+
+Jump to our [Quick Start Guides](#quick-start-guides) tailored for your role, or
+explore our [featured tools](#featured-tools) below.
+
+:::
 
 ## What We Provide
 
@@ -50,7 +53,7 @@ Choose your path based on your role and goals:
 
 <div className="row">
 
-<div className="col col--6">
+<div className="col col--12">
 
 ### 👩‍💻 **Application Developer**
 
@@ -62,20 +65,6 @@ Ready to build your first service?
 - [Follow our coding conventions](conventions/index.md)
 
 [**Start Building →**](getting-started/index.md)
-
-</div>
-
-<div className="col col--6">
-
-### 🆕 **New to PagoPA**
-
-First day at PagoPA?
-
-- [Understand our approach](getting-started/index.md)
-- [Set up your monorepo workspace](getting-started/monorepository-setup.md)
-- [Get familiar with our conventions](conventions/index.md)
-
-[**Get Oriented →**](getting-started/index.md)
 
 </div>
 
@@ -149,31 +138,6 @@ structure, and code quality
 </div>
 
 </div>
-
-## Current status
-
-We're working on the following:
-
-- [x] Terraform configuration for GitHub Action runners with Azure access
-- [x] Custom Terraform modules for common Azure resources
-- [x] GitHub Actions to plan and apply infrastructure changes
-- [x] GitHub Actions for safe deployment of TypeScript applications on Azure
-- [x] Standardized TypeScript linting presets (eslint)
-- [ ] Scaffold templates for TypeScript applications (monorepo)
-- [ ] Scaffold templates for Terraform modules
-- [ ] Complete web application template using Next.js
-- [ ] OpenAPI client generator for TypeScript
-- [ ] OpenAPI server generator for TypeScript
-- [ ] Documentation for all the above items
-
-If you wonder why we're working with these specific technologies, check out our
-[Architecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
-
-We're going to update this list as we progress and - eventually - consider other
-languages (e.g., JAVA), and platforms (e.g., AWS).
-
-Aside, we experiment with _new_ technologies and tools to improve our daily
-work.
 
 ## Stay Connected
 
