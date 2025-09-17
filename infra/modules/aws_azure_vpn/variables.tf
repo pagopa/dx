@@ -37,8 +37,15 @@ variable "aws" {
     vpc_id              = string
     vpc_cidr            = string
     route_table_ids     = list(string)
-    isolated_subnet_ids = optional(list(string), [])
+    dns_forwarder_ip    = optional(string, null)
+    isolated_subnet_ids = list(string)
+    private_dns_zones   = optional(list(string), [])
   })
+  description = "AWS related configuration."
+  validation {
+    condition     = (var.use_case == "high_availability" && var.aws.dns_forwarder_ip == null) || (var.use_case == "default" && var.aws.dns_forwarder_ip != null)
+    error_message = "If use_case is default, the dns_forwarder_ip must be provided in order to create a CoreDNS EC2 instance. If use_case is high_availability, the dns forwarder will be created with managed resources."
+  }
 }
 
 #-------#

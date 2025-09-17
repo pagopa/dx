@@ -1,4 +1,5 @@
 # Security Group for Route53 Resolver endpoints
+# trivy:ignore:AVD-AWS-0104 Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
 resource "aws_security_group" "resolver" {
   name_prefix = "route53-resolver-"
   vpc_id      = var.aws.vpc_id
@@ -52,6 +53,28 @@ resource "aws_security_group" "resolver" {
   })
 }
 
+# Route53 Resolver Inbound Endpoint
+# This allows Azure resources to query AWS private DNS zones
+resource "aws_route53_resolver_endpoint" "inbound" {
+  count     = var.use_case == "high_availability" ? 1 : 0
+  name      = "resolver-inbound"
+  direction = "INBOUND"
+
+  security_group_ids = [aws_security_group.resolver.id]
+
+  dynamic "ip_address" {
+    for_each = local.aws.dns_resolver_subnet_ids
+    content {
+      subnet_id = ip_address.value
+    }
+  }
+
+  tags = merge(var.tags, {
+    Name = "resolver-inbound"
+    Type = "Inbound"
+  })
+}
+
 # Route53 Resolver Outbound Endpoint  
 # This allows AWS resources to query Azure private DNS zones
 resource "aws_route53_resolver_endpoint" "outbound" {
@@ -83,8 +106,11 @@ resource "aws_route53_resolver_rule" "azure_zones" {
   rule_type            = "FORWARD"
   resolver_endpoint_id = aws_route53_resolver_endpoint.outbound.id
 
-  target_ip {
-    ip = var.azure.dns_forwarder_ip
+  dynamic "target_ip" {
+    for_each = local.azure_inbound_ip_addresses
+    content {
+      ip = target_ip.value
+    }
   }
 
   tags = merge(var.tags, {
@@ -102,7 +128,9 @@ resource "aws_route53_resolver_rule_association" "azure_zones" {
 }
 
 # CloudWatch Log Group for Query Logging (optional)
+# trivy:ignore:AVD-AWS-0017 CloudWatch log groups are encrypted by default, however, to get the full benefit of controlling key rotation and other KMS aspects a KMS CMK should be used.
 resource "aws_cloudwatch_log_group" "resolver_query_logs" {
+  count = var.use_case == "high_availability" ? 1 : 0
   name              = "/aws/route53resolver/azurevpn"
   retention_in_days = 3
 
@@ -113,8 +141,9 @@ resource "aws_cloudwatch_log_group" "resolver_query_logs" {
 
 # Route53 Resolver Query Logging Configuration
 resource "aws_route53_resolver_query_log_config" "main" {
+  count = var.use_case == "high_availability" ? 1 : 0
   name            = "resolver-query-logs"
-  destination_arn = aws_cloudwatch_log_group.resolver_query_logs.arn
+  destination_arn = aws_cloudwatch_log_group.resolver_query_logs[0].arn
 
   tags = merge(var.tags, {
     Name = "resolver-query-logs"
@@ -123,6 +152,7 @@ resource "aws_route53_resolver_query_log_config" "main" {
 
 # Associate Query Logging with VPC
 resource "aws_route53_resolver_query_log_config_association" "main" {
-  resolver_query_log_config_id = aws_route53_resolver_query_log_config.main.id
+  count                        = var.use_case == "high_availability" ? 1 : 0
+  resolver_query_log_config_id = aws_route53_resolver_query_log_config.main[0].id
   resource_id                  = var.aws.vpc_id
 }

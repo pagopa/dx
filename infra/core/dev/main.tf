@@ -60,6 +60,7 @@ module "vpn" {
     vpc_cidr            = local.aws.vpc_cidr
     route_table_ids     = concat(module.aws.private_route_table_ids, module.aws.isolated_route_table_ids)
     isolated_subnet_ids = module.aws.isolated_subnet_ids
+    dns_forwarder_ip    = "10.0.3.123"
   }
 
   azure = {
