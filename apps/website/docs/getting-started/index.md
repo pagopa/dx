@@ -18,8 +18,9 @@ If you're building APIs, web applications, or services:
    Configure your workspace for PagoPA development
 2. **[Understand our conventions](../conventions/index.md)** - Learn our Git
    workflows, naming conventions, and code standards
-3. **[Explore deployment pipelines](../pipelines/index.md)** - Automate your
+3. **[Deploy applications](../pipelines/index.md)** - Automate your
    deployments with GitHub Actions
+4. **[Deploy infrastructure](../infrastructure/index.md)** - Use Terraform modules to deploy Azure resources
 
 **Quick wins:**
 
@@ -27,27 +28,9 @@ If you're building APIs, web applications, or services:
   instant environment setup
 - Follow our [Git conventions](../conventions/git/index.md) for consistent
   collaboration
-- Deploy with our
+- Deploy apps with our
   [TypeScript deployment workflows](../pipelines/release-azure-appsvc.md)
-
-### 🏗️ Infrastructure Contributors
-
-If you're contributing to infrastructure and platform tooling:
-
-1. **[Learn our infrastructure patterns](../infrastructure/index.md)** -
-   Understand our Terraform modules and patterns
-2. **[Contribute to Terraform modules](../infrastructure/contributing-to-dx-terraform-modules/index.md)** -
-   Help improve shared infrastructure
-3. **[Understand infrastructure pipelines](../pipelines/index.md)** - Learn
-   about CI/CD for infrastructure
-
-**Ways to contribute:**
-
-- Improve
-  [Terraform registry modules](../infrastructure/using-terraform-registry-modules.md)
-- Enhance [infrastructure pipelines](../pipelines/infra-apply.md)
-- Help maintain
-  [Azure naming conventions](../conventions/azure-naming-convention.md)
+- Deploy infrastructure with our [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
 
 ### 🆕 New Team Members
 

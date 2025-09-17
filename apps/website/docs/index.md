@@ -50,7 +50,7 @@ Choose your path based on your role and goals:
 
 <div className="row">
 
-<div className="col col--4">
+<div className="col col--6">
 
 ### 👩‍💻 **Application Developer**
 
@@ -58,27 +58,14 @@ Ready to build your first service?
 
 - [Set up your development environment](getting-started/index.md)
 - [Build and deploy a TypeScript API](pipelines/release-azure-appsvc.md)
+- [Deploy infrastructure with Terraform](infrastructure/index.md)
 - [Follow our coding conventions](conventions/index.md)
 
 [**Start Building →**](getting-started/index.md)
 
 </div>
 
-<div className="col col--4">
-
-### 🏗️ **Infrastructure Contributor**
-
-Contributing to infrastructure and tooling?
-
-- [Contribute to Terraform modules](infrastructure/contributing-to-dx-terraform-modules/index.md)
-- [Learn Azure patterns and practices](infrastructure/azure/index.md)
-- [Understand infrastructure pipelines](pipelines/infra-apply.md)
-
-[**Start Contributing →**](infrastructure/contributing-to-dx-terraform-modules/index.md)
-
-</div>
-
-<div className="col col--4">
+<div className="col col--6">
 
 ### 🆕 **New to PagoPA**
 
