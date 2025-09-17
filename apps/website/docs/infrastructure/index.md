@@ -7,13 +7,14 @@ sidebar_position: 4
 
 This section offers comprehensive guidance on infrastructure-related topics, common problem resolutions, patterns, and best practices for building scalable applications on Azure.
 
-## Quick Start for Platform Engineers
+## Contributing to Infrastructure
 
-New to DX infrastructure tools? Start here:
+Want to contribute to DX infrastructure tools? Start here:
 
-1. **[Set up Terraform modules](./using-terraform-registry-modules.md)** - Use our production-ready modules
-2. **[Configure Azure resources](./azure/index.md)** - Deploy secure, scalable infrastructure
-3. **[Automate deployments](../pipelines/infra-apply.md)** - Set up CI/CD for infrastructure
+1. **[Learn about our Terraform modules](./using-terraform-registry-modules.md)** - Understand our production-ready modules
+2. **[Contribute to modules](./contributing-to-dx-terraform-modules/index.md)** - Help improve shared infrastructure
+3. **[Understand Azure patterns](./azure/index.md)** - Learn our Azure resource patterns
+4. **[Infrastructure automation](../pipelines/infra-apply.md)** - Learn about CI/CD for infrastructure
 
 ## Available Tools
 

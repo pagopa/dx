@@ -21,17 +21,17 @@ If you're building APIs, web applications, or services:
 - Follow our [Git conventions](../conventions/git/index.md) for consistent collaboration
 - Deploy with our [TypeScript deployment workflows](../pipelines/release-azure-appsvc.md)
 
-### 🏗️ Platform Engineers
-If you're managing infrastructure and platform tooling:
+### 🏗️ Infrastructure Contributors
+If you're contributing to infrastructure and platform tooling:
 
-1. **[Set up infrastructure automation](../infrastructure/index.md)** - Learn our Terraform modules and patterns
-2. **[Configure Azure resources](../infrastructure/azure/index.md)** - Deploy production-ready Azure infrastructure
-3. **[Automate with pipelines](../pipelines/index.md)** - Set up CI/CD for infrastructure and applications
+1. **[Learn our infrastructure patterns](../infrastructure/index.md)** - Understand our Terraform modules and patterns
+2. **[Contribute to Terraform modules](../infrastructure/contributing-to-dx-terraform-modules/index.md)** - Help improve shared infrastructure
+3. **[Understand infrastructure pipelines](../pipelines/index.md)** - Learn about CI/CD for infrastructure
 
-**Quick wins:**
-- Use our [Terraform registry modules](../infrastructure/using-terraform-registry-modules.md)
-- Implement [infrastructure pipelines](../pipelines/infra-apply.md)
-- Follow [Azure naming conventions](../conventions/azure-naming-convention.md)
+**Ways to contribute:**
+- Improve [Terraform registry modules](../infrastructure/using-terraform-registry-modules.md)
+- Enhance [infrastructure pipelines](../pipelines/infra-apply.md)
+- Help maintain [Azure naming conventions](../conventions/azure-naming-convention.md)
 
 ### 🆕 New Team Members
 Just joined PagoPA? Start here:

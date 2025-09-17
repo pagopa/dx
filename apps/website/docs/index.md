@@ -2,7 +2,7 @@
 sidebar_position: 1
 title: Developer Experience at PagoPA
 description: Accelerate your development with proven tools, patterns, and best practices for building scalable applications on Azure.
-keywords: [developer experience, pagopa, azure, terraform, typescript, devops, platform engineering]
+keywords: [developer experience, pagopa, azure, terraform, typescript, devops, infrastructure, contributing]
 ---
 
 # Developer Experience at PagoPA
@@ -46,14 +46,14 @@ Ready to build your first service?
 
 <div className="col col--4">
 
-### 🏗️ **Platform Engineer**
-Managing infrastructure and tooling?
+### 🏗️ **Infrastructure Contributor**
+Contributing to infrastructure and tooling?
 
-- [Set up infrastructure with Terraform](infrastructure/index.md)
-- [Configure Azure resources](infrastructure/azure/index.md)
-- [Automate with GitHub Actions](pipelines/index.md)
+- [Contribute to Terraform modules](infrastructure/contributing-to-dx-terraform-modules/index.md)
+- [Learn Azure patterns and practices](infrastructure/azure/index.md)
+- [Understand infrastructure pipelines](pipelines/infra-apply.md)
 
-[**Start Building →**](getting-started/index.md)
+[**Start Contributing →**](infrastructure/contributing-to-dx-terraform-modules/index.md)
 
 </div>
 

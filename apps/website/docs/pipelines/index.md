@@ -57,16 +57,16 @@ New to DX pipelines? Start here:
 3. **Configure triggers:**
    - Learn about [workflow triggers](./triggers.md) and branch protection
 
-### For Platform Teams
+### For Infrastructure Contributors
 
 1. **Infrastructure automation:**
-   - Set up [Infrastructure Planning](./infra-plan.md) for pull requests
-   - Configure [Infrastructure Apply](./infra-apply.md) for deployments
-   - Enable [Drift Detection](./drift-detection.md) for monitoring
+   - Learn about [Infrastructure Planning](./infra-plan.md) for pull requests
+   - Understand [Infrastructure Apply](./infra-apply.md) for deployments
+   - Help improve [Drift Detection](./drift-detection.md) for monitoring
 
 2. **Security and compliance:**
-   - Implement [Azure Login](./azure-login.md) patterns
-   - Set up [Static Analysis](./static-analysis.md) across repositories
+   - Contribute to [Azure Login](./azure-login.md) patterns
+   - Enhance [Static Analysis](./static-analysis.md) across repositories
 
 ## Workflow Features
 
