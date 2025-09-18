@@ -34,6 +34,19 @@
   --pagopa-shadow-strong: rgba(0, 161, 176, 0.24);
 }
 
+/* Dark mode variable overrides */
+[data-theme="dark"] {
+  --pagopa-text-primary: #ffffff;
+  --pagopa-text-secondary: #b3b3b3;
+  --pagopa-background: #1a1a1a;
+  --pagopa-background-light: #1a1a1a;
+  --pagopa-background-card: #242526;
+  --pagopa-border: #444950;
+  --pagopa-shadow: rgba(0, 0, 0, 0.3);
+  --pagopa-shadow-hover: rgba(0, 0, 0, 0.5);
+  --pagopa-shadow-strong: rgba(0, 0, 0, 0.7);
+}
+
 /* Hero Banner */
 .heroBanner {
   background: linear-gradient(
@@ -46,6 +59,17 @@
   padding: 4rem 0;
   position: relative;
   overflow: hidden;
+}
+
+/* Dark mode styles for hero banner */
+[data-theme="dark"] .heroBanner {
+  background: linear-gradient(
+    135deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    var(--pagopa-primary-dark) 75%,
+    var(--pagopa-primary) 100%
+  );
 }
 
 .heroBanner::before {
@@ -201,6 +225,11 @@
   background: var(--pagopa-background-light);
 }
 
+/* Dark mode styles for topics section */
+[data-theme="dark"] .topicsSection {
+  background: var(--pagopa-background-light);
+}
+
 .topicsHeader {
   text-align: center;
 }
@@ -224,6 +253,15 @@
   margin-right: auto;
 }
 
+/* Dark mode styles for section headers */
+[data-theme="dark"] .sectionTitle {
+  color: var(--pagopa-text-primary);
+}
+
+[data-theme="dark"] .sectionSubtitle {
+  color: var(--pagopa-text-secondary);
+}
+
 .topicsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -244,6 +282,17 @@
 .topicCard:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 40px var(--pagopa-shadow-hover);
+}
+
+/* Dark mode styles for topic cards */
+[data-theme="dark"] .topicCard {
+  background: #242526;
+  border: 1px solid #444950;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .topicCard:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 .topicCardLink {
@@ -302,6 +351,19 @@
   flex-grow: 1;
 }
 
+/* Dark mode styles for topic card text */
+[data-theme="dark"] .topicTitle {
+  color: var(--pagopa-text-primary);
+}
+
+[data-theme="dark"] .topicDescription {
+  color: var(--pagopa-text-secondary);
+}
+
+[data-theme="dark"] .topicItem {
+  color: var(--pagopa-text-secondary);
+}
+
 .topicItems {
   list-style: none;
   padding: 0;
@@ -332,6 +394,11 @@
   border-top: 1px solid var(--pagopa-border);
 }
 
+/* Dark mode styles for topic card footer */
+[data-theme="dark"] .topicCardFooter {
+  border-top: 1px solid #444950;
+}
+
 .exploreText {
   color: var(--pagopa-primary);
   font-weight: 600;
@@ -345,6 +412,12 @@
   padding: 5rem 0;
   background: var(--pagopa-background);
   border-top: 1px solid var(--pagopa-border);
+}
+
+/* Dark mode styles for discoverable section */
+[data-theme="dark"] .discoverableSection {
+  background: var(--ifm-background-color);
+  border-top: 1px solid var(--ifm-color-emphasis-300);
 }
 
 .discoverableContent {
@@ -377,6 +450,19 @@
   line-height: 1.6;
   color: var(--pagopa-text-secondary);
   margin: 0 0 2rem 0;
+}
+
+/* Dark mode styles for discoverable text */
+[data-theme="dark"] .discoverableTitle {
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme="dark"] .discoverableSubtitle {
+  color: var(--pagopa-primary);
+}
+
+[data-theme="dark"] .discoverableDescription {
+  color: var(--ifm-color-emphasis-700);
 }
 
 .contributeButton {

@@ -115,6 +115,11 @@
   );
 }
 
+/* Dark mode footer styling */
+[data-theme="dark"] .footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f1419 100%);
+}
+
 /* Card enhancements for better visual hierarchy */
 .card {
   box-shadow: 0 4px 20px rgba(0, 161, 176, 0.08);
