@@ -4,8 +4,8 @@
  * work well for content-centric websites.
  */
 
-/* Import Google Fonts - PagoPA Typography */
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
+/* Import Local Fonts - PagoPA Typography */
+@import url("./fonts.css");
 
 /* PagoPA Color Palette - Updated with #00a1b0 */
 :root {
