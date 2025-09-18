@@ -1,7 +1,11 @@
 # Security Group for Route53 Resolver endpoints
 # trivy:ignore:AVD-AWS-0104 Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
 resource "aws_security_group" "resolver" {
-  name_prefix = "route53-resolver-"
+  name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
+    name            = "route53-resolvers"
+    resource_type   = "security_group"
+    instance_number = local.aws_naming_config.instance_number
+  }))
   vpc_id      = var.aws.vpc_id
   description = "Security group for Route53 Resolver endpoints"
 
@@ -130,7 +134,7 @@ resource "aws_route53_resolver_rule_association" "azure_zones" {
 # CloudWatch Log Group for Query Logging (optional)
 # trivy:ignore:AVD-AWS-0017 CloudWatch log groups are encrypted by default, however, to get the full benefit of controlling key rotation and other KMS aspects a KMS CMK should be used.
 resource "aws_cloudwatch_log_group" "resolver_query_logs" {
-  count = var.use_case == "high_availability" ? 1 : 0
+  count             = var.use_case == "high_availability" ? 1 : 0
   name              = "/aws/route53resolver/azurevpn"
   retention_in_days = 3
 
@@ -141,7 +145,7 @@ resource "aws_cloudwatch_log_group" "resolver_query_logs" {
 
 # Route53 Resolver Query Logging Configuration
 resource "aws_route53_resolver_query_log_config" "main" {
-  count = var.use_case == "high_availability" ? 1 : 0
+  count           = var.use_case == "high_availability" ? 1 : 0
   name            = "resolver-query-logs"
   destination_arn = aws_cloudwatch_log_group.resolver_query_logs[0].arn
 
