@@ -26,7 +26,7 @@ resource "azurerm_virtual_network_gateway" "this" {
   type          = "Vpn"
   vpn_type      = "RouteBased"
   active_active = local.use_cases[var.vpn_use_case].vpn_connections_number > 1 ? true : false
-  enable_bgp    = var.aws_vpn_enabled
+  enable_bgp    = var.cross_cloud_dns_enabled
   sku           = local.use_cases[var.vpn_use_case].sku
   generation    = "Generation${local.use_cases[var.vpn_use_case].generation}"
 
@@ -42,7 +42,7 @@ resource "azurerm_virtual_network_gateway" "this" {
   }
 
   dynamic "bgp_settings" {
-    for_each = var.aws_vpn_enabled ? [1] : []
+    for_each = var.cross_cloud_dns_enabled ? [1] : []
     content {
       asn = local.aws.bgp_asn
 

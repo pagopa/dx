@@ -57,8 +57,6 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_vpn_enabled"></a> [aws\_vpn\_enabled](#input\_aws\_vpn\_enabled) | A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS. | `bool` | `false` | no |
-| <a name="input_cross_cloud_dns_config"></a> [cross\_cloud\_dns\_config](#input\_cross\_cloud\_dns\_config) | Cross-cloud DNS configuration for AWS integration. Required when cross\_cloud\_dns\_enabled is true. | <pre>object({<br/>    aws_coredns_ip = string<br/>    aws_vpc_cidr   = string<br/>  })</pre> | <pre>{<br/>  "aws_coredns_ip": "",<br/>  "aws_vpc_cidr": ""<br/>}</pre> | no |
 | <a name="input_cross_cloud_dns_enabled"></a> [cross\_cloud\_dns\_enabled](#input\_cross\_cloud\_dns\_enabled) | Enable cross-cloud DNS resolution with AWS. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | A boolean flag to enable or disable the creation of a NAT gateway. | `bool` | `false` | no |

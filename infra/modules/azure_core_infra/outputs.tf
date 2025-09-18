@@ -96,17 +96,17 @@ output "common_nat_gateways" {
 
 output "vpn_gateway_id" {
   description = "The ID of the virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].gateway_id : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].gateway_id : null
 }
 
 output "vpn_fqdns" {
   description = "The FQDNs for virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].fqdns : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].fqdns : null
 }
 
 output "vpn_public_ips" {
   description = "The public IP addresses associated with the virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].public_ips : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].public_ips : null
 }
 
 # Key Vault

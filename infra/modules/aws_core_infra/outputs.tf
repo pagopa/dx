@@ -108,14 +108,3 @@ output "github_personal_access_token_ssm_parameter_name" {
   description = "SSM parameter name for the GitHub personal access token"
   value       = aws_ssm_parameter.personal_access_token.name
 }
-
-# DNS Forwarder Outputs
-output "dns_forwarder" {
-  description = "DNS forwarder configuration and endpoints"
-  value = var.cross_cloud_dns_enabled ? {
-    instance_id    = module.dns_forwarder[0].coredns_instance_id
-    private_ip     = module.dns_forwarder[0].coredns_private_ip
-    endpoint       = module.dns_forwarder[0].coredns_endpoint
-    security_group = module.dns_forwarder[0].security_group_id
-  } : null
-}

@@ -23,8 +23,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_vpn_enabled"></a> [aws\_vpn\_enabled](#input\_aws\_vpn\_enabled) | A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS. | `bool` | `false` | no |
-| <a name="input_cross_cloud_dns_config"></a> [cross\_cloud\_dns\_config](#input\_cross\_cloud\_dns\_config) | Cross-cloud DNS configuration for AWS integration. Required when cross\_cloud\_dns\_enabled is true. | <pre>object({<br/>    aws_coredns_ip = string<br/>    aws_vpc_cidr   = string<br/>  })</pre> | <pre>{<br/>  "aws_coredns_ip": "",<br/>  "aws_vpc_cidr": ""<br/>}</pre> | no |
 | <a name="input_cross_cloud_dns_enabled"></a> [cross\_cloud\_dns\_enabled](#input\_cross\_cloud\_dns\_enabled) | Enable cross-cloud DNS resolution with AWS. | `bool` | `false` | no |
 | <a name="input_dnsforwarder_subnet_id"></a> [dnsforwarder\_subnet\_id](#input\_dnsforwarder\_subnet\_id) | DNS forwarder subnet ID. | `string` | n/a | yes |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment in short form where resources are located | `string` | n/a | yes |
