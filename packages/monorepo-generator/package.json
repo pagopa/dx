@@ -23,11 +23,11 @@
     "plop": "catalog:"
   },
   "devDependencies": {
-    "plop": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:dx",
+    "plop": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   },
@@ -36,5 +36,9 @@
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "execa": "^9.6.0",
+    "neverthrow": "^8.2.0"
   }
 }
