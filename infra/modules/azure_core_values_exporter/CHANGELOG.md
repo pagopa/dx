@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.2.1
+
+### Patch Changes
+
+- 1cbe3ca: Add the following outputs about the VPN (common_vpn_snet, vpn_gateway_id, vpn_fqdns, vpn_public_ips)
+
 ## 0.2.0
 
 ### Minor Changes

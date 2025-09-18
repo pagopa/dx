@@ -1,5 +1,11 @@
 # provider-aws
 
+## 0.1.2
+
+### Patch Changes
+
+- 4803b50: Added DNS related resources abbreviations
+
 ## 0.1.1
 
 ### Patch Changes
