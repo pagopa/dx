@@ -5,6 +5,7 @@ import React from "react";
 
 import SearchComponent from "../components/SearchComponent";
 import styles from "./index.module.css";
+import "../css/button-override.css";
 
 const topicCards = [
   {
@@ -121,10 +122,10 @@ function HomepageHeader() {
                 Get Started
               </Link>
               <Link
-                className={`button button--secondary button--lg ${styles.heroButton}`}
+                className={`button button--secondary button--lg ${styles.heroButton} ${styles.heroButtonWithIcon}`}
                 to="/blog"
               >
-                Stay Updated
+                Stay up to date!
               </Link>
             </div>
           </div>

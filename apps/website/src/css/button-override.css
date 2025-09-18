@@ -1,0 +1,32 @@
+/* Global CSS override for the secondary button in hero section */
+.heroBanner a[href="/blog"] {
+  color: #ffffff !important;
+}
+
+.heroBanner a[href="/blog"]:hover {
+  color: #ffffff !important;
+}
+
+.heroBanner a[href="/blog"]:visited {
+  color: #ffffff !important;
+}
+
+.heroBanner a[href="/blog"]:focus {
+  color: #ffffff !important;
+}
+
+.heroBanner a[href="/blog"]:active {
+  color: #ffffff !important;
+}
+
+/* More specific override using classes */
+.button--secondary[href="/blog"] {
+  color: #ffffff !important;
+}
+
+.button--secondary[href="/blog"]:hover,
+.button--secondary[href="/blog"]:visited,
+.button--secondary[href="/blog"]:focus,
+.button--secondary[href="/blog"]:active {
+  color: #ffffff !important;
+}
