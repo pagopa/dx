@@ -30,7 +30,7 @@ export const makeInitCommand = (): Command =>
           ),
         )
         .andTee(() => {
-          //eslint-disable-next-line no-console
+          // eslint-disable-next-line no-console
           console.log("Monorepo initialized successfully ✅");
         })
         .orTee((err) => {
