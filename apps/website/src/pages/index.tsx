@@ -3,6 +3,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import React from "react";
 
+import SearchComponent from "../components/SearchComponent";
 import styles from "./index.module.css";
 
 const topicCards = [
@@ -170,11 +171,12 @@ function TopicsSection() {
     <section className={styles.topicsSection}>
       <div className="container">
         <div className={styles.topicsHeader}>
-          <h2 className={styles.sectionTitle}>Tech Topics</h2>
+          {/* <h2 className={styles.sectionTitle}>Tech Topics</h2> */}
           <p className={styles.sectionSubtitle}>
             Start your journey here and explore one of the topics below
           </p>
         </div>
+        <SearchComponent className={styles.topicsSearch} />
         <div className={styles.topicsGrid}>
           {topicCards.map((topic, index) => (
             <TopicCard key={index} {...topic} />
