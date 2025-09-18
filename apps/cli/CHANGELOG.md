@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.5.0
+
+### Minor Changes
+
+- 8abeb56: Experimental: Add `codemod` command behind `ENABLE_CODEMODS` feature flag
+
 ## 0.4.4
 
 ### Patch Changes
