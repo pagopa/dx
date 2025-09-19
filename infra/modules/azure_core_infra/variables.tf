@@ -46,12 +46,6 @@ variable "vpn_enabled" {
   default     = false
 }
 
-variable "aws_vpn_enabled" {
-  type        = bool
-  description = "A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS."
-  default     = false
-}
-
 variable "vpn_use_case" {
   type        = string
   description = "Site-to-Site VPN use case. Allowed values: 'default', 'high_availability'."
@@ -61,4 +55,11 @@ variable "vpn_use_case" {
     condition     = contains(["default", "high_availability"], var.vpn_use_case)
     error_message = "vpn_use_case must be either 'default' or 'high_availability'."
   }
+}
+
+# Cross-cloud DNS configuration
+variable "cross_cloud_dns_enabled" {
+  type        = bool
+  description = "Enable cross-cloud DNS resolution with AWS."
+  default     = false
 }

@@ -25,7 +25,7 @@ terraform {
     resource_group_name  = "dx-d-itn-tfstate-rg-01"
     storage_account_name = "dxditntfstatest01"
     container_name       = "terraform-state"
-    key                  = "dx.core.dev.tfstate"
+    key                  = "dx.example.dev.tfstate"
   }
 }
 
@@ -35,7 +35,10 @@ provider "azurerm" {
 }
 
 provider "aws" {
-  region = local.aws_environment.region
+  region = var.aws.region
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awsdx" {

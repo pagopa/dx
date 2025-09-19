@@ -4,7 +4,7 @@ locals {
     location        = "italynorth"
     location_short  = "itn"
     env_short       = "d"
-    app_name        = "core"
+    app_name        = "examples"
     instance_number = "01"
   }
 
@@ -12,7 +12,7 @@ locals {
     prefix          = "dx"
     env_short       = "d"
     region          = "eu-south-1"
-    app_name        = "core"
+    app_name        = "examples"
     instance_number = "01"
   }
 
@@ -29,7 +29,7 @@ locals {
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
     Environment    = "Dev"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/core/dev"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/aws_azure_vpn/examples/complete"
     ManagementTeam = "Developer Experience"
   }
 }
