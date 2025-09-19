@@ -182,8 +182,8 @@ resource "aws_network_interface" "coredns" {
   source_dest_check = false
   tags = merge(var.tags, {
     Name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
-      name          = "coredns-instance-eni"
-      resource_type = "ec2_instance"
+      name          = "coredns-instance"
+      resource_type = "network_interface"
     }))
   })
 }

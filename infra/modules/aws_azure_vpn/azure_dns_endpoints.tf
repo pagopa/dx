@@ -62,8 +62,7 @@ resource "azurerm_subnet" "outbound_endpoint_snet" {
 
 # Azure Private DNS Resolver
 resource "azurerm_private_dns_resolver" "main" {
-  # name                = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "private_dns_resolver" }))
-  name                = "private-dns-resolver"
+  name                = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "dns_private_resolver" }))
   resource_group_name = var.azure.resource_group_name
   location            = var.azure.location
   virtual_network_id  = var.azure.vnet_id
@@ -73,9 +72,8 @@ resource "azurerm_private_dns_resolver" "main" {
 
 # Inbound Endpoint - allows AWS to query Azure private DNS zones
 resource "azurerm_private_dns_resolver_inbound_endpoint" "main" {
-  count = var.use_case == "high_availability" ? 1 : 0
-  # name                    = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "private_dns_resolver_inbound_endpoint" }))
-  name                    = "private-dns-resolver-inbound-endpoint"
+  count                   = var.use_case == "high_availability" ? 1 : 0
+  name                    = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "dns_private_resolver_inbound_endpoint" }))
   private_dns_resolver_id = azurerm_private_dns_resolver.main.id
   location                = var.azure.location
 
@@ -89,8 +87,7 @@ resource "azurerm_private_dns_resolver_inbound_endpoint" "main" {
 
 # Outbound Endpoint - allows Azure to query AWS private DNS zones
 resource "azurerm_private_dns_resolver_outbound_endpoint" "main" {
-  # name                    = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "private_dns_resolver_outbound_endpoint" }))
-  name                    = "private-dns-resolver-outbound-endpoint"
+  name                    = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "dns_private_resolver_outbound_endpoint" }))
   private_dns_resolver_id = azurerm_private_dns_resolver.main.id
   location                = var.azure.location
   subnet_id               = azurerm_subnet.outbound_endpoint_snet.id
@@ -100,8 +97,7 @@ resource "azurerm_private_dns_resolver_outbound_endpoint" "main" {
 
 # DNS Forwarding Ruleset
 resource "azurerm_private_dns_resolver_dns_forwarding_ruleset" "aws" {
-  # name                                       = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "private_dns_resolver_dns_forwarding_ruleset" }))
-  name                                       = "aws-dns-forwarding-ruleset"
+  name                                       = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "dns_forwarding_ruleset" }))
   resource_group_name                        = var.azure.resource_group_name
   location                                   = var.azure.location
   private_dns_resolver_outbound_endpoint_ids = [azurerm_private_dns_resolver_outbound_endpoint.main.id]
@@ -136,8 +132,7 @@ resource "azurerm_private_dns_resolver_forwarding_rule" "aws_domains" {
 
 # Virtual Network Link - Associates the ruleset with the VNet
 resource "azurerm_private_dns_resolver_virtual_network_link" "main" {
-  # name                      = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "private_dns_resolver_virtual_network_link" }))
-  name                      = "vnet-link"
+  name                      = provider::azuredx::resource_name(merge(local.azure_naming_config, { resource_type = "dns_private_resolver_virtual_network_link" }))
   dns_forwarding_ruleset_id = azurerm_private_dns_resolver_dns_forwarding_ruleset.aws.id
   virtual_network_id        = var.azure.vnet_id
 }
