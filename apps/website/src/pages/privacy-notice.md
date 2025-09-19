@@ -1,6 +1,6 @@
-# Privacy Policy
+# Privacy Notice
 
-This privacy policy, provided pursuant to Regulation (EU) 2016/679 (hereinafter,
+This privacy notice, provided pursuant to Regulation (EU) 2016/679 (hereinafter,
 also "Regulation" or "GDPR"), describes the processing of personal data of users
 (hereinafter, "Data Subject(s)" or generically "User(s)") who browse the website
 dx.pagopa.it (hereinafter, also the "Site"), managed by PagoPA S.p.A.
@@ -14,20 +14,15 @@ even if managed by the Company.
 
 The data controller is PagoPA S.p.A., with registered office in Rome, Piazza
 Colonna n. 370, ZIP - 00187, registration number in the Rome Business Register,
-Tax Code and VAT number 15376371009. Email: info@pagopa.it.
-
-For any request regarding the processing of personal data, please write using
-the dedicated form for managing data subject requests.
+Tax Code and VAT number 15376371009. PEC pagopaspa@pec.pagopa.it.
 
 ## Data Protection Officer
 
 PagoPA S.p.A. has appointed its own Data Protection Officer (DPO), pursuant to
-art. 37 of the Regulation, who can be contacted at the following addresses:
-
-- email: dpo@pagopa.it
-- PEC: dpo@pec.pagopa.it
-- address: Via Sardegna n. 38 - 00187, ROME (operational headquarters of the
-  company)
+art. 37 of the Regulation, who can be contacted through the
+[dedicated form](https://privacyportal-de.onetrust.com/webform/77f17844-04c3-4969-a11d-462ee77acbe1/9ab6533d-be4a-482e-929a-0d8d2ab29df8)
+or by regular mail at the address: Via Sardegna n. 38 - 00187, ROME (operational
+headquarters of the company).
 
 ## Data Categories and Purposes
 
@@ -158,8 +153,10 @@ In case the processing is based on consent, Users have the right to withdraw it
 at any time without affecting the lawfulness of processing based on consent
 before its withdrawal.
 
-Requests for exercising such rights may be addressed to the Controller by
-writing to: privacy@pagopa.it
+For any request regarding the processing of personal data, please write using
+the
+[dedicated form](https://privacyportal-de.onetrust.com/webform/77f17844-04c3-4969-a11d-462ee77acbe1/9ab6533d-be4a-482e-929a-0d8d2ab29df8)
+for managing data subject requests.
 
 Should a User believe that processing of personal data violates the provisions
 of the Regulation, they have the right to lodge a complaint with the supervisory

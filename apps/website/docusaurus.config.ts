@@ -116,8 +116,8 @@ const config: Config = {
         {
           items: [
             {
-              label: "Privacy Policy",
-              to: "/privacy-policy",
+              label: "Privacy Notice",
+              to: "/privacy-notice",
             },
             {
               label: "Legal Notes",

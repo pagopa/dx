@@ -1,5 +1,11 @@
 # docs
 
+## 0.8.0
+
+### Minor Changes
+
+- a3f3535: Fix privacy policy
+
 ## 0.7.0
 
 ### Minor Changes
