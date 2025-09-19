@@ -291,11 +291,12 @@ func TestResourceNameFunction_AllRegions(t *testing.T) {
 
 func TestResourceNameFunction_LongerPrefixes(t *testing.T) {
 	t.Parallel()
-	// Test prefix lengths from 2 to 4 characters
+	// Test prefix lengths from 1 to 4 characters
 	testCases := []struct {
 		prefix   string
 		expected string
 	}{
+		{"x", "x-d-eu-test-ec2-01"},
 		{"dx", "dx-d-eu-test-ec2-01"},
 		{"abc", "abc-d-eu-test-ec2-01"},
 		{"test", "test-d-eu-test-ec2-01"},
@@ -339,7 +340,7 @@ func TestResourceNameFunction_InvalidPrefix(t *testing.T) {
 		prefix      string
 		description string
 	}{
-		{"x", "too short"},
+		{"", "empty"},
 		{"toolong", "too long"},
 	}
 
@@ -364,7 +365,7 @@ func TestResourceNameFunction_InvalidPrefix(t *testing.T) {
 							})
             }
             `,
-						ExpectError: regexp.MustCompile(`Prefix must be between[\s\n]*2[\s\n]*and[\s\n]*4[\s\n]*characters long`),
+						ExpectError: regexp.MustCompile(`Prefix must be between[\s\n]*1[\s\n]*and[\s\n]*4[\s\n]*characters long`),
 					},
 				},
 			})
