@@ -60,7 +60,7 @@ on:
         default: ""
 
 concurrency:
-  group: ${{ github.workflow }}-cd
+  group: ${{ github.workflow }}-${{ github.ref }}-cd
   cancel-in-progress: true
 
 env:
