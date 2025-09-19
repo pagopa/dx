@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.6
+
+### Patch Changes
+
+- 4803b50: Added DNS related resources abbreviations
+
 ## 0.6.5
 
 ### Patch Changes

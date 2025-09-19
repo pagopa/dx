@@ -1,5 +1,17 @@
 # @pagopa/monorepo-generator
 
+## 0.3.0
+
+### Minor Changes
+
+- 9ba06a2: Add the templates for the infra plan and apply and update the generator to scaffold them
+- 5a0fc56: Add the `.pre-commit-config.yaml` to the template
+
+  The generator already scaffold the dotfiles (`.`), so when executing the generator, you will have the `.pre-commit-config.yaml` file created in your project.
+
+- 40424ad: Add templates for `.gitignore`, `.prettierignore` and `.trivyignore`
+- 36b387f: Create a template for `turbo` configuration file and instruct the generator to generate it
+
 ## 0.2.0
 
 ### Minor Changes
