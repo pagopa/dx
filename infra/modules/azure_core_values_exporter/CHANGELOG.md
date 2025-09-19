@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.2.2
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
 ## 0.2.1
 
 ### Patch Changes
