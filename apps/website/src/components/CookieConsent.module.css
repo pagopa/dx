@@ -159,11 +159,11 @@
 }
 
 [data-theme="dark"] .buttonPrimary {
-  background: #25c2a0;
+  background: #157560;
 }
 
 [data-theme="dark"] .buttonPrimary:hover {
-  background: #21af90;
+  background: #13654f;
 }
 
 [data-theme="dark"] .buttonSecondary {

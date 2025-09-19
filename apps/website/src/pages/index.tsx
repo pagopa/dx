@@ -172,9 +172,9 @@ function TopicsSection() {
       <div className="container">
         <div className={styles.topicsHeader}>
           {/* <h2 className={styles.sectionTitle}>Tech Topics</h2> */}
-          <p className={styles.sectionSubtitle}>
+          <h2 className={styles.sectionSubtitle}>
             Start your journey here and explore one of the topics below
-          </p>
+          </h2>
         </div>
         <SearchComponent className={styles.topicsSearch} />
         <div className={styles.topicsGrid}>
