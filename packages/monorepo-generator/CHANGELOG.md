@@ -1,5 +1,11 @@
 # @pagopa/monorepo-generator
 
+## 0.3.1
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
 ## 0.3.0
 
 ### Minor Changes
