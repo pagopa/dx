@@ -26,7 +26,7 @@ resource "azurerm_subnet" "inbound_endpoint_snet" {
   address_prefixes     = [dx_available_subnet_cidr.inbound_endpoint_cidr[0].cidr_block]
 
   delegation {
-    name = "dns-inbound-delegation"
+    name = "Microsoft.Network.dnsResolvers"
 
     service_delegation {
       name = "Microsoft.Network/dnsResolvers"
@@ -49,7 +49,7 @@ resource "azurerm_subnet" "outbound_endpoint_snet" {
   address_prefixes     = [dx_available_subnet_cidr.outbound_endpoint_cidr.cidr_block]
 
   delegation {
-    name = "dns-outbound-delegation"
+    name = "Microsoft.Network.dnsResolvers"
 
     service_delegation {
       name = "Microsoft.Network/dnsResolvers"
