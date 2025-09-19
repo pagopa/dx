@@ -61,7 +61,7 @@ resource "aws_security_group" "resolver" {
 # This allows Azure resources to query AWS private DNS zones
 resource "aws_route53_resolver_endpoint" "inbound" {
   count     = var.use_case == "high_availability" ? 1 : 0
-  name      = "resolver-inbound"
+  name      = provider::awsdx::resource_name(merge(local.aws_naming_config, { resource_type = "route53_resolver_endpoint", name = "inbound" }))
   direction = "INBOUND"
 
   security_group_ids = [aws_security_group.resolver.id]
@@ -82,7 +82,7 @@ resource "aws_route53_resolver_endpoint" "inbound" {
 # Route53 Resolver Outbound Endpoint  
 # This allows AWS resources to query Azure private DNS zones
 resource "aws_route53_resolver_endpoint" "outbound" {
-  name      = "resolver-outbound"
+  name      = provider::awsdx::resource_name(merge(local.aws_naming_config, { resource_type = "route53_resolver_endpoint", name = "outbound" }))
   direction = "OUTBOUND"
 
   security_group_ids = [aws_security_group.resolver.id]
