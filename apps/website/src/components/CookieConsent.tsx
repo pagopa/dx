@@ -107,7 +107,7 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Privacy Policy
+                  Privacy Notice
                 </a>
                 .
               </p>
