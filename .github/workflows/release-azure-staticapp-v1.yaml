@@ -30,7 +30,7 @@ on:
         description: The name of the build output directory.
         type: string
         required: false
-        default: 'dist'
+        default: "dist"
       static_web_app_name:
         description: Azure Static Web App name where the assets will be deployed.
         type: string
@@ -57,7 +57,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -83,7 +83,7 @@ jobs:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
           WORKSPACE_NAME: ${{ inputs.workspace_name }}
-      
+
       - name: Get Artifact path
         id: get-artifact-path
         working-directory: ${{ steps.build-package.outputs.workspace-path }}
