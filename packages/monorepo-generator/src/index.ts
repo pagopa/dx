@@ -1,7 +1,19 @@
 import type { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 
 import path from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { Octokit } from "octokit";
+
+import {
+  getDxGitHubBootstrapLatestTag,
+  getGitHubTerraformProviderLatestRelease,
+} from "./actions/terraform.js";
+
+interface ActionsDependencies {
+  octokitClient: Octokit;
+  templatesPath: string;
+}
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -71,18 +83,38 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getActions = (templatesPath: string): ActionType[] => [
+const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
+  {
+    abortOnFail: true,
+    base: `${templatesPath}/infra/repository`,
+    destination: "{{repoSrc}}/{{repoName}}/infra/repository",
+    templateFiles: path.join(templatesPath, "infra", "repository", "*.tf.hbs"),
+    type: "addMany",
+  },
+];
+
+const getActions = ({
+  octokitClient,
+  templatesPath,
+}: ActionsDependencies): ActionType[] => [
+  getGitHubTerraformProviderLatestRelease({ octokitClient }),
+  getDxGitHubBootstrapLatestTag({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
+  ...getTerraformRepositoryFile(templatesPath),
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
   // The bundled templates are in the "monorepo" subdirectory
   const templatesPath = path.join(entryPointDirectory, "monorepo");
+  const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   const prompts = getPrompts();
-  const actions = getActions(templatesPath);
+  const actions = getActions({
+    octokitClient,
+    templatesPath,
+  });
 
   plopApi.setGenerator("monorepo", {
     actions,
