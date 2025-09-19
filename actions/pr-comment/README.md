@@ -174,4 +174,4 @@ This TypeScript version replaces the previous YAML-based implementation with the
 
 ## Maintainers
 
-This action is maintained by the [PagoPA DX](https://pagopa.github.io/dx/docs/) team.
+This action is maintained by the [PagoPA DX](https://dx.pagopa.it/docs/) team.

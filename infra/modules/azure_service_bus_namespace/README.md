@@ -12,13 +12,13 @@ This Terraform module deploys an Azure Service Bus namespace. Currently it suppo
 
 ## Use cases and Configurations
 
-| Use case | Description                                                  | Security                                                                      |
-|----------|--------------------------------------------------------------|-------------------------------------------------------------------------------|
-| default  | High-load production environments and all features available | Access via Private Endpoints only                                             |
+| Use case | Description                                                  | Security                          |
+| -------- | ------------------------------------------------------------ | --------------------------------- |
+| default  | High-load production environments and all features available | Access via Private Endpoints only |
 
 ## Best Practices
 
-Patterns and advices on how use Service Bus can be found in [DX documentation](https://pagopa.github.io/dx/docs/infrastructure/azure/using-service-bus).
+Patterns and advices on how use Service Bus can be found in [DX documentation](https://dx.pagopa.it/docs/infrastructure/azure/using-service-bus).
 
 ## Usage Example
 

@@ -31,20 +31,19 @@ jobs:
         run: npm ci
 
       # The code-review script must be defined in the root workspace
-      # Example: "turbo run typecheck format:check lint:check //#test:coverage"
+      # Example: "turbo run typecheck format:check lint:check test:coverage"
       # See https://github.com/pagopa/io-fims/pull/41
       - name: Run code-review script
         if: steps.node-setup.outputs.package-manager != ''
         run: ${{ steps.node-setup.outputs.package-manager }} run code-review
 
       # Codecov provides reports and metrics about test coverage data.
-      # To enable set CODECOV_TOKEN secret at repo level and make sure
-      # that your "code-review" script creates a "coverage/" folder in
-      # the root workspace.
+      # To enable set CODECOV_TOKEN secret at repo level
       - name: Upload coverage report to codecov.io
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@84508663e988701840491b86de86b666e8a86bed # v4.3.0
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           token: ${{ env.CODECOV_TOKEN }}
+          codecov_yml_path: codecov.yml

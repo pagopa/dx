@@ -1,0 +1,31 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+      dx-cli:
+        target: 80%
+        flags:
+          - dx-cli
+      pr-comment:
+        target: 80%
+        flags:
+          - pr-comment-action
+
+comment:
+  layout: "diff, flags, files"
+  behavior: default
+  require_changes: false
+  require_head: false
+  require_base: false
+  branches: []
+
+flags:
+  dx-cli:
+    paths:
+      - apps/cli
+    carryforward: false
+  pr-comment-action:
+    paths:
+      - actions/pr-comment
+    carryforward: false

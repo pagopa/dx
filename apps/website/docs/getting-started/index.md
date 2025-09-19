@@ -1,8 +1,40 @@
 ---
+sidebar_label: "Getting Started"
 sidebar_position: 2
 ---
 
-# Getting Started
+# Getting Started with DX
+
+Welcome to the PagoPA Developer Experience initiative! This section will help
+you get up and running quickly, regardless of your role or experience level.
+
+## Choose Your Path
+
+### 👩‍💻 Application Developers
+
+If you're building APIs, web applications, or services:
+
+1. **[Set up your development environment](./monorepository-setup.md)** -
+   Configure your workspace for PagoPA development
+2. **[Understand our conventions](../conventions/index.md)** - Learn our Git
+   workflows, naming conventions, and code standards
+3. **[Deploy applications](../pipelines/index.md)** - Automate your deployments
+   with GitHub Actions
+4. **[Deploy infrastructure](../infrastructure/index.md)** - Use Terraform
+   modules to deploy Azure resources
+
+**Quick wins:**
+
+- Use our [pre-configured dev containers](../dev-containers/index.md) for
+  instant environment setup
+- Follow our [Git conventions](../conventions/git/index.md) for consistent
+  collaboration
+- Deploy apps with our
+  [TypeScript deployment workflows](../pipelines/release-azure-appsvc.md)
+- Deploy infrastructure with our
+  [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
+
+## Getting Started with DX
 
 Getting started with DX tooling can sometimes feel overwhelming, as it covers a
 wide range of scenarios. This page provides initial guidance to help understand
@@ -19,10 +51,15 @@ this section may save you from getting stuck later 🫷.
 
 ### Mono Repository: Yes Please!
 
+:::warning **Mono Repository Required**
+
 Using a mono repository is a prerequisite to adopt DX tooling.
 
-[Mono repos offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
-and DX tools are designed with them in mind.
+:::
+
+[Mono repositories offer several advantages](https://pagopa.github.io/technology-radar/methods-and-patterns/monorepo.html),
+and DX tools are designed with this in mind. We recommend using a mono
+repository, even for a single project or workspace.
 
 To start adopting DX tools, define boundaries for team services and plan how to
 split team projects. Once ready, ensure you have a mono-repository on GitHub and
@@ -41,13 +78,6 @@ teams are expected to follow.
 Technology Radar recommendations are thoughtfully designed to foster
 consistency, efficiency, and alignment across projects, ensuring a streamlined
 development experience.
-
-:::info
-
-Currently, we support Azure and TypeScript. We are actively working on adding
-support for AWS and Java as well.
-
-:::
 
 ### Conventions
 
@@ -78,7 +108,7 @@ All DX Terraform modules are available on
 under the `pagopa-dx` organization.
 
 Of course,
-[everyone can contribute](https://pagopa.github.io/dx/docs/infrastructure/contributing-to-dx-terraform-modules/)
+[everyone can contribute](https://dx.pagopa.it/docs/infrastructure/contributing-to-dx-terraform-modules/)
 to improve them.
 
 ### GitHub Workflows
@@ -100,12 +130,22 @@ more. Feel free to choose the ones that best suit team needs!
 
 If DX tooling is appreciated, there's much more to discover on this website:
 
-- **Articles**: Guidance for common use cases.
-- **Conventions**: Predefined conventions to better organize resources.
-- **Infrastructure**: DX tooling for cloud-related topics.
-- **Pipelines**: DX tooling for GitHub Actions.
+- **Infrastructure**: DX tooling for cloud-related topics
+- **Pipelines**: DX tooling for GitHub Actions
+- **Conventions**: Predefined conventions to better organize resources
+- **Dev Containers**: Standardized development environments
 
-Stay up to date with DX [blog](https://pagopa.github.io/dx/blog/)!
+Stay up to date with DX [blog](https://dx.pagopa.it/blog/)!
+
+## Getting Support
+
+The [DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) is
+here to help:
+
+- **Questions?** Open a [GitHub issue](https://github.com/pagopa/dx/issues)
+- **Bug reports** Use our issue templates for faster resolution
+- **Feature requests** We're always looking for ways to improve
+- **Direct support** Available for teams adopting DX golden paths
 
 ## Contributing
 
@@ -115,3 +155,12 @@ out to us. We are always open to new ideas and improvements.
 We encourage you to contribute to the DX project! Start by reviewing our
 [contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md)
 to understand how you can get involved and make a meaningful impact.
+
+:::tip **Need help deciding?**
+
+Not sure which path to take? Check out our
+[conventions overview](../conventions/index.md) to understand how we organize
+work at PagoPA, or reach out to the DX team on
+[GitHub](https://github.com/pagopa/dx/issues).
+
+:::

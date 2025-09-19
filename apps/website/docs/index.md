@@ -1,111 +1,168 @@
 ---
 sidebar_position: 1
+title: Developer Experience at PagoPA
+description:
+  Accelerate your development with proven tools, patterns, and best practices
+  for building scalable applications on Azure.
+keywords:
+  [
+    developer experience,
+    pagopa,
+    azure,
+    terraform,
+    typescript,
+    devops,
+    infrastructure,
+    contributing,
+  ]
 ---
 
-# Developer Experience Initiative
+# Developer Experience at PagoPA
 
-## What this is all about
+## 🚀 Accelerate Your Development Journey
 
-Whether it's your first day or you've been an engineer at PagoPA for years, your
-goal is to make an impact. However, the multitude of tools, platforms, and
-processes can be overwhelming.
+Whether you're shipping your first API or architecting complex distributed
+systems, the PagoPA Developer Experience (DX) initiative provides **golden
+paths** and **battle-tested tools** to help you build with confidence.
 
-Don't worry, we've all been there! This initiative aims to make your journey as
-smooth and enjoyable as possible.
+:::tip **Ready to start building?**
 
-You probably want to start writing your first API or building your first UI
-components as soon as you can. To do that, you need to know how to:
-
-- **Structure** your work (e.g., monorepo vs. polyrepo).
-- **Select** the right tools and framework.
-- **Architect** your services using the right PaaS.
-- **Configure** your services using Infrastructure as Code.
-- **Deploy** your application logic to production.
-- **Secure** your services and manage permissions efficiently.
-- **Monitor** your services and troubleshoot issues.
-
-All of this, ensuring everything is efficient, scalable and aligned to our
-Technology Standards.
-
-Making these decisions can be complex and time-consuming. The
-[Developer Experience Initiative](https://github.com/pagopa/dx) (DX) is here to
-help you with _golden paths_ and best practices.
-
-### How this differs from Technology Standards initiative?
-
-While Technology Standards aim is to define best practices and guidelines for
-well architected solutions, leaving every choice to the teams, the DX initiative
-aims to provide **strongly opinionated** tools and workflows to implement the
-Technology Standards.
-
-:::info
-
-We think that engineers should focus on **provide value to end users** rather
-than spending time on technical choices.
+Jump to our [Quick Start Guides](#quick-start-guides) tailored for your role, or
+explore our [featured tools](#featured-tools) below.
 
 :::
 
-Moreover, the
-[DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) is
-available to support you if you choose to adopt these golden paths. However,
-you're always free to make your own choices, though this might require more time
-and effort and you may miss out on some of the benefits of this support.
+## What We Provide
 
-This initiative is designed to tackle these challenges and simplify your daily
-work, no matter how long you've been with us. With the right information at your
-fingertips, you'll confidently navigate our tech ecosystem, solving problems and
-creating effective solutions.
+**🛤️ Golden Paths** - Opinionated, proven approaches aligned with our
+[Technology Radar](https://pagopa.github.io/technology-radar/)
 
-## DX in practice
+**🔧 Ready-to-Use Tools** - Terraform modules, GitHub Actions, and development
+environments that just work
 
-- **Golden Paths**: We provide golden paths, aligned with our
-  [Technology Radar](https://pagopa.github.io/technology-radar/index.html), to
-  help you avoid wasting precious effort on unnecessary choices.
-- **Tools**: We offer tools (e.g., Terraform abstractions) to help you follow
-  PagoPA Technology Standards easily.
-- **Training**: We conduct workshops and training to help you understand and
-  apply golden paths and best practices.
-- **Support**: We offer concrete support to help you apply these guidelines and
-  best practices in your daily work.
+**📚 Comprehensive Guides** - Step-by-step documentation from setup to
+production deployment
 
-## Current status
+**🤝 Expert Support** - Direct access to the
+[DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) for
+guidance and troubleshooting
 
-We're working on the following:
+## Quick Start Guides
 
-- [x] Terraform configuration for GitHub Action runners with Azure access
-- [x] Custom Terraform modules for common Azure resources
-- [x] GitHub Actions to plan and apply infrastructure changes
-- [x] GitHub Actions for safe deployment of TypeScript applications on Azure
-- [x] Standardized TypeScript linting presets (eslint)
-- [ ] Scaffold templates for TypeScript applications (monorepo)
-- [ ] Scaffold templates for Terraform modules
-- [ ] Complete web application template using Next.js
-- [ ] OpenAPI client generator for TypeScript
-- [ ] OpenAPI server generator for TypeScript
-- [ ] Documentation for all the above items
+Choose your path based on your role and goals:
 
-If you wonder why we're working with these specific technologies, check out our
-[Architecture decision records](https://github.com/pagopa/dx/tree/main/decisions).
+<div className="row">
 
-We're going to update this list as we progress and - eventually - consider other
-languages (e.g., JAVA), and platforms (e.g., AWS).
+<div className="col col--12">
 
-Aside, we experiment with _new_ technologies and tools to improve our daily
-work.
+### 👩‍💻 **Application Developer**
 
-## How to stay updated
+Ready to build your first service?
 
-We're glad you're interested! You may stay updated watching our
-[GitHub repository](https://github.com/pagopa/dx).
+- [Set up your development environment](getting-started/index.md)
+- [Build and deploy a TypeScript API](pipelines/release-azure-appsvc.md)
+- [Deploy infrastructure with Terraform](infrastructure/index.md)
+- [Follow our coding conventions](conventions/index.md)
 
-We will publish a blog post with a changelog every time we release a new
-significant feature or update. You'll find these posts on our
-[documentation website](https://pagopa.github.io/dx/).
+[**Start Building →**](getting-started/index.md)
 
-## How to contribute
+</div>
 
-We're always looking for contributors to help improve our documentation and
-tools. If you're interested in contributing, please check out the
-[dx repository on GitHub](https://github.com/pagopa/dx). Feel free to open an
-[issue](https://github.com/pagopa/dx/issues) or submit a pull request with any
-suggestions or improvements!
+</div>
+
+## Featured Tools
+
+### 🏛️ **Infrastructure as Code**
+
+Production-ready Terraform modules for Azure resources:
+
+- **Azure Core Infrastructure** - Networking, security, and monitoring
+  foundations
+- **Application Services** - Container apps, function apps, and API management
+- **Data & Storage** - Cosmos DB, Service Bus, and storage accounts
+
+[**Browse All Modules →**](https://registry.terraform.io/namespaces/pagopa-dx) |
+[**Contributing Guide →**](infrastructure/contributing-to-dx-terraform-modules/index.md)
+
+### ⚙️ **GitHub Actions Workflows**
+
+Reusable workflows for common scenarios:
+
+- **Code Review** - Automated linting, testing, and security scanning
+- **Infrastructure** - Safe Terraform planning and deployment
+- **Application Deployment** - Zero-downtime releases to Azure
+
+[**View All Workflows →**](pipelines/index.md) |
+[**GitHub Repository →**](https://github.com/pagopa/dx/tree/main/.github)
+
+### 📋 **Development Standards**
+
+Consistent approaches across teams:
+
+- **Git Workflows** - Branch naming, commit messages, and PR guidelines
+- **Azure Naming** - Resource naming conventions and tagging strategies
+- **Project Structure** - Monorepo organization and folder hierarchies
+
+[**View All Conventions →**](conventions/index.md)
+
+## Navigation Guide
+
+<div className="row">
+
+<div className="col col--3">
+
+**🚀 [Getting Started](getting-started/index.md)** New to DX? Start here for
+onboarding and setup guides
+
+</div>
+
+<div className="col col--3">
+
+**📚 [Infrastructure](infrastructure/index.md)** Azure resources, Terraform
+modules, and infrastructure patterns
+
+</div>
+
+<div className="col col--3">
+
+**⚙️ [Pipelines](pipelines/index.md)** GitHub Actions workflows for CI/CD and
+automation
+
+</div>
+
+<div className="col col--3">
+
+**📋 [Conventions](conventions/index.md)** Standards for Git, naming, project
+structure, and code quality
+
+</div>
+
+</div>
+
+## Stay Connected
+
+**📖 [Read our blog](https://pagopa.github.io/dx/blog/)** for the latest updates
+and feature announcements
+
+**⭐ [Watch our repository](https://github.com/pagopa/dx)** to stay informed
+about new releases
+
+**🐛
+[Report issues or suggest improvements](https://github.com/pagopa/dx/issues)** -
+we welcome your feedback!
+
+## Contributing
+
+We're building this platform together! Whether you're fixing a typo or proposing
+a new tool, your contributions make DX better for everyone.
+
+- **📝 Improve documentation** - Found something unclear? Submit a PR!
+- **🔧 Contribute tools** - Share reusable modules and workflows
+- **💡 Share ideas** - Open an issue to discuss new features
+
+[**Read our contribution guide →**](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md)
+
+---
+
+_Built with ❤️ by the PagoPA DX Team |
+[Powered by Docusaurus](https://docusaurus.io/)_

@@ -9,11 +9,11 @@ module "github_repository" {
     description            = "Devex repository for shared tools and pipelines."
     topics                 = ["developer-experience"]
     reviewers_teams        = ["engineering-team-devex"]
-    pages_enabled          = true
+    pages_enabled          = false
     has_downloads          = true
     has_projects           = true
     has_issues             = true
-    homepage_url           = "https://pagopa.github.io/dx/docs/"
+    homepage_url           = "https://dx.pagopa.it/docs/"
     pull_request_bypassers = ["/dx-pagopa-bot"]
     environments           = ["dev", "prod"]
     jira_boards_ids        = ["CES"]

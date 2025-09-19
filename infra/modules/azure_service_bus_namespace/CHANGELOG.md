@@ -1,5 +1,11 @@
 # azure_service_bus_namespace
 
+## 0.0.6
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
 ## 0.0.5
 
 ### Patch Changes

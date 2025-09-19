@@ -118,6 +118,7 @@ The following table lists the resource types and their abbreviations used in the
 | **DNS**                                |                       |
 | route53_record                         |      r53-record       |
 | route53_zone                           |       r53-zone        |
+| route53_resolver_endpoint              |     r53-res-endp      |
 | **Identity & Access Management (IAM)** |                       |
 | cognito_identity_pool                  |    cognito-id-pool    |
 | cognito_identity_pool_roles_attachment |   cognito-id-roles    |
@@ -160,6 +161,7 @@ The following table lists the resource types and their abbreviations used in the
 | vpc_endpoint                           |         vpce          |
 | customer_gateway                       |          cgw          |
 | vpn_connection                         |          vpn          |
+| network_interface                      |          eni          |
 | **Resource Management**                |                       |
 | resource_group                         |          rg           |
 | **Security**                           |                       |
