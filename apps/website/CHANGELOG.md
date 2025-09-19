@@ -1,5 +1,11 @@
 # docs
 
+## 0.6.0
+
+### Minor Changes
+
+- 2b751a4: Add analytics capabilities and GDPR information
+
 ## 0.5.1
 
 ### Patch Changes
