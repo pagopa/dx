@@ -54,3 +54,6 @@ coverage
 # Go build artifacts
 terraform-provider-azure
 providers/azure/terraform-provider-azure
+
+# Playwright test artifacts
+.playwright-mcp

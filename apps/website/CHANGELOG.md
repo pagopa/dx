@@ -1,5 +1,11 @@
 # docs
 
+## 0.7.0
+
+### Minor Changes
+
+- 98097db: Change docs info-architecture and styles
+
 ## 0.6.0
 
 ### Minor Changes
