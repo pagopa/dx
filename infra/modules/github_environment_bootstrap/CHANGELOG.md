@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.2
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
 ## 1.1.1
 
 ### Patch Changes
