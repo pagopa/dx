@@ -40,6 +40,25 @@ const config: Config = {
         language: ["en"],
       },
     ],
+    [
+      require.resolve("./src/plugins/analytics-with-consent.ts"),
+      {
+        config: {
+          disableFetchTracking: false,
+          disableTelemetry: false, // Will be controlled by cookie consent
+          enableAjaxErrorStatusText: true,
+          enableAjaxPerfTracking: true,
+          enableAutoRouteTracking: true,
+          enableCookieSuggestion: false,
+          enableCorsCorrelation: true,
+          enableRequestHeaderTracking: true,
+          enableResponseHeaderTracking: true,
+          enableUnhandledPromiseRejectionTracking: true,
+          instrumentationKey: "e0ff8094-78fa-45e5-a21d-e62b453dc5d1",
+        },
+        enableClickAnalytics: false,
+      },
+    ],
   ],
 
   presets: [
@@ -94,6 +113,22 @@ const config: Config = {
           ],
           title: "Blog",
         },
+        {
+          items: [
+            {
+              label: "Privacy Policy",
+              to: "/privacy-policy",
+            },
+            {
+              label: "Legal Notes",
+              to: "/legal-notes",
+            },
+            {
+              html: '<div id="cookie-preferences-link"></div>',
+            },
+          ],
+          title: "Legal",
+        },
       ],
       style: "dark",
       // copyright: `Copyright © ${new Date().getFullYear()} PagoPA. Built with Docusaurus.`,
@@ -130,7 +165,7 @@ const config: Config = {
   title: "DX",
 
   // Set the production url of your site here
-  url: "https://pagopa.github.io",
+  url: "https://dx.pagopa.it",
 };
 
 export default config;
