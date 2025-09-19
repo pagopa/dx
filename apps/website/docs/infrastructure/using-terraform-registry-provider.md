@@ -52,7 +52,7 @@ The DX Azure provider accepts the following inputs (all currently optional):
 
 | Name          | Type   | Required | Description                                             |
 | ------------- | ------ | -------- | ------------------------------------------------------- |
-| `prefix`      | String | No       | Two-character project prefix.                           |
+| `prefix`      | String | No       | Project prefix (2-4 characters).                        |
 | `environment` | String | No       | Deployment environment (d, u, or p).                    |
 | `location`    | String | No       | Deployment location (itn/italynorth or weu/westeurope). |
 | `domain`      | String | No       | Optional domain for naming.                             |
