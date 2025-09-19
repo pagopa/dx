@@ -103,11 +103,11 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
               <p>
                 For more information, please see our{" "}
                 <a
-                  href="/privacy-policy"
+                  href="/privacy-notice"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Privacy Policy
+                  Privacy Notice
                 </a>
                 .
               </p>
