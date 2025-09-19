@@ -13,7 +13,7 @@ run "setup_tests" {
   }
 }
 
-run "eventhub_is_correct_plan" {
+run "default_eventhub_is_correct_plan" {
   command = plan
 
   variables {
@@ -38,7 +38,7 @@ run "eventhub_is_correct_plan" {
     }
 
     resource_group_name = "dx-d-evt-rg"
-    tier                = "s"
+    use_case            = "default"
 
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
@@ -78,5 +78,20 @@ run "eventhub_is_correct_plan" {
   assert {
     condition     = [for k, v in azurerm_eventhub.events : v.partition_count][0] == 1
     error_message = "Number of partitions are incorrect, have to be 1"
+  }
+
+  assert {
+    condition     = azurerm_eventhub_namespace.this.auto_inflate_enabled == false
+    error_message = "Auto Inflate should be disabled for the default use case"
+  }
+
+  assert {
+    condition     = azurerm_eventhub_namespace.this.capacity == 1
+    error_message = "Capacity should be 1 for the default use case"
+  }
+
+  assert {
+    condition     = azurerm_eventhub_namespace.this.maximum_throughput_units == null
+    error_message = "Maximum throughput units should be null when auto-inflate is disabled"
   }
 }
