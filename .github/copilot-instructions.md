@@ -69,28 +69,28 @@ pnpm --filter @pagopa/dx-cli run test
 
 ```
 /
-├── apps/                    # Main applications
-│   ├── cli/                # @pagopa/dx-cli - Developer CLI tool
-│   └── website/            # Documentation website (Docusaurus)
-├── packages/               # Reusable packages
-│   ├── azure-tracing/      # Azure observability utilities
-│   ├── eslint-config/      # Shared ESLint configuration
-│   ├── monorepo-generator/ # Project scaffolding tool
-│   └── pnpm-plugin-pagopa/ # Custom pnpm plugin
-├── infra/                  # Infrastructure as Code
-│   ├── modules/           # Reusable Terraform modules (40+ modules)
-│   ├── resources/         # Environment-specific resources (dev/prod)
-│   ├── bootstrapper/      # Initial infrastructure setup
-│   └── scripts/           # Infrastructure automation scripts
-├── actions/               # GitHub Actions
-│   ├── pr-comment/        # PR comment automation
-│   ├── detect-node-package-manager/ # Package manager detection
-│   └── swap-appsvc-slot/   # Azure App Service slot swapping
-├── providers/             # Terraform providers
-│   ├── azure/             # Azure-specific Terraform utilities
-│   └── aws/               # AWS-specific Terraform utilities
-└── containers/            # Container configurations
-    └── self-hosted-runner/ # GitHub Actions self-hosted runner
+├── apps/                               # Main applications
+│   ├── cli/                           # @pagopa/dx-cli - Developer CLI tool
+│   └── website/                       # Documentation website (Docusaurus)
+├── packages/                          # Reusable packages
+│   ├── azure-tracing/                 # Azure observability utilities
+│   ├── eslint-config/                 # Shared ESLint configuration
+│   ├── monorepo-generator/            # Project scaffolding tool
+│   └── pnpm-plugin-pagopa/            # Custom pnpm plugin
+├── infra/                             # Infrastructure as Code
+│   ├── modules/                       # Reusable Terraform modules (40+ modules)
+│   ├── resources/                     # Environment-specific resources (dev/prod)
+│   ├── bootstrapper/                  # Initial infrastructure setup
+│   └── scripts/                       # Infrastructure automation scripts
+├── actions/                           # GitHub Actions
+│   ├── pr-comment/                    # PR comment automation
+│   ├── detect-node-package-manager/  # Package manager detection
+│   └── swap-appsvc-slot/              # Azure App Service slot swapping
+├── providers/                         # Terraform providers
+│   ├── azure/                         # Azure-specific Terraform utilities
+│   └── aws/                           # AWS-specific Terraform utilities
+└── containers/                        # Container configurations
+    └── self-hosted-runner/            # GitHub Actions self-hosted runner
 ```
 
 ### Configuration Files
