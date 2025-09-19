@@ -7,8 +7,7 @@ number 15376371009.
 
 PagoPA S.p.A. is constantly committed to ensuring the quality of information
 published on the Site, as well as their integrity, updating, completeness,
-timeliness, ease of consultation and accessibility. For any reports or
-suggestions, please write to info@pagopa.it.
+timeliness, ease of consultation and accessibility.
 
 Under no circumstances can PagoPA S.p.A. be held responsible for damages of any
 nature caused directly or indirectly by access to the Site, by the inability or
@@ -47,11 +46,6 @@ procedural and substantive law.
 
 For any dispute relating to the interpretation, execution and validity of these
 legal notes, the Court of Rome shall have exclusive jurisdiction.
-
-## Contacts
-
-For information relating to the site or these legal notes, please contact PagoPA
-S.p.A. at: info@pagopa.it
 
 ## Privacy
 
