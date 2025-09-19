@@ -105,7 +105,7 @@ resource "aws_security_group" "coredns" {
     description = "HTTP for package downloads"
   }
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # IAM role for EC2 instance
@@ -129,7 +129,7 @@ resource "aws_iam_role" "coredns" {
     ]
   })
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # IAM instance profile
@@ -138,7 +138,7 @@ resource "aws_iam_instance_profile" "coredns" {
   name_prefix = aws_iam_role.coredns[0].name
   role        = aws_iam_role.coredns[0].name
 
-  tags = var.tags
+  tags = local.tags
 }
 
 # IAM policy for CloudWatch logs (optional)
@@ -180,7 +180,7 @@ resource "aws_network_interface" "coredns" {
   private_ips       = [local.aws_dns_forwarder_static_ip]
   security_groups   = [aws_security_group.coredns[0].id]
   source_dest_check = false
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
       name          = "coredns-instance"
       resource_type = "network_interface"
@@ -213,7 +213,7 @@ resource "aws_instance" "coredns" {
     encrypted   = true
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
       name          = "coredns-instance"
       resource_type = "ec2_instance"

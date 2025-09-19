@@ -82,14 +82,6 @@ output "common_vpn_snet" {
   }
 }
 
-output "common_vpn_snet" {
-  description = "Details of the VPN subnet, including its name and ID."
-  value = {
-    name = local.core_outputs.values.common_vpn_snet.name
-    id   = local.core_outputs.values.common_vpn_snet.id
-  }
-}
-
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value       = local.core_outputs.values.common_nat_gateways
@@ -139,6 +131,16 @@ output "application_insights" {
     instrumentation_key_kv_secret_id   = local.core_outputs.values.application_insights.instrumentation_key_kv_secret_id
     instrumentation_key_kv_secret_name = local.core_outputs.values.application_insights.instrumentation_key_kv_secret_name
     resource_group_name                = local.core_outputs.values.application_insights.resource_group_name
+  }
+}
+
+output "dns_forwarder" {
+  value = {
+    endpoint            = local.core_outputs.values.dns_forwarder.endpoint
+    subnet_id           = local.core_outputs.values.dns_forwarder.subnet_id
+    private_ip          = local.core_outputs.values.dns_forwarder.private_ip
+    resource_group      = local.core_outputs.values.dns_forwarder.resource_group
+    cross_cloud_enabled = local.core_outputs.values.dns_forwarder.cross_cloud_enabled
   }
 }
 
