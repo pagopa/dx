@@ -10,7 +10,7 @@ locals {
 
   use_cases = {
     default           = { vpn_connections_number = 1 }
-    high_availability = { vpn_connections_number = 2 }
+    high_availability = { vpn_connections_number = (var.azure.vpn.virtual_network_gateway_id == null ? 2 : length(var.azure.vpn.public_ips)) }
   }
 
   #########

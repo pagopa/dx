@@ -1,7 +1,7 @@
 resource "aws_vpn_gateway" "this" {
   vpc_id = var.aws.vpc_id
 
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "aws_customer_gateway" "this" {
@@ -15,7 +15,7 @@ resource "aws_customer_gateway" "this" {
       name          = "${local.aws_naming_config.name}-${count.index + 1}"
       resource_type = "customer_gateway"
     }))
-  }, var.tags)
+  }, local.tags)
 
   depends_on = [
     time_sleep.wait_public_ips
@@ -36,7 +36,7 @@ resource "aws_vpn_connection" "this" {
       name          = "${local.aws_naming_config.name}-${count.index + 1}"
       resource_type = "vpn_connection"
     }))
-  }, var.tags)
+  }, local.tags)
 }
 
 #---------#

@@ -52,7 +52,7 @@ resource "aws_security_group" "resolver" {
     description = "All outbound traffic"
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = "route53-resolver-sg"
   })
 }
@@ -73,7 +73,7 @@ resource "aws_route53_resolver_endpoint" "inbound" {
     }
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = "resolver-inbound"
     Type = "Inbound"
   })
@@ -94,7 +94,7 @@ resource "aws_route53_resolver_endpoint" "outbound" {
     }
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = "resolver-outbound"
     Type = "Outbound"
   })
@@ -117,7 +117,7 @@ resource "aws_route53_resolver_rule" "azure_zones" {
     }
   }
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name   = "resolver-rule-${replace(each.value, ".", "-")}"
     Domain = each.value
   })
@@ -138,7 +138,7 @@ resource "aws_cloudwatch_log_group" "resolver_query_logs" {
   name              = "/aws/route53resolver/azurevpn"
   retention_in_days = 3
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = "resolver-query-logs"
   })
 }
@@ -149,7 +149,7 @@ resource "aws_route53_resolver_query_log_config" "main" {
   name            = "resolver-query-logs"
   destination_arn = aws_cloudwatch_log_group.resolver_query_logs[0].arn
 
-  tags = merge(var.tags, {
+  tags = merge(local.tags, {
     Name = "resolver-query-logs"
   })
 }

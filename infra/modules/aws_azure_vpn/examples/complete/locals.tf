@@ -1,24 +1,35 @@
 locals {
-  # Environment configuration
-  environment = {
+  azure_environment = {
     prefix          = "dx"
+    location        = "italynorth"
+    location_short  = "itn"
     env_short       = "d"
-    app_name        = "vpn-example"
+    app_name        = "examples"
     instance_number = "01"
   }
 
-  # AWS and Azure regions
-  aws_region     = "eu-south-1"
-  azure_location = "italynorth"
+  aws_environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    region          = "eu-south-1"
+    app_name        = "examples"
+    instance_number = "01"
+  }
 
-  # Common tags for all resources
+  aws = {
+    vpc_cidr = "10.0.0.0/16"
+  }
+
+  azure = {
+    vnet_cidr = "10.51.0.0/16"
+  }
+
   tags = {
-    CreatedBy   = "Terraform"
-    Environment = "Development"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/aws_azure_vpn/examples/complete"
-    CostCenter  = "TS700 - ENGINEERING"
-    Purpose     = "AWS-Azure VPN Demo"
-    UseCase     = "Cross-cloud connectivity"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Owner          = "DevEx"
+    Environment    = "Dev"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/aws_azure_vpn/examples/complete"
+    ManagementTeam = "Developer Experience"
   }
 }

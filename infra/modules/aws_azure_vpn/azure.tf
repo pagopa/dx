@@ -1,5 +1,5 @@
 resource "azurerm_public_ip" "this" {
-  count = local.use_cases[var.use_case].vpn_connections_number
+  count = var.azure.vpn.virtual_network_gateway_id == null ? local.use_cases[var.use_case].vpn_connections_number : 0
   name = provider::azuredx::resource_name(merge(local.azure_naming_config, {
     name          = "${local.azure_naming_config.name}-${count.index + 1}"
     resource_type = "public_ip"
