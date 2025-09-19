@@ -19,9 +19,6 @@
     "templates"
   ],
   "main": "dist/index.js",
-  "peerDependencies": {
-    "plop": "catalog:"
-  },
   "devDependencies": {
     "plop": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
