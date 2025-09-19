@@ -16,9 +16,9 @@ const topicCards = [
     title: "Development Tools",
   },
   {
-    description: "Production-ready Terraform modules for Azure resources",
+    description: "Production-ready Terraform modules",
     icon: "🏗️",
-    items: ["Azure Modules", "Terraform Registry", "Best Practices"],
+    items: ["Azure Modules", "AWS Modules", "Best Practices"],
     link: "/docs/infrastructure",
     title: "Infrastructure",
   },
@@ -32,12 +32,12 @@ const topicCards = [
   {
     description: "Development standards and best practices",
     icon: "📋",
-    items: ["Git Workflows", "Azure Naming", "Project Structure"],
+    items: ["Git Workflows", "Resource Naming", "Project Structure"],
     link: "/docs/conventions",
     title: "Conventions",
   },
   {
-    description: "Secure authentication patterns and tools",
+    description: "Authentication patterns and tools",
     icon: "🔐",
     items: ["Azure Login", "Service Principals", "RBAC Patterns"],
     link: "/docs/pipelines/azure-login",

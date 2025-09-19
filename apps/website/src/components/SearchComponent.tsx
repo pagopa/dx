@@ -55,6 +55,7 @@ export default function SearchComponent({
       <form className={styles.searchForm} onSubmit={handleSearch}>
         <div className={styles.searchInputWrapper}>
           <svg
+            aria-hidden="true"
             className={styles.searchIcon}
             fill="none"
             height="20"

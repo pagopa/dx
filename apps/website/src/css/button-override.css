@@ -13,6 +13,8 @@
 
 .heroBanner a[href="/blog"]:focus {
   color: #ffffff !important;
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
 }
 
 .heroBanner a[href="/blog"]:active {
@@ -29,4 +31,6 @@
 .button--secondary[href="/blog"]:focus,
 .button--secondary[href="/blog"]:active {
   color: #ffffff !important;
+  outline: 2px solid #ffffff !important;
+  outline-offset: 2px !important;
 }
