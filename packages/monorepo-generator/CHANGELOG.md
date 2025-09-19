@@ -1,5 +1,11 @@
 # @pagopa/monorepo-generator
 
+## 0.4.0
+
+### Minor Changes
+
+- 9af6b57: Generate Terraform file to manage the GitHub repository during scaffolding
+
 ## 0.3.1
 
 ### Patch Changes
