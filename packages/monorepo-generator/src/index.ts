@@ -8,6 +8,7 @@ import { Octokit } from "octokit";
 import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
+  getTerraformLatestRelease,
 } from "./actions/terraform.js";
 
 interface ActionsDependencies {
@@ -99,6 +100,7 @@ const getActions = ({
 }: ActionsDependencies): ActionType[] => [
   getGitHubTerraformProviderLatestRelease({ octokitClient }),
   getDxGitHubBootstrapLatestTag({ octokitClient }),
+  getTerraformLatestRelease({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
