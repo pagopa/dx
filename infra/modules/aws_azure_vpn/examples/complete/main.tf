@@ -4,10 +4,9 @@ module "azure" {
 
   environment = local.azure_environment
 
-  nat_enabled  = false
-  vpn_enabled  = true
-  test_enabled = true
-
+  nat_enabled             = false
+  vpn_enabled             = true
+  test_enabled            = true
   cross_cloud_dns_enabled = true
 
   virtual_network_cidr = local.azure.vnet_cidr
@@ -37,7 +36,7 @@ module "vpn" {
     instance_number = "01"
   }
 
-  use_case = "high_availability" # "default" | "high_availability"
+  use_case = "high_availability" # "development" | "high_availability"
 
   aws = {
     region               = local.aws_environment.region

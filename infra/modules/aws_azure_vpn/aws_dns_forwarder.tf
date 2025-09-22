@@ -1,6 +1,6 @@
 # Security Group for CoreDNS
 resource "aws_security_group" "coredns" {
-  count = var.use_case == "default" ? 1 : 0
+  count = var.use_case == "development" ? 1 : 0
   name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
     name          = "coredns-instance"
     resource_type = "security_group"
@@ -110,7 +110,7 @@ resource "aws_security_group" "coredns" {
 
 # IAM role for EC2 instance
 resource "aws_iam_role" "coredns" {
-  count = var.use_case == "default" ? 1 : 0
+  count = var.use_case == "development" ? 1 : 0
   name = provider::awsdx::resource_name(merge(local.aws_naming_config, {
     name          = "coredns-instance"
     resource_type = "iam_role"
@@ -134,7 +134,7 @@ resource "aws_iam_role" "coredns" {
 
 # IAM instance profile
 resource "aws_iam_instance_profile" "coredns" {
-  count       = var.use_case == "default" ? 1 : 0
+  count       = var.use_case == "development" ? 1 : 0
   name_prefix = aws_iam_role.coredns[0].name
   role        = aws_iam_role.coredns[0].name
 
@@ -143,7 +143,7 @@ resource "aws_iam_instance_profile" "coredns" {
 
 # IAM policy for CloudWatch logs (optional)
 resource "aws_iam_role_policy" "coredns_cloudwatch" {
-  count = var.use_case == "default" ? 1 : 0
+  count = var.use_case == "development" ? 1 : 0
   name_prefix = provider::awsdx::resource_name(merge(local.aws_naming_config, {
     name          = "coredns-instance-cloudwatch"
     resource_type = "iam_role_policy"
@@ -169,13 +169,13 @@ resource "aws_iam_role_policy" "coredns_cloudwatch" {
 
 # Attach SSM managed policy for Session Manager access
 resource "aws_iam_role_policy_attachment" "coredns_ssm" {
-  count      = var.use_case == "default" ? 1 : 0
+  count      = var.use_case == "development" ? 1 : 0
   role       = aws_iam_role.coredns[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 resource "aws_network_interface" "coredns" {
-  count             = var.use_case == "default" ? 1 : 0
+  count             = var.use_case == "development" ? 1 : 0
   subnet_id         = var.aws.private_subnet_ids[0]
   private_ips       = [local.aws_dns_forwarder_static_ip]
   security_groups   = [aws_security_group.coredns[0].id]
@@ -188,7 +188,7 @@ resource "aws_network_interface" "coredns" {
   })
 }
 resource "aws_instance" "coredns" {
-  count                       = var.use_case == "default" ? 1 : 0
+  count                       = var.use_case == "development" ? 1 : 0
   ami                         = data.aws_ami.amazon_linux[0].id
   instance_type               = "t3.micro"
   iam_instance_profile        = aws_iam_instance_profile.coredns[0].name

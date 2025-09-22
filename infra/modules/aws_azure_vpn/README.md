@@ -1,154 +1,177 @@
 # DX - AWS Azure VPN Module
 
-![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/aws-azure-vpn/azurerm?logo=terraform&label=downloads&cacheSeconds=5000)
-
-This Terraform module deploys a site-to-site VPN connection between an AWS VPC and an Azure Virtual Network, enabling secure network communication between cloud environments. The module supports both standard and high-availability configurations.
+This Terraform module establishes a Site-to-Site VPN connection between AWS and Azure, enabling secure communication between resources in both cloud environments. The module supports both development and high-availability configurations and includes DNS resolution across clouds.
 
 ## Features
 
-- **Site-to-Site VPN**: Establishes secure IPsec tunnels between AWS and Azure
-- **High Availability**: Optional dual-tunnel configuration for redundancy
-- **BGP Support**: Dynamic routing with Border Gateway Protocol
-- **Flexible Gateway Configuration**: Can use existing Azure Virtual Network Gateway or create a new one
-- **Multi-Region Support**: Supports various AWS and Azure regions with automatic naming conventions
-- **Comprehensive Security**: IPsec encryption with configurable BGP ASN values
+✅ **Secure connectivity** between your AWS VPC and Azure Virtual Network  
+✅ **High availability** option with redundant connections for production workloads  
+✅ **Automatic routing** - no manual route management needed  
+✅ **Cross-cloud DNS** - resolve private hostnames across both environments  
+✅ **Production ready** - tested configurations for enterprise use
 
 ## Architecture
 
-The module creates the following resources:
+### Development Configuration
 
-### AWS Side
+The development configuration provides a single VPN connection with basic redundancy, suitable for development and testing environments.
 
-- **VPN Gateway**: Attached to the specified AWS VPC
-- **Customer Gateway(s)**: Represents the Azure side endpoint(s)
-- **VPN Connection(s)**: IPsec tunnels with BGP configuration
+### High Availability Configuration
 
-### Azure Side
+The high availability configuration provides multiple VPN connections with enhanced redundancy, recommended for production environments.
 
-- **Public IP(s)**: Static IPs for the VPN gateway
-- **Virtual Network Gateway**: Route-based VPN gateway (optional, if not provided)
-- **Local Network Gateway(s)**: Represents the AWS side endpoint(s)
-- **VPN Connection(s)**: Site-to-site connections between gateways
-
-## Use Cases and Configuration
-
-| Use Case            | Description                                    | VPN Connections | Tunnels            | Availability           |
-| ------------------- | ---------------------------------------------- | --------------- | ------------------ | ---------------------- |
-| `default`           | Standard configuration for basic connectivity  | 1               | 2 (per connection) | Single gateway         |
-| `high_availability` | Redundant configuration for critical workloads | 2               | 4 (total)          | Active-active gateways |
-
-## Supported Regions
-
-### AWS Regions
-
-- `eu-west-1` (Ireland)
-- `eu-south-1` (Milan)
-
-### Azure Regions
-
-- `westeurope` (West Europe)
-- `italynorth` (Italy North)
-
-## BGP Configuration
-
-- **AWS BGP ASN**: 65000 (fixed)
-- **Azure BGP ASN**: 65010 (fixed)
-- **Inside CIDR Ranges**: Pre-configured for tunnel communication
+The module creates secure IPSec tunnels between your AWS and Azure networks with automatic routing and cross-cloud DNS resolution.
 
 ## Usage Example
 
+For detailed usage examples, refer to the [examples folder](./examples/), which includes a [complete example](./examples/complete/) that demonstrates all features including high availability configuration
+
+### Basic Configuration
+
 ```hcl
 module "aws_azure_vpn" {
-  source = "../../modules/aws_azure_vpn"
+  source = "path/to/aws_azure_vpn"
 
-  # Environment configuration
+  # Your project details
   environment = {
-    prefix          = "pagopa"
-    env_short       = "d"
-    app_name        = "network"
-    instance_number = "01"
+    prefix          = "mycompany"     # Your organization prefix
+    env_short       = "dev"           # Environment: dev, staging, prod
+    app_name        = "myapp"         # Your application name
+    instance_number = "01"            # Instance number for multiple deployments
   }
 
-  # Use case: 'default' or 'high_availability'
-  use_case = "default"
+  use_case = "development"  # "development" | "high_availability"
 
-  # AWS configuration
+  # Your AWS network details
   aws = {
-    region = "eu-west-1"
-    vpc_id = "vpc-12345678"
+    region               = "eu-west-1"                    # Your AWS region
+    vpc_id               = "vpc-xxxxxxxxx"               # Your VPC ID
+    vpc_cidr             = "10.0.0.0/16"                 # Your VPC CIDR
+    route_table_ids      = ["rtb-xxx", "rtb-yyy"]        # Route tables to update
+    private_subnet_ids   = ["subnet-xxx", "subnet-yyy"]  # Subnets for DNS resolver
+    private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"] # Subnet CIDRs
+    private_dns_zones    = ["myapp.internal"]            # DNS zones to forward
   }
 
-  # Azure configuration
+  # Your Azure network details
   azure = {
-    resource_group_name = "rg-network-d-weu-01"
-    location           = "westeurope"
-    vnet_id           = "/subscriptions/.../virtualNetworks/vnet-d-weu-01"
-    vnet_name         = "vnet-d-weu-01"
-    vpn_snet_id       = "/subscriptions/.../subnets/GatewaySubnet"
-
-    # Optional: Use existing VPN gateway
-    vpn = {
-      virtual_network_gateway_id = null  # Will create new gateway
-      public_ips = []                    # Will create new public IPs
-    }
+    resource_group_name = "rg-myapp-network"           # Your resource group
+    location            = "West Europe"                 # Your Azure region
+    vnet_id             = "/subscriptions/.../vnet-main" # Your VNet resource ID
+    vnet_name           = "vnet-main"                   # Your VNet name
+    vnet_cidr           = "10.1.0.0/16"                 # Your VNet CIDR
+    vpn_snet_id         = "/subscriptions/.../GatewaySubnet" # Gateway subnet
+    dns_forwarder_ip    = "10.1.0.4"                   # DNS forwarder IP
+    private_dns_zones   = ["privatelink.database.windows.net"] # DNS zones
   }
 
-  # Resource tags
   tags = {
-    Environment = "development"
-    Project     = "network-connectivity"
+    Environment = "dev"
+    Project     = "MyProject"
   }
 }
 ```
 
-## High Availability Example
+### High Availability Configuration
+
+For production workloads, use the high availability option:
 
 ```hcl
-module "aws_azure_vpn_ha" {
-  source = "../../modules/aws_azure_vpn"
+module "aws_azure_vpn_prod" {
+  source = "path/to/aws_azure_vpn"
 
   environment = {
-    prefix          = "pagopa"
-    env_short       = "p"
-    app_name        = "network"
+    prefix          = "mycompany"
+    env_short       = "prod"      # Production environment
+    app_name        = "myapp"
     instance_number = "01"
   }
 
-  use_case = "high_availability"
+  use_case = "high_availability"  # Redundant connections for production
 
-  aws = {
-    region = "eu-west-1"
-    vpc_id = "vpc-87654321"
-  }
-
-  azure = {
-    resource_group_name = "rg-network-p-weu-01"
-    location           = "westeurope"
-    vnet_id           = "/subscriptions/.../virtualNetworks/vnet-p-weu-01"
-    vnet_name         = "vnet-p-weu-01"
-    vpn_snet_id       = "/subscriptions/.../subnets/GatewaySubnet"
-  }
-
-  tags = {
-    Environment = "production"
-    Project     = "network-connectivity"
-    Tier        = "high-availability"
-  }
+  # Same AWS and Azure configuration as above...
+  # The module will automatically create redundant VPN connections
 }
 ```
 
 ## Prerequisites
 
-1. **AWS VPC**: Must exist with proper routing configuration
-2. **Azure Virtual Network**: Must exist with a `GatewaySubnet` (minimum /27)
-3. **Permissions**: Appropriate IAM and Azure RBAC permissions for VPN resources
-4. **Network Planning**: Ensure no CIDR conflicts between AWS and Azure networks
+Before using this module, ensure you have:
 
-## Important Notes
+✅ **AWS VPC** with private subnets and route tables  
+✅ **Azure Virtual Network** with a Gateway Subnet (at least /27 size)  
+✅ **Non-overlapping IP ranges** between AWS and Azure networks  
+✅ **Appropriate permissions** in both AWS and Azure accounts
 
-- Inside CIDR ranges are automatically assigned based on connection index
-- The Azure Virtual Network Gateway uses VpnGw2 Generation2 SKU for optimal performance
-- BGP is enabled for dynamic routing between environments
+**Important:** For development use case, ensure your AWS core infrastructure has `nat_gateway_count` set to at least 1.
+
+## Use Cases
+
+**Perfect for:**
+
+- Multi-cloud applications that need AWS and Azure services
+- Migrating workloads between AWS and Azure
+- Disaster recovery scenarios across clouds
+- Hybrid architectures with services in both environments
+
+**Configuration options:**
+
+- **Development**: Single VPN connection for development/testing (cost-optimized)
+- **High availability**: Multiple redundant connections for production workloads
+
+1. **AWS Prerequisites**:
+   - VPC with private subnets
+   - Route tables that need VPN connectivity
+
+2. **Azure Prerequisites**:
+   - Virtual Network with GatewaySubnet (minimum /27) - created by the azure-core-infra module
+   - Resource group for network resources
+   - DNS forwarder IP (if using cross-cloud DNS)
+
+## Troubleshooting
+
+### "My VPN isn't connecting"
+
+**Check these first:**
+
+1. Make sure your Azure Gateway Subnet is at least /27 in size
+2. Verify your AWS and Azure networks don't have overlapping IP ranges
+3. Wait 15-20 minutes - VPN connections take time to establish
+
+**Still not working?** Check the connection status in:
+
+- AWS Console → VPC → VPN Connections
+- Azure Portal → Virtual Network Gateways → Connections
+
+### "I can't reach services across clouds"
+
+**Quick fixes:**
+
+1. Check your security groups (AWS) and Network Security Groups (Azure) allow traffic
+2. Verify your route tables are updated (this should happen automatically)
+3. Try pinging by IP address first, then by hostname
+
+### "DNS isn't working across clouds"
+
+**Common solutions:**
+
+1. Make sure you specified the correct DNS zones in your configuration
+2. Check that your DNS forwarder IP is reachable
+3. Wait a few minutes for DNS changes to propagate
+
+### "High availability mode isn't working"
+
+**Things to check:**
+
+1. Ensure you have enough public IP addresses
+2. Verify your Azure VPN Gateway supports active-active mode
+3. Check that both VPN tunnels show as "Connected"
+
+### Still need help?
+
+1. Check the VPN connection logs in both AWS and Azure consoles
+2. Verify all required permissions are in place
+3. Consider opening a support ticket with detailed error messages
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -212,11 +235,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws"></a> [aws](#input\_aws) | AWS related configuration. | <pre>object({<br/>    region               = string<br/>    vpc_id               = string<br/>    vpc_cidr             = string<br/>    route_table_ids      = list(string)<br/>    private_subnet_ids   = list(string)<br/>    private_subnet_cidrs = list(string)<br/>    private_dns_zones    = optional(list(string), [])<br/>  })</pre> | n/a | yes |
-| <a name="input_azure"></a> [azure](#input\_azure) | -------# Azure # -------# | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vnet_cidr           = string<br/>    vpn_snet_id         = string<br/>    dns_forwarder_ip    = string<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>    private_dns_zones = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_aws"></a> [aws](#input\_aws) | AWS configuration object containing all required AWS-side settings. Includes the target VPC details, networking configuration, and DNS zones for cross-cloud resolution. The region must be supported (eu-west-1, eu-south-1). Route table IDs will be updated with VPN routes. Private subnets are used for DNS resolver endpoints. DNS zones listed here will be forwarded to Azure for resolution. | <pre>object({<br/>    region               = string<br/>    vpc_id               = string<br/>    vpc_cidr             = string<br/>    route_table_ids      = list(string)<br/>    private_subnet_ids   = list(string)<br/>    private_subnet_cidrs = list(string)<br/>    private_dns_zones    = optional(list(string), [])<br/>  })</pre> | n/a | yes |
+| <a name="input_azure"></a> [azure](#input\_azure) | Azure configuration object containing all required Azure-side settings. Includes the target Virtual Network details, resource group, and VPN gateway configuration. The vpn\_snet\_id must point to a GatewaySubnet (minimum /27). If vpn.virtual\_network\_gateway\_id is null, a new VPN gateway will be created. The dns\_forwarder\_ip should point to your Azure DNS forwarder for cross-cloud DNS resolution. Private DNS zones listed here will be forwarded to AWS for resolution. | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vnet_cidr           = string<br/>    vpn_snet_id         = string<br/>    dns_forwarder_ip    = string<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>    private_dns_zones = list(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | SitetoSite VPN use case. Allowed values: 'default', 'high\_availability'. | `string` | `"default"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Deployment scenario for the Site-to-Site VPN connection. 'development' creates a single VPN connection suitable for dev/test environments (cost-optimized). 'high\_availability' creates multiple redundant VPN connections for production workloads with enhanced reliability. | `string` | `"development"` | no |
 
 ## Outputs
 

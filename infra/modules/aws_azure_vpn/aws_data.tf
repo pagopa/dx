@@ -3,7 +3,7 @@ data "aws_caller_identity" "current" {}
 
 # Latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux" {
-  count       = var.use_case == "default" ? 1 : 0
+  count       = var.use_case == "development" ? 1 : 0
   most_recent = true
   owners      = ["amazon"]
 
