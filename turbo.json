@@ -7,6 +7,7 @@
       "outputs": ["dist/**", "bin/**"]
     },
     "typecheck": {
+      "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"]
     },
     "lint:check": {
