@@ -1,5 +1,5 @@
 ---
-"azure_cosmos_account": major
+"azure_cosmos_account": patch
 ---
 
 Disabled local authentication in the Azure Cosmos DB account module by setting `local_authentication_disabled = true`
