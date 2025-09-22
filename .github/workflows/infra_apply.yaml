@@ -153,11 +153,20 @@ jobs:
             -input=false \
             | grep -v "hidden-link:"
 
-      - name: Upload Terraform Plan as Artifact
+      - name: Create Terraform Bundle
+        working-directory: ${{ steps.directory.outputs.dir }}
+        run: |
+          # Create a comprehensive bundle with plan, lock file, and modules
+          tar -czf terraform-bundle.tar.gz \
+            tfplan-${{ github.sha }} \
+            .terraform.lock.hcl \
+            .terraform/modules/
+
+      - name: Upload Terraform Bundle as Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          bundle_name: tfplan
-          file_path: ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
+          bundle_name: terraform-bundle
+          file_path: ${{ steps.directory.outputs.dir }}/terraform-bundle.tar.gz
 
   tf_apply:
     name: 'Terraform Apply'
@@ -179,11 +188,18 @@ jobs:
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
 
-      - name: Download Terraform Plan as Artifact
+      - name: Download Terraform Bundle as Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          bundle_name: tfplan
+          bundle_name: terraform-bundle
           file_path: ${{ needs.tf_plan.outputs.working_dir }}
+
+      - name: Extract Terraform Bundle
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        run: |
+          # Extract the complete bundle (plan, lock file, and modules)
+          tar -xzf terraform-bundle.tar.gz
+          rm terraform-bundle.tar.gz
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
