@@ -7,7 +7,7 @@ repos:
         exclude: ^.*/(_modules|modules|\.terraform)(/.*)?$
         files: infra/(resources/prod|repository)
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v{{ preCommitTerraformVersion }}
+    rev: {{ preCommitTerraformVersion }}
     hooks:
       - id: terraform_tflint
         args:

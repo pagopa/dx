@@ -100,5 +100,6 @@ export const getPreCommitTerraformLatestRelease =
       () => fetchLatestRelease({ client: octokitClient, owner, repo }),
       answers,
       "preCommitTerraformVersion",
+      (version) => `v${version.toString()}`,
     );
   };
