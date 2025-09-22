@@ -84,7 +84,7 @@ module "azure_postgres" {
   resource_group_name                  = azurerm_resource_group.example.name
   private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
-  tier = "s"
+  use_case = "default"
 
   administrator_credentials = {
     name     = azurerm_key_vault_secret.postgres_username.value

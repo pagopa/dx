@@ -7,7 +7,7 @@ repos:
         exclude: ^.*/(_modules|modules|\.terraform)(/.*)?$
         files: infra/(resources/prod|repository)
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.100.0 # TODO: use a variable here: https://pagopa.atlassian.net/browse/CES-1276
+    rev: {{ preCommitTerraformVersion }}
     hooks:
       - id: terraform_tflint
         args:
