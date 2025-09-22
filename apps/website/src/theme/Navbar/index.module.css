@@ -1,0 +1,16 @@
+/* Hide search bar in navbar on homepage */
+.navbarNoSearch :global(.navbar__search) {
+  display: none !important;
+}
+
+.navbarNoSearch :global([class*="search-bar"]) {
+  display: none !important;
+}
+
+.navbarNoSearch :global(.DocSearch) {
+  display: none !important;
+}
+
+.navbarNoSearch :global([data-theme] .searchBox_) {
+  display: none !important;
+}

@@ -1,5 +1,17 @@
 # docs
 
+## 0.8.0
+
+### Minor Changes
+
+- a3f3535: Fix privacy policy
+
+## 0.7.0
+
+### Minor Changes
+
+- 98097db: Change docs info-architecture and styles
+
 ## 0.6.0
 
 ### Minor Changes

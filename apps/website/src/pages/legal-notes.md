@@ -2,13 +2,12 @@
 
 The website https://dx.pagopa.it (hereinafter the "Site") is managed by PagoPA
 S.p.A., with registered office in Rome, Piazza Colonna n. 370, ZIP 00187 -
-registration number in Rome Business Register, Tax Code and VAT number
-15376371009, email info@pagopa.it.
+registration number in Rome Business Register, Tax Code and VAT
+number 15376371009.
 
 PagoPA S.p.A. is constantly committed to ensuring the quality of information
 published on the Site, as well as their integrity, updating, completeness,
-timeliness, ease of consultation and accessibility. For any reports or
-suggestions, please write to info@pagopa.it.
+timeliness, ease of consultation and accessibility.
 
 Under no circumstances can PagoPA S.p.A. be held responsible for damages of any
 nature caused directly or indirectly by access to the Site, by the inability or
@@ -40,18 +39,6 @@ any initiatives undertaken by third parties aimed at using in any form and
 manner not permitted distinctive signs identical or similar (as confusing) to
 the aforementioned trademarks and logos.
 
-## Use of published material
-
-Documents and images present in any section of the Site and in any format may be
-downloaded only for personal and non-commercial use: therefore nothing, not even
-in part, may be copied, modified, distributed for profit.
-
-Any commercial use may take place, in compliance with applicable law and with
-prior written authorization from PagoPA S.p.A.
-
-Reproduction of trademarks and contents, images and any other form of
-communication subject to copyright is prohibited.
-
 ## Law and jurisdiction
 
 The application of the conditions of use of this Site is governed by Italian
@@ -60,19 +47,14 @@ procedural and substantive law.
 For any dispute relating to the interpretation, execution and validity of these
 legal notes, the Court of Rome shall have exclusive jurisdiction.
 
-## Contacts
-
-For information relating to the site or these legal notes, please contact PagoPA
-S.p.A. at: info@pagopa.it
-
 ## Privacy
 
 For information on personal data processing, see the
-[Privacy Policy](/privacy-policy).
+[Privacy Notice](/privacy-notice).
 
 ---
 
-_Last updated: September 11, 2025_
+_Last updated: September 19, 2025_
 
 PagoPA S.p.A. - Joint-stock company with sole shareholder - Share capital of
 1,000,000 euros fully paid-in - Registered office in Rome, Piazza Colonna 370,

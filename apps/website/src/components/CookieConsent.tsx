@@ -84,7 +84,11 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
   };
 
   return (
-    <div className={styles.cookieConsent}>
+    <aside
+      aria-label="Cookie consent banner"
+      className={styles.cookieConsent}
+      role="complementary"
+    >
       <div className={styles.cookieContent}>
         {!showPreferences ? (
           <>
@@ -99,11 +103,11 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
               <p>
                 For more information, please see our{" "}
                 <a
-                  href="/privacy-policy"
+                  href="/privacy-notice"
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Privacy Policy
+                  Privacy Notice
                 </a>
                 .
               </p>
@@ -182,7 +186,7 @@ const CookieConsent: React.FC<CookieConsentProps> = ({ onConsentGiven }) => {
           </>
         )}
       </div>
-    </div>
+    </aside>
   );
 };
 
