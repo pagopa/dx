@@ -169,7 +169,7 @@ overlapping CIDRs.
 - High availability with redundant connections
 - Mission-critical workloads and 24/7 operations
 - 📖
-  **[View Complete Example →](https://github.com/pagopa/dx/tree/main/infra/modules/aws_azure_vpn/examples/complete)**
+  **[View Complete Example →](https://github.com/pagopa/dx/tree/main/infra/modules/aws_azure_vpn/examples/high_availability)**
 
 ### Step 3: Deploy with Terraform
 
