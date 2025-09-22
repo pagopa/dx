@@ -155,10 +155,12 @@ jobs:
 
       - name: Create Terraform Bundle
         working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           # Create a comprehensive bundle with plan, lock file, and modules
           tar -czf terraform-bundle.tar.gz \
-            tfplan-${{ github.sha }} \
+            tfplan-$GITHUB_SHA \
             .terraform.lock.hcl \
             .terraform/modules/
 
