@@ -29,22 +29,11 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Set Terraform Refresh
-      shell: bash
-      run: |
-        if [ "$NO_REFRESH" == "true" ]; then
-          echo "ADDITIONAL_FLAGS=-refresh=false -lock=false" >> $GITHUB_ENV
-        else
-          echo "ADDITIONAL_FLAGS=" >> $GITHUB_ENV
-        fi
-      env:
-        NO_REFRESH: ${{ inputs.no-refresh }}
-
     - name: Run Terraform Plan and Filter Output
       id: plan
+      working-directory: ${{ inputs.base-path }}
       shell: bash
       run: |
-        cd $WORKING_DIRECTORY
         bash $GITHUB_ACTION_PATH/run_plan.sh
 
         # --- Define outputs ---
@@ -53,13 +42,12 @@ runs:
         WORKING_DIRECTORY: ${{ inputs.base-path }}
         GITHUB_ACTION_PATH: ${{ github.action_path }}
         SENSITIVE_KEYS: ${{ inputs.sensitive-keys }}
+        NO_REFRESH: ${{ inputs.no-refresh }}
         PLAN_FILE: filtered_plan.txt
 
     - name: Upload Artifact
       if: ${{ inputs.upload-artifact == 'true' }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: pagopa/dx/.github/actions/upload-artifact@main
       with:
-        name: filtered-terraform-plan
-        path: ${{ steps.plan.outputs.filtered_plan_path }}
-        if-no-files-found: error
-        retention-days: 7
+        file_path: ${{ steps.plan.outputs.filtered_plan_path }}
+        bundle_name: filtered-terraform-plan

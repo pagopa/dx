@@ -13,6 +13,7 @@ usage() {
   echo "Options / Environment Variables:"
   echo "  --plan-file           (Var: PLAN_FILE) The name of the output file. (Required)"
   echo "  --sensitive-keys      (Var: SENSITIVE_KEYS) A comma-separated list of sensitive keys. (Required)"
+  echo "  --no-refresh          (Var: NO_REFRESH) Optional, if set to 'true', adds the -refresh=false -lock=false flags to the plan command."
   echo "  --additional-flags    (Var: ADDITIONAL_FLAGS) Optional flags for the plan command."
   echo "  -h, --help            Show this help message."
   exit 1
@@ -27,6 +28,10 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --sensitive-keys)
       SENSITIVE_KEYS="$2"
+      shift 2
+      ;;
+    --no-refresh)
+      NO_REFRESH="$2"
       shift 2
       ;;
     --additional-flags)
@@ -77,6 +82,10 @@ echo "--- Executing Plan ---"
 
 # Run terraform plan, capture its exit code
 set +e
+
+if [[ "$NO_REFRESH" == "true" ]]; then
+  ADDITIONAL_FLAGS="$ADDITIONAL_FLAGS -refresh=false -lock=false"
+fi
 
 # shellcheck disable=2086
 terraform plan \
