@@ -22,17 +22,17 @@ If you use a code editor that doesn't support Dev Container, you can still run i
 1. Follow the instruction of the following chapter ("Using local machine") to setup your local environment
 2. Run devcontainer from your terminal
    ```bash
-   yarn devcontainer up --workspace-folder .
-   yarn devcontainer exec -- workspace-folder . /bin/bash
+   pnpm devcontainer up --workspace-folder .
+   pnpm devcontainer exec -- workspace-folder . /bin/bash
    ```
 
 ### Local Development Setup (Alternative)
 
 If you prefer not to use dev containers, you can bootstrap the local development on your machine.
 
-This project uses specific versions of `node`, `yarn` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
-1. Install and configure the follow tool in your machine
+This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
 
+1. Install and configure the follow tool in your machine
    - [nodenv](https://github.com/nodenv/nodenv) - Node version manager
    - [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
    - [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
@@ -46,19 +46,16 @@ This project uses specific versions of `node`, `yarn` and `terraform`. To make s
     nodenv install
    ```
 
-3. Install `yarn` using [corepack](https://nodejs.org/api/corepack.html) (Node Package Manager version manager, it is distributed with `node`). This step will also install all the required dependencies
-
-   > [!IMPORTANT]
-   > Yarn uses Plug and Play for dependency management. For more information, see: [Yarn Plug’n’Play](https://yarnpkg.com/features/pnp)
+3. Install `pnpm` using [corepack](https://nodejs.org/api/corepack.html) (Node Package Manager version manager, it is distributed with `node`). This step will also install all the required dependencies
 
    ```bash
    corepack enable
-   yarn
+   pnpm install
    ```
 
 4. Build all the workspaces contained by this repo
    ```bash
-   yarn build
+   pnpm run build
    ```
 
 ## Release management
@@ -70,46 +67,80 @@ Each Pull Request that includes changes that require a version bump must include
 To create a _changeset file_ run the following command and follow the instructions.
 
 ```bash
-yarn changeset
+pnpm changeset
 ```
 
 ## Useful commands
 
-This project uses `yarn` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
+This project uses `pnpm` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
 
 ### Work with workspaces
 
 ```bash
 # build all the workspaces using turbo
-yarn build
+pnpm build
 # or
-yarn turbo build
-
+pnpm turbo build
 # to execute COMMAND on WORKSPACE_NAME
-yarn workspace WORKSPACE_NAME run command
-# to execute COMMAD on all workspaces
-yarn workspace foreach run command
-
+pnpm --filter WORKSPACE_NAME run command
 # run unit tests on citizen-func
-yarn workspace citizen-func run test
+pnpm --filter citizen-func run test
 # or (with turbo)
-yarn turbo test -- citizen-func
-
-# run the typecheck script on all workspaces
-yarn workspaces foreach run typecheck
+pnpm turbo test -- citizen-func
 ```
 
 ### Add dependencies
 
 ```bash
 # add a dependency to the workspace root
-yarn add turbo
-
-# add vitest as devDependency on citizen-func
-yarn workspace citizen-func add -D vitest
-
-# add zod as dependency on each workspace
-yarn workspace foreach add zod
+pnpm add turbo
+# add a dependency to a specific workspace
+pnpm --filter WORKSPACE_NAME add dependency-name
 ```
+
+# SBOM Management
+
+## What is an SBOM
+
+An SBOM (Software Bill of Materials) is a formal, machine-readable inventory of
+software components and dependencies contained in an application. It provides a
+detailed list of all the libraries, frameworks, and modules that make up the
+software, along with their versions and licenses.
+
+## SBOM Management Script
+
+To generate SBOMs, this project includes a
+[script](https://github.com/pagopa/dx/blob/main/sbom.sh) that automates their
+creation, updates, and validation.
+
+### Requirements
+
+Before using the script, you need to have the following tools installed on your
+system:
+
+- **[Syft](https://github.com/anchore/syft)**: A CLI tool for generating SBOMs
+  from container images and filesystems.
+- **[Grype](https://github.com/anchore/grype)**: A vulnerability scanner for
+  container images and filesystems.
+
+You can find installation instructions on their official GitHub pages.
+
+### Usage
+
+The root `package.json` includes the following scripts to manage SBOMs:
+
+- **To generate all SBOMs**:
+
+  ```sh
+  pnpm sbom-generate
+  ```
+
+- **To validate existing SBOMs**:
+
+  ```sh
+  pnpm sbom-validate
+  ```
+
+---
 
 Thank you for contributing to DX!

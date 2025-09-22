@@ -1,5 +1,69 @@
 # azure_core_infra
 
+## 2.2.1
+
+### Patch Changes
+
+- 330fce6: Fix virtual network gateway generation and sku
+
+## 2.2.0
+
+### Minor Changes
+
+- eb14f05: Rewrite VPN and DNS forwarder IaC from external module to plain resources
+
+## 2.1.4
+
+### Patch Changes
+
+- b3293b3: Add DNS Private Zone for API Management
+
+## 2.1.3
+
+### Patch Changes
+
+- d75ce50: Address two issues with generated names:
+  - `instance_number` variable was not used to generate resource name, causing all instances to have the same name when multiple instances were created
+    - affected components: VPN Gateway and NAT Gateway
+  - the Entra ID application name was not using the `prefix` variable, replaced by `dx` hardcoded value
+    - affected components: VPN Gateway
+
+## 2.1.2
+
+### Patch Changes
+
+- 8635473: Disable purge protection on KeyVault created in non-prod environment
+
+## 2.1.1
+
+### Patch Changes
+
+- 9ffff21: Resolved typos inside examples
+
+## 2.1.0
+
+### Minor Changes
+
+- c93e73f: Add application insights resource
+
+## 2.0.0
+
+### Major Changes
+
+- a08a2c9: Remove CIDR variables, found automatically with pagopa-dx found cidr resource
+
+## 1.0.10
+
+### Patch Changes
+
+- 9b8c061: Add opex resource group
+
+## 1.0.9
+
+### Patch Changes
+
+- 2c0cd45: Add log analytics workspace and resource groups ids outputs
+
 ## 1.0.8
 
 ### Patch Changes
@@ -59,7 +123,6 @@
   Update your Terraform configuration from azurerm v3 to azurerm v4, and make sure your Terraform version is above or equal to 1.9.
 
   Remember that azurerm v4 requires you to set in your local CLI profile the following environment variable:
-
   - `ARM_SUBSCRIPTION_ID`: with the id of the subscription you want to work with
 
 ## 0.0.5

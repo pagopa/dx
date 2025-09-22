@@ -14,6 +14,10 @@ This module abstracts the complexity of Azure IAM roles by providing a streamlin
 - **RBAC Integration**: Simplifies the integration with Azure Role-Based Access Control (RBAC).
 - **Scalability**: Designed to handle complex role assignment scenarios across multiple Azure services.
 
+## Storage Submodule
+
+For detailed documentation on storage-related role assignments (Blob, Queue, Table), see the [storage_account submodule README](modules/storage_account/README.md). This includes available roles, usage notes, and concrete examples for each storage service.
+
 ## Usage Example
 
 For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples), which includes:

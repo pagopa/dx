@@ -2,13 +2,7 @@
 
 set -e
 
-echo "Choose the version of Azure Functions Core Tools to install"
-if [ "$VERSION" = "latest" ]; then
-    CORE_TOOLS_VERSION=$(curl -s https://api.github.com/repos/Azure/azure-functions-core-tools/releases/latest | jq -r '.tag_name')
-else
-    CORE_TOOLS_VERSION=$VERSION
-fi
-
+CORE_TOOLS_VERSION=4.0.7030
 BUILD_NUMBER=$(echo $CORE_TOOLS_VERSION | cut -d '.' -f 3)
 
 echo "Clone Azure Functions Core Tools repository"

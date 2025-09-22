@@ -14,8 +14,6 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  vpn_enabled = var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != ""
-
   nat_enabled = var.nat_enabled && !var.test_enabled
 
   private_dns_zones = {
@@ -34,5 +32,6 @@ locals {
     "management_azure_api_net" = "management.azure-api.net"
     "scm_azure_api_net"        = "scm.azure-api.net"
     "container_app"            = "privatelink.italynorth.azurecontainerapps.io"
+    "apim"                     = "privatelink.azure-api.net"
   }
 }

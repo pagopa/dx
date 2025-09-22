@@ -10,12 +10,6 @@ module "core" {
   environment = local.environment
 
   virtual_network_cidr = "10.60.0.0/16"
-  pep_subnet_cidr      = "10.60.1.0/23"
-
-  vpn = {
-    cidr_subnet              = "10.60.133.0/24"
-    dnsforwarder_cidr_subnet = "10.60.252.8/29"
-  }
 
   tags = local.tags
 }

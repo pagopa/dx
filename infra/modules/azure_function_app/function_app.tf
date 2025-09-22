@@ -26,7 +26,7 @@ resource "azurerm_linux_function_app" "this" {
     health_check_eviction_time_in_min      = 2
     ip_restriction_default_action          = "Deny"
     application_insights_key               = var.application_insights_key
-    minimum_tls_version                    = 1.3
+    minimum_tls_version                    = var.tls_version
 
     application_stack {
       node_version = var.stack == "node" ? var.node_version : null
@@ -90,6 +90,7 @@ resource "azurerm_linux_function_app" "this" {
 
   lifecycle {
     ignore_changes = [
+      site_config["health_check_eviction_time_in_min"],
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],

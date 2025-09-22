@@ -170,10 +170,10 @@ variable "subnet_service_endpoints" {
   default     = null
 }
 
-variable "action_group_id" {
-  type        = string
-  description = "The ID of the Action Group to invoke when an alert is triggered for the Function App."
-  default     = null
+variable "action_group_ids" {
+  type        = set(string)
+  description = "The ID of the Action Groups to invoke when an alert is triggered for the Function App."
+  default     = []
 }
 
 variable "application_insights_key" {
@@ -187,4 +187,10 @@ variable "has_durable_functions" {
   type        = bool
   description = "Set to true if the Function App hosts Durable Functions."
   default     = false
+}
+
+variable "tls_version" {
+  type        = number
+  default     = 1.2
+  description = "Minimum TLS version for the App Service."
 }

@@ -1,68 +1,76 @@
-## VPN
-
-data "azuread_application" "vpn_app" {
-  display_name = "eng-d-app-vpn"
+resource "azurerm_public_ip" "this" {
+  count = local.use_cases[var.vpn_use_case].vpn_connections_number
+  name = "${provider::dx::resource_name(merge(var.naming_config, {
+    name          = "vpn"
+    resource_type = "public_ip"
+  }))}-${count.index + 1}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Static"
+  tags                = var.tags
 }
 
-resource "azurerm_subnet" "vpn_snet" {
-  name                 = "GatewaySubnet"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = var.virtual_network.name
-  address_prefixes     = [var.vpn_cidr_subnet]
-  service_endpoints    = []
+resource "time_sleep" "wait_public_ips" {
+  depends_on      = [azurerm_public_ip.this]
+  create_duration = "30s"
 }
 
-module "vpn" {
-  source = "github.com/pagopa/terraform-azurerm-v4//vpn_gateway?ref=v1.9.0"
+resource "azurerm_virtual_network_gateway" "this" {
+  name = provider::dx::resource_name(merge(var.naming_config, {
+    name          = "vpn"
+    resource_type = "virtual_network_gateway"
+  }))
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
-  name                  = "${var.project}-vgw-01"
-  location              = var.location
-  resource_group_name   = var.resource_group_name
-  sku                   = "VpnGw1"
-  pip_sku               = "Standard"
-  pip_allocation_method = "Static"
-  subnet_id             = azurerm_subnet.vpn_snet.id
+  type          = "Vpn"
+  vpn_type      = "RouteBased"
+  active_active = local.use_cases[var.vpn_use_case].vpn_connections_number > 1 ? true : false
+  enable_bgp    = var.aws_vpn_enabled
+  sku           = local.use_cases[var.vpn_use_case].sku
+  generation    = "Generation${local.use_cases[var.vpn_use_case].generation}"
 
-  vpn_client_configuration = [
-    {
-      address_space         = ["172.16.2.0/24"],
-      vpn_client_protocols  = ["OpenVPN"],
+  dynamic "ip_configuration" {
+    for_each = azurerm_public_ip.this
+
+    content {
+      name                          = "vpnConfig${ip_configuration.key + 1}"
+      public_ip_address_id          = azurerm_public_ip.this[ip_configuration.key].id
+      private_ip_address_allocation = "Dynamic"
+      subnet_id                     = var.vpn_subnet_id
+    }
+  }
+
+  dynamic "bgp_settings" {
+    for_each = var.aws_vpn_enabled ? [1] : []
+    content {
+      asn = local.aws.bgp_asn
+
+      dynamic "peering_addresses" {
+        for_each = azurerm_public_ip.this
+
+        content {
+          ip_configuration_name = "vpnConfig${peering_addresses.key + 1}"
+          apipa_addresses = [
+            cidrhost(local.aws.inside_cidrs[peering_addresses.key][0], 2),
+            cidrhost(local.aws.inside_cidrs[peering_addresses.key][1], 2)
+          ]
+        }
+      }
+    }
+  }
+
+  dynamic "vpn_client_configuration" {
+    for_each = var.vpn_enabled ? [1] : []
+    content {
       aad_audience          = data.azuread_application.vpn_app.client_id
       aad_issuer            = "https://sts.windows.net/${var.tenant_id}/"
       aad_tenant            = "https://login.microsoftonline.com/${var.tenant_id}"
+      address_space         = ["172.16.2.0/24"]
       radius_server_address = null
       radius_server_secret  = null
-      revoked_certificate   = []
-      root_certificate      = []
-    }
-  ]
-
-  tags = var.tags
-}
-
-## DNS FORWARDER
-resource "azurerm_subnet" "dns_forwarder_snet" {
-  name                 = "${var.project}-dns-forwarder-snet-01"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = var.virtual_network.name
-  address_prefixes     = [var.dnsforwarder_cidr_subnet]
-
-  delegation {
-    name = "delegation"
-
-    service_delegation {
-      name    = "Microsoft.ContainerInstance/containerGroups"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      vpn_client_protocols  = ["OpenVPN"]
     }
   }
-}
-
-module "dns_forwarder" {
-  source              = "github.com/pagopa/terraform-azurerm-v4//dns_forwarder?ref=v1.9.0"
-  name                = "${var.project}-dns-forwarder-ci-01"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  subnet_id           = azurerm_subnet.dns_forwarder_snet.id
-
   tags = var.tags
 }

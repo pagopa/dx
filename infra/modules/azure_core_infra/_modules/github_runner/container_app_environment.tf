@@ -11,7 +11,7 @@ resource "azurerm_container_app_environment" "cae" {
 
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  infrastructure_subnet_id       = azurerm_subnet.runner_snet.id
+  infrastructure_subnet_id       = var.runner_snet
   zone_redundancy_enabled        = false
   internal_load_balancer_enabled = false
 

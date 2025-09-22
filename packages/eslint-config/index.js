@@ -1,16 +1,15 @@
 import eslint from "@eslint/js";
-import perfectionistNatural from "eslint-plugin-perfectionist/configs/recommended-natural";
+import vitest from "@vitest/eslint-plugin";
+import perfectionist from "eslint-plugin-perfectionist";
 import prettier from "eslint-plugin-prettier/recommended";
-import vitest from "eslint-plugin-vitest";
 import tseslint from "typescript-eslint";
 
 export default [
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   prettier,
-  perfectionistNatural,
+  perfectionist.configs["recommended-natural"],
   {
     files: ["**/tests/**", "**/__tests__/**"],
     ...vitest.configs.recommended,

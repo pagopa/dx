@@ -1,6 +1,0 @@
-{
-  "name": "provider-azure",
-  "version": "0.2.1",
-  "private": true,
-  "description": "Terraform provider for DX on Azure, to enhance developer experience"
-}

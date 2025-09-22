@@ -1,5 +1,23 @@
 # azure_cdn
 
+## 0.3.0
+
+### Minor Changes
+
+- d55068e: Support apex domains by using custom certificates
+
+## 0.2.0
+
+### Minor Changes
+
+- 40beff1: Added `rule_set_id` output that exposes the Front Door Rule Set ID. This allows users to implement custom rules via the `azurerm_cdn_frontdoor_rule` resource and link them to the rule set provided by the module.
+
+## 0.1.0
+
+### Minor Changes
+
+- 32aae43: The CDN FrontDoor Profile now has a system-assigned managed identity
+
 ## 0.0.7
 
 ### Patch Changes

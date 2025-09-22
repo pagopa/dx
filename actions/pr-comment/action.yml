@@ -1,0 +1,32 @@
+name: "PR Comment Manager"
+description: "Creates or updates comments on Pull Requests using TypeScript"
+author: "PagoPA DX Team"
+
+inputs:
+  comment-body:
+    description: "The comment content to post (supports markdown). Either this or comment-body-file must be provided"
+    required: false
+  comment-body-file:
+    description: "Path to a file containing the comment content (supports markdown). Either this or comment-body must be provided"
+    required: false
+  search-pattern:
+    description: "Text pattern to identify existing comments to delete. If not provided, a new comment will always be created"
+    required: false
+  github-token:
+    description: "GitHub token for API access. Defaults to GITHUB_TOKEN environment variable"
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  comment-id:
+    description: "The ID of the created comment"
+  comment-url:
+    description: "The URL of the created comment"
+
+runs:
+  using: "node20"
+  main: "dist/index.cjs"
+
+branding:
+  icon: "message-circle"
+  color: "blue"

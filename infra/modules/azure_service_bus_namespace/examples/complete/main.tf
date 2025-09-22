@@ -39,7 +39,7 @@ module "service_bus_01" {
   subnet_pep_id                        = data.azurerm_subnet.pep.id
   private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
-  tier = "l"
+  use_case = "default"
 
   tags = local.tags
 }

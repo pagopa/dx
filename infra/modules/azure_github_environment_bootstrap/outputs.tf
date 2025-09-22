@@ -8,10 +8,10 @@ output "resource_group" {
 }
 
 output "repository" {
-  description = "Details of the GitHub repository, including ID and name."
+  description = "GitHub repository name and owner."
   value = {
-    id   = try(module.github_repository["repo"].id, null)
-    name = local.repository_name
+    owner = var.repository.owner
+    name  = var.repository.name
   }
 }
 
@@ -28,29 +28,39 @@ output "identities" {
   description = "Details of the user-assigned identities for app, infra, and opex, including IDs and names."
   value = {
     app = {
+      ci = {
+        id           = azurerm_user_assigned_identity.app_ci.id
+        name         = azurerm_user_assigned_identity.app_ci.name
+        principal_id = azurerm_user_assigned_identity.app_ci.principal_id
+      }
       cd = {
-        id   = azurerm_user_assigned_identity.app_cd.id
-        name = azurerm_user_assigned_identity.app_cd.name
+        id           = azurerm_user_assigned_identity.app_cd.id
+        name         = azurerm_user_assigned_identity.app_cd.name
+        principal_id = azurerm_user_assigned_identity.app_cd.principal_id
       }
     }
     infra = {
       ci = {
-        id   = azurerm_user_assigned_identity.infra_ci.id
-        name = azurerm_user_assigned_identity.infra_ci.name
+        id           = azurerm_user_assigned_identity.infra_ci.id
+        name         = azurerm_user_assigned_identity.infra_ci.name
+        principal_id = azurerm_user_assigned_identity.infra_ci.principal_id
       }
       cd = {
-        id   = azurerm_user_assigned_identity.infra_cd.id
-        name = azurerm_user_assigned_identity.infra_cd.name
+        id           = azurerm_user_assigned_identity.infra_cd.id
+        name         = azurerm_user_assigned_identity.infra_cd.name
+        principal_id = azurerm_user_assigned_identity.infra_cd.principal_id
       }
     }
     opex = {
       ci = {
-        id   = azurerm_user_assigned_identity.opex_ci.id
-        name = azurerm_user_assigned_identity.opex_ci.name
+        id           = azurerm_user_assigned_identity.opex_ci.id
+        name         = azurerm_user_assigned_identity.opex_ci.name
+        principal_id = azurerm_user_assigned_identity.opex_ci.principal_id
       }
       cd = {
-        id   = azurerm_user_assigned_identity.opex_cd.id
-        name = azurerm_user_assigned_identity.opex_cd.name
+        id           = azurerm_user_assigned_identity.opex_cd.id
+        name         = azurerm_user_assigned_identity.opex_cd.name
+        principal_id = azurerm_user_assigned_identity.opex_cd.principal_id
       }
     }
   }

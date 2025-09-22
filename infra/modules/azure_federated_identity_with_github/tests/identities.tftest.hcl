@@ -39,6 +39,36 @@ run "ids_default" {
       owner = "pagopa"
     }
 
+    continuos_integration = {
+      enable = true
+      roles = {
+        subscription = [
+          "Reader",
+          "Reader and Data Access",
+          "PagoPA IaC Reader",
+          "DocumentDB Account Contributor",
+          "PagoPA API Management Service List Secrets"
+        ]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+
+    continuos_delivery = {
+      enable = true
+      roles = {
+        subscription = ["Contributor"]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+
     subscription_id = run.setup_tests.subscription_id
 
     tags = {}
@@ -116,12 +146,12 @@ run "ids_default" {
 
   assert {
     condition     = azurerm_role_assignment.ci_rg[0].role_definition_name == "Storage Blob Data Contributor"
-    error_message = "CI identity must have Storage Blob Data Contributor role at terraform-state-rg resource group scope"
+    error_message = "CI identity must have Storage Blob Data Contributor role at dx-d-itn-tfstate-rg-01 resource group scope"
   }
 
   assert {
     condition     = azurerm_role_assignment.cd_rg[0].role_definition_name == "Storage Blob Data Contributor"
-    error_message = "CD identity must have Storage Blob Data Contributor role at terraform-state-rg resource group scope"
+    error_message = "CD identity must have Storage Blob Data Contributor role at dx-d-itn-tfstate-rg-01 resource group scope"
   }
 
   assert {
@@ -237,6 +267,24 @@ run "cd_disabled" {
 
     subscription_id = run.setup_tests.subscription_id
 
+    continuos_integration = {
+      enable = true
+      roles = {
+        subscription = [
+          "Reader",
+          "Reader and Data Access",
+          "PagoPA IaC Reader",
+          "DocumentDB Account Contributor",
+          "PagoPA API Management Service List Secrets"
+        ]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+
     continuos_delivery = {
       enable = false
     }
@@ -275,6 +323,18 @@ run "ci_disabled" {
       enable = false
     }
 
+    continuos_delivery = {
+      enable = true
+      roles = {
+        subscription = ["Contributor"]
+        resource_groups = {
+          dx-d-itn-tfstate-rg-01 = [
+            "Storage Blob Data Contributor"
+          ]
+        }
+      }
+    }
+    
     tags = {}
   }
 

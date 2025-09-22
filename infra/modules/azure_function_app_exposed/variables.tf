@@ -129,3 +129,9 @@ variable "has_durable_functions" {
   description = "Set to true if the Function App hosts Durable Functions."
   default     = false
 }
+
+variable "tls_version" {
+  type        = number
+  default     = 1.2
+  description = "Minimum TLS version for the App Service."
+}

@@ -189,7 +189,6 @@ The property `copy_blobs_created_after` accepts either `Everything` or
 ### Table storage migration
 
 1. For small Tables:
-
    - Use
      [Microsoft Azure Storage Explorer](https://azure.microsoft.com/en-us/products/storage/storage-explorer#Download-4)
    - Right-click source table and select `Copy`

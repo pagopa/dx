@@ -34,34 +34,31 @@ variable "virtual_network_cidr" {
   default     = "10.0.0.0/16"
 }
 
-variable "pep_subnet_cidr" {
-  type        = string
-  description = "The CIDR block defining the IP address range for the private endpoint subnet."
-  default     = "10.0.2.0/23"
-}
-
-variable "vpn" {
-  type = object({
-    cidr_subnet              = optional(string, "")
-    dnsforwarder_cidr_subnet = optional(string, "")
-  })
-  description = "VPN configuration. Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together or not at all."
-  default     = {}
-
-  validation {
-    condition     = (var.vpn.cidr_subnet == "" && var.vpn.dnsforwarder_cidr_subnet == "") || (var.vpn.cidr_subnet != "" && var.vpn.dnsforwarder_cidr_subnet != "")
-    error_message = "Both 'cidr_subnet' and 'dnsforwarder_cidr_subnet' must be specified together, or both must be left empty."
-  }
-}
-
 variable "nat_enabled" {
   type        = bool
   description = "A boolean flag to enable or disable the creation of a NAT gateway."
   default     = false
 }
 
-variable "gh_runner_snet" {
+variable "vpn_enabled" {
+  type        = bool
+  description = "A boolean flag to enable or disable the creation of a VPN."
+  default     = false
+}
+
+variable "aws_vpn_enabled" {
+  type        = bool
+  description = "A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS."
+  default     = false
+}
+
+variable "vpn_use_case" {
   type        = string
-  default     = "10.0.242.0/23"
-  description = "The CIDR block defining the IP address range for the GitHub runner subnet."
+  description = "Site-to-Site VPN use case. Allowed values: 'default', 'high_availability'."
+  default     = "default"
+
+  validation {
+    condition     = contains(["default", "high_availability"], var.vpn_use_case)
+    error_message = "vpn_use_case must be either 'default' or 'high_availability'."
+  }
 }

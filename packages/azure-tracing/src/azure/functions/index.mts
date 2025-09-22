@@ -26,4 +26,6 @@ registerInstrumentations({
   tracerProvider: trace.getTracerProvider(),
 });
 
-await waitForAllMessagesAcknowledged();
+(async () => {
+  await waitForAllMessagesAcknowledged();
+})();

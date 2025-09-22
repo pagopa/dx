@@ -5,16 +5,15 @@ locals {
     location        = "italynorth"
     location_short  = "itn"
     domain          = "test"
-    app_name        = "monorepo_starter_pack_multienv"
     instance_number = "02"
   }
 
   project = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location_short}"
 
   adgroups = {
-    admins_name   = "io-d-adgroup-admin"
-    devs_name     = "io-p-adgroup-developers"
-    external_name = "io-p-adgroup-externals"
+    admins_name   = "${local.environment.prefix}-${local.environment.env_short}-adgroup-admin"
+    devs_name     = "${local.environment.prefix}-${local.environment.env_short}-adgroup-developers"
+    external_name = "${local.environment.prefix}-${local.environment.env_short}-adgroup-externals"
   }
 
   runner = {

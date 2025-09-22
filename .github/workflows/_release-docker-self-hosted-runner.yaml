@@ -1,0 +1,128 @@
+name: Publish GitHub Self-Hosted Runner
+
+# This workflow publishes the latest GitHub Self-Hosted Runner image to the GitHub Container Registry.
+# It checks for the latest official Runner image digest, updates the Dockerfile if necessary,
+# and builds and pushes the new image to the registry.
+# The workflow is scheduled to run every 2 months on the 1st day at 08:00 UTC.
+# It can also be triggered manually for testing purposes using input 'dry_run'.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run the workflow for testing purposes (does not push the image)'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '0 8 1 */2 *' # Every 2 months on the 1st day at 08:00 UTC
+  push:
+    branches:
+      - main
+    paths:
+      - 'containers/self-hosted-runner/**'
+
+jobs:
+  found_sha:
+    name: Found latest Github Self-Hosted Runner SHA
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      latest_digest: ${{ steps.latest_digest.outputs.latest_digest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Get official Runner image digests
+        id: latest_digest
+        run: |
+          # Fetch the latest digest of the official GitHub Actions Runner image for amd64 Linux
+          latest_digest=$(docker manifest inspect ghcr.io/actions/actions-runner:latest | jq -r '.manifests[] | select(.platform.architecture == "amd64" and .platform.os == "linux") | .digest')
+          echo $latest_digest
+          echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
+      
+  publish:
+    name: Publish GitHub Self-Hosted Runner
+    runs-on: ubuntu-latest
+    needs: [found_sha]
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+      id-token: write
+      attestations: write
+    env:
+      IMAGE_NAME: "pagopa/dx-github-self-hosted-runner"
+      IMAGE_TAG: ${{ inputs.dry_run && github.ref_name || 'latest' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Container registry Login
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        if: github.event_name != 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if image exists
+        id: check_image
+        if: github.event_name != 'push'
+        run: |
+          # Check if the image exists in the registry
+          if docker manifest inspect ghcr.io/$IMAGE_NAME:$IMAGE_TAG > /dev/null 2>&1; then
+            echo "🟢 Image exists in the registry!"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "🔴 Image doesn't exist in the registry"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Read previous digest
+        id: old_digest
+        if: steps.check_image.outputs.exists == 'true' && github.event_name != 'push'
+        run: |
+          # Found used digest of the latest image
+          docker pull ghcr.io/$IMAGE_NAME:$IMAGE_TAG
+          old_digest=$(docker inspect ghcr.io/$IMAGE_NAME:$IMAGE_TAG | jq -r '.[0].Config.Labels["base_runner_digest"]')
+
+          echo "🔎 Used Digest: $old_digest"
+          echo "digest=$old_digest" >> $GITHUB_OUTPUT
+
+          # Cleanup
+          docker rmi ghcr.io/$IMAGE_NAME:$IMAGE_TAG || true
+
+      - name: Inject digest into Dockerfile
+        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
+        run: |
+          echo "⏳ Updating Dockerfile..."
+          
+          # Construct the new FROM statement
+          new_from="FROM ghcr.io/actions/actions-runner:latest@${{ needs.found_sha.outputs.latest_digest }} AS base"
+          
+          # Replace the first line with the new FROM statement
+          sed -i "1s|.*|$new_from|" ./containers/self-hosted-runner/Dockerfile
+
+          echo "Dockerfile updated."
+
+      - name: Docker Build
+        uses: pagopa/dx/.github/actions/docker-build-push@main
+        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
+        with:
+          dockerfile_path: './containers/self-hosted-runner/Dockerfile'
+          dockerfile_context: './containers/self-hosted-runner'
+          docker_image_name: '${{ env.IMAGE_NAME }}'
+          docker_image_description: 'DX GitHub Self-Hosted Runner'
+          docker_image_authors: 'DevEx'
+          build_platforms: linux/amd64
+          build_args: |
+            RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
+          push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

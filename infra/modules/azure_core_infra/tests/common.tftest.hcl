@@ -15,14 +15,7 @@ run "core_is_correct_plan" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
+    environment = run.setup_tests.environment
 
     tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
@@ -36,19 +29,14 @@ run "core_is_correct_plan" {
     }
 
     virtual_network_cidr = "10.50.0.0/16"
-    pep_subnet_cidr      = "10.50.2.0/23"
 
     nat_enabled = true
-
-    vpn = {
-      cidr_subnet              = "10.50.133.0/24"
-      dnsforwarder_cidr_subnet = "10.50.252.8/29"
-    }
+    vpn_enabled = true
   }
 
   # Checks some assertions
   assert {
-    condition     = local.vpn_enabled == true
+    condition     = var.vpn_enabled == true
     error_message = "VPN have to be enabled becouse cidr_subnet and dnsforwarder_cidr_subnet are set"
   }
 
@@ -58,13 +46,18 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = [module.network.vnet.name, module.network.pep_snet.name, module.nat_gateway[0].nat_gateways[0].name] == ["dx-d-itn-common-vnet-01", "dx-d-itn-pep-snet-01", "dx-d-itn-ng-01"]
-    error_message = "The VNET names configuration must be correct"
+    condition     = module.network.vnet.name == "dx-d-itn-common-vnet-${run.setup_tests.environment.instance_number}"
+    error_message = "VNet name is not correct"
   }
 
   assert {
-    condition     = [tolist(module.network.vnet.address_space)[0], module.network.pep_snet.address_prefixes[0]] == ["10.50.0.0/16", "10.50.2.0/23"]
-    error_message = "The VNET address space and PEP subnet configuration must be correct"
+    condition     = module.network.pep_snet.name == "dx-d-itn-pep-snet-${run.setup_tests.environment.instance_number}"
+    error_message = "Pep subnet name is not correct"
+  }
+
+  assert {
+    condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-d-itn-ng-${run.setup_tests.environment.instance_number}"
+    error_message = "The NAT Gateway name configuration must be correct"
   }
 
   assert {

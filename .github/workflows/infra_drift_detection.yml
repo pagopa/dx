@@ -23,6 +23,16 @@ on:
           type: string
           required: false
           default: ''
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ''
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -32,14 +42,15 @@ env:
   ARM_STORAGE_USE_AZUREAD: true
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
+  TF_IN_AUTOMATION: true
 
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
-    runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
-      group: ${{ github.workflow }}-ci
+      group: ${{ github.workflow }}-${{ inputs.environment }}-ci
       cancel-in-progress: true
     permissions:
       id-token: write
@@ -93,7 +104,7 @@ jobs:
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform init
+          terraform init -input=false
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
@@ -104,7 +115,13 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -uo pipefail
-          terraform plan -no-color -detailed-exitcode -out=plan.tfplan | grep -v "hidden-link:"
+          terraform plan \
+            -lock=false \
+            -no-color \
+            -input=false \
+            -detailed-exitcode \
+            -out=plan.tfplan | \
+            grep -v "hidden-link:"
 
           EXIT_CODE=${PIPESTATUS[0]}
           if [ "$EXIT_CODE" -eq 1 ]; then

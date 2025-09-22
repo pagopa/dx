@@ -25,13 +25,11 @@ To use secrets from KeyVault as AppSettings values, you can follow these steps:
 
 1. Granting the AppService's system-assigned managed identity access to read
    secrets:
-
    - For KeyVaults using Access Policies, assign `Get` and `List` permissions.
    - For KeyVaults using RBAC, assign the `Key Vault Secrets User` role.
 
 2. By referencing the secrets from the AppService environment variables, using
    one between:
-
    - `@Microsoft.KeyVault(VaultName=<kv-name>;SecretName=<secret-name>)`
    - `@Microsoft.KeyVault(SecretUri=https://<kv-name>.vault.azure.net/secrets/<secret-name>)`
 

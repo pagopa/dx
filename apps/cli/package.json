@@ -1,0 +1,58 @@
+{
+  "name": "@pagopa/dx-cli",
+  "version": "0.5.0",
+  "type": "module",
+  "description": "A CLI useful to manage DX tools.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "apps/cli"
+  },
+  "keywords": [
+    "DX",
+    "CLI"
+  ],
+  "files": [
+    "bin"
+  ],
+  "bin": {
+    "dx": "./bin/index.js"
+  },
+  "dependencies": {
+    "@logtape/logtape": "^1.0.0",
+    "commander": "^14.0.0",
+    "core-js": "^3.44.0",
+    "glob": "^11.0.3",
+    "neverthrow": "catalog:",
+    "semver": "catalog:",
+    "yaml": "^2.8.0",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "@vitest/coverage-v8": "catalog:dx",
+    "eslint": "catalog:dx",
+    "memfs": "^4.23.0",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:dx",
+    "vitest-mock-extended": "^3.1.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

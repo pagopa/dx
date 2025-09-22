@@ -4,11 +4,9 @@ description: "Upload an artifact to the workflow run"
 inputs:
   file_path:
     description: "Path of the file to upload (Example: ./build/bundle.zip)"
-    type: string
     required: true
   bundle_name:
     description: "Name of the bundle to upload"
-    type: string
     required: true
 
 runs:

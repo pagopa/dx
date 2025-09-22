@@ -28,10 +28,16 @@ development smoother and more rewarding for everyone.
 <div class="container">
   <div class="row">
     <div class="col col--6">
-      <div class="col-demo">![Without DX](001-images/image-3.png)</div>
+      <div class="col-demo">
+        ![Complex development process without DevEx tools showing multiple
+        manual steps and scattered documentation](001-images/image-3.png)
+      </div>
     </div>
     <div class="col col--6">
-      <div class="col-demo">![With DX](001-images/image-2.png)</div>
+      <div class="col-demo">
+        ![Streamlined development process with DevEx tools showing automated
+        workflows and centralized resources](001-images/image-2.png)
+      </div>
     </div>
   </div>
 </div>
@@ -107,15 +113,13 @@ Between April and July 2024, we have...
   GitHub Actions.
 
 - Established some new practices such as:
-
-  - [naming conventions](https://pagopa.github.io/dx/docs/conventions/azure-naming-convention)
+  - [naming conventions](https://dx.pagopa.it/docs/conventions/azure-naming-convention)
     for Azure resources
   - structure for
-    [npm tasks for Typescript projects](https://pagopa.github.io/dx/docs/conventions/npm-scripts)
-  - [HCL code structure for Terraform modules](https://pagopa.github.io/dx/docs/conventions/infra-folder-structure)
+    [npm tasks for Typescript projects](https://dx.pagopa.it/docs/conventions/npm-scripts)
+  - [HCL code structure for Terraform modules](https://dx.pagopa.it/docs/conventions/infra-folder-structure)
 
 - Implemented new Terraform modules for:
-
   - [creating a GitHub Actions runner](https://github.com/pagopa/dx/tree/main/infra/modules/github_selfhosted_runner_on_container_app_jobs)
   - [setting up GitHub repository identity on Azure](https://github.com/pagopa/dx/tree/main/infra/modules/azure_federated_identity_with_github)
   - [easily creating roles and permissions for Azure services](https://github.com/pagopa/dx/tree/main/infra/modules/azure_role_assignments)
@@ -124,7 +128,6 @@ Between April and July 2024, we have...
   - [setting up autoscaling for an App Service or Function App](https://github.com/pagopa/dx/tree/main/infra/modules/azure_app_service_plan_autoscaler)
 
 - Developed GitHub Actions for:
-
   - [conducting code reviews on Typescript codebases](https://github.com/pagopa/dx/blob/main/.github/workflows/js_code_review.yaml)
   - [building Docker images](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
   - [deploying Azure services via Terraform](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)
@@ -138,17 +141,16 @@ Between April and July 2024, we have...
   eslint, yarn, turbo, changeset.
 
 - Shared the
-  [results of a benchmark on tools for generating clients from OpenAPI specifications](https://pagopa.github.io/dx/docs/articles/benchmark-openapi-gen)
+  [results of a benchmark on tools for generating clients from OpenAPI specifications](https://dx.pagopa.it/docs/articles/benchmark-openapi-gen)
 
 - Analyzed the state of the art for
-  [distributed monitoring and log correlation on Azure](https://pagopa.github.io/dx/docs/articles/azure-tracing)
+  [distributed monitoring and log correlation on Azure](https://dx.pagopa.it/docs/articles/azure-tracing)
 
 While it may seem like a lot of material, we recognize that without proper
 documentation and effective communication, our efforts might be overlooked.
-That's why we've launched a
-[dedicated website](https://pagopa.github.io/dx/docs/) to be populated with
-content and continuously updated as a reference for all engineers in the
-organization.
+That's why we've launched a [dedicated website](https://dx.pagopa.it/docs/) to
+be populated with content and continuously updated as a reference for all
+engineers in the organization.
 
 And that's not all! We're also working to provide tools (_scaffolding_) that can
 automate repetitive and redundant tasks.

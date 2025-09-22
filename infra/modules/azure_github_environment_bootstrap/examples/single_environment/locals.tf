@@ -4,7 +4,6 @@ locals {
     location        = "italynorth"
     location_short  = "itn"
     domain          = "test"
-    app_name        = "monorepo_starter_pack"
     instance_number = "02"
   }
 
@@ -41,8 +40,6 @@ locals {
 
   repository = {
     name               = "dx-test-monorepo-starter-pack"
-    description        = "Devex repository for shared tools and pipelines."
-    topics             = ["developer-experience"]
     reviewers_teams    = ["engineering-team-cloud-eng"]
     app_cd_policy_tags = ["release/"]
   }

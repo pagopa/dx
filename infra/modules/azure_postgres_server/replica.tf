@@ -12,6 +12,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 
   # Network
   public_network_access_enabled = false
+  private_dns_zone_id           = var.delegated_subnet_id != null ? data.azurerm_private_dns_zone.postgre_dns_zone.id : null
 
   # Backup
   create_mode      = "Replica"

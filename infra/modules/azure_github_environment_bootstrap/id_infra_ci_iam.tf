@@ -60,7 +60,7 @@ resource "azurerm_role_assignment" "infra_ci_rgs_kv_crypto" {
   for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "Key Vault Crypto User"
+  role_definition_name = "Key Vault Crypto Officer" # Need officer to get rotation policy: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key#example-usage
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
   description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's keys at monorepository resource group scope"
 }

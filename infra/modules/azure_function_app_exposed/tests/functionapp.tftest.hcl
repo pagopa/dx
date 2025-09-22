@@ -71,8 +71,8 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.site_config[0].minimum_tls_version == "1.3"
-    error_message = "The Function App must use TLS version 1.3"
+    condition     = azurerm_linux_function_app.this.site_config[0].minimum_tls_version == "1.2"
+    error_message = "The Function App must use TLS version 1.2"
   }
 
   assert {

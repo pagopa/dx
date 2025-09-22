@@ -8,7 +8,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [],
-  "snapshot": {
-    "prereleaseTemplate": "{commit}"
+  "privatePackages": {
+    "version": true,
+    "tag": true
   }
 }

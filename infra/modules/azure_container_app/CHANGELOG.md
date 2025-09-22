@@ -1,5 +1,46 @@
 # azure_container_app
 
+## 3.0.1
+
+### Patch Changes
+
+- 724717e: Fix azurerm minimum version definition
+
+## 3.0.0
+
+### Major Changes
+
+- f2f4f1a: Set the azurerm provider at least to version `4.16.0` to ensure compatibility with new scaling features.
+
+  New features:
+
+  - Add support to scaling rules (both built-in and custom)
+  - Add support to override default number of replicas
+  - Set the termination grace period to 30 seconds
+
+  Documentation:
+
+  - Add documentation for scaling rules
+
+  ### Upgrade Notes
+
+  - Set the azurerm provider at least to version `4.16.0` as follows:
+
+  ```hcl
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.16.0"
+    }
+  }
+  ```
+
+## 2.0.0
+
+### Major Changes
+
+- 5731c31: Container image name is no longer stored in Terraform state file, to allow CD pipelines to update the tag without requiring an update to the Terraform code.
+
 ## 1.0.2
 
 ### Patch Changes

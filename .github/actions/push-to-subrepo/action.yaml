@@ -63,7 +63,7 @@ runs:
           REMOTE_NAME="module-repo"
         elif [[ "$REPO_TYPE" == "provider" ]]; then
           # Provider setup
-          PREFIX_PATH="infra/provider"
+          PREFIX_PATH="providers/${ITEM_NAME}"
           REGISTRY_ITEM_NAME=${ITEM_NAME//_/\-}
           REPO_URL="https://github.com/$REPO_OWNER/terraform-provider-${REGISTRY_ITEM_NAME}"
           BRANCH_NAME="${ITEM_NAME}-branch"

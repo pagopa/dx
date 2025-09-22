@@ -65,7 +65,7 @@ run "sbns_is_correct_plan" {
   }
 }
 
-run "sbns_premium_is_correct_plan" {
+run "sbns_default_is_correct_plan" {
   command = plan
 
   variables {
@@ -115,12 +115,12 @@ run "sbns_premium_is_correct_plan" {
   }
 
   assert {
-    condition = azurerm_monitor_autoscale_setting.this[0] != null
+    condition     = azurerm_monitor_autoscale_setting.this[0] != null
     error_message = "Autoscaler should be created"
   }
 }
 
-run "sbns_standard_is_correct_plan" {
+run "sbns_default_fail_plan" {
   command = plan
 
   variables {
@@ -128,45 +128,14 @@ run "sbns_standard_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
 
-    allowed_ips = ["127.0.0.1"]
-
-    tier = "m"
+    allowed_ips = ["0.0.0.0/0"]
 
     tags = run.setup_tests.tags
   }
 
-  assert {
-    condition     = azurerm_servicebus_namespace.this.sku == "Standard"
-    error_message = "Tier \"l\" should be the default one and set to \"Standard\""
-  }
-
-  assert {
-    condition     = azurerm_servicebus_namespace.this.capacity == 0
-    error_message = "Service Bus Namespace capacity should be 0"
-  }
-
-  assert {
-    condition     = azurerm_servicebus_namespace.this.premium_messaging_partitions == 0
-    error_message = "Service Bus Namespace partitions should be 0"
-  }
-
-  assert {
-    condition     = azurerm_servicebus_namespace.this.network_rule_set[0].public_network_access_enabled == false
-    error_message = "Service Bus Namespace public network access should be disabled"
-  }
-
-  assert {
-    condition     = azurerm_servicebus_namespace.this.network_rule_set[0].default_action == "Deny"
-    error_message = "Service Bus Namespace default action should be \"Deny\" for \"m\" tier"
-  }
-
-  assert {
-    condition     = azurerm_servicebus_namespace.this.network_rule_set[0].trusted_services_allowed == true
-    error_message = "Service Bus Namespace trusted services should be allowed"
-  }
-
-  assert {
-    condition     = length(azurerm_servicebus_namespace.this.network_rule_set[0].ip_rules) == 1
-    error_message = "Service Bus Namespace IP rules should be filled"
-  }
+  expect_failures = [
+    var.subnet_pep_id,
+    var.private_dns_zone_resource_group_name,
+    var.allowed_ips,
+  ]
 }

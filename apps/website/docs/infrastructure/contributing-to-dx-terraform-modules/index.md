@@ -165,7 +165,6 @@ to its sub-repository:
 1. **Ensure the Tag Exists**  
    Before proceeding, merge the changeset Pull Request titled **"Version
    packages"** into the main branch of the sub-repository.
-
    - This step is essential because the Terraform Registry requires at least one
      version tag (`X.Y.Z`) for the module to be listed and published.
 
@@ -174,7 +173,6 @@ to its sub-repository:
    [registry.terraform.io](https://registry.terraform.io).
 
 3. **Add the Repository**
-
    - Click **Publish** => **Module**.
    - Select the **GitHub repository** corresponding to the module (e.g.,
      `terraform-azurerm-azure-api-management`).

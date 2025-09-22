@@ -100,3 +100,9 @@ variable "sticky_app_setting_names" {
   description = "List of application setting names that are not swapped between slots."
   default     = []
 }
+
+variable "tls_version" {
+  type        = number
+  default     = 1.2
+  description = "Minimum TLS version for the App Service."
+}
