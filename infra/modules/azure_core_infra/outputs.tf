@@ -145,10 +145,10 @@ output "application_insights" {
 output "dns_forwarder" {
   description = "DNS forwarder configuration and endpoints"
   value = {
-    endpoint            = var.vpn_enabled ? module.vpn[0].dns_forwarder_endpoint : null
-    subnet_id           = var.vpn_enabled ? module.network.dns_forwarder_snet.id : null
-    private_ip          = var.vpn_enabled ? module.vpn[0].dns_forwarder_private_ip : null
-    resource_group      = var.vpn_enabled ? azurerm_resource_group.network.name : null
+    endpoint            = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.vpn[0].dns_forwarder_endpoint : null
+    subnet_id           = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.network.dns_forwarder_snet.id : null
+    private_ip          = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.vpn[0].dns_forwarder_private_ip : null
+    resource_group      = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? azurerm_resource_group.network.name : null
     cross_cloud_enabled = var.cross_cloud_dns_enabled
   }
 }
