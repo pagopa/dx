@@ -20,7 +20,7 @@ module "aws" {
 
   environment       = local.aws_environment
   vpc_cidr          = local.aws.vpc_cidr
-  nat_gateway_count = 1
+  nat_gateway_count = 3
 
   tags = local.tags
 }

@@ -15,7 +15,9 @@ const config: Config = {
     defaultLocale: "en",
     locales: ["en"],
   },
-
+  markdown: {
+    mermaid: true,
+  },
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
@@ -162,6 +164,7 @@ const config: Config = {
       theme: prismThemes.github,
     },
   } satisfies Preset.ThemeConfig,
+  themes: ["@docusaurus/theme-mermaid"],
   title: "DX",
 
   // Set the production url of your site here

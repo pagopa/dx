@@ -24,75 +24,7 @@ The module creates secure IPSec tunnels between your AWS and Azure networks with
 
 ## Usage Example
 
-For detailed usage examples, refer to the [examples folder](./examples/), which includes a [complete example](./examples/complete/) that demonstrates all features including high availability configuration
-
-### Basic Configuration
-
-```hcl
-module "aws_azure_vpn" {
-  source = "path/to/aws_azure_vpn"
-
-  # Your project details
-  environment = {
-    prefix          = "mycompany"     # Your organization prefix
-    env_short       = "dev"           # Environment: dev, staging, prod
-    app_name        = "myapp"         # Your application name
-    instance_number = "01"            # Instance number for multiple deployments
-  }
-
-  use_case = "development"  # "development" | "high_availability"
-
-  # Your AWS network details
-  aws = {
-    region               = "eu-west-1"                    # Your AWS region
-    vpc_id               = "vpc-xxxxxxxxx"               # Your VPC ID
-    vpc_cidr             = "10.0.0.0/16"                 # Your VPC CIDR
-    route_table_ids      = ["rtb-xxx", "rtb-yyy"]        # Route tables to update
-    private_subnet_ids   = ["subnet-xxx", "subnet-yyy"]  # Subnets for DNS resolver
-    private_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"] # Subnet CIDRs
-    private_dns_zones    = ["myapp.internal"]            # DNS zones to forward
-  }
-
-  # Your Azure network details
-  azure = {
-    resource_group_name = "rg-myapp-network"           # Your resource group
-    location            = "West Europe"                 # Your Azure region
-    vnet_id             = "/subscriptions/.../vnet-main" # Your VNet resource ID
-    vnet_name           = "vnet-main"                   # Your VNet name
-    vnet_cidr           = "10.1.0.0/16"                 # Your VNet CIDR
-    vpn_snet_id         = "/subscriptions/.../GatewaySubnet" # Gateway subnet
-    dns_forwarder_ip    = "10.1.0.4"                   # DNS forwarder IP
-    private_dns_zones   = ["privatelink.database.windows.net"] # DNS zones
-  }
-
-  tags = {
-    Environment = "dev"
-    Project     = "MyProject"
-  }
-}
-```
-
-### High Availability Configuration
-
-For production workloads, use the high availability option:
-
-```hcl
-module "aws_azure_vpn_prod" {
-  source = "path/to/aws_azure_vpn"
-
-  environment = {
-    prefix          = "mycompany"
-    env_short       = "prod"      # Production environment
-    app_name        = "myapp"
-    instance_number = "01"
-  }
-
-  use_case = "high_availability"  # Redundant connections for production
-
-  # Same AWS and Azure configuration as above...
-  # The module will automatically create redundant VPN connections
-}
-```
+For detailed usage examples, refer to the [examples folder](./examples/) that includes both a cheaper and less reliable [development example](./examples/development/) and a more expensive [high availability example](./examples/high_availability/) that demonstrates all features and configuration.
 
 ## Prerequisites
 
