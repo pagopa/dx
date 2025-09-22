@@ -56,7 +56,7 @@ provider "dx" {
 
 | Name        |  Type  | Required | Description                                             |
 | :---------- | :----: | :------: | :------------------------------------------------------ |
-| prefix      | String |    No    | Two-character project prefix.                           |
+| prefix      | String |    No    | Project prefix (2-4 characters).                        |
 | environment | String |    No    | Deployment environment (d, u, or p).                    |
 | location    | String |    No    | Deployment location (itn/italynorth or weu/westeurope). |
 | domain      | String |    No    | Optional domain for naming.                             |
@@ -140,7 +140,7 @@ Generates a resource name based on the standardized prefix and additional parame
 
 | Name        |  Type   | Required | Description                                                                       |
 | :---------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
-| prefix      | String  |   Yes    | Prefix that define the repository domain (Max 2 characters).                      |
+| prefix      | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                       |
 | environment | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
 | location    | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
 | domain      | String  |    No    | Optional value that specify the domain.                                           |
