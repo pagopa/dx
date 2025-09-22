@@ -1,6 +1,6 @@
 {
   "name": "pnpm-plugin-pagopa",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "files": [
     "pnpmfile.cjs"
   ],

@@ -140,6 +140,37 @@ module "aws_core_infra" {
 | availability_zones   | List of availability zones used                           |
 | region               | AWS region where resources are created                    |
 
+## GitHub Personal Access Token Configuration
+
+This module creates an SSM parameter named `/core/github/personal_access_token` that must be manually populated with a fine-grained GitHub Personal Access Token (PAT) from a bot user.
+
+### Required Permissions
+
+The GitHub PAT must have the following permissions to work with AWS CodeBuild:
+
+- **Contents: Read-only**: Grants access to private repositories. This permission is required if you are using private repositories as source.
+
+- **Commit statuses: Read and write**: Grants permission to create commit statuses. This permission is required if your project has webhook set up, or you have report build status feature enabled.
+
+- **Webhooks: Read and write**: Grants permission to manage webhooks. This permission is required if your project has webhook set up.
+
+- **Pull requests: Read-only**: Grants permission to access pull requests. This permission is required if your webhook has a FILE_PATH filter on pull request events.
+
+- **Administration: Read and write**: This permission is required if you are using the self-hosted GitHub Actions runner feature with CodeBuild. For more details, see Create a registration token for a repository and Tutorial: Configure a CodeBuild-hosted GitHub Actions runner.
+
+### Setup Instructions
+
+1. Create a GitHub bot user account (recommended for security)
+2. Generate a fine-grained Personal Access Token with the permissions listed above
+3. After applying this Terraform module, update the SSM parameter value:
+   ```bash
+   aws ssm put-parameter \
+     --name "/core/github/personal_access_token" \
+     --value "your-github-pat-here" \
+     --type "SecureString" \
+     --overwrite
+   ```
+
 ## Important Notes
 
 - **Database Subnets**: Completely isolated subnets with no internet access, perfect for RDS, ElastiCache, and other database services
@@ -188,6 +219,7 @@ module "aws_core_infra" {
 
 | Name | Type |
 |------|------|
+| [aws_ssm_parameter.personal_access_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 
 ## Inputs
@@ -205,6 +237,7 @@ module "aws_core_infra" {
 |------|-------------|
 | <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
 | <a name="output_dynamodb_endpoint_id"></a> [dynamodb\_endpoint\_id](#output\_dynamodb\_endpoint\_id) | The ID of the DynamoDB VPC endpoint |
+| <a name="output_github_personal_access_token_ssm_parameter_name"></a> [github\_personal\_access\_token\_ssm\_parameter\_name](#output\_github\_personal\_access\_token\_ssm\_parameter\_name) | SSM parameter name for the GitHub personal access token |
 | <a name="output_internet_gateway_id"></a> [internet\_gateway\_id](#output\_internet\_gateway\_id) | The ID of the Internet Gateway |
 | <a name="output_isolated_route_table_ids"></a> [isolated\_route\_table\_ids](#output\_isolated\_route\_table\_ids) | List of IDs of the isolated route tables |
 | <a name="output_isolated_subnet_ids"></a> [isolated\_subnet\_ids](#output\_isolated\_subnet\_ids) | List of IDs of the isolated subnets |

@@ -4,31 +4,188 @@
  * work well for content-centric websites.
  */
 
-/* You can override the default Infima variables here. */
+/* Import Local Fonts - PagoPA Typography */
+@import url("./fonts.css");
+
+/* PagoPA Color Palette - Updated with #00a1b0 */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #00a1b0;
+  --ifm-color-primary-dark: #007a85;
+  --ifm-color-primary-darker: #006d75;
+  --ifm-color-primary-darkest: #005a62;
+  --ifm-color-primary-light: #26b3c2;
+  --ifm-color-primary-lighter: #39bcc9;
+  --ifm-color-primary-lightest: #66d1db;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 161, 176, 0.1);
+
+  /* PagoPA Typography - Matching official website */
+  --ifm-font-family-base:
+    "Work Sans", -apple-system, "system-ui", "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --ifm-font-family-monospace:
+    "Roboto Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --ifm-heading-font-family:
+    "Work Sans", -apple-system, "system-ui", "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* PagoPA Brand Colors */
+  --pagopa-primary: #00a1b0;
+  --pagopa-secondary: #0088a0;
+  --pagopa-accent: #00d4e7;
+  --pagopa-text-primary: #1a1a1a;
+  --pagopa-text-secondary: #4a4a4a;
+  --pagopa-background-light: #f8fbfc;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #26b3c2;
+  --ifm-color-primary-dark: #00a1b0;
+  --ifm-color-primary-darker: #007a85;
+  --ifm-color-primary-darkest: #005a62;
+  --ifm-color-primary-light: #39bcc9;
+  --ifm-color-primary-lighter: #4dc3d0;
+  --ifm-color-primary-lightest: #80d4dc;
+  --docusaurus-highlighted-code-line-bg: rgba(38, 179, 194, 0.2);
+
+  /* Dark mode adjustments for PagoPA colors */
+  --pagopa-primary: #26b3c2;
+  --pagopa-secondary: #00a1b0;
+  --pagopa-accent: #4dd8e8;
+  --pagopa-text-primary: #ffffff;
+  --pagopa-text-secondary: #b3b3b3;
+  --pagopa-background-light: #1a1a1a;
 }
 
 .markdown {
   max-width: 70ch;
+}
+
+/* Enhanced button styles for PagoPA theme */
+.button--primary {
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary) 0%,
+    var(--pagopa-secondary) 100%
+  );
+  border: none;
+  font-weight: 600;
+}
+
+.button--primary:hover {
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary-dark) 0%,
+    var(--ifm-color-primary-darker) 100%
+  );
+  transform: translateY(-1px);
+}
+
+.button--secondary {
+  background: transparent;
+  border: 2px solid var(--ifm-color-primary);
+  color: var(--ifm-color-primary);
+  font-weight: 600;
+}
+
+.button--secondary:hover {
+  background: var(--ifm-color-primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Smooth transitions for interactive elements */
+.button {
+  transition: all 0.2s ease;
+}
+
+/* Enhanced navbar styling */
+.navbar {
+  box-shadow: 0 2px 20px rgba(0, 161, 176, 0.08);
+}
+
+/* Footer enhancements */
+.footer {
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-text-primary) 0%,
+    #0f1419 100%
+  );
+}
+
+/* Dark mode footer styling */
+[data-theme="dark"] .footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0f1419 100%);
+}
+
+/* Card enhancements for better visual hierarchy */
+.card {
+  box-shadow: 0 4px 20px rgba(0, 161, 176, 0.08);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 161, 176, 0.16);
+}
+
+/* PagoPA Typography Styles - Matching official website */
+body {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 400;
+}
+
+h1 {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 500;
+}
+
+h2 {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 500;
+}
+
+h3 {
+  font-family: var(--ifm-heading-font-family);
+  font-weight: 500;
+}
+
+h4 {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+h5 {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+p {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 400;
+}
+
+/* Strong text weight matching PagoPA */
+strong {
+  font-weight: 600;
+}
+
+/* Navigation typography */
+.navbar__item,
+.navbar__link {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 400;
+}
+
+/* Button typography */
+.button {
+  font-family: var(--ifm-font-family-base);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }

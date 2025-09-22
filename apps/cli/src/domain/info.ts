@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
-import { DependencyName, PackageJson, PackageManager } from "./package-json.js";
+import { PackageJson, PackageManager } from "./package-json.js";
 
 export type InfoResult = {
   node?: string;
@@ -63,7 +63,7 @@ const detectTerraformVersion = async (
     .unwrapOr(undefined);
 
 const detectTurboVersion = ({ devDependencies }: PackageJson) =>
-  devDependencies.get("turbo" as DependencyName)?.trim();
+  devDependencies.get("turbo")?.trim();
 
 export const getInfo = async (
   dependencies: Dependencies,

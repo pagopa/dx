@@ -37,7 +37,7 @@ run "codebuild_is_correct_plan" {
     environment = {
       prefix          = "dx"
       env_short       = "d"
-      location        = "italynorth"
+      region          = "eu-south-1"
       domain          = "modules"
       app_name        = "test"
       instance_number = "01"
@@ -50,8 +50,6 @@ run "codebuild_is_correct_plan" {
       BusinessUnit   = "DevEx"
       ManagementTeam = "Developer Experience"
       Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/github_selfhosted_runner_on_codebuild/tests"
-      Test           = "true"
-      TestName       = "Create Self Hosted Runner for test"
     }
 
     docker_image = "ghcr.io/pagopa/dx-github-self-hosted-runner:sha-4693a86"
