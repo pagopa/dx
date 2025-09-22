@@ -8,7 +8,7 @@
 2. Add new variables for replica:
 
     - `create_replica`: Set to `true` by default, this determines whether or not to create a replica.
-    - `replica_location`: optional value used to specify a different location for the replica (default on `spaincentral`)
+    - `replica_location`: optional value used to specify a different location for the replica
 
 3. Removed metrics block from azurerm_monitor_diagnostic_setting for deprecation .
 
