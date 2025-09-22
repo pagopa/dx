@@ -3,12 +3,14 @@ import { Command } from "commander";
 import { Result, ResultAsync } from "neverthrow";
 import nodePlop from "node-plop";
 
-export const makeProjectCommand = (): Command =>
+export const makeInitCommand = (): Command =>
   new Command()
-    .name("project")
-    .description("Manage the projects")
+    .name("init")
+    .description(
+      "Command to initialize resources (like projects, subscriptions, ...)",
+    )
     .addCommand(
-      new Command("init")
+      new Command("project")
         .description("Initialize a new monorepo project")
         .action(async function () {
           await ResultAsync.fromPromise(
