@@ -38,6 +38,7 @@ run "postgres_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "default"
+    replica_location    = "spaincentral"
 
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
@@ -83,6 +84,7 @@ run "postgres_delegated_snet_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "default"
+    replica_location    = "spaincentral"
 
     delegated_subnet_id                  = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
@@ -154,7 +156,8 @@ run "postgres_replica_location_correct_plan" {
       instance_number = "01"
     }
 
-    tags = run.setup_tests.tags
+    tags             = run.setup_tests.tags
+    replica_location = "spaincentral"
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "default"
