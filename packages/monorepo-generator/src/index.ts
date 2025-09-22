@@ -8,6 +8,7 @@ import { Octokit } from "octokit";
 import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
+  getPreCommitTerraformLatestRelease,
   getTerraformLatestRelease,
 } from "./actions/terraform.js";
 
@@ -101,6 +102,7 @@ const getActions = ({
   getGitHubTerraformProviderLatestRelease({ octokitClient }),
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
+  getPreCommitTerraformLatestRelease({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
