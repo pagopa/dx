@@ -1,5 +1,12 @@
 # docs
 
+## 0.8.1
+
+### Patch Changes
+
+- 7af2739: Prefix can now be long up to 4 characters instead of strictly 2
+  characters
+
 ## 0.8.0
 
 ### Minor Changes
