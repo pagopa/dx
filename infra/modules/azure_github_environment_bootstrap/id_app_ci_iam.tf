@@ -15,3 +15,12 @@ resource "azurerm_role_assignment" "app_ci_subscription_pagopa_iac_reader" {
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
   description          = "Allow ${var.repository.name} App CI identity to read resources configuration at resource group scope. Allows to read AppServices and Function Apps configuration."
 }
+
+resource "azurerm_role_assignment" "app_ci_rgs_static_webapp_secrets" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
+  role_definition_name = "PagoPA Static Web Apps List Secrets"
+  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
+  description          = "Allow ${var.repository.name} App CI identity to to read Static Web Apps secrets at ${each.value} resource group scope"
+}
