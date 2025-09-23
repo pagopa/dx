@@ -7,7 +7,7 @@ This GitHub Action logs into AWS using OpenID Connect (OIDC) authentication.
 ```yaml
 steps:
   - name: AWS Login
-    uses: pagopa/dx/.github/actions/aws-login@adapt-terraform-cicd-to-aws
+    uses: pagopa/dx/.github/actions/aws-login@main
 ```
 
 ## Environment Variables
@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: AWS Login
-        uses: pagopa/dx/.github/actions/aws-login@adapt-terraform-cicd-to-aws
+        uses: pagopa/dx/.github/actions/aws-login@main
 
       - name: Deploy with Terraform
         run: terraform apply -auto-approve

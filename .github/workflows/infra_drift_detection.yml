@@ -97,7 +97,7 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/.github/actions/cloud-login@adapt-terraform-cicd-to-aws
+        uses: pagopa/dx/.github/actions/cloud-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
