@@ -1,4 +1,5 @@
-name: "Cloud Login"
+name: "Cloud Service Provider Login"
+description: "Login to cloud provider (Azure or AWS) based on available secrets"
 description: "Login to cloud provider (Azure or AWS) based on available secrets"
 
 runs:
