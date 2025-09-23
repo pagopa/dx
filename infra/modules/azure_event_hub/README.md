@@ -23,6 +23,37 @@ This Terraform module provisions an Azure Event Hub namespace, event hubs, consu
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-event-hub/tree/main/example/complete) folder in the module repository.
 
+### Local development
+
+For local development we recommend using an Event Hub emulator together with a GUI (for example a Kafka UI) and the Event Hubs SDK. This setup lets you reproduce Event Hub behaviour locally without connecting to Azure.
+
+Below is a small conceptual `docker-compose` example — replace the emulator image and configuration with the implementation you prefer:
+
+```yaml
+services:
+  eventhubs:
+    image: "mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest@<eventhub-emulator-sha>"
+    ports:
+      - "5672:5672"
+      - "9093:9093"
+    volumes:
+      - ...
+    environment:
+      EMULATOR_CONFIG: ...
+
+  kafka-ui:
+    image: "provectuslabs/kafka-ui:latest@<kafka-ui-sha>"
+    depends_on:
+      - "eventhubs"
+    ports:
+      - "8002:8080"
+    environment:
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "eventhubs:9093"
+      ...
+```
+
+This example is illustrative.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
