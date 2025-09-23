@@ -19,16 +19,4 @@ This configuration package provides the following default settings for your `pnp
 - Sets [packageImportMethod](https://pnpm.io/settings#packageimportmethod) to `clone-or-copy`
 - Sets [cleanupUnusedCatalogs](https://pnpm.io/catalogs#cleanupunusedcatalogs) to `true`
 
-## Use the catalog
 
-To use the default catalog, you can specify the `catalog:` version for supported packages in your `package.json`. This will ensure that you are using the recommended versions of packages that are compatible with the PagoPA DX toolchain.
-
-```jsonc
-{
-  // .....
-  "devDependencies": {
-    "eslint": "catalog:",
-    "vitest": "catalog:",
-  },
-}
-```
