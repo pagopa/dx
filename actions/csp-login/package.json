@@ -1,5 +1,5 @@
 {
-  "name": "cloud-login",
+  "name": "csp-login",
   "description": "A GitHub action to log in to cloud providers.",
   "version": "0.0.0",
   "type": "module",

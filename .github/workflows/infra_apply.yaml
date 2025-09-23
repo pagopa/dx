@@ -130,7 +130,7 @@ jobs:
           done
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/cloud-login@main
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -177,7 +177,7 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/cloud-login@main
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Download Terraform Plan as Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main

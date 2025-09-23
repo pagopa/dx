@@ -1,5 +1,5 @@
 ---
-"cloud-login": patch
+"csp-login": patch
 ---
 
-First release of the cloud-login action that automatizes AWS and Azure logins according to environment variables
+First release of the csp-login action that automatizes AWS and Azure logins according to environment variables
