@@ -4,7 +4,6 @@ module "core_values" {
 
   core_state = local.core_state
 }
-
 module "dx_website" {
   source = "../_modules/dx_website"
 
