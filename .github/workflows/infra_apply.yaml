@@ -40,6 +40,8 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   TF_IN_AUTOMATION: true
 
 concurrency:
@@ -127,8 +129,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -152,15 +154,11 @@ jobs:
             -input=false \
             | grep -v "hidden-link:"
 
-      - name: Upload Terraform Bundle as Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - name: Upload Terraform Plan as Artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          name: terraform-bundle
-          path: |
-            ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
-            ${{ steps.directory.outputs.dir }}/.terraform.lock.hcl
-            ${{ steps.directory.outputs.dir }}/.terraform/modules/
-          retention-days: 7
+          bundle_name: tfplan
+          file_path: ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
 
   tf_apply:
     name: "Terraform Apply"
@@ -178,14 +176,14 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
-      - name: Download Terraform Bundle as Artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - name: Download Terraform Plan as Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          name: terraform-bundle
-          path: ${{ needs.tf_plan.outputs.working_dir }}
+          bundle_name: tfplan
+          file_path: ${{ needs.tf_plan.outputs.working_dir }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
