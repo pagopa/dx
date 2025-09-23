@@ -10,7 +10,7 @@ terraform {
       version = "~> 2.0"
     }
 
-    dx = {
+    azuredx = {
       source  = "pagopa-dx/azure"
       version = "~> 0.0"
     }
@@ -31,4 +31,4 @@ provider "azurerm" {
   storage_use_azuread = true
 }
 
-provider "dx" {}
+provider "azuredx" {}

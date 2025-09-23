@@ -30,7 +30,7 @@ on:
         description: The name of the build output directory.
         type: string
         required: false
-        default: 'dist'
+        default: "dist"
       static_web_app_name:
         description: Azure Static Web App name where the assets will be deployed.
         type: string
@@ -57,10 +57,10 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 concurrency:
-  group: ${{ github.workflow }}-cd
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'closed' && 'cd' || 'ci' }}
   cancel-in-progress: true
 
 env:
@@ -70,7 +70,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-latest
+    runs-on:  ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
     steps:
       - name: Checkout
@@ -83,7 +83,7 @@ jobs:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
           WORKSPACE_NAME: ${{ inputs.workspace_name }}
-      
+
       - name: Get Artifact path
         id: get-artifact-path
         working-directory: ${{ steps.build-package.outputs.workspace-path }}
@@ -100,11 +100,11 @@ jobs:
           file_path: ${{ steps.get-artifact-path.outputs.artifact-path }}
 
   deploy:
-    name: Deploy
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    name: Deploy Static Website
+    runs-on: ubuntu-latest
     needs: [build]
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-cd
+    environment: ${{ inputs.environment }}-${{ github.event.action == 'closed' && 'cd' || 'ci' }}
     permissions:
       id-token: write
       contents: read
@@ -135,16 +135,25 @@ jobs:
         run: |
           api_key=$(az staticwebapp secrets list --name $STATIC_WEB_APP_NAME --resource-group $RESOURCE_GROUP_NAME | jq -r '.properties.apiKey')
           echo "::add-mask::$api_key"
-          echo "sensitive-value=$api_key" >> $GITHUB_OUTPUT
+          echo "api_key=$api_key" >> $GITHUB_OUTPUT
         env:
           STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
           RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
-      - name: Deploy
-        id: builddeploy
+      - name: Deploy Preview
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
-          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.sensitive-value }}
+          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
+
+      - name: Delete Preview and Deploy production
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          app_location: "./${{ env.OUTPUT_DIR }}"
+          action: "close"

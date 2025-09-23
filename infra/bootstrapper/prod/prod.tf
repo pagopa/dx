@@ -1,7 +1,7 @@
-module "bootstrapper" {
-  source = "../_modules/bootstrapper"
+module "azure" {
+  source = "../_modules/azure"
 
-  environment = local.environment
+  environment = local.azure_environment
 
   core_state = {
     resource_group_name  = "dx-p-itn-tfstate-rg-01"

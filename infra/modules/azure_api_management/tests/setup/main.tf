@@ -30,6 +30,17 @@ locals {
     Test           = "true"
     TestName       = "Create APIM for test"
   }
+
+  virtual_network = {
+    name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = "common",
+      resource_type = "virtual_network"
+    }))
+    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+      name          = "network",
+      resource_type = "resource_group"
+    }))
+  }
 }
 
 data "azurerm_virtual_network" "vnet" {
@@ -66,6 +77,15 @@ resource "azurerm_public_ip" "pip" {
   tags = local.tags
 }
 
+data "azurerm_subnet" "pep" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "pep",
+    resource_type = "subnet"
+  }))
+  virtual_network_name = local.virtual_network.name
+  resource_group_name  = local.virtual_network.resource_group_name
+}
+
 data "azurerm_resource_group" "rg" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "test",
@@ -79,6 +99,10 @@ output "subnet_id" {
 
 output "pip_id" {
   value = azurerm_public_ip.pip.id
+}
+
+output "pep_id" {
+  value = data.azurerm_subnet.pep.id
 }
 
 output "resource_group_name" {

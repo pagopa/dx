@@ -1,5 +1,5 @@
 locals {
-  environment = {
+  azure_environment = {
     prefix          = "dx"
     location        = "italynorth"
     location_short  = "itn"

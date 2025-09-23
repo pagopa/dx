@@ -35,6 +35,7 @@ repos:
             infra/modules/.*?|
             providers/.*?|
             infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
+            infra\/resources\/(?:.*\/)?(?:_?modules)\/.*
             )$
       - id: terraform_tflint
         args:
@@ -52,3 +53,4 @@ repos:
         args:
           - --args=--skip-dirs="**/.terraform"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
+          - --hook-config=--parallelism-limit=1

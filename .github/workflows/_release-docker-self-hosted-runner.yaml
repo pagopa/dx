@@ -10,17 +10,17 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Run the workflow for testing purposes (does not push the image)'
+        description: "Run the workflow for testing purposes (does not push the image)"
         required: false
         default: false
         type: boolean
   schedule:
-    - cron: '0 8 1 */2 *' # Every 2 months on the 1st day at 08:00 UTC
+    - cron: "0 8 1 */2 *" # Every 2 months on the 1st day at 08:00 UTC
   push:
     branches:
       - main
     paths:
-      - 'containers/self-hosted-runner/**'
+      - "containers/self-hosted-runner/**"
 
 jobs:
   found_sha:
@@ -42,7 +42,7 @@ jobs:
           latest_digest=$(docker manifest inspect ghcr.io/actions/actions-runner:latest | jq -r '.manifests[] | select(.platform.architecture == "amd64" and .platform.os == "linux") | .digest')
           echo $latest_digest
           echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
-      
+
   publish:
     name: Publish GitHub Self-Hosted Runner
     runs-on: ubuntu-latest
@@ -98,28 +98,15 @@ jobs:
           # Cleanup
           docker rmi ghcr.io/$IMAGE_NAME:$IMAGE_TAG || true
 
-      - name: Inject digest into Dockerfile
-        if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
-        run: |
-          echo "⏳ Updating Dockerfile..."
-          
-          # Construct the new FROM statement
-          new_from="FROM ghcr.io/actions/actions-runner:latest@${{ needs.found_sha.outputs.latest_digest }} AS base"
-          
-          # Replace the first line with the new FROM statement
-          sed -i "1s|.*|$new_from|" ./containers/self-hosted-runner/Dockerfile
-
-          echo "Dockerfile updated."
-
       - name: Docker Build
         uses: pagopa/dx/.github/actions/docker-build-push@main
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
         with:
-          dockerfile_path: './containers/self-hosted-runner/Dockerfile'
-          dockerfile_context: './containers/self-hosted-runner'
-          docker_image_name: '${{ env.IMAGE_NAME }}'
-          docker_image_description: 'DX GitHub Self-Hosted Runner'
-          docker_image_authors: 'DevEx'
+          dockerfile_path: "./containers/self-hosted-runner/Dockerfile"
+          dockerfile_context: "./containers/self-hosted-runner"
+          docker_image_name: "${{ env.IMAGE_NAME }}"
+          docker_image_description: "DX GitHub Self-Hosted Runner"
+          docker_image_authors: "DevEx"
           build_platforms: linux/amd64
           build_args: |
             RUNNER_DIGEST=${{ needs.found_sha.outputs.latest_digest }}
