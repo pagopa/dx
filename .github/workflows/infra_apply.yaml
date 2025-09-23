@@ -130,7 +130,7 @@ jobs:
           done
 
       - name: Cloud Login
-        uses: pagopa/dx/.github/actions/cloud-login@main
+        uses: pagopa/dx/.github/actions/cloud-login@adapt-terraform-cicd-to-aws
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -177,7 +177,7 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/.github/actions/cloud-login@main
+        uses: pagopa/dx/.github/actions/cloud-login@adapt-terraform-cicd-to-aws
 
       - name: Download Terraform Plan as Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
