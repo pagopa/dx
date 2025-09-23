@@ -17,7 +17,7 @@ on:
 
 jobs:
   code_review:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@adapt-terraform-cicd-to-aws
     name: Terraform Plan
     secrets: inherit
     with:
