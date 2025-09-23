@@ -15,6 +15,12 @@ catalogs:
     '@types/semver':
       specifier: ^7.7.1
       version: 7.7.1
+    '@vitest/coverage-v8':
+      specifier: ^3.2.4
+      version: 3.2.4
+    eslint:
+      specifier: ^9.30.0
+      version: 9.32.0
     neverthrow:
       specifier: ^8.2.0
       version: 8.2.0
@@ -33,18 +39,11 @@ catalogs:
     typescript:
       specifier: ~5.8.3
       version: 5.8.3
-  dx:
-    '@vitest/coverage-v8':
-      specifier: ^3.2.4
-      version: 3.2.4
-    eslint:
-      specifier: ^9.30.0
-      version: 9.32.0
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
 
-pnpmfileChecksum: sha256-OJouNBndqt4Cp0CqbnjFSTzKffvO5ZIbhBx14jMkk9k=
+pnpmfileChecksum: sha256-FMjTmt1bCo0SOOG7o/y8rRzputl19yL2BTfTrVHFYS4=
 
 importers:
 
@@ -57,7 +56,7 @@ importers:
         specifier: ^0.79.0
         version: 0.79.0
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -94,10 +93,10 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       '@vitest/coverage-v8':
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0))
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -109,7 +108,7 @@ importers:
         specifier: 'catalog:'
         version: 5.8.3
       vitest:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0)
       vitest-mock-extended:
         specifier: ^3.1.0
@@ -161,10 +160,10 @@ importers:
         specifier: 'catalog:'
         version: 7.7.1
       '@vitest/coverage-v8':
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0))
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       memfs:
         specifier: ^4.23.0
@@ -179,7 +178,7 @@ importers:
         specifier: 'catalog:'
         version: 5.8.3
       vitest:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0)
       vitest-mock-extended:
         specifier: ^3.1.0
@@ -246,7 +245,7 @@ importers:
         specifier: ^18.0.38
         version: 18.3.23
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -358,7 +357,7 @@ importers:
         specifier: 'catalog:'
         version: 22.16.2
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       tsup:
         specifier: 'catalog:'
@@ -392,7 +391,7 @@ importers:
         version: 8.38.0(eslint@9.32.0(jiti@1.21.7))(typescript@5.8.3)
     devDependencies:
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       prettier:
         specifier: 'catalog:'
@@ -429,7 +428,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@1.21.7)(terser@5.39.0)(yaml@2.8.0))
       eslint:
-        specifier: catalog:dx
+        specifier: 'catalog:'
         version: 9.32.0(jiti@1.21.7)
       plop:
         specifier: 'catalog:'
