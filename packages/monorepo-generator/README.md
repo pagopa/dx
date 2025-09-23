@@ -31,7 +31,7 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `repoStateResourceGroupName`          | prompt (conditional)         | Azure only — resource group name that stores the remote Terraform state (only when `csp === 'azure'`).                                                                           |
 | `repoStateStorageAccountName`         | prompt (conditional)         | Azure only — storage account name that holds the `terraform-state` container (only when `csp === 'azure'`).                                                                      |
 | `awsAccountId`                        | prompt (conditional)         | AWS only — AWS account id. Used to derive the remote state bucket name `<accountId>-terraform-state` (only when `csp === 'aws'`).                                                |
-| `awsRegion`                           | prompt (conditional)         | AWS only — region for the S3 backend (default `eu-west-1`) (only when `csp === 'aws'`).                                                                                          |
+| `awsRegion`                           | prompt (conditional)         | AWS only — region for the S3 backend (default `eu-south-1`) (only when `csp === 'aws'`).                                                                                         |
 
 ## Recommended usage
 
