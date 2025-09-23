@@ -32,7 +32,7 @@ Below is a small conceptual `docker-compose` example — replace the emulator im
 ```yaml
 services:
   eventhubs:
-    image: "mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest@<eventhub-emulator-sha>"
+    image: "mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest"
     ports:
       - "5672:5672"
       - "9093:9093"
@@ -42,7 +42,7 @@ services:
       EMULATOR_CONFIG: ...
 
   kafka-ui:
-    image: "provectuslabs/kafka-ui:latest@<kafka-ui-sha>"
+    image: "provectuslabs/kafka-ui:latest"
     depends_on:
       - "eventhubs"
     ports:
