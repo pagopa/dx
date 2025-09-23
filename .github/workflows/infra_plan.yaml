@@ -128,7 +128,7 @@ jobs:
           done
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/cloud-login@main
+        uses: pagopa/dx/actions/cloud-login@adapt-terraform-cicd-to-aws
 
       - name: Terraform Setup
         id: set-terraform-version
