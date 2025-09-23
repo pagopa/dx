@@ -26,10 +26,12 @@ export const makeCli = (deps: Dependencies, config: Config) => {
   if (process.env.ENABLE_CODEMODS) {
     program.addCommand(makeCodemodCommand(deps));
   }
+  if (process.env.ENABLE_INIT_COMMAND) {
+    program.addCommand(makeInitCommand());
+  }
 
   program.addCommand(makeVersionCommand());
   program.addCommand(makeInfoCommand(deps, config));
-  program.addCommand(makeInitCommand());
 
   return program;
 };
