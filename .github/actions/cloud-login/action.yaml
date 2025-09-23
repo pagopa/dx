@@ -1,0 +1,14 @@
+name: "Cloud Login"
+description: "Login to cloud provider (Azure or AWS) based on available secrets"
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Azure Login
+      if: env.ARM_CLIENT_ID != '' && env.ARM_TENANT_ID != '' && env.ARM_SUBSCRIPTION_ID != ''
+      uses: pagopa/dx/.github/actions/azure-login@main
+
+    - name: AWS Login
+      if: env.ROLE_ARN != ''
+      uses: pagopa/dx/.github/actions/aws-login@main

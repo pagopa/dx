@@ -40,6 +40,8 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   TF_IN_AUTOMATION: true
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
 
@@ -125,8 +127,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/.github/actions/cloud-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
