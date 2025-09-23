@@ -13,7 +13,7 @@ on:
     paths:
       - "infra/resources/dev/**"
       - "infra/resources/_modules/**"
-      - ".github/workflows/_validate-terraform-plan-resources.yaml"
+      - ".github/workflows/_validate-terraform-plan-dev-resources.yaml"
 
 jobs:
   code_review:
