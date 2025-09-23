@@ -16,5 +16,5 @@ jobs:
     secrets: inherit
     with:
       environment: prod
-      base_path: infra/resources/
+      base_path: "infra/resources/"
       use_private_agent: true
