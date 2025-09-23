@@ -1,8 +1,8 @@
 ---
-"azure_event_hub": patch
+"azure_event_hub": minor
 ---
 
-# Patch Changes
+# Minor Changes
 
 Replace the `tier` variable with a new `use_case` variable for tiering configuration.
 
