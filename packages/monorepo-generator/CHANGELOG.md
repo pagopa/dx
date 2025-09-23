@@ -1,5 +1,18 @@
 # @pagopa/monorepo-generator
 
+## 0.5.0
+
+### Minor Changes
+
+- f23dea2: Enable `pnpm` and configure `pnpm-plugin-pagopa`
+
+  With this change, the generated monorepo will use `pnpm` as package manager and will be configured to use `pnpm-plugin-pagopa`.
+  You can find more information about `pnpm-plugin-pagopa` [here](https://github.com/pagopa/dx/blob/main/packages/pnpm-plugin-pagopa/README.md).
+
+### Patch Changes
+
+- 41b3c8d: Get pre-commit revision dynamically, so it's always up to date
+
 ## 0.4.1
 
 ### Patch Changes
