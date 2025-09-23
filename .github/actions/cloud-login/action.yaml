@@ -11,4 +11,4 @@ runs:
 
     - name: AWS Login
       if: env.ROLE_ARN
-      uses: pagopa/dx/.github/actions/aws-login@main
+      uses: pagopa/dx/.github/actions/aws-login@adapt-terraform-cicd-to-aws
