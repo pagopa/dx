@@ -151,7 +151,7 @@ jobs:
 
       - name: Delete Preview and Deploy production
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
-        uses: Azure/static-web-apps-deploy@v1
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
           azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
