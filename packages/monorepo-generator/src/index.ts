@@ -1,10 +1,18 @@
 import type { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 
+import * as fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { Octokit } from "octokit";
 
+import {
+  addPagoPaPnpmPlugin,
+  configureChangesets,
+  configureDevContainer,
+  enablePnpm,
+  installRootDependencies,
+} from "./actions/pnpm.js";
 import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
@@ -14,16 +22,9 @@ import {
 
 interface ActionsDependencies {
   octokitClient: Octokit;
+  plopApi: NodePlopAPI;
   templatesPath: string;
 }
-
-import {
-  addPagoPaPnpmPlugin,
-  configureChangesets,
-  configureDevContainer,
-  enablePnpm,
-  installRootDependencies,
-} from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -56,6 +57,33 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     type: "checkbox",
     validate: (input) =>
       input.length > 0 ? true : "Select at least one environment",
+  },
+  {
+    default: "dx-d-itn-terraform-rg-01",
+    message: "Azure resource group for tfstate:",
+    name: "repoStateResourceGroupName",
+    type: "input",
+    when: (answers) => answers.csp === "azure",
+  },
+  {
+    default: "dxditntfst01",
+    message: "Azure storage account for tfstate:",
+    name: "repoStateStorageAccountName",
+    type: "input",
+    when: (answers) => answers.csp === "azure",
+  },
+  {
+    message: "AWS Account ID:",
+    name: "awsAccountId",
+    type: "input",
+    when: (answers) => answers.csp === "aws",
+  },
+  {
+    default: "eu-south-1",
+    message: "AWS region for tfstate:",
+    name: "awsRegion",
+    type: "input",
+    when: (answers) => answers.csp === "aws",
   },
 ];
 
@@ -116,10 +144,32 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
   },
 ];
 
+// Dynamically select the backend state partial AFTER prompts (needs answers.csp)
+const selectBackendPartial =
+  ({
+    plopApi,
+    templatesPath,
+  }: Omit<ActionsDependencies, "octokitClient">): ActionType =>
+  (answers) => {
+    const { csp } = answers;
+    const backendPath = path.join(
+      templatesPath,
+      "infra",
+      csp,
+      "partials",
+      "backend-state.tf.hbs",
+    );
+    const content = fs.readFileSync(backendPath, "utf-8");
+    plopApi.setPartial("terraformRepositoryBackendState", content);
+    return `Loaded ${csp} backend state partial`;
+  };
+
 const getActions = ({
   octokitClient,
+  plopApi,
   templatesPath,
-}: ActionsDependencies): ActionType[] => [
+}: ActionsDependencies) => [
+  selectBackendPartial({ plopApi, templatesPath }),
   getGitHubTerraformProviderLatestRelease({ octokitClient }),
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
@@ -141,13 +191,9 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   const prompts = getPrompts();
-  const actions = getActions({
-    octokitClient,
-    templatesPath,
-  });
 
   plopApi.setGenerator("monorepo", {
-    actions,
+    actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
     prompts,
   });
