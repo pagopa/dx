@@ -10,6 +10,11 @@
     "terraform",
     "login"
   ],
-  "scripts": {},
-  "devDependencies": {}
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "catalog:"
+  }
 }
