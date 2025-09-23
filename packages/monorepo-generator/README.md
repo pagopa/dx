@@ -60,14 +60,11 @@ pnpm add @pagopa/monorepo-generator
 
 2. Example repository-level plopfile (JavaScript)
 
-Create a top-level plopfile.js in your repo:
-
 ```js
 // plopfile.js
 const scaffoldMonorepo = require("@pagopa/monorepo-generator");
 
 module.exports = function (plop) {
-  // register the generator exported by the package
   scaffoldMonorepo(plop);
 };
 ```
