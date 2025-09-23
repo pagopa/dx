@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Cloud Login
-        uses: pagopa/dx/.github/actions/cloud-login@main
+        uses: pagopa/dx/actions/cloud-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
