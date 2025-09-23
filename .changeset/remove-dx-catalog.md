@@ -13,5 +13,3 @@ Affected packages moved to default catalog:
 - @vitest/coverage-v8: ^3.2.4
 - eslint: ^9.30.0
 - vitest: ^3.2.4
-
-References: CES-1281
