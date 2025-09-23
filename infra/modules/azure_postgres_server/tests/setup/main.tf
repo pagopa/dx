@@ -20,6 +20,17 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    Owner          = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create PostgreSQL for test"
+  }
+
   virtual_network = {
     name = provider::dx::resource_name(merge(local.naming_config, {
       name          = "common",
@@ -54,4 +65,8 @@ output "pep_id" {
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
+}
+
+output "tags" {
+  value = local.tags
 }

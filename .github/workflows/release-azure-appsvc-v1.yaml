@@ -183,7 +183,7 @@ jobs:
             echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
             echo "### Custom warm-up configuration needed ❌" >> $GITHUB_STEP_SUMMARY
             echo "The custom warm-up configuration is not set for the staging slot. This is required to ensure a smooth swap between slots." >> $GITHUB_STEP_SUMMARY
-            echo "Check out the [documentation](https://pagopa.github.io/dx/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
+            echo "Check out the [documentation](https://dx.pagopa.it/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 

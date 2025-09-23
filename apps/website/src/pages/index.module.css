@@ -1,0 +1,681 @@
+/* PagoPA-inspired color palette and modern design */
+:root {
+  /* PagoPA Typography - Matching official website */
+  --pagopa-font-primary:
+    "Work Sans", -apple-system, "system-ui", "Segoe UI", "Helvetica Neue",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --pagopa-font-mono:
+    "Roboto Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  /* Primary brand color #00a1b0 with accessible variants */
+  --pagopa-primary: #00a1b0;
+  --pagopa-primary-dark: #007a85;
+  --pagopa-primary-darker: #005a62;
+  --pagopa-primary-light: #26b3c2;
+  --pagopa-primary-lighter: #4dc3d0;
+  --pagopa-secondary: #0088a0;
+  --pagopa-accent: #00d4e7;
+
+  /* Text colors with WCAG AA compliance */
+  --pagopa-text-primary: #1a1a1a;
+  --pagopa-text-secondary: #4a4a4a;
+  --pagopa-text-light: #ffffff;
+
+  /* Background colors */
+  --pagopa-background: #ffffff;
+  --pagopa-background-light: #f8fbfc;
+  --pagopa-background-card: #ffffff;
+  --pagopa-border: #e1e8ed;
+
+  /* Shadow colors using the new brand color */
+  --pagopa-shadow: rgba(0, 161, 176, 0.08);
+  --pagopa-shadow-hover: rgba(0, 161, 176, 0.16);
+  --pagopa-shadow-strong: rgba(0, 161, 176, 0.24);
+}
+
+/* Dark mode variable overrides */
+[data-theme="dark"] {
+  --pagopa-text-primary: #ffffff;
+  --pagopa-text-secondary: #b3b3b3;
+  --pagopa-background: #1a1a1a;
+  --pagopa-background-light: #1a1a1a;
+  --pagopa-background-card: #242526;
+  --pagopa-border: #444950;
+  --pagopa-shadow: rgba(0, 0, 0, 0.3);
+  --pagopa-shadow-hover: rgba(0, 0, 0, 0.5);
+  --pagopa-shadow-strong: rgba(0, 0, 0, 0.7);
+}
+
+/* Hero Banner */
+.heroBanner {
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-primary) 0%,
+    var(--pagopa-primary-dark) 50%,
+    var(--pagopa-secondary) 100%
+  );
+  color: var(--pagopa-text-light);
+  padding: 4rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dark mode styles for hero banner */
+[data-theme="dark"] .heroBanner {
+  background: linear-gradient(
+    135deg,
+    #1a1a1a 0%,
+    #2d2d2d 25%,
+    var(--pagopa-primary-dark) 75%,
+    var(--pagopa-primary) 100%
+  );
+}
+
+.heroBanner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.12) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(255, 255, 255, 0.08) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
+.heroContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.heroTitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--pagopa-text-light);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.heroSubtitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.heroButtons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.heroButton {
+  padding: 0.875rem 2rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+/* Primary button with high contrast */
+.heroButton.button--primary {
+  background: var(--pagopa-text-light);
+  color: var(--pagopa-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.heroButton.button--primary:hover {
+  background: #f8f9fa;
+  color: var(--pagopa-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  text-decoration: none;
+}
+
+/* Secondary button with border */
+.heroButton.button--secondary {
+  background: transparent;
+  color: #ffffff !important;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Force white text color with maximum specificity */
+.heroButtons .heroButton.button--secondary,
+.heroButtons .heroButton.button--secondary *,
+.heroButton.button--secondary.heroButtonWithIcon {
+  color: #ffffff !important;
+}
+
+.heroButtonWithIcon {
+  animation: pulseGlow 10s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.1),
+      0 0 0 4px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.heroButton.button--secondary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.heroButton.button--secondary:hover::before {
+  left: 100%;
+}
+
+.heroButton.button--secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--pagopa-text-light);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 0 0 3px rgba(255, 255, 255, 0.2);
+  text-decoration: none;
+  color: #ffffff !important;
+  animation: none;
+}
+
+/* Force white text color on hover with maximum specificity */
+.heroButtons .heroButton.button--secondary:hover,
+.heroButtons .heroButton.button--secondary:hover *,
+.heroButton.button--secondary.heroButtonWithIcon:hover {
+  color: #ffffff !important;
+}
+
+.heroVisual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroCard {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 300px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.heroIcon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.heroCard h3 {
+  font-family: var(--pagopa-font-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--pagopa-text-light);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.heroCard p {
+  font-family: var(--pagopa-font-primary);
+  font-weight: 400;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Topics Section */
+.topicsSection {
+  padding: 3rem 0;
+  background: var(--pagopa-background-light);
+}
+
+/* Dark mode styles for topics section */
+[data-theme="dark"] .topicsSection {
+  background: var(--pagopa-background-light);
+}
+
+.topicsHeader {
+  text-align: center;
+}
+
+.sectionTitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--pagopa-text-primary);
+  margin: 0 0 1rem 0;
+}
+
+.sectionSubtitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--pagopa-text-secondary);
+  margin: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Dark mode styles for section headers */
+[data-theme="dark"] .sectionTitle {
+  color: var(--pagopa-text-primary);
+}
+
+[data-theme="dark"] .sectionSubtitle {
+  color: var(--pagopa-text-secondary);
+}
+
+.topicsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.topicCard {
+  background: var(--pagopa-background-card);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px var(--pagopa-shadow);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+}
+
+.topicCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px var(--pagopa-shadow-hover);
+}
+
+/* Dark mode styles for topic cards */
+[data-theme="dark"] .topicCard {
+  background: #242526;
+  border: 1px solid #444950;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .topicCard:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.topicCardLink {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.topicCardLink:hover {
+  text-decoration: none;
+  color: inherit;
+}
+
+.topicCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.topicIcon {
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-primary),
+    var(--pagopa-accent)
+  );
+  border-radius: 12px;
+  flex-shrink: 0;
+  color: var(--pagopa-text-light);
+  box-shadow: 0 4px 12px var(--pagopa-shadow);
+}
+
+.topicTitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--pagopa-text-primary);
+  margin: 0;
+}
+
+.topicDescription {
+  font-family: var(--pagopa-font-primary);
+  font-weight: 400;
+  color: var(--pagopa-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+  flex-grow: 1;
+}
+
+/* Dark mode styles for topic card text */
+[data-theme="dark"] .topicTitle {
+  color: var(--pagopa-text-primary);
+}
+
+[data-theme="dark"] .topicDescription {
+  color: var(--pagopa-text-secondary);
+}
+
+[data-theme="dark"] .topicItem {
+  color: var(--pagopa-text-secondary);
+}
+
+.topicItems {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.topicItem {
+  font-family: var(--pagopa-font-primary);
+  padding: 0.5rem 0;
+  color: var(--pagopa-text-secondary);
+  font-size: 0.9rem;
+  font-weight: 400;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.topicItem::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--pagopa-primary);
+  font-weight: 600;
+}
+
+.topicCardFooter {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--pagopa-border);
+}
+
+/* Dark mode styles for topic card footer */
+[data-theme="dark"] .topicCardFooter {
+  border-top: 1px solid #444950;
+}
+
+.exploreText {
+  color: var(--pagopa-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* .topicsSearch {} */
+
+/* Discoverable Section */
+.discoverableSection {
+  padding: 5rem 0;
+  background: var(--pagopa-background);
+  border-top: 1px solid var(--pagopa-border);
+}
+
+/* Dark mode styles for discoverable section */
+[data-theme="dark"] .discoverableSection {
+  background: var(--ifm-background-color);
+  border-top: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.discoverableContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.discoverableTitle {
+  font-family: var(--pagopa-font-primary);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--pagopa-text-primary);
+  margin: 0 0 1rem 0;
+}
+
+.discoverableSubtitle {
+  font-family: var(--pagopa-font-mono);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--pagopa-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 1.5rem 0;
+}
+
+.discoverableDescription {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--pagopa-text-secondary);
+  margin: 0 0 2rem 0;
+}
+
+/* Dark mode styles for discoverable text */
+[data-theme="dark"] .discoverableTitle {
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme="dark"] .discoverableSubtitle {
+  color: var(--pagopa-primary);
+}
+
+[data-theme="dark"] .discoverableDescription {
+  color: var(--ifm-color-emphasis-700);
+}
+
+.contributeButton {
+  padding: 0.875rem 2rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-primary),
+    var(--pagopa-primary-dark)
+  );
+  color: var(--pagopa-text-light);
+  border: none;
+  box-shadow: 0 4px 12px var(--pagopa-shadow);
+}
+
+.contributeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--pagopa-shadow-strong);
+  text-decoration: none;
+  color: var(--pagopa-text-light);
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-primary-dark),
+    var(--pagopa-primary-darker)
+  );
+}
+
+.discoverableVisual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.discoverableCard {
+  background: linear-gradient(
+    135deg,
+    var(--pagopa-primary),
+    var(--pagopa-primary-dark)
+  );
+  color: var(--pagopa-text-light);
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 12px 40px var(--pagopa-shadow-hover);
+  max-width: 300px;
+  width: 100%;
+}
+
+.discoverableCard h4 {
+  font-family: var(--pagopa-font-primary);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 0.5rem 0;
+  color: var(--pagopa-text-light);
+}
+
+.discoverableCard p {
+  font-family: var(--pagopa-font-primary);
+  font-weight: 400;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Responsive Design */
+@media (max-width: 996px) {
+  .heroContent {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .topicsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .discoverableContent {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .heroBanner {
+    padding: 3rem 0;
+  }
+
+  .heroTitle {
+    font-size: 2rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1.125rem;
+  }
+
+  .heroButtons {
+    justify-content: center;
+  }
+
+  .topicsSection {
+    padding: 3rem 0;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .discoverableTitle {
+    font-size: 2rem;
+  }
+
+  .discoverableSubtitle {
+    font-size: 1.25rem;
+  }
+
+  .topicCardLink {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .topicsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .heroButton {
+    width: 200px;
+    text-align: center;
+  }
+}
+
+/* Ultimate override for button text color */
+.heroBanner .heroButtons .button--secondary,
+.heroBanner .heroButtons .button--secondary:link,
+.heroBanner .heroButtons .button--secondary:visited,
+.heroBanner .heroButtons .button--secondary:hover,
+.heroBanner .heroButtons .button--secondary:active,
+.heroBanner .heroButtons .button--secondary:focus {
+  color: #ffffff !important;
+}
+
+/* Override any Docusaurus button styles */
+[data-theme="light"] .heroBanner .heroButtons .button--secondary,
+[data-theme="dark"] .heroBanner .heroButtons .button--secondary {
+  color: #ffffff !important;
+}

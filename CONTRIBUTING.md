@@ -31,8 +31,8 @@ If you use a code editor that doesn't support Dev Container, you can still run i
 If you prefer not to use dev containers, you can bootstrap the local development on your machine.
 
 This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
-1. Install and configure the follow tool in your machine
 
+1. Install and configure the follow tool in your machine
    - [nodenv](https://github.com/nodenv/nodenv) - Node version manager
    - [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
    - [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
@@ -97,5 +97,50 @@ pnpm add turbo
 # add a dependency to a specific workspace
 pnpm --filter WORKSPACE_NAME add dependency-name
 ```
+
+# SBOM Management
+
+## What is an SBOM
+
+An SBOM (Software Bill of Materials) is a formal, machine-readable inventory of
+software components and dependencies contained in an application. It provides a
+detailed list of all the libraries, frameworks, and modules that make up the
+software, along with their versions and licenses.
+
+## SBOM Management Script
+
+To generate SBOMs, this project includes a
+[script](https://github.com/pagopa/dx/blob/main/sbom.sh) that automates their
+creation, updates, and validation.
+
+### Requirements
+
+Before using the script, you need to have the following tools installed on your
+system:
+
+- **[Syft](https://github.com/anchore/syft)**: A CLI tool for generating SBOMs
+  from container images and filesystems.
+- **[Grype](https://github.com/anchore/grype)**: A vulnerability scanner for
+  container images and filesystems.
+
+You can find installation instructions on their official GitHub pages.
+
+### Usage
+
+The root `package.json` includes the following scripts to manage SBOMs:
+
+- **To generate all SBOMs**:
+
+  ```sh
+  pnpm sbom-generate
+  ```
+
+- **To validate existing SBOMs**:
+
+  ```sh
+  pnpm sbom-validate
+  ```
+
+---
 
 Thank you for contributing to DX!

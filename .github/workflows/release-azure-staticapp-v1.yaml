@@ -30,7 +30,7 @@ on:
         description: The name of the build output directory.
         type: string
         required: false
-        default: 'dist'
+        default: "dist"
       static_web_app_name:
         description: Azure Static Web App name where the assets will be deployed.
         type: string
@@ -57,7 +57,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'closed' && 'cd' || 'ci' }}
