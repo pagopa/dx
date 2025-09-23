@@ -33,7 +33,7 @@ moved {
 #--------------------------#
 
 resource "azurerm_private_endpoint" "replica_postgre_pep" {
-  count = var.tier == "l" && var.delegated_subnet_id == null ? 1 : 0
+  count = local.replica.create == true && var.delegated_subnet_id == null ? 1 : 0
 
   name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgre_replica_private_endpoint" }))
   location            = var.environment.location

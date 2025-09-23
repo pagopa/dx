@@ -8,6 +8,7 @@ import { Octokit } from "octokit";
 import {
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
+  getPreCommitTerraformLatestRelease,
   getTerraformLatestRelease,
 } from "./actions/terraform.js";
 
@@ -15,6 +16,8 @@ interface ActionsDependencies {
   octokitClient: Octokit;
   templatesPath: string;
 }
+
+import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -124,9 +127,12 @@ const getActions = ({
   getGitHubTerraformProviderLatestRelease({ octokitClient }),
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
+  getPreCommitTerraformLatestRelease({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getInfraFiles(templatesPath),
+  enablePnpm,
+  addPagoPaPnpmPlugin,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {

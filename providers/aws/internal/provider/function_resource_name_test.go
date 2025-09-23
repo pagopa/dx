@@ -288,3 +288,86 @@ func TestResourceNameFunction_AllRegions(t *testing.T) {
 		})
 	}
 }
+
+func TestResourceNameFunction_LongerPrefixes(t *testing.T) {
+	t.Parallel()
+	// Test prefix lengths from 2 to 4 characters
+	testCases := []struct {
+		prefix   string
+		expected string
+	}{
+		{"dx", "dx-d-eu-test-ec2-01"},
+		{"abc", "abc-d-eu-test-ec2-01"},
+		{"test", "test-d-eu-test-ec2-01"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("prefix_"+tc.prefix, func(t *testing.T) {
+			resource.UnitTest(t, resource.TestCase{
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.SkipBelow(tfversion.Version1_8_0),
+				},
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            output "test" {
+              value = provider::dx::resource_name({
+								prefix = "` + tc.prefix + `",
+								environment = "d",
+								region = "eu",
+								name = "test",
+								resource_type = "ec2_instance",
+								instance_number = "1"
+							})
+            }
+            `,
+						ConfigStateChecks: []statecheck.StateCheck{
+							statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact(tc.expected)),
+						},
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestResourceNameFunction_InvalidPrefix(t *testing.T) {
+	t.Parallel()
+	// Test invalid prefix lengths
+	testCases := []struct {
+		prefix      string
+		description string
+	}{
+		{"x", "too short"},
+		{"toolong", "too long"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("prefix_"+tc.prefix+"_"+tc.description, func(t *testing.T) {
+			resource.UnitTest(t, resource.TestCase{
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.SkipBelow(tfversion.Version1_8_0),
+				},
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            output "test" {
+              value = provider::dx::resource_name({
+								prefix = "` + tc.prefix + `",
+								environment = "d",
+								region = "eu",
+								name = "test",
+								resource_type = "ec2_instance",
+								instance_number = "1"
+							})
+            }
+            `,
+						ExpectError: regexp.MustCompile(`Prefix must be between[\s\n]*2[\s\n]*and[\s\n]*4[\s\n]*characters long`),
+					},
+				},
+			})
+		})
+	}
+}

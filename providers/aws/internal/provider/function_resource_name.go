@@ -241,8 +241,8 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 
 	// Validate provider Prefix configuration
-	if len(prefix) != 2 {
-		resp.Error = function.NewFuncError("Prefix must be 2 characters long")
+	if len(prefix) < 2 || len(prefix) > 4 {
+		resp.Error = function.NewFuncError("Prefix must be between 2 and 4 characters long")
 		return
 	}
 

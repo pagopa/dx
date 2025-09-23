@@ -1,5 +1,11 @@
 # @pagopa/monorepo-generator
 
+## 0.4.1
+
+### Patch Changes
+
+- 5371c5e: Fetch latest terraform version dynamically
+
 ## 0.4.0
 
 ### Minor Changes

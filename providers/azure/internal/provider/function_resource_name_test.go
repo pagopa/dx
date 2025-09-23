@@ -405,30 +405,42 @@ func TestResourceNameFunction_InvalidEnvironment(t *testing.T) {
 
 func TestResourceNameFunction_InvalidPrefix(t *testing.T) {
 	t.Parallel()
-	// Test invalid prefix length
-	resource.UnitTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_8_0),
-		},
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-        output "test" {
-          value = provider::dx::resource_name({
-						prefix = "toolong",
-						environment = "d",
-						location = "weu",
-						name = "test",
-						resource_type = "virtual_machine",
-						instance_number = "1"
-					})
-        }
-        `,
-				ExpectError: regexp.MustCompile(`Prefix must be 2\s+characters long`),
-			},
-		},
-	})
+	// Test invalid prefix lengths
+	testCases := []struct {
+		prefix      string
+		description string
+	}{
+		{"x", "too short"},
+		{"toolong", "too long"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("prefix_"+tc.prefix+"_"+tc.description, func(t *testing.T) {
+			resource.UnitTest(t, resource.TestCase{
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.SkipBelow(tfversion.Version1_8_0),
+				},
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            output "test" {
+              value = provider::dx::resource_name({
+								prefix = "` + tc.prefix + `",
+								environment = "d",
+								location = "weu",
+								name = "test",
+								resource_type = "virtual_machine",
+								instance_number = "1"
+							})
+            }
+            `,
+						ExpectError: regexp.MustCompile(`Prefix must be between[\s\n]*2[\s\n]*and[\s\n]*4[\s\n]*characters long`),
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestResourceNameFunction_InvalidInstanceNumberString(t *testing.T) {
@@ -589,6 +601,49 @@ func TestResourceNameFunction_DomainHandling(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestResourceNameFunction_LongerPrefixes(t *testing.T) {
+	t.Parallel()
+	// Test prefix lengths from 2 to 4 characters
+	testCases := []struct {
+		prefix   string
+		expected string
+	}{
+		{"dx", "dx-d-weu-test-vm-01"},
+		{"abc", "abc-d-weu-test-vm-01"},
+		{"test", "test-d-weu-test-vm-01"},
+	}
+
+	for _, tc := range testCases {
+		t.Run("prefix_"+tc.prefix, func(t *testing.T) {
+			resource.UnitTest(t, resource.TestCase{
+				TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+					tfversion.SkipBelow(tfversion.Version1_8_0),
+				},
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            output "test" {
+              value = provider::dx::resource_name({
+								prefix = "` + tc.prefix + `",
+								environment = "d",
+								location = "weu",
+								name = "test",
+								resource_type = "virtual_machine",
+								instance_number = "1"
+							})
+            }
+            `,
+						ConfigStateChecks: []statecheck.StateCheck{
+							statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact(tc.expected)),
+						},
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestResourceNameFunction_CaseInsensitiveLocation(t *testing.T) {

@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.6.7
+
+### Patch Changes
+
+- 7af2739: Prefix can now be long up to 4 characters instead of strictly 2 characters
+
 ## 0.6.6
 
 ### Patch Changes

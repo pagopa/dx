@@ -3,11 +3,11 @@
 #------------------------------------#
 
 resource "azurerm_postgresql_flexible_server" "replica" {
-  count = var.tier == "l" ? 1 : 0
+  count = local.replica.create ? 1 : 0
 
-  name                = local.db.replica_name
+  name                = local.replica.name
   resource_group_name = var.resource_group_name
-  location            = var.environment.location
+  location            = var.replica_location
   version             = var.db_version
 
   # Network
@@ -20,7 +20,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
   zone             = var.replica_zone
 
   storage_mb = var.storage_mb
-  sku_name   = local.db.sku_name
+  sku_name   = local.use_case_features.sku_name
 
   maintenance_window {
     day_of_week  = 3
@@ -32,7 +32,7 @@ resource "azurerm_postgresql_flexible_server" "replica" {
 }
 
 resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
-  count = var.tier == "l" ? 1 : 0
+  count = local.replica.create ? 1 : 0
 
   name              = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgre_endpoint" }))
   source_server_id  = azurerm_postgresql_flexible_server.this.id
@@ -45,7 +45,7 @@ resource "azurerm_postgresql_flexible_server_virtual_endpoint" "endpoint" {
 #-----------------------------#
 
 resource "azurerm_postgresql_flexible_server_configuration" "pgbouncer_replica" {
-  count = var.tier == "l" && var.pgbouncer_enabled ? 1 : 0
+  count = local.replica.create && var.pgbouncer_enabled ? 1 : 0
 
   name      = "pgbouncer.enabled"
   server_id = azurerm_postgresql_flexible_server.replica[0].id
@@ -60,7 +60,7 @@ resource "azurerm_monitor_metric_alert" "replica" {
   for_each = local.replica_metric_alerts
 
   enabled             = var.alerts_enabled
-  name                = "${local.db.replica_name}-${upper(each.key)}"
+  name                = "${local.replica.name}-${upper(each.key)}"
   resource_group_name = var.resource_group_name
   scopes              = [azurerm_postgresql_flexible_server.replica[0].id]
   frequency           = each.value.frequency
@@ -89,7 +89,7 @@ resource "azurerm_monitor_metric_alert" "replica" {
 #---------------------#
 
 resource "azurerm_monitor_diagnostic_setting" "replica" {
-  count                      = var.tier == "l" && var.diagnostic_settings.enabled ? 1 : 0
+  count                      = local.replica.create && var.diagnostic_settings.enabled ? 1 : 0
   name                       = "LogSecurity"
   target_resource_id         = azurerm_postgresql_flexible_server.replica[0].id
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
@@ -97,10 +97,5 @@ resource "azurerm_monitor_diagnostic_setting" "replica" {
 
   enabled_log {
     category = "PostgreSQLLogs"
-  }
-
-  metric {
-    category = "AllMetrics"
-    enabled  = false
   }
 }

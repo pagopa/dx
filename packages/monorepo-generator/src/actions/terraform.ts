@@ -89,3 +89,17 @@ export const getTerraformLatestRelease =
       "terraformVersion",
     );
   };
+
+export const getPreCommitTerraformLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "antonbabenko";
+    const repo = "pre-commit-terraform";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "preCommitTerraformVersion",
+      (version) => `v${version.toString()}`,
+    );
+  };

@@ -27,6 +27,7 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `terraformVersion`                    | custom action (GitHub fetch) | Terraform version used to populate `.terraform-version`. Full semver string, e.g. `1.5.7`.                                                                                                    |
 | `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module. Formatted as `major.minor` (e.g. `4.13`). The value is derived from the latest provider release.                |
 | `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources. Formatted as `major.minor` (e.g. `0.2`). The value is derived from the latest tag of the bootstrap repository. |
+| `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. Full semver string (e.g. `1.81.0`). The generated file prefixes it with a `v` (`rev: v{{ preCommitTerraformVersion }}`). |
 
 ## Recommended usage
 

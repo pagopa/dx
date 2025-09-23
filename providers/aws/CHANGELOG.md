@@ -1,5 +1,11 @@
 # provider-aws
 
+## 0.1.3
+
+### Patch Changes
+
+- 7af2739: Prefix can now be long up to 4 characters instead of strictly 2 characters
+
 ## 0.1.2
 
 ### Patch Changes

@@ -70,7 +70,8 @@ jobs:
 3. **Permissions & Secrets**: The calling workflow must have the necessary
    permissions (`id-token: write`, `contents: read`, `pull-requests: write`) and
    secrets (e.g., for Azure login) available. Using `secrets: inherit` is the
-   easiest way to pass them down.
+   easiest way to pass them down. Make sure the Azure Identity have the
+   `PagoPA Static Web Apps List Secrets` role assigned.
 4. **Monorepo Structure**: This workflow is optimized for a monorepo managed
    with Turborepo. It assumes your applications are located in workspaces (under
    an `apps/` directory).
