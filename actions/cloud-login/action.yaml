@@ -1,6 +1,5 @@
 name: "Cloud Service Provider Login"
 description: "Login to cloud provider (Azure or AWS) based on available secrets"
-description: "Login to cloud provider (Azure or AWS) based on available secrets"
 
 runs:
   using: "composite"
@@ -16,8 +15,15 @@ runs:
 
     - name: Azure Login
       if: env.ARM_CLIENT_ID && env.ARM_TENANT_ID && env.ARM_SUBSCRIPTION_ID
-      uses: pagopa/dx/.github/actions/azure-login@main
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2.2.0
+      with:
+        client-id: ${{ env.ARM_CLIENT_ID }}
+        tenant-id: ${{ env.ARM_TENANT_ID }}
+        subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
     - name: AWS Login
       if: env.ROLE_ARN
-      uses: pagopa/dx/actions/aws-login@main
+      uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502 # v4.0.2
+      with:
+        role-to-assume: ${{ env.ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION && env.AWS_REGION || 'eu-south-1' }}
