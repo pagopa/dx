@@ -21,6 +21,6 @@ resource "azurerm_role_assignment" "app_ci_rgs_static_webapp_secrets" {
 
   scope                = each.value
   role_definition_name = "PagoPA Static Web Apps List Secrets"
-  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
+  principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
   description          = "Allow ${var.repository.name} App CI identity to to read Static Web Apps secrets at ${each.value} resource group scope"
 }

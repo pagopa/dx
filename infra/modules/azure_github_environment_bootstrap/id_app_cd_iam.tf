@@ -49,3 +49,12 @@ resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
   description          = "Allow ${var.repository.name} App CD identity to apply changes to the Terraform state file Storage Account scope"
 }
+
+resource "azurerm_role_assignment" "app_cd_rgs_static_webapp_secrets" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
+  role_definition_name = "PagoPA Static Web Apps List Secrets"
+  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
+  description          = "Allow ${var.repository.name} App CD identity to to read Static Web Apps secrets at ${each.value} resource group scope"
+}
