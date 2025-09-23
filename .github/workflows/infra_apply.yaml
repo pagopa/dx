@@ -19,10 +19,10 @@ on:
         required: false
         default: false
       override_github_environment:
-          description: Set a value if GitHub Environment name is different than the TF environment folder
-          type: string
-          required: false
-          default: ''
+        description: Set a value if GitHub Environment name is different than the TF environment folder
+        type: string
+        required: false
+        default: ""
       use_labels:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
@@ -32,7 +32,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -74,7 +74,7 @@ jobs:
       verbose: true
 
   tf_plan:
-    name: 'Terraform Plan'
+    name: "Terraform Plan"
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
@@ -92,7 +92,6 @@ jobs:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
     steps:
-
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
       - name: Set directory
@@ -153,14 +152,18 @@ jobs:
             -input=false \
             | grep -v "hidden-link:"
 
-      - name: Upload Terraform Plan as Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+      - name: Upload Terraform Bundle as Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          bundle_name: tfplan
-          file_path: ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
+          name: terraform-bundle
+          path: |
+            ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
+            ${{ steps.directory.outputs.dir }}/.terraform.lock.hcl
+            ${{ steps.directory.outputs.dir }}/.terraform/modules/
+          retention-days: 7
 
   tf_apply:
-    name: 'Terraform Apply'
+    name: "Terraform Apply"
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [get-terraform-version, tf_plan]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
@@ -172,18 +175,17 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
 
-      - name: Download Terraform Plan as Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+      - name: Download Terraform Bundle as Artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          bundle_name: tfplan
-          file_path: ${{ needs.tf_plan.outputs.working_dir }}
+          name: terraform-bundle
+          path: ${{ needs.tf_plan.outputs.working_dir }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
