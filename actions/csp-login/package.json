@@ -1,7 +1,7 @@
 {
   "name": "csp-login",
   "description": "A GitHub action to log in to cloud providers.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "private": true,
   "keywords": [
