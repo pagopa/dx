@@ -131,6 +131,9 @@ importers:
       '@logtape/logtape':
         specifier: ^1.0.0
         version: 1.0.4
+      '@pagopa/monorepo-generator':
+        specifier: workspace:^
+        version: link:../../packages/monorepo-generator
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -143,6 +146,9 @@ importers:
       neverthrow:
         specifier: 'catalog:'
         version: 8.2.0
+      node-plop:
+        specifier: ^0.32.1
+        version: 0.32.1
       semver:
         specifier: 'catalog:'
         version: 7.7.2
