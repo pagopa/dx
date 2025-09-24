@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.4
+
+### Patch Changes
+
+- f87fa4b: Moved OIDC provider from bootstrapper to core module
+
+## 0.0.3
+
+### Patch Changes
+
+- f34d0b9: Removed unnecessary data source from the VPC endpoints submodule
+
 ## 0.0.2
 
 ### Patch Changes

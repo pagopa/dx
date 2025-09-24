@@ -6,7 +6,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = ">= 0.6.5, < 1.0.0"
     }
   }
 }
@@ -22,10 +22,10 @@ resource "azurerm_api_management" "this" {
   publisher_name                = var.publisher_name
   publisher_email               = var.publisher_email
   notification_sender_email     = var.notification_sender_email
-  sku_name                      = local.apim.sku_name
-  zones                         = contains(["l", "xl"], var.tier) ? local.apim.zones : null
-  public_network_access_enabled = var.enable_public_network_access
-  public_ip_address_id          = var.tier != "m" && var.virtual_network_type_internal ? var.public_ip_address_id : null
+  sku_name                      = local.use_case_features.sku
+  zones                         = local.use_case_features.zones
+  public_network_access_enabled = local.public_network
+  public_ip_address_id          = local.public_network && local.virtual_network_type == "Internal" ? var.public_ip_address_id : null
 
   min_api_version = "2021-08-01"
 
@@ -34,21 +34,24 @@ resource "azurerm_api_management" "this" {
     type = "SystemAssigned"
   }
 
-  virtual_network_type = var.virtual_network_type_internal ? "Internal" : "None"
+  virtual_network_type = local.virtual_network_type
 
   # subnet
   dynamic "virtual_network_configuration" {
-    for_each = var.virtual_network_type_internal ? ["dummy"] : []
+    for_each = local.virtual_network_configuration_enabled ? ["dummy"] : []
     content {
       subnet_id = var.subnet_id
     }
   }
 
-  sign_up {
-    enabled = false
-    terms_of_service {
-      enabled          = false
-      consent_required = false
+  dynamic "sign_up" {
+    for_each = var.use_case != "cost_optimized" ? ["dummy"] : []
+    content {
+      enabled = false
+      terms_of_service {
+        enabled          = false
+        consent_required = false
+      }
     }
   }
 
@@ -85,7 +88,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = contains(["l", "xl"], var.tier) && var.autoscale != null && var.autoscale.enabled ? 1 : 0
+  count               = local.use_case_features.autoscale && var.autoscale != null && var.autoscale.enabled ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location

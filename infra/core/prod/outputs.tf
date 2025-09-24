@@ -1,3 +1,3 @@
 output "values" {
-  value = module.core
+  value = module.azure
 }

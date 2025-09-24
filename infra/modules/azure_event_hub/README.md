@@ -13,17 +13,46 @@ This Terraform module provisions an Azure Event Hub namespace, event hubs, consu
 - **Private Endpoint**: Creates a private endpoint for secure access to the Event Hub namespace.
 - **Monitoring**: Configures metric alerts for monitoring Event Hub health.
 
-## Tiers and Configurations
+## Use cases and Configurations
 
-| Tier | Description                                                                   | Capacity | Auto Inflate | Maximum Throughput Units |
-|------|-------------------------------------------------------------------------------|----------|--------------|--------------------------|
-| `s`  | Designed for test and development environments with limited requirements.     | N/A      | No           | N/A                      |
-| `m`  | Suitable for production environments with low to moderate demands.            | 1        | No           | N/A                      |
-| `l`  | Ideal for high-demand production environments with auto-scaling capabilities. | 2        | Yes          | 15                       |
+| Use case  | Description                                                          | Capacity | Auto Inflate | Maximum Throughput Units |
+|-----------|----------------------------------------------------------------------|----------|--------------|--------------------------|
+| `default` | Suitable for production environments with low to moderate demands.   | 1        | No           | N/A                      |
 
 ### Usage Example
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-event-hub/tree/main/example/complete) folder in the module repository.
+
+### Local development
+
+For local development we recommend using an Event Hub emulator together with a GUI (for example a Kafka UI) and the Event Hubs SDK. This setup lets you reproduce Event Hub behaviour locally without connecting to Azure.
+
+Below is a small conceptual `docker-compose` example — replace the emulator image and configuration with the implementation you prefer:
+
+```yaml
+services:
+  eventhubs:
+    image: "mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest"
+    ports:
+      - "5672:5672"
+      - "9093:9093"
+    volumes:
+      - ...
+    environment:
+      EMULATOR_CONFIG: ...
+
+  kafka-ui:
+    image: "provectuslabs/kafka-ui:latest"
+    depends_on:
+      - "eventhubs"
+    ports:
+      - "8002:8080"
+    environment:
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "eventhubs:9093"
+      ...
+```
+
+This example is illustrative.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -63,7 +92,7 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'. | `string` | `"s"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Event Hub. Allowed value is 'default'. | `string` | `"default"` | no |
 
 ## Outputs
 

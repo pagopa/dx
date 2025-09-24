@@ -9,8 +9,8 @@ variable "environment" {
   })
 
   validation {
-    condition     = length(var.environment.prefix) == 2
-    error_message = "The variable \"prefix\" must contain exactly 2 characters."
+    condition     = length(var.environment.prefix) >= 2 && length(var.environment.prefix) <= 4
+    error_message = "The variable \"prefix\" must contain between 2 and 4 characters."
   }
 
   validation {

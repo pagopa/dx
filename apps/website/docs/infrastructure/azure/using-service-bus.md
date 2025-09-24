@@ -107,7 +107,7 @@ access in a single Terraform codebase, so that there is always a clear overview
 of which is consuming messages in a given queue. Therefore, the team owner of
 the queue should create it and then manage its access in the same configuration,
 even if the consumer is in another domain or
-[cross-subscription](https://pagopa.github.io/dx/docs/infrastructure/azure/iam-cross-subscription/)
+[cross-subscription](https://dx.pagopa.it/docs/infrastructure/azure/iam-cross-subscription/)
 scenario. If multiple teams read events from the same queue without being aware
 of them, hard-to-detect concurrency problems could occur.
 
@@ -265,7 +265,7 @@ Subscriptions' consumers, on the other hand, will be managed by the individual
 subscription owners, assigning the `Reader` role to consumers. In cross-domain
 scenarios, the Terraform code can be written in the consumer's repository. In
 cross-subscription cases, refer to the
-[general guidelines](https://pagopa.github.io/dx/docs/infrastructure/azure/iam-cross-subscription).
+[general guidelines](https://dx.pagopa.it/docs/infrastructure/azure/iam-cross-subscription).
 
 The following example does:
 

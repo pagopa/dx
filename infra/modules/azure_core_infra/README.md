@@ -57,12 +57,14 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_aws_vpn_enabled"></a> [aws\_vpn\_enabled](#input\_aws\_vpn\_enabled) | A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | A boolean flag to enable or disable the creation of a NAT gateway. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_test_enabled"></a> [test\_enabled](#input\_test\_enabled) | A boolean flag to enable or disable the creation of testing resources. | `bool` | `false` | no |
 | <a name="input_virtual_network_cidr"></a> [virtual\_network\_cidr](#input\_virtual\_network\_cidr) | The CIDR block defining the IP address range for the virtual network. | `string` | `"10.0.0.0/16"` | no |
 | <a name="input_vpn_enabled"></a> [vpn\_enabled](#input\_vpn\_enabled) | A boolean flag to enable or disable the creation of a VPN. | `bool` | `false` | no |
+| <a name="input_vpn_use_case"></a> [vpn\_use\_case](#input\_vpn\_use\_case) | Site-to-Site VPN use case. Allowed values: 'default', 'high\_availability'. | `string` | `"default"` | no |
 
 ## Outputs
 
@@ -77,6 +79,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | <a name="output_common_resource_group_name"></a> [common\_resource\_group\_name](#output\_common\_resource\_group\_name) | The name of the common resource group. |
 | <a name="output_common_test_snet"></a> [common\_test\_snet](#output\_common\_test\_snet) | Details of the test subnet, including its name and ID. |
 | <a name="output_common_vnet"></a> [common\_vnet](#output\_common\_vnet) | Details of the common virtual network, including its name and ID. |
+| <a name="output_common_vpn_snet"></a> [common\_vpn\_snet](#output\_common\_vpn\_snet) | Details of the VPN subnet, including its name and ID. |
 | <a name="output_github_runner"></a> [github\_runner](#output\_github\_runner) | Details of the GitHub runner, including environment ID, resource group name, and subnet ID. |
 | <a name="output_network_resource_group_id"></a> [network\_resource\_group\_id](#output\_network\_resource\_group\_id) | The ID of the network resource group. |
 | <a name="output_network_resource_group_name"></a> [network\_resource\_group\_name](#output\_network\_resource\_group\_name) | The name of the network resource group. |
@@ -84,4 +87,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | <a name="output_opex_resource_group_name"></a> [opex\_resource\_group\_name](#output\_opex\_resource\_group\_name) | The name of the OPEX resource group. |
 | <a name="output_test_resource_group_id"></a> [test\_resource\_group\_id](#output\_test\_resource\_group\_id) | The ID of the test resource group (null if testing is disabled). |
 | <a name="output_test_resource_group_name"></a> [test\_resource\_group\_name](#output\_test\_resource\_group\_name) | The name of the test resource group (null if testing is disabled). |
+| <a name="output_vpn_fqdns"></a> [vpn\_fqdns](#output\_vpn\_fqdns) | The FQDNs for virtual network gateway. |
+| <a name="output_vpn_gateway_id"></a> [vpn\_gateway\_id](#output\_vpn\_gateway\_id) | The ID of the virtual network gateway. |
+| <a name="output_vpn_public_ips"></a> [vpn\_public\_ips](#output\_vpn\_public\_ips) | The public IP addresses associated with the virtual network gateway. |
 <!-- END_TF_DOCS -->
