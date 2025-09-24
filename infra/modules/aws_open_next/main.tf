@@ -2,21 +2,21 @@ module "assets" {
   source = "./modules/assets"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 }
 
 module "common" {
   source = "./modules/common"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 }
 
 module "server" {
   source = "./modules/server_lambda"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 
   node_major_version    = var.node_major_version
   timeout               = var.server.timeout
@@ -39,7 +39,7 @@ module "image_optimizer" {
   source = "./modules/image_optimizer_lambda"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 
   node_major_version    = var.node_major_version
   timeout               = var.image_optimizer.timeout
@@ -53,7 +53,7 @@ module "isr_revalidation" {
   source = "./modules/isr_revalidation"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 
   node_major_version    = var.node_major_version
   timeout               = var.image_optimizer.timeout
@@ -66,7 +66,7 @@ module "initializer" {
   source = "./modules/initialization_lambda"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 
   node_major_version    = var.node_major_version
   timeout               = var.initializer.timeout
@@ -81,7 +81,7 @@ module "cloudfront" {
   source = "./modules/cloudfront"
 
   environment = var.environment
-  tags        = var.tags
+  tags        = local.tags
 
   enable_waf           = var.enable_waf
   are_previews_enabled = var.are_previews_enabled
