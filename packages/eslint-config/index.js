@@ -33,7 +33,6 @@ export default [
       "guard-for-in": "error",
       "max-lines-per-function": ["error", 200],
       "no-bitwise": "error",
-      "no-console": "error",
       "no-eval": "error",
       "no-new-wrappers": "error",
       "no-param-reassign": "error",

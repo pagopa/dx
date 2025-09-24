@@ -8,6 +8,7 @@ import {
 } from "./commands/codemod.js";
 import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
+import { makeInitCommand } from "./commands/init.js";
 import { makeVersionCommand } from "./commands/version.js";
 
 export type CliDependencies = CodemodCommandDependencies;
@@ -24,6 +25,9 @@ export const makeCli = (deps: Dependencies, config: Config) => {
 
   if (process.env.ENABLE_CODEMODS) {
     program.addCommand(makeCodemodCommand(deps));
+  }
+  if (process.env.ENABLE_INIT_COMMAND) {
+    program.addCommand(makeInitCommand());
   }
 
   program.addCommand(makeVersionCommand());
