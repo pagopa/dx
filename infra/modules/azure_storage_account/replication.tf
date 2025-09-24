@@ -97,8 +97,6 @@ resource "azurerm_storage_management_policy" "secondary_lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
-        # Delete after 1095 days (3 years) of inactivity (no modification)
-        delete_after_days_since_modification_greater_than = 1095
       }
 
       snapshot {
