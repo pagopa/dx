@@ -85,6 +85,11 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
     templateFile: path.join(templatesPath, "package.json.hbs"),
     type: "add",
   },
+  {
+    path: "{{repoSrc}}/{{repoName}}/README.md",
+    templateFile: path.join(templatesPath, "README.md.hbs"),
+    type: "add",
+  },
 ];
 
 const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
