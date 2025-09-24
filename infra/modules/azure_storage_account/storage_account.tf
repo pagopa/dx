@@ -12,8 +12,8 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   blob_properties {
-    versioning_enabled            = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
-    change_feed_enabled           = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled ? true : var.blob_features.change_feed.enabled
+    versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
+    change_feed_enabled           = local.immutability_policy_enabled ? true : var.blob_features.change_feed.enabled
     change_feed_retention_in_days = var.blob_features.change_feed.enabled && var.blob_features.change_feed.retention_in_days > 0 ? var.blob_features.change_feed.retention_in_days : null
     last_access_time_enabled      = var.blob_features.last_access_time
 
@@ -25,7 +25,7 @@ resource "azurerm_storage_account" "this" {
     }
 
     dynamic "restore_policy" {
-      for_each = (var.blob_features.restore_policy_days > 0 && !local.tier_features.immutability_policy && !var.blob_features.immutability_policy.enabled) ? [1] : []
+      for_each = (var.blob_features.restore_policy_days > 0 && !local.immutability_policy_enabled) ? [1] : []
       content {
         days = var.blob_features.restore_policy_days
       }
@@ -56,7 +56,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   dynamic "immutability_policy" {
-    for_each = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled ? [1] : []
+    for_each = local.immutability_policy_enabled ? [1] : []
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes

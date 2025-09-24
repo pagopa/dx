@@ -61,6 +61,7 @@ locals {
   tier_features = local.use_cases[var.use_case]
 
   force_public_network_access_enabled = var.force_public_network_access_enabled || var.use_case == "delegated_access"
+  immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
 
   peps = {
     create_subservices = local.force_public_network_access_enabled ? {

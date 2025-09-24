@@ -127,7 +127,7 @@ variable "blob_features" {
   }
 
   validation {
-    condition     = !(contains(["archive", "audit"], var.use_case)) || (var.blob_features.delete_retention_days == 0 && var.blob_features.restore_policy_days == 0)
+    condition     = !contains(["archive", "audit"], var.use_case) || (var.blob_features.delete_retention_days == 0 && var.blob_features.restore_policy_days == 0)
     error_message = "For 'archive' and 'audit' use cases, delete_retention_days and restore_policy_days must be 0."
   }
 }
