@@ -80,6 +80,8 @@ module "aws_github_bootstrap" {
     name  = "my-aws-project"
   }
 
+  oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+
   tags = {
     CreatedBy   = "Terraform"
     Environment = "dev"
