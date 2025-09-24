@@ -197,7 +197,12 @@ variable "custom_domain" {
 variable "secondary_location" {
   type        = string
   description = "Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication_type like GRS or GZRS."
-  default     = "westeurope"
+  default     = null
+
+  validation {
+    condition     = ((var.secondary_location != var.environment.location) && local.tier_features.secondary_replication == true) || local.tier_features.secondary_replication == false
+    error_message = "'secondary_location' must be different from 'environment.location'."
+  }
 }
 
 variable "containers" {
@@ -225,5 +230,4 @@ variable "queues" {
   description = "Queues to be created."
   type        = list(string)
   default     = []
-
 }

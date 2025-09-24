@@ -78,10 +78,18 @@ For Example:
 
 ### Note for already existing resources
 
-If containers, queues, or tables were previously created manually or through other means, you need to import them into the new module state using the `terraform import` command to avoid recreation.
+If `containers`, `queues`, or `tables` were previously created manually or through other means, use a [moved](https://developer.hashicorp.com/terraform/language/block/moved) file approach to map the existing resource addresses to the new module-managed addresses.
 
-```bash
-terraform import 'module.storage_account.azure_storage_container.this[N]' /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myresourcegroup/providers/Microsoft.Storage/storageAccounts/myaccount/blobServices/default/containers/mycontainer
+1. Create a file named `moved.tf` in the same directory as your Terraform configuration.
+2. Add one `moved` block for each resource you want to reassign to the module. Inspect the `terraform plan` result carefully to see what Terraform intends to destroy/create.
+
+Example `moved.tf` block:
+
+```hcl
+moved {
+  from = resource.azure_storage_container.old_container
+  to   = module.storage_account.azure_storage_container.this[N]
+}
 ```
 
-Choose the correct index `N` based on the order of your `containers`, `queues`, and `tables` lists.
+Add one `moved` block per existing container/queue/table. Make sure the `from` address matches the existing resource address in your current configuration/state, and use the correct index `N` in the `to` address based on the order of the `containers`, `queues`, and `tables` lists you pass to the module so that internal indexes line up correctly.

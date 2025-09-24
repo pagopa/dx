@@ -302,6 +302,7 @@ run "audit_storage_account_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "audit"
+    secondary_location  = "westeurope"
 
     subnet_pep_id = run.setup_tests.pep_id
 
@@ -359,6 +360,7 @@ run "archive_storage_account_is_correct_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "archive"
+    secondary_location  = "westeurope"
 
     subnet_pep_id = run.setup_tests.pep_id
   }
@@ -410,8 +412,8 @@ run "audit_storage_account_fail_plan" {
 
     resource_group_name = run.setup_tests.resource_group_name
     use_case            = "audit"
-
-    subnet_pep_id = run.setup_tests.pep_id
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
   }
 
   # Checks some assertions

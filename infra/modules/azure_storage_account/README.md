@@ -22,7 +22,7 @@ This Terraform module provisions an Azure Storage Account with optional configur
 |--------------------|--------------------------------------------------------------------|--------|----------------------------|-------------------------|--------------|
 | `development`      | Ideal for lightweight workloads, testing, and development.         | No     | No                         | LRS                     | Standard     |
 | `default`          | Suitable for production with moderate to high performance needs.   | Yes    | No                         | ZRS                     | Standard     |
-| `audit`            | For storing audit logs with high security and long-term retention. | Yes    | No                         | ZRS + secondary replica | Standard     |
+| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 yaers of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
 | `delegated_access` | For sharing files externally, forcing secure access patterns.      | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                 | No     | No                         | LRS + secondary replica | Standard     |
 
@@ -91,7 +91,7 @@ No modules.
 | [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |
 | [azurerm_storage_account_customer_managed_key.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_customer_managed_key) | resource |
 | [azurerm_storage_account_network_rules.network_rules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_network_rules) | resource |
-| [azurerm_storage_container.container_replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
+| [azurerm_storage_container.replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
 | [azurerm_storage_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
 | [azurerm_storage_management_policy.lifecycle_archive](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_management_policy) | resource |
 | [azurerm_storage_management_policy.lifecycle_audit](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_management_policy) | resource |
@@ -120,7 +120,7 @@ No modules.
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Resource group for the private DNS zone. Defaults to the virtual network's resource group. | `string` | `null` | no |
 | <a name="input_queues"></a> [queues](#input\_queues) | Queues to be created. | `list(string)` | `[]` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the storage account and related resources will be deployed. | `string` | n/a | yes |
-| <a name="input_secondary_location"></a> [secondary\_location](#input\_secondary\_location) | Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication\_type like GRS or GZRS. | `string` | `"westeurope"` | no |
+| <a name="input_secondary_location"></a> [secondary\_location](#input\_secondary\_location) | Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication\_type like GRS or GZRS. | `string` | `null` | no |
 | <a name="input_static_website"></a> [static\_website](#input\_static\_website) | Configures static website hosting with index and error documents. | <pre>object({<br/>    enabled            = optional(bool, false)<br/>    index_document     = optional(string, null)<br/>    error_404_document = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "error_404_document": null,<br/>  "index_document": null<br/>}</pre> | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false. | `string` | `null` | no |
 | <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force\_public\_network\_access\_enabled is false. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |

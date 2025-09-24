@@ -45,7 +45,7 @@ resource "azurerm_storage_account" "secondary_replica" {
 }
 
 # Container replication (Geo-replication)
-resource "azurerm_storage_container" "container_replica" {
+resource "azurerm_storage_container" "replica" {
   for_each = local.tier_features.secondary_replication ? { for c in var.containers : c.name => c } : {}
 
   name                  = each.value.name
@@ -72,7 +72,7 @@ resource "azurerm_storage_object_replication" "geo_replication_policy" {
     azurerm_storage_account.this,
     azurerm_storage_account.secondary_replica,
     azurerm_storage_container.this,
-    azurerm_storage_container.container_replica
+    azurerm_storage_container.replica
   ]
 }
 

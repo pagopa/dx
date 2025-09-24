@@ -129,14 +129,14 @@ resource "azurerm_storage_container" "this" {
 resource "azurerm_storage_table" "this" {
   for_each             = var.subservices_enabled.table ? toset(var.tables) : []
   name                 = each.value
-  storage_account_name = azurerm_storage_account.this.id
+  storage_account_name = azurerm_storage_account.this.name
 }
 
 # Queues
 resource "azurerm_storage_queue" "this" {
   for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
   name                 = each.value
-  storage_account_name = azurerm_storage_account.this.id
+  storage_account_name = azurerm_storage_account.this.name
 
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
