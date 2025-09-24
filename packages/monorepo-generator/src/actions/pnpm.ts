@@ -22,3 +22,10 @@ export const installRootDependencies: ActionType = async (answers) =>
   })`pnpm -w add -D turbo @changesets/cli`
     .then(() => "Root dependencies installed")
     .catch(() => "Error installing root dependencies");
+
+export const configureChangesets: ActionType = async (answers) =>
+  $({
+    cwd: `${answers.repoSrc}/${answers.repoName}`,
+  })`pnpm changeset init`
+    .then(() => "Changeset configured")
+    .catch(() => "Error configuring changeset");
