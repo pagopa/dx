@@ -17,7 +17,11 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
-import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
+import {
+  addPagoPaPnpmPlugin,
+  enablePnpm,
+  installRootDependencies,
+} from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -110,6 +114,7 @@ const getActions = ({
   ...getTerraformRepositoryFile(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
+  installRootDependencies,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
