@@ -25,5 +25,7 @@ module "bootstrap" {
     secrets = {}
   }
 
+  oidc_provider_arn = module.core_values.oidc_provider_arn
+
   tags = var.tags
 }
