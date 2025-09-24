@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.0.2
+
+### Patch Changes
+
+- 1b7e7e7: Add Static Web App list secrets role assingment to App CI and CD managed identities
+
 ## 3.0.1
 
 ### Patch Changes

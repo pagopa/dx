@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -30,8 +30,8 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "@vitest/coverage-v8": "catalog:dx",
-    "eslint": "catalog:dx",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "catalog:",
     "plop": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",

@@ -19,10 +19,10 @@ on:
         required: false
         default: false
       override_github_environment:
-          description: Set a value if GitHub Environment name is different than the TF environment folder
-          type: string
-          required: false
-          default: ''
+        description: Set a value if GitHub Environment name is different than the TF environment folder
+        type: string
+        required: false
+        default: ""
       use_labels:
         description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
         type: boolean
@@ -32,7 +32,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -40,6 +40,8 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
   TF_IN_AUTOMATION: true
@@ -94,8 +96,8 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
         name: Checkout
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
@@ -198,8 +200,8 @@ jobs:
         id: drift_notify
         uses: pagopa/dx/.github/actions/slack-notification@main
         with:
-          id: 'Drift Detected'
-          title: ':x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*.'
+          id: "Drift Detected"
+          title: ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
           text: '*${{ steps.workflow_data.outputs.workflow_name }}* results:\n:shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}\n:diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>\n:envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}\n:page_with_curl: *Terraform* plan results:\n:heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}\n:wavy_dash: Resource to change: ${{ env.TO_CHANGE }}\n:heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>'
           slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
@@ -208,8 +210,8 @@ jobs:
         id: failure_notify
         uses: pagopa/dx/.github/actions/slack-notification@main
         with:
-          id: 'Workflow Failed'
-          title: ':x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed.'
+          id: "Workflow Failed"
+          title: ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
           text: 'Check the Workflow:\n *URL*: ${{ steps.workflow_data.outputs.workflow_url }}\n *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>\n'
           slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
@@ -218,4 +220,3 @@ jobs:
       - name: Exit with error
         if: ${{ failure() || steps.drift.outputs.drift_found == 'true' }}
         run: exit 1
-

@@ -33,13 +33,13 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "@vitest/coverage-v8": "catalog:dx",
-    "eslint": "catalog:dx",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
     "memfs": "^4.23.0",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:dx",
+    "vitest": "catalog:",
     "vitest-mock-extended": "^3.1.0"
   },
   "scripts": {

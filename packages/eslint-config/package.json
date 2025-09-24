@@ -29,10 +29,10 @@
     "typescript-eslint": "^8.35.1"
   },
   "devDependencies": {
-    "eslint": "catalog:dx",
+    "eslint": "catalog:",
     "prettier": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:dx"
+    "eslint": "catalog:"
   }
 }

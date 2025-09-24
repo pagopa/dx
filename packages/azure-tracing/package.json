@@ -50,7 +50,7 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:dx",
+    "eslint": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   },

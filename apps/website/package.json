@@ -40,7 +40,7 @@
     "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "^18.0.38",
-    "eslint": "catalog:dx",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
   },

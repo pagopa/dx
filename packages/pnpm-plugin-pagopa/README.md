@@ -18,18 +18,5 @@ This configuration package provides the following default settings for your `pnp
 - Sets [linkWorkspacePackages](https://pnpm.io/cli/run#linkworkspacepackages) to `true`
 - Sets [packageImportMethod](https://pnpm.io/settings#packageimportmethod) to `clone-or-copy`
 - Sets [cleanupUnusedCatalogs](https://pnpm.io/catalogs#cleanupunusedcatalogs) to `true`
-- Adds `dx` [catalog](https://pnpm.io/catalogs) which includes recommended version of the packages supported by the PagoPA DX toolchain. Here you can find the full [list of packages included](https://github.com/pagopa/dx/blob/main/packages/pnpm-plugin-pagopa/pnpmfile.cjs).
 
-## Use the PagoPA DX catalog
 
-To use the PagoPA DX catalog, you can specify the `catalog:dx` version for supported packages in your `package.json`. This will ensure that you are using the recommended versions of packages that are compatible with the PagoPA DX toolchain.
-
-```jsonc
-{
-  // .....
-  "devDependencies": {
-    "eslint": "catalog:dx",
-    "vitest": "catalog:dx",
-  },
-}
-```
