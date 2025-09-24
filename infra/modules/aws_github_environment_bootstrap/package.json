@@ -1,6 +1,6 @@
 {
   "name": "aws_github_environment_bootstrap",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "provider": "aws",
   "description": "Sets up monorepo's settings and required AWS permissions and roles"

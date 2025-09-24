@@ -15,7 +15,11 @@ resource "aws_iam_role_policy_attachment" "app_ci_ro_lambda" {
 }
 
 resource "aws_iam_policy" "ro_ecs" {
-  name   = "ECSReadOnlyAccess"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = var.environment.domain
+    name          = "ecs-read-only"
+    resource_type = "iam_role_policy"
+  }))
   policy = data.aws_iam_policy_document.ecs_read_only_access.json
 }
 

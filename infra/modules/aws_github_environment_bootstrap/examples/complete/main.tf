@@ -26,5 +26,7 @@ module "bootstrapper" {
     }
   }
 
+  oidc_provider_arn = module.core_values.oidc_provider_arn
+
   tags = local.tags
 }

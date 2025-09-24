@@ -17,7 +17,12 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
-import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
+import {
+  addPagoPaPnpmPlugin,
+  configureChangesets,
+  enablePnpm,
+  installRootDependencies,
+} from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -43,6 +48,14 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     name: "csp",
     type: "list",
   },
+  {
+    choices: ["dev", "prod"],
+    message: "Which environments do you need?",
+    name: "environments",
+    type: "checkbox",
+    validate: (input) =>
+      input.length > 0 ? true : "Select at least one environment",
+  },
 ];
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
@@ -59,7 +72,7 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
     base: `${templatesPath}/.github/workflows`,
     destination: "{{repoSrc}}/{{repoName}}/.github/workflows",
     globOptions: { dot: true, onlyFiles: true },
-    templateFiles: path.join(templatesPath, ".github", "workflows", "*"),
+    templateFiles: path.join(templatesPath, ".github", "workflows", "*.hbs"),
     type: "addMany",
   },
   {
@@ -83,6 +96,11 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   {
     path: "{{repoSrc}}/{{repoName}}/package.json",
     templateFile: path.join(templatesPath, "package.json.hbs"),
+    type: "add",
+  },
+  {
+    path: "{{repoSrc}}/{{repoName}}/README.md",
+    templateFile: path.join(templatesPath, "README.md.hbs"),
     type: "add",
   },
 ];
@@ -133,6 +151,8 @@ const getActions = ({
   ...getInfraFiles(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
+  installRootDependencies,
+  configureChangesets,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
