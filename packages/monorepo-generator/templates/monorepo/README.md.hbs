@@ -28,6 +28,18 @@ nodenv install
 pnpm build
 ```
 
+## Release management
+
+We use [changesets](https://github.com/changesets/changesets) to automate package versioning and releases.
+
+Each Pull Request that includes changes that require a version bump must include a _changeset file_ that describes the introduced changes.
+
+To create a _changeset file_ run the following command and follow the instructions.
+
+```bash
+pnpm changeset
+```
+
 ## Useful commands
 
 This project uses `pnpm` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
@@ -88,6 +100,19 @@ It contains the _infrastructure-as-code_ project that defines the resources for 
 Technical documentation about the project. Topics that may be included are architecture overviews, [ADRs](https://adr.github.io/), coding standards, and anything that can be relevant for a developer approaching the project as a contributor or as an auditor.
 
 User documentation doesn't usually go in here. For public packages, it must go in the package's `README` file so that it will also be uploaded to the registry; user-faced documentation websites, when needed by the project, go under the `/apps` folder as they are treated as end-user applications.
+
+## Releases
+
+Releases are handled using [Changeset](https://github.com/changesets/changesets).
+Changeset takes care of bumping packages, updating the changelog, and tagging the repository accordingly.
+
+#### How it works
+
+- When opening a Pull Request with a change intended to be published, [add a changeset file](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md) to the proposed changes.
+- Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly (see https://github.com/changesets/changesets/blob/main/docs/decisions.md#how-changesets-are-combined).
+Only apps and packages mentioned in the changeset files will be bumped.
+- Review the `Version Packages` PR and merge it when ready. Changeset files will be deleted.
+- A Release entry is created for each app or package whose version has been bumped.
 
 ### Folder structure
 
