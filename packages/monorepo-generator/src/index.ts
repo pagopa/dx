@@ -105,7 +105,7 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
+const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
@@ -113,6 +113,29 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
     templateFiles: path.join(templatesPath, "infra", "repository", "*.tf.hbs"),
     type: "addMany",
   },
+];
+
+const getTerraformDefaultEnvironmentFiles = (
+  templatesPath: string,
+): ActionType[] => [
+  {
+    abortOnFail: true,
+    base: `${templatesPath}/infra/resources/prod`,
+    destination: "{{repoSrc}}/{{repoName}}/infra/resources/prod",
+    templateFiles: path.join(
+      templatesPath,
+      "infra",
+      "resources",
+      "prod",
+      "*.tf.hbs",
+    ),
+    type: "addMany",
+  },
+];
+
+const getInfraFiles = (templatesPath: string): ActionType[] => [
+  ...getTerraformRepositoryFiles(templatesPath),
+  ...getTerraformDefaultEnvironmentFiles(templatesPath),
 ];
 
 const getActions = ({
@@ -125,7 +148,7 @@ const getActions = ({
   getPreCommitTerraformLatestRelease({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
-  ...getTerraformRepositoryFile(templatesPath),
+  ...getInfraFiles(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
   installRootDependencies,
