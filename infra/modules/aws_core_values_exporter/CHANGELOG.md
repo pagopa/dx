@@ -1,5 +1,11 @@
 # aws_core_values_exporter
 
+## 0.1.1
+
+### Patch Changes
+
+- f87fa4b: Moved OIDC provider from bootstrapper to core module
+
 ## 0.1.0
 
 ### Minor Changes

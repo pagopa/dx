@@ -219,6 +219,7 @@ The GitHub PAT must have the following permissions to work with AWS CodeBuild:
 
 | Name | Type |
 |------|------|
+| [aws_iam_openid_connect_provider.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 | [aws_ssm_parameter.personal_access_token](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ssm_parameter) | resource |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
 
@@ -244,6 +245,7 @@ The GitHub PAT must have the following permissions to work with AWS CodeBuild:
 | <a name="output_isolated_subnets"></a> [isolated\_subnets](#output\_isolated\_subnets) | Details of isolated subnets including IDs, CIDR blocks, and availability zones |
 | <a name="output_nat_gateway_ids"></a> [nat\_gateway\_ids](#output\_nat\_gateway\_ids) | List of IDs of the NAT Gateways |
 | <a name="output_nat_gateway_ips"></a> [nat\_gateway\_ips](#output\_nat\_gateway\_ips) | List of Elastic IP addresses assigned to the NAT Gateways |
+| <a name="output_oidc_provider_arn"></a> [oidc\_provider\_arn](#output\_oidc\_provider\_arn) | The ARN of the OIDC provider for GitHub Actions |
 | <a name="output_private_route_table_ids"></a> [private\_route\_table\_ids](#output\_private\_route\_table\_ids) | List of IDs of the private route tables |
 | <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | List of IDs of the private subnets |
 | <a name="output_private_subnets"></a> [private\_subnets](#output\_private\_subnets) | Details of private subnets including IDs, CIDR blocks, and availability zones |

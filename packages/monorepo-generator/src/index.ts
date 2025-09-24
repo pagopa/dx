@@ -17,7 +17,11 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
-import { addPagoPaPnpmPlugin, enablePnpm } from "./actions/pnpm.js";
+import {
+  addPagoPaPnpmPlugin,
+  enablePnpm,
+  installRootDependencies,
+} from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -85,6 +89,11 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
     templateFile: path.join(templatesPath, "package.json.hbs"),
     type: "add",
   },
+  {
+    path: "{{repoSrc}}/{{repoName}}/README.md",
+    templateFile: path.join(templatesPath, "README.md.hbs"),
+    type: "add",
+  },
 ];
 
 const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
@@ -110,6 +119,7 @@ const getActions = ({
   ...getTerraformRepositoryFile(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
+  installRootDependencies,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
