@@ -1,0 +1,6 @@
+Test mode enabled.
+--- Executing Plan ---
+normal_value = "Keep Me"
+
+hidden-link = "[REDACTED]"
+hidden-links = "http://non_sensitive_test.link"

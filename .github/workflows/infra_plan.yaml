@@ -193,7 +193,7 @@ jobs:
             echo "${SUMMARY_LINE}" > plan_output.txt
             echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
-            cat filtered_plan.txt > plan_output.txt
+            cat "${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"}" > plan_output.txt
             echo "COMPLETE_PLAN=true" >> $GITHUB_OUTPUT
           fi
         env:

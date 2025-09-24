@@ -3,6 +3,8 @@
 set -e
 set -o pipefail
 
+MODE="normal"
+
 # --- Help Function ---
 usage() {
   echo "Usage: $0 [OPTIONS]"
@@ -15,6 +17,7 @@ usage() {
   echo "  --sensitive-keys      (Var: SENSITIVE_KEYS) A comma-separated list of sensitive keys. (Required)"
   echo "  --no-refresh          (Var: NO_REFRESH) Optional, if set to 'true', adds the -refresh=false -lock=false flags to the plan command."
   echo "  --additional-flags    (Var: ADDITIONAL_FLAGS) Optional flags for the plan command."
+  echo "  --test                Optional flags for testing (only sed commands will be executed)."
   echo "  -h, --help            Show this help message."
   exit 1
 }
@@ -38,6 +41,11 @@ while [[ "$#" -gt 0 ]]; do
       ADDITIONAL_FLAGS="$2"
       shift 2
       ;;
+    --test)
+      echo "Test mode enabled."
+      MODE="test"
+      shift 1
+      ;;
     -h|--help)
       usage
       ;;
@@ -50,7 +58,7 @@ done
 
 # --- Validation of required parameters ---
 if [[ -z "$SENSITIVE_KEYS" || -z "$PLAN_FILE" ]]; then
-  echo "::error::The following parameters are required (via arguments or environment variables): --working-directory, --plan-file, --sensitive-keys"
+  echo "::error::The following parameters are required (via arguments or environment variables): --plan-file, --sensitive-keys"
   usage
 fi
 
@@ -64,7 +72,7 @@ for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
   if [[ -n "$trimmed_key" ]]; then
     # Matches an optional-quoted key followed by : or =, then a quoted value;
     # it captures the left side and replaces the value with "[REDACTED]" (non-greedy match, case-insensitive).
-    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\".*?\"/\\1\"[REDACTED]\"/I")
+    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
   fi
 done
 
@@ -75,7 +83,7 @@ SED_EXPRESSIONS+=(
 
   # Named secret/key assignments: only redact when the left-hand side is a known secret name
   # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
-  -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
+  -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
 )
 
 echo "--- Executing Plan ---"
@@ -87,14 +95,19 @@ if [[ "$NO_REFRESH" == "true" ]]; then
   ADDITIONAL_FLAGS="$ADDITIONAL_FLAGS -refresh=false -lock=false"
 fi
 
-# shellcheck disable=2086
-terraform plan \
-  -no-color \
-  -lock-timeout=120s \
-  $ADDITIONAL_FLAGS \
-  -input=false 2>&1 | \
-  sed -E "${SED_EXPRESSIONS[@]}" | \
-  tee "$PLAN_FILE"
+if [[ "$MODE" == "test" ]]; then
+  sed -E "${SED_EXPRESSIONS[@]}"
+  exit 0
+else
+  # shellcheck disable=2086
+  terraform plan \
+    -no-color \
+    -lock-timeout=120s \
+    $ADDITIONAL_FLAGS \
+    -input=false 2>&1 | \
+    sed -E "${SED_EXPRESSIONS[@]}" | \
+    tee "$PLAN_FILE"
+fi
 
 PLAN_EXIT_CODE=${PIPESTATUS[0]}
 set -e
