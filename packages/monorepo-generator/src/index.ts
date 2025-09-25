@@ -17,6 +17,7 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
+import { getLatestNodeVersion } from "./actions/node.js";
 import {
   addPagoPaPnpmPlugin,
   configureChangesets,
@@ -24,7 +25,6 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
-import { getLatestNodeVersion } from "./actions/node.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
