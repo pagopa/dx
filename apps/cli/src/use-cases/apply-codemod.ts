@@ -1,7 +1,7 @@
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 import { Codemod, CodemodRegistry } from "../domain/codemod.js";
-import { GetInfo } from "../domain/info.js";
+import { GetInfo, InfoResult } from "../domain/info.js";
 
 export type ApplyCodemodById = (id: string) => ResultAsync<void, Error>;
 
@@ -17,7 +17,7 @@ const getCodemodById = (
         : errAsync(new Error(`Codemod with id ${id} not found`)),
     );
 
-const safeGetInfo = (getInfo: GetInfo): ResultAsync<unknown, Error> =>
+const safeGetInfo = (getInfo: GetInfo): ResultAsync<InfoResult, Error> =>
   ResultAsync.fromPromise(
     getInfo(),
     (error) => new Error("Failed to get info", { cause: error }),
