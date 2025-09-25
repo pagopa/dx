@@ -6,6 +6,7 @@ import YAML from "yaml";
 
 import { Codemod } from "../../domain/codemod.js";
 import { getLatestCommitShaOrRef } from "./git.js";
+import { updateJSCodeReview } from "./update-code-review.js";
 import { migrateWorkflow } from "./use-azure-appsvc.js";
 
 async function preparePackageJsonForPnpm(): Promise<string[]> {
@@ -64,17 +65,12 @@ async function updateDXWorkflows(): Promise<void> {
   // Get the latest commit sha from the main branch of the dx repository
   const sha = await getLatestCommitShaOrRef("pagopa", "dx");
   // Update the js_code_review workflow to use the latest commit sha
-  const results = await replaceInFile({
-    allowEmptyPaths: true,
-    files: [".github/workflows/*.yaml"],
-    from: [/pagopa\/dx\/.github\/workflows\/js_code_review.yaml@(\S+)/g],
-    to: [`pagopa/dx/.github/workflows/js_code_review.yaml@${sha}`],
-  });
+  const ignore = await updateJSCodeReview(sha);
   // Update the legacy deployment workflow to release-azure-appsvc-v1.yaml
   await replaceInFile({
     allowEmptyPaths: true,
     files: [".github/workflows/*.yaml"],
-    ignore: results.filter((r) => r.hasChanged).map((r) => r.file),
+    ignore,
     processor: migrateWorkflow(sha),
   });
 }
