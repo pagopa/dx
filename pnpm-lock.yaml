@@ -21,6 +21,9 @@ catalogs:
     eslint:
       specifier: ^9.30.0
       version: 9.32.0
+    execa:
+      specifier: ^9.6.0
+      version: 9.6.0
     neverthrow:
       specifier: ^8.2.0
       version: 8.2.0
@@ -141,7 +144,7 @@ importers:
         specifier: ^3.44.0
         version: 3.44.0
       execa:
-        specifier: ^9.6.0
+        specifier: 'catalog:'
         version: 9.6.0
       glob:
         specifier: ^11.0.3
@@ -426,7 +429,7 @@ importers:
   packages/monorepo-generator:
     dependencies:
       execa:
-        specifier: ^9.6.0
+        specifier: 'catalog:'
         version: 9.6.0
       neverthrow:
         specifier: 'catalog:'

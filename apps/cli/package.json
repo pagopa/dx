@@ -23,7 +23,7 @@
     "@pagopa/monorepo-generator": "workspace:^",
     "commander": "^14.0.0",
     "core-js": "^3.44.0",
-    "execa": "^9.6.0",
+    "execa": "catalog:",
     "glob": "^11.0.3",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.1",
