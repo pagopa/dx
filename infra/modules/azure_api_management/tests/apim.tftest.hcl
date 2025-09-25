@@ -36,7 +36,7 @@ run "apim_is_correct_plan" {
     tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    tier                = "l"
+    use_case            = "cost_optimized"
 
     publisher_email = "example@pagopa.it"
     publisher_name  = "Example Publisher"
@@ -54,13 +54,13 @@ run "apim_is_correct_plan" {
     }
 
     subnet_id                     = run.setup_tests.subnet_id
-    virtual_network_type_internal = true
+    subnet_pep_id                 = run.setup_tests.pep_id
   }
 
   # Checks some assertions
   assert {
-    condition     = azurerm_api_management.this.sku_name == "Premium_2"
-    error_message = "The APIM SKU is incorrect, have to be Premium_2"
+    condition     = azurerm_api_management.this.sku_name == "StandardV2_1"
+    error_message = "The APIM SKU is incorrect, have to be StandardV2_1"
   }
 
   assert {
@@ -69,13 +69,28 @@ run "apim_is_correct_plan" {
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
-    error_message = "The APIM zones are incorrect, they should be ['1', '2']"
+    condition     = azurerm_api_management.this.zones == null
+    error_message = "The APIM zones are incorrect, they should be []"
   }
 
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.apim) == 0
     error_message = "No diagnostic setting should be created when monitoring is disabled"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_ip_address_id == null
+    error_message = "The APIM public IP address is incorrect, it should be null"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_network_access_enabled == false
+    error_message = "The APIM public Network Access should be disabled"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_type == "External"
+    error_message = "The APIM virtual network type is incorrect, it should be External"
   }
 }
 
@@ -95,7 +110,7 @@ run "plan_with_invalid_parameters" {
     tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    tier                = "l"
+    use_case            = "high_load"
 
     publisher_email = "example@pagopa.it"
     publisher_name  = "Example Publisher"
@@ -138,7 +153,7 @@ run "apim_test_zones_public_ip" {
     tags = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    tier                = "xl"
+    use_case            = "high_load"
 
     publisher_email = "example@pagopa.it"
     publisher_name  = "Example Publisher"
@@ -162,17 +177,22 @@ run "apim_test_zones_public_ip" {
 
   # Checks some assertions
   assert {
-    condition     = azurerm_api_management.this.sku_name == "Premium_3"
-    error_message = "The APIM SKU is incorrect, have to be Premium_3"
+    condition     = azurerm_api_management.this.sku_name == "Premium_2"
+    error_message = "The APIM SKU is incorrect, have to be Premium_2"
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.zones) == 3 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2") && contains(azurerm_api_management.this.zones, "3")
-    error_message = "The APIM zones are incorrect, they should be ['1', '2', '3']"
+    condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
+    error_message = "The APIM zones are incorrect, they should be ['1', '2']"
   }
 
   assert {
     condition     = azurerm_api_management.this.public_ip_address_id == run.setup_tests.pip_id
     error_message = "The APIM public IP address is incorrect, it should match the setup public IP"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_type == "Internal"
+    error_message = "The APIM virtual network type is incorrect, it should be Internal"
   }
 }

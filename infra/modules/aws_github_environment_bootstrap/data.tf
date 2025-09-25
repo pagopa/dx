@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "github_assume_role_policy" {
     actions = ["sts:AssumeRoleWithWebIdentity"]
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.this.arn]
+      identifiers = [var.oidc_provider_arn]
     }
 
     condition {

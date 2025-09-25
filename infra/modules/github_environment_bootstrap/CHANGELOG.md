@@ -1,5 +1,17 @@
 # github_environment_bootstrap
 
+## 1.1.2
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
+## 1.1.1
+
+### Patch Changes
+
+- 1b59a77: Move relevant documentation sections between azure-github-environment-bootstrap and github-environment-bootstrap modules documentation
+
 ## 1.1.0
 
 ### Minor Changes

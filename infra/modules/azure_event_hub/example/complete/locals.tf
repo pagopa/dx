@@ -28,10 +28,11 @@ locals {
   }
 
   tags = {
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_event_hub/examples/complete"
-    CostCenter  = "TS700 - ENGINEERING"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    Owner          = "DevEx"
+    ManagementTeam = "Developer Experience"
+    Source         = "https://github.com/pagopa/dx/modules/azure_event_hub/examples/complete"
   }
 }

@@ -7,6 +7,7 @@
       "outputs": ["dist/**", "bin/**"]
     },
     "typecheck": {
+      "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"]
     },
     "lint:check": {
@@ -14,19 +15,13 @@
     },
     "format:check": {},
     "test": {
-      "dependsOn": ["^test"],
-      "inputs": ["src/**/__tests__/**/*.test.ts"],
-      "outputLogs": "errors-only"
-    },
-    "//#test:coverage": {
       "dependsOn": ["^build"],
-      "inputs": [
-        "apps/**/src/**/*.ts",
-        "packages/**/src/**/*.ts",
-        "actions/**/src/**/*.ts"
-      ],
-      "outputs": ["coverage"],
-      "outputLogs": "errors-only"
+      "inputs": ["src/**/*.ts"]
+    },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts"],
+      "outputs": ["coverage"]
     }
   }
 }

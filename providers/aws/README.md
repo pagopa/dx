@@ -56,7 +56,7 @@ provider "dx" {
 
 | Name        |  Type  | Required | Description                          |
 | :---------- | :----: | :------: | :----------------------------------- |
-| prefix      | String |    No    | Two-character project prefix.        |
+| prefix      | String |    No    | Project prefix (2-4 characters).     |
 | environment | String |    No    | Deployment environment (d, u, or p). |
 | region      | String |    No    | AWS region abbreviation.             |
 | domain      | String |    No    | Optional domain for naming.          |
@@ -159,7 +159,7 @@ Generates a resource name based on the standardized prefix and additional parame
 
 | Name            |  Type   | Required | Description                                                   |
 | :-------------- | :-----: | :------: | :------------------------------------------------------------ |
-| prefix          | String  |   Yes    | Prefix that define the repository domain (Max 2 characters).  |
+| prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters). |
 | environment     | String  |   Yes    | Environment where the resources will be deployed (d, u or p). |
 | region          | String  |   Yes    | AWS region where the resources will be deployed.              |
 | domain          | String  |    No    | Optional value that specify the domain.                       |
@@ -218,6 +218,9 @@ The following table lists the resource types and their abbreviations used in the
 | security_group            |      sg      |
 | network_acl               |     nacl     |
 | vpc_endpoint              |     vpce     |
+| customer_gateway          |     cgw      |
+| vpn_connection            |     vpn      |
+| network_interface         |     eni      |
 | elastic_load_balancer     |     elb      |
 | application_load_balancer |     alb      |
 | network_load_balancer     |     nlb      |
@@ -251,6 +254,8 @@ The following table lists the resource types and their abbreviations used in the
 | opensearch_domain         |      os      |
 | resource_group            |      rg      |
 | route53_zone              |   r53-zone   |
+| route53_record            |  r53-record  |
+| route53_resolver_endpoint | r53-res-endp |
 | elasticache_redis         |    redis     |
 | sqs_dead_letter_queue     |   sqs-dlq    |
 | sns_subscription          |   sns-sub    |

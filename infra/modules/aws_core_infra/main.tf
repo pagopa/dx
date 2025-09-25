@@ -68,9 +68,26 @@ module "vpc_endpoints" {
   naming_config = local.naming_config
 
   vpc_id                   = module.networking.vpc_id
+  vpc_cidr                 = var.vpc_cidr
   region                   = var.environment.region
   private_route_table_ids  = module.routing.private_route_table_ids
   isolated_route_table_ids = module.routing.isolated_route_table_ids
 
   tags = local.tags
+}
+
+# SSM parameter for personal access token
+
+resource "aws_ssm_parameter" "personal_access_token" {
+  name        = "/core/github/personal_access_token"
+  description = "Personal access token for GitHub"
+  type        = "SecureString"
+  value       = "Fill in the bot's personal access token here"
+
+  lifecycle {
+    ignore_changes = [
+      insecure_value,
+      value
+    ]
+  }
 }

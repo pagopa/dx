@@ -1,0 +1,138 @@
+# {{ repoName }}
+
+{{ repoDescription }}
+
+## Getting Started
+
+### Using local machine
+
+This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
+
+1. Install and configure the following tools in your machine
+
+- [nodenv](https://github.com/nodenv/nodenv) - Node version manager
+- [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
+- [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
+- [tflint](https://github.com/terraform-linters/tflint) - A Pluggable Terraform Linter
+- [pre-commit](https://pre-commit.com/) - A framework for managing and maintaining multi-language pre-commit hooks
+
+2. Install `node` at the right version used by this project
+
+```bash
+cd {{ repoName }}
+nodenv install
+```
+
+3. Build all the workspaces contained by this repo
+```bash
+pnpm build
+```
+
+## Release management
+
+We use [changesets](https://github.com/changesets/changesets) to automate package versioning and releases.
+
+Each Pull Request that includes changes that require a version bump must include a _changeset file_ that describes the introduced changes.
+
+To create a _changeset file_ run the following command and follow the instructions.
+
+```bash
+pnpm changeset
+```
+
+## Useful commands
+
+This project uses `pnpm` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
+
+### Work with workspaces
+
+```bash
+# build all the workspaces using turbo
+pnpm build
+# or
+pnpm turbo build
+
+# to execute COMMAND on WORKSPACE_NAME
+pnpm --filter WORKSPACE_NAME COMMAND
+# to execute COMMAND on all workspaces
+pnpm -r COMMAND
+
+# run the typecheck script on all workspaces
+pnpm -r typecheck
+```
+
+### Add dependencies
+
+```bash
+# add a dependency to the workspace root
+pnpm -w add turbo
+
+# add vitest as devDependency on citizen-func
+pnpm --filter citizen-func add -D vitest
+
+# add zod as dependency on each workspace
+pnpm -r add zod
+```
+
+## Folder structure
+
+### `/apps`
+
+It contains the applications included in the project.
+Each folder is meant to produce a deployable artifact; how and where to deploy it is demanded to a single application.
+
+Each sub-folder is a workspace.
+
+### `/packages`
+
+Packages are reusable modules that implement a specific logic of the project. They are meant for sharing implementations across other apps and packages of the same projects, as well as being published in public registries.
+
+Packages that are meant for internal code sharing have `private: true` in their `package.json` file; all the others are meant to be published into the public registry.
+
+Each sub-folder is a workspace.
+
+### `/infra`
+
+It contains the _infrastructure-as-code_ project that defines the resources for the project as well as the execution environments. Database schemas and migrations are defined here too, in case they are needed.
+
+### `/docs`
+
+Technical documentation about the project. Topics that may be included are architecture overviews, [ADRs](https://adr.github.io/), coding standards, and anything that can be relevant for a developer approaching the project as a contributor or as an auditor.
+
+User documentation doesn't usually go in here. For public packages, it must go in the package's `README` file so that it will also be uploaded to the registry; user-faced documentation websites, when needed by the project, go under the `/apps` folder as they are treated as end-user applications.
+
+## Releases
+
+Releases are handled using [Changeset](https://github.com/changesets/changesets).
+Changeset takes care of bumping packages, updating the changelog, and tagging the repository accordingly.
+
+#### How it works
+
+- When opening a Pull Request with a change intended to be published, [add a changeset file](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md) to the proposed changes.
+- Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly (see https://github.com/changesets/changesets/blob/main/docs/decisions.md#how-changesets-are-combined).
+Only apps and packages mentioned in the changeset files will be bumped.
+- Review the `Version Packages` PR and merge it when ready. Changeset files will be deleted.
+- A Release entry is created for each app or package whose version has been bumped.
+
+### Folder structure
+
+The IaC template contains the following projects:
+
+#### repository
+
+Set up the current repository settings.
+It's intended to be executed once on a local machine at project initialization.
+
+```sh
+cd infra/repository
+
+# Substitute subscription_name with the actual subscription name if you selected Azure as CSP
+az account set --name <subscription_name>
+
+terraform init
+terraform plan
+terraform apply
+```
+### Workflow automation
+
+The workflow `infra_plan.yaml` is executed on every PR that edits the `infra/resources` folder or the workflow definition itself. It executes a `terraform plan` and comments the PR with the result. If the plan fails, the workflow fails.

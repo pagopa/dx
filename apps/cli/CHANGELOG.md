@@ -1,5 +1,19 @@
 # @pagopa/dx-cli
 
+## 0.5.0
+
+### Minor Changes
+
+- 8abeb56: Experimental: Add `codemod` command behind `ENABLE_CODEMODS` feature flag
+
+## 0.4.4
+
+### Patch Changes
+
+- 2dbc275: Remove `DependencyName` type.
+
+  At the moment we do not need to have a strong type to handle the name of a dependency; a simple string it is enough.
+
 ## 0.4.3
 
 ### Patch Changes

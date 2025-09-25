@@ -103,3 +103,13 @@ output "project" {
   description = "Project naming convention"
   value       = local.project
 }
+
+output "github_personal_access_token_ssm_parameter_name" {
+  description = "SSM parameter name for the GitHub personal access token"
+  value       = aws_ssm_parameter.personal_access_token.name
+}
+
+output "oidc_provider_arn" {
+  description = "The ARN of the OIDC provider for GitHub Actions"
+  value       = aws_iam_openid_connect_provider.this.arn
+}

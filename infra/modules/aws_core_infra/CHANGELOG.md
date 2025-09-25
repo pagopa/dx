@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.0.4
+
+### Patch Changes
+
+- f87fa4b: Moved OIDC provider from bootstrapper to core module
+
+## 0.0.3
+
+### Patch Changes
+
+- f34d0b9: Removed unnecessary data source from the VPC endpoints submodule
+
+## 0.0.2
+
+### Patch Changes
+
+- b8c93fd: Add debugging tags for DX
+- b8c93fd: Add SSM parameter containing the bot's PAT
+
 ## 0.0.1
 
 ### Patch Changes

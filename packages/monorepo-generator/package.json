@@ -1,0 +1,49 @@
+{
+  "name": "@pagopa/monorepo-generator",
+  "version": "0.5.0",
+  "type": "module",
+  "description": "A package that will generate a monorepo, following DX conventions, from a template",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/monorepo-generator"
+  },
+  "keywords": [
+    "monorepo",
+    "generator",
+    "dx",
+    "pagopa"
+  ],
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "main": "dist/index.js",
+  "dependencies": {
+    "execa": "^9.6.0",
+    "neverthrow": "catalog:",
+    "octokit": "^5.0.3",
+    "semver": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "catalog:",
+    "plop": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "^3.2.4",
+    "vitest-mock-extended": "^3.1.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  }
+}
