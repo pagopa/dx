@@ -1,5 +1,11 @@
 # docs
 
+## 0.8.2
+
+### Patch Changes
+
+- 707b5cf: Document AWS to Azure VPN module
+
 ## 0.8.1
 
 ### Patch Changes
