@@ -204,7 +204,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download generated diagrams
-        uses: pagopa/dx/.github/actions/download-artifact@feat-add-graph-generation # main
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           file_path: downloaded-artifacts
 
