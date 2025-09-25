@@ -86,24 +86,6 @@ output "azure_local_network_gateways" {
   }
 }
 
-# output "azure_vpn_connections" {
-#   description = "Azure VPN Connection details"
-#   value = {
-#     tunnel1 = length(azurerm_virtual_network_gateway_connection.tunnel1) > 0 ? {
-#       for idx, conn in azurerm_virtual_network_gateway_connection.tunnel1 : idx => {
-#         id                = conn.id
-#         connection_status = conn.connection_status
-#       }
-#     } : {}
-#     tunnel2 = length(azurerm_virtual_network_gateway_connection.tunnel2) > 0 ? {
-#       for idx, conn in azurerm_virtual_network_gateway_connection.tunnel2 : idx => {
-#         id                = conn.id
-#         connection_status = conn.connection_status
-#       }
-#     } : {}
-#   }
-# }
-
 #---------#
 # General #
 #---------#
