@@ -2,7 +2,7 @@
 set -e
 
 if [[ "$GITHUB_ACTIONS" == "true" ]]; then
-    echo "Skipping SBOM generation in GitHub Actions environment."
+    echo "Skipping .dot generation in GitHub Actions environment."
     exit 0
 fi
 
@@ -31,9 +31,9 @@ echo "---"
 
 for DIR in $DIRECTORIES; do
     echo "🔄 Graph generation in: $DIR"
-    
+
     (cd "$DIR" && terraform init && terraform graph > graph.dot)
-    
+
     echo "✅ File graph.dot generated"
     echo "---"
 done
