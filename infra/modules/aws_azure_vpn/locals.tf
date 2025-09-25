@@ -17,14 +17,8 @@ locals {
   #  AWS  #
   #########
 
-  aws_region_short = {
-    "eu-west-1"  = "eu"
-    "eu-south-1" = "eus1"
-  }
-
   aws = {
     bgp_asn = 65000
-    name    = "${var.environment.prefix}-${var.environment.env_short}-${local.aws_region_short[var.aws.region]}-awsvpn-${var.environment.instance_number}"
     # First level key is the VPN connection index, second level key is the tunnel index
     inside_cidrs = {
       0 = {
@@ -63,7 +57,6 @@ locals {
   #########
   azure = {
     bgp_asn = 64512
-    name    = "${var.environment.prefix}-${var.environment.env_short}-${local.azure_location_short[var.azure.location]}-awsvpn-${var.environment.instance_number}"
   }
 
   azure_naming_config = {
@@ -75,9 +68,4 @@ locals {
   }
 
   azure_inbound_ip_addresses = var.use_case == "high_availability" ? [for obj in azurerm_private_dns_resolver_inbound_endpoint.main[0].ip_configurations : obj.private_ip_address] : [var.azure.dns_forwarder_ip]
-
-  azure_location_short = {
-    "westeurope" = "weu"
-    "italynorth" = "itn"
-  }
 }
