@@ -136,15 +136,15 @@ output "application_insights" {
 
 output "dns_forwarder" {
   value = {
-    endpoint            = local.core_outputs.values.dns_forwarder.endpoint
-    subnet_id           = local.core_outputs.values.dns_forwarder.subnet_id
-    private_ip          = local.core_outputs.values.dns_forwarder.private_ip
-    resource_group      = local.core_outputs.values.dns_forwarder.resource_group
-    cross_cloud_enabled = local.core_outputs.values.dns_forwarder.cross_cloud_enabled
+    endpoint            = try(local.core_outputs.values.dns_forwarder.endpoint, null)
+    subnet_id           = try(local.core_outputs.values.dns_forwarder.subnet_id, null)
+    private_ip          = try(local.core_outputs.values.dns_forwarder.private_ip, null)
+    resource_group      = try(local.core_outputs.values.dns_forwarder.resource_group, null)
+    cross_cloud_enabled = try(local.core_outputs.values.dns_forwarder.cross_cloud_enabled, false)
   }
 }
 
 output "private_dns_zones" {
   description = "List of private DNS zones linked to the virtual network."
-  value       = local.core_outputs.values.private_dns_zones
+  value       = try(local.core_outputs.values.private_dns_zones, [])
 }
