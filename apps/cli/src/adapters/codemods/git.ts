@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { getLogger } from "@logtape/logtape";
+=======
+import { Logger } from "@logtape/logtape";
+>>>>>>> ce82cdac (Add use-azure-appsvc codemod)
 import { Octokit } from "octokit";
 
 export const getLatestCommitSha = async (
