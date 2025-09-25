@@ -1,4 +1,4 @@
-# complete
+# high_availability
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
