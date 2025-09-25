@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.7.0
+
+### Minor Changes
+
+- eefc4d3: Add `use-pnpm` codemod to migrate a project from yarn to pnpm
+- eefc4d3: Add `update-code-review` codemod to update the `js_code_review` workflow to the latest version
+- eefc4d3: Add `use-azure-appsvc` codemod to migrate legacy deployment workflows
+
 ## 0.6.0
 
 ### Minor Changes
