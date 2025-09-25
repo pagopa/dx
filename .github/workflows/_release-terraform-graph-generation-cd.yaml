@@ -17,6 +17,10 @@ on:
         default: ""
         required: false
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-cd
+  cancel-in-progress: true
+
 env:
   PR_NUMBER: ${{ (github.event_name == 'workflow_dispatch' && inputs.from_pr == '') && github.sha || (inputs.from_pr != '') && inputs.from_pr || github.event.pull_request.number }}
 

@@ -18,6 +18,10 @@ on:
         default: ""
         required: false
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-ci
+  cancel-in-progress: true
+
 jobs:
   find-changed-dots:
     name: Find Changed .dot Files
