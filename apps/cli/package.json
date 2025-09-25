@@ -27,8 +27,9 @@
     "glob": "^11.0.3",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.1",
-    "semver": "catalog:",
+    "octokit": "^5.0.3",
     "replace-in-file": "^8.3.0",
+    "semver": "catalog:",
     "yaml": "^2.8.0",
     "zod": "^3.25.28"
   },
