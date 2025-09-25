@@ -39,6 +39,7 @@ variable "aws" {
     route_table_ids      = list(string)
     private_subnet_ids   = list(string)
     private_subnet_cidrs = list(string)
+    asn                  = optional(number, 65000)
     private_dns_zones    = optional(list(string), [])
   })
   description = <<-EOT
@@ -59,6 +60,7 @@ variable "azure" {
     vnet_name           = string
     vnet_cidr           = string
     dns_forwarder_ip    = string
+    asn                 = optional(number, 64512)
     vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created
       virtual_network_gateway_id = string
       public_ips                 = list(string)

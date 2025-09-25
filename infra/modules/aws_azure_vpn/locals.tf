@@ -18,7 +18,7 @@ locals {
   #########
 
   aws = {
-    bgp_asn = 65000
+    bgp_asn = var.aws.asn
     # First level key is the VPN connection index, second level key is the tunnel index
     inside_cidrs = {
       0 = {
@@ -56,7 +56,7 @@ locals {
   # Azure #
   #########
   azure = {
-    bgp_asn = 64512
+    bgp_asn = var.azure.asn
   }
 
   azure_naming_config = {
