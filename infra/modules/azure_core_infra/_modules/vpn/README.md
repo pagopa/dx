@@ -23,7 +23,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_vpn_enabled"></a> [aws\_vpn\_enabled](#input\_aws\_vpn\_enabled) | A boolean flag to enable or disable the creation of the required resources to support a site-to-site VPN connection towards AWS. | `bool` | `false` | no |
+| <a name="input_cross_cloud_dns_enabled"></a> [cross\_cloud\_dns\_enabled](#input\_cross\_cloud\_dns\_enabled) | Enable cross-cloud DNS resolution with AWS. | `bool` | `false` | no |
 | <a name="input_dnsforwarder_subnet_id"></a> [dnsforwarder\_subnet\_id](#input\_dnsforwarder\_subnet\_id) | DNS forwarder subnet ID. | `string` | n/a | yes |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment in short form where resources are located | `string` | n/a | yes |
 | <a name="input_instance_number"></a> [instance\_number](#input\_instance\_number) | The instance number of the resource, used to differentiate multiple instances of the same resource type within the same project and environment. | `string` | n/a | yes |
@@ -42,6 +42,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_dns_forwarder_endpoint"></a> [dns\_forwarder\_endpoint](#output\_dns\_forwarder\_endpoint) | DNS forwarder endpoint |
+| <a name="output_dns_forwarder_private_ip"></a> [dns\_forwarder\_private\_ip](#output\_dns\_forwarder\_private\_ip) | DNS forwarder private IP address |
 | <a name="output_fqdns"></a> [fqdns](#output\_fqdns) | The FQDNs for the gateway. |
 | <a name="output_gateway_id"></a> [gateway\_id](#output\_gateway\_id) | The ID of the virtual network gateway. |
 | <a name="output_public_ips"></a> [public\_ips](#output\_public\_ips) | The public IP addresses associated with the gateway. |

@@ -1,4 +1,4 @@
-# dev
+# high_availability
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -10,16 +10,13 @@
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
-## Providers
-
-No providers.
-
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_aws"></a> [aws](#module\_aws) | pagopa-dx/aws-core-infra/aws | ~> 0.0 |
 | <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 2.0 |
+| <a name="module_vpn"></a> [vpn](#module\_vpn) | pagopa-dx/aws-azure-vpn/aws | ~> 0.0 |
 
 ## Resources
 
@@ -31,7 +28,5 @@ No inputs.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_values"></a> [values](#output\_values) | n/a |
+No outputs.
 <!-- END_TF_DOCS -->
