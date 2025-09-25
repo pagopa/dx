@@ -7,12 +7,13 @@ resource "azurerm_storage_account" "this" {
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = local.tier_features.replication_type
   access_tier                     = var.access_tier
-  public_network_access_enabled   = var.force_public_network_access_enabled
-  allow_nested_items_to_be_public = var.force_public_network_access_enabled
+  public_network_access_enabled   = local.force_public_network_access_enabled
+  allow_nested_items_to_be_public = local.force_public_network_access_enabled
+  shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   blob_properties {
-    versioning_enabled            = var.blob_features.versioning
-    change_feed_enabled           = var.blob_features.change_feed.enabled
+    versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
+    change_feed_enabled           = local.immutability_policy_enabled ? true : var.blob_features.change_feed.enabled
     change_feed_retention_in_days = var.blob_features.change_feed.enabled && var.blob_features.change_feed.retention_in_days > 0 ? var.blob_features.change_feed.retention_in_days : null
     last_access_time_enabled      = var.blob_features.last_access_time
 
@@ -24,7 +25,7 @@ resource "azurerm_storage_account" "this" {
     }
 
     dynamic "restore_policy" {
-      for_each = (var.blob_features.restore_policy_days > 0 ? [1] : [])
+      for_each = (var.blob_features.restore_policy_days > 0 && !local.immutability_policy_enabled) ? [1] : []
       content {
         days = var.blob_features.restore_policy_days
       }
@@ -55,7 +56,7 @@ resource "azurerm_storage_account" "this" {
   }
 
   dynamic "immutability_policy" {
-    for_each = var.blob_features.immutability_policy.enabled ? [1] : []
+    for_each = local.immutability_policy_enabled ? [1] : []
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
@@ -74,6 +75,100 @@ resource "azurerm_storage_account" "this" {
 }
 
 resource "azurerm_security_center_storage_defender" "this" {
-  count              = local.tier_features.advanced_threat_protection ? 1 : 0
+  count              = local.force_public_network_access_enabled || local.tier_features.advanced_threat_protection ? 1 : 0
   storage_account_id = azurerm_storage_account.this.id
+}
+
+# Blob lifecycle management policy for Audit (Hot -> Cool -> Cold -> Delete)
+resource "azurerm_storage_management_policy" "lifecycle_audit" {
+  count = var.use_case == "audit" ? 1 : 0
+
+  storage_account_id = azurerm_storage_account.this.id
+  rule {
+    name    = "audit-log-lifecycle-policy"
+    enabled = true
+
+    filters {
+      prefix_match = [""] # Apply to all blobs
+      blob_types   = ["blockBlob"]
+    }
+
+    actions {
+      base_blob {
+        # Tier to Cool after 30 days of inactivity (no modification)
+        tier_to_cool_after_days_since_modification_greater_than = 30
+        # Tier to Cold after 90 days of inactivity (no modification)
+        tier_to_cold_after_days_since_modification_greater_than = 90
+        # Delete after 1095 days (3 years) of inactivity (no modification)
+        delete_after_days_since_modification_greater_than = 1095
+      }
+
+      snapshot {
+        delete_after_days_since_creation_greater_than = 30
+      }
+
+      version {
+        delete_after_days_since_creation = 30
+      }
+    }
+  }
+}
+
+# Containers
+resource "azurerm_storage_container" "this" {
+  for_each = { for c in var.containers : c.name => c }
+
+  name                  = each.value.name
+  storage_account_id    = azurerm_storage_account.this.id
+  container_access_type = each.value.access_type
+
+  metadata = { for k, v in local.tags : lower(k) => lower(v) }
+}
+
+# Tables
+resource "azurerm_storage_table" "this" {
+  for_each             = var.subservices_enabled.table ? toset(var.tables) : []
+  name                 = each.value
+  storage_account_name = azurerm_storage_account.this.name
+}
+
+# Queues
+resource "azurerm_storage_queue" "this" {
+  for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
+  name                 = each.value
+  storage_account_name = azurerm_storage_account.this.name
+
+  metadata = { for k, v in local.tags : lower(k) => lower(v) }
+}
+
+# Blob lifecycle management policy for Archive (Any -> Archive)
+## Note: The archive access tier can only be set if storage account kind is BlobStorage and replication is LRS.
+resource "azurerm_storage_management_policy" "lifecycle_archive" {
+  count = var.use_case == "archive" ? 1 : 0
+
+  storage_account_id = azurerm_storage_account.this.id
+  rule {
+    name    = "archive-storage-lifecycle-policy"
+    enabled = true
+
+    filters {
+      prefix_match = [""] # Apply to all blobs
+      blob_types   = ["blockBlob"]
+    }
+
+    actions {
+      base_blob {
+        # Tier to Archive after 1 day
+        tier_to_archive_after_days_since_creation_greater_than = 1
+      }
+
+      snapshot {
+        delete_after_days_since_creation_greater_than = 180
+      }
+
+      version {
+        delete_after_days_since_creation = 180
+      }
+    }
+  }
 }

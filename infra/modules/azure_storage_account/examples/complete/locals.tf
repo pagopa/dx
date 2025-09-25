@@ -31,10 +31,11 @@ locals {
   }
 
   tags = {
-    CreatedBy   = "Terraform"
-    Environment = "Dev"
-    Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
-    CostCenter  = "TS700 - ENGINEERING"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/modules/azure_storage_account/examples/complete"
+    ManagementTeam = "Developer Experience"
   }
 }
