@@ -1,0 +1,143 @@
+name: Add generated Mermaid Diagrams on Terraform modules - CD
+
+# Trigger the workflow when PR will be closed
+# The workflow will create or update corresponding Mermaid diagrams in README.md files within the same directories
+# A new PR with generated diagrams will be created
+
+on:
+  pull_request:
+    types:
+      - closed
+    paths:
+      - "**/graph.dot"
+  workflow_dispatch:
+    inputs:
+      from_pr:
+        description: "Search artifacts from PR number, if not specified will be used latest sha"
+        default: ""
+        required: false
+
+env:
+  PR_NUMBER: ${{ (github.event_name == 'workflow_dispatch' && inputs.from_pr == '') && github.sha || (inputs.from_pr != '') && inputs.from_pr || github.event.pull_request.number }}
+
+jobs:
+  commit-changes:
+    runs-on: ubuntu-latest
+    name: Commit Mermaid Diagrams
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Download generated diagrams
+        uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
+        with:
+          workflow: _release-terraform-graph-generation-ci.yaml
+          name: mermaid-diagrams-${{ env.PR_NUMBER }}
+          path: downloaded-artifacts
+          check_artifacts: true
+          workflow_conclusion: success
+
+      - name: Node Setup
+        id: node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install mermaid-cli
+        run: npm install -g @mermaid-js/mermaid-cli
+
+      - name: Organize downloaded files
+        id: organize_files
+        run: |
+          if [ -z "$(ls -A ./downloaded-artifacts)" ]; then
+            echo "No artifacts found or directory is empty. Nothing to commit."
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Organizing downloaded files..."
+          for filepath in downloaded-artifacts/*.md; do
+            if [ -f "$filepath" ]; then
+              filename=$(basename "$filepath")
+              dir_encoded_name="${filename%.md}"
+              dest_dir=$(echo "$dir_encoded_name" | base64 -d)
+              readme_file="$dest_dir/README.md"
+              graph_file="$dest_dir/graph.md"
+
+              # Move the .md file to the correct directory
+              mv "$filepath" "$graph_file"
+              echo "Moved $filename to $graph_file"
+
+              # Check if README.md exists in the destination directory
+              echo "Processing $filename for $readme_file"
+              if [ ! -f "$readme_file" ]; then
+                echo "Skipping: README.md not found at $readme_file"
+                continue
+              fi
+              if ! grep -q "<!-- BEGIN_TF_GRAPH -->" "$readme_file"; then
+                echo "Skipping: Start tag not found in $readme_file"
+                continue
+              fi
+              if ! grep -q "<!-- END_TF_GRAPH -->" "$readme_file"; then
+                echo "Skipping: End tag not found in $readme_file"
+                continue
+              fi
+
+              # Inject Mermaid in README.md (replace existing block)
+              awk -v f="$graph_file" '
+                BEGIN {
+                  while ((getline line < f) > 0) graph = graph line "\n"
+                }
+                /<!-- BEGIN_TF_GRAPH -->/ { print; print graph; skip=1; next }
+                /<!-- END_TF_GRAPH -->/ { skip=0 }
+                !skip
+              ' "$readme_file" > "$readme_file.tmp" && mv "$readme_file.tmp" "$readme_file"
+
+              echo "✅ Successfully updated $readme_file"
+              changes_made=true
+            fi
+          done
+          echo "Files organized."
+          echo "changes_made=$changes_made" >> $GITHUB_OUTPUT
+
+      - name: Collect changed files
+        id: collect_changed
+        if: steps.organize_files.outputs.changes_made == 'true'
+        run: |
+          # Find changed/added files
+          files=$(git status --porcelain | awk '/^ M|^A / {print $2}' | grep -E '(README\.md|graph\.md)$' || true)
+
+          if [ -z "$files" ]; then
+            echo "No README.md or graph.md changes found."
+            echo "paths=" >> $GITHUB_OUTPUT
+          else
+            echo "Found changed files:"
+            echo "$files"
+            # Convert in list with newlines separator
+            echo "paths<<EOF" >> $GITHUB_OUTPUT
+            echo "$files" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request for updated diagrams
+        if: steps.organize_files.outputs.changes_made == 'true' && steps.collect_changed.outputs.paths != ''
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs(autodocs): ✨ Update Mermaid diagrams from PR #${{ env.PR_NUMBER }}"
+          branch: "docs/update-diagrams-pr-${{ env.PR_NUMBER }}"
+          delete-branch: true
+          title: "Docs: ✨ Update Mermaid diagrams from PR #${{ env.PR_NUMBER }}"
+          body: |
+            This is an auto-generated PR to update the Mermaid diagrams in the README files.
+
+            This was triggered by the merge of PR #${{ env.PR_NUMBER }}.
+          labels: "documentation, automated"
+          committer: "dx-pagopa-bot <dx-pagopa-github-bot@pagopa.it>"
+          author: "dx-pagopa-bot <dx-pagopa-github-bot@pagopa.it>"
+          add-paths: ${{ steps.collect_changed.outputs.paths }}
