@@ -41,7 +41,11 @@ variable "aws" {
     private_subnet_cidrs = list(string)
     private_dns_zones    = optional(list(string), [])
   })
-  description = "AWS configuration object containing all required AWS-side settings. Includes the target VPC details, networking configuration, and DNS zones for cross-cloud resolution. The region must be supported (eu-west-1, eu-south-1). Route table IDs will be updated with VPN routes. Private subnets are used for DNS resolver endpoints. DNS zones listed here will be forwarded to Azure for resolution."
+  description = <<-EOT
+AWS configuration object containing all required AWS-side settings. Includes the target VPC details, networking configuration, and DNS zones for cross-cloud resolution. 
+The region must be supported (eu-west-1, eu-south-1). Route table IDs will be updated with VPN routes. Private subnets are used for DNS resolver endpoints. 
+DNS zones listed here will be forwarded to Azure for resolution.
+EOT
 }
 
 #-------#
@@ -62,5 +66,9 @@ variable "azure" {
     }), { virtual_network_gateway_id = null, public_ips = [] })
     private_dns_zones = list(string)
   })
-  description = "Azure configuration object containing all required Azure-side settings. Includes the target Virtual Network details, resource group, and VPN gateway configuration. The vpn_snet_id must point to a GatewaySubnet (minimum /27). If vpn.virtual_network_gateway_id is null, a new VPN gateway will be created. The dns_forwarder_ip should point to your Azure DNS forwarder for cross-cloud DNS resolution. Private DNS zones listed here will be forwarded to AWS for resolution."
+  description = <<-EOT
+Azure configuration object containing all required Azure-side settings. Includes the target Virtual Network details, resource group, and VPN gateway configuration. 
+The vpn_snet_id must point to a GatewaySubnet (minimum /27). If vpn.virtual_network_gateway_id is null, a new VPN gateway will be created. 
+The dns_forwarder_ip should point to your Azure DNS forwarder for cross-cloud DNS resolution. Private DNS zones listed here will be forwarded to AWS for resolution.
+EOT
 }
