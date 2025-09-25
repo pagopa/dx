@@ -5,13 +5,18 @@ import { Codemod } from "../../domain/codemod.js";
 import { getLatestCommitSha } from "./git.js";
 
 export const updateJSCodeReview = async (sha: string): Promise<string[]> => {
+  const logger = getLogger(["dx-cli", "codemod"]);
   const results = await replaceInFile({
     allowEmptyPaths: true,
     files: [".github/workflows/*.yaml"],
     from: [/pagopa\/dx\/.github\/workflows\/js_code_review.yaml@(\S+)/g],
     to: [`pagopa/dx/.github/workflows/js_code_review.yaml@${sha}`],
   });
-  return results.filter((r) => r.hasChanged).map((r) => r.file);
+  const updated = results.filter((r) => r.hasChanged).map((r) => r.file);
+  updated.forEach((filename) => {
+    logger.info("Workflow {filename} updated", { filename });
+  });
+  return updated;
 };
 
 export const updateCodeReview: Codemod = {
@@ -21,10 +26,7 @@ export const updateCodeReview: Codemod = {
     const repo = "dx";
     return getLatestCommitSha(owner, repo)
       .then(async (sha) => {
-        const updatedFiles = await updateJSCodeReview(sha);
-        updatedFiles.forEach((file) => {
-          logger.info("Updated js_code_review workflow in {file}", { file });
-        });
+        await updateJSCodeReview(sha);
       })
       .catch(() => {
         logger.error(

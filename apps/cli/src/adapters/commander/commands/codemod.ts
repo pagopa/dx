@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { Command } from "commander";
 
 import { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
@@ -20,7 +21,6 @@ export const makeCodemodCommand = ({
         .action(async function () {
           await listCodemods()
             .andTee((codemods) =>
-              // eslint-disable-next-line no-console
               console.table(codemods, ["id", "description"]),
             )
             .orTee((error) => this.error(error.message));
@@ -31,10 +31,10 @@ export const makeCodemodCommand = ({
         .argument("<id>", "The id of the codemod to apply")
         .description("Apply migration scripts to the repository")
         .action(async function (id) {
+          const logger = getLogger(["dx-cli", "codemod"]);
           await applyCodemodById(id)
             .andTee(() => {
-              // eslint-disable-next-line no-console
-              console.log("Codemod applied successfully ✅");
+              logger.info("Codemod applied ✅");
             })
             .orTee((error) => this.error(error.message));
         }),

@@ -36,7 +36,9 @@ async function removeFiles(...files: string[]): Promise<void> {
 }
 
 async function replaceYarnOccurrences(): Promise<void> {
-  await replaceInFile({
+  const logger = getLogger(["dx-cli", "codemod"]);
+  logger.info("Replacing yarn occurrences in files...");
+  const results = await replaceInFile({
     allowEmptyPaths: true,
     files: ["**/*.json", "**/*.md", "**/Dockerfile", "**/docker-compose.yml"],
     from: [
@@ -59,9 +61,16 @@ async function replaceYarnOccurrences(): Promise<void> {
       "pnpm",
     ],
   });
+  const count = results.reduce(
+    (acc, file) => (file.hasChanged ? acc + 1 : acc),
+    0,
+  );
+  logger.info("Replaced yarn occurrences in {count} files", { count });
 }
 
 async function updateDXWorkflows(): Promise<void> {
+  const logger = getLogger(["dx-cli", "codemod"]);
+  logger.info("Updating Github Workflows workflows...");
   // Get the latest commit sha from the main branch of the dx repository
   const sha = await getLatestCommitShaOrRef("pagopa", "dx");
   // Update the js_code_review workflow to use the latest commit sha
@@ -91,15 +100,19 @@ const apply: Codemod["apply"] = async (info) => {
   const logger = getLogger(["dx-cli", "codemod"]);
 
   // Remove unused field from package.json
-  logger.info("Preparing package.json for pnpm...");
+  logger.info("Remove unused fields from {file}", {
+    file: "package.json",
+  });
   const workspaces = await preparePackageJsonForPnpm();
 
   // Create pnpm-workspace.yaml
-  logger.info("Creating pnpm-workspace.yaml...");
+  logger.info("Create {file}", {
+    file: "pnpm-workspace.yaml",
+  });
   await writePnpmWorkspaceFile(workspaces);
 
   // Remove yarn and node_modules files and folders
-  logger.info("Removing yarn and node_modules files...");
+  logger.info("Remove node_modules and yarn files");
   await removeFiles(
     ".yarnrc",
     ".yarnrc.yml",
@@ -111,7 +124,10 @@ const apply: Codemod["apply"] = async (info) => {
   );
 
   // Import lockfile
-  logger.info("Importing yarn.lock to pnpm-lock.yaml...");
+  logger.info("Importing {source} to {target}", {
+    source: "yarn.lock",
+    target: "pnpm-lock.yaml",
+  });
   try {
     await fs.access("yarn.lock");
     await $`corepack pnpm@latest import yarn.lock`;
@@ -123,7 +139,6 @@ const apply: Codemod["apply"] = async (info) => {
   await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
 
   // Replace yarn occurrences in files and update workflows
-  logger.info("Replacing yarn occurrences in files...");
   await replaceYarnOccurrences();
   await updateDXWorkflows();
 
