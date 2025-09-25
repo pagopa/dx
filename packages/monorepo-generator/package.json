@@ -20,7 +20,7 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "execa": "^9.6.0",
+    "execa": "catalog:",
     "neverthrow": "catalog:",
     "octokit": "^5.0.3",
     "semver": "catalog:"
