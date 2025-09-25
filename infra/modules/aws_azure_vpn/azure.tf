@@ -37,7 +37,7 @@ resource "azurerm_virtual_network_gateway" "this" {
       name                          = "vpnConfig${ip_configuration.key + 1}"
       public_ip_address_id          = azurerm_public_ip.this[ip_configuration.key].id
       private_ip_address_allocation = "Dynamic"
-      subnet_id                     = var.azure.vpn_snet_id
+      subnet_id                     = "${var.azure.vnet_id}/subnets/GatewaySubnet"
     }
   }
 

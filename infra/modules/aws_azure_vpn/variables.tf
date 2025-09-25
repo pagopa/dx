@@ -58,7 +58,6 @@ variable "azure" {
     vnet_id             = string
     vnet_name           = string
     vnet_cidr           = string
-    vpn_snet_id         = string
     dns_forwarder_ip    = string
     vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created
       virtual_network_gateway_id = string

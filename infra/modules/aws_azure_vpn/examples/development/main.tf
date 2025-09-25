@@ -53,7 +53,6 @@ module "vpn" {
     vnet_id             = module.azure.common_vnet.id
     vnet_name           = module.azure.common_vnet.name
     vnet_cidr           = local.azure.vnet_cidr
-    vpn_snet_id         = module.azure.common_vpn_snet.id
     dns_forwarder_ip    = module.azure.dns_forwarder.private_ip
     vpn = {
       virtual_network_gateway_id = module.azure.vpn_gateway_id
