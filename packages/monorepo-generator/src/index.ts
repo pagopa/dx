@@ -24,6 +24,7 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
+import { getLatestNodeVersion } from "./actions/node.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -179,6 +180,7 @@ const getActions = ({
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
   getPreCommitTerraformLatestRelease({ octokitClient }),
+  getLatestNodeVersion({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
