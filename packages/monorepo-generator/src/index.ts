@@ -20,6 +20,7 @@ interface ActionsDependencies {
 import {
   addPagoPaPnpmPlugin,
   configureChangesets,
+  configureDevContainer,
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
@@ -115,14 +116,6 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getDevcontainerConfig = (templatesPath: string): ActionType[] => [
-  {
-    path: "{{repoSrc}}/{{repoName}}/.devcontainer/devcontainer.json",
-    templateFile: path.join(templatesPath, "devcontainer.json.hbs"),
-    type: "add",
-  },
-];
-
 const getActions = ({
   octokitClient,
   templatesPath,
@@ -134,11 +127,11 @@ const getActions = ({
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
-  ...getDevcontainerConfig(templatesPath),
   enablePnpm,
   addPagoPaPnpmPlugin,
   installRootDependencies,
   configureChangesets,
+  configureDevContainer,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
