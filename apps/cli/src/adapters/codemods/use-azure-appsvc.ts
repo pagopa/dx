@@ -19,12 +19,8 @@ const isChildOf = (
 };
 
 export const migrateWorkflow =
-<<<<<<< HEAD
   (sha: string) => (workflow: string, filename: string) => {
     const logger: Logger = getLogger(["dx-cli", "codemod"]);
-=======
-  (logger: Logger, sha: string) => (workflow: string, filename: string) => {
->>>>>>> ce82cdac (Add use-azure-appsvc codemod)
     logger.debug("Processing {filename} file", { filename });
     const document = YAML.parseDocument(workflow);
     let updated = false;
@@ -95,20 +91,11 @@ export const migrateWorkflow =
 
 export const useAzureAppsvc: Codemod = {
   apply: async () => {
-<<<<<<< HEAD
     const sha = await getLatestCommitShaOrRef("pagopa", "dx");
     await replaceInFile({
       allowEmptyPaths: true,
       files: [".github/workflows/*.yaml"],
       processor: migrateWorkflow(sha),
-=======
-    const logger = getLogger(["dx-cli", "codemod", "use-azure-appsvc"]);
-    const sha = await getLatestCommitShaOrRef(logger)("pagopa", "dx");
-    await replaceInFile({
-      allowEmptyPaths: true,
-      files: [".github/workflows/*.yaml"],
-      processor: migrateWorkflow(logger, sha),
->>>>>>> ce82cdac (Add use-azure-appsvc codemod)
     });
   },
   description: "Refactor legacy deploy workflows to use release-azure-appsvc",

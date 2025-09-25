@@ -88,7 +88,7 @@ const apply: Codemod["apply"] = async (info) => {
     throw new Error("Project is already using pnpm");
   }
 
-  const logger = getLogger(["dx-cli", "codemod", "use-pnpm"]);
+  const logger = getLogger(["dx-cli", "codemod"]);
 
   // Remove unused field from package.json
   logger.info("Preparing package.json for pnpm...");
