@@ -38,3 +38,25 @@ runs:
           echo "package-manager=npm" >> $GITHUB_OUTPUT
           echo "No package manager detected, defaulting to npm"
         fi
+
+    - name: Deprecation warning for yarn/npm
+      shell: bash
+      env:
+        DETECTED_PM: ${{ steps.detect-pm.outputs.package-manager }}
+      run: |
+        # Only show deprecation notice after Oct 3, 2025 at 10:00
+        NOW_TS=$(date -u +%s)
+        DEPRECATION_TS=$(date -u -d "2025-10-03T10:00:00Z" +%s)
+        if [ "$NOW_TS" -lt "$DEPRECATION_TS" ]; then
+          exit 0
+        fi
+
+        if [[ "$DETECTED_PM" != "pnpm" ]]; then
+          cat <<EOF > "$GITHUB_STEP_SUMMARY"
+            ### :warning: Deprecation Notice
+            Starting **January 16th, 2026**, we will no longer support **yarn** and **npm** in our pipelines. All new builds will be required to use [**pnpm**](https://pnpm.io).
+
+            To ensure a smooth transition, we have created a migration guide on our blog.
+            [Read our blog announcement](https://dx.pagopa.it/blog/migrating-to-pnpm/)
+          EOF
+        fi
