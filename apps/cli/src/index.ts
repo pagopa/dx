@@ -25,7 +25,6 @@ await configure({
   sinks: {
     console: getConsoleSink(),
     rawJson(record) {
-      // eslint-disable-next-line no-console
       console.log(record.rawMessage);
     },
   },
