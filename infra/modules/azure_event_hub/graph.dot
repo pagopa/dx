@@ -1,0 +1,17 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_private_dns_zone.this" [label="data.azurerm_private_dns_zone.this"];
+  "azurerm_eventhub.events" [label="azurerm_eventhub.events"];
+  "azurerm_eventhub_authorization_rule.authorization_rule" [label="azurerm_eventhub_authorization_rule.authorization_rule"];
+  "azurerm_eventhub_consumer_group.consumer_group" [label="azurerm_eventhub_consumer_group.consumer_group"];
+  "azurerm_eventhub_namespace.this" [label="azurerm_eventhub_namespace.this"];
+  "azurerm_monitor_metric_alert.event_hub_health_check" [label="azurerm_monitor_metric_alert.event_hub_health_check"];
+  "azurerm_private_endpoint.event_hub_pep" [label="azurerm_private_endpoint.event_hub_pep"];
+  "azurerm_eventhub.events" -> "azurerm_eventhub_namespace.this";
+  "azurerm_eventhub_authorization_rule.authorization_rule" -> "azurerm_eventhub.events";
+  "azurerm_eventhub_consumer_group.consumer_group" -> "azurerm_eventhub.events";
+  "azurerm_monitor_metric_alert.event_hub_health_check" -> "azurerm_eventhub_namespace.this";
+  "azurerm_private_endpoint.event_hub_pep" -> "data.azurerm_private_dns_zone.this";
+  "azurerm_private_endpoint.event_hub_pep" -> "azurerm_eventhub_namespace.this";
+}

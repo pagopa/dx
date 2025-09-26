@@ -1,0 +1,37 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "azurerm_linux_function_app.this" [label="azurerm_linux_function_app.this"];
+  "azurerm_linux_function_app_slot.this" [label="azurerm_linux_function_app_slot.this"];
+  "azurerm_role_assignment.durable_function_storage_blob_data_contributor" [label="azurerm_role_assignment.durable_function_storage_blob_data_contributor"];
+  "azurerm_role_assignment.durable_function_storage_queue_data_contributor" [label="azurerm_role_assignment.durable_function_storage_queue_data_contributor"];
+  "azurerm_role_assignment.durable_function_storage_table_data_contributor" [label="azurerm_role_assignment.durable_function_storage_table_data_contributor"];
+  "azurerm_role_assignment.function_storage_account_contributor" [label="azurerm_role_assignment.function_storage_account_contributor"];
+  "azurerm_role_assignment.function_storage_blob_data_owner" [label="azurerm_role_assignment.function_storage_blob_data_owner"];
+  "azurerm_role_assignment.function_storage_queue_data_contributor" [label="azurerm_role_assignment.function_storage_queue_data_contributor"];
+  "azurerm_role_assignment.staging_durable_function_storage_blob_data_contributor" [label="azurerm_role_assignment.staging_durable_function_storage_blob_data_contributor"];
+  "azurerm_role_assignment.staging_durable_function_storage_queue_data_contributor" [label="azurerm_role_assignment.staging_durable_function_storage_queue_data_contributor"];
+  "azurerm_role_assignment.staging_durable_function_storage_table_data_contributor" [label="azurerm_role_assignment.staging_durable_function_storage_table_data_contributor"];
+  "azurerm_role_assignment.staging_function_storage_account_contributor" [label="azurerm_role_assignment.staging_function_storage_account_contributor"];
+  "azurerm_role_assignment.staging_function_storage_blob_data_owner" [label="azurerm_role_assignment.staging_function_storage_blob_data_owner"];
+  "azurerm_role_assignment.staging_function_storage_queue_data_contributor" [label="azurerm_role_assignment.staging_function_storage_queue_data_contributor"];
+  "azurerm_service_plan.this" [label="azurerm_service_plan.this"];
+  "azurerm_storage_account.durable_function" [label="azurerm_storage_account.durable_function"];
+  "azurerm_storage_account.this" [label="azurerm_storage_account.this"];
+  "azurerm_linux_function_app.this" -> "azurerm_service_plan.this";
+  "azurerm_linux_function_app.this" -> "azurerm_storage_account.durable_function";
+  "azurerm_linux_function_app.this" -> "azurerm_storage_account.this";
+  "azurerm_linux_function_app_slot.this" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.durable_function_storage_blob_data_contributor" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.durable_function_storage_queue_data_contributor" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.durable_function_storage_table_data_contributor" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.function_storage_account_contributor" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.function_storage_blob_data_owner" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.function_storage_queue_data_contributor" -> "azurerm_linux_function_app.this";
+  "azurerm_role_assignment.staging_durable_function_storage_blob_data_contributor" -> "azurerm_linux_function_app_slot.this";
+  "azurerm_role_assignment.staging_durable_function_storage_queue_data_contributor" -> "azurerm_linux_function_app_slot.this";
+  "azurerm_role_assignment.staging_durable_function_storage_table_data_contributor" -> "azurerm_linux_function_app_slot.this";
+  "azurerm_role_assignment.staging_function_storage_account_contributor" -> "azurerm_linux_function_app_slot.this";
+  "azurerm_role_assignment.staging_function_storage_blob_data_owner" -> "azurerm_linux_function_app_slot.this";
+  "azurerm_role_assignment.staging_function_storage_queue_data_contributor" -> "azurerm_linux_function_app_slot.this";
+}

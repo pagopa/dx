@@ -1,0 +1,5 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.terraform_remote_state.core" [label="data.terraform_remote_state.core"];
+}

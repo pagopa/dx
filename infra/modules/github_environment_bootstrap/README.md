@@ -108,6 +108,10 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 }
 ```
 
+## Diagram
+<!-- BEGIN_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

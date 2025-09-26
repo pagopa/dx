@@ -1,0 +1,48 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  subgraph "cluster_module.apim" {
+    label = "module.apim"
+    fontname = "sans-serif"
+    "module.apim.azurerm_role_assignment.this" [label="azurerm_role_assignment.this"];
+  }
+  subgraph "cluster_module.cosmos" {
+    label = "module.cosmos"
+    fontname = "sans-serif"
+    "module.cosmos.azurerm_cosmosdb_sql_role_assignment.this" [label="azurerm_cosmosdb_sql_role_assignment.this"];
+  }
+  subgraph "cluster_module.event_hub" {
+    label = "module.event_hub"
+    fontname = "sans-serif"
+    "module.event_hub.azurerm_role_assignment.this" [label="azurerm_role_assignment.this"];
+  }
+  subgraph "cluster_module.key_vault" {
+    label = "module.key_vault"
+    fontname = "sans-serif"
+    "module.key_vault.data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+    "module.key_vault.azurerm_key_vault_access_policy.this" [label="azurerm_key_vault_access_policy.this"];
+    "module.key_vault.azurerm_role_assignment.certificates" [label="azurerm_role_assignment.certificates"];
+    "module.key_vault.azurerm_role_assignment.keys" [label="azurerm_role_assignment.keys"];
+    "module.key_vault.azurerm_role_assignment.secrets" [label="azurerm_role_assignment.secrets"];
+  }
+  subgraph "cluster_module.redis" {
+    label = "module.redis"
+    fontname = "sans-serif"
+    "module.redis.azurerm_redis_cache_access_policy_assignment.this" [label="azurerm_redis_cache_access_policy_assignment.this"];
+  }
+  subgraph "cluster_module.service_bus" {
+    label = "module.service_bus"
+    fontname = "sans-serif"
+    "module.service_bus.azurerm_role_assignment.queues" [label="azurerm_role_assignment.queues"];
+    "module.service_bus.azurerm_role_assignment.subscriptions" [label="azurerm_role_assignment.subscriptions"];
+    "module.service_bus.azurerm_role_assignment.topics" [label="azurerm_role_assignment.topics"];
+  }
+  subgraph "cluster_module.storage_account" {
+    label = "module.storage_account"
+    fontname = "sans-serif"
+    "module.storage_account.azurerm_role_assignment.blob" [label="azurerm_role_assignment.blob"];
+    "module.storage_account.azurerm_role_assignment.queue" [label="azurerm_role_assignment.queue"];
+    "module.storage_account.azurerm_role_assignment.table" [label="azurerm_role_assignment.table"];
+  }
+  "module.key_vault.azurerm_key_vault_access_policy.this" -> "module.key_vault.data.azurerm_client_config.current";
+}

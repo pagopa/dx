@@ -1,0 +1,29 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_private_dns_zone.postgre_dns_zone" [label="data.azurerm_private_dns_zone.postgre_dns_zone"];
+  "azurerm_management_lock.this" [label="azurerm_management_lock.this"];
+  "azurerm_monitor_diagnostic_setting.replica" [label="azurerm_monitor_diagnostic_setting.replica"];
+  "azurerm_monitor_diagnostic_setting.this" [label="azurerm_monitor_diagnostic_setting.this"];
+  "azurerm_monitor_metric_alert.replica" [label="azurerm_monitor_metric_alert.replica"];
+  "azurerm_monitor_metric_alert.this" [label="azurerm_monitor_metric_alert.this"];
+  "azurerm_postgresql_flexible_server.replica" [label="azurerm_postgresql_flexible_server.replica"];
+  "azurerm_postgresql_flexible_server.this" [label="azurerm_postgresql_flexible_server.this"];
+  "azurerm_postgresql_flexible_server_configuration.pgbouncer" [label="azurerm_postgresql_flexible_server_configuration.pgbouncer"];
+  "azurerm_postgresql_flexible_server_configuration.pgbouncer_replica" [label="azurerm_postgresql_flexible_server_configuration.pgbouncer_replica"];
+  "azurerm_postgresql_flexible_server_virtual_endpoint.endpoint" [label="azurerm_postgresql_flexible_server_virtual_endpoint.endpoint"];
+  "azurerm_private_endpoint.postgre_pep" [label="azurerm_private_endpoint.postgre_pep"];
+  "azurerm_private_endpoint.replica_postgre_pep" [label="azurerm_private_endpoint.replica_postgre_pep"];
+  "azurerm_management_lock.this" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_monitor_diagnostic_setting.replica" -> "azurerm_postgresql_flexible_server.replica";
+  "azurerm_monitor_diagnostic_setting.this" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_monitor_metric_alert.replica" -> "azurerm_postgresql_flexible_server.replica";
+  "azurerm_monitor_metric_alert.this" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_postgresql_flexible_server.replica" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_postgresql_flexible_server.this" -> "data.azurerm_private_dns_zone.postgre_dns_zone";
+  "azurerm_postgresql_flexible_server_configuration.pgbouncer" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_postgresql_flexible_server_configuration.pgbouncer_replica" -> "azurerm_postgresql_flexible_server.replica";
+  "azurerm_postgresql_flexible_server_virtual_endpoint.endpoint" -> "azurerm_postgresql_flexible_server.replica";
+  "azurerm_private_endpoint.postgre_pep" -> "azurerm_postgresql_flexible_server.this";
+  "azurerm_private_endpoint.replica_postgre_pep" -> "azurerm_postgresql_flexible_server.replica";
+}

@@ -44,6 +44,10 @@ module "core_values" {
 }
 ```
 
+## Diagram
+<!-- BEGIN_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -1,0 +1,9 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "azurerm_linux_web_app.this" [label="azurerm_linux_web_app.this"];
+  "azurerm_linux_web_app_slot.this" [label="azurerm_linux_web_app_slot.this"];
+  "azurerm_service_plan.this" [label="azurerm_service_plan.this"];
+  "azurerm_linux_web_app.this" -> "azurerm_service_plan.this";
+  "azurerm_linux_web_app_slot.this" -> "azurerm_linux_web_app.this";
+}
