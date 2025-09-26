@@ -38,3 +38,23 @@ runs:
           echo "package-manager=npm" >> $GITHUB_OUTPUT
           echo "No package manager detected, defaulting to npm"
         fi
+
+        # Only show deprecation notice after Oct 3, 2025 at 10:00
+        NOW_TS=$(date -u +%s)
+        DEPRECATION_TS=$(date -u -d "2025-09-03T10:00:00Z" +%s)
+
+        echo "now-ts=$NOW_TS" >> $GITHUB_OUTPUT
+        echo "deprecation-ts=$DEPRECATION_TS" >> $GITHUB_OUTPUT
+
+    - name: Post Plan on PR
+      id: comment
+      if: steps.detect-pm.outputs.package-manager == 'pnpm' && github.event_name == 'pull_request'
+      uses: pagopa/dx/actions/pr-comment@main
+      with:
+        comment-body: |
+          ### ⚠️ Deprecation Notice
+          Starting **January 16th, 2026**, we will no longer support **yarn** and **npm** in our pipelines. All new builds will be required to use [**pnpm**](https://pnpm.io).
+
+          To ensure a smooth transition, we have created a migration guide on our blog.
+          [Read our blog announcement](https://dx.pagopa.it/blog/migrating-to-pnpm/)
+        search-pattern: "Deprecation Notice"

@@ -25,7 +25,7 @@ runs:
 
     - name: Detect Node.js package manager
       id: detect-pm
-      uses: pagopa/dx/actions/detect-node-package-manager@main
+      uses: pagopa/dx/actions/detect-node-package-manager@add-deprecation-notice
 
     - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
