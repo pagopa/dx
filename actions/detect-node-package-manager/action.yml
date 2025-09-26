@@ -58,5 +58,5 @@ runs:
 
             To ensure a smooth transition, we have created a migration guide on our blog.
             [Read our blog announcement](https://dx.pagopa.it/blog/migrating-to-pnpm/)
-          EOF
+        EOF
         fi
