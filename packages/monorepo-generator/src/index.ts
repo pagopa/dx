@@ -17,6 +17,7 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
+import { getLatestNodeVersion } from "./actions/node.js";
 import {
   addPagoPaPnpmPlugin,
   configureChangesets,
@@ -124,6 +125,7 @@ const getActions = ({
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
   getPreCommitTerraformLatestRelease({ octokitClient }),
+  getLatestNodeVersion({ octokitClient }),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
