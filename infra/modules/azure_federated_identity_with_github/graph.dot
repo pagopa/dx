@@ -1,0 +1,22 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_resource_group.cd_details" [label="data.azurerm_resource_group.cd_details"];
+  "data.azurerm_resource_group.ci_details" [label="data.azurerm_resource_group.ci_details"];
+  "azurerm_federated_identity_credential.cd_github" [label="azurerm_federated_identity_credential.cd_github"];
+  "azurerm_federated_identity_credential.ci_github" [label="azurerm_federated_identity_credential.ci_github"];
+  "azurerm_role_assignment.cd_rg" [label="azurerm_role_assignment.cd_rg"];
+  "azurerm_role_assignment.cd_subscription" [label="azurerm_role_assignment.cd_subscription"];
+  "azurerm_role_assignment.ci_rg" [label="azurerm_role_assignment.ci_rg"];
+  "azurerm_role_assignment.ci_subscription" [label="azurerm_role_assignment.ci_subscription"];
+  "azurerm_user_assigned_identity.cd" [label="azurerm_user_assigned_identity.cd"];
+  "azurerm_user_assigned_identity.ci" [label="azurerm_user_assigned_identity.ci"];
+  "azurerm_federated_identity_credential.cd_github" -> "azurerm_user_assigned_identity.cd";
+  "azurerm_federated_identity_credential.ci_github" -> "azurerm_user_assigned_identity.ci";
+  "azurerm_role_assignment.cd_rg" -> "data.azurerm_resource_group.cd_details";
+  "azurerm_role_assignment.cd_rg" -> "azurerm_user_assigned_identity.cd";
+  "azurerm_role_assignment.cd_subscription" -> "azurerm_user_assigned_identity.cd";
+  "azurerm_role_assignment.ci_rg" -> "data.azurerm_resource_group.ci_details";
+  "azurerm_role_assignment.ci_rg" -> "azurerm_user_assigned_identity.ci";
+  "azurerm_role_assignment.ci_subscription" -> "azurerm_user_assigned_identity.ci";
+}
