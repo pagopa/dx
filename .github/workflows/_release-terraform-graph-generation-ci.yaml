@@ -111,7 +111,7 @@ jobs:
           \`\`\`
           1. **Output only valid Mermaid syntax** (no prose).
           2. **Orientation**: Use \`graph LR\` (left-to-right).
-          3. **Subgraphs**: Group nodes into logical clusters with meaningful titles. Each subgraph block must be in the form:
+          3. **Subgraphs**: Group nodes into logical clusters with meaningful titles, avoid using any special characters or symbols (such as parentheses, brackets, punctuation, etc). Use only clear, descriptive text for group titles. Each subgraph block must be in the form:
             subgraph Group Title
               NodeA[“Label A”]
               NodeB[“Label B”]
