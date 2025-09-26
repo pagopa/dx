@@ -18,16 +18,20 @@ If you have authenticated with the GitHub CLI (`gh`) or another local auth mecha
 
 The generator exposes the following variables to Handlebars templates. Use the Handlebars syntax `{{variableName}}` inside templates.
 
-| Variable                              | Source                       | Description & format example                                                                                                                                                                  |
-| ------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `repoSrc`                             | prompt                       | Directory where the repository will be created. Defaults to the current working directory (prompt default).                                                                                   |
-| `repoName`                            | prompt                       | Repository name provided by the user (string).                                                                                                                                                |
-| `repoDescription`                     | prompt                       | Repository description provided by the user (string).                                                                                                                                         |
-| `csp`                                 | prompt                       | Cloud provider selection. One of `aws` or `azure` (prompt type: list, default `azure`).                                                                                                       |
-| `terraformVersion`                    | custom action (GitHub fetch) | Terraform version used to populate `.terraform-version`. Full semver string, e.g. `1.5.7`.                                                                                                    |
-| `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module. Formatted as `major.minor` (e.g. `4.13`). The value is derived from the latest provider release.                |
-| `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources. Formatted as `major.minor` (e.g. `0.2`). The value is derived from the latest tag of the bootstrap repository. |
-| `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. Full semver string (e.g. `1.81.0`). The generated file prefixes it with a `v` (`rev: v{{ preCommitTerraformVersion }}`). |
+| Variable                              | Source                       | Description & format example                                                                                                                                                     |
+| ------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `repoSrc`                             | prompt                       | Directory where the repository will be created. Defaults to the current working directory (prompt default).                                                                      |
+| `repoName`                            | prompt                       | Repository name provided by the user (string).                                                                                                                                   |
+| `repoDescription`                     | prompt                       | Repository description provided by the user (string).                                                                                                                            |
+| `csp`                                 | prompt                       | Cloud provider selection. One of `aws` or `azure` (prompt type: list, default `azure`).                                                                                          |
+| `terraformVersion`                    | custom action (GitHub fetch) | Terraform version used to populate `.terraform-version`. Full semver string, e.g. `1.5.7`.                                                                                       |
+| `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module. Formatted as `major.minor` (e.g. `4.13`). Derived from the latest provider release.                |
+| `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources. Formatted as `major.minor` (e.g. `0.2`). Derived from the latest tag of the bootstrap repository. |
+| `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. Already includes the leading `v` (e.g. `v1.81.0`).                                 |
+| `repoStateResourceGroupName`          | prompt (conditional)         | Azure only — resource group name that stores the remote Terraform state (only when `csp === 'azure'`).                                                                           |
+| `repoStateStorageAccountName`         | prompt (conditional)         | Azure only — storage account name that holds the `terraform-state` container (only when `csp === 'azure'`).                                                                      |
+| `awsAccountId`                        | prompt (conditional)         | AWS only — AWS account id. Used to derive the remote state bucket name `<accountId>-terraform-state` (only when `csp === 'aws'`).                                                |
+| `awsRegion`                           | prompt (conditional)         | AWS only — region for the S3 backend (default `eu-south-1`) (only when `csp === 'aws'`).                                                                                         |
 
 ## Recommended usage
 
@@ -42,14 +46,11 @@ pnpm add @pagopa/monorepo-generator
 
 2. Example repository-level plopfile (JavaScript)
 
-Create a top-level plopfile.js in your repo:
-
 ```js
 // plopfile.js
 const scaffoldMonorepo = require("@pagopa/monorepo-generator");
 
 module.exports = function (plop) {
-  // register the generator exported by the package
   scaffoldMonorepo(plop);
 };
 ```
