@@ -44,7 +44,7 @@ jobs:
         with:
           workflow: _release-terraform-graph-generation-ci.yaml
           name: mermaid-diagrams-${{ env.PR_NUMBER }}
-          path: downloaded-artifacts
+          path: ${{ runner.temp }}/downloaded-artifacts
           check_artifacts: true
           workflow_conclusion: success
 
@@ -58,14 +58,14 @@ jobs:
       - name: Organize downloaded files
         id: organize_files
         run: |
-          if [ -z "$(ls -A ./downloaded-artifacts)" ]; then
+          if [ -z "$(ls -A ${{ runner.temp }}/downloaded-artifacts)" ]; then
             echo "No artifacts found or directory is empty. Nothing to commit."
             echo "changes_made=false" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "Organizing downloaded files..."
-          for filepath in downloaded-artifacts/*.md; do
+          for filepath in ${{ runner.temp }}/downloaded-artifacts/*.md; do
             if [ -f "$filepath" ]; then
               filename=$(basename "$filepath")
               dir_encoded_name="${filename%.md}"

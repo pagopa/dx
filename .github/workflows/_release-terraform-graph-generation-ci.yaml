@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changed_files: ${{ steps.find_files.outputs.changed_files }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -201,6 +203,8 @@ jobs:
     name: Upload all generated diagrams into artifact
     runs-on: ubuntu-latest
     needs: dot-to-mermaid
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -208,7 +212,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download generated diagrams
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@feat-add-graph-generation # main
         with:
           file_path: downloaded-artifacts
 
