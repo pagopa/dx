@@ -213,7 +213,9 @@ jobs:
       
       - name: Validate artifact attestation
         run: |
-          gh attestation verify ${{ env.ARTIFACT_PATH }} --repo ${{ env.REPOSITORY }} --signer-workflow pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml
+          gh attestation verify "$ARTIFACT_PATH" \
+           --repo "$REPOSITORY" \
+           --signer-workflow pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml
         env:
           ARTIFACT_PATH: format('{0}.zip', env.BUNDLE_NAME)
           REPOSITORY: ${{ github.repository }}
