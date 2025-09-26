@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "tests" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   name = provider::dx::resource_name(
     merge(

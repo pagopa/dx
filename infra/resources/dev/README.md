@@ -20,7 +20,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_test_infrastructure"></a> [test\_infrastructure](#module\_test\_infrastructure) | ../_modules/test_infrastructure | n/a |
+| <a name="module_testing"></a> [testing](#module\_testing) | ../_modules/testing | n/a |
 
 ## Resources
 

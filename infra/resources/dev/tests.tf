@@ -1,8 +1,8 @@
-module "test_infrastructure" {
-  source = "../_modules/test_infrastructure"
+module "testing" {
+  source = "../_modules/testing"
 
   environment = local.environment
-  tests_kind  = local.tests_kind
+  test_modes  = local.test_modes
 
   gh_pat_reference = {
     keyvault_name                = data.azurerm_key_vault.common.name

@@ -6,7 +6,7 @@ locals {
     instance_number = "01"
   }
 
-  tests_kind = ["integration", "e2e"]
+  test_modes = ["integration", "e2e"]
 
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"

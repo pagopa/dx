@@ -1,5 +1,5 @@
 resource "azurerm_log_analytics_workspace" "tests" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   name = provider::dx::resource_name(
     merge(

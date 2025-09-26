@@ -1,5 +1,5 @@
 {
-  "test_infrastructure.gh_runner_integration_tests": {
+  "testing.gh_runner_integration_tests": {
     "hash": "4fce17537aa4d416e19ad2ff2cb765091107f2181ef48fcc5a0a79c40e6c0bb7",
     "version": "1.1.3",
     "name": "github_selfhosted_runner_on_container_app_jobs",

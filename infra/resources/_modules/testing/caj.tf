@@ -1,5 +1,5 @@
 module "gh_runner_integration_tests" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
   version = "~> 1.0"

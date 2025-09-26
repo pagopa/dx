@@ -1,10 +1,10 @@
-variable "tests_kind" {
+variable "test_modes" {
   type        = set(string)
   description = "List of test kinds to create resources for. Allowed values are 'integration' and 'e2e'."
 
   validation {
-    condition     = alltrue([for v in var.tests_kind : contains(["integration", "e2e"], v)])
-    error_message = "Invalid value in tests_kind. Allowed values are 'integration' and 'e2e'."
+    condition     = alltrue([for v in var.test_modes : contains(["integration", "e2e"], v)])
+    error_message = "Invalid value in test_modes. Allowed values are 'integration' and 'e2e'."
   }
 }
 

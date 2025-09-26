@@ -1,5 +1,5 @@
 resource "azurerm_virtual_network" "tests" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   name = provider::dx::resource_name(
     merge(
@@ -10,27 +10,27 @@ resource "azurerm_virtual_network" "tests" {
   ))
   location            = azurerm_resource_group.tests[each.value].location
   resource_group_name = azurerm_resource_group.tests[each.value].name
-  address_space       = [format("10.%d.0.0/16", 20 + index(tolist(var.tests_kind), each.key))]
+  address_space       = [format("10.%d.0.0/16", 20 + index(tolist(var.test_modes), each.key))]
 
   tags = var.tags
 }
 
 resource "dx_available_subnet_cidr" "pep_snet_cidrs" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   virtual_network_id = azurerm_virtual_network.tests[each.value].id
   prefix_length      = 23
 }
 
 resource "dx_available_subnet_cidr" "cae_snet_cidrs" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   virtual_network_id = azurerm_virtual_network.tests[each.value].id
   prefix_length      = 23
 }
 
 resource "azurerm_subnet" "pep_snets" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   name = provider::dx::resource_name(
     merge(
@@ -46,7 +46,7 @@ resource "azurerm_subnet" "pep_snets" {
 }
 
 resource "azurerm_subnet" "cae_snets" {
-  for_each = var.tests_kind
+  for_each = var.test_modes
 
   name = provider::dx::resource_name(
     merge(

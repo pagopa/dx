@@ -38,7 +38,7 @@ No requirements.
 | <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    location        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_gh_pat_reference"></a> [gh\_pat\_reference](#input\_gh\_pat\_reference) | n/a | <pre>object({<br/>    keyvault_name                = string<br/>    keyvault_resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to resources | `map(string)` | n/a | yes |
-| <a name="input_tests_kind"></a> [tests\_kind](#input\_tests\_kind) | List of test kinds to create resources for. Allowed values are 'integration' and 'e2e'. | `set(string)` | n/a | yes |
+| <a name="input_test_modes"></a> [test\_modes](#input\_test\_modes) | List of test kinds to create resources for. Allowed values are 'integration' and 'e2e'. | `set(string)` | n/a | yes |
 
 ## Outputs
 
