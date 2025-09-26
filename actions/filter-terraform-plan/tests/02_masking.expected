@@ -1,0 +1,20 @@
+Test mode enabled.
+--- Executing Plan ---
+password = "[REDACTED]"
+Password = "[REDACTED]"
+PASSWORD = "[REDACTED]"
+DBPassword = "[REDACTED]"
+
+apiKey = "[REDACTED]"
+api_key = "[REDACTED]"
+testAPIKey = "[REDACTED]"
+
+AccessKey = "[REDACTED]"
+AccountKey = "[REDACTED]"
+Password = "[REDACTED]"
+secret = "[REDACTED]"
+SecretToken = "[REDACTED]"
+AuthToken = "[REDACTED]"
+auth_token = "[REDACTED]"
+access_key = "[REDACTED]"
+connection_string = "[REDACTED]"

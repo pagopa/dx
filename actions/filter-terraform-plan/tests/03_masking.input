@@ -1,0 +1,4 @@
+normal_value = "Keep Me"
+
+hidden-link = "http://sensitive_test.link"
+hidden-links = "http://non_sensitive_test.link"
