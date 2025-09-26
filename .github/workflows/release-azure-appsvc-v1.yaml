@@ -57,7 +57,9 @@ jobs:
     concurrency:
       group: ${{ format('{0}-build-{1}', github.run_id, inputs.workspace_name) }}
       cancel-in-progress: false
-
+    permissions:
+      id-token: write
+      attestations: write
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
