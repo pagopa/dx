@@ -48,7 +48,7 @@ runs:
 
     - name: Post Plan on PR
       id: comment
-      if: steps.detect-pm.outputs.package-manager == 'pnpm' && steps.now-ts.outputs.now-ts > steps.deprecation-ts.outputs.deprecation-ts && github.event_name == 'pull_request'
+      if: steps.detect-pm.outputs.package-manager == 'pnpm' && github.event_name == 'pull_request'
       uses: pagopa/dx/actions/pr-comment@main
       with:
         comment-body: |
