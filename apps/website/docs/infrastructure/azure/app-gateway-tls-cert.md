@@ -25,7 +25,7 @@ with the following characteristics:
 resource "azurerm_key_vault" "this" {
   ...
 
-  enable_rbac_authorization     = true
+  rbac_authorization_enabled     = true
   enabled_for_disk_encryption   = true
   soft_delete_retention_days    = 30
   purge_protection_enabled      = true
