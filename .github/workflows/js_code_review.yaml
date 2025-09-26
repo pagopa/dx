@@ -16,7 +16,7 @@ jobs:
 
       - name: Node Setup
         id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@add-deprecation-notice
 
       - name: Install dependencies (Yarn)
         if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
