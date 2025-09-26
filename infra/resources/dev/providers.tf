@@ -1,5 +1,10 @@
 terraform {
   required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -32,3 +37,7 @@ provider "azurerm" {
 }
 
 provider "dx" {}
+
+provider "aws" {
+  region = "eu-south-1"
+}
