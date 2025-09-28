@@ -12,7 +12,7 @@ const topicCards = [
       "Ready-to-use generators, templates, and development environments",
     icon: "⚙️",
     items: ["TypeScript Generators", "Dev Containers", "Monorepo Tools"],
-    link: "/docs/getting-started",
+    link: "/docs/",
     title: "Development Tools",
   },
   {
@@ -56,7 +56,7 @@ export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      description="Developer Experience at PagoPA - Accelerate your development with proven tools and patterns"
+      description="Getting Started with PagoPA DX - Accelerate your development with proven tools and patterns"
       title={`${siteConfig.title}`}
     >
       <HomepageHeader />
@@ -108,7 +108,7 @@ function HomepageHeader() {
       <div className="container">
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
-            <h1 className={styles.heroTitle}>Developer Experience at PagoPA</h1>
+            <h1 className={styles.heroTitle}>Getting Started with PagoPA DX</h1>
             <p className={styles.heroSubtitle}>
               Accelerate your development journey with proven tools, patterns,
               and best practices for building scalable applications.
@@ -116,7 +116,7 @@ function HomepageHeader() {
             <div className={styles.heroButtons}>
               <Link
                 className={`button button--primary button--lg ${styles.heroButton}`}
-                to="/docs/getting-started"
+                to="/docs/"
               >
                 Get Started
               </Link>
