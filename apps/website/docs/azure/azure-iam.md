@@ -1,3 +1,8 @@
+---
+id: azure-iam
+sidebar_position: 40
+---
+
 # Managing Azure IAM Roles and Permissions
 
 ## Overview

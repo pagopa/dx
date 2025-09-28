@@ -1,9 +1,8 @@
 ---
-sidebar_label: Infrastructure
 sidebar_position: 4
 ---
 
-# Infrastructure
+# Working with Terraform
 
 This section offers comprehensive guidance on infrastructure-related topics,
 common problem resolutions, patterns, and best practices for building scalable
@@ -16,9 +15,9 @@ applications. Start here:
 
 1. **[Learn about our Terraform modules](./using-terraform-registry-modules.md)** -
    Use our production-ready modules
-2. **[Deploy Azure resources](./azure/index.md)** - Deploy secure, scalable
+2. **[Deploy Azure resources](../azure/index.md)** - Deploy secure, scalable
    infrastructure for your applications
-3. **[Automate deployments](../pipelines/infra-apply.md)** - Set up CI/CD for
+3. **[Automate deployments](./infra-apply.md)** - Set up CI/CD for
    infrastructure
 
 ## Available Tools
@@ -45,13 +44,13 @@ Custom Terraform provider for Azure resources:
 - Built-in security best practices
 - Integration with DX conventions
 
-[**Learn about the DX provider →**](./contributing-to-dx-provider.md)
+[**Learn about the DX provider →**](../contributing/contributing-to-dx-provider.md)
 
 ### 📋 Best Practices
 
 - **[Pre-commit hooks](./pre-commit-terraform.md)** - Validate and format
   Terraform code
-- **[Azure naming conventions](../conventions/azure-naming-convention.md)** -
+- **[Azure naming conventions](../azure/azure-naming-convention.md)** -
   Consistent resource naming
 - **[Folder structure](../conventions/infra-folder-structure.md)** - Organize
   Infrastructure as Code
@@ -60,23 +59,23 @@ Custom Terraform provider for Azure resources:
 
 ### Most Common Use Cases
 
-- **[Setting up static web apps](./setting-up-azure-static-web-app.md)** -
+- **[Setting up static web apps](../azure/setting-up-azure-static-web-app.md)** -
   Deploy static sites with CI/CD
-- **[IAM and security](./azure/azure-iam.md)** - Manage permissions and access
+- **[IAM and security](../azure/azure-iam.md)** - Manage permissions and access
   control
-- **[API Management](./azure/apim/index.md)** - Configure and secure APIs
-- **[Monitoring and tracing](./azure/azure-tracing.md)** - Observability and
+- **[API Management](../azure/apim/index.md)** - Configure and secure APIs
+- **[Monitoring and tracing](../azure/azure-tracing.md)** - Observability and
   debugging
 
-[**View all Azure guides →**](./azure/index.md)
+[**View all Azure guides →**](../azure/index.md)
 
 ## Contributing
 
 Help improve DX infrastructure tools:
 
-- **[Contributing to Terraform modules](./contributing-to-dx-terraform-modules/index.md)** -
+- **[Contributing to Terraform modules](../contributing/contributing-to-dx-terraform-modules.md)** -
   Add new modules or improve existing ones
-- **[Module documentation](./contributing-to-dx-terraform-modules/documenting-dx-terraform-modules.md)** -
+- **[Module documentation](../contributing/documenting-dx-terraform-modules.md)** -
   Keep docs up to date
 - **[Testing and validation](./pre-commit-terraform.md)** - Ensure quality and
   consistency

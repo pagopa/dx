@@ -1,9 +1,8 @@
 ---
-sidebar_label: Azure
-sidebar_position: 5
+sidebar_position: 6
 ---
 
-# Azure Services and Infrastructure
+# Developing on Azure
 
 This section offers guidance on Azure infrastructure-related topics, common
 problem resolutions, patterns, and more.

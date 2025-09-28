@@ -1,9 +1,8 @@
 ---
-sidebar_label: Creating a Brand-New Mono-Repository on GitHub Using DX Tools
-sidebar_position: 1
+sidebar_position: 3
 ---
 
-# Creating a Brand-New Mono-Repository on GitHub Using DX Tools
+# Creating a DX-Ready Mono-Repository on GitHub
 
 This guide provides step-by-step instructions for creating and setting up a new
 mono-repository on GitHub using DX tools.
@@ -143,7 +142,7 @@ Terraform module.
 
 For more information, see the
 [related blog post](https://dx.pagopa.it/blog/devex-azure-bootstrap-0.1-alpha)
-and the [IAM Framework documentation](../infrastructure/azure/azure-iam.md).
+and the [IAM Framework documentation](azure/azure-iam.md).
 
 :::info[Azure Permissions for Initial Setup]
 

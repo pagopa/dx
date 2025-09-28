@@ -6,7 +6,7 @@ sidebar_position: 5
 
 This guide explains how to create an **Azure Static Web App** resource, using
 Terraform to enable automated deployments via the
-[Build and Deploy Static Site to Azure Static Web App Workflow](../pipelines/build-deploy-static-web-app.md).
+[Build and Deploy Static Site to Azure Static Web App Workflow](./build-deploy-static-web-app.md).
 
 ## Create Azure Static Web App with Terraform
 
@@ -38,7 +38,7 @@ resource "azurerm_static_web_app" "example" {
 
 Once the Static Web App is created, configure your CI/CD workflow as described
 in
-[Build and Deploy Static Site to Azure Static Web App](../pipelines/build-deploy-static-web-app.md):
+[Build and Deploy Static Site to Azure Static Web App](./build-deploy-static-web-app.md):
 
 - Set `static_web_app_name` and `resource_group_name` in the workflow inputs to
   match your Azure resource.

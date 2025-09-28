@@ -14,14 +14,14 @@ you get up and running quickly, regardless of your role or experience level.
 
 If you're building APIs, web applications, or services:
 
-1. **[Set up your development environment](./monorepository-setup.md)** -
+1. **[Set up your development environment](../monorepository-setup.md)** -
    Configure your workspace for PagoPA development
 2. **[Understand our conventions](../conventions/index.md)** - Learn our Git
    workflows, naming conventions, and code standards
 3. **[Deploy applications](../pipelines/index.md)** - Automate your deployments
    with GitHub Actions
-4. **[Deploy infrastructure](../infrastructure/index.md)** - Use Terraform
-   modules to deploy Azure resources
+4. **[Deploy infrastructure](../terraform/index.md)** - Use Terraform modules to
+   deploy Azure resources
 
 **Quick wins:**
 
@@ -30,9 +30,9 @@ If you're building APIs, web applications, or services:
 - Follow our [Git conventions](../conventions/git/index.md) for consistent
   collaboration
 - Deploy apps with our
-  [TypeScript deployment workflows](../pipelines/release-azure-appsvc.md)
+  [TypeScript deployment workflows](../azure/release-azure-appsvc.md)
 - Deploy infrastructure with our
-  [Terraform modules](../infrastructure/using-terraform-registry-modules.md)
+  [Terraform modules](../terraform/using-terraform-registry-modules.md)
 
 ## Getting Started with DX
 
@@ -63,7 +63,7 @@ repository, even for a single project or workspace.
 
 To start adopting DX tools, define boundaries for team services and plan how to
 split team projects. Once ready, ensure you have a mono-repository on GitHub and
-start [configuring it using DX tools](./monorepository-setup.md).
+start [configuring it using DX tools](../monorepository-setup.md).
 
 ### Supported Platforms
 
@@ -86,8 +86,7 @@ journey:
 
 - [Optimize Git usage](../conventions/git/index.md) usage.
 - [Create effective Pull Requests](../conventions/pull-requests/index.md).
-- [Name Azure resources](../conventions/azure-naming-convention.md)
-  consistently.
+- [Name Azure resources](../azure/azure-naming-convention.md) consistently.
 - [Organize repository folders](../conventions/infra-folder-structure.md) for
   Infrastructure as Code (IaC) sources.
 

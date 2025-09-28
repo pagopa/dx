@@ -60,8 +60,8 @@ Choose your path based on your role and goals:
 Ready to build your first service?
 
 - [Set up your development environment](getting-started/index.md)
-- [Build and deploy a TypeScript API](pipelines/release-azure-appsvc.md)
-- [Deploy infrastructure with Terraform](infrastructure/index.md)
+- [Build and deploy a TypeScript API](./azure/release-azure-appsvc.md)
+- [Deploy infrastructure with Terraform](./terraform/index.md)
 - [Follow our coding conventions](conventions/index.md)
 
 [**Start Building →**](getting-started/index.md)
@@ -82,7 +82,7 @@ Production-ready Terraform modules for Azure resources:
 - **Data & Storage** - Cosmos DB, Service Bus, and storage accounts
 
 [**Browse All Modules →**](https://registry.terraform.io/namespaces/pagopa-dx) |
-[**Contributing Guide →**](infrastructure/contributing-to-dx-terraform-modules/index.md)
+[**Contributing Guide →**](./contributing/contributing-to-dx-terraform-modules.md)
 
 ### ⚙️ **GitHub Actions Workflows**
 
@@ -118,7 +118,7 @@ onboarding and setup guides
 
 <div className="col col--3">
 
-**📚 [Infrastructure](infrastructure/index.md)** Azure resources, Terraform
+**📚 [Infrastructure](./terraform/index.md)** Azure resources, Terraform
 modules, and infrastructure patterns
 
 </div>

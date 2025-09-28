@@ -1,18 +1,21 @@
 ---
-sidebar_position: 100
-title: "Legacy Workflows"
+sidebar_position: 11
 ---
 
-# Legacy Workflows
+# Deprecated Legacy Tools
 
 This section provides information about legacy workflows that are no longer
 actively maintained but may still be in use in some projects. These workflows
 are part of the transition to a monorepo architecture and are provided for
 reference only.
 
-:::warning **Deprecated Content** **It is strongly recommended to migrate to the
-new workflows as soon as possible.** Legacy workflows will be removed in a
-future release and do not receive security updates or bug fixes. :::
+:::warning
+
+It is strongly recommended to migrate to the new workflows as soon as possible.
+Legacy workflows will be removed in a future release and do not receive security
+updates or bug fixes.
+
+:::
 
 ## Migration Guide
 
@@ -28,11 +31,11 @@ future release and do not receive security updates or bug fixes. :::
 
 ### Legacy → Modern Workflow Mapping
 
-| Legacy Workflow                                               | Modern Replacement                               | Benefits                                   |
-| ------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------ |
-| [Legacy Code Review](./legacy-code-review.md)                 | [Code Review](../code-review.md)                 | Faster execution, better security scanning |
-| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../release-azure-appsvc.md) | Zero-downtime deployment, better rollback  |
-| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | [Docker Image Build](../docker-image-build.md)   | Multi-platform support, optimized caching  |
+| Legacy Workflow                                               | Modern Replacement                                       | Benefits                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------ |
+| [Legacy Code Review](./legacy-code-review.md)                 | [Code Review](../pipelines/code-review.md)               | Faster execution, better security scanning |
+| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../azure/release-azure-appsvc.md)   | Zero-downtime deployment, better rollback  |
+| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | [Docker Image Build](../pipelines/docker-image-build.md) | Multi-platform support, optimized caching  |
 
 ## Legacy Workflows
 
@@ -40,22 +43,22 @@ future release and do not receive security updates or bug fixes. :::
 
 - **[Legacy Code Review](./legacy-code-review.md)** - Original code review
   workflow for Node.js projects
-  - ⚠️ **Use instead:** [Modern Code Review](../code-review.md)
+  - ⚠️ **Use instead:** [Modern Code Review](../pipelines/code-review.md)
   - **Migration effort:** Low - mostly configuration changes
 
 ### Deployment (Deprecated)
 
 - **[Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md)** - Original
   Azure deployment workflows
-  - ⚠️ **Use instead:** [App Service Deploy](../release-azure-appsvc.md) or
-    [Container App Deploy](../release-container-app.md)
+  - ⚠️ **Use instead:** [App Service Deploy](../azure/release-azure-appsvc.md)
+    or [Container App Deploy](../azure/release-container-app.md)
   - **Migration effort:** Medium - may require application changes
 
 ### Package Publishing (Deprecated)
 
 - **[Legacy Publish SDK](./legacy-publish-sdk.md)** - Original package
   publishing workflow
-  - ⚠️ **Use instead:** [Docker Image Build](../docker-image-build.md)
+  - ⚠️ **Use instead:** [Docker Image Build](../pipelines/docker-image-build.md)
   - **Migration effort:** Low - mainly configuration updates
 
 ## Support Timeline
@@ -83,7 +86,7 @@ The DX team provides migration support:
 
 - Legacy workflows use service principals
 - Modern workflows use OIDC authentication
-- [Learn about Azure Login setup](../azure-login.md)
+- [Learn about Azure Login setup](../azure/azure-login.md)
 
 **Configuration Format**
 

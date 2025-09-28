@@ -1,5 +1,4 @@
 ---
-sidebar_label: Multi-Cloud Connectivity (AWS ↔ Azure)
 sidebar_position: 7
 ---
 
@@ -322,7 +321,7 @@ After your VPN connection is established:
 
 - [Module Repository on GitHub](https://github.com/pagopa/dx/tree/main/infra/modules/aws_azure_vpn)
 - [Terraform Registry Module](https://registry.terraform.io/modules/pagopa-dx/aws-azure-vpn/aws)
-- [Multi-Cloud Architecture Patterns](../conventions/infra-folder-structure.md)
+- [Multi-Cloud Architecture Patterns](./conventions/infra-folder-structure.md)
 
 🛠️ **Get Support:**
 

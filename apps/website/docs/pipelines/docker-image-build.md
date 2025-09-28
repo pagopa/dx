@@ -9,7 +9,11 @@ The
 is a workflow that builds a OCI image and verifies that the Dockerfile is
 functional.
 
-:::note This workflow does not publish the OCI image to any registry :::
+:::note
+
+This workflow does not publish the OCI image to any registry
+
+:::
 
 ## How It Works
 

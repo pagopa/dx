@@ -19,7 +19,7 @@ const topicCards = [
     description: "Production-ready Terraform modules",
     icon: "🏗️",
     items: ["Azure Modules", "AWS Modules", "Best Practices"],
-    link: "/docs/infrastructure",
+    link: "/docs/terraform",
     title: "Infrastructure",
   },
   {
@@ -40,14 +40,14 @@ const topicCards = [
     description: "Authentication patterns and tools",
     icon: "🔐",
     items: ["Azure Login", "Service Principals", "RBAC Patterns"],
-    link: "/docs/pipelines/azure-login",
+    link: "/docs/azure/azure-login",
     title: "Authentication",
   },
   {
     description: "Application monitoring and observability solutions",
     icon: "📊",
     items: ["Azure Monitor", "Log Analytics", "Application Insights"],
-    link: "/docs/infrastructure",
+    link: "/docs/terraform",
     title: "Monitoring",
   },
 ];

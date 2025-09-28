@@ -1,6 +1,6 @@
 ---
 sidebar_label: "Standards and Conventions"
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Standards and Conventions
@@ -44,13 +44,6 @@ Consistent conventions across teams enable:
   changelogs
 
 [**Learn all PR conventions →**](./pull-requests/index.md)
-
-### ☁️ Azure Resources
-
-- **[Naming Convention](./azure-naming-convention.md)** - Consistent Azure
-  resource naming
-- **[Tagging Strategy](./azure-naming-convention.md#tagging)** - Resource
-  organization and cost management
 
 ### 📁 Project Structure
 
