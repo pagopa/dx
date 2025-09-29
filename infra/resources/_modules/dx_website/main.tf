@@ -8,7 +8,6 @@ resource "azurerm_static_web_app" "this" {
   )
   resource_group_name = var.resource_group_name
   location            = "westeurope"
-  sku_tier            = "Standard"
   sku_size            = "Standard"
 
   tags = var.tags
