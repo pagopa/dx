@@ -8,8 +8,8 @@ resource "azurerm_virtual_network" "tests" {
         name          = each.value
       }
   ))
-  location            = azurerm_resource_group.tests[each.value].location
-  resource_group_name = azurerm_resource_group.tests[each.value].name
+  location            = data.azurerm_resource_group.tests[each.value].location
+  resource_group_name = data.azurerm_resource_group.tests[each.value].name
   address_space       = [format("10.%d.0.0/16", 20 + index(tolist(var.test_modes), each.key))]
 
   tags = var.tags
