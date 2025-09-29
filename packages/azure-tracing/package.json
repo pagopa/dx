@@ -44,6 +44,16 @@
       "require": "./dist/functions/v3/index.cjs"
     }
   },
+  "types": "./dist/functions/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "azure-functions": ["dist/functions/hooks.d.ts"],
+      "azure-functions/v3": ["dist/functions/v3/index.d.ts"],
+      "logger": ["dist/opentelemetry/logger.d.ts"],
+      "azure-monitor": ["dist/monitor/index.d.ts"],
+      "*": ["dist/*"]
+    }
+  },
   "dependencies": {
     "@azure/functions": "^4.7.2",
     "@azure/monitor-opentelemetry": "^1.13.1",
