@@ -45,7 +45,7 @@ const topicCards = [
   {
     description: "Container development and deployment",
     icon: "🐳",
-    items: ["Docker Images", "Kubernetes", "CI/CD Pipelines"],
+    items: ["Docker Images", "Registry", "CI/CD Pipelines"],
     link: "/docs/containers",
     title: "Working with Containers",
   },
