@@ -66,6 +66,24 @@ const config: Config = {
         enableClickAnalytics: false,
       },
     ],
+    [
+      "docusaurus-plugin-llms",
+      {
+        customLLMFiles: [],
+        description: "Complete reference documentation for My Project",
+        docsDir: "docs",
+        excludeImports: true,
+        generateLLMsFullTxt: true,
+        generateLLMsTxt: true,
+        // Generate individual markdown files following llmstxt.org specification
+        generateMarkdownFiles: true,
+        ignoreFiles: [],
+        includeBlog: true,
+        includeUnmatchedLast: true,
+        removeDuplicateHeadings: true,
+        title: "PagoPA DevEx Documentation",
+      },
+    ],
   ],
 
   presets: [
