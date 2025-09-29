@@ -41,6 +41,7 @@
     "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "^18.0.38",
+    "docusaurus-plugin-llms": "^0.2.2",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
