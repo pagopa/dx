@@ -1,5 +1,12 @@
 # docs
 
+## 0.8.3
+
+### Patch Changes
+
+- 1841454: Include input sku_size in Azure Static Web Apps HCL snippet
+- 8ea5b13: Enabled llms.txt generation
+
 ## 0.8.2
 
 ### Patch Changes
