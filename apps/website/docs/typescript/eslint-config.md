@@ -9,19 +9,25 @@ JavaScript and TypeScript projects.
 
 :::note
 
-Most rules are **autofixable** - run `pnpm lint` to automatically fix formatting
-and style issues.
+Most rules are **autofixable** - run `eslint --fix src` to automatically fix
+formatting and style issues.
 
 :::
 
+## Requirements
+
+This ESLint configuration requires **ESLint > 9** with **flat config files**
+(`eslint.config.js` or `eslint.config.mjs`). We do not support older versions of
+ESLint or classic configuration files (`.eslintrc.*`).
+
 ## Features
 
+- **Import Organization**: Uses the perfectionist plugin for natural
+  import/export sorting, grouping, and object key reordering
 - **TypeScript Support**: Uses `typescript-eslint` strict and stylistic
   configurations
 - **Prettier Integration**: Combines ESLint with Prettier for consistent
   formatting
-- **Import Organization**: Uses the perfectionist plugin for natural
-  import/export sorting
 - **Testing Rules**: Specialized configuration for Vitest test files
 - **Code Quality**: Enforces complexity limits and modern JavaScript practices
 
@@ -39,7 +45,7 @@ Create an `eslint.config.js` file at the root of your project:
 // eslint.config.js
 import pagopa from "@pagopa/eslint-config";
 
-export default [...pagopa];
+export default pagopa;
 ```
 
 For CommonJS projects, use `eslint.config.mjs` instead.
@@ -51,10 +57,10 @@ The configuration includes rules for:
 - Unused variables and expressions
 - Function complexity (maximum 200 lines)
 - Equality operators (`==` vs `===`)
-- Bitwise operations
-- Parameter reassignment
-- Variable declarations (`var` vs `const`/`let`)
-- And other code quality checks
+- ... many other code quality checks!
+
+For the complete list of rules, see the
+[configuration implementation](https://github.com/pagopa/dx/tree/main/packages/eslint-config).
 
 ## Scripts
 
