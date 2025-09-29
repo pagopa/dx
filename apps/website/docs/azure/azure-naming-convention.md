@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Azure Naming Convention
+# Following Azure Naming Convention
 
 Having a naming convention for your Azure resources is critical for quickly
 identifying the resource type, associated workload, environment, and Azure

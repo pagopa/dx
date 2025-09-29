@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Custom Azure Roles
 
 The DX team has developed several custom Azure roles to provide granular access

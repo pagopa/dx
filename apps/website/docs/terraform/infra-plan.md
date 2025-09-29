@@ -1,8 +1,8 @@
 ---
-sidebar_label: Preview Infrastructure Changes
+sidebar_position: 5
 ---
 
-# Workflow Infra Plan
+# Reviewing Infrastructure Changes
 
 This page describes the GitHub workflow that automates Terraform plan
 operations.

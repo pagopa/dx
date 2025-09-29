@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 2
 ---
 
 # How to Set Up Azure Static Web App for CI/CD Workflow

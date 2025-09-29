@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+sidebar_label: Configuring pre-commit hooks for Terraform
 ---
 
 # Configuring pre-commit hooks for Terraform to ensure smooth module upgrades

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 1
 ---
 
 # Deploy Static Site to Azure Static Web App Workflow

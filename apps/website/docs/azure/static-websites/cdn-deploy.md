@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 4
 ---
 
 # Deploying Assets to a CDN

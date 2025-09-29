@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 3
 ---
 
 # Deploy Static Site to Azure CDN Workflow

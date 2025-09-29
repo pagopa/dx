@@ -1,5 +1,5 @@
 ---
-sidebar_position: 4
+sidebar_position: 7
 ---
 
 # Working with Terraform
@@ -52,8 +52,8 @@ Custom Terraform provider for Azure resources:
   Terraform code
 - **[Azure naming conventions](../azure/azure-naming-convention.md)** -
   Consistent resource naming
-- **[Folder structure](../conventions/infra-folder-structure.md)** - Organize
-  Infrastructure as Code
+- **[Folder structure](./infra-folder-structure.md)** - Organize Infrastructure
+  as Code
 
 ## Azure Resources Guide
 
@@ -88,8 +88,7 @@ Help improve DX infrastructure tools:
 
 :::tip **Infrastructure as Code Best Practices**
 
-Follow our
-[Infrastructure as Code guidelines](../conventions/infra-folder-structure.md) to
+Follow our [Infrastructure as Code guidelines](./infra-folder-structure.md) to
 ensure consistency across projects and teams.
 
 :::

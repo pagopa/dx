@@ -1,8 +1,8 @@
 ---
-sidebar_position: 7
+sidebar_position: 9
 ---
 
-# Multi-Cloud Connectivity: AWS ↔ Azure
+# Connecting Multiple Cloud Providers
 
 Break down cloud silos and unlock the power of multi-cloud architecture. Our
 Terraform module creates secure, seamless connectivity between your AWS and
@@ -321,7 +321,7 @@ After your VPN connection is established:
 
 - [Module Repository on GitHub](https://github.com/pagopa/dx/tree/main/infra/modules/aws_azure_vpn)
 - [Terraform Registry Module](https://registry.terraform.io/modules/pagopa-dx/aws-azure-vpn/aws)
-- [Multi-Cloud Architecture Patterns](./conventions/infra-folder-structure.md)
+- [Multi-Cloud Architecture Patterns](../terraform/infra-folder-structure.md)
 
 🛠️ **Get Support:**
 

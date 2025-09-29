@@ -1,18 +1,11 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
-# Creating a DX-Ready Mono-Repository on GitHub
+# Creating a DX-Ready Monorepo on GitHub
 
 This guide provides step-by-step instructions for creating and setting up a new
 mono-repository on GitHub using DX tools.
-
-:::info
-
-Currently, only projects with a single environment powered by Azure are
-supported. Additional tooling to support other scenarios is under development.
-
-:::
 
 ## Setup GitHub Repository
 

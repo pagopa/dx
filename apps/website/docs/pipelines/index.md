@@ -12,8 +12,8 @@ scanning.
 
 New to DX pipelines? Start here:
 
-1. **[Set up code review workflow](./code-review.md)** - Automated linting,
-   testing, and security scanning
+1. **Set up code review workflow** - Automated linting, testing, and security
+   scanning
 2. **[Deploy applications](../azure/release-azure-appsvc.md)** - Zero-downtime
    releases to Azure App Service
 3. **[Automate infrastructure](../terraform/infra-apply.md)** - Safe Terraform
@@ -23,7 +23,7 @@ New to DX pipelines? Start here:
 
 ### 🔍 Code Quality & Security
 
-- **[Code Review](./code-review.md)** - Comprehensive code quality checks
+- **Code Review** - Comprehensive code quality checks
 - **[Static Analysis](../terraform/static-analysis.md)** - Security and code
   quality scanning
 - **[Drift Detection](../terraform/drift-detection.md)** - Monitor
@@ -50,8 +50,7 @@ New to DX pipelines? Start here:
 
 ### 🛠️ Build & Package
 
-- **[Docker Image Build](./docker-image-build.md)** - Build and push container
-  images
+- **Docker Image Build** - Build and push container images
 - **[CDN Deploy](../azure/cdn-deploy.md)** - Deploy assets to content delivery
   networks
 
@@ -68,7 +67,7 @@ New to DX pipelines? Start here:
      [Static Web App workflow](../azure/build-deploy-static-web-app.md)
 
 2. **Set up code quality:**
-   - Add [Code Review workflow](./code-review.md) to your repository
+   - Add Code Review workflow to your repository
    - Configure [Static Analysis](../terraform/static-analysis.md) for security
      scanning
 
@@ -123,6 +122,6 @@ current workflows documented above. :::
 - **Feature requests** We welcome suggestions for new workflows
 
 :::tip **Pipeline Best Practices** Follow our
-[Git conventions](../conventions/git/index.md) and
-[pull request guidelines](../conventions/pull-requests/index.md) to get the most
-out of DX pipelines. :::
+[Git conventions](../github/git/index.md) and
+[pull request guidelines](../github/pull-requests/index.md) to get the most out
+of DX pipelines. :::

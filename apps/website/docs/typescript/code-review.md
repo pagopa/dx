@@ -2,7 +2,7 @@
 sidebar_position: 50
 ---
 
-# Using the Code Review Workflow
+# Reviewing TypeScript Code
 
 The
 [Code Review workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/js_code_review.yaml)

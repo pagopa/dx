@@ -1,29 +1,18 @@
 ---
 sidebar_position: 1
-title: Getting Started with PagoPA DX
 description:
   Accelerate your development with proven tools, patterns, and best practices
-  for building scalable applications on Azure.
+  for building scalable applications.
 keywords:
   [
     developer experience,
     pagopa,
-    azure,
     terraform,
     typescript,
     devops,
     infrastructure,
     contributing,
   ]
----
-
----
-
-sidebar_position: 1 title: Getting Started with PagoPA DX description:
-Accelerate your development with proven tools, patterns, and best practices for
-building scalable applications on Azure. keywords: [ developer experience,
-pagopa, azure, terraform, typescript, devops, infrastructure, contributing, ]
-
 ---
 
 # Getting Started with PagoPA DX
@@ -42,6 +31,10 @@ explore our [featured tools](#featured-tools) below.
 :::
 
 ## Prerequisites to adopt DX tools
+
+Teams that follow DX conventions report faster onboarding and fewer
+infrastructure issues. The upfront investment in consistency pays dividends in
+reduced maintenance and improved collaboration.
 
 ### Mono Repository: Yes Please!
 
@@ -78,10 +71,9 @@ development experience.
 DX provides guidance to help teams adopt shared conventions during their
 journey:
 
-- [Optimize Git usage](conventions/git/index.md) usage.
-- [Create effective Pull Requests](conventions/pull-requests/index.md).
-- [Name Azure resources](azure/azure-naming-convention.md) consistently.
-- [Organize repository folders](conventions/infra-folder-structure.md) for
+- [Optimize Git usage](github/git/index.md).
+- [Create effective Pull Requests](github/pull-requests/index.md).
+- [Organize repository folders](terraform/infra-folder-structure.md) for
   Infrastructure as Code (IaC) sources.
 
 We expect teams to adhere to these conventions to ensure a consistent experience
@@ -96,21 +88,16 @@ If you're building APIs, web applications, or services:
 
 1. **[Set up your development environment](monorepository-setup.md)** -
    Configure your workspace for PagoPA development
-2. **[Understand our conventions](conventions/index.md)** - Learn our Git
-   workflows, naming conventions, and code standards
-3. **[Deploy applications](pipelines/index.md)** - Automate your deployments
-   with GitHub Actions
-4. **[Deploy infrastructure](terraform/index.md)** - Use Terraform modules to
-   deploy Azure resources
+1. **[Understand our conventions](github/index.md)** - Learn our Git workflows,
+   naming conventions, and code standards
+1. **[Deploy infrastructure](terraform/index.md)** - Use Terraform modules to
+   deploy resources
 
 **Quick wins:**
 
 - Use our [pre-configured dev containers](dev-containers/index.md) for instant
   environment setup
-- Follow our [Git conventions](conventions/git/index.md) for consistent
-  collaboration
-- Deploy apps with our
-  [TypeScript deployment workflows](azure/release-azure-appsvc.md)
+- Follow our [Git conventions](github/git/index.md) for consistent collaboration
 - Deploy infrastructure with our
   [Terraform modules](terraform/using-terraform-registry-modules.md)
 
@@ -133,7 +120,7 @@ guidance and troubleshooting
 
 ### 🏛️ **Infrastructure as Code**
 
-Production-ready Terraform modules for Azure resources:
+Production-ready Terraform modules for different CSPs:
 
 All DX Terraform modules are available on
 [the public Terraform Registry](https://registry.terraform.io/namespaces/pagopa-dx)
@@ -143,18 +130,12 @@ Of course,
 [everyone can contribute](./contributing/contributing-to-dx-terraform-modules.md)
 to improve them.
 
-- **Azure Core Infrastructure** - Networking, security, and monitoring
-  foundations
-- **Application Services** - Container apps, function apps, and API management
-- **Data & Storage** - Cosmos DB, Service Bus, and storage accounts
-
 ### ⚙️ **GitHub Actions Workflows**
 
 Reusable workflows for common scenarios:
 
 The DX repository provides several
-[GitHub reusable workflows](https://github.com/pagopa/dx/tree/main/.github)
-documented in the [pipelines section](pipelines/index.md) of this website.
+[GitHub reusable workflows](https://github.com/pagopa/dx/tree/main/.github/workflows).
 
 We encourage teams to use these templates as a starting point for their GitHub
 Actions workflows. They are designed to speed up continuous integration and
@@ -167,51 +148,16 @@ more. Feel free to choose the ones that best suit team needs!
 
 - **Code Review** - Automated linting, testing, and security scanning
 - **Infrastructure** - Safe Terraform planning and deployment
-- **Application Deployment** - Zero-downtime releases to Azure
+- **Application Deployment** - Zero-downtime releases
 
 ### 📋 **Development Standards**
 
 Consistent approaches across teams:
 
 - **Git Workflows** - Branch naming, commit messages, and PR guidelines
-- **Azure Naming** - Resource naming conventions and tagging strategies
 - **Project Structure** - Monorepo organization and folder hierarchies
 
-[**View All Conventions →**](conventions/index.md)
-
-## Navigation Guide
-
-<div className="row">
-
-<div className="col col--3">
-
-**🚀 [Getting Started](#)** New to DX? Start here for onboarding and setup
-guides
-
-</div>
-
-<div className="col col--3">
-
-**📚 [Infrastructure](./terraform/index.md)** Azure resources, Terraform
-modules, and infrastructure patterns
-
-</div>
-
-<div className="col col--3">
-
-**⚙️ [Pipelines](pipelines/index.md)** GitHub Actions workflows for CI/CD and
-automation
-
-</div>
-
-<div className="col col--3">
-
-**📋 [Conventions](conventions/index.md)** Standards for Git, naming, project
-structure, and code quality
-
-</div>
-
-</div>
+[**View All Conventions →**](github/index.md)
 
 ## Getting Support
 
@@ -225,8 +171,8 @@ here to help:
 
 ## Stay Connected
 
-**📖 [Read our blog](https://pagopa.github.io/dx/blog/)** for the latest updates
-and feature announcements
+**📖 [Read our blog](https://dx.pagopa.it/blog)** for the latest updates and
+feature announcements
 
 **⭐ [Watch our repository](https://github.com/pagopa/dx)** to stay informed
 about new releases
@@ -251,8 +197,8 @@ to understand how you can get involved and make a meaningful impact.
 :::tip **Need help deciding?**
 
 Not sure which path to take? Check out our
-[conventions overview](conventions/index.md) to understand how we organize work
-at PagoPA, or reach out to the DX team on
+[conventions overview](github/index.md) to understand how we organize work at
+PagoPA, or reach out to the DX team on
 [GitHub](https://github.com/pagopa/dx/issues).
 
 :::

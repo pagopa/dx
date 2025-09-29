@@ -1,8 +1,8 @@
 ---
-sidebar_label: Deploy Infrastructure Changes
+sidebar_position: 6
 ---
 
-# Workflow Infra Apply
+# Deploying Infrastructure Changes
 
 This document describes the GitHub workflow that automates Terraform apply
 operations.

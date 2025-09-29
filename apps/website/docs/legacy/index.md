@@ -31,11 +31,11 @@ updates or bug fixes.
 
 ### Legacy → Modern Workflow Mapping
 
-| Legacy Workflow                                               | Modern Replacement                                       | Benefits                                   |
-| ------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------ |
-| [Legacy Code Review](./legacy-code-review.md)                 | [Code Review](../pipelines/code-review.md)               | Faster execution, better security scanning |
-| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../azure/release-azure-appsvc.md)   | Zero-downtime deployment, better rollback  |
-| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | [Docker Image Build](../pipelines/docker-image-build.md) | Multi-platform support, optimized caching  |
+| Legacy Workflow                                               | Modern Replacement                                     | Benefits                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| [Legacy Code Review](./legacy-code-review.md)                 | Code Review (planned)                                  | Faster execution, better security scanning |
+| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../azure/release-azure-appsvc.md) | Zero-downtime deployment, better rollback  |
+| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | Docker Image Build (planned)                           | Multi-platform support, optimized caching  |
 
 ## Legacy Workflows
 
@@ -43,7 +43,7 @@ updates or bug fixes.
 
 - **[Legacy Code Review](./legacy-code-review.md)** - Original code review
   workflow for Node.js projects
-  - ⚠️ **Use instead:** [Modern Code Review](../pipelines/code-review.md)
+  - ⚠️ **Use instead:** Modern Code Review (planned)
   - **Migration effort:** Low - mostly configuration changes
 
 ### Deployment (Deprecated)
@@ -58,7 +58,7 @@ updates or bug fixes.
 
 - **[Legacy Publish SDK](./legacy-publish-sdk.md)** - Original package
   publishing workflow
-  - ⚠️ **Use instead:** [Docker Image Build](../pipelines/docker-image-build.md)
+  - ⚠️ **Use instead:** Docker Image Build (planned)
   - **Migration effort:** Low - mainly configuration updates
 
 ## Support Timeline
