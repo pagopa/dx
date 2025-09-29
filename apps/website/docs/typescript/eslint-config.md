@@ -5,7 +5,7 @@ sidebar_position: 3
 # Configuring ESLint
 
 The `@pagopa/eslint-config` package provides a shared ESLint configuration for
-TypeScript projects.
+JavaScript and TypeScript projects.
 
 :::note
 
