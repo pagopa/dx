@@ -28,7 +28,12 @@ const config: Config = {
     [
       "@docusaurus/plugin-client-redirects",
       {
-        redirects: [],
+        redirects: [
+          {
+            from: "/docs/getting-started",
+            to: "/docs/",
+          },
+        ],
       },
     ],
     [
