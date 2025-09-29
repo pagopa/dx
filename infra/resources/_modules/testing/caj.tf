@@ -26,5 +26,7 @@ module "gh_runner_integration_tests" {
     use_rbac            = true
   }
 
+  resource_group_name = data.azurerm_resource_group.tests[each.value].name
+
   tags = var.tags
 }
