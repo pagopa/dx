@@ -22,6 +22,7 @@ resource "azurerm_static_web_app" "example" {
   resource_group_name = "your-resource-group-name"
   location            = "westeurope" # Is a required parameter, but doesn't affect deployments because the service is global
   sku_tier            = "Standard" # Choose Free for testing, Standard for production
+  sku_size            = "Standard" # Choose Free for testing, Standard for production
 
   tags = {
     ...
