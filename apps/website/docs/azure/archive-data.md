@@ -1,3 +1,7 @@
+---
+sidebar_position: 100
+---
+
 # Archiving Data for Decommissioned Projects
 
 ## Best practices for data archiving

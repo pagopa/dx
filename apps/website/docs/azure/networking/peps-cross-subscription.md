@@ -1,4 +1,4 @@
-# Connecting resources across Azure Subscription via Private Endpoints
+# Connecting resources across Azure Subscriptions via Private Endpoints
 
 ## Overview
 

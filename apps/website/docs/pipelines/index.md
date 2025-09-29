@@ -2,7 +2,7 @@
 sidebar_position: 5
 ---
 
-# Leveraging DX Pipelines
+# Managing DX Pipelines
 
 This section contains documentation on GitHub Actions workflows that automate
 the deployment of resources and applications, code quality checks, and security

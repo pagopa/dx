@@ -1,9 +1,8 @@
 ---
-sidebar_label: Setting up API Management
 sidebar_position: 4
 ---
 
-# Setting up API Management
+# Leveraging API Management
 
 Azure API Management (APIM) is a cloud-based service that enables organizations
 to publish, secure, transform, maintain, and monitor APIs. This section collects
