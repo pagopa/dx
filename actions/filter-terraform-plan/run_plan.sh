@@ -91,23 +91,24 @@ echo "--- Executing Plan ---"
 # Run terraform plan, capture its exit code
 set +e
 
+if [[ "$MODE" == "test" ]]; then
+  sed -E "${SED_EXPRESSIONS[@]}"
+  exit 0
+fi
+
 if [[ "$NO_REFRESH" == "true" ]]; then
   ADDITIONAL_FLAGS="$ADDITIONAL_FLAGS -refresh=false -lock=false"
 fi
 
-if [[ "$MODE" == "test" ]]; then
-  sed -E "${SED_EXPRESSIONS[@]}"
-  exit 0
-else
-  # shellcheck disable=2086
-  terraform plan \
-    -no-color \
-    -lock-timeout=120s \
-    $ADDITIONAL_FLAGS \
-    -input=false 2>&1 | \
-    sed -E "${SED_EXPRESSIONS[@]}" | \
-    tee "$PLAN_FILE"
-fi
+# shellcheck disable=2086
+terraform plan \
+  -no-color \
+  -lock-timeout=120s \
+  $ADDITIONAL_FLAGS \
+  -input=false 2>&1 | \
+  sed -E "${SED_EXPRESSIONS[@]}" | \
+  tee "$PLAN_FILE"
+
 
 PLAN_EXIT_CODE=${PIPESTATUS[0]}
 set -e

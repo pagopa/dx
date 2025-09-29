@@ -13,10 +13,6 @@ inputs:
   sensitive-keys:
     description: "A comma-separated list of sensitive keys to filter from the plan output."
     required: true
-  upload-artifact:
-    description: "If true, the filtered plan will be uploaded as an artifact."
-    required: false
-    default: "false"
 
 outputs:
   summary_line:
@@ -44,10 +40,3 @@ runs:
         SENSITIVE_KEYS: ${{ inputs.sensitive-keys }}
         NO_REFRESH: ${{ inputs.no-refresh }}
         PLAN_FILE: filtered_plan.txt
-
-    - name: Upload Artifact
-      if: ${{ inputs.upload-artifact == 'true' }}
-      uses: pagopa/dx/.github/actions/upload-artifact@main
-      with:
-        file_path: ${{ steps.plan.outputs.filtered_plan_path }}
-        bundle_name: filtered-terraform-plan
