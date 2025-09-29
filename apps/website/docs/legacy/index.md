@@ -31,11 +31,11 @@ updates or bug fixes.
 
 ### Legacy → Modern Workflow Mapping
 
-| Legacy Workflow                                               | Modern Replacement                                     | Benefits                                   |
-| ------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
-| [Legacy Code Review](./legacy-code-review.md)                 | Code Review (planned)                                  | Faster execution, better security scanning |
-| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../azure/release-azure-appsvc.md) | Zero-downtime deployment, better rollback  |
-| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | Docker Image Build (planned)                           | Multi-platform support, optimized caching  |
+| Legacy Workflow                                               | Modern Replacement                                                            | Benefits                                   |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| [Legacy Code Review](./legacy-code-review.md)                 | Code Review (planned)                                                         | Faster execution, better security scanning |
+| [Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md) | [App Service Deploy](../azure/application-deployment/release-azure-appsvc.md) | Zero-downtime deployment, better rollback  |
+| [Legacy Publish SDK](./legacy-publish-sdk.md)                 | Docker Image Build (planned)                                                  | Multi-platform support, optimized caching  |
 
 ## Legacy Workflows
 
@@ -50,8 +50,10 @@ updates or bug fixes.
 
 - **[Legacy Deploy Pipelines](./legacy-deploy-pipelines-azure.md)** - Original
   Azure deployment workflows
-  - ⚠️ **Use instead:** [App Service Deploy](../azure/release-azure-appsvc.md)
-    or [Container App Deploy](../azure/release-container-app.md)
+  - ⚠️ **Use instead:**
+    [App Service Deploy](../azure/application-deployment/release-azure-appsvc.md)
+    or
+    [Container App Deploy](../azure/application-deployment/release-container-app.md)
   - **Migration effort:** Medium - may require application changes
 
 ### Package Publishing (Deprecated)
@@ -86,7 +88,7 @@ The DX team provides migration support:
 
 - Legacy workflows use service principals
 - Modern workflows use OIDC authentication
-- [Learn about Azure Login setup](../azure/azure-login.md)
+- [Learn about Azure Login setup](../azure/iam/azure-login.md)
 
 **Configuration Format**
 

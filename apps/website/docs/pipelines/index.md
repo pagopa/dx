@@ -14,8 +14,8 @@ New to DX pipelines? Start here:
 
 1. **Set up code review workflow** - Automated linting, testing, and security
    scanning
-2. **[Deploy applications](../azure/release-azure-appsvc.md)** - Zero-downtime
-   releases to Azure App Service
+2. **[Deploy applications](../azure/application-deployment/release-azure-appsvc.md)** -
+   Zero-downtime releases to Azure App Service
 3. **[Automate infrastructure](../terraform/infra-apply.md)** - Safe Terraform
    deployments
 
@@ -31,14 +31,14 @@ New to DX pipelines? Start here:
 
 ### 🚀 Application Deployment
 
-- **[Azure App Service](../azure/release-azure-appsvc.md)** - Deploy web
-  applications and APIs
-- **[Container Apps](../azure/release-container-app.md)** - Deploy containerized
-  applications
-- **[Static Web Apps](../azure/build-deploy-static-web-app.md)** - Deploy static
-  sites with CDN
-- **[CDN Deployment](../azure/build-deploy-cdn-static-site.md)** - Deploy to
-  Azure CDN
+- **[Azure App Service](../azure/application-deployment/release-azure-appsvc.md)** -
+  Deploy web applications and APIs
+- **[Container Apps](../azure/application-deployment/release-container-app.md)** -
+  Deploy containerized applications
+- **[Static Web Apps](../azure/static-websites/build-deploy-static-web-app.md)** -
+  Deploy static sites with CDN
+- **[CDN Deployment](../azure/static-websites/build-deploy-cdn-static-site.md)** -
+  Deploy to Azure CDN
 
 ### 🏗️ Infrastructure Automation
 
@@ -46,13 +46,14 @@ New to DX pipelines? Start here:
   validation
 - **[Infrastructure Apply](../terraform/infra-apply.md)** - Safe infrastructure
   deployments
-- **[Azure Login](../azure/azure-login.md)** - Secure authentication to Azure
+- **[Azure Login](../azure/iam/azure-login.md)** - Secure authentication to
+  Azure
 
 ### 🛠️ Build & Package
 
 - **Docker Image Build** - Build and push container images
-- **[CDN Deploy](../azure/cdn-deploy.md)** - Deploy assets to content delivery
-  networks
+- **[CDN Deploy](../azure/static-websites/cdn-deploy.md)** - Deploy assets to
+  content delivery networks
 
 ## Getting Started
 
@@ -60,11 +61,11 @@ New to DX pipelines? Start here:
 
 1. **Choose your deployment target:**
    - Azure App Service →
-     [App Service workflow](../azure/release-azure-appsvc.md)
+     [App Service workflow](../azure/application-deployment/release-azure-appsvc.md)
    - Container Apps →
-     [Container App workflow](../azure/release-container-app.md)
+     [Container App workflow](../azure/application-deployment/release-container-app.md)
    - Static sites →
-     [Static Web App workflow](../azure/build-deploy-static-web-app.md)
+     [Static Web App workflow](../azure/static-websites/build-deploy-static-web-app.md)
 
 2. **Set up code quality:**
    - Add Code Review workflow to your repository
@@ -80,7 +81,7 @@ New to DX pipelines? Start here:
    - Configure [Infrastructure Apply](../terraform/infra-apply.md) for
      deployments
    - Enable [Drift Detection](../terraform/drift-detection.md) for monitoring
-   - Implement [Azure Login](../azure/azure-login.md) patterns
+   - Implement [Azure Login](../azure/iam/azure-login.md) patterns
 
 ## Workflow Features
 

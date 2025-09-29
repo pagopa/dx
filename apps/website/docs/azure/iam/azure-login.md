@@ -22,7 +22,7 @@ GitHub Environments and secrets. If you're already using
 about [GitHub Environments](#github-environments) and
 [how to manage multiple environments](#managing-multiple-github-environments).
 Instead, `azure_github_environment_bootstrap` users might find it more useful to
-read about [best practices for managing Azure IAM](../azure/azure-iam.md).
+read about [best practices for managing Azure IAM](./azure-iam.md).
 
 :::
 

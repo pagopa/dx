@@ -135,7 +135,7 @@ Terraform module.
 
 For more information, see the
 [related blog post](https://dx.pagopa.it/blog/devex-azure-bootstrap-0.1-alpha)
-and the [IAM Framework documentation](azure/azure-iam.md).
+and the [IAM Framework documentation](azure/iam/azure-iam.md).
 
 :::info[Azure Permissions for Initial Setup]
 

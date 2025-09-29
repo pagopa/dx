@@ -19,5 +19,5 @@ effectively managing IAM in your Azure environment.
   passwordless login to Azure from GitHub Actions.
 - **[Cross-Subscription Role Assignments](./iam-cross-subscription.md)** -
   Implement cross-subscription role assignments using Terraform.
-- **[Role Assignments with DX Modules](../terraform/using-terraform-registry-modules.md#role-assignments)** -
+- **[Role Assignments with DX Modules](../../terraform/using-terraform-registry-modules.md#role-assignments)** -
   Use DX Terraform modules to manage role assignments efficiently.

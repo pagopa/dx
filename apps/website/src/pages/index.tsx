@@ -33,14 +33,14 @@ const topicCards = [
     description: "Development standards and best practices",
     icon: "📋",
     items: ["Git Workflows", "Resource Naming", "Project Structure"],
-    link: "/docs/conventions",
+    link: "/docs/github",
     title: "Conventions",
   },
   {
     description: "Authentication patterns and tools",
     icon: "🔐",
     items: ["Azure Login", "Service Principals", "RBAC Patterns"],
-    link: "/docs/azure/azure-login",
+    link: "/docs/azure/iam/azure-login",
     title: "Authentication",
   },
   {
