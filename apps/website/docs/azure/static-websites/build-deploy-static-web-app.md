@@ -39,7 +39,7 @@ resource "azurerm_static_web_app" "example" {
     })
   )
   resource_group_name = var.resource_group_name
-  location            = "italynorth"
+  location            = "westeurope"
   sku_tier            = "Standard"
 
   tags = var.tags
