@@ -2,4 +2,4 @@
 "docs": patch
 ---
 
-Add @pagopa/eslint package documentation
+Add @pagopa/eslint-config package documentation
