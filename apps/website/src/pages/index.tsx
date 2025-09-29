@@ -25,7 +25,7 @@ const topicCards = [
     description: "TypeScript generators and development tools",
     icon: "⚙️",
     items: ["TypeScript Generators", "Project Templates", "Code Quality"],
-    link: "/docs/",
+    link: "/docs/typescript",
     title: "Building with TypeScript",
   },
   {
