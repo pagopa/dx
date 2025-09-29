@@ -2,44 +2,74 @@
 sidebar_position: 1
 ---
 
-# Deploy Static Site to Azure Static Web App Workflow
+# Deploy Static Site to Azure Static Web App
 
-The
-[Build and Deploy Static Site to Azure Static Web App](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-staticapp-v1.yaml)
-is a reusable workflow (`workflow_call`) that automates the build and deployment
-of a static application from a Turborepo-based monorepo to **Azure Static Web
-Apps**. It is designed to provide a streamlined, secure, and consistent
-deployment process, complete with integrated support for **Pull Request
-previews**.
+This guide provides a complete walkthrough for setting up and deploying a static
+website to Azure Static Web Apps using Terraform for infrastructure provisioning
+and GitHub Actions for automated CI/CD.
 
-## How It Works
+## Overview
 
-The workflow automates the entire deployment process from build to release.
+Deploying a static site to Azure Static Web Apps involves two main phases:
 
-1. Automatically identifies the package manager used in the project (pnpm, yarn,
-   or npm), configures the runner accordingly and builds the application using
-   `turbo build` command.
-2. It uses the official `Azure/static-web-apps-deploy@v1` action to upload the
-   built application.
-3. If the workflow is triggered by a Pull Request, the deployment step
-   automatically creates a temporary preview environment, allowing you to see
-   your changes live before merging.
+1. **Infrastructure Setup**: Create the Azure Static Web App resource using
+   Terraform
+2. **CI/CD Configuration**: Set up automated deployment using GitHub Actions
 
-## Usage
+## Prerequisites
 
-To use this reusable workflow, you need to call it from another workflow file in
-your repository. Below is an example of how to trigger it for a specific
-application.
+- Azure subscription with appropriate permissions
+- Terraform installed and configured
+- GitHub repository with your static site code
+- Azure CLI installed (for authentication)
+
+## Step 1: Infrastructure Setup with Terraform
+
+Create the Azure Static Web App resource using Terraform.
+
+Use the official `azurerm_static_web_app` resource:
+
+```hcl
+resource "azurerm_static_web_app" "example" {
+  name = provider::azuredx::resource_name(merge(
+    var.naming_config,
+    {
+      name          = "website",
+      resource_type = "static_web_app",
+    })
+  )
+  resource_group_name = var.resource_group_name
+  location            = "italynorth"
+  sku_tier            = "Standard"
+
+  tags = var.tags
+}
+```
+
+## Step 2: Configure CI/CD with GitHub Actions
+
+Use the reusable workflow to automate build and deployment.
+
+The workflow automates the entire deployment process:
+
+1. Detects your package manager (pnpm, yarn, or npm)
+2. Builds the application using `turbo build`
+3. Deploys using the official Azure Static Web Apps action
+4. Creates preview environments for pull requests
+
+### Workflow Configuration
+
+Create a workflow file in `.github/workflows/`:
 
 ```yaml
-name: Deploy My Static App to Azure
+name: Deploy Static App to Azure
 
 on:
   push:
     branches:
       - main
     paths:
-      - "apps/my-static-app/**" # Trigger only when this app changes
+      - "apps/my-static-app/**"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -49,29 +79,30 @@ on:
 
 jobs:
   deploy_to_static_web_app:
-    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
+    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main
     secrets: inherit
     with:
-      workspace_name: "my-static-app" # The 'name' from the app's package.json
-      output_dir: "dist" # The build output directory name
-      static_web_app_name: "your-static-web-app-name"
-      resource_group_name: "your-resource-group-name"
+      workspace_name: "my-static-app" # Matches package.json name
+      output_dir: "dist" # Build output directory
+      static_web_app_name: "your-static-web-app-name" # From Terraform
+      resource_group_name: "your-resource-group-name" # From Terraform
       environment: "app-dev"
 ```
 
-### Important Notes
+### Required Permissions and Secrets
 
-1. **Trigger Configuration**: The calling workflow must be triggered on `push`
-   and `pull_request` events for the preview environment functionality to work
-   correctly.
-2. **Workspace Name**: Ensure the `workspace_name` input matches the `name`
-   field in the `package.json` of the application you want to deploy, not its
-   directory path.
-3. **Permissions & Secrets**: The calling workflow must have the necessary
-   permissions (`id-token: write`, `contents: read`, `pull-requests: write`) and
-   secrets (e.g., for Azure login) available. Using `secrets: inherit` is the
-   easiest way to pass them down. Make sure the Azure Identity have the
-   `PagoPA Static Web Apps List Secrets` role assigned.
-4. **Monorepo Structure**: This workflow is optimized for a monorepo managed
-   with Turborepo. It assumes your applications are located in workspaces (under
-   an `apps/` directory).
+- **GitHub Environment Roles**: Assign `Contributor` and `Website Contributor`
+  roles
+- **Azure Identity Role**: Assign `PagoPA Static Web Apps List Secrets` role
+- **Workflow Permissions**: Ensure `id-token: write`, `contents: read`,
+  `pull-requests: write`
+- **Secrets**: Use `secrets: inherit` or configure Azure authentication secrets
+
+## Additional Notes
+
+- The workflow supports preview deployments for pull requests
+- Built for Turborepo monorepos with apps in the `apps/` directory
+- For more details, see the
+  [Azure Static Web Apps documentation](https://learn.microsoft.com/en-us/azure/static-web-apps/)
+  and
+  [Terraform provider docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/static_web_app)
