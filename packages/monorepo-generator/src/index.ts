@@ -57,6 +57,34 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     validate: (input) =>
       input.length > 0 ? true : "Select at least one environment",
   },
+  {
+    message: "What is the project prefix?",
+    name: "prefix",
+  },
+  {
+    message: "What is the Azure location?",
+    name: "azureLocation",
+    when: (answers) => answers.csp === "azure",
+  },
+  {
+    message: "What is the project domain?",
+    name: "domain",
+  },
+  {
+    default: "01",
+    message: "What is the instance number?",
+    name: "instanceNumber",
+  },
+  {
+    message: "What is the AWS region?",
+    name: "awsRegion",
+    when: (answers) => answers.csp === "aws",
+  },
+  {
+    message: "What is the AWS app name?",
+    name: "awsAppName",
+    when: (answers) => answers.csp === "aws",
+  },
 ];
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
