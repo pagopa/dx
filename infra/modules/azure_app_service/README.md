@@ -19,6 +19,15 @@ This module deploys an AppService with a strong opinionated configuration in ter
 | default   | Above average production tier    | 99.95% | Yes          | Max 30      | Yes      |
 | high_load | High-performance production tier | 99.95% | Yes          | Max 30      | Yes      |
 
+### Allowed Sizes
+
+The SKU name is determined by the use case, but if you want to override it, you can set the `size` variable.
+The allowed sizes are:
+
+- P0v3
+- P1v3
+- P2v3
+
 ## Usage Example
 
 For a complete example of how to use this module, refer to the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service/tree/main/examples/complete) folder in the module repository.
