@@ -4,10 +4,13 @@ module "testing" {
   environment = local.environment
   test_modes  = local.test_modes
 
-  gh_pat_reference = {
-    keyvault_name                = data.azurerm_key_vault.common.name
-    keyvault_resource_group_name = data.azurerm_key_vault.common.resource_group_name
+  vnet_common = {
+    name                = data.azurerm_virtual_network.common.name
+    id                  = data.azurerm_virtual_network.common.id
+    resource_group_name = data.azurerm_virtual_network.common.resource_group_name
   }
+
+  private_dns_zone_names = data.azurerm_private_dns_zone.tests_peps[*].name
 
   tags = local.tags
 }
