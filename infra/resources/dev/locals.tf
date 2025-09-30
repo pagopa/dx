@@ -8,6 +8,22 @@ locals {
 
   test_modes = ["integration", "e2e"]
 
+  private_dns_zones = [
+    "privatelink.azure-api.net",
+    "azure-api.net",
+    "privatelink.azurewebsites.net",
+    "privatelink.blob.core.windows.net",
+    "privatelink.${local.environment.location}.azurecontainerapps.io",
+    "privatelink.documents.azure.com",
+    "privatelink.file.core.windows.net",
+    "management.azure-api.net",
+    "privatelink.postgres.database.azure.com",
+    "privatelink.queue.core.windows.net",
+    "scm.azure-api.net",
+    "privatelink.servicebus.windows.net",
+    "privatelink.table.core.windows.net",
+  ]
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
