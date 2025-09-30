@@ -1,5 +1,11 @@
 # docs
 
+## 0.8.4
+
+### Patch Changes
+
+- 421e8a4: Add @pagopa/eslint-config package documentation
+
 ## 0.8.3
 
 ### Patch Changes
