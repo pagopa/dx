@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "repository": {
@@ -47,11 +47,21 @@
   "types": "./dist/functions/index.d.ts",
   "typesVersions": {
     "*": {
-      "azure-functions": ["dist/functions/hooks.d.ts"],
-      "azure-functions/v3": ["dist/functions/v3/index.d.ts"],
-      "logger": ["dist/opentelemetry/logger.d.ts"],
-      "azure-monitor": ["dist/monitor/index.d.ts"],
-      "*": ["dist/*"]
+      "azure-functions": [
+        "dist/functions/hooks.d.ts"
+      ],
+      "azure-functions/v3": [
+        "dist/functions/v3/index.d.ts"
+      ],
+      "logger": [
+        "dist/opentelemetry/logger.d.ts"
+      ],
+      "azure-monitor": [
+        "dist/monitor/index.d.ts"
+      ],
+      "*": [
+        "dist/*"
+      ]
     }
   },
   "dependencies": {
