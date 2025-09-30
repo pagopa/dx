@@ -8,8 +8,8 @@ resource "azurerm_container_app_environment" "tests" {
         name          = each.value
       }
   ))
-  location            = azurerm_resource_group.tests[each.value].location
-  resource_group_name = azurerm_resource_group.tests[each.value].name
+  location            = data.azurerm_resource_group.tests[each.value].location
+  resource_group_name = data.azurerm_resource_group.tests[each.value].name
 
   log_analytics_workspace_id = azurerm_log_analytics_workspace.tests[each.value].id
 

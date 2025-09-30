@@ -1,4 +1,4 @@
-resource "azurerm_resource_group" "tests" {
+data "azurerm_resource_group" "tests" {
   for_each = var.test_modes
 
   name = provider::dx::resource_name(
@@ -9,7 +9,4 @@ resource "azurerm_resource_group" "tests" {
         name          = each.value
       }
   ))
-  location = var.environment.location
-
-  tags = var.tags
 }

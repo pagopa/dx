@@ -34,7 +34,7 @@ resource "azurerm_private_dns_zone" "tests_peps" {
   for_each = local.flat_map
 
   name                = each.value.dns_zone
-  resource_group_name = azurerm_resource_group.tests[each.value.test_mode].name
+  resource_group_name = data.azurerm_resource_group.tests[each.value.test_mode].name
 
   tags = var.tags
 }
@@ -43,7 +43,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "tests_peps" {
   for_each = local.flat_map
 
   name                  = azurerm_virtual_network.tests[each.value.test_mode].name
-  resource_group_name   = azurerm_resource_group.tests[each.value.test_mode].name
+  resource_group_name   = data.azurerm_resource_group.tests[each.value.test_mode].name
   private_dns_zone_name = azurerm_private_dns_zone.tests_peps[each.key].name
   virtual_network_id    = azurerm_virtual_network.tests[each.value.test_mode].id
   registration_enabled  = false
