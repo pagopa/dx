@@ -32,5 +32,5 @@ variable "vnet_common" {
 
 variable "private_dns_zone_names" {
   type        = list(string)
-  description = "Map of private DNS zone IDs to link to the test virtual networks"
+  description = "Map of private DNS zone names to link to the test virtual networks"
 }

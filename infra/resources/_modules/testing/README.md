@@ -34,7 +34,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    location        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_private_dns_zone_names"></a> [private\_dns\_zone\_names](#input\_private\_dns\_zone\_names) | Map of private DNS zone IDs to link to the test virtual networks | `list(string)` | n/a | yes |
+| <a name="input_private_dns_zone_names"></a> [private\_dns\_zone\_names](#input\_private\_dns\_zone\_names) | Map of private DNS zone names to link to the test virtual networks | `list(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to resources | `map(string)` | n/a | yes |
 | <a name="input_test_modes"></a> [test\_modes](#input\_test\_modes) | List of test kinds to create resources for. Allowed values are 'integration' and 'e2e'. | `set(string)` | n/a | yes |
 | <a name="input_vnet_common"></a> [vnet\_common](#input\_vnet\_common) | n/a | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>    id                  = string<br/>  })</pre> | n/a | yes |
