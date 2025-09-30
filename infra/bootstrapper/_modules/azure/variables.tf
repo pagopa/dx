@@ -31,6 +31,12 @@ variable "core_state" {
   description = "Details about the Azure Storage Account used to store the Terraform state file."
 }
 
+variable "resource_group_ids" {
+  type        = list(string)
+  description = "List of resource group IDs to be added to the bootstrapper role assignments."
+  default     = []
+}
+
 variable "tags" {
   type        = map(any)
   description = "Map of tags to apply to all created resources."

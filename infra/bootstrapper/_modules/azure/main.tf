@@ -43,6 +43,10 @@ module "bootstrap" {
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
 
-  additional_resource_group_ids = concat([module.core_values.common_resource_group_id], (module.core_values.test_resource_group_id != null ? [module.core_values.test_resource_group_id] : []))
-  tags                          = var.tags
+  additional_resource_group_ids = concat(
+    var.resource_group_ids,
+    [module.core_values.common_resource_group_id],
+    (module.core_values.test_resource_group_id != null ? [module.core_values.test_resource_group_id] : [])
+  )
+  tags = var.tags
 }

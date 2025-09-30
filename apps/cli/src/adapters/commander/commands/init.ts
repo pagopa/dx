@@ -41,7 +41,6 @@ export const makeInitCommand = (): Command =>
             .andThen((plop) => getGenerator(plop)("monorepo"))
             .andThen(runGenerator)
             .andTee(() => {
-              // eslint-disable-next-line no-console
               console.log("Monorepo initialized successfully ✅");
             })
             .orTee((err) => {

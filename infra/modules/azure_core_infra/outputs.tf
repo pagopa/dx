@@ -96,17 +96,17 @@ output "common_nat_gateways" {
 
 output "vpn_gateway_id" {
   description = "The ID of the virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].gateway_id : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].gateway_id : null
 }
 
 output "vpn_fqdns" {
   description = "The FQDNs for virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].fqdns : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].fqdns : null
 }
 
 output "vpn_public_ips" {
   description = "The public IP addresses associated with the virtual network gateway."
-  value       = var.vpn_enabled || var.aws_vpn_enabled ? module.vpn[0].public_ips : null
+  value       = var.vpn_enabled || var.cross_cloud_dns_enabled ? module.vpn[0].public_ips : null
 }
 
 # Key Vault
@@ -139,4 +139,21 @@ output "application_insights" {
     instrumentation_key_kv_secret_name = module.application_insights.instrumentation_key_kv_secret_name
     resource_group_name                = module.application_insights.resource_group_name
   }
+}
+
+# DNS Forwarder
+output "dns_forwarder" {
+  description = "DNS forwarder configuration and endpoints"
+  value = {
+    endpoint            = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.vpn[0].dns_forwarder_endpoint : null
+    subnet_id           = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.network.dns_forwarder_snet.id : null
+    private_ip          = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? module.vpn[0].dns_forwarder_private_ip : null
+    resource_group      = (var.vpn_enabled || var.cross_cloud_dns_enabled) ? azurerm_resource_group.network.name : null
+    cross_cloud_enabled = var.cross_cloud_dns_enabled
+  }
+}
+
+output "private_dns_zones" {
+  description = "List of private DNS zones linked to the virtual network."
+  value       = values(local.private_dns_zones)
 }

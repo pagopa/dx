@@ -1,5 +1,33 @@
 # @pagopa/dx-cli
 
+## 0.7.0
+
+### Minor Changes
+
+- eefc4d3: Add `use-pnpm` codemod to migrate a project from yarn to pnpm
+- eefc4d3: Add `update-code-review` codemod to update the `js_code_review` workflow to the latest version
+- eefc4d3: Add `use-azure-appsvc` codemod to migrate legacy deployment workflows
+
+## 0.6.0
+
+### Minor Changes
+
+- fa4e825: Create the `init` command
+
+  This command is going to be used to initialize a new project (a monorepo) using the DX CLI.
+
+### Patch Changes
+
+- Updated dependencies [051f215]
+- Updated dependencies [155cb81]
+- Updated dependencies [7171d9d]
+- Updated dependencies [155cb81]
+- Updated dependencies [f638ad6]
+- Updated dependencies [38396b0]
+- Updated dependencies [fa4e825]
+- Updated dependencies [7171d9d]
+  - @pagopa/monorepo-generator@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

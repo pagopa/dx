@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 5.1.0
+
+### Minor Changes
+
+- 932fa05: Removed no-console rule
+
 ## 5.0.0
 
 ### Major Changes

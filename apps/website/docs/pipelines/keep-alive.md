@@ -2,7 +2,7 @@
 sidebar_position: 50
 ---
 
-# Maintaining Scheduled GitHub Actions Alive
+# Keeping Scheduled GitHub Actions Alive
 
 The
 [Keep Alive action](https://github.com/pagopa/dx/tree/main/.github/actions/keep-alive)

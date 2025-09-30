@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -20,7 +20,7 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "execa": "^9.6.0",
+    "execa": "catalog:",
     "neverthrow": "catalog:",
     "octokit": "^5.0.3",
     "semver": "catalog:"

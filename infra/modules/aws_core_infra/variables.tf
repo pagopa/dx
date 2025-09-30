@@ -36,4 +36,3 @@ variable "nat_gateway_count" {
     error_message = "NAT gateway count must be between 0 and 3."
   }
 }
-

@@ -10,26 +10,61 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  tiers = {
-    s = {
+  use_cases = {
+    development = {
       alerts                     = false
       advanced_threat_protection = false
+      immutability_policy        = false
+      shared_access_key_enabled  = true
       account_tier               = "Standard"
       replication_type           = "LRS"
+      secondary_replication      = false
     }
-
-    l = {
+    default = {
       alerts                     = true
-      advanced_threat_protection = var.environment.location != "italynorth"
+      advanced_threat_protection = false
+      immutability_policy        = false
+      shared_access_key_enabled  = true
       account_tier               = "Standard"
       replication_type           = "ZRS"
+      secondary_replication      = false
+    }
+    audit = {
+      alerts                     = true
+      advanced_threat_protection = false
+      immutability_policy        = true
+      shared_access_key_enabled  = true
+      account_tier               = "Standard"
+      replication_type           = "ZRS"
+      secondary_replication      = true
+    }
+    delegated_access = {
+      alerts                     = true
+      advanced_threat_protection = true
+      immutability_policy        = false
+      shared_access_key_enabled  = false
+      account_tier               = "Standard"
+      replication_type           = "ZRS"
+      secondary_replication      = false
+    }
+    archive = {
+      alerts                     = false
+      advanced_threat_protection = false
+      immutability_policy        = true
+      shared_access_key_enabled  = true
+      account_tier               = "Standard"
+      replication_type           = "LRS"
+      secondary_replication      = true
     }
   }
 
-  tier_features = local.tiers[var.tier]
+  tier_features = local.use_cases[var.use_case]
+
+  force_public_network_access_enabled = var.force_public_network_access_enabled || var.use_case == "delegated_access"
+  immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
 
   peps = {
-    create_subservices = var.force_public_network_access_enabled ? {
+    create_subservices = local.force_public_network_access_enabled ? {
       blob  = false
       file  = false
       queue = false

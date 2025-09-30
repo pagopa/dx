@@ -63,6 +63,19 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
+data "azurerm_key_vault" "kv" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "key_vault"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "resource_group"
+  }))
+}
+
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
 }
@@ -73,4 +86,15 @@ output "subnet_id" {
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
+}
+
+output "kv_id" {
+  value = data.azurerm_key_vault.kv.id
+}
+output "tags" {
+  value = var.tags
+}
+
+output "environment" {
+  value = var.environment
 }

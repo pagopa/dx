@@ -3,11 +3,16 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { Codemod, CodemodRegistry } from "../../domain/codemod.js";
 
+import { InfoResult } from "../../domain/info.js";
 import { applyCodemodById } from "../apply-codemod.js";
+
+const info = vi.fn().mockResolvedValue({
+  packageManager: "npm",
+} satisfies InfoResult);
 
 describe("applyCodemodById", () => {
   it("applies the codemod when found", async () => {
-    const apply: Codemod["apply"] = vi.fn(() => okAsync(undefined));
+    const apply: Codemod["apply"] = vi.fn().mockResolvedValue(undefined);
 
     const codemod: Codemod = {
       apply,
@@ -22,7 +27,7 @@ describe("applyCodemodById", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(codemod)),
     };
 
-    const result = await applyCodemodById(registry)("foo");
+    const result = await applyCodemodById(registry, info)("foo");
 
     expect(result.isOk()).toBe(true);
     expect(apply).toHaveBeenCalledTimes(1);
@@ -36,7 +41,7 @@ describe("applyCodemodById", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(undefined)),
     };
 
-    const result = await applyCodemodById(registry)("missing-id");
+    const result = await applyCodemodById(registry, info)("missing-id");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
@@ -54,18 +59,18 @@ describe("applyCodemodById", () => {
         .mockReturnValue(errAsync<Codemod | undefined, Error>(registryError)),
     };
 
-    const result = await applyCodemodById(registry)("foo");
+    const result = await applyCodemodById(registry, info)("foo");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toBe(registryError);
+      expect(result.error.message).toContain(registryError.message);
     }
   });
 
   it("propagates apply errors", async () => {
     const applyError = new Error("apply failed");
     const codemod: Codemod = {
-      apply: vi.fn(() => errAsync(applyError)),
+      apply: vi.fn().mockRejectedValue(applyError),
       description: "test codemod",
       id: "foo",
     };
@@ -77,11 +82,12 @@ describe("applyCodemodById", () => {
         .mockReturnValue(okAsync<Codemod | undefined, Error>(codemod)),
     };
 
-    const result = await applyCodemodById(registry)("foo");
+    const result = await applyCodemodById(registry, info)("foo");
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toBe(applyError);
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.message).toContain(applyError.message);
     }
   });
 });

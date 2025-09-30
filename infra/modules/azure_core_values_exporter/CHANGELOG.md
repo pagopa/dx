@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.2.3
+
+### Patch Changes
+
+- 707b5cf: Add dns_forwarder outputs
+
 ## 0.2.2
 
 ### Patch Changes

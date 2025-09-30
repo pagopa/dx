@@ -23,13 +23,14 @@ variable "resource_group_name" {
 }
 
 # ------------ STORAGE ACCOUNT ------------ #
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Storage account tier depending on demanding workload. Allowed values: 's', 'l'."
+  description = "Storage account use case. Allowed values: 'default', 'audit', 'delegated_access', 'development', 'archive'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "l"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\" or \"l\"."
+    condition     = contains(["default", "audit", "delegated_access", "development", "archive"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", \"audit\", \"delegated_access\", \"development\", or \"archive\"."
   }
 }
 
@@ -39,7 +40,7 @@ variable "subnet_pep_id" {
   default     = null
 
   validation {
-    condition     = var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+    condition     = var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
     error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
   }
 }
@@ -54,6 +55,11 @@ variable "customer_managed_key" {
   })
   description = "Configures customer-managed keys (CMK) for encryption. Supports only 'kv' (Key Vault)."
   default     = { enabled = false }
+
+  validation {
+    condition     = var.use_case != "audit" || var.customer_managed_key.enabled
+    error_message = "Customer-managed key (BYOK) must be enabled when the use case is 'audit'."
+  }
 }
 
 variable "force_public_network_access_enabled" {
@@ -119,6 +125,11 @@ variable "blob_features" {
     condition     = var.blob_features.restore_policy_days == 0 || (var.blob_features.restore_policy_days >= 1 && var.blob_features.restore_policy_days <= 365)
     error_message = "Restore policy days must be 0 to disable the policy or between 1 and 365."
   }
+
+  validation {
+    condition     = !contains(["archive", "audit"], var.use_case) || (var.blob_features.delete_retention_days == 0 && var.blob_features.restore_policy_days == 0)
+    error_message = "For 'archive' and 'audit' use cases, delete_retention_days and restore_policy_days must be 0."
+  }
 }
 
 variable "network_rules" {
@@ -181,4 +192,42 @@ variable "custom_domain" {
     name          = null
     use_subdomain = false
   }
+}
+
+variable "secondary_location" {
+  type        = string
+  description = "Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication_type like GRS or GZRS."
+  default     = null
+
+  validation {
+    condition     = ((var.secondary_location != var.environment.location) && local.tier_features.secondary_replication == true) || local.tier_features.secondary_replication == false
+    error_message = "'secondary_location' must be different from 'environment.location'."
+  }
+}
+
+variable "containers" {
+  description = "Containers to be created."
+  type = list(object({
+    name        = string
+    access_type = optional(string, "private")
+  }))
+
+  default = []
+
+  validation {
+    condition     = alltrue([for c in var.containers : contains(["private", "blob", "container"], c.access_type)])
+    error_message = "Container access_type must be one of 'private', 'blob', or 'container'."
+  }
+}
+
+variable "tables" {
+  description = "Tables to be created."
+  type        = list(string)
+  default     = []
+}
+
+variable "queues" {
+  description = "Queues to be created."
+  type        = list(string)
+  default     = []
 }

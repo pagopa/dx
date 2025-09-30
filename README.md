@@ -30,7 +30,7 @@ DevEx initiative consists in a set of tools, patterns, and best practices aimed 
 
 ## ⚡️ Quick Start
 
-To start using DX tooling, conventions and best practices, refer to the [getting started](https://dx.pagopa.it/docs/getting-started) on the DX website.
+To start using DX tooling, conventions and best practices, refer to the [getting started](https://dx.pagopa.it/docs/) on the DX website.
 
 <div align="right">
 

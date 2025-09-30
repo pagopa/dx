@@ -9,9 +9,9 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | n/a |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
-| <a name="provider_github"></a> [github](#provider\_github) | n/a |
+| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.6.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.46.0 |
+| <a name="provider_github"></a> [github](#provider\_github) | 6.6.0 |
 
 ## Modules
 
@@ -47,6 +47,7 @@ No requirements.
 | <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Details about the Azure Storage Account used to store the Terraform state file. | <pre>object({<br/>    resource_group_name  = string<br/>    storage_account_name = string<br/>    container_name       = string<br/>    key                  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner, name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_resource_group_ids"></a> [resource\_group\_ids](#input\_resource\_group\_ids) | List of resource group IDs to be added to the bootstrapper role assignments. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to apply to all created resources. | `map(any)` | n/a | yes |
 
 ## Outputs

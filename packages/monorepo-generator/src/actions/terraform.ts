@@ -41,7 +41,6 @@ const fetchLatestSemver = async (
     .map(semverFormatFn);
 
   if (version.isErr()) {
-    // eslint-disable-next-line no-console
     console.warn(`Could not fetch latest version`);
     throw new Error("Could not fetch latest version", { cause: version.error });
   }

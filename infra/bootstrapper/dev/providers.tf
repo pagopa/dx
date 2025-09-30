@@ -14,6 +14,11 @@ terraform {
       source  = "integrations/github"
       version = "~> 6.0"
     }
+
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
+    }
   }
 
   backend "azurerm" {
@@ -21,13 +26,16 @@ terraform {
     storage_account_name = "dxditntfstatest01"
     container_name       = "terraform-state"
     key                  = "dx.bootstrapper.dev.tfstate"
+    use_azuread_auth     = true
   }
 }
 
-# Default provider configuration
 provider "azurerm" {
   features {}
+  storage_use_azuread = true
 }
+
+provider "dx" {}
 
 provider "github" {
   owner = "pagopa"

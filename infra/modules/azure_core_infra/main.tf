@@ -117,7 +117,7 @@ module "nat_gateway" {
 }
 
 module "vpn" {
-  count = var.vpn_enabled || var.aws_vpn_enabled ? 1 : 0
+  count = var.vpn_enabled || var.cross_cloud_dns_enabled ? 1 : 0
 
   source = "./_modules/vpn"
 
@@ -134,9 +134,11 @@ module "vpn" {
   vpn_subnet_id          = module.network.vpn_snet.id
   dnsforwarder_subnet_id = module.network.dns_forwarder_snet.id
 
-  vpn_enabled     = var.vpn_enabled
-  aws_vpn_enabled = var.aws_vpn_enabled
-  vpn_use_case    = var.vpn_use_case
+  vpn_enabled  = var.vpn_enabled
+  vpn_use_case = var.vpn_use_case
+
+  # Cross-cloud DNS configuration
+  cross_cloud_dns_enabled = var.cross_cloud_dns_enabled
 
   tags = local.tags
 }

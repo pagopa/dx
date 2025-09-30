@@ -20,6 +20,7 @@ interface ActionsDependencies {
 import {
   addPagoPaPnpmPlugin,
   configureChangesets,
+  configureDevContainer,
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
@@ -153,6 +154,7 @@ const getActions = ({
   addPagoPaPnpmPlugin,
   installRootDependencies,
   configureChangesets,
+  configureDevContainer,
 ];
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {

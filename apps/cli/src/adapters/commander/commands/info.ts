@@ -12,6 +12,6 @@ export const makeInfoCommand = (
     .name("info")
     .description("Display information about the project")
     .action(async () => {
-      const result = await getInfo(dependencies, config);
+      const result = await getInfo(dependencies, config)();
       printInfo(result);
     });
