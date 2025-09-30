@@ -11,6 +11,7 @@
 
 | Old Value | New Value        | Description                         |
 | --------- | ---------------- | ----------------------------------- |
+| xs        | _none_           | Does not exist anymore              |
 | s         | _none_           | Does not exist anymore              |
 | m         | _none_           | Does not exist anymore              |
 | l         | default          | Ideal for `production` environments |
