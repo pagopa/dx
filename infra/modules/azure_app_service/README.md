@@ -12,14 +12,12 @@ This module deploys an AppService with a strong opinionated configuration in ter
 - **Private Endpoint**: To allow only private incoming connections
 - **Subnet**: To allow outbound connections in a VNet
 
-## Tiers and Configuration
+## Use cases Comparison
 
-| Tier | Description                      | SLA    | Staging Slot | Autoscaling | Multi AZ |
-| ---- | -------------------------------- | ------ | ------------ | ----------- | -------- |
-| s    | Non-production tier              | 99.95% | No           | Max 3       | No       |
-| m    | Standard production tier         | 99.95% | Yes          | Max 30      | Yes      |
-| l    | Above average production tier    | 99.95% | Yes          | Max 30      | Yes      |
-| xl   | High-performance production tier | 99.95% | Yes          | Max 30      | Yex      |
+| Use case  | Description                      | SLA    | Staging Slot | Autoscaling | Multi AZ |
+| --------- | -------------------------------- | ------ | ------------ | ----------- | -------- |
+| default   | Above average production tier    | 99.95% | Yes          | Max 30      | Yes      |
+| high_load | High-performance production tier | 99.95% | Yes          | Max 30      | Yes      |
 
 ## Usage Example
 
@@ -65,6 +63,7 @@ No modules.
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Node.js version to use. | `number` | `20` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Name of the resource group containing the private DNS zone for private endpoints. Default is the resource group of the virtual network. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where resources will be deployed. | `string` | n/a | yes |
+| <a name="input_size"></a> [size](#input\_size) | App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2v3'. If not set, it will be determined by the use\_case. | `string` | `null` | no |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | Application settings for the staging slot. | `map(string)` | `{}` | no |
 | <a name="input_stack"></a> [stack](#input\_stack) | Technology stack to use. Allowed values: 'node', 'java'. | `string` | `"node"` | no |
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | List of application setting names that are not swapped between slots. | `list(string)` | `[]` | no |
@@ -73,8 +72,8 @@ No modules.
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | ID of the subnet hosting private endpoints. | `string` | n/a | yes |
 | <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints) | Enable service endpoints for the underlying subnet. Should only be set if dependencies do not use private endpoints. | <pre>object({<br/>    cosmos  = optional(bool, false)<br/>    storage = optional(bool, false)<br/>    web     = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to apply to all created resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tier based on workload. Allowed values: 's', 'm', 'l', 'xl'. Legacy values: 'premium', 'standard', 'test'. | `string` | `"l"` | no |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | App Service use case. Allowed values: 'default', 'high\_load'. | `string` | `"default"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network where the subnet will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
