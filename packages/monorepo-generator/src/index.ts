@@ -34,6 +34,8 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the repository name?",
     name: "repoName",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Repository name cannot be empty",
   },
   {
     message: "What is the repository description?",
@@ -60,15 +62,21 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the project prefix?",
     name: "prefix",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Prefix cannot be empty",
   },
   {
     message: "What is the Azure location?",
     name: "azureLocation",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Azure location cannot be empty",
     when: (answers) => answers.csp === "azure",
   },
   {
     message: "What is the project domain?",
     name: "domain",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Domain cannot be empty",
   },
   {
     default: "01",
@@ -78,11 +86,15 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the AWS region?",
     name: "awsRegion",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "AWS region cannot be empty",
     when: (answers) => answers.csp === "aws",
   },
   {
     message: "What is the AWS app name?",
     name: "awsAppName",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "AWS app name cannot be empty",
     when: (answers) => answers.csp === "aws",
   },
 ];
