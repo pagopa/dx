@@ -13,8 +13,8 @@
 | --------- | ---------------- | ------------------------------------------------- |
 | s         | _none_           | Does not exist anymore                            |
 | m         | _none_           | Does not exist anymore                            |
-| l         | default          | Ideal for `production` environments, use P1v3 SKU |
-| xl        | high_load        | Ideal for `high_load` scenarios, use P2v3 SKU     |
+| l         | default          | Ideal for `production` environments |
+| xl        | high_load        | Ideal for `high_load` scenarios     |
 
 This change simplifies and clarifies the selection of App Service.
 
