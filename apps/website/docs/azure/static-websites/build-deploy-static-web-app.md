@@ -22,7 +22,6 @@ Deploying a static site to Azure Static Web Apps involves two main phases:
 - Terraform installed and configured
 - A GitHub repository with your static site code
 - Azure CLI installed (for authentication)
-- Terraform installed and configured
 
 You can set up a fully configured environment using a templated dev container.
 See [Setting Up Dev Containers](../../dev-containers/index.md) for details.
