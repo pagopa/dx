@@ -3,7 +3,7 @@
 # GitHub repository shouldn’t be public.
 AVD-GIT-0001
 
-# GitHub branch protection does not require signed commits.
+# GitHub branch protection does not require signed commits.
 AVD-GIT-0004
 
 # LOW: Secret should have an expiry date specified

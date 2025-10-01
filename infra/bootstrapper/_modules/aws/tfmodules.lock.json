@@ -1,9 +1,9 @@
 {
   "bootstrap": {
-    "hash": "99289f71c70ce0f5249463f3186e1b0a9ee8a858a12a9cc726d6ccec1f76ab30",
-    "version": "0.0.1",
+    "hash": "38af289ef374c18828d09e2598cec72bf8ab9dae77b15d898bf2ae0b8e67701c",
+    "version": "0.0.3",
     "name": "aws_github_environment_bootstrap",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/aws/0.0.1"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/aws/0.0.3"
   },
   "bootstrap.github_runner": {
     "hash": "925c8a0214316f67f4ae99c6d7bcb38791d64c6913d12c1f8fcac0f3be29441b",
@@ -12,9 +12,9 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/github-selfhosted-runner-on-codebuild/aws/1.0.1"
   },
   "core_values": {
-    "hash": "d720370f3dd4b9af6a02054dd8f27ed97a6f348897206777bad08668e952786c",
-    "version": "0.1.0",
+    "hash": "9856967355058d1d2adc2147efd9df809edc03ece8e3f22d8c99a9a392363e18",
+    "version": "0.1.1",
     "name": "aws_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.1"
   }
 }

@@ -41,7 +41,6 @@ const fetchLatestSemver = async (
     .map(semverFormatFn);
 
   if (version.isErr()) {
-    // eslint-disable-next-line no-console
     console.warn(`Could not fetch latest version`);
     throw new Error("Could not fetch latest version", { cause: version.error });
   }
@@ -87,5 +86,19 @@ export const getTerraformLatestRelease =
       () => fetchLatestRelease({ client: octokitClient, owner, repo }),
       answers,
       "terraformVersion",
+    );
+  };
+
+export const getPreCommitTerraformLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "antonbabenko";
+    const repo = "pre-commit-terraform";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "preCommitTerraformVersion",
+      (version) => `v${version.toString()}`,
     );
   };

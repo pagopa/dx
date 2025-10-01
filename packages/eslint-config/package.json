@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -29,10 +29,10 @@
     "typescript-eslint": "^8.35.1"
   },
   "devDependencies": {
-    "eslint": "catalog:dx",
+    "eslint": "catalog:",
     "prettier": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:dx"
+    "eslint": "catalog:"
   }
 }

@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.3.1
+
+### Patch Changes
+
+- bc9645d: Fix terraform test with new Storage Account module version
+
 ## 0.3.0
 
 ### Minor Changes

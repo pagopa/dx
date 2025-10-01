@@ -15,6 +15,11 @@ module "azure" {
     name  = "dx"
   }
 
+  resource_group_ids = [
+    azurerm_resource_group.integration.id,
+    azurerm_resource_group.e2e.id
+  ]
+
   tags = local.tags
 }
 

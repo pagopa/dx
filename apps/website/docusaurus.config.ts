@@ -15,7 +15,9 @@ const config: Config = {
     defaultLocale: "en",
     locales: ["en"],
   },
-
+  markdown: {
+    mermaid: true,
+  },
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
@@ -26,7 +28,12 @@ const config: Config = {
     [
       "@docusaurus/plugin-client-redirects",
       {
-        redirects: [],
+        redirects: [
+          {
+            from: "/docs/getting-started",
+            to: "/docs/",
+          },
+        ],
       },
     ],
     [
@@ -57,6 +64,24 @@ const config: Config = {
           instrumentationKey: "e0ff8094-78fa-45e5-a21d-e62b453dc5d1",
         },
         enableClickAnalytics: false,
+      },
+    ],
+    [
+      "docusaurus-plugin-llms",
+      {
+        customLLMFiles: [],
+        description: "Complete reference documentation for My Project",
+        docsDir: "docs",
+        excludeImports: true,
+        generateLLMsFullTxt: true,
+        generateLLMsTxt: true,
+        // Generate individual markdown files following llmstxt.org specification
+        generateMarkdownFiles: true,
+        ignoreFiles: [],
+        includeBlog: true,
+        includeUnmatchedLast: true,
+        removeDuplicateHeadings: true,
+        title: "PagoPA DevEx Documentation",
       },
     ],
   ],
@@ -162,6 +187,7 @@ const config: Config = {
       theme: prismThemes.github,
     },
   } satisfies Preset.ThemeConfig,
+  themes: ["@docusaurus/theme-mermaid"],
   title: "DX",
 
   // Set the production url of your site here

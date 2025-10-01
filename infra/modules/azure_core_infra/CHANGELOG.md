@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.2.2
+
+### Patch Changes
+
+- 707b5cf: Add dns_forwarder outputs
+
 ## 2.2.1
 
 ### Patch Changes

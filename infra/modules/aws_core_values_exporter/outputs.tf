@@ -108,3 +108,8 @@ output "github_personal_access_token_ssm_parameter_name" {
   description = "SSM parameter name for the GitHub personal access token"
   value       = local.core_outputs.values.github_personal_access_token_ssm_parameter_name
 }
+
+output "oidc_provider_arn" {
+  description = "The ARN of the OIDC provider for GitHub Actions"
+  value       = local.core_outputs.values.oidc_provider_arn
+}

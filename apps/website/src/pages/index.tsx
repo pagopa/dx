@@ -8,47 +8,46 @@ import "../css/button-override.css";
 
 const topicCards = [
   {
-    description:
-      "Ready-to-use generators, templates, and development environments",
-    icon: "⚙️",
-    items: ["TypeScript Generators", "Dev Containers", "Monorepo Tools"],
-    link: "/docs/getting-started",
-    title: "Development Tools",
+    description: "Your first steps into the PagoPA Developer Experience",
+    icon: "🚀",
+    items: ["Quick Start Guide", "Project Setup", "Best Practices"],
+    link: "/docs/",
+    title: "Getting Started with DX",
   },
   {
-    description: "Production-ready Terraform modules",
+    description: "Learn Git workflows and collaboration patterns",
+    icon: "🤝",
+    items: ["Git Workflows", "Pull Requests", "Code Reviews"],
+    link: "/docs/github",
+    title: "Collaborating on GitHub",
+  },
+  {
+    description: "TypeScript generators and development tools",
+    icon: "⚙️",
+    items: ["TypeScript Generators", "Project Templates", "Code Quality"],
+    link: "/docs/typescript",
+    title: "Building with TypeScript",
+  },
+  {
+    description: "Infrastructure as Code with Terraform modules",
     icon: "🏗️",
     items: ["Azure Modules", "AWS Modules", "Best Practices"],
-    link: "/docs/infrastructure",
-    title: "Infrastructure",
+    link: "/docs/terraform",
+    title: "Working with Terraform",
   },
   {
-    description: "GitHub Actions workflows for CI/CD and automation",
-    icon: "🚀",
-    items: ["Code Review", "Infrastructure Deploy", "Release Automation"],
-    link: "/docs/pipelines",
-    title: "Pipelines",
+    description: "Azure development patterns and tools",
+    icon: "☁️",
+    items: ["Azure Services", "Authentication", "Monitoring"],
+    link: "/docs/azure/",
+    title: "Developing on Azure",
   },
   {
-    description: "Development standards and best practices",
-    icon: "📋",
-    items: ["Git Workflows", "Resource Naming", "Project Structure"],
-    link: "/docs/conventions",
-    title: "Conventions",
-  },
-  {
-    description: "Authentication patterns and tools",
-    icon: "🔐",
-    items: ["Azure Login", "Service Principals", "RBAC Patterns"],
-    link: "/docs/pipelines/azure-login",
-    title: "Authentication",
-  },
-  {
-    description: "Application monitoring and observability solutions",
-    icon: "📊",
-    items: ["Azure Monitor", "Log Analytics", "Application Insights"],
-    link: "/docs/infrastructure",
-    title: "Monitoring",
+    description: "Container development and deployment",
+    icon: "🐳",
+    items: ["Docker Images", "Registry", "CI/CD Pipelines"],
+    link: "/docs/containers",
+    title: "Working with Containers",
   },
 ];
 
@@ -56,7 +55,7 @@ export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      description="Developer Experience at PagoPA - Accelerate your development with proven tools and patterns"
+      description="Getting Started with PagoPA DX - Accelerate your development with proven tools and patterns"
       title={`${siteConfig.title}`}
     >
       <HomepageHeader />
@@ -108,7 +107,7 @@ function HomepageHeader() {
       <div className="container">
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
-            <h1 className={styles.heroTitle}>Developer Experience at PagoPA</h1>
+            <h1 className={styles.heroTitle}>Getting Started with PagoPA DX</h1>
             <p className={styles.heroSubtitle}>
               Accelerate your development journey with proven tools, patterns,
               and best practices for building scalable applications.
@@ -116,7 +115,7 @@ function HomepageHeader() {
             <div className={styles.heroButtons}>
               <Link
                 className={`button button--primary button--lg ${styles.heroButton}`}
-                to="/docs/getting-started"
+                to="/docs/"
               >
                 Get Started
               </Link>
