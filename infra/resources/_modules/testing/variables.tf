@@ -22,9 +22,15 @@ variable "tags" {
   description = "Tags to apply to resources"
 }
 
-variable "gh_pat_reference" {
+variable "vnet_common" {
   type = object({
-    keyvault_name                = string
-    keyvault_resource_group_name = string
+    name                = string
+    resource_group_name = string
+    id                  = string
   })
+}
+
+variable "private_dns_zone_names" {
+  type        = list(string)
+  description = "Map of private DNS zone names to link to the test virtual networks"
 }
