@@ -2,4 +2,4 @@
 "@pagopa/monorepo-generator": patch
 ---
 
-Validate value for `repoName` promt; it cannot be empty.
+Validate value for `repoName` prompt; it cannot be empty.
