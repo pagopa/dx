@@ -131,6 +131,10 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "AWS Account ID:",
     name: "awsAccountId",
     type: "input",
+    validate: (input: string) =>
+      /^\d{12}$/.test(input.trim())
+        ? true
+        : "AWS Account ID must be a 12-digit number",
     when: (answers) => answers.csp === "aws",
   },
 ];
@@ -198,8 +202,7 @@ const selectBackendPartial =
     plopApi,
     templatesPath,
   }: Omit<ActionsDependencies, "octokitClient">): ActionType =>
-  (answers) => {
-    const { csp } = answers;
+  ({ csp }) => {
     const backendPath = path.join(
       templatesPath,
       "infra",
