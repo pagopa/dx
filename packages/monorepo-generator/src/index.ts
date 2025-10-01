@@ -34,6 +34,8 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the repository name?",
     name: "repoName",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Repository name cannot be empty",
   },
   {
     message: "What is the repository description?",
@@ -56,6 +58,59 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     type: "checkbox",
     validate: (input) =>
       input.length > 0 ? true : "Select at least one environment",
+  },
+  {
+    message: "What is the project prefix?",
+    name: "prefix",
+    validate: (input: string) =>
+      input.trim().length >= 2 && input.trim().length <= 4
+        ? true
+        : "Prefix length must be between 2 and 4 characters",
+  },
+  {
+    choices: [
+      { name: "Italy North", value: "italynorth" },
+      { name: "North Europe", value: "northeurope" },
+      { name: "West Europe", value: "westeurope" },
+    ],
+    default: "italynorth",
+    loop: false,
+    message: "What is the Azure location?",
+    name: "azureLocation",
+    type: "list",
+    when: (answers) => answers.csp === "azure",
+  },
+  {
+    message: "What is the project domain?",
+    name: "domain",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Domain cannot be empty",
+  },
+  {
+    default: "01",
+    message: "What is the instance number?",
+    name: "instanceNumber",
+  },
+  {
+    choices: [
+      { name: "Europe (Milan)", value: "eu-south-1" },
+      { name: "Europe (Frankfurt)", value: "eu-central-1" },
+      { name: "Europe (Ireland)", value: "eu-west-1" },
+      { name: "Europe (Paris)", value: "eu-west-3" },
+    ],
+    default: "eu-south-1",
+    loop: false,
+    message: "What is the AWS region?",
+    name: "awsRegion",
+    type: "list",
+    when: (answers) => answers.csp === "aws",
+  },
+  {
+    message: "What is the AWS app name?",
+    name: "awsAppName",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "AWS app name cannot be empty",
+    when: (answers) => answers.csp === "aws",
   },
 ];
 
