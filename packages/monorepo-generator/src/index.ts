@@ -68,8 +68,16 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
         : "Prefix length must be between 2 and 4 characters",
   },
   {
+    choices: [
+      { name: "Italy North", value: "italynorth" },
+      { name: "North Europe", value: "northeurope" },
+      { name: "West Europe", value: "westeurope" },
+    ],
+    default: "italynorth",
+    loop: false,
     message: "What is the Azure location?",
     name: "azureLocation",
+    type: "list",
     validate: (input: string) =>
       input.trim().length > 0 ? true : "Azure location cannot be empty",
     when: (answers) => answers.csp === "azure",
