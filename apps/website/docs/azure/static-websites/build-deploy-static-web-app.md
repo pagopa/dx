@@ -33,8 +33,6 @@ GitHub Actions workflow requires specific permissions and secrets. If you're
 already using the DX bootstrap module, these are pre-configured aside custom
 roles for the static web app.
 
-- **GitHub Environment Roles**: Assign `Contributor` and `Website Contributor`
-  roles
 - **Azure Identity Role**: Assign `PagoPA Static Web Apps List Secrets` role
 - **Workflow Permissions**: Ensure `id-token: write`, `contents: read`,
   `pull-requests: write`
