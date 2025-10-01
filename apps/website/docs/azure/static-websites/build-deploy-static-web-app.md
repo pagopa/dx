@@ -104,13 +104,6 @@ jobs:
       environment: "app-dev"
 ```
 
-### Required Permissions and Secrets
-
-- **Azure Identity Role**: Assign `PagoPA Static Web Apps List Secrets` role
-- **Workflow Permissions**: Ensure `id-token: write`, `contents: read`,
-  `pull-requests: write`
-- **Secrets**: Use `secrets: inherit` or configure Azure authentication secrets
-
 ## Additional Notes
 
 - The workflow supports preview deployments for pull requests
