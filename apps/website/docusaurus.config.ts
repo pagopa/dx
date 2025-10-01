@@ -162,13 +162,8 @@ const config: Config = {
     image: "img/pagopa-logo.png",
     navbar: {
       items: [
-        // {
-        //   type: "docSidebar",
-        //   sidebarId: "tutorialSidebar",
-        //   position: "left",
-        //   label: "Tutorial",
-        // },
-        // { to: "/blog", label: "Blog", position: "left" },
+        { label: "Docs", position: "left", to: "/docs" },
+        { label: "Blog", position: "left", to: "/blog" },
         {
           href: "https://github.com/pagopa/dx",
           label: "GitHub",
@@ -179,7 +174,7 @@ const config: Config = {
         alt: "DX Logo",
         src: "img/pagopa-logo.png",
       },
-      title: "DX",
+      title: "DX PagoPA",
     },
     prism: {
       additionalLanguages: ["hcl", "bash"],
