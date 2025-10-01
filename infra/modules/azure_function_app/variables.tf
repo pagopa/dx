@@ -50,15 +50,33 @@ variable "health_check_path" {
   description = "The endpoint path where the health probe is exposed for the Function App."
 }
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility."
-
-  default = "l"
+  description = "Function App use case. Allowed values: 'default', 'high_load'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "m", "l", "xl", "xxl", "premium", "standard", "test"], var.tier)
-    error_message = "Allowed values for \"tier\" are \"s\", \"m\", \"l\", \"xl\", \"xxl\". Legacy values 'premium', 'standard', or 'test' are also supported for backward compatibility."
+    condition     = contains(["default", "high_load"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", \"high_load\"."
+  }
+}
+
+locals {
+  sku_allowlist = [
+    "P0v3",
+    "P1v3",
+    "P2mv3",
+    "P3mv3"
+  ]
+}
+
+variable "size" {
+  type        = string
+  default     = null
+  description = "App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2v3'. If not set, it will be determined by the use_case."
+  validation {
+    condition     = var.size == null || contains(local.sku_allowlist, var.size)
+    error_message = "Allowed values for \"size\" are ${join(", ", local.sku_allowlist)}."
   }
 }
 
