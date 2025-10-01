@@ -59,7 +59,7 @@ Custom Terraform provider for Azure resources:
 
 ### Most Common Use Cases
 
-- **[Setting up static web apps](../azure/static-websites/setting-up-azure-static-web-app.md)** -
+- **[Setting up static web apps](../azure/static-websites/build-deploy-static-web-app.md)** -
   Deploy static sites with CI/CD
 - **[IAM and security](../azure/iam/azure-iam.md)** - Manage permissions and
   access control
