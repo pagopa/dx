@@ -65,7 +65,6 @@ locals {
   sku_allowlist = [
     "P0v3",
     "P1v3",
-    "P1mv3",
     "P2mv3",
     "P3mv3"
   ]
@@ -73,7 +72,6 @@ locals {
   worker_process_count_map = {
     "P0v3"  = 1
     "P1v3"  = 2
-    "P1mv3" = 4
     "P2mv3" = 8
     "P3mv3" = 10
   }
@@ -82,7 +80,7 @@ locals {
 variable "size" {
   type        = string
   default     = null
-  description = "App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P1mv3', 'P2mv3', 'P3mv3'. If not set, it will be determined by the use_case."
+  description = "App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2mv3', 'P3mv3'. If not set, it will be determined by the use_case."
   validation {
     condition     = var.size == null || contains(local.sku_allowlist, var.size)
     error_message = "Allowed values for \"size\" are ${join(", ", local.sku_allowlist)}."
