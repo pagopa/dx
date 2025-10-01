@@ -53,6 +53,34 @@ export const getTerraformLatestRelease =
     );
   };
 
+export const getAwsProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "hashicorp";
+    const repo = "terraform-provider-aws";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "awsTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getTlsProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "hashicorp";
+    const repo = "terraform-provider-tls";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "tlsTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
 export const getPreCommitTerraformLatestRelease =
   ({ octokitClient }: TerraformActionsDependencies): ActionType =>
   async (answers) => {
@@ -64,5 +92,33 @@ export const getPreCommitTerraformLatestRelease =
       answers,
       "preCommitTerraformVersion",
       (version) => `v${version.toString()}`,
+    );
+  };
+
+export const getDxAwsBootstrapperLatestTag =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-aws-aws-github-environment-bootstrap";
+
+    return fetchLatestSemver(
+      () => fetchLatestTag({ client: octokitClient, owner, repo }),
+      answers,
+      "dxAwsBootstrapperVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getDxAwsCoreValuesExporterLatestTag =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-aws-aws-core-values-exporter";
+
+    return fetchLatestSemver(
+      () => fetchLatestTag({ client: octokitClient, owner, repo }),
+      answers,
+      "dxAwsCoreValuesExporterVersion",
+      ({ major, minor }) => `${major}.${minor}`,
     );
   };
