@@ -1,5 +1,18 @@
 # docs
 
+## 0.8.4
+
+### Patch Changes
+
+- 421e8a4: Add @pagopa/eslint-config package documentation
+
+## 0.8.3
+
+### Patch Changes
+
+- 1841454: Include input sku_size in Azure Static Web Apps HCL snippet
+- 8ea5b13: Enabled llms.txt generation
+
 ## 0.8.2
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 50
+sidebar_position: 2
 ---
 
 # Reviewing TypeScript Code

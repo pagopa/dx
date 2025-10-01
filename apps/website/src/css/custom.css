@@ -142,6 +142,11 @@ h1 {
   font-weight: 500;
 }
 
+/* Blog post title size override */
+.title_nvtp {
+  font-size: 2rem !important;
+}
+
 h2 {
   font-family: var(--ifm-heading-font-family);
   font-weight: 500;
