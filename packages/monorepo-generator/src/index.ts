@@ -63,7 +63,9 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the project prefix?",
     name: "prefix",
     validate: (input: string) =>
-      input.trim().length > 0 ? true : "Prefix cannot be empty",
+      input.trim().length >= 2 && input.trim().length <= 4
+        ? true
+        : "Prefix length must be between 2 and 4 characters",
   },
   {
     message: "What is the Azure location?",
