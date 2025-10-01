@@ -69,6 +69,14 @@ locals {
     "P2mv3",
     "P3mv3"
   ]
+
+  worker_process_count_map = {
+    "P0v3"  = 1
+    "P1v3"  = 2
+    "P1mv3" = 4
+    "P2mv3" = 8
+    "P3mv3" = 10
+  }
 }
 
 variable "size" {

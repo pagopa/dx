@@ -20,24 +20,24 @@ locals {
 
   use_cases = {
     default = {
-      sku                  = "P1v3"
-      worker_process_count = 2
-      zone_balancing       = true
-      slot                 = true
-      replication_type     = "ZRS"
-      alerts               = true
+      sku              = "P1v3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+      alerts           = true
     }
     high_load = {
-      sku                  = "P2mv3"
-      worker_process_count = 8
-      zone_balancing       = true
-      slot                 = true
-      replication_type     = "ZRS"
-      alerts               = true
+      sku              = "P2mv3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+      alerts           = true
     }
   }
 
   use_case_features = local.use_cases[var.use_case]
+
+  worker_process_count = local.worker_process_count_map[local.function_app.sku_name]
 
   app_service_plan = {
     enable = var.app_service_plan_id == null
