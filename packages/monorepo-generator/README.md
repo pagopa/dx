@@ -47,7 +47,11 @@ These variables are loaded automatically by custom actions and do not require us
 | ------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------- |
 | `terraformVersion`                    | custom action (GitHub fetch) | Terraform version used to populate `.terraform-version`. Full semver string, e.g. `1.5.7`.    |
 | `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module.                 |
+| `awsTfProviderVersion`                | custom action (GitHub fetch) | AWS Terraform provider version, e.g. `5.34`.                                                  |
+| `tlsTfProviderVersion`                | custom action (GitHub fetch) | TLS Terraform provider version, e.g. `4.0`.                                                   |
 | `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources.                |
+| `dxAwsBootstrapperVersion`            | custom action (GitHub fetch) | AWS bootstrapper module version, e.g. `1.2`.                                                  |
+| `dxAwsCoreValuesExporterVersion`      | custom action (GitHub fetch) | AWS core values exporter module version, e.g. `1.2`.                                          |
 | `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. |
 
 ## Recommended usage
