@@ -20,21 +20,21 @@ The generator exposes the following variables to Handlebars templates. Use the H
 
 ### Prompted variables
 
-| Variable          | Source | Description & format example                                              | Default | Required |
-| ----------------- | ------ | ------------------------------------------------------------------------- | ------- | -------- |
-| `repoSrc`         | prompt | Directory where the repository will be created.                           | cwd     | yes      |
-| `repoName`        | prompt | Repository name provided by the user (string).                            |         | yes      |
-| `repoDescription` | prompt | Repository description provided by the user (string).                     |         | no       |
-| `csp`             | prompt | Cloud provider selection. One of `aws` or `azure`.                        | azure   | yes      |
-| `environments`    | prompt | List of environments to create (e.g., `dev`, `prod`).                     |         | yes      |
-| `prefix`          | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming. |         | yes      |
-| `domain`          | prompt | Project domain (e.g., `payments`, `identity`).                            |         | yes      |
-| `instanceNumber`  | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.         | 01      | no       |
-| `azureLocation`   | prompt | Azure location (e.g., `westeurope`). Only asked if `csp` is `azure`.      |         | yes\*    |
-| `awsRegion`       | prompt | AWS region (e.g., `eu-west-1`). Only asked if `csp` is `aws`.             |         | yes\*    |
-| `awsAppName`      | prompt | AWS app name (e.g., `my-app`). Only asked if `csp` is `aws`.              |         | yes\*    |
+| Variable          | Source | Description & format example                                              | Default      | Required |
+| ----------------- | ------ | ------------------------------------------------------------------------- | ------------ | -------- |
+| `repoSrc`         | prompt | Directory where the repository will be created.                           | cwd          | yes      |
+| `repoName`        | prompt | Repository name provided by the user (string).                            |              | yes      |
+| `repoDescription` | prompt | Repository description provided by the user (string).                     |              | no       |
+| `csp`             | prompt | Cloud provider selection. One of `aws` or `azure`.                        | azure        | yes      |
+| `environments`    | prompt | List of environments to create (e.g., `dev`, `prod`).                     |              | yes      |
+| `prefix`          | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming. |              | yes      |
+| `domain`          | prompt | Project domain (e.g., `payments`, `identity`).                            |              | yes      |
+| `instanceNumber`  | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.         | 01           | no       |
+| `azureLocation`   | prompt | Azure location (e.g., `westeurope`). Only asked if `csp` is `azure`.      |              | yes*     |
+| `awsRegion`       | prompt | AWS region (e.g., `eu-south-1`). Only asked if `csp` is `aws`.            | eu-south-1   | yes*     |
+| `awsAppName`      | prompt | AWS app name (e.g., `my-app`). Only asked if `csp` is `aws`.              |              | yes*     |
 
-\*Required only if the corresponding cloud provider is selected.
+*Required only if the corresponding cloud provider is selected.
 
 ### Automatically loaded variables
 
