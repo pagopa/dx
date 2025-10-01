@@ -4,18 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { Octokit } from "octokit";
-
-import {
-  getDxGitHubBootstrapLatestTag,
-  getGitHubTerraformProviderLatestRelease,
-  getPreCommitTerraformLatestRelease,
-  getTerraformLatestRelease,
-} from "./actions/terraform.js";
-
-interface ActionsDependencies {
-  octokitClient: Octokit;
-  templatesPath: string;
-}
+import { z } from "zod/v4";
 
 import {
   addPagoPaPnpmPlugin,
@@ -24,6 +13,36 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
+import {
+  getAwsProviderLatestRelease,
+  getDxAwsBootstrapperLatestTag,
+  getDxAwsCoreValuesExporterLatestTag,
+  getDxGitHubBootstrapLatestTag,
+  getGitHubTerraformProviderLatestRelease,
+  getPreCommitTerraformLatestRelease,
+  getTerraformLatestRelease,
+  getTlsProviderLatestRelease,
+} from "./actions/terraform.js";
+
+const answersSchema = z.object({
+  awsAppName: z.string().optional(),
+  awsRegion: z.string().optional(),
+  csp: z.enum(["aws", "azure"]),
+  domain: z.string().nonempty(),
+  environments: z.array(z.enum(["dev", "prod"])).nonempty(),
+  instanceNumber: z.string().nonempty(),
+  prefix: z.string().nonempty(),
+  repoDescription: z.string().optional(),
+  repoName: z.string().nonempty(),
+  repoSrc: z.string().nonempty(),
+});
+
+export type Answers = z.infer<typeof answersSchema>;
+
+interface ActionsDependencies {
+  octokitClient: Octokit;
+  templatesPath: string;
+}
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -171,63 +190,66 @@ const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getTerraformDefaultEnvironmentFiles = (
-  templatesPath: string,
-): ActionType[] => [
-  {
-    abortOnFail: true,
-    base: `${templatesPath}/infra/resources/prod`,
-    destination: "{{repoSrc}}/{{repoName}}/infra/resources/prod",
-    templateFiles: path.join(
-      templatesPath,
-      "infra",
-      "resources",
-      "prod",
-      "*.tf.hbs",
-    ),
-    type: "addMany",
-  },
-];
+const getTerraformEnvironmentFiles =
+  (templatesPath: string) =>
+  (env: Answers["environments"][number], csp: Answers["csp"]): ActionType[] => [
+    {
+      abortOnFail: true,
+      base: `${templatesPath}/infra/bootstrapper/${csp}`,
+      data: { environment: env, envShort: env.slice(0, 1).toLowerCase() }, //FIXME: This could be a separate function
+      destination: `{{repoSrc}}/{{repoName}}/infra/resources/${env}`,
+      templateFiles: path.join(
+        templatesPath,
+        "infra",
+        "bootstrapper",
+        csp,
+        "*.tf.hbs",
+      ),
+      type: "addMany",
+    },
+  ];
 
-const getInfraFiles = (templatesPath: string): ActionType[] => [
-  ...getTerraformRepositoryFiles(templatesPath),
-  ...getTerraformDefaultEnvironmentFiles(templatesPath),
-];
+const getActions =
+  ({ octokitClient, templatesPath }: ActionsDependencies) =>
+  (answers: Record<string, unknown> | undefined): ActionType[] => {
+    if (!answers) {
+      throw new Error("No answers provided by Plop");
+    }
 
-const getActions = ({
-  octokitClient,
-  templatesPath,
-}: ActionsDependencies): ActionType[] => [
-  getGitHubTerraformProviderLatestRelease({ octokitClient }),
-  getDxGitHubBootstrapLatestTag({ octokitClient }),
-  getTerraformLatestRelease({ octokitClient }),
-  getPreCommitTerraformLatestRelease({ octokitClient }),
-  ...getDotFiles(templatesPath),
-  ...getMonorepoFiles(templatesPath),
-  ...getInfraFiles(templatesPath),
-  enablePnpm,
-  addPagoPaPnpmPlugin,
-  installRootDependencies,
-  configureChangesets,
-  configureDevContainer,
-];
+    const data = answersSchema.parse(answers);
+
+    return [
+      getGitHubTerraformProviderLatestRelease({ octokitClient }),
+      getAwsProviderLatestRelease({ octokitClient }),
+      getTlsProviderLatestRelease({ octokitClient }),
+      getDxGitHubBootstrapLatestTag({ octokitClient }),
+      getTerraformLatestRelease({ octokitClient }),
+      getPreCommitTerraformLatestRelease({ octokitClient }),
+      getDxAwsBootstrapperLatestTag({ octokitClient }),
+      getDxAwsCoreValuesExporterLatestTag({ octokitClient }),
+      ...getDotFiles(templatesPath),
+      ...getMonorepoFiles(templatesPath),
+      ...getTerraformRepositoryFiles(templatesPath),
+      ...data.environments.flatMap((env) =>
+        getTerraformEnvironmentFiles(templatesPath)(env, data.csp),
+      ),
+      enablePnpm,
+      addPagoPaPnpmPlugin,
+      installRootDependencies,
+      configureChangesets,
+      configureDevContainer,
+    ];
+  };
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  // The bundled templates are in the "monorepo" subdirectory
   const templatesPath = path.join(entryPointDirectory, "monorepo");
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  const prompts = getPrompts();
-  const actions = getActions({
-    octokitClient,
-    templatesPath,
-  });
-
   plopApi.setGenerator("monorepo", {
-    actions,
+    actions: getActions({ octokitClient, templatesPath }),
     description: "A scaffold for a monorepo repository",
-    prompts,
+    prompts: getPrompts(),
   });
 };
 
