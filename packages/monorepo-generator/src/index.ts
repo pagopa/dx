@@ -94,6 +94,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
       { name: "Europe (Stockholm)", value: "eu-north-1" },
       { name: "Europe (Zurich)", value: "eu-central-2" },
     ],
+    loop: false,
     message: "What is the AWS region?",
     name: "awsRegion",
     type: "list",
