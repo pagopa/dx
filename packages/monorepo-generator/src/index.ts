@@ -84,8 +84,19 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     name: "instanceNumber",
   },
   {
+    choices: [
+      { name: "Europe (Frankfurt)", value: "eu-central-1" },
+      { name: "Europe (Ireland)", value: "eu-west-1" },
+      { name: "Europe (London)", value: "eu-west-2" },
+      { name: "Europe (Milan)", value: "eu-south-1" },
+      { name: "Europe (Paris)", value: "eu-west-3" },
+      { name: "Europe (Spain)", value: "eu-south-2" },
+      { name: "Europe (Stockholm)", value: "eu-north-1" },
+      { name: "Europe (Zurich)", value: "eu-central-2" },
+    ],
     message: "What is the AWS region?",
     name: "awsRegion",
+    type: "list",
     validate: (input: string) =>
       input.trim().length > 0 ? true : "AWS region cannot be empty",
     when: (answers) => answers.csp === "aws",
