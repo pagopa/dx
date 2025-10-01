@@ -106,8 +106,6 @@ jobs:
 
 ### Required Permissions and Secrets
 
-- **GitHub Environment Roles**: Assign `Contributor` and `Website Contributor`
-  roles
 - **Azure Identity Role**: Assign `PagoPA Static Web Apps List Secrets` role
 - **Workflow Permissions**: Ensure `id-token: write`, `contents: read`,
   `pull-requests: write`
