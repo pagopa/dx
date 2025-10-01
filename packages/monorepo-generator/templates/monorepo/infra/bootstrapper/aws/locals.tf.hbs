@@ -1,0 +1,16 @@
+locals {
+  environment = {
+    prefix          = "{{ prefix }}"
+    env_short       = "{{ envShort }}"
+    region          = "{{ awsRegion }}"
+    domain          = "{{ domain }}"
+    app_name        = "{{ awsAppName }}"
+    instance_number = "{{ instanceNumber }}"
+  }
+
+  tags = {
+    CreatedBy      = "DX CLI"
+    Environment    = "{{ environment }}"
+    Source         = "https://github.com/pagopa/dx/modules/aws_github_environment_bootstrap/examples/complete"
+  }
+}
