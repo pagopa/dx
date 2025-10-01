@@ -78,8 +78,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the Azure location?",
     name: "azureLocation",
     type: "list",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Azure location cannot be empty",
     when: (answers) => answers.csp === "azure",
   },
   {
@@ -105,8 +103,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the AWS region?",
     name: "awsRegion",
     type: "list",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "AWS region cannot be empty",
     when: (answers) => answers.csp === "aws",
   },
   {
