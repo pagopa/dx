@@ -2,10 +2,10 @@
 sidebar_position: 3
 ---
 
-# Deploy Static Site to Azure CDN
+# Deploying a Static Site to Azure CDN
 
 The
-[Build and Deploy Static Site to Azure CDN](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-cdn-v1.yaml)
+[Build and Deploy a Static Site to Azure CDN](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-cdn-v1.yaml)
 is a reusable workflow (`workflow_call`) that automates the build and deployment
 of a static application from a monorepo. It handles everything from dependency
 installation to purging the Azure CDN cache, ensuring a streamlined and

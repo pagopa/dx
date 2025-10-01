@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Deploy Static Site to Azure Static Web App
+# Deploying an Azure Static Web App
 
 This guide provides a complete walkthrough for setting up and deploying a static
 website to Azure Static Web Apps using Terraform for infrastructure provisioning
