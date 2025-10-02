@@ -46,8 +46,6 @@ module "azure_github_bootstrap" {
     }
   }
 
-  opex_resource_group_id = module.core_values.opex_resource_group_id
-
   pep_vnet_id                        = module.core_values.common_vnet.id
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
