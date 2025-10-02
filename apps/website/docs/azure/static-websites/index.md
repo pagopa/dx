@@ -10,9 +10,6 @@ a smooth deployment and management of your static web applications.
 
 ## Key Topics
 
-- **[Setting Up Azure Static Web App](./setting-up-azure-static-web-app.md)**:
-  Learn how to create and configure Azure Static Web Apps using Terraform for
-  automated CI/CD deployments.
 - **[Deploy Static Site to Azure Static Web App](./build-deploy-static-web-app.md)**:
   Comprehensive guide to the reusable workflow for deploying static applications
   to Azure Static Web Apps with pull request previews.

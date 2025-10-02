@@ -27,7 +27,13 @@ variable "vnet_common" {
     name                = string
     resource_group_name = string
     id                  = string
+    subnet_ids          = list(string)
   })
+}
+
+variable "runner_subnet_name" {
+  type        = string
+  description = "Name of the subnet where the GitHub runners are deployed"
 }
 
 variable "private_dns_zone_names" {
