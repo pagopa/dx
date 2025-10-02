@@ -1,0 +1,17 @@
+locals {
+  environment = {
+    prefix          = "{{ prefix }}"
+    env_short       = "{{ envShort }}"
+    location        = "{{ azureLocation }}"
+    location_short  = "{{ locationShort }}"
+    domain          = "{{ domain }}"
+    app_name        = "{{ awsAppName }}"
+    instance_number = "{{ instanceNumber }}"
+  }
+
+  tags = {
+    CreatedBy      = "DX CLI"
+    Environment    = "{{ environment }}"
+    Source         = "https://github.com/pagopa/dx/tree/main/infra/modules/azure_github_environment_bootstrap/examples/single_environment"
+  }
+}

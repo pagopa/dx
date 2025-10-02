@@ -9,6 +9,11 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> {{ tlsTfProviderVersion }}"
     }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> {{ githubTfProviderVersion }}"
+    }
   }
 }
 
