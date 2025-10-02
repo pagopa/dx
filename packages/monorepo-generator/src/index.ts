@@ -278,7 +278,7 @@ const getTerraformEnvironmentFiles =
         //FIXME: This could be a separate function
         locationShort: "itn",
       },
-      destination: `{{repoSrc}}/{{repoName}}/infra/resources/${env}`,
+      destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
         templatesPath,
         "infra",
