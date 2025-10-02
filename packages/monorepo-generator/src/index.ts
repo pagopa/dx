@@ -23,8 +23,12 @@ import {
 } from "./actions/pnpm.js";
 import {
   getAwsProviderLatestRelease,
+  getAzureadProviderLatestRelease,
+  getAzurermProviderLatestRelease,
   getDxAwsBootstrapperLatestTag,
   getDxAwsCoreValuesExporterLatestTag,
+  getDxAzureBootstrapperLatestTag,
+  getDxAzureCoreValuesExporterLatestTag,
   getDxGitHubBootstrapLatestTag,
   getGitHubTerraformProviderLatestRelease,
   getPreCommitTerraformLatestRelease,
@@ -267,7 +271,13 @@ const getTerraformEnvironmentFiles =
     {
       abortOnFail: true,
       base: `${templatesPath}/infra/bootstrapper/${csp}`,
-      data: { environment: env, envShort: env.slice(0, 1).toLowerCase() }, //FIXME: This could be a separate function
+      data: {
+        environment: env,
+        //FIXME: This could be a separate function
+        envShort: env.slice(0, 1).toLowerCase(),
+        //FIXME: This could be a separate function
+        locationShort: "itn",
+      },
       destination: `{{repoSrc}}/{{repoName}}/infra/resources/${env}`,
       templateFiles: path.join(
         templatesPath,
@@ -283,10 +293,6 @@ const getTerraformEnvironmentFiles =
 const getActions =
   ({ octokitClient, plopApi, templatesPath }: ActionsDependencies) =>
   (answers: Record<string, unknown> | undefined): ActionType[] => {
-    if (!answers) {
-      throw new Error("No answers provided by Plop");
-    }
-
     const data = answersSchema.parse(answers);
 
     return [
@@ -294,11 +300,15 @@ const getActions =
       getGitHubTerraformProviderLatestRelease({ octokitClient }),
       getAwsProviderLatestRelease({ octokitClient }),
       getTlsProviderLatestRelease({ octokitClient }),
+      getAzurermProviderLatestRelease({ octokitClient }),
+      getAzureadProviderLatestRelease({ octokitClient }),
       getDxGitHubBootstrapLatestTag({ octokitClient }),
+      getDxAzureBootstrapperLatestTag({ octokitClient }),
       getTerraformLatestRelease({ octokitClient }),
       getPreCommitTerraformLatestRelease({ octokitClient }),
       getDxAwsBootstrapperLatestTag({ octokitClient }),
       getDxAwsCoreValuesExporterLatestTag({ octokitClient }),
+      getDxAzureCoreValuesExporterLatestTag({ octokitClient }),
       getLatestNodeVersion(),
       ...getDotFiles(templatesPath),
       ...getMonorepoFiles(templatesPath),
