@@ -19,7 +19,6 @@ module "azure_github_bootstrap" {
   subscription_id = module.core_values.subscription_id
   tenant_id       = module.core_values.tenant_id
 
-  // formiamo convenzione (e.g. "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin|developers|")
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
     devs_object_id      = data.azuread_group.developers.object_id
@@ -46,7 +45,6 @@ module "azure_github_bootstrap" {
       resource_group_name = module.core_values.common_key_vault.resource_group_name
     }
   }
-
 
   opex_resource_group_id = module.core_values.opex_resource_group_id
 

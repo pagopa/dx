@@ -9,6 +9,12 @@ locals {
     instance_number = "{{ instanceNumber }}"
   }
 
+  adgroups = {
+    admins_name   = "{{ prefix }}-{{ envShort }}-adgroup-admin"
+    devs_name     = "{{ prefix }}-{{ envShort }}-adgroup-developers"
+    external_name = "{{ prefix }}-{{ envShort }}-adgroup-externals"
+  }
+
   tags = {
     CreatedBy      = "DX CLI"
     Environment    = "{{ environment }}"
