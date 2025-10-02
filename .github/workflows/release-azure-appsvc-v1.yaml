@@ -138,7 +138,7 @@ jobs:
         with:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
-      
+
       - name: Generate artifact attestation (build provenance)
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
@@ -214,14 +214,14 @@ jobs:
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
-      
+
       - name: Validate artifact attestation
         run: |
           gh attestation verify "$ARTIFACT_PATH" \
            --repo "$REPOSITORY" \
            --signer-workflow pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml
         env:
-          ARTIFACT_PATH: format('{0}.zip', env.BUNDLE_NAME)
+          ARTIFACT_PATH: ${{ format('{0}.zip', env.BUNDLE_NAME) }}
           REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
