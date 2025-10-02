@@ -10,7 +10,7 @@ module "core_values" {
   }
 }
 
-module "bootstrap" {
+module "azure_github_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> {{ dxAzureBootstrapperVersion }}"
 
