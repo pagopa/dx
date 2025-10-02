@@ -7,8 +7,6 @@ module "open_next" {
     hosted_zone_id      = local.hosted_zone_id
   }
 
-  are_previews_enabled = true
-
   environment = local.environment
   tags        = local.tags
 }

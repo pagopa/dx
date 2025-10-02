@@ -126,7 +126,7 @@ variable "custom_headers" {
 
 variable "are_previews_enabled" {
   type        = bool
-  description = "Whether to enable previews."
+  description = "Whether to enable previews. This feature is still under development and should be used with caution."
   default     = false
 }
 

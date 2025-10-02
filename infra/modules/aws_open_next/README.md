@@ -10,7 +10,7 @@ This Terraform module deploys a complete serverless infrastructure for Next.js a
 - **Incremental Static Regeneration (ISR)**: Built-in support for ISR with DynamoDB caching
 - **CloudFront Distribution**: Global CDN with optimized caching strategies
 - **Custom Domain Support**: Easy setup with custom domains and SSL certificates
-- **Preview Deployments**: Optional support for preview deployments
+- **Preview Deployments**: Optional support for preview deployments [Under development]
 - **WAF Protection**: Optional Web Application Firewall for enhanced security
 - **Monitoring & Alarms**: Built-in CloudWatch alarms and monitoring
 - **VPC Support**: Optional VPC deployment for private resources access
@@ -62,85 +62,6 @@ For complete examples, see the [examples/](./examples/) directory:
 
 - [Basic deployment](./examples/basic/) - Minimal configuration
 
-## 🚢 Deployment with GitHub Actions
-
-This module integrates seamlessly with the provided GitHub Actions workflow for automated deployments. The workflow handles building your Next.js application with OpenNext and deploying the generated artifacts.
-
-### Setting up the Workflow
-
-**Add the workflow call** to your repository's workflow file:
-
-```yaml
-name: Deploy Next.js Application
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    uses: pagopa/dx/.github/workflows/_release-bash-aws-open-next.yaml@main
-    with:
-      workspace_name: "my-nextjs-app"
-      environment: "production"
-      app_path: "./apps/frontend"
-      project_prefix: "mycompany-p-eus-web-frontend"
-      aws_region: "eu-south-1"
-      cloudfront_distribution_id: ${{ needs.terraform.outputs.cloudfront_distribution_id }}
-    secrets:
-      APP_CD_ROLE_ARN: ${{ secrets.APP_CD_ROLE_ARN }}
-```
-
-### Workflow Process
-
-The GitHub Actions workflow performs the following steps:
-
-1. **Build Phase**:
-   - Checks out the repository
-   - Sets up Node.js environment
-   - Installs dependencies using the monorepo structure
-   - Builds the Next.js application
-   - Runs OpenNext to generate deployment artifacts
-   - Creates and uploads the deployment bundle
-
-2. **Deploy Phase**:
-   - Configures AWS credentials using OIDC
-   - Downloads the deployment artifact
-   - Syncs static assets to S3
-   - Deploys Lambda functions for:
-     - Server-side rendering
-     - Image optimization
-     - ISR revalidation
-     - DynamoDB initialization
-   - Publishes Lambda versions with aliases
-   - Invalidates CloudFront cache
-
-### Required Secrets and Variables
-
-Configure the following in your GitHub repository:
-
-**Secrets:**
-
-- `APP_CD_ROLE_ARN`: AWS IAM role ARN for deployment (with OIDC trust relationship)
-
-**Variables:**
-
-- `PROJECT_PREFIX`: Resource naming prefix (optional, can be passed as input)
-
-### Resource Naming Convention
-
-The workflow uses a consistent naming pattern for AWS resources:
-
-- **Lambda Functions**: `{project_prefix}-website-opnext-{function-type}-lambda-01`
-- **S3 Buckets**: `{project_prefix}-website-opnext-assets-01` (assets), `{project_prefix}-website-opennext-lambda-code-01` (code)
-- **Aliases**: All Lambda functions use the `production` alias
-
-Example with `project_prefix: "mycompany-p-eus-web-frontend"`:
-
-- Server Lambda: `mycompany-p-eus-web-frontend-website-opnext-server-lambda-01`
-- Assets S3: `mycompany-p-eus-web-frontend-website-opnext-assets-01`
-
 ## 📊 Monitoring and Observability
 
 When `enable_alarms` is set to `true`, the module creates CloudWatch alarms for:
@@ -162,8 +83,6 @@ When `enable_alarms` is set to `true`, the module creates CloudWatch alarms for:
 
 - **ARM64 Architecture**: Lambda functions use ARM64 for better price-performance
 - **CloudFront Caching**: Aggressive caching reduces origin requests
-- **S3 Intelligent Tiering**: Automatic cost optimization for stored assets
-- **Lambda Provisioned Concurrency**: Optional for consistent performance (configure via variables)
 
 ```
 
@@ -198,7 +117,7 @@ No resources.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alarms_actions"></a> [alarms\_actions](#input\_alarms\_actions) | List of actions to perform when an alarm is triggered. This can include SNS topics, Lambda functions, etc. If empty, no actions will be performed. | `list(string)` | `[]` | no |
-| <a name="input_are_previews_enabled"></a> [are\_previews\_enabled](#input\_are\_previews\_enabled) | Whether to enable previews. | `bool` | `false` | no |
+| <a name="input_are_previews_enabled"></a> [are\_previews\_enabled](#input\_are\_previews\_enabled) | Whether to enable previews. This feature is still under development and should be used with caution. | `bool` | `false` | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration. If not provided, the cloudfront default domain will be used. If the DNS zone is managed by AWS, the hosted\_zone\_id must be provided to create the Route53 record. | <pre>object({<br/>    domain_name         = string<br/>    acm_certificate_arn = string<br/>    hosted_zone_id      = optional(string, null)<br/>  })</pre> | `null` | no |
 | <a name="input_custom_headers"></a> [custom\_headers](#input\_custom\_headers) | Custom headers to be added to the CloudFront distribution. | <pre>list(object({<br/>    header   = string<br/>    value    = string<br/>    override = optional(bool)<br/>  }))</pre> | `[]` | no |
 | <a name="input_enable_alarms"></a> [enable\_alarms](#input\_enable\_alarms) | Whether to enable alarms for the lambda functions. | `bool` | `false` | no |
