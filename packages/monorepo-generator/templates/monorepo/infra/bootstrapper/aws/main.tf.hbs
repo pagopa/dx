@@ -4,7 +4,7 @@ module "core_values" {
 
   core_state = {
     bucket         = "{{ awsAccountId }}-terraform-state"
-    key            = "{{ repoName }}.repository.tfstate"
+    key            = "{{ repoName }}.bootstrapper.{{ environment }}.tfstate"
     region         = "{{ awsRegion }}"
     dynamodb_table = "terraform-locks"
   }
