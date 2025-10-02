@@ -145,7 +145,6 @@ async function writePnpmWorkspaceFile(
   const pnpmWorkspace = {
     packageExtensions,
     packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
-    preferWorkspacePackages: true,
   };
   const yamlContent = YAML.stringify(pnpmWorkspace);
   await fs.writeFile("pnpm-workspace.yaml", yamlContent, "utf-8");
