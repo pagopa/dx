@@ -27,10 +27,9 @@ module "bootstrap" {
     externals_object_id = data.azuread_group.externals.object_id
   }
 
-  // stessi del core state
   terraform_storage_account = {
-    name                = local.tf_storage_account.name
-    resource_group_name = local.tf_storage_account.resource_group_name
+    name                = "{{ tfStateStorageAccountName }}"
+    resource_group_name = "{{ tfStateResourceGroupName }}"
   }
 
   repository = {
