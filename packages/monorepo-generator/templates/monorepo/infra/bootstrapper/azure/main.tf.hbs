@@ -6,7 +6,7 @@ module "core_values" {
     resource_group_name  = "{{ tfStateResourceGroupName }}"
     storage_account_name = "{{ tfStateStorageAccountName }}"
     container_name       = "terraform-state"
-    key                  = "{{ repoName }}.core.{{ environment }}.tfstate"
+    key                  = "{{ repoName }}.bootstrapper.{{ environment }}.tfstate"
   }
 }
 
