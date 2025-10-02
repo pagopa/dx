@@ -1,6 +1,6 @@
 output "subscription_id" {
   description = "The ID of the Azure subscription."
-  value = data.azurerm_client_config.current.subscription_id
+  value       = data.azurerm_client_config.current.subscription_id
 }
 
 output "tenant_id" {

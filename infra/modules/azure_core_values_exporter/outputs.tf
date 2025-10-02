@@ -1,6 +1,6 @@
 output "subscription_id" {
   description = "The ID of the Azure subscription."
-  value = try(local.core_outputs.values.subscription_id, null)
+  value       = try(local.core_outputs.values.subscription_id, null)
 }
 
 output "tenant_id" {
