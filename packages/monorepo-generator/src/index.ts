@@ -79,22 +79,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     type: "list",
   },
   {
-    choices: ["dev", "prod"],
-    message: "Which environments do you need?",
-    name: "environments",
-    type: "checkbox",
-    validate: (input) =>
-      input.length > 0 ? true : "Select at least one environment",
-  },
-  {
-    message: "What is the project prefix?",
-    name: "prefix",
-    validate: (input: string) =>
-      input.trim().length >= 2 && input.trim().length <= 4
-        ? true
-        : "Prefix length must be between 2 and 4 characters",
-  },
-  {
     choices: [
       { name: "Italy North", value: "italynorth" },
       { name: "North Europe", value: "northeurope" },
@@ -106,17 +90,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     name: "azureLocation",
     type: "list",
     when: (answers) => answers.csp === "azure",
-  },
-  {
-    message: "What is the project domain?",
-    name: "domain",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Domain cannot be empty",
-  },
-  {
-    default: "01",
-    message: "What is the instance number?",
-    name: "instanceNumber",
   },
   {
     choices: [
@@ -133,11 +106,38 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     when: (answers) => answers.csp === "aws",
   },
   {
+    choices: ["dev", "prod"],
+    message: "Which environments do you need?",
+    name: "environments",
+    type: "checkbox",
+    validate: (input) =>
+      input.length > 0 ? true : "Select at least one environment",
+  },
+  {
+    message: "What is the project prefix?",
+    name: "prefix",
+    validate: (input: string) =>
+      input.trim().length >= 2 && input.trim().length <= 4
+        ? true
+        : "Prefix length must be between 2 and 4 characters",
+  },
+  {
     message: "What is the AWS app name?",
     name: "awsAppName",
     validate: (input: string) =>
       input.trim().length > 0 ? true : "AWS app name cannot be empty",
     when: (answers) => answers.csp === "aws",
+  },
+  {
+    message: "What is the project domain?",
+    name: "domain",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Domain cannot be empty",
+  },
+  {
+    default: "01",
+    message: "What is the instance number?",
+    name: "instanceNumber",
   },
 ];
 
