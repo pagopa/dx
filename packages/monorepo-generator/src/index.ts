@@ -33,6 +33,7 @@ import {
 const answersSchema = z.object({
   awsAppName: z.string().optional(),
   awsRegion: z.string().optional(),
+  azureLocation: z.string().optional(),
   csp: z.enum(["aws", "azure"]),
   domain: z.string().nonempty(),
   environments: z.array(z.enum(["dev", "prod"])).nonempty(),
@@ -43,12 +44,13 @@ const answersSchema = z.object({
   repoSrc: z.string().nonempty(),
 });
 
-export type Answers = z.infer<typeof answersSchema>;
-
 interface ActionsDependencies {
   octokitClient: Octokit;
   templatesPath: string;
 }
+type AzureLocation = z.infer<typeof answersSchema.shape.azureLocation>;
+type CSP = z.infer<typeof answersSchema.shape.csp>;
+type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -196,18 +198,33 @@ const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
+const toEnvShort = (env: Environment) => {
+  const envMap = new Map<Environment, string>([
+    ["dev", "d"],
+    ["prod", "p"],
+  ]);
+
+  return envMap.get(env);
+};
+
+const toLocationShort = (location: AzureLocation) => {
+  const locationMap = new Map<AzureLocation, string>([
+    ["italynorth", "itn"],
+    ["northeurope", "neu"],
+    ["westeurope", "weu"],
+  ]);
+  return locationMap.get(location);
+};
 const getTerraformEnvironmentFiles =
   (templatesPath: string) =>
-  (env: Answers["environments"][number], csp: Answers["csp"]): ActionType[] => [
+  (env: Environment, csp: CSP, azureLocation: AzureLocation): ActionType[] => [
     {
       abortOnFail: true,
       base: `${templatesPath}/infra/bootstrapper/${csp}`,
       data: {
         environment: env,
-        //FIXME: This could be a separate function
-        envShort: env.slice(0, 1).toLowerCase(),
-        //FIXME: This could be a separate function
-        locationShort: "itn",
+        envShort: toEnvShort(env),
+        locationShort: toLocationShort(azureLocation),
       },
       destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
@@ -245,7 +262,11 @@ const getActions =
       ...getMonorepoFiles(templatesPath),
       ...getTerraformRepositoryFiles(templatesPath),
       ...data.environments.flatMap((env) =>
-        getTerraformEnvironmentFiles(templatesPath)(env, data.csp),
+        getTerraformEnvironmentFiles(templatesPath)(
+          env,
+          data.csp,
+          data.azureLocation,
+        ),
       ),
       enablePnpm,
       addPagoPaPnpmPlugin,
