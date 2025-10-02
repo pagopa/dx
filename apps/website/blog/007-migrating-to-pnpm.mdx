@@ -5,7 +5,6 @@ hide_table_of_contents: false
 date: 2025-10-03T08:00
 toc_min_heading_level: 2
 toc_max_heading_level: 2
-draft: true
 ---
 
 import Tabs from "@theme/Tabs";
@@ -19,10 +18,11 @@ dependency management. This change is a significant step forward for the PagoPA
 DX Toolchain, bringing improvements in speed, consistency and security to our
 development workflow.
 
-:::warning Deprecation notice We understand that a change of this magnitude
-requires a smooth transition. That's why Yarn will continue to be fully
+:::warning Deprecation notice
+We understand that a change of this magnitude requires a smooth transition. That's why Yarn will continue to be fully
 supported and integrated into our toolchain until **January 16th, 2026**, after
-which it will be officially deprecated. :::
+which it will be officially dismissed.
+:::
 
 ## Why PNPM?
 
@@ -51,14 +51,15 @@ directory:
 npx @pagopa/dx-cli codemod apply use-pnpm
 ```
 
-This script will import your existing `yarn.lock` and it will automatically
+This script will import your existing lockfile and it will automatically
 replace Yarn commands in your CI/CD workflows with their PNPM equivalents.
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) version 20 or higher with `corepack` enabled.
+- [Node.js](https://nodejs.org/) `20.19.5` or higher with `corepack` enabled.
 
-  :::note Corepack is included by default with Node.js versions 16.9.0 and
+  :::note
+  Corepack is included by default with Node.js versions 16.9.0 and
   above, but you'll need to enable it manually for version 20 and above. You can
   do this by running:
 
@@ -74,9 +75,24 @@ replace Yarn commands in your CI/CD workflows with their PNPM equivalents.
   - [web_app_deploy.yaml](../docs/pipelines/web-app-deploy.md)
   - [function_app_deploy.yaml](../docs/pipelines/function-app-deploy.md)
 
-:::tip Need help? For any questions or assistance you need during the migration
+:::tip Need help?
+For any questions or assistance you need during the migration
 process, you can reach out to the PagoPA DX team on Slack in the
-`#team_devex_help` channel. :::
+`#team_devex_help` channel.
+:::
+
+### After the migration
+
+After running the migration script, test your project locally to ensure all scripts
+are working as expected, and all dependencies are correctly resolved.
+
+:::warning Important
+Remember that PNPM is more strict that NPM and Yarn (without Plug'n'Play) and does not allow
+indirect dependencies.
+
+This means that if your project relies on packages that are not explicitly
+declared in your `package.json`, you might encounter errors during installation or runtime.
+:::
 
 ## Quick Guide: Using PNPM
 
@@ -99,6 +115,22 @@ tasks with PNPM, compared to their Yarn equivalents.
 
       # Add a development dependency to root package
       yarn add -D typescript
+    ```
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+    ```shell title="shell"
+      # Install dependencies
+      npm install
+
+      # Don't alter the lockfile
+      npm ci
+
+      # Add a new dependency to root package
+      npm install express
+
+      # Add a development dependency to root package
+      npm install --save-dev typescript
     ```
 
   </TabItem>
@@ -148,6 +180,24 @@ the root `package.json`, while PNPM uses a dedicated `pnpm-workspace.yaml` file.
     ```
 
   </TabItem>
+  <TabItem value="npm" label="NPM">
+    ```json title="package.json"
+      {
+        "name": "my-monorepo",
+        "private": true,
+        // highlight-next-line
+        "workspaces": [
+          "apps/*"
+        ]
+      }
+    ```
+
+    ```shell title="shell"
+      # Add a new dependency to my-app package
+      npm -w my-app add express
+    ```
+
+  </TabItem>
   <TabItem value="pnpm" label="PNPM">
     ```yaml title="pnpm-workspace.yaml"
       // highlight-next-line
@@ -189,6 +239,19 @@ files.
 
       # Run the build script in all packages
       yarn workspaces foreach --all run build
+    ```
+
+  </TabItem>
+  <TabItem value="npm" label="NPM">
+    ```shell title="shell"
+      # Run the build script in the current package
+      npm run build
+
+      # Run the build script in the my-app package
+      npm run build -w my-app
+
+      # Run the build script in all packages
+      npm run build --workspaces
     ```
 
   </TabItem>
