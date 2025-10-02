@@ -3,10 +3,10 @@ module "core_values" {
   version = "~> {{ dxAzurermCoreValuesExporterVersion }}"
 
   core_state = {
-    resource_group_name  = ""
-    storage_account_name = ""
-    container_name       = ""
-    key                  = ""
+    resource_group_name  = "{{ tfStateResourceGroupName }}"
+    storage_account_name = "{{ tfStateStorageAccountName }}"
+    container_name       = "terraform-state"
+    key                  = "{{ repoName }}.core.{{ environment }}.tfstate"
   }
 }
 
