@@ -10,7 +10,7 @@ resource "azurerm_virtual_network" "tests" {
   ))
   location            = data.azurerm_resource_group.tests[each.value].location
   resource_group_name = data.azurerm_resource_group.tests[each.value].name
-  address_space       = [format("10.%d.0.0/16", 20 + index(tolist(var.test_modes), each.key))]
+  address_space       = [local.vnet_address_space_by_mode[each.key]]
 
   tags = var.tags
 }
@@ -22,17 +22,6 @@ resource "dx_available_subnet_cidr" "pep_snet_cidrs" {
   prefix_length      = 23
 }
 
-locals {
-  pep_subnet_name = provider::dx::resource_name(
-    merge(
-      var.environment,
-      {
-        resource_type = "subnet",
-        name          = "pep",
-      }
-  ))
-}
-
 resource "azurerm_subnet" "pep_snets" {
   for_each = var.test_modes
 
@@ -40,11 +29,6 @@ resource "azurerm_subnet" "pep_snets" {
   virtual_network_name = azurerm_virtual_network.tests[each.value].name
   resource_group_name  = azurerm_virtual_network.tests[each.value].resource_group_name
   address_prefixes     = [dx_available_subnet_cidr.pep_snet_cidrs[each.value].cidr_block]
-}
-
-locals {
-  common_subnets = [var.runner_subnet_name]
-  tests_subnets  = [local.pep_subnet_name] # same subnet name for both vnets
 }
 
 resource "azurerm_virtual_network_peering" "common_to_tests" {
@@ -104,14 +88,6 @@ resource "azurerm_network_security_group" "common" {
   tags = var.tags
 }
 
-locals {
-  subnet_names_by_id = { for subnet_id in var.vnet_common.subnet_ids : subnet_id => provider::azurerm::parse_resource_id(subnet_id)["resource_name"] }
-  subnets_to_associate = {
-    for subnet_id, subnet_name in local.subnet_names_by_id : subnet_id => subnet_name
-    if !contains([var.runner_subnet_name, "GatewaySubnet"], subnet_name)
-  }
-}
-
 resource "azurerm_subnet_network_security_group_association" "common_runner_to_tests_pep" {
   for_each = local.subnets_to_associate
 
@@ -119,10 +95,10 @@ resource "azurerm_subnet_network_security_group_association" "common_runner_to_t
   network_security_group_id = azurerm_network_security_group.common.id
 }
 
-resource "azurerm_network_security_rule" "deny_common_to_tests_pep" {
+resource "azurerm_network_security_rule" "deny_common_to_tests_vnets" {
   for_each = var.test_modes
 
-  name      = "DenyToVNet${each.value}SubnetPep"
+  name      = "DenyToVNet${each.value}"
   priority  = tonumber(format("10%d", 0 + index(tolist(var.test_modes), each.key)))
   direction = "Outbound"
   access    = "Deny"
@@ -132,7 +108,7 @@ resource "azurerm_network_security_rule" "deny_common_to_tests_pep" {
   source_address_prefix = "*"
 
   destination_port_range     = "*"
-  destination_address_prefix = azurerm_subnet.pep_snets[each.value].address_prefixes[0]
+  destination_address_prefix = local.vnet_address_space_by_mode[each.key]
 
   resource_group_name         = var.vnet_common.resource_group_name
   network_security_group_name = azurerm_network_security_group.common.name
