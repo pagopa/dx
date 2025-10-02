@@ -16,9 +16,8 @@ module "bootstrap" {
 
   environment = local.environment
 
-  // si potrebbero importare da module.core_values.subscription_id
-  subscription_id = data.azurerm_subscription.current.id
-  tenant_id       = data.azurerm_client_config.current.tenant_id
+  subscription_id = module.core_values.subscription_id
+  tenant_id       = module.core_values.tenant_id
 
   // formiamo convenzione (e.g. "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin|developers|")
   entraid_groups = {
