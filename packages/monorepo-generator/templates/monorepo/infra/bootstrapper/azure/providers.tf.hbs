@@ -14,6 +14,11 @@ terraform {
       source  = "integrations/github"
       version = "~> {{ githubTfProviderVersion }}"
     }
+
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> {{ pagopaDxAzureTfProviderVersion }}"
+    }
   }
 }
 
@@ -24,3 +29,5 @@ provider "azurerm" {
 provider "github" {
   owner = "pagopa"
 }
+
+provider "dx" {}
