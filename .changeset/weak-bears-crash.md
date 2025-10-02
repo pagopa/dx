@@ -2,6 +2,7 @@
 "@pagopa/monorepo-generator": minor
 ---
 
-Add the default `prod` environment to the template.
+Scaffold the bootstrapper per CSP per environment.
 
-Instruct the generator to scaffold that empty environment for now.
+Given the CSP selection and the environments, generate the Terraform code
+to bootstrap the GitHub environment and the cloud resources.
