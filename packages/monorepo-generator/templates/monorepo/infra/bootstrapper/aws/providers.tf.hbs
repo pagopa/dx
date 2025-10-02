@@ -14,9 +14,16 @@ terraform {
       source  = "integrations/github"
       version = "~> {{ githubTfProviderVersion }}"
     }
+
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> {{ pagopaDxAwsTfProviderVersion }}"
+    }
   }
 }
 
 provider "aws" {
   region = local.environment.region
 }
+
+provider "dx" {}
