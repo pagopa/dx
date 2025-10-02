@@ -1,6 +1,6 @@
 backend "azurerm" {
-  resource_group_name  = "{{ repoStateResourceGroupName }}"
-  storage_account_name = "{{ repoStateStorageAccountName }}"
+  resource_group_name  = "{{ tfStateResourceGroupName }}"
+  storage_account_name = "{{ tfStateStorageAccountName }}"
   container_name       = "terraform-state"
   key                  = "{{ repoName }}.repository.tfstate"
 }

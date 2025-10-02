@@ -116,14 +116,14 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: "dx-d-itn-terraform-rg-01",
     message: "Azure resource group for tfstate:",
-    name: "repoStateResourceGroupName",
+    name: "tfStateResourceGroupName",
     type: "input",
     when: (answers) => answers.csp === "azure",
   },
   {
     default: "dxditntfst01",
     message: "Azure storage account for tfstate:",
-    name: "repoStateStorageAccountName",
+    name: "tfStateStorageAccountName",
     type: "input",
     when: (answers) => answers.csp === "azure",
   },
