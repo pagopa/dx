@@ -26,6 +26,34 @@ export const getGitHubTerraformProviderLatestRelease =
     );
   };
 
+export const getPagoPaDxAzureTerraformProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-provider-azure";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "pagopaDxAzureTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getPagoPaDxAwsTerraformProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-provider-aws";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "pagopaDxAwsTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
 export const getDxGitHubBootstrapLatestTag =
   ({ octokitClient }: TerraformActionsDependencies): ActionType =>
   async (answers) => {
