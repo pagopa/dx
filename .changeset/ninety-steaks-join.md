@@ -7,7 +7,8 @@
 
 1. Replace the `tier` variable with a new `use_case` variable for tiering configuration.
 2. Add new variables `size` for cpu/memory override.
-3. Added README documentation.
+3. Update README documentation.
+4. Update `autoscaler` variable to include minimum and maximum replica limits. If these are not defined, they default to `null` and the values from the `use_case` will be applied.
 
 ## Upgrade Notes
 
