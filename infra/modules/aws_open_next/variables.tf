@@ -91,6 +91,23 @@ variable "image_optimizer" {
   }
 }
 
+variable "isr_revalidation" {
+  type = object({
+    timeout               = optional(number, 30)
+    memory_size           = optional(number, 1024)
+    handler               = optional(string, "index.handler")
+    environment_variables = optional(map(string), {})
+  })
+
+  description = "The ISR revalidation lambda function configuration."
+  default = {
+    timeout               = 30
+    memory_size           = 1024
+    handler               = "index.handler"
+    environment_variables = {}
+  }
+}
+
 variable "initializer" {
   type = object({
     timeout               = optional(number, 900)

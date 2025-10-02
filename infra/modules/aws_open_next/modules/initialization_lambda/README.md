@@ -1,4 +1,4 @@
-# image_optimizer_lambda
+# initialization_lambda
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

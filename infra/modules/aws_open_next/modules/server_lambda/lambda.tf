@@ -115,7 +115,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
     FunctionName = local.function_name
   }
 
-  alarm_description  = "Alarm when Lambda ${local.function_name} has more than 5 errors in 5 minutes"
+  alarm_description  = "Alarm when Lambda ${local.function_name} has more than 3 errors in 3 minutes"
   treat_missing_data = "notBreaching"
 
   alarm_actions = var.alarms_actions

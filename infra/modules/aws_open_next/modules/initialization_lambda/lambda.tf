@@ -3,7 +3,7 @@ resource "aws_lambda_function" "function" {
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
   function_name = "${local.app_prefix}-lambda-${local.app_suffix}"
-  description   = "OpenNext Image Optimizer Lambda Function for project ${local.project}"
+  description   = "OpenNext Initialization Lambda Function for project ${local.project}"
 
   handler       = var.handler
   runtime       = "nodejs${var.node_major_version}.x"

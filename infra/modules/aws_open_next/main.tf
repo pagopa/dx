@@ -56,10 +56,10 @@ module "isr_revalidation" {
   tags        = local.tags
 
   node_major_version    = var.node_major_version
-  timeout               = var.image_optimizer.timeout
-  memory_size           = var.image_optimizer.memory_size
-  handler               = var.image_optimizer.handler
-  environment_variables = var.image_optimizer.environment_variables
+  timeout               = var.isr_revalidation.timeout
+  memory_size           = var.isr_revalidation.memory_size
+  handler               = var.isr_revalidation.handler
+  environment_variables = var.isr_revalidation.environment_variables
 }
 
 module "initializer" {
