@@ -32,7 +32,7 @@ variable "container_app_environment_id" {
 
 variable "use_case" {
   type        = string
-  description = "Function App use case. Allowed values: 'default'."
+  description = "Container app use case. Allowed values: 'default'."
   default     = "default"
 
   validation {

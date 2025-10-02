@@ -119,7 +119,7 @@ No modules.
 | <a name="input_size"></a> [size](#input\_size) | Container app memory and cpu sizes. For allowed values consult table at https://learn.microsoft.com/en-us/azure/container-apps/containers#allocations. If not set, it will be determined by the use\_case. | <pre>object({<br/>    cpu    = number<br/>    memory = string<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_target_port"></a> [target\_port](#input\_target\_port) | The port on which the container app will listen for incoming traffic. | `number` | `8080` | no |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Function App use case. Allowed values: 'default'. | `string` | `"default"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Container app use case. Allowed values: 'default'. | `string` | `"default"` | no |
 | <a name="input_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#input\_user\_assigned\_identity\_id) | Id of the user-assigned managed identity created along with the Container App Environment. This is necessary to give identity roles (e.g. KeyVault access) to the Container App. | `string` | n/a | yes |
 
 ## Outputs
