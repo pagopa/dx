@@ -49,9 +49,15 @@ These variables are loaded automatically by custom actions and do not require us
 | `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module.                 |
 | `awsTfProviderVersion`                | custom action (GitHub fetch) | AWS Terraform provider version, e.g. `5.34`.                                                  |
 | `tlsTfProviderVersion`                | custom action (GitHub fetch) | TLS Terraform provider version, e.g. `4.0`.                                                   |
+| `azurermTfProviderVersion`            | custom action (GitHub fetch) | AzureRM Terraform provider version, e.g. `3.80`.                                              |
+| `azureadTfProviderVersion`            | custom action (GitHub fetch) | AzureAD Terraform provider version, e.g. `2.40`.                                              |
+| `pagopaDxAwsTfProviderVersion`        | custom action (GitHub fetch) | PagoPA DX AWS Terraform provider version, e.g. `1.0`.                                         |
+| `pagopaDxAzureTfProviderVersion`      | custom action (GitHub fetch) | PagoPA DX Azure Terraform provider version, e.g. `1.0`.                                       |
 | `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources.                |
 | `dxAwsBootstrapperVersion`            | custom action (GitHub fetch) | AWS bootstrapper module version, e.g. `1.2`.                                                  |
 | `dxAwsCoreValuesExporterVersion`      | custom action (GitHub fetch) | AWS core values exporter module version, e.g. `1.2`.                                          |
+| `dxAzureBootstrapperVersion`          | custom action (GitHub fetch) | Azure bootstrapper module version, e.g. `1.2`.                                                |
+| `dxAzureCoreValuesExporterVersion`    | custom action (GitHub fetch) | Azure core values exporter module version, e.g. `1.2`.                                        |
 | `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. |
 
 ## Recommended usage
