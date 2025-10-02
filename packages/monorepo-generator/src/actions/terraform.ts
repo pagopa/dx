@@ -81,6 +81,34 @@ export const getTlsProviderLatestRelease =
     );
   };
 
+export const getAzurermProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "hashicorp";
+    const repo = "terraform-provider-azurerm";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "azurermTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getAzureadProviderLatestRelease =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "hashicorp";
+    const repo = "terraform-provider-azuread";
+
+    return fetchLatestSemver(
+      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+      answers,
+      "azureadTfProviderVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
 export const getPreCommitTerraformLatestRelease =
   ({ octokitClient }: TerraformActionsDependencies): ActionType =>
   async (answers) => {
@@ -119,6 +147,34 @@ export const getDxAwsCoreValuesExporterLatestTag =
       () => fetchLatestTag({ client: octokitClient, owner, repo }),
       answers,
       "dxAwsCoreValuesExporterVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getDxAzureBootstrapperLatestTag =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-azurerm-azure-github-environment-bootstrap";
+
+    return fetchLatestSemver(
+      () => fetchLatestTag({ client: octokitClient, owner, repo }),
+      answers,
+      "dxAzureBootstrapperVersion",
+      ({ major, minor }) => `${major}.${minor}`,
+    );
+  };
+
+export const getDxAzureCoreValuesExporterLatestTag =
+  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
+  async (answers) => {
+    const owner = "pagopa-dx";
+    const repo = "terraform-azurerm-azure-core-values-exporter";
+
+    return fetchLatestSemver(
+      () => fetchLatestTag({ client: octokitClient, owner, repo }),
+      answers,
+      "dxAzurermCoreValuesExporterVersion",
       ({ major, minor }) => `${major}.${minor}`,
     );
   };

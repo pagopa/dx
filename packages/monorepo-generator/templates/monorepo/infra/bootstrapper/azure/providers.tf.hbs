@@ -1,0 +1,26 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> {{ azurermTfProviderVersion }}"
+    }
+
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> {{ azureadTfProviderVersion }}"
+    }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> {{ githubTfProviderVersion }}"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+provider "github" {
+  owner = "pagopa"
+}
