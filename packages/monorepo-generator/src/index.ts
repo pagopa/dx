@@ -57,7 +57,6 @@ interface ActionsDependencies {
   plopApi: NodePlopAPI;
   templatesPath: string;
 }
-type AzureLocation = z.infer<typeof answersSchema.shape.azureLocation>;
 type CSP = z.infer<typeof answersSchema.shape.csp>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
@@ -271,14 +270,13 @@ const selectBackendPartial =
 
 const getTerraformEnvironmentFiles =
   (templatesPath: string) =>
-  (env: Environment, csp: CSP, azureLocation: AzureLocation): ActionType[] => [
+  (env: Environment, csp: CSP): ActionType[] => [
     {
       abortOnFail: true,
       base: `${templatesPath}/infra/bootstrapper/${csp}`,
       data: {
         environment: env,
         envShort: toEnvShort(env),
-        locationShort: toLocationShort(azureLocation),
       },
       destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
@@ -318,11 +316,7 @@ const getActions =
       ...getMonorepoFiles(templatesPath),
       ...getTerraformRepositoryFiles(templatesPath),
       ...data.environments.flatMap((env) =>
-        getTerraformEnvironmentFiles(templatesPath)(
-          env,
-          data.csp,
-          data.azureLocation,
-        ),
+        getTerraformEnvironmentFiles(templatesPath)(env, data.csp),
       ),
       enablePnpm,
       addPagoPaPnpmPlugin,
