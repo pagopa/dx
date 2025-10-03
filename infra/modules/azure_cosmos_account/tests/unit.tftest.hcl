@@ -176,3 +176,16 @@ run "valid_cmk" {
     error_message = "default_identity_type must reference the provided user-assigned identity"
   }
 }
+
+// Validate Local Authentication Disabled
+run "cosmos_account_local_auth_disabled" {
+  command = plan
+
+  assert {
+    condition = length(setintersection(
+      [for value in azurerm_cosmosdb_account.this.capabilities : value.name],
+      ["EnableMongo", "EnableCassandra", "EnableTable", "EnableGremlin"]
+    )) == 0
+    error_message = "The Cosmos DB account must not have capabilities EnableMongo, EnableCassandra, EnableTable, or EnableGremlin"
+  }
+}
