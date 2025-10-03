@@ -1,0 +1,29 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_key_vault.this" [label="data.azurerm_key_vault.this"];
+  "data.azurerm_private_dns_zone.storage_account" [label="data.azurerm_private_dns_zone.storage_account"];
+  "data.azurerm_subscription.current" [label="data.azurerm_subscription.current"];
+  "azurerm_key_vault_access_policy.keys" [label="azurerm_key_vault_access_policy.keys"];
+  "azurerm_key_vault_key.key" [label="azurerm_key_vault_key.key"];
+  "azurerm_monitor_metric_alert.storage_account_health_check" [label="azurerm_monitor_metric_alert.storage_account_health_check"];
+  "azurerm_private_endpoint.this" [label="azurerm_private_endpoint.this"];
+  "azurerm_role_assignment.keys" [label="azurerm_role_assignment.keys"];
+  "azurerm_security_center_storage_defender.this" [label="azurerm_security_center_storage_defender.this"];
+  "azurerm_storage_account.this" [label="azurerm_storage_account.this"];
+  "azurerm_storage_account_customer_managed_key.kv" [label="azurerm_storage_account_customer_managed_key.kv"];
+  "azurerm_storage_account_network_rules.network_rules" [label="azurerm_storage_account_network_rules.network_rules"];
+  "azurerm_key_vault_access_policy.keys" -> "data.azurerm_key_vault.this";
+  "azurerm_key_vault_access_policy.keys" -> "data.azurerm_subscription.current";
+  "azurerm_key_vault_access_policy.keys" -> "azurerm_storage_account.this";
+  "azurerm_key_vault_key.key" -> "azurerm_key_vault_access_policy.keys";
+  "azurerm_monitor_metric_alert.storage_account_health_check" -> "azurerm_storage_account.this";
+  "azurerm_private_endpoint.this" -> "data.azurerm_private_dns_zone.storage_account";
+  "azurerm_private_endpoint.this" -> "azurerm_storage_account.this";
+  "azurerm_role_assignment.keys" -> "data.azurerm_key_vault.this";
+  "azurerm_role_assignment.keys" -> "data.azurerm_subscription.current";
+  "azurerm_role_assignment.keys" -> "azurerm_storage_account.this";
+  "azurerm_security_center_storage_defender.this" -> "azurerm_storage_account.this";
+  "azurerm_storage_account_customer_managed_key.kv" -> "azurerm_key_vault_key.key";
+  "azurerm_storage_account_network_rules.network_rules" -> "azurerm_storage_account.this";
+}
