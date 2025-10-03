@@ -229,9 +229,15 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
       '@types/node':
         specifier: 'catalog:'
         version: 22.16.2
+      eslint:
+        specifier: 'catalog:'
+        version: 9.32.0(jiti@2.6.0)
       typescript:
         specifier: 'catalog:'
         version: 5.8.3

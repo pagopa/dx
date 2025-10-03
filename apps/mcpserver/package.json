@@ -28,6 +28,8 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@pagopa/eslint-config": "workspace:^",
+    "eslint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
