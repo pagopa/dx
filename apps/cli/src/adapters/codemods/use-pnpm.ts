@@ -229,6 +229,10 @@ const apply: Codemod["apply"] = async (info) => {
   await replacePMOccurrences();
   await updateDXWorkflows();
 
+  // Add pnpm store to .gitignore
+  logger.info("Adding pnpm store to .gitignore...");
+  await fs.appendFile(".gitignore", "\n\n# PNPM\n.pnpm-store");
+
   // Set pnpm as the package manager
   logger.info("Setting pnpm as the package manager...");
   await $`corepack use pnpm@latest`;
