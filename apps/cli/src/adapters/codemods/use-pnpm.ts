@@ -99,7 +99,7 @@ async function replacePMOccurrences(): Promise<void> {
       "https://yarnpkg.com/",
       "https://classic.yarnpkg.com/",
       /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) (\S+)\b/g,
-      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) /g,
+      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b))\b/g,
       /\b(yarn install --immutable|npm ci)\b/g,
       /\b(yarn -q dlx|npx)\b/g,
       /\b(Yarn|npm)\b/gi,
@@ -108,7 +108,7 @@ async function replacePMOccurrences(): Promise<void> {
     to: [
       "https://pnpm.io/",
       "https://pnpm.io/",
-      "pnpm --filter $1",
+      "pnpm --filter $3",
       "pnpm --filter <package-selector>",
       "pnpm install --frozen-lockfile",
       "pnpm dlx",
