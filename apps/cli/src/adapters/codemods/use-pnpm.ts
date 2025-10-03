@@ -9,6 +9,60 @@ import { getLatestCommitShaOrRef } from "./git.js";
 import { updateJSCodeReview } from "./update-code-review.js";
 import { migrateWorkflow } from "./use-azure-appsvc.js";
 
+type NodePackageManager = {
+  listWorkspaces(): Promise<string[]>;
+  lockFileName: string;
+};
+
+class NPM implements NodePackageManager {
+  lockFileName = "package-lock.json";
+
+  async listWorkspaces(): Promise<string[]> {
+    const { stdout } = await $`npm query .workspace`;
+    const workspaces = JSON.parse(stdout);
+    //console.log(workspaces);
+    const workspaceNames = [];
+    if (Array.isArray(workspaces)) {
+      for (const ws of workspaces) {
+        if (Object.hasOwn(ws, "name")) {
+          workspaceNames.push(ws.name);
+        }
+      }
+    }
+    return workspaceNames;
+  }
+}
+
+class Yarn implements NodePackageManager {
+  lockFileName = "yarn.lock";
+
+  async listWorkspaces(): Promise<string[]> {
+    const { stdout } = await $({ lines: true })`yarn workspaces list --json`;
+    const workspaceNames = [];
+    for (const line of stdout) {
+      const ws = JSON.parse(line);
+      if (Object.hasOwn(ws, "name")) {
+        workspaceNames.push(ws.name);
+      }
+    }
+    return workspaceNames;
+  }
+}
+
+async function extractPackageExtensions(): Promise<object | undefined> {
+  // Read the .yarnrc.yaml file if it exists and extract the packageExtensions field
+  try {
+    const yarnrc = await fs.readFile(".yarnrc.yml", "utf-8");
+    const parsed = YAML.parse(yarnrc);
+    if (parsed.packageExtensions) {
+      return parsed.packageExtensions;
+    }
+  } catch {
+    // File does not exist or is not readable, ignore
+  }
+  return undefined;
+}
+
 async function preparePackageJsonForPnpm(): Promise<string[]> {
   const packageJson = await fs.readFile("package.json", "utf-8");
   const manifest = JSON.parse(packageJson);
@@ -35,20 +89,20 @@ async function removeFiles(...files: string[]): Promise<void> {
   );
 }
 
-async function replaceYarnOccurrences(): Promise<void> {
+async function replacePMOccurrences(): Promise<void> {
   const logger = getLogger(["dx-cli", "codemod"]);
-  logger.info("Replacing yarn occurrences in files...");
+  logger.info("Replacing yarn and npm occurrences in files...");
   const results = await replaceInFile({
     allowEmptyPaths: true,
     files: ["**/*.json", "**/*.md", "**/Dockerfile", "**/docker-compose.yml"],
     from: [
       "https://yarnpkg.com/",
       "https://classic.yarnpkg.com/",
-      /yarn workspace (\S+)/g,
-      /yarn workspace/g,
-      /yarn install --immutable/g,
-      /yarn -q dlx/g,
-      /Yarn/gi,
+      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) (\S+)\b/g,
+      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) /g,
+      /\b(yarn install --immutable|npm ci)\b/g,
+      /\b(yarn -q dlx|npx)\b/g,
+      /\b(Yarn|npm)\b/gi,
     ],
     ignore: ["**/node_modules/**", "**/dist/**", "**/build/**"],
     to: [
@@ -84,8 +138,12 @@ async function updateDXWorkflows(): Promise<void> {
   });
 }
 
-async function writePnpmWorkspaceFile(workspaces: string[]): Promise<void> {
+async function writePnpmWorkspaceFile(
+  workspaces: string[],
+  packageExtensions: object | undefined,
+): Promise<void> {
   const pnpmWorkspace = {
+    packageExtensions,
     packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
   };
   const yamlContent = YAML.stringify(pnpmWorkspace);
@@ -97,7 +155,24 @@ const apply: Codemod["apply"] = async (info) => {
     throw new Error("Project is already using pnpm");
   }
 
+  const pm = info.packageManager === "yarn" ? new Yarn() : new NPM();
+
   const logger = getLogger(["dx-cli", "codemod"]);
+
+  const localWorkspaces = await pm.listWorkspaces();
+
+  logger.info("Using the {protocol} protocol for local dependencies", {
+    protocol: "workspace:",
+  });
+
+  if (localWorkspaces.length > 0) {
+    await replaceInFile({
+      allowEmptyPaths: true,
+      files: ["**/package.json"],
+      from: localWorkspaces.map((ws) => new RegExp(`"${ws}": ".*?"`, "g")),
+      to: localWorkspaces.map((ws) => `"${ws}": "workspace:^"`),
+    });
+  }
 
   // Remove unused field from package.json
   logger.info("Remove unused fields from {file}", {
@@ -105,11 +180,18 @@ const apply: Codemod["apply"] = async (info) => {
   });
   const workspaces = await preparePackageJsonForPnpm();
 
+  const packageExtensions =
+    info.packageManager === "yarn"
+      ? await extractPackageExtensions()
+      : undefined;
+
   // Create pnpm-workspace.yaml
   logger.info("Create {file}", {
     file: "pnpm-workspace.yaml",
   });
-  await writePnpmWorkspaceFile(workspaces);
+  await writePnpmWorkspaceFile(workspaces, packageExtensions);
+
+  await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
 
   // Remove yarn and node_modules files and folders
   logger.info("Remove node_modules and yarn files");
@@ -124,22 +206,22 @@ const apply: Codemod["apply"] = async (info) => {
   );
 
   // Import lockfile
-  logger.info("Importing {source} to {target}", {
-    source: "yarn.lock",
-    target: "pnpm-lock.yaml",
-  });
-  try {
-    await fs.access("yarn.lock");
-    await $`corepack pnpm@latest import yarn.lock`;
-    await removeFiles("yarn.lock");
-  } catch {
-    logger.info("No yarn.lock file found, skipping import.");
+  const stat = await fs.stat(pm.lockFileName);
+  if (stat.isFile()) {
+    logger.info("Importing {source} to {target}", {
+      source: pm.lockFileName,
+      target: "pnpm-lock.yaml",
+    });
+    await $`corepack pnpm@latest import ${pm.lockFileName}`;
+    await removeFiles(pm.lockFileName);
+  } else {
+    logger.info("No {source} file found, skipping import.", {
+      source: pm.lockFileName,
+    });
   }
 
-  await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
-
-  // Replace yarn occurrences in files and update workflows
-  await replaceYarnOccurrences();
+  // Replace yarn and npm occurrences in files and update workflows
+  await replacePMOccurrences();
   await updateDXWorkflows();
 
   // Set pnpm as the package manager
@@ -149,6 +231,6 @@ const apply: Codemod["apply"] = async (info) => {
 
 export default {
   apply,
-  description: "A codemod that switches the project to use pnpm",
+  description: "Migrate the project to use pnpm as the package manager",
   id: "use-pnpm",
 } satisfies Codemod;
