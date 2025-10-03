@@ -20,51 +20,60 @@ run "setup_tests" {
   }
 }
 
+variables {
+  environment = run.setup_tests.environment
+
+  tags = run.setup_tests.tags
+
+  use_case = "default"
+
+  resource_group_name = run.setup_tests.resource_group_name
+
+  container_app_environment_id = run.setup_tests.container_app_environment_id
+  user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
+
+  container_app_templates = [
+    {
+      image = "nginx:latest"
+
+      app_settings = {
+        "TEST1" = "value1",
+        "TEST2" = "value2"
+      }
+
+      liveness_probe = {
+        path = "/"
+      }
+    }
+  ]
+
+  secrets = [
+    {
+      name                = run.setup_tests.key_vault_secret1.name
+      key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
+    },
+    {
+      name                = run.setup_tests.key_vault_secret2.name
+      key_vault_secret_id = run.setup_tests.key_vault_secret2.secret_id
+    }
+  ]
+}
+
 run "container_app_is_correct_plan" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
 
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
-    container_app_templates = [
-      {
-        image = "nginx:latest"
-
-        app_settings = {
-          "TEST1" = "value1",
-          "TEST2" = "value2"
-        }
-
-        liveness_probe = {
-          path = "/"
-        }
-      }
-    ]
-
-    secrets = [
-      {
-        name                = run.setup_tests.key_vault_secret1.name
-        key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
-      },
-      {
-        name                = run.setup_tests.key_vault_secret2.name
-        key_vault_secret_id = run.setup_tests.key_vault_secret2.secret_id
-      }
-    ]
   }
 
   assert {
     condition     = azurerm_container_app.this.name == "dx-d-itn-modules-test-ca-01"
     error_message = "The container app name is not correct"
+  }
+
+  assert {
+    condition     = local.cpu_size == 1.25 && local.memory_size == "2.5Gi"
+    error_message = "The container app size is not correct"
   }
 
   assert {
@@ -83,12 +92,12 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_container_app.this.template[0].min_replicas == 0
+    condition     = azurerm_container_app.this.template[0].min_replicas == 1
     error_message = "The container app minimum replicas is not correct"
   }
 
   assert {
-    condition     = azurerm_container_app.this.template[0].max_replicas == 1
+    condition     = azurerm_container_app.this.template[0].max_replicas == 2
     error_message = "The container app maximum replicas is not correct"
   }
 
@@ -184,17 +193,6 @@ run "container_app_correct_container_name" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
-
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
     container_app_templates = [
       {
         image = "ghcr.io/pagopa/selfcare-dashboard-backend:sha-4b7f62d"
@@ -221,17 +219,6 @@ run "container_app_correct_custom_container_name" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
-
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
     container_app_templates = [
       {
         image = "nginx:latest"
@@ -259,41 +246,12 @@ run "container_app_correct_replicas" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
-
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
-    container_app_templates = [
-      {
-        image = "nginx:latest"
-        name  = "custom-nginx"
-
-        liveness_probe = {
-          path = "/"
-        }
-      }
-    ]
-
     autoscaler = {
       replicas = {
         minimum = 0
         maximum = 5
       }
     }
-
-    secrets = [
-      {
-        name                = run.setup_tests.key_vault_secret1.name
-        key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
-      }
-    ]
   }
 
   assert {
@@ -326,17 +284,6 @@ run "container_app_correct_custom_autoscaler" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
-
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
     container_app_templates = [
       {
         image = "nginx:latest"
@@ -425,17 +372,6 @@ run "container_app_correct_autoscalers" {
   command = plan
 
   variables {
-    environment = run.setup_tests.environment
-
-    tags = run.setup_tests.tags
-
-    tier = "xs"
-
-    resource_group_name = run.setup_tests.resource_group_name
-
-    container_app_environment_id = run.setup_tests.container_app_environment_id
-    user_assigned_identity_id    = run.setup_tests.user_assigned_identity_id
-
     container_app_templates = [
       {
         image = "nginx:latest"
@@ -549,4 +485,79 @@ run "container_app_correct_autoscalers" {
     condition     = azurerm_container_app.this.template[0].max_replicas == 5
     error_message = "The container app should have maximum replicas set to 5"
   }
+}
+
+run "container_app_correct_size" {
+  command = plan
+
+  variables {
+    size = {
+      cpu    = 2.5
+      memory = "5Gi"
+    }
+  }
+  assert {
+    condition     = local.cpu_size == 2.5 && local.memory_size == "5Gi"
+    error_message = "The container app size is not correct"
+  }
+}
+
+run "container_app_override_size_wrong_mapping" {
+  command = plan
+
+  variables {
+    size = {
+      cpu    = 2.5
+      memory = "6Gi"
+    }
+  }
+
+  expect_failures = [
+    var.size,
+  ]
+}
+
+run "container_app_override_size_too_small" {
+  command = plan
+
+  variables {
+    size = {
+      cpu    = 0.1
+      memory = "0.2Gi"
+    }
+  }
+
+  expect_failures = [
+    var.size,
+  ]
+}
+
+run "container_app_override_size_wrong_increase" {
+  command = plan
+
+  variables {
+    size = {
+      cpu    = 0.6
+      memory = "1.2Gi"
+    }
+  }
+
+  expect_failures = [
+    var.size,
+  ]
+}
+
+run "container_app_override_size_too_large" {
+  command = plan
+
+  variables {
+    size = {
+      cpu    = 5
+      memory = "10Gi"
+    }
+  }
+
+  expect_failures = [
+    var.size,
+  ]
 }
