@@ -1,13 +1,13 @@
 import { FastMCP } from "fastmcp";
+
 import { verifyGithubUser } from "./auth/github.js";
-import { logger } from "./utils/logger.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
+import { logger } from "./utils/logger.js";
 
 const isAuthRequired = (process.env.AUTH_REQUIRED || "true") !== "false";
 
 const server = new FastMCP({
   name: "pagopa.dx.documentation_retrieval_mcp_server",
-  version: "0.0.0",
   instructions: `The pagoPa DX Knowledge Retrieval MCP Server is the authoritative source for everything related to PagoPA Developer Experience (DX/DevEx/Platform).
 
 It provides guidance on:
@@ -38,6 +38,7 @@ Use this server instead of generic documentation tools whenever the request invo
 	•	Development workflows and DevEx patterns
 	•	TypeScript development within the PagoPA DX ecosystem
     `,
+  version: "0.0.0",
   authenticate: isAuthRequired
     ? async (request) => {
         const authHeader = request.headers["x-gh-pat"];
@@ -70,9 +71,9 @@ Use this server instead of generic documentation tools whenever the request invo
 server.addTool(QueryPagoPADXDocumentationTool);
 
 server.start({
-  transportType: "httpStream",
   httpStream: {
     port: 8080,
     stateless: true,
   },
+  transportType: "httpStream",
 });

@@ -1,29 +1,30 @@
 import {
   BedrockAgentRuntimeClient,
-  RetrieveCommand,
   KnowledgeBaseRetrievalConfiguration,
+  RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
+
 import { logger } from "../utils/logger.js";
 
-type RerankingModelName = "COHERE" | "AMAZON";
+type RerankingModelName = "AMAZON" | "COHERE";
 
 export async function queryKnowledgeBase(
   knowledgeBaseId: string,
   query: string,
   kbAgentClient: BedrockAgentRuntimeClient,
-  numberOfResults: number = 20,
-  reranking: boolean = false,
+  numberOfResults = 20,
+  reranking = false,
   rerankingModelName: RerankingModelName = "AMAZON",
 ): Promise<string> {
   const clientRegion = await kbAgentClient.config.region();
   if (
     reranking &&
     ![
-      "us-west-2",
-      "us-east-1",
       "ap-northeast-1",
       "ca-central-1",
       "eu-central-1",
+      "us-east-1",
+      "us-west-2",
     ].includes(clientRegion)
   ) {
     logger.warn(`Reranking is not supported in region ${clientRegion}`);
@@ -32,34 +33,34 @@ export async function queryKnowledgeBase(
 
   const retrieveRequest: KnowledgeBaseRetrievalConfiguration = {
     vectorSearchConfiguration: {
-      numberOfResults: numberOfResults,
+      numberOfResults,
     },
   };
 
   if (reranking && retrieveRequest.vectorSearchConfiguration) {
     const modelNameMapping: Record<RerankingModelName, string> = {
-      COHERE: "cohere.rerank-v3-5:0",
       AMAZON: "amazon.rerank-v1:0",
+      COHERE: "cohere.rerank-v3-5:0",
     };
     retrieveRequest.vectorSearchConfiguration.rerankingConfiguration = {
-      type: "BEDROCK_RERANKING_MODEL",
       bedrockRerankingConfiguration: {
         modelConfiguration: {
           modelArn: `arn:aws:bedrock:${clientRegion}::foundation-model/${modelNameMapping[rerankingModelName]}`,
         },
       },
+      type: "BEDROCK_RERANKING_MODEL",
     };
   }
 
   const command = new RetrieveCommand({
-    knowledgeBaseId: knowledgeBaseId,
-    retrievalQuery: { text: query },
+    knowledgeBaseId,
     retrievalConfiguration: retrieveRequest,
+    retrievalQuery: { text: query },
   });
 
   const response = await kbAgentClient.send(command);
   const results = response.retrievalResults || [];
-  const documents: Record<string, any>[] = [];
+  const documents: Record<string, unknown>[] = [];
 
   for (const result of results) {
     if (result.content?.type === "IMAGE") {

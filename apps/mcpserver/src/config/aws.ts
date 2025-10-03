@@ -1,4 +1,5 @@
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
+
 import { logger } from "../utils/logger.js";
 
 export const kbRerankingEnabled =

@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import { logger } from "../utils/logger.js";
 
 const GITHUB_API_URL = "https://api.github.com";
@@ -8,6 +9,10 @@ const REQUIRED_ORGANIZATIONS = (
   .split(",")
   .map((org) => org.trim());
 
+type Org = {
+  login: string;
+};
+
 export async function verifyGithubUser(token: string): Promise<boolean> {
   if (!token) {
     return false;
@@ -16,15 +21,15 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
   try {
     const response = await axios.get(`${GITHUB_API_URL}/user/orgs`, {
       headers: {
-        Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github.v3+json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
     logger.info("GitHub API response:", response.data);
 
-    const organizations = response.data;
-    const isMember = organizations.some((org: any) =>
+    const organizations = response.data as Org[];
+    const isMember = organizations.some((org: Org) =>
       REQUIRED_ORGANIZATIONS.includes(org.login),
     );
 

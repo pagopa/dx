@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 vi.mock("../logger", () => ({
   logger: {
+    error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
-    error: vi.fn(),
   },
 }));
 import { logger } from "../logger.js";
