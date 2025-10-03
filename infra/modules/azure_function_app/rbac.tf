@@ -8,7 +8,7 @@ resource "azurerm_role_assignment" "function_storage_blob_data_owner" {
 }
 
 resource "azurerm_role_assignment" "staging_function_storage_blob_data_owner" {
-  count = local.function_app.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Blob Data Owner"
@@ -22,7 +22,7 @@ resource "azurerm_role_assignment" "function_storage_account_contributor" {
 }
 
 resource "azurerm_role_assignment" "staging_function_storage_account_contributor" {
-  count = local.function_app.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Account Contributor"
@@ -36,7 +36,7 @@ resource "azurerm_role_assignment" "function_storage_queue_data_contributor" {
 }
 
 resource "azurerm_role_assignment" "staging_function_storage_queue_data_contributor" {
-  count = local.function_app.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   scope                = azurerm_storage_account.this.id
   role_definition_name = "Storage Queue Data Contributor"
@@ -54,7 +54,7 @@ resource "azurerm_role_assignment" "durable_function_storage_blob_data_contribut
 }
 
 resource "azurerm_role_assignment" "staging_durable_function_storage_blob_data_contributor" {
-  count = local.function_app.is_slot_enabled == 1 && local.function_app.has_durable == 1 ? 1 : 0
+  count = local.use_case_features.slot && local.function_app.has_durable == 1 ? 1 : 0
 
   scope                = azurerm_storage_account.durable_function[0].id
   role_definition_name = "Storage Blob Data Contributor"
@@ -72,7 +72,7 @@ resource "azurerm_role_assignment" "durable_function_storage_queue_data_contribu
 }
 
 resource "azurerm_role_assignment" "staging_durable_function_storage_queue_data_contributor" {
-  count = local.function_app.is_slot_enabled == 1 && local.function_app.has_durable == 1 ? 1 : 0
+  count = local.use_case_features.slot && local.function_app.has_durable == 1 ? 1 : 0
 
   scope                = azurerm_storage_account.durable_function[0].id
   role_definition_name = "Storage Queue Data Contributor"
@@ -90,7 +90,7 @@ resource "azurerm_role_assignment" "durable_function_storage_table_data_contribu
 }
 
 resource "azurerm_role_assignment" "staging_durable_function_storage_table_data_contributor" {
-  count = local.function_app.is_slot_enabled == 1 && local.function_app.has_durable == 1 ? 1 : 0
+  count = local.use_case_features.slot && local.function_app.has_durable == 1 ? 1 : 0
 
   scope                = azurerm_storage_account.durable_function[0].id
   role_definition_name = "Storage Table Data Contributor"
