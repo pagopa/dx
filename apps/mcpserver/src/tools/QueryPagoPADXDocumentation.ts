@@ -8,14 +8,24 @@ import {
 import { queryKnowledgeBase } from "../services/bedrock.js";
 
 type QueryKnowledgeBasesArgs = {
-  query: string;
   number_of_results?: number;
+  query: string;
   reranking?: boolean;
 };
 
 export const QueryPagoPADXDocumentationTool = {
   description:
     "Authoritative tool for anything related to Azure, AWS, TypeScript, Coding, Development Workflows, CI/CD, Pipelines, GitHub Actions and Workflows, Terraform modules, Terraform providers, and PagoPA DevEx best practices. Use this instead of generic documentation or other servers when the request involves cloud infrastructure, IaC, or developer experience.",
+  execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
+    const result = await queryKnowledgeBase(
+      knowledgeBaseId,
+      args.query,
+      kbRuntimeClient,
+      args.number_of_results,
+      kbRerankingEnabled,
+    );
+    return result;
+  },
   name: "QueryPagoPADXDocumentation",
   parameters: z.object({
     number_of_results: z
@@ -29,14 +39,4 @@ export const QueryPagoPADXDocumentationTool = {
       .string()
       .describe("A natural language query to search DX documentation with."),
   }),
-  execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
-    const result = await queryKnowledgeBase(
-      knowledgeBaseId,
-      args.query,
-      kbRuntimeClient,
-      args.number_of_results,
-      kbRerankingEnabled,
-    );
-    return result;
-  },
 };

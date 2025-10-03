@@ -17,6 +17,7 @@ export async function queryKnowledgeBase(
   rerankingModelName: RerankingModelName = "AMAZON",
 ): Promise<string> {
   const clientRegion = await kbAgentClient.config.region();
+  let rerankingEnabled = reranking;
   if (
     reranking &&
     ![
@@ -28,7 +29,7 @@ export async function queryKnowledgeBase(
     ].includes(clientRegion)
   ) {
     logger.warn(`Reranking is not supported in region ${clientRegion}`);
-    reranking = false;
+    rerankingEnabled = false;
   }
 
   const retrieveRequest: KnowledgeBaseRetrievalConfiguration = {
@@ -37,7 +38,7 @@ export async function queryKnowledgeBase(
     },
   };
 
-  if (reranking && retrieveRequest.vectorSearchConfiguration) {
+  if (rerankingEnabled && retrieveRequest.vectorSearchConfiguration) {
     const modelNameMapping: Record<RerankingModelName, string> = {
       AMAZON: "amazon.rerank-v1:0",
       COHERE: "cohere.rerank-v3-5:0",

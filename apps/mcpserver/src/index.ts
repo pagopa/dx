@@ -7,7 +7,33 @@ import { logger } from "./utils/logger.js";
 const isAuthRequired = (process.env.AUTH_REQUIRED || "true") !== "false";
 
 const server = new FastMCP({
-  name: "pagopa.dx.documentation_retrieval_mcp_server",
+  authenticate: isAuthRequired
+    ? async (request) => {
+        const authHeader = request.headers["x-gh-pat"];
+        const apiKey =
+          typeof authHeader === "string"
+            ? authHeader
+            : Array.isArray(authHeader)
+              ? authHeader[0]
+              : undefined;
+
+        logger.info(
+          `Authenticating request with API key: ${apiKey ? "Provided" : "Not Provided"}`,
+        );
+
+        if (!apiKey || !(await verifyGithubUser(apiKey))) {
+          throw new Response(null, {
+            status: 401,
+            statusText: "Unauthorized",
+          });
+        }
+
+        // Whatever you return here will be accessible in the `context.session` object.
+        return {
+          id: 1,
+        };
+      }
+    : undefined,
   instructions: `The pagoPa DX Knowledge Retrieval MCP Server is the authoritative source for everything related to PagoPA Developer Experience (DX/DevEx/Platform).
 
 It provides guidance on:
@@ -38,34 +64,8 @@ Use this server instead of generic documentation tools whenever the request invo
 	•	Development workflows and DevEx patterns
 	•	TypeScript development within the PagoPA DX ecosystem
     `,
+  name: "pagopa.dx.documentation_retrieval_mcp_server",
   version: "0.0.0",
-  authenticate: isAuthRequired
-    ? async (request) => {
-        const authHeader = request.headers["x-gh-pat"];
-        const apiKey =
-          typeof authHeader === "string"
-            ? authHeader
-            : Array.isArray(authHeader)
-              ? authHeader[0]
-              : undefined;
-
-        logger.info(
-          `Authenticating request with API key: ${apiKey ? "Provided" : "Not Provided"}`,
-        );
-
-        if (!apiKey || !(await verifyGithubUser(apiKey))) {
-          throw new Response(null, {
-            status: 401,
-            statusText: "Unauthorized",
-          });
-        }
-
-        // Whatever you return here will be accessible in the `context.session` object.
-        return {
-          id: 1,
-        };
-      }
-    : undefined,
 });
 
 server.addTool(QueryPagoPADXDocumentationTool);
