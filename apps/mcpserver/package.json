@@ -27,8 +27,9 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
     "@pagopa/eslint-config": "workspace:^",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
