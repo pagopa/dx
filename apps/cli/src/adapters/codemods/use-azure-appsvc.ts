@@ -50,6 +50,11 @@ export const migrateWorkflow =
           ) {
             logger.debug("Adding disable_auto_staging_deploy");
             map.addIn(["with", "disable_auto_staging_deploy"], true);
+            map.set("permissions", {
+              attestations: "write",
+              contents: "read",
+              "id-token": "write",
+            });
             updated = true;
             return undefined;
           }
