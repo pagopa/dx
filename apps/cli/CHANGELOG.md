@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.8.2
+
+### Patch Changes
+
+- 90ac56c: Fix regex in `use-pnpm` codemod
+
 ## 0.8.1
 
 ### Patch Changes
