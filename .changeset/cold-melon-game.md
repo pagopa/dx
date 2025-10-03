@@ -1,12 +1,12 @@
 ---
-"azure_core_infra": patch
+"azure_core_values_exporter": patch
 ---
+
+Added subscription_id and tenant_id outputs to the module
 
 # How to use these values
 
 These values can be used to configure other Azure resources that require subscription or tenant IDs.
-
-If you already use the `azure_core_values_exporter`:
 
 1. Remove from your configuration:
    ```hcl
