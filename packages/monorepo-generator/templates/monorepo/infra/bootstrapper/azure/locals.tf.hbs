@@ -1,0 +1,21 @@
+locals {
+  environment = {
+    prefix          = "{{ prefix }}"
+    env_short       = "{{ envShort }}"
+    location        = "{{ azureLocation }}"
+    domain          = "{{ domain }}"
+    instance_number = "{{ instanceNumber }}"
+  }
+
+  adgroups = {
+    admins_name   = "{{ prefix }}-{{ envShort }}-adgroup-admin"
+    devs_name     = "{{ prefix }}-{{ envShort }}-adgroup-developers"
+    external_name = "{{ prefix }}-{{ envShort }}-adgroup-externals"
+  }
+
+  tags = {
+    CreatedBy      = "DX CLI"
+    Environment    = "{{ environment }}"
+    Source         = "https://github.com/pagopa/dx/tree/main/infra/modules/azure_github_environment_bootstrap/examples/single_environment"
+  }
+}

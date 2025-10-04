@@ -20,19 +20,19 @@ The generator exposes the following variables to Handlebars templates. Use the H
 
 ### Prompted variables
 
-| Variable          | Source | Description & format example                                                                      | Default    | Required |
-| ----------------- | ------ | ------------------------------------------------------------------------------------------------- | ---------- | -------- |
-| `repoSrc`         | prompt | Directory where the repository will be created.                                                   | cwd        | yes      |
-| `repoName`        | prompt | Repository name provided by the user (string).                                                    |            | yes      |
-| `repoDescription` | prompt | Repository description provided by the user (string).                                             |            | no       |
-| `csp`             | prompt | Cloud provider selection. One of `aws` or `azure`.                                                | azure      | yes      |
-| `environments`    | prompt | List of environments to create (e.g., `dev`, `prod`).                                             |            | yes      |
-| `prefix`          | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming.                         |            | yes      |
-| `domain`          | prompt | Project domain (e.g., `payments`, `identity`).                                                    |            | yes      |
-| `instanceNumber`  | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.                                 | 01         | no       |
-| `azureLocation`   | prompt | Azure location (e.g., `italynorth`, `northeurope`, `westeurope`). Only asked if `csp` is `azure`. | italynorth | yes\*    |
-| `awsRegion`       | prompt | AWS region (e.g., `eu-south-1`). Only asked if `csp` is `aws`.                                    | eu-south-1 | yes\*    |
-| `awsAppName`      | prompt | AWS app name (e.g., `my-app`). Only asked if `csp` is `aws`.                                      |            | yes\*    |
+| Variable          | Source | Description & format example                                                                | Default    | Required |
+| ----------------- | ------ | ------------------------------------------------------------------------------------------- | ---------- | -------- |
+| `repoSrc`         | prompt | Directory where the repository will be created.                                             | cwd        | yes      |
+| `repoName`        | prompt | Repository name provided by the user (string).                                              |            | yes      |
+| `repoDescription` | prompt | Repository description provided by the user (string).                                       |            | no       |
+| `csp`             | prompt | Cloud provider selection. One of `aws` or `azure`.                                          | azure      | yes      |
+| `environments`    | prompt | List of environments to create (e.g., `dev`, `prod`).                                       |            | yes      |
+| `prefix`          | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming.                   |            | yes      |
+| `azureLocation`   | prompt | Azure location (e.g., `italynorth`, `northeurope`, `westeurope`). Only if `csp` is `azure`. | italynorth | yes\*    |
+| `domain`          | prompt | Project domain (e.g., `payments`, `identity`).                                              |            | yes      |
+| `instanceNumber`  | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.                           | 01         | no       |
+| `awsRegion`       | prompt | AWS region (e.g., `eu-south-1`). Only if `csp` is `aws`.                                    | eu-south-1 | yes\*    |
+| `awsAppName`      | prompt | AWS app name (e.g., `my-app`). Only if `csp` is `aws`.                                      |            | yes\*    |
 
 \*Required only if the corresponding cloud provider is selected.
 
@@ -44,7 +44,17 @@ These variables are loaded automatically by custom actions and do not require us
 | ------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------- |
 | `terraformVersion`                    | custom action (GitHub fetch) | Terraform version used to populate `.terraform-version`. Full semver string, e.g. `1.5.7`.    |
 | `githubTfProviderVersion`             | custom action (GitHub fetch) | Version used inside Terraform infra templates for the GitHub provider/module.                 |
+| `awsTfProviderVersion`                | custom action (GitHub fetch) | AWS Terraform provider version, e.g. `5.34`.                                                  |
+| `tlsTfProviderVersion`                | custom action (GitHub fetch) | TLS Terraform provider version, e.g. `4.0`.                                                   |
+| `azurermTfProviderVersion`            | custom action (GitHub fetch) | AzureRM Terraform provider version, e.g. `3.80`.                                              |
+| `azureadTfProviderVersion`            | custom action (GitHub fetch) | AzureAD Terraform provider version, e.g. `2.40`.                                              |
+| `pagopaDxAwsTfProviderVersion`        | custom action (GitHub fetch) | PagoPA DX AWS Terraform provider version, e.g. `1.0`.                                         |
+| `pagopaDxAzureTfProviderVersion`      | custom action (GitHub fetch) | PagoPA DX Azure Terraform provider version, e.g. `1.0`.                                       |
 | `dxGithubEnvironmentBootstrapVersion` | custom action (GitHub fetch) | Version/tag used by infra templates to bootstrap GitHub environment resources.                |
+| `dxAwsBootstrapperVersion`            | custom action (GitHub fetch) | AWS bootstrapper module version, e.g. `1.2`.                                                  |
+| `dxAwsCoreValuesExporterVersion`      | custom action (GitHub fetch) | AWS core values exporter module version, e.g. `1.2`.                                          |
+| `dxAzureBootstrapperVersion`          | custom action (GitHub fetch) | Azure bootstrapper module version, e.g. `1.2`.                                                |
+| `dxAzureCoreValuesExporterVersion`    | custom action (GitHub fetch) | Azure core values exporter module version, e.g. `1.2`.                                        |
 | `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. |
 
 ## Recommended usage

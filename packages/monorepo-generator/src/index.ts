@@ -4,18 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { Octokit } from "octokit";
-
-import {
-  getDxGitHubBootstrapLatestTag,
-  getGitHubTerraformProviderLatestRelease,
-  getPreCommitTerraformLatestRelease,
-  getTerraformLatestRelease,
-} from "./actions/terraform.js";
-
-interface ActionsDependencies {
-  octokitClient: Octokit;
-  templatesPath: string;
-}
+import { z } from "zod/v4";
 
 import {
   addPagoPaPnpmPlugin,
@@ -24,6 +13,43 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
+import {
+  getAwsProviderLatestRelease,
+  getAzureadProviderLatestRelease,
+  getAzurermProviderLatestRelease,
+  getDxAwsBootstrapperLatestTag,
+  getDxAwsCoreValuesExporterLatestTag,
+  getDxAzureBootstrapperLatestTag,
+  getDxAzureCoreValuesExporterLatestTag,
+  getDxGitHubBootstrapLatestTag,
+  getGitHubTerraformProviderLatestRelease,
+  getPagoPaDxAwsTerraformProviderLatestRelease,
+  getPagoPaDxAzureTerraformProviderLatestRelease,
+  getPreCommitTerraformLatestRelease,
+  getTerraformLatestRelease,
+  getTlsProviderLatestRelease,
+} from "./actions/terraform.js";
+
+const answersSchema = z.object({
+  awsAppName: z.string().optional(),
+  awsRegion: z.string().optional(),
+  azureLocation: z.string().optional(),
+  csp: z.enum(["aws", "azure"]),
+  domain: z.string().nonempty(),
+  environments: z.array(z.enum(["dev", "prod"])).nonempty(),
+  instanceNumber: z.string().nonempty(),
+  prefix: z.string().nonempty(),
+  repoDescription: z.string().optional(),
+  repoName: z.string().nonempty(),
+  repoSrc: z.string().nonempty(),
+});
+
+interface ActionsDependencies {
+  octokitClient: Octokit;
+  templatesPath: string;
+}
+type CSP = z.infer<typeof answersSchema.shape.csp>;
+type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
@@ -52,22 +78,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     type: "list",
   },
   {
-    choices: ["dev", "prod"],
-    message: "Which environments do you need?",
-    name: "environments",
-    type: "checkbox",
-    validate: (input) =>
-      input.length > 0 ? true : "Select at least one environment",
-  },
-  {
-    message: "What is the project prefix?",
-    name: "prefix",
-    validate: (input: string) =>
-      input.trim().length >= 2 && input.trim().length <= 4
-        ? true
-        : "Prefix length must be between 2 and 4 characters",
-  },
-  {
     choices: [
       { name: "Italy North", value: "italynorth" },
       { name: "North Europe", value: "northeurope" },
@@ -79,17 +89,6 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     name: "azureLocation",
     type: "list",
     when: (answers) => answers.csp === "azure",
-  },
-  {
-    message: "What is the project domain?",
-    name: "domain",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Domain cannot be empty",
-  },
-  {
-    default: "01",
-    message: "What is the instance number?",
-    name: "instanceNumber",
   },
   {
     choices: [
@@ -106,11 +105,38 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     when: (answers) => answers.csp === "aws",
   },
   {
+    choices: ["dev", "prod"],
+    message: "Which environments do you need?",
+    name: "environments",
+    type: "checkbox",
+    validate: (input) =>
+      input.length > 0 ? true : "Select at least one environment",
+  },
+  {
+    message: "What is the project prefix?",
+    name: "prefix",
+    validate: (input: string) =>
+      input.trim().length >= 2 && input.trim().length <= 4
+        ? true
+        : "Prefix length must be between 2 and 4 characters",
+  },
+  {
     message: "What is the AWS app name?",
     name: "awsAppName",
     validate: (input: string) =>
       input.trim().length > 0 ? true : "AWS app name cannot be empty",
     when: (answers) => answers.csp === "aws",
+  },
+  {
+    message: "What is the project domain?",
+    name: "domain",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Domain cannot be empty",
+  },
+  {
+    default: "01",
+    message: "What is the instance number?",
+    name: "instanceNumber",
   },
 ];
 
@@ -161,7 +187,7 @@ const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
+const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
@@ -171,40 +197,80 @@ const getTerraformRepositoryFile = (templatesPath: string): ActionType[] => [
   },
 ];
 
-const getActions = ({
-  octokitClient,
-  templatesPath,
-}: ActionsDependencies): ActionType[] => [
-  getGitHubTerraformProviderLatestRelease({ octokitClient }),
-  getDxGitHubBootstrapLatestTag({ octokitClient }),
-  getTerraformLatestRelease({ octokitClient }),
-  getPreCommitTerraformLatestRelease({ octokitClient }),
-  ...getDotFiles(templatesPath),
-  ...getMonorepoFiles(templatesPath),
-  ...getTerraformRepositoryFile(templatesPath),
-  enablePnpm,
-  addPagoPaPnpmPlugin,
-  installRootDependencies,
-  configureChangesets,
-  configureDevContainer,
-];
+const toEnvShort = (env: Environment) => {
+  const envMap = new Map<Environment, string>([
+    ["dev", "d"],
+    ["prod", "p"],
+  ]);
+
+  return envMap.get(env);
+};
+
+const getTerraformEnvironmentFiles =
+  (templatesPath: string) =>
+  (env: Environment, csp: CSP): ActionType[] => [
+    {
+      abortOnFail: true,
+      base: `${templatesPath}/infra/bootstrapper/${csp}`,
+      data: {
+        environment: env,
+        envShort: toEnvShort(env),
+      },
+      destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
+      templateFiles: path.join(
+        templatesPath,
+        "infra",
+        "bootstrapper",
+        csp,
+        "*.tf.hbs",
+      ),
+      type: "addMany",
+    },
+  ];
+
+const getActions =
+  ({ octokitClient, templatesPath }: ActionsDependencies) =>
+  (answers: Record<string, unknown> | undefined): ActionType[] => {
+    const data = answersSchema.parse(answers);
+
+    return [
+      getGitHubTerraformProviderLatestRelease({ octokitClient }),
+      getAwsProviderLatestRelease({ octokitClient }),
+      getTlsProviderLatestRelease({ octokitClient }),
+      getAzurermProviderLatestRelease({ octokitClient }),
+      getAzureadProviderLatestRelease({ octokitClient }),
+      getDxGitHubBootstrapLatestTag({ octokitClient }),
+      getDxAzureBootstrapperLatestTag({ octokitClient }),
+      getTerraformLatestRelease({ octokitClient }),
+      getPreCommitTerraformLatestRelease({ octokitClient }),
+      getDxAwsBootstrapperLatestTag({ octokitClient }),
+      getDxAwsCoreValuesExporterLatestTag({ octokitClient }),
+      getDxAzureCoreValuesExporterLatestTag({ octokitClient }),
+      getPagoPaDxAzureTerraformProviderLatestRelease({ octokitClient }),
+      getPagoPaDxAwsTerraformProviderLatestRelease({ octokitClient }),
+      ...getDotFiles(templatesPath),
+      ...getMonorepoFiles(templatesPath),
+      ...getTerraformRepositoryFiles(templatesPath),
+      ...data.environments.flatMap((env) =>
+        getTerraformEnvironmentFiles(templatesPath)(env, data.csp),
+      ),
+      enablePnpm,
+      addPagoPaPnpmPlugin,
+      installRootDependencies,
+      configureChangesets,
+      configureDevContainer,
+    ];
+  };
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  // The bundled templates are in the "monorepo" subdirectory
   const templatesPath = path.join(entryPointDirectory, "monorepo");
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  const prompts = getPrompts();
-  const actions = getActions({
-    octokitClient,
-    templatesPath,
-  });
-
   plopApi.setGenerator("monorepo", {
-    actions,
+    actions: getActions({ octokitClient, templatesPath }),
     description: "A scaffold for a monorepo repository",
-    prompts,
+    prompts: getPrompts(),
   });
 };
 
