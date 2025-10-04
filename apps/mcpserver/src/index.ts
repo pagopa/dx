@@ -2,6 +2,7 @@ import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
+import { GetTerraformModuleDetailsPrompt } from "./prompts/GetTerraformModuleDetails.js";
 import { logger } from "./utils/logger.js";
 
 const isAuthRequired = (process.env.AUTH_REQUIRED || "true") !== "false";
@@ -68,6 +69,7 @@ Use this server instead of generic documentation tools whenever the request invo
   version: "0.0.0",
 });
 
+server.addPrompt(GetTerraformModuleDetailsPrompt);
 server.addTool(QueryPagoPADXDocumentationTool);
 
 server.start({
