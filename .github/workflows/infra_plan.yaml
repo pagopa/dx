@@ -40,8 +40,6 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  ROLE_ARN: ${{ secrets.ROLE_ARN }}
-  AWS_REGION: ${{ secrets.AWS_REGION }}
   TF_IN_AUTOMATION: true
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
 
@@ -127,8 +125,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+      - name: Azure Login
+        uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
@@ -180,7 +178,7 @@ jobs:
       # Run Terraform Plan
       - name: Terraform Plan
         id: plan
-        uses: pagopa/dx/actions/filter-terraform-plan@feat-terraform-plan-action # main
+        uses: pagopa/dx/actions/filter-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY

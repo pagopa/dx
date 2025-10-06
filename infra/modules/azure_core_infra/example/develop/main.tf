@@ -33,7 +33,7 @@ module "apim" {
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  use_case            = "cost_optimized"
+  tier                = "s"
 
   publisher_email = "common-dx@pagopa.it"
   publisher_name  = "Common DX"
@@ -60,7 +60,7 @@ module "cosmos" {
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  use_case            = "default"
+  tier                = "s"
 
   subnet_pep_id = module.core.common_pep_snet.id
 
@@ -99,7 +99,7 @@ module "storage_account" {
   subnet_pep_id                       = module.core.common_pep_snet.id
   force_public_network_access_enabled = false
 
-  use_case = "default"
+  tier = "s"
 
   subservices_enabled = {
     blob  = true
