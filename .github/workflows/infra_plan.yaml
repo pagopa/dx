@@ -125,8 +125,8 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
