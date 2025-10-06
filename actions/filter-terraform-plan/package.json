@@ -1,7 +1,7 @@
 {
   "name": "filter-terraform-plan",
   "description": "A GitHub action to run and filter terraform plan.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "private": true,
   "keywords": [
