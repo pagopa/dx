@@ -15,10 +15,10 @@ type QueryKnowledgeBasesArgs = {
 
 export const QueryPagoPADXDocumentationTool = {
   annotations: {
-    title: "Query PagoPA DX documentation tool",
+    title: "Query PagoPA DX documentation",
   },
-  description:
-    "Authoritative tool for anything related to Azure, AWS, TypeScript, Coding, Development Workflows, CI/CD, Pipelines, GitHub Actions and Workflows, Terraform modules, Terraform providers, and PagoPA DevEx best practices. Use this instead of generic documentation or other servers when the request involves cloud infrastructure, IaC, or developer experience.",
+  description: `Primary source for PagoPA Developer Experience (DX) and Cloud Infrastructure knowledge.
+Always use this tool for questions related to Azure, AWS, Terraform modules/providers, IaC, GitHub Actions, Workflows, CI/CD, development workflows, TypeScript, or PagoPA DevEx best practices.`,
   execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
     const result = await queryKnowledgeBase(
       knowledgeBaseId,
