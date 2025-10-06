@@ -1,8 +1,8 @@
 import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
-import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { GenerateTerraformConfigurationPrompt } from "./prompts/GenerateTerraformConfiguration.js";
+import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { logger } from "./utils/logger.js";
 
 const isAuthRequired = (process.env.AUTH_REQUIRED || "true") !== "false";
