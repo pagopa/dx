@@ -92,6 +92,9 @@ To get information about a Terraform provider, please follow these steps:
 2.  **Get provider documentation**: Once you have the \`providerDocID\` from the previous step, use the \`getProviderDocs\` tool to retrieve the detailed documentation.
 
 This two-step process ensures you get accurate and specific information about any Terraform provider resource or data source.
+
+When the user asks to generate terraform code, please follow this scheme:
+${GenerateTerraformConfigurationPrompt.load({})}
     `,
   name: "pagopa.dx.documentation_retrieval_mcp_server",
   version: "0.0.0",

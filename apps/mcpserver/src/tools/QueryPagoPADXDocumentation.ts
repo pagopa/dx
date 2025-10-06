@@ -14,6 +14,9 @@ type QueryKnowledgeBasesArgs = {
 };
 
 export const QueryPagoPADXDocumentationTool = {
+  annotations: {
+    title: "Query PagoPA DX documentation tool",
+  },
   description:
     "Authoritative tool for anything related to Azure, AWS, TypeScript, Coding, Development Workflows, CI/CD, Pipelines, GitHub Actions and Workflows, Terraform modules, Terraform providers, and PagoPA DevEx best practices. Use this instead of generic documentation or other servers when the request involves cloud infrastructure, IaC, or developer experience.",
   execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
