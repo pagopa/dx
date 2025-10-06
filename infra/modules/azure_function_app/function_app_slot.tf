@@ -2,7 +2,7 @@ resource "azurerm_linux_function_app_slot" "this" {
   count = local.use_case_features.slot ? 1 : 0
 
   name            = local.function_app_slot.name
-  function_app_id = azurerm_linux_function_app.this.id
+  function_app_id = azurerm_linux_function_app.this[0].id
 
   storage_account_name          = azurerm_storage_account.this.name
   storage_uses_managed_identity = true
@@ -62,7 +62,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = "100"
     } : {},
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
-    length("${azurerm_linux_function_app.this.name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
+    length("${azurerm_linux_function_app.this[0].name}-${local.function_app_slot.name}") > 32 && !(contains(keys(var.slot_app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = local.function_app_slot.name } : {},
     var.slot_app_settings,
     local.function_app.has_durable == 1 ? {
       #https://learn.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-storage-providers#hostjson-configuration

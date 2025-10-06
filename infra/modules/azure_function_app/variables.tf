@@ -161,7 +161,7 @@ variable "subnet_cidr" {
   description = "The CIDR block for the subnet used by the Function App for outbound connectivity. Mandatory if 'subnet_id' is not set."
 
   validation {
-    condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
+    condition     = var.container_app_config != null ? true : (var.subnet_id != null) != (var.subnet_cidr != null)
     error_message = "Please specify the subnet_cidr or the subnet_id, not both"
   }
 }
@@ -177,6 +177,12 @@ variable "virtual_network" {
     resource_group_name = string
   })
   description = "Details of the virtual network where the subnet for the Function App will be created."
+  default     = null
+
+  validation {
+    condition     = var.container_app_config != null ? true : var.virtual_network != null
+    error_message = "The virtual_network is required when deploying to an App Service Plan."
+  }
 }
 
 variable "private_dns_zone_resource_group_name" {
@@ -218,4 +224,30 @@ variable "tls_version" {
   type        = number
   default     = 1.2
   description = "Minimum TLS version for the App Service."
+}
+
+variable "container_app_config" {
+  type = object({
+    environment_id            = string
+    user_assigned_identity_id = string
+    image                     = string
+    key_vault = object({
+      id        = string
+      use_rbac  = optional(bool, true)
+      tenant_id = string
+    })
+    name                  = optional(string, "")
+    active_revisions_mode = optional(string, "Single")
+    target_port           = optional(number, 80)
+    min_replicas          = optional(number, 1)
+    max_replicas          = optional(number, 1000)
+    secrets = optional(map(object(
+      {
+        name                = string
+        key_vault_secret_id = string
+      }
+    )), {})
+  })
+  default     = null
+  description = "Configuration for the container app. If not null, a container app will be created."
 }
