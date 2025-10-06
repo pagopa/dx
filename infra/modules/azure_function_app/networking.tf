@@ -63,6 +63,27 @@ resource "azurerm_private_endpoint" "st_queue" {
   tags = local.tags
 }
 
+# Subnet
+resource "azurerm_subnet" "this" {
+  count = local.function_app.has_existing_subnet || local.use_container_app ? 0 : 1
+
+  name                 = local.subnet.name
+  virtual_network_name = data.azurerm_virtual_network.this.name
+  resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
+  address_prefixes     = [var.subnet_cidr]
+
+  service_endpoints = local.subnet.enable_service_endpoints
+
+  delegation {
+    name = "default"
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+}
+
+
 # Durable Function Storage
 
 resource "azurerm_private_endpoint" "std_blob" {
@@ -159,6 +180,8 @@ resource "azurerm_private_endpoint" "std_table" {
 
 # Function App
 resource "azurerm_private_endpoint" "function_sites" {
+  count = local.use_container_app ? 0 : 1
+
   name                = local.function_app.pep_sites
   location            = var.environment.location
   resource_group_name = var.resource_group_name
@@ -166,7 +189,7 @@ resource "azurerm_private_endpoint" "function_sites" {
 
   private_service_connection {
     name                           = local.function_app.pep_sites
-    private_connection_resource_id = azurerm_linux_function_app.this.id
+    private_connection_resource_id = azurerm_linux_function_app.this[0].id
     is_manual_connection           = false
     subresource_names              = ["sites"]
   }
@@ -189,7 +212,7 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
 
   private_service_connection {
     name                           = local.function_app.pep_sites_staging
-    private_connection_resource_id = azurerm_linux_function_app.this.id
+    private_connection_resource_id = azurerm_linux_function_app.this[0].id
     is_manual_connection           = false
     subresource_names              = ["sites-${azurerm_linux_function_app_slot.this[0].name}"]
   }

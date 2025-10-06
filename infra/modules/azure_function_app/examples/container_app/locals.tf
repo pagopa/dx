@@ -32,7 +32,7 @@ locals {
     CreatedBy      = "Terraform"
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/examples/complete"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/examples/container_app"
     ManagementTeam = "Developer Experience"
   }
 }
