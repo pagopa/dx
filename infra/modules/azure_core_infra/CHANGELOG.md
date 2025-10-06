@@ -1,5 +1,54 @@
 # azure_core_infra
 
+## 2.2.3
+
+### Patch Changes
+
+- a441444: # How to use these values
+
+  These values can be used to configure other Azure resources that require subscription or tenant IDs.
+
+  If you already use the `azure_core_values_exporter`:
+  1. Remove from your configuration:
+     ```hcl
+     data "azurerm_subscription" "current" {}
+     ```
+     or
+     ```hcl
+     data "azurerm_client_config" "current" {}
+     ```
+  2. Replace:
+
+  ```hcl
+  subscription_id = data.azurerm_subscription.current.id
+  tenant_id       = data.azurerm_client_config.current.tenant_id
+  ```
+
+  with:
+
+  ```hcl
+  subscription_id = module.<exporter>.subscription_id
+  tenant_id       = module.<exporter>.tenant_id
+  ```
+
+## 2.2.2
+
+### Patch Changes
+
+- 707b5cf: Add dns_forwarder outputs
+
+## 2.2.1
+
+### Patch Changes
+
+- 330fce6: Fix virtual network gateway generation and sku
+
+## 2.2.0
+
+### Minor Changes
+
+- eb14f05: Rewrite VPN and DNS forwarder IaC from external module to plain resources
+
 ## 2.1.4
 
 ### Patch Changes

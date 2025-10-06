@@ -1,0 +1,35 @@
+resource "azurerm_container_group" "this" {
+  name                = "${var.project}-dns-forwarder-ci-${var.instance_number}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  ip_address_type     = "Private"
+  subnet_ids          = [var.dnsforwarder_subnet_id]
+  os_type             = "Linux"
+
+  container {
+    name = "dns-forwarder"
+    # from https://hub.docker.com/r/coredns/coredns
+    image  = "coredns/coredns:1.10.1@sha256:be7652ce0b43b1339f3d14d9b14af9f588578011092c1f7893bd55432d83a378"
+    cpu    = "0.5"
+    memory = "0.5"
+
+    commands = ["/coredns", "-conf", "/app/conf/Corefile"]
+
+    ports {
+      port     = 53
+      protocol = "UDP"
+    }
+
+    volume {
+      mount_path = "/app/conf"
+      name       = "dns-forwarder-conf"
+      read_only  = true
+      secret = {
+        Corefile = base64encode(local.corefile_content)
+      }
+    }
+
+  }
+
+  tags = var.tags
+}

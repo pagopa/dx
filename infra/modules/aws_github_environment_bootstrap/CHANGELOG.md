@@ -1,5 +1,17 @@
 # aws_github_environment_bootstrap
 
+## 0.0.3
+
+### Patch Changes
+
+- 11ef401: Include oidc_provider_arn variable in examples and documentation
+
+## 0.0.2
+
+### Patch Changes
+
+- f87fa4b: Moved OIDC provider from bootstrapper to core module
+
 ## 0.0.1
 
 ### Patch Changes

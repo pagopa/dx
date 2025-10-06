@@ -54,8 +54,7 @@ run "apim_is_correct_plan" {
     }
 
     subnet_id                     = run.setup_tests.subnet_id
-    enable_public_network_access  = true
-    virtual_network_type_internal = true
+    subnet_pep_id                 = run.setup_tests.pep_id
   }
 
   # Checks some assertions
@@ -87,6 +86,11 @@ run "apim_is_correct_plan" {
   assert {
     condition     = azurerm_api_management.this.public_network_access_enabled == false
     error_message = "The APIM public Network Access should be disabled"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_type == "External"
+    error_message = "The APIM virtual network type is incorrect, it should be External"
   }
 }
 
@@ -185,5 +189,10 @@ run "apim_test_zones_public_ip" {
   assert {
     condition     = azurerm_api_management.this.public_ip_address_id == run.setup_tests.pip_id
     error_message = "The APIM public IP address is incorrect, it should match the setup public IP"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_type == "Internal"
+    error_message = "The APIM virtual network type is incorrect, it should be Internal"
   }
 }

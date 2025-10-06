@@ -1,5 +1,30 @@
 # @pagopa/azure-tracing
 
+## 0.4.8
+
+### Patch Changes
+
+- bdc22a5: Add compatibility with old `moduleResolution` systems
+
+  > [!NOTE]: When a consumer with `moduleResolution: node` tries to import `@pagopa/azure-tracing`, TypeScript fails to find the exported subpath.
+  > Now, the subpaths are properly exported in the `package.json` file, and, for old systems (like `node`), this packages works as well thanks to the
+  > `typesVersions` entry.
+  >
+  > Even though this change guarantees compatibility with old systems, it is recommended to use a more recent `moduleResolution` system, like `bundler`.
+  > Reference: https://www.typescriptlang.org/docs/handbook/modules/theory.html#module-resolution-is-host-defined.
+
+- bdc22a5: Fix exports in the package.json to make sure the types are properly exported
+
+## 0.4.7
+
+### Patch Changes
+
+- ddd0073: Update OpenTelemetry dependencies
+
+  The version previously used of `@azure/monitor-opentelemetry` contained a bug that did not export a variable causing a runtime error.
+  To locally fix it, it was necessary to patch the package, but now the issue has been fixed in the latest version, so we can remove the patch and update the dependency.
+  You can find more details about the issue [here](https://github.com/Azure/azure-sdk-for-js/issues/35466).
+
 ## 0.4.6
 
 ### Patch Changes

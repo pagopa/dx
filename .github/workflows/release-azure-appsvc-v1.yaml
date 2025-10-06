@@ -58,6 +58,10 @@ jobs:
       group: ${{ format('{0}-build-{1}', github.run_id, inputs.workspace_name) }}
       cancel-in-progress: false
 
+    permissions:
+      id-token: write
+      attestations: write
+
     env:
       WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
@@ -135,6 +139,13 @@ jobs:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
 
+      - name: Generate artifact attestation (build provenance)
+        if: ${{ steps.check-artifact.outputs.exists != 'true' }}
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ steps.make-artifact.outputs.artifact-path }}
+          show-summary: false
+
   validate:
     name: Validate Web App
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
@@ -183,7 +194,7 @@ jobs:
             echo "::error::WEBSITE_SWAP_WARMUP_PING_PATH and WEBSITE_SWAP_WARMUP_PING_STATUSES are not set. Please update the webapp module to the latest version to continue."
             echo "### Custom warm-up configuration needed ❌" >> $GITHUB_STEP_SUMMARY
             echo "The custom warm-up configuration is not set for the staging slot. This is required to ensure a smooth swap between slots." >> $GITHUB_STEP_SUMMARY
-            echo "Check out the [documentation](https://pagopa.github.io/dx/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
+            echo "Check out the [documentation](https://dx.pagopa.it/docs/pipelines/release-azure-appsvc#safe-swapping) for more details on safe slot swapping." >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
@@ -203,6 +214,16 @@ jobs:
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
+
+      - name: Validate artifact attestation
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" \
+           --repo "$REPOSITORY" \
+           --signer-workflow pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml
+        env:
+          ARTIFACT_PATH: ${{ format('{0}.zip', env.BUNDLE_NAME) }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main

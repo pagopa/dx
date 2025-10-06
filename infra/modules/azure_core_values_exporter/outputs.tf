@@ -1,3 +1,13 @@
+output "subscription_id" {
+  description = "The ID of the Azure subscription."
+  value       = try(local.core_outputs.values.subscription_id, null)
+}
+
+output "tenant_id" {
+  description = "The ID of the Azure tenant."
+  value       = try(local.core_outputs.values.tenant_id, null)
+}
+
 output "common_resource_group_name" {
   description = "The name of the common resource group."
   value       = local.core_outputs.values.common_resource_group_name
@@ -74,9 +84,32 @@ output "common_test_snet" {
   }
 }
 
+output "common_vpn_snet" {
+  description = "Details of the VPN subnet, including its name and ID."
+  value = {
+    name = local.core_outputs.values.common_vpn_snet.name
+    id   = local.core_outputs.values.common_vpn_snet.id
+  }
+}
+
 output "common_nat_gateways" {
   description = "A list of NAT gateways, including their IDs and names."
   value       = local.core_outputs.values.common_nat_gateways
+}
+
+output "vpn_gateway_id" {
+  description = "The ID of the virtual network gateway."
+  value       = local.core_outputs.values.vpn_gateway_id
+}
+
+output "vpn_fqdns" {
+  description = "The fqdn for virtual network gateway."
+  value       = local.core_outputs.values.vpn_fqdns
+}
+
+output "vpn_public_ips" {
+  description = "The public IP addresses associated with the virtual network gateway."
+  value       = local.core_outputs.values.vpn_public_ips
 }
 
 # Key Vault
@@ -109,4 +142,19 @@ output "application_insights" {
     instrumentation_key_kv_secret_name = local.core_outputs.values.application_insights.instrumentation_key_kv_secret_name
     resource_group_name                = local.core_outputs.values.application_insights.resource_group_name
   }
+}
+
+output "dns_forwarder" {
+  value = {
+    endpoint            = try(local.core_outputs.values.dns_forwarder.endpoint, null)
+    subnet_id           = try(local.core_outputs.values.dns_forwarder.subnet_id, null)
+    private_ip          = try(local.core_outputs.values.dns_forwarder.private_ip, null)
+    resource_group      = try(local.core_outputs.values.dns_forwarder.resource_group, null)
+    cross_cloud_enabled = try(local.core_outputs.values.dns_forwarder.cross_cloud_enabled, false)
+  }
+}
+
+output "private_dns_zones" {
+  description = "List of private DNS zones linked to the virtual network."
+  value       = try(local.core_outputs.values.private_dns_zones, [])
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4
+
+### Patch Changes
+
+- f87fa4b: Moved OIDC provider from bootstrapper to core module
+
 ## 0.0.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.4.6",
+  "version": "0.4.8",
   "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "repository": {
@@ -19,29 +19,59 @@
   "main": "./dist/functions/index.js",
   "exports": {
     ".": {
-      "import": "./dist/functions/index.js"
+      "types": "./dist/functions/index.d.ts",
+      "import": "./dist/functions/index.js",
+      "require": "./dist/functions/index.cjs"
     },
     "./logger": {
-      "import": "./dist/opentelemetry/logger.js"
+      "types": "./dist/opentelemetry/logger.d.ts",
+      "import": "./dist/opentelemetry/logger.js",
+      "require": "./dist/opentelemetry/logger.cjs"
     },
     "./azure-monitor": {
-      "import": "./dist/monitor/index.js"
+      "types": "./dist/monitor/index.d.ts",
+      "import": "./dist/monitor/index.js",
+      "require": "./dist/monitor/index.cjs"
     },
     "./azure-functions": {
-      "import": "./dist/functions/hooks.js"
+      "types": "./dist/functions/hooks.d.ts",
+      "import": "./dist/functions/hooks.js",
+      "require": "./dist/functions/hooks.cjs"
     },
     "./azure-functions/v3": {
-      "import": "./dist/functions/v3/index.js"
+      "types": "./dist/functions/v3/index.d.ts",
+      "import": "./dist/functions/v3/index.js",
+      "require": "./dist/functions/v3/index.cjs"
+    }
+  },
+  "types": "./dist/functions/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "azure-functions": [
+        "dist/functions/hooks.d.ts"
+      ],
+      "azure-functions/v3": [
+        "dist/functions/v3/index.d.ts"
+      ],
+      "logger": [
+        "dist/opentelemetry/logger.d.ts"
+      ],
+      "azure-monitor": [
+        "dist/monitor/index.d.ts"
+      ],
+      "*": [
+        "dist/*"
+      ]
     }
   },
   "dependencies": {
     "@azure/functions": "^4.7.2",
-    "@azure/monitor-opentelemetry": "^1.11.1",
+    "@azure/monitor-opentelemetry": "^1.13.1",
     "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.32",
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/api-logs": "^0.202.0",
-    "@opentelemetry/instrumentation": "^0.202.0",
-    "@opentelemetry/instrumentation-undici": "^0.13.1",
+    "@opentelemetry/api-logs": "^0.205.0",
+    "@opentelemetry/instrumentation": "^0.205.0",
+    "@opentelemetry/instrumentation-undici": "^0.16.0",
     "@t3-oss/env-core": "^0.13.8",
     "import-in-the-middle": "^1.14.2",
     "zod": "^3.25.73"
@@ -50,7 +80,7 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:dx",
+    "eslint": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   },

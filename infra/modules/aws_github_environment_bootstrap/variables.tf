@@ -65,3 +65,8 @@ variable "github_private_runner" {
     error_message = "In secrets, either ssm_parameter_name or secrets_manager_name must be set. Not both."
   }
 }
+
+variable "oidc_provider_arn" {
+  type        = string
+  description = "The ARN of the OIDC provider for GitHub Actions."
+}

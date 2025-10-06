@@ -1,5 +1,56 @@
 # docs
 
+## 0.8.5
+
+### Patch Changes
+
+- 1619aef: Update navbar items and enhance blog title styling
+- 88596b6: Refactor docs for Azure Static Web Apps
+
+## 0.8.4
+
+### Patch Changes
+
+- 421e8a4: Add @pagopa/eslint-config package documentation
+
+## 0.8.3
+
+### Patch Changes
+
+- 1841454: Include input sku_size in Azure Static Web Apps HCL snippet
+- 8ea5b13: Enabled llms.txt generation
+
+## 0.8.2
+
+### Patch Changes
+
+- 707b5cf: Document AWS to Azure VPN module
+
+## 0.8.1
+
+### Patch Changes
+
+- 7af2739: Prefix can now be long up to 4 characters instead of strictly 2
+  characters
+
+## 0.8.0
+
+### Minor Changes
+
+- a3f3535: Fix privacy policy
+
+## 0.7.0
+
+### Minor Changes
+
+- 98097db: Change docs info-architecture and styles
+
+## 0.6.0
+
+### Minor Changes
+
+- 2b751a4: Add analytics capabilities and GDPR information
+
 ## 0.5.1
 
 ### Patch Changes

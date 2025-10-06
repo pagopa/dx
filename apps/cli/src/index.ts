@@ -1,12 +1,16 @@
 import "core-js/actual/set/index.js";
 import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
 
+import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
+import { getInfo } from "./domain/info.js";
+import { applyCodemodById } from "./use-cases/apply-codemod.js";
+import { listCodemods } from "./use-cases/list-codemods.js";
 
 await configure({
   loggers: [
@@ -21,7 +25,6 @@ await configure({
   sinks: {
     console: getConsoleSink(),
     rawJson(record) {
-      // eslint-disable-next-line no-console
       console.log(record.rawMessage);
     },
   },
@@ -51,6 +54,7 @@ if (repoPackageJson.isErr()) {
   process.exit(1);
 }
 const packageJson = repoPackageJson.value;
+
 const deps: Dependencies = {
   packageJson,
   packageJsonReader,
@@ -60,6 +64,11 @@ const deps: Dependencies = {
 
 const config = getConfig(repositoryRoot);
 
-const program = makeCli(deps, config);
+const useCases = {
+  applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps, config)),
+  listCodemods: listCodemods(codemodRegistry),
+};
+
+const program = makeCli(deps, config, useCases);
 
 program.parse();

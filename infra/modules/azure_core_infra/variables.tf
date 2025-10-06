@@ -45,3 +45,21 @@ variable "vpn_enabled" {
   description = "A boolean flag to enable or disable the creation of a VPN."
   default     = false
 }
+
+variable "vpn_use_case" {
+  type        = string
+  description = "Site-to-Site VPN use case. Allowed values: 'default', 'high_availability'."
+  default     = "default"
+
+  validation {
+    condition     = contains(["default", "high_availability"], var.vpn_use_case)
+    error_message = "vpn_use_case must be either 'default' or 'high_availability'."
+  }
+}
+
+# Cross-cloud DNS configuration
+variable "cross_cloud_dns_enabled" {
+  type        = bool
+  description = "Enable cross-cloud DNS resolution with AWS."
+  default     = false
+}

@@ -65,14 +65,14 @@ variable "delegated_subnet_id" {
 # Administration #
 #----------------#
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "Resource tiers depending on demanding workload. Allowed values are 's', 'm', 'l'."
-  default     = "s"
+  description = "Specifies the use case for the PostgreSQL Server. Allowed value are 'default'."
+  default     = "default"
 
   validation {
-    condition     = contains(["s", "m", "l"], var.tier)
-    error_message = "Allowed values are 's', 'm', or 'l'."
+    condition     = contains(["default"], var.use_case)
+    error_message = "Allowed value for \"use_case\" are \"default\"."
   }
 }
 
@@ -111,6 +111,23 @@ variable "replica_zone" {
   type        = string
   description = "Specifies the Availability Zone in which the Replica PostgreSQL Flexible Server should be located."
   default     = null
+}
+
+variable "create_replica" {
+  type        = bool
+  description = "Indicates whether a replica PostgreSQL Flexible Server should be created. Defaults to true."
+  default     = true
+}
+
+variable "replica_location" {
+  type        = string
+  description = "The location where the replica PostgreSQL Flexible Server should be created. Defaults to another region to improve Disaster Recovery."
+  default     = null
+
+  validation {
+    condition     = ((var.replica_location != var.environment.location) && var.create_replica == true) || var.create_replica == false
+    error_message = "'replica_location' must be different from 'environment.location' to improve Disaster Recovery."
+  }
 }
 
 #-------------------#
@@ -259,7 +276,7 @@ variable "diagnostic_settings" {
   description = <<-EOT
     Define if diagnostic settings should be enabled.
     if it is:
-    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and 
+    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
     the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
   EOT
 

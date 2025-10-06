@@ -4,3 +4,10 @@ resource "github_actions_secret" "codecov_token" {
   secret_name     = "CODECOV_TOKEN"
   plaintext_value = data.azurerm_key_vault_secret.codecov_token[0].value
 }
+
+resource "github_actions_environment_secret" "appi_instrumentation_key" {
+  repository      = var.repository.name
+  environment     = "app-${local.env_long}-cd"
+  secret_name     = "APPLICATIONINSIGHTS_INSTRUMENTATION_KEY"
+  plaintext_value = data.azurerm_key_vault_secret.appi_instrumentation_key.value
+}

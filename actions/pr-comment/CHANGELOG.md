@@ -1,5 +1,11 @@
 # pr-comment-action
 
+## 0.1.3
+
+### Patch Changes
+
+- 2b751a4: Update references to the new DX website from pagopa.github.io/dx to dx.pagopa.it
+
 ## 0.1.2
 
 ### Patch Changes

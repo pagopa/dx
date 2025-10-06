@@ -24,13 +24,14 @@ resource "azurerm_container_app_job" "github_runner" {
         name             = "github-runner-rule"
         custom_rule_type = "github-runner"
 
-        # https://keda.sh/docs/2.16/scalers/github-runner/
+        # https://keda.sh/docs/2.17/scalers/github-runner/
         metadata = merge({
           owner                     = var.repository.owner
           runnerScope               = "repo"
           repos                     = var.repository.name
           targetWorkflowQueueLength = "1"
           github-runner             = "https://api.github.com"
+          enableEtags               = "true"
         }, var.container_app_environment.use_labels ? { labels = local.labels } : {})
 
         authentication {

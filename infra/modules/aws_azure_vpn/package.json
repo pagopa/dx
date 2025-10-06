@@ -1,0 +1,7 @@
+{
+  "name": "aws_azure_vpn",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "aws",
+  "description": "Deploy a site-to-site vpn to enable network reachability between an AWS VPC and an Azure VNet"
+}

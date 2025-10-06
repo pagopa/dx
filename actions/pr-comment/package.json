@@ -1,6 +1,6 @@
 {
   "name": "pr-comment-action",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "private": true,
   "description": "TypeScript action for creating and managing PR comments",
@@ -33,12 +33,12 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:dx",
-    "eslint": "catalog:dx",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:dx",
+    "vitest": "catalog:",
     "vitest-mock-extended": "^3.1.0"
   }
 }

@@ -58,8 +58,8 @@ data "azurerm_resource_group" "rg" {
 }
 
 module "storage_account" {
-  source = "../../../azure_storage_account"
-
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.0"
   environment = {
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
@@ -70,7 +70,7 @@ module "storage_account" {
   }
 
   resource_group_name                 = data.azurerm_resource_group.rg.name
-  tier                                = "s"
+  use_case                            = "development"
   subnet_pep_id                       = data.azurerm_subnet.pep.id
   force_public_network_access_enabled = true # just for testing
   static_website = {

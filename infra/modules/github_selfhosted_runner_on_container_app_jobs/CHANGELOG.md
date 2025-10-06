@@ -1,5 +1,17 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.2.0
+
+### Minor Changes
+
+- dc2120f: Enable enableEtags property on the KEDA scale rule to mitigate rate limit issue with GitHub
+
+## 1.1.3
+
+### Patch Changes
+
+- 1ac674f: Fix an issue where which prevented the creation of the Container App Job with long repository names and prefix with more than 2 characters
+
 ## 1.1.2
 
 ### Patch Changes
