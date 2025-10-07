@@ -6,7 +6,7 @@ import { GenerateTerraformConfigurationPrompt } from "./prompts/GenerateTerrafor
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { logger } from "./utils/logger.js";
 
-const isAuthRequired = (process.env.AUTH_REQUIRED || "true") !== "false";
+const isAuthRequired = (process.env.AUTH_REQUIRED || "false") !== "false";
 
 const server = new FastMCP({
   authenticate: isAuthRequired

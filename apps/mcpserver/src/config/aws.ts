@@ -5,7 +5,7 @@ import { logger } from "../utils/logger.js";
 export const kbRerankingEnabled =
   (process.env.BEDROCK_KB_RERANKING_ENABLED || "true").trim().toLowerCase() ===
   "true";
-export const knowledgeBaseId = "TWMAUIB8QZ";
+export const knowledgeBaseId = process.env.BEDROCK_KNOWLEDGE_BASE_ID || "";
 
 logger.info(
   `Default reranking enabled: ${kbRerankingEnabled} (from BEDROCK_KB_RERANKING_ENABLED)`,
