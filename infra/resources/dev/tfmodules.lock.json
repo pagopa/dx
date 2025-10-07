@@ -1,1 +1,8 @@
-{}
+{
+  "aws_core_values": {
+    "hash": "9856967355058d1d2adc2147efd9df809edc03ece8e3f22d8c99a9a392363e18",
+    "version": "0.1.1",
+    "name": "aws_core_values_exporter",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.1"
+  }
+}
