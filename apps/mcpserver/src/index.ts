@@ -37,7 +37,7 @@ const server = new FastMCP({
       }
     : undefined,
   instructions: serverInstructions,
-  name: "pagopa.dx.documentation_retrieval_mcp_server",
+  name: "PagoPA DX Knowledge Retrieval MCP Server",
   version: "0.0.0",
 });
 

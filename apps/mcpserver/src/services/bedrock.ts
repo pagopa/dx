@@ -19,7 +19,7 @@ export async function queryKnowledgeBase(
   knowledgeBaseId: string,
   query: string,
   kbAgentClient: BedrockAgentRuntimeClient,
-  numberOfResults = 20,
+  numberOfResults = 5,
   reranking = false,
   rerankingModelName: RerankingModelName = "AMAZON",
 ): Promise<string> {
@@ -100,7 +100,7 @@ export function resolveToWebsiteUrl(
     location.s3Location?.uri
   ) {
     // The uri format is: s3://bucket/key
-    const match = location.s3Location.uri.match(/^s3:\/\/[^\/]+\/(.+)$/);
+    const match = location.s3Location.uri.match(/^s3:\/[^/]+\/(.+)$/);
     if (match) {
       const key = match[1];
       let url = "";

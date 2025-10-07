@@ -15,31 +15,30 @@ type QueryKnowledgeBasesArgs = {
 
 export const QueryPagoPADXDocumentationTool = {
   annotations: {
-    title: "Query PagoPA DX documentation",
+    title: "Query PagoPA DX Terraform documentation",
   },
-  description: `Primary source for PagoPA Developer Experience (DX) and Cloud Infrastructure knowledge.
-Always use this tool for questions related to Azure, AWS, Terraform modules/providers, IaC, GitHub Actions, Workflows, CI/CD, development workflows, TypeScript, or PagoPA DevEx best practices.`,
+  description: `This tool provides access to the complete Terraform documentation for PagoPA Dx.
+Use this knowledge base to generate or review Terraform configurations aligned with the official PagoPA Dx module conventions.
+All prompts and questions should be written in English, so that the tool responds using English resource and variable names.
+The tool should be used to explain, guide, or suggest Terraform usage based on verified module documentation and internal best practices.
+Use only modules from the pagopa-dx namespace. To get terraform modules descriptions, input/output variables and examples, use the \`searchModules\` tool.
+`,
   execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
     const result = await queryKnowledgeBase(
       knowledgeBaseId,
       args.query,
       kbRuntimeClient,
-      args.number_of_results,
+      undefined,
       kbRerankingEnabled,
     );
     return result;
   },
-  name: "QueryPagoPADXDocumentation",
+  name: "QueryPagoPADXTerraformDocumentation",
   parameters: z.object({
-    number_of_results: z
-      .number()
-      .optional()
-      .default(5)
-      .describe(
-        "The number of results to return. Use smaller values for focused results and larger values for broader coverage.",
-      ),
     query: z
       .string()
-      .describe("A natural language query to search DX documentation with."),
+      .describe(
+        "A natural language query in English used to search the DX documentation for relevant information.",
+      ),
   }),
 };
