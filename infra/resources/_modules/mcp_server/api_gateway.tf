@@ -16,15 +16,21 @@ resource "aws_apigatewayv2_integration" "lambda_proxy" {
   payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "proxy" {
+resource "aws_apigatewayv2_route" "mcp" {
+  api_id    = aws_apigatewayv2_api.mcp_server.id
+  route_key = "ANY /mcp/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
+}
+
+resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.mcp_server.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
 }
 
-resource "aws_apigatewayv2_stage" "prod" {
+resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.mcp_server.id
-  name        = "prod"
+  name        = "$default"
   auto_deploy = true
   tags        = var.tags
 
