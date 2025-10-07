@@ -1,6 +1,4 @@
-# API Gateway REST che espone la Lambda come proxy
-
-# HTTP API Gateway v2 che espone la Lambda come proxy
+## HTTP API Gateway v2 exposing the Lambda as a proxy
 resource "aws_apigatewayv2_api" "mcp_server" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "mcp-server"
@@ -30,6 +28,7 @@ resource "aws_apigatewayv2_stage" "prod" {
   auto_deploy = true
   tags        = var.tags
 
+  # Throttling settings: max 100 requests per second, burst up to 200
   default_route_settings {
     throttling_burst_limit = 200
     throttling_rate_limit  = 100
