@@ -29,6 +29,11 @@ resource "aws_apigatewayv2_stage" "prod" {
   name        = "prod"
   auto_deploy = true
   tags        = var.tags
+
+  default_route_settings {
+    throttling_burst_limit = 200
+    throttling_rate_limit  = 100
+  }
 }
 
 resource "aws_lambda_permission" "apigw_http" {
