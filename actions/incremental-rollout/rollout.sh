@@ -1,9 +1,38 @@
 #!/usr/bin/env bash
 
 resource_group_name=$1
-web_app_name=$2
+resource_name=$2
+resource_type=$3  # e.g., "appsvc" or "containerapp"
 
 set -euo pipefail
+
+# shellcheck disable=SC2317
+__revert_traffic() {
+  echo "::error::__revert_traffic not implemented for this resource type."
+}
+
+# shellcheck disable=SC2317
+__set_traffic() {
+  echo "::error::__set_traffic not implemented for this resource type."
+}
+
+# shellcheck disable=SC2317
+__swap_versions() {
+  echo "::error::__swap_versions not implemented for this resource type."
+}
+
+case $resource_type in
+  "appsvc")
+    source ./azure-appsvc.sh
+    ;;
+  "containerapp")
+    source ./azure-containerapp.sh
+    ;;
+  *)
+    echo "::error::Unsupported resource type: $resource_type"
+    exit 1
+    ;;
+esac
 
 log_canary_event() {
   local staging_percentage="$1"
@@ -44,9 +73,7 @@ EOF
 revert_traffic() {
   local reason="$1"
   echo "::error::$reason. Reverting traffic to production."
-  az webapp traffic-routing clear \
-    --resource-group "$resource_group_name" \
-    --name "$web_app_name"
+  __revert_traffic "$resource_group_name" "$resource_name"
   log_canary_event 0
   post_canary_gh_summary "Rollout failed ❌. $reason. Traffic reverted to production."
   exit 1
@@ -55,24 +82,13 @@ revert_traffic() {
 set_traffic() {
   local staging_percentage="$1"
   local production_percentage=$((100 - staging_percentage))
-
   echo "Setting traffic distribution: ${staging_percentage}% staging, ${production_percentage}% production"
-
-  az webapp traffic-routing set \
-    --resource-group "$resource_group_name" \
-    --name "$web_app_name" \
-    --distribution "staging=${staging_percentage}"
-
+  __set_traffic "$resource_group_name" "$resource_name" "$staging_percentage"
   log_canary_event "$staging_percentage"
 }
 
-swap_slots() {
-  echo "Swapping staging slot to production"
-  az webapp deployment slot swap \
-    --resource-group "$resource_group_name" \
-    --name "$web_app_name" \
-    --slot staging \
-    --target-slot production
+swap_versions() {
+  __swap_versions "$resource_group_name" "$resource_name"
 }
 
 if [[ -r ./canary-monitor.sh ]]; then
@@ -84,7 +100,7 @@ if [[ -r ./canary-monitor.sh ]]; then
 
     # Run monitoring script with error handling
     set +e
-    output=$(bash ./canary-monitor.sh "$resource_group_name" "$web_app_name" "$currentPercentage")
+    output=$(bash ./canary-monitor.sh "$resource_group_name" "$resource_name" "$currentPercentage")
     exitCode=$?
     set -e
 
@@ -128,14 +144,14 @@ if [[ -r ./canary-monitor.sh ]]; then
   echo "::endgroup::"
   echo "Finalizing rollout by setting traffic to 100% production"
   set_traffic 0
-  swap_slots
+  swap_versions
   echo "Rollout completed successfully. Traffic is now fully on production."
   log_canary_event 100
   post_canary_gh_summary "Rollout completed. Traffic is now fully on production."
   exit 0
 fi
 
-swap_slots
+swap_versions
 
 cat <<EOF > "$GITHUB_STEP_SUMMARY"
 Successfully swapped staging slot to production.
