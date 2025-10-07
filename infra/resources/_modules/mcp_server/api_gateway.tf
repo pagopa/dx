@@ -2,7 +2,7 @@
 resource "aws_apigatewayv2_api" "mcp_server" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "mcp-server"
-    resource_type = "api_gateway"
+    resource_type = "api_gateway_v2"
   }))
   protocol_type = "HTTP"
   tags          = var.tags
