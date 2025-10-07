@@ -1,4 +1,4 @@
-# swap-appsvc-slot
+# incremental-rollout
 
 ## 0.1.1
 

@@ -6,18 +6,20 @@ This GitHub Action enables incremental rollouts for Azure App Service deployment
 
 ```yaml
 - name: Incremental Rollout and Swap
-  uses: ./.github/actions/swap-appsvc-slot
+  uses: ./.github/actions/incremental-rollout
   with:
     resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-    web_app_name: ${{ env.WEB_APP_NAME }}
+    resource_name: ${{ env.WEB_APP_NAME }}
+    resource_type: "appsvc" # or "containerapp"
 ```
 
 ## Inputs
 
-| Input               | Description               | Required | Default |
-| ------------------- | ------------------------- | -------- | ------- |
-| resource_group_name | Azure Resource Group name | Yes      |         |
-| web_app_name        | Azure Web App name        | Yes      |         |
+| Input               | Description                                               | Required |
+| ------------------- | --------------------------------------------------------- | -------- |
+| resource_group_name | Azure Resource Group name                                 | Yes      |
+| resource_name       | Azure Web App name                                        | Yes      |
+| resource_type       | Type of Azure resource (e.g., 'appsvc' or 'containerapp') | Yes      |
 
 ## How It Works
 
@@ -62,5 +64,6 @@ steps:
     uses: pagopa/dx/actions/swap-appsvc-slot@main
     with:
       resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-      web_app_name: ${{ env.WEB_APP_NAME }}
+      resource_name: ${{ env.WEB_APP_NAME }}
+      resource_type: "appsvc"
 ```

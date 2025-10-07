@@ -1,5 +1,5 @@
 {
-  "name": "swap-appsvc-slot",
+  "name": "incremental-rollout",
   "version": "0.1.1",
   "type": "module",
   "private": true,
@@ -9,6 +9,6 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:check": "shellcheck rollout.sh"
+    "lint:check": "shellcheck *.sh"
   }
 }
