@@ -1,0 +1,44 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "cache": true
+    },
+    "lint:check": {
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "cache": true
+    },
+    "format:check": {
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "cache": true
+    },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "outputs": ["{projectRoot}/coverage"],
+      "cache": true
+    },
+    "tf-init": {
+      "inputs": ["{projectRoot}/**/*.tf"]
+    },
+    "test:integration": {
+      "dependsOn": ["tf-init"],
+      "inputs": [
+        "{projectRoot}/**/*.tf",
+        "{projectRoot}/**/integration.tftest.hcl"
+      ]
+    }
+  }
+}

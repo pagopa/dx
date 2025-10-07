@@ -6,12 +6,10 @@
     "@devcontainers/cli": "^0.80.1",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "turbo": "^2.6.1",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "nx": "21.6.3"
   },
   "scripts": {
-    "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check test:coverage",
     "version": "changeset version && pnpm i --lockfile-only",
     "release": "pnpm build && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
