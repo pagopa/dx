@@ -14,6 +14,16 @@ terraform {
       source  = "pagopa-dx/azure"
       version = "~> 0.0"
     }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+
+    awsdx = {
+      source  = "pagopa-dx/aws"
+      version = "~> 0.0"
+    }
   }
 
   backend "azurerm" {
@@ -32,3 +42,14 @@ provider "azurerm" {
 }
 
 provider "azuredx" {}
+
+provider "aws" {
+  region = "eu-south-1"
+}
+
+provider "aws" {
+  alias  = "eu-central-1"
+  region = "eu-central-1"
+}
+
+provider "awsdx" {}
