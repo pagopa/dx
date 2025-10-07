@@ -6,7 +6,8 @@
     "@devcontainers/cli": "^0.80.1",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "nx": "21.6.3"
   },
   "scripts": {
     "version": "changeset version && pnpm i --lockfile-only",
