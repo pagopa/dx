@@ -3,7 +3,7 @@ resource "azurerm_monitor_metric_alert" "function_app_health_check" {
 
   name                = local.function_app.alert
   resource_group_name = var.resource_group_name
-  scopes              = [azurerm_linux_function_app.this[0].id]
+  scopes              = [azurerm_linux_function_app.this.id]
   description         = "Function availability is under threshold level. Runbook: -"
   severity            = 1
   frequency           = "PT5M"

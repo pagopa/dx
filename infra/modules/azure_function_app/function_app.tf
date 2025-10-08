@@ -1,6 +1,4 @@
 resource "azurerm_linux_function_app" "this" {
-  count = local.use_container_app ? 0 : 1
-
   name                = local.function_app.name
   location            = var.environment.location
   resource_group_name = var.resource_group_name

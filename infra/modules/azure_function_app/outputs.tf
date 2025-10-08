@@ -25,26 +25,22 @@ output "storage_account_durable" {
 output "function_app" {
   description = "Details of the Function App, including its resource group, service plan, and app-specific information such as ID, name, principal ID, and default hostname. Also includes details of the app slot if configured."
   value = {
-    resource_group_name = var.resource_group_name
+    resource_group_name = azurerm_linux_function_app.this.resource_group_name
     plan = {
       id   = try(azurerm_service_plan.this[0].id, var.app_service_plan_id)
       name = try(azurerm_service_plan.this[0].name, null)
     }
     function_app = {
-      id               = try(azurerm_linux_function_app.this[0].id, null)
-      name             = try(azurerm_linux_function_app.this[0].name, null)
-      principal_id     = try(azurerm_linux_function_app.this[0].identity[0].principal_id, null)
-      default_hostname = try(azurerm_linux_function_app.this[0].default_hostname, null)
+      id               = azurerm_linux_function_app.this.id
+      name             = azurerm_linux_function_app.this.name
+      principal_id     = azurerm_linux_function_app.this.identity[0].principal_id
+      default_hostname = azurerm_linux_function_app.this.default_hostname
       slot = {
         id               = try(azurerm_linux_function_app_slot.this[0].id, null)
         name             = try(azurerm_linux_function_app_slot.this[0].name, null)
         principal_id     = try(azurerm_linux_function_app_slot.this[0].identity[0].principal_id, null)
         default_hostname = try(azurerm_linux_function_app_slot.this[0].default_hostname, null)
       }
-    }
-    container_app = {
-      id   = try(azapi_resource.this[0].id, null)
-      name = try(azapi_resource.this[0].name, null)
     }
   }
 }
