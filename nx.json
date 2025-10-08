@@ -20,15 +20,14 @@
       "cache": true
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "cache": true
-    },
-    "test:coverage": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "outputs": ["{projectRoot}/coverage"],
-      "cache": true
+      "options": {
+        "run": true
+      },
+      "configurations": {
+        "coverage": {
+          "coverage": true
+        }
+      }
     }
   },
   "plugins": [
@@ -37,6 +36,12 @@
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "testTargetName": "test"
       }
     }
   ]
