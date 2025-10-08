@@ -1,26 +1,32 @@
 ## Custom domain for API Gateway HTTP v2
-resource "aws_acm_certificate" "api_custom_domain" {
+
+# Creates an ACM certificate for the custom domain.
+resource "aws_acm_certificate" "api_custom" {
   domain_name       = var.dns.custom_domain_name
   validation_method = "DNS"
   tags              = var.tags
 }
 
+# Configures the custom domain name for the API Gateway.
 resource "aws_apigatewayv2_domain_name" "api_custom" {
   domain_name = var.dns.custom_domain_name
   domain_name_configuration {
-    certificate_arn = aws_acm_certificate.api_custom_domain.arn
+    certificate_arn = aws_acm_certificate.api_custom.arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
   tags = var.tags
 }
 
+# Maps the custom domain to the API Gateway stage.
 resource "aws_apigatewayv2_api_mapping" "api_custom" {
   api_id      = aws_apigatewayv2_api.mcp_server.id
   domain_name = aws_apigatewayv2_domain_name.api_custom.domain_name
   stage       = aws_apigatewayv2_stage.default.id
 }
 ## HTTP API Gateway v2 exposing the Lambda as a proxy
+
+# Defines the HTTP API Gateway v2.
 resource "aws_apigatewayv2_api" "mcp_server" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "mcp-server"
@@ -30,6 +36,7 @@ resource "aws_apigatewayv2_api" "mcp_server" {
   tags          = var.tags
 }
 
+# Creates an integration between the API Gateway and the Lambda function.
 resource "aws_apigatewayv2_integration" "lambda_proxy" {
   api_id                 = aws_apigatewayv2_api.mcp_server.id
   integration_type       = "AWS_PROXY"
@@ -38,18 +45,21 @@ resource "aws_apigatewayv2_integration" "lambda_proxy" {
   payload_format_version = "2.0"
 }
 
+# Defines a route for the /mcp path with a proxy.
 resource "aws_apigatewayv2_route" "mcp" {
   api_id    = aws_apigatewayv2_api.mcp_server.id
   route_key = "ANY /mcp/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
 }
 
+# Defines the default route for the API Gateway.
 resource "aws_apigatewayv2_route" "default" {
   api_id    = aws_apigatewayv2_api.mcp_server.id
   route_key = "$default"
   target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
 }
 
+# Defines the default stage for the API Gateway.
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.mcp_server.id
   name        = "$default"
@@ -63,6 +73,7 @@ resource "aws_apigatewayv2_stage" "default" {
   }
 }
 
+# Grants the API Gateway permission to invoke the Lambda function.
 resource "aws_lambda_permission" "apigw_http" {
   statement_id  = "AllowAPIGatewayV2Invoke"
   action        = "lambda:InvokeFunction"

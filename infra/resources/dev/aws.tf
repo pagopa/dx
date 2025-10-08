@@ -16,7 +16,7 @@ module "mcp_server" {
   bedrock_knowledge_base_id = "TWMAUIB8QZ"
 
   dns = {
-    custom_domain_name  = "mcp.dev.dx.pagopa.it"
+    custom_domain_name  = "api.dev.dx.pagopa.it"
     zone_name           = "dev.dx.pagopa.it"
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
