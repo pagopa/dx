@@ -93,36 +93,18 @@ resource "azurerm_user_assigned_identity" "cae" {
   tags = local.tags
 }
 
-output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
+data "azurerm_subnet" "pep" {
+  name                 = "dx-d-itn-pep-snet-01"
+  virtual_network_name = "dx-d-itn-common-vnet-01"
+  resource_group_name  = data.azurerm_resource_group.network.name
 }
 
-output "container_app_environment_id" {
-  value = data.azurerm_container_app_environment.cae.id
+data "azurerm_resource_group" "network" {
+  name = "dx-d-itn-network-rg-01"
 }
 
-output "key_vault_secret1" {
-  value = {
-    secret_id = azurerm_key_vault_secret.test1.versionless_id
-    name      = "${azurerm_key_vault_secret.test1.name}_SECRET"
-  }
+data "azurerm_application_insights" "common" {
+  name                = "dx-d-itn-common-appi-01"
+  resource_group_name = "dx-d-itn-common-rg-01"
 }
 
-output "key_vault_secret2" {
-  value = {
-    secret_id = azurerm_key_vault_secret.test2.versionless_id
-    name      = azurerm_key_vault_secret.test2.name
-  }
-}
-
-output "tags" {
-  value = local.tags
-}
-
-output "environment" {
-  value = local.environment
-}
-
-output "user_assigned_identity_id" {
-  value = azurerm_user_assigned_identity.cae.id
-}
