@@ -6,9 +6,14 @@ import { GenerateTerraformConfigurationPrompt } from "./prompts/GenerateTerrafor
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { logger } from "./utils/logger.js";
 
+// Authentication is enabled based on the AUTH_REQUIRED environment variable.
 const isAuthRequired = (process.env.AUTH_REQUIRED || "false") !== "false";
 
 const server = new FastMCP({
+  /**
+   * If authentication is required, this function verifies the user's GitHub token
+   * by checking their organization membership.
+   */
   authenticate: isAuthRequired
     ? async (request) => {
         const authHeader = request.headers["x-gh-pat"];
@@ -30,7 +35,7 @@ const server = new FastMCP({
           });
         }
 
-        // Whatever you return here will be accessible in the `context.session` object.
+        // The returned object is accessible in the `context.session`.
         return {
           id: 1,
         };
@@ -46,6 +51,7 @@ logger.debug(`Server instructions: \n\n${serverInstructions}`);
 server.addPrompt(GenerateTerraformConfigurationPrompt);
 server.addTool(QueryPagoPADXDocumentationTool);
 
+// Starts the server in HTTP Stream mode.
 server.start({
   httpStream: {
     port: 8080,

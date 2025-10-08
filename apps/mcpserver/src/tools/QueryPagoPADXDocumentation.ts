@@ -7,12 +7,17 @@ import {
 } from "../config/aws.js";
 import { queryKnowledgeBase } from "../services/bedrock.js";
 
+// The arguments for the QueryPagoPADXDocumentation tool.
 type QueryKnowledgeBasesArgs = {
   number_of_results?: number;
   query: string;
   reranking?: boolean;
 };
 
+/**
+ * A tool that provides access to the complete Terraform documentation for PagoPA Dx.
+ * It uses a Bedrock knowledge base to answer queries about Terraform modules and best practices.
+ */
 export const QueryPagoPADXDocumentationTool = {
   annotations: {
     title: "Query PagoPA DX Terraform documentation",

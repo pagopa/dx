@@ -3,6 +3,7 @@ import axios from "axios";
 import { logger } from "../utils/logger.js";
 
 const GITHUB_API_URL = "https://api.github.com";
+// A list of required GitHub organizations, configurable via environment variable.
 const REQUIRED_ORGANIZATIONS = (
   process.env["REQUIRED_ORGANIZATIONS"] || "pagopa"
 )
@@ -13,12 +14,19 @@ type Org = {
   login: string;
 };
 
+/**
+ * Verifies that a user, identified by a GitHub personal access token, is a member
+ * of at least one of the required GitHub organizations.
+ * @param token The user's GitHub personal access token.
+ * @returns A boolean indicating whether the user is a member of a required organization.
+ */
 export async function verifyGithubUser(token: string): Promise<boolean> {
   if (!token) {
     return false;
   }
 
   try {
+    // Fetches the user's organization memberships from the GitHub API.
     const response = await axios.get(`${GITHUB_API_URL}/user/orgs`, {
       headers: {
         Accept: "application/vnd.github.v3+json",

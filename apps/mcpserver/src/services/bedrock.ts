@@ -15,6 +15,16 @@ export type QueryKnowledgeBasesOutput = {
 
 type RerankingModelName = "AMAZON" | "COHERE";
 
+/**
+ * Queries a Bedrock knowledge base with a given query, handling reranking and result serialization.
+ * @param knowledgeBaseId The ID of the knowledge base to query.
+ * @param query The natural language query.
+ * @param kbAgentClient The Bedrock Agent Runtime client.
+ * @param numberOfResults The maximum number of results to return.
+ * @param reranking Whether to enable reranking of the results.
+ * @param rerankingModelName The reranking model to use.
+ * @returns A serialized string of the query results.
+ */
 export async function queryKnowledgeBase(
   knowledgeBaseId: string,
   query: string,
@@ -25,6 +35,7 @@ export async function queryKnowledgeBase(
 ): Promise<string> {
   const clientRegion = await kbAgentClient.config.region();
   let rerankingEnabled = reranking;
+  // Reranking is only supported in specific AWS regions.
   if (
     reranking &&
     ![
@@ -86,6 +97,11 @@ export async function queryKnowledgeBase(
   return serializeResults(documents);
 }
 
+/**
+ * Resolves an S3 location from a knowledge base result to a public website URL.
+ * @param location The original location object from the retrieval result.
+ * @returns A new location object with a `WEB` type and a URL, or the original location if no conversion is needed.
+ */
 export function resolveToWebsiteUrl(
   location?: RetrievalResultLocation,
 ): RetrievalResultLocation | undefined {
@@ -93,7 +109,7 @@ export function resolveToWebsiteUrl(
     return undefined;
   }
 
-  // If the location is of type S3 and contains a uri, convert the S3 key to a dx.pagopa.it website URL
+  // If the location is an S3 URI, convert it to a dx.pagopa.it URL.
   if (
     typeof location === "object" &&
     location.type === "S3" &&
@@ -137,6 +153,11 @@ export function resolveToWebsiteUrl(
   return undefined;
 }
 
+/**
+ * Serializes an array of knowledge base query results into a formatted string.
+ * @param results An array of query results.
+ * @returns A formatted string containing the content and location of each result.
+ */
 function serializeResults(results: QueryKnowledgeBasesOutput[]): string {
   return results
     .map((result, index) => {
