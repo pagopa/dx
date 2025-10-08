@@ -159,7 +159,6 @@ resource "azurerm_private_endpoint" "std_table" {
 
 # Function App
 resource "azurerm_private_endpoint" "function_sites" {
-
   name                = local.function_app.pep_sites
   location            = var.environment.location
   resource_group_name = var.resource_group_name
