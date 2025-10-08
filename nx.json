@@ -20,15 +20,11 @@
       "cache": true
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "cache": true
-    },
-    "test:coverage": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "outputs": ["{projectRoot}/coverage"],
-      "cache": true
+      "configurations": {
+        "ci": {
+          "coverage": true
+        }
+      }
     },
     "tf-init": {
       "inputs": ["{projectRoot}/**/*.tf"]
@@ -47,6 +43,12 @@
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "testTargetName": "test"
       }
     }
   ]

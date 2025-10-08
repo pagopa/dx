@@ -5,10 +5,13 @@
     "@changesets/cli": "^2.29.7",
     "@devcontainers/cli": "^0.80.1",
     "@nx/docker": "21.6.3",
+    "@nx/vite": "21.6.3",
     "eslint": "catalog:",
     "nx": "21.6.3",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
     "version": "changeset version && pnpm i --lockfile-only",
