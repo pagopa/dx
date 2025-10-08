@@ -10,7 +10,11 @@ resource "azurerm_resource_group" "example" {
 
 data "azurerm_virtual_network" "common" {
   name                = local.virtual_network.name
-  resource_group_name = local.virtual_network.resource_group_name
+  resource_group_name = data.azurerm_resource_group.network.name
+}
+
+data "azurerm_resource_group" "network" {
+  name = local.virtual_network.resource_group_name
 }
 
 data "azurerm_subnet" "pep" {
@@ -39,6 +43,11 @@ data "azurerm_log_analytics_workspace" "common" {
     name          = "common",
     resource_type = "resource_group"
   }))
+}
+
+data "azurerm_application_insights" "common" {
+  name                = "dx-d-itn-common-appi-01"
+  resource_group_name = "dx-d-itn-common-rg-01"
 }
 
 resource "dx_available_subnet_cidr" "next_cidr" {
@@ -74,8 +83,8 @@ module "container_app" {
     key_vault_name                         = data.azurerm_key_vault.common.name
     has_durable_functions                  = false
     subnet_pep_id                          = data.azurerm_subnet.pep.id
-    private_dns_zone_resource_group_id     = "/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/dx-d-itn-network-rg-01"
-    application_insights_connection_string = "InstrumentationKey=baff8afe-7304-4c90-9cac-0bde8bd8fa66;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=2b6b379c-37b0-443c-8af7-5ad8d6babb80"
+    private_dns_zone_resource_group_id     = data.azurerm_resource_group.network.id
+    application_insights_connection_string = data.azurerm_application_insights.common.connection_string
   }
 
   tier          = "m"
