@@ -1,6 +1,5 @@
 #tfsec:ignore:AVD-AZU-0013
 #tfsec:ignore:AVD-AZU-0016
-#trivy:ignore:AVD-AZU-0012
 resource "azurerm_key_vault" "common" {
   name = provider::dx::resource_name(merge(
     var.naming_config,
