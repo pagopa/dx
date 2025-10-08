@@ -211,3 +211,16 @@ variable "autoscaler" {
   }
 
 }
+
+variable "function_settings" {
+  type = object({
+    key_vault_name                           = string
+    application_insights_connection_string   = string
+    application_insights_sampling_percentage = optional(number, 5)
+    has_durable_functions                    = optional(bool, false)
+    subnet_pep_id                            = string
+    private_dns_zone_resource_group_id       = string
+    action_group_ids                         = optional(set(string), [])
+  })
+  default = null
+}
