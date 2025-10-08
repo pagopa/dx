@@ -24,24 +24,24 @@ locals {
       worker_process_count = 1
       replicas = {
         min = 1
-        max = 200
+        max = 10
       }
     }
     "m" = {
       cpu                  = 1.25
       memory               = "2.5Gi"
-      worker_process_count = 1
+      worker_process_count = 2
       replicas = {
-        min = 1
+        min = 2
         max = 500
       }
     }
     "l" = {
       cpu                  = 2
       memory               = "4Gi"
-      worker_process_count = 2
+      worker_process_count = 3
       replicas = {
-        min = 2
+        min = 3
         max = 1000
       }
     }
