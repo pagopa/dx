@@ -40,5 +40,14 @@
         "{projectRoot}/**/integration.tftest.hcl"
       ]
     }
-  }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    }
+  ]
 }
