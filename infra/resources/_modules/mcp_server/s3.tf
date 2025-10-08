@@ -3,7 +3,6 @@
 # Creates an S3 bucket to store the knowledge base objects.
 # trivy:ignore:AVD-AWS-0089
 # trivy:ignore:AVD-AWS-0090
-# trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket" "mcp_knowledge_base" {
   bucket = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "docs-knowledge-base"
@@ -11,6 +10,7 @@ resource "aws_s3_bucket" "mcp_knowledge_base" {
   }))
 }
 
+# trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "mcp_knowledge_base" {
   bucket = aws_s3_bucket.mcp_knowledge_base.id
 

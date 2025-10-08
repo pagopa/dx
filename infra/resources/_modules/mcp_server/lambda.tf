@@ -38,7 +38,8 @@ resource "aws_ecr_repository" "server" {
     scan_on_push = true
   }
 
-  # trivy:ignore:AVD-AWS-0031
+  image_tag_mutability = "IMMUTABLE"
+
   # trivy:ignore:AVD-AWS-0033
   tags = var.tags
 }

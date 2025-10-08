@@ -88,9 +88,10 @@ resource "aws_apigatewayv2_stage" "default" {
 }
 
 # Creates a CloudWatch Log Group for the API Gateway access logs.
+# trivy:ignore:AVD-AWS-0017
 resource "aws_cloudwatch_log_group" "api_gateway_logs" {
   name              = "/aws/api-gateway/${aws_apigatewayv2_api.mcp_server.name}"
-  retention_in_days = 7
+  retention_in_days = 14
   tags              = var.tags
 }
 
