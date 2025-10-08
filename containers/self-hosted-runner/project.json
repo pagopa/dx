@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "self-hosted-runner",
+  "targets": {
+    "docker:build": {
+      "options": {
+        "platform": "linux/amd64"
+      }
+    }
+  }
+}
