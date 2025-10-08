@@ -1,4 +1,4 @@
-# https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-typescript#connecting-to-host-storage-with-an-identityresource "azurerm_role_assignment" "ca_storage_blob_data_owner" {
+# https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-typescript#connecting-to-host-storage-with-an-identity
 
 resource "azurerm_role_assignment" "ca_storage_blob_data_owner" {
   count = local.is_function_app ? 1 : 0
