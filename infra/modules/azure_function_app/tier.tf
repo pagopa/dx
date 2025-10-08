@@ -26,23 +26,6 @@ locals {
     "xxl" = "P3mv3"
   }
 
-  ca_sku_name_mapping = {
-    cpu = {
-      "s"   = 0.75
-      "m"   = 1.5
-      "l"   = 2
-      "xl"  = 3
-      "xxl" = 4
-    }
-    memory = {
-      "s"   = "1.5Gi"
-      "m"   = "3Gi"
-      "l"   = "4Gi"
-      "xl"  = "6Gi"
-      "xxl" = "8Gi"
-    }
-  }
-
   # Worker process count based on tier
   worker_process_count_mapping = {
     "s"   = 1

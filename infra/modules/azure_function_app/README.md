@@ -8,7 +8,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.8 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.8.0, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.6.0, < 1.0.0 |
 
 ## Modules
@@ -19,8 +19,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azapi_resource.this](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
-| [azurerm_key_vault_access_policy.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_linux_function_app.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app) | resource |
 | [azurerm_linux_function_app_slot.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app_slot) | resource |
 | [azurerm_monitor_metric_alert.function_app_health_check](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
@@ -34,16 +32,12 @@ No modules.
 | [azurerm_private_endpoint.std_file](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_private_endpoint.std_queue](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_private_endpoint.std_table](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
-| [azurerm_role_assignment.ca_storage_account_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.ca_storage_blob_data_owner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.ca_storage_queue_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.durable_function_storage_blob_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.durable_function_storage_queue_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.durable_function_storage_table_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.function_storage_account_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.function_storage_blob_data_owner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.function_storage_queue_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.staging_durable_function_storage_blob_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.staging_durable_function_storage_queue_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.staging_durable_function_storage_table_data_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -73,7 +67,6 @@ No modules.
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | The connection string for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | The instrumentation key for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | The sampling percentage for Application Insights telemetry. Default is 5. | `number` | `5` | no |
-| <a name="input_container_app_config"></a> [container\_app\_config](#input\_container\_app\_config) | Configuration for the container app. If not null, a container app will be created. | <pre>object({<br/>    environment_id            = string<br/>    user_assigned_identity_id = string<br/>    image                     = string<br/>    key_vault = object({<br/>      id        = string<br/>      use_rbac  = optional(bool, true)<br/>      tenant_id = string<br/>    })<br/>    name                  = optional(string, "")<br/>    active_revisions_mode = optional(string, "Single")<br/>    target_port           = optional(number, 80)<br/>    min_replicas          = optional(number, 1)<br/>    max_replicas          = optional(number, 1000)<br/>    secrets = optional(map(object(<br/>      {<br/>        name                = string<br/>        key_vault_secret_id = string<br/>      }<br/>    )), {})<br/>  })</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_has_durable_functions"></a> [has\_durable\_functions](#input\_has\_durable\_functions) | Set to true if the Function App hosts Durable Functions. | `bool` | `false` | no |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The endpoint path where the health probe is exposed for the Function App. | `string` | n/a | yes |
@@ -91,7 +84,7 @@ No modules.
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility. | `string` | `"l"` | no |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
-| <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Details of the virtual network where the subnet for the Function App will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | `null` | no |
+| <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Details of the virtual network where the subnet for the Function App will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

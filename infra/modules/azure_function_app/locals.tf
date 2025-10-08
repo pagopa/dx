@@ -19,7 +19,7 @@ locals {
   }
 
   app_service_plan = {
-    enable = var.app_service_plan_id == null && local.use_container_app == false
+    enable = var.app_service_plan_id == null
     name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service_plan" }))
   }
 
@@ -27,7 +27,7 @@ locals {
     name                   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))
     sku_name               = local.sku_name_mapping[local.tier]
     zone_balancing_enabled = local.tier != "s"
-    is_slot_enabled        = local.tier == "s" || local.use_container_app ? 0 : 1
+    is_slot_enabled        = local.tier == "s" ? 0 : 1
     has_existing_subnet    = var.subnet_id != null
     pep_sites              = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_private_endpoint" }))
     pep_sites_staging      = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_slot_private_endpoint" }))
@@ -38,14 +38,6 @@ locals {
 
   function_app_slot = {
     name = "staging"
-  }
-
-  use_container_app = var.container_app_config != null
-  subscription_id   = local.use_container_app ? local.container_app.cae_id["subscription_id"] : null
-  resource_group_id = local.use_container_app ? provider::azurerm::normalise_resource_id("/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}") : null
-  container_app = {
-    name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app" }))
-    cae_id = local.use_container_app ? provider::azurerm::parse_resource_id(var.container_app_config.environment_id) : null
   }
 
   application_insights = {
@@ -68,11 +60,5 @@ locals {
 
   private_dns_zone = {
     resource_group_name = var.private_dns_zone_resource_group_name == null ? var.virtual_network.resource_group_name : var.private_dns_zone_resource_group_name
-  }
-
-  key_vault_parsed = local.use_container_app ? provider::azurerm::parse_resource_id(var.container_app_config.key_vault.id) : null
-  key_vault = {
-    name                = local.use_container_app ? local.key_vault_parsed["resource_name"] : null
-    resource_group_name = local.use_container_app ? local.key_vault_parsed["resource_group_name"] : null
   }
 }
