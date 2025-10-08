@@ -107,4 +107,3 @@ data "azurerm_application_insights" "common" {
   name                = "dx-d-itn-common-appi-01"
   resource_group_name = "dx-d-itn-common-rg-01"
 }
-
