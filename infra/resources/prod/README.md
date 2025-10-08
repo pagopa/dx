@@ -17,7 +17,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_core_values"></a> [azure\_core\_values](#module\_azure\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
+| <a name="module_core_values"></a> [core\_values](#module\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
 | <a name="module_dx_website"></a> [dx\_website](#module\_dx\_website) | ../_modules/dx_website | n/a |
 
 ## Resources
