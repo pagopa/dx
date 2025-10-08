@@ -64,3 +64,5 @@ providers/azure/terraform-provider-azure
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+vite.config.*.timestamp*
+vitest.config.*.timestamp*

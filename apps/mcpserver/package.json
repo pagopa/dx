@@ -45,8 +45,6 @@
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "typecheck": "tsc --noEmit"
   }
 }
