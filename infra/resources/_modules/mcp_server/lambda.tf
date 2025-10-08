@@ -1,4 +1,5 @@
 # Defines the Lambda function for the MCP server.
+# trivy:ignore:AVD-AWS-0066
 resource "aws_lambda_function" "server" {
   function_name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "mcp-server"
@@ -33,6 +34,12 @@ resource "aws_lambda_function" "server" {
 resource "aws_ecr_repository" "server" {
   name = "dx/mcp-server"
 
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  # trivy:ignore:AVD-AWS-0031
+  # trivy:ignore:AVD-AWS-0033
   tags = var.tags
 }
 

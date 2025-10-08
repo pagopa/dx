@@ -66,11 +66,32 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
   tags        = var.tags
 
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
+    format = jsonencode({
+      "requestId" : "$context.requestId",
+      "ip" : "$context.identity.sourceIp",
+      "requestTime" : "$context.requestTime",
+      "httpMethod" : "$context.httpMethod",
+      "routeKey" : "$context.routeKey",
+      "status" : "$context.status",
+      "protocol" : "$context.protocol",
+      "responseLength" : "$context.responseLength"
+    })
+  }
+
   # Throttling settings: max 100 requests per second, burst up to 200
   default_route_settings {
     throttling_burst_limit = 200
     throttling_rate_limit  = 100
   }
+}
+
+# Creates a CloudWatch Log Group for the API Gateway access logs.
+resource "aws_cloudwatch_log_group" "api_gateway_logs" {
+  name              = "/aws/api-gateway/${aws_apigatewayv2_api.mcp_server.name}"
+  retention_in_days = 7
+  tags              = var.tags
 }
 
 # Grants the API Gateway permission to invoke the Lambda function.
