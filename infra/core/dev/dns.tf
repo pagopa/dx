@@ -1,13 +1,13 @@
-resource "azurerm_dns_zone" "dx_pagopa_it" {
-  name                = "dx.pagopa.it"
+resource "azurerm_dns_zone" "dev_dx_pagopa_it" {
+  name                = "dev.dx.pagopa.it"
   resource_group_name = module.azure.network_resource_group_name
 
   tags = local.tags
 }
 
-resource "azurerm_dns_caa_record" "dx_pagopa_it" {
+resource "azurerm_dns_caa_record" "dev_dx_pagopa_it" {
   name                = "@"
-  zone_name           = azurerm_dns_zone.dx_pagopa_it.name
+  zone_name           = azurerm_dns_zone.dev_dx_pagopa_it.name
   resource_group_name = module.azure.network_resource_group_name
   ttl                 = 300
 
