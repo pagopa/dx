@@ -6,7 +6,7 @@ This package contains the implementation of a Model Context Protocol (MCP) serve
 
 ## Architecture
 
-The architecture allows any Model Context Protocol (MCP) compliant client (such as GitHub Copilot) to query the PagoPA DX technical documentation in natural language, receiving contextualized and up-to-date answers.
+The architecture allows any Model Context Protocol (MCP) compliant client (such as GitHub Copilot) to query the [PagoPA DX technical documentation](https://dx.pagopa.it/) in natural language, receiving contextualized and up-to-date answers.
 
 1.  **Content Upload**: On each release of the documentation website, Markdown and text files (`.md`, `.txt`) are uploaded to an S3 bucket.
 2.  **Indexing**: From there, the documents are processed by **Amazon Bedrock Knowledge Bases**, which handles the embedding and semantic indexing process.
@@ -20,7 +20,7 @@ This approach allows AI agents like Copilot to access the documentation context 
 The server currently exposes the following capabilities:
 
 - **Tools**:
-  - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the DX documentation.
+  - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the [DX documentation](https://dx.pagopa.it/).
 - **Prompts**:
   - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
 
