@@ -1,3 +1,25 @@
+## Custom domain for API Gateway HTTP v2
+resource "aws_acm_certificate" "api_custom_domain" {
+  domain_name       = var.dns.custom_domain_name
+  validation_method = "DNS"
+  tags              = var.tags
+}
+
+resource "aws_apigatewayv2_domain_name" "api_custom" {
+  domain_name = var.dns.custom_domain_name
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.api_custom_domain.arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+  tags = var.tags
+}
+
+resource "aws_apigatewayv2_api_mapping" "api_custom" {
+  api_id      = aws_apigatewayv2_api.mcp_server.id
+  domain_name = aws_apigatewayv2_domain_name.api_custom.domain_name
+  stage       = aws_apigatewayv2_stage.default.id
+}
 ## HTTP API Gateway v2 exposing the Lambda as a proxy
 resource "aws_apigatewayv2_api" "mcp_server" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {

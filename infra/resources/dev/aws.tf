@@ -11,8 +11,14 @@ module "mcp_server" {
     aws = aws.eu-central-1
   }
 
-  naming_config             = local.aws_naming_config
+  naming_config             = merge(local.aws_naming_config, { region = "eu-central-1" })
   account_id                = data.aws_caller_identity.current.account_id
   bedrock_knowledge_base_id = "TWMAUIB8QZ"
-  tags                      = local.tags
+
+  dns = {
+    custom_domain_name  = "mcp.dev.dx.pagopa.it"
+    zone_name           = "dev.dx.pagopa.it"
+    resource_group_name = module.azure_core_values.network_resource_group_name
+  }
+  tags = local.tags
 }

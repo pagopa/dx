@@ -86,7 +86,8 @@ resource "aws_iam_policy" "lambda_bedrock_access" {
         Action = [
           "bedrock:ListKnowledgeBases",
           "bedrock:GetKnowledgeBase",
-          "bedrock:QueryKnowledgeBase"
+          "bedrock:QueryKnowledgeBase",
+          "bedrock:Retrieve"
         ]
         Resource = "arn:aws:bedrock:${var.naming_config.region}:${var.account_id}:knowledge-base/${var.bedrock_knowledge_base_id}"
       }
