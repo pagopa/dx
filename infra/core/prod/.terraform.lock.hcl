@@ -5,6 +5,9 @@ provider "registry.terraform.io/hashicorp/azuread" {
   version     = "2.53.1"
   constraints = "~> 2.0"
   hashes = [
+    "h1:0z/718jtR2TJHQQMMqi4nvd6XFPV/iA1jb/5fyAcn5o=",
+    "h1:2rk36pu4YyhBVz/Mf4swYCQxaB31iPaXOiWNlqZMXbM=",
+    "h1:7ZNdNGnUB6N6Z6St3COzRXFaghMEyYkZt7WyOCRKOqo=",
     "h1:EZNO8sEtUABuRxujQrDrW1z1QsG0dq6iLbzWtnG7Om4=",
     "zh:162916b037e5133f49298b0ffa3e7dcef7d76530a8ca738e7293373980f73c68",
     "zh:1c3e89cf19118fc07d7b04257251fc9897e722c16e0a0df7b07fcd261f8c12e7",
@@ -25,7 +28,10 @@ provider "registry.terraform.io/hashicorp/azurerm" {
   version     = "4.47.0"
   constraints = "~> 4.0"
   hashes = [
+    "h1:8bklxAxgDiWJU/84N7GCTL+ZywTBleBPar+vphjdU4k=",
+    "h1:ZrKIw6aeFKVH/8fsm7AlJfjN9WJJGrMb7RviL/yYY6g=",
     "h1:vYuNFnIf83/oCbyNqnxCjkWZNjVvxkDaoXyHiEb4PGU=",
+    "h1:ybA8HIye0RC4gFPLc9V/L3pJlkrT3+VmN6MlZul9d4M=",
     "zh:07ade226563e3f1ba32d494847ab9f533b3dae8374fba7ef74cf327687e06d49",
     "zh:0c3a44c2e7ae7c1c747ce7f72a4a1a1791a289d0e58a050b3aef340b5a691a37",
     "zh:1fb4a2484af5a712a3385ea0adddb43b34099b4b7b4c4c9a9657e21fb2d30096",
@@ -44,7 +50,10 @@ provider "registry.terraform.io/hashicorp/azurerm" {
 provider "registry.terraform.io/hashicorp/time" {
   version = "0.13.1"
   hashes = [
+    "h1:+W+DMrVoVnoXo3f3M4W+OpZbkCrUn6PnqDF33D2Cuf0=",
+    "h1:5l8PAnxPdoUPqNPuv1dAr3efcCCtSCnY+Vj2nSGkQmw=",
     "h1:ZT5ppCNIModqk3iOkVt5my8b8yBHmDpl663JtXAIRqM=",
+    "h1:eSX+RgYfeumojmeJ9Y5CbnkH2NkBC+9vUEolqdQVtGw=",
     "zh:02cb9aab1002f0f2a94a4f85acec8893297dc75915f7404c165983f720a54b74",
     "zh:04429b2b31a492d19e5ecf999b116d396dac0b24bba0d0fb19ecaefe193fdb8f",
     "zh:26f8e51bb7c275c404ba6028c1b530312066009194db721a8427a7bc5cdbc83a",
@@ -65,6 +74,9 @@ provider "registry.terraform.io/pagopa-dx/azure" {
   constraints = ">= 0.0.6, < 1.0.0"
   hashes = [
     "h1:4js2cEh5hEhjhy6KPKnlzSHynR4efXEfgSoVrQYm9YM=",
+    "h1:ATQgKjcP95vQFhuGtyFlAYGvjS8dboqgTDpKMFG8M4s=",
+    "h1:Jb/TOO2E/cSWZVqs1nYbUxwBuRkBITzdnBK3hZ3UUcw=",
+    "h1:QTdZ7+J2i2HVYvI6N5OyRoqKcHOnqAXsD3ySjNIoWYo=",
     "zh:289d80f156a7d76f374f210fd4c1a45dd1bc1d86487f2bbd174eb63aafe73115",
     "zh:2fec04b303abf9c40783a3e40ddb8d802b073dd7c02c921a3334548da9c406fc",
     "zh:4ce076c82d94304736944d34b3e8a2828a2075f57064cb8ef7a8b58e79c4b4d2",
