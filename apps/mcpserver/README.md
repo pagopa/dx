@@ -4,6 +4,75 @@
 
 This package contains the implementation of a Model Context Protocol (MCP) server.
 
+## Architecture
+
+The architecture allows any Model Context Protocol (MCP) compliant client (such as GitHub Copilot) to query the PagoPA DX technical documentation in natural language, receiving contextualized and up-to-date answers.
+
+1.  **Content Upload**: On each release of the documentation website, Markdown and text files (`.md`, `.txt`) are uploaded to an S3 bucket.
+2.  **Indexing**: From there, the documents are processed by **Amazon Bedrock Knowledge Bases**, which handles the embedding and semantic indexing process.
+3.  **Vector Storage**: The resulting embeddings are saved in a Vector Bucket (an S3-based vector database), enabling efficient and persistent semantic search.
+4.  **Query and Retrieval**: When an MCP client sends a query, an **AWS Lambda** function implementing the MCP Server queries the Knowledge Base to retrieve the most relevant content and returns the response to the client.
+
+This approach allows AI agents like Copilot to access the documentation context in a structured way, keeping the orchestration, storage, and semantic retrieval layers separate.
+
+## Features
+
+The server currently exposes the following capabilities:
+
+- **Tools**:
+  - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the DX documentation.
+- **Prompts**:
+  - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
+
+## How to use it
+
+This server can be used by any MCP-compliant client.
+
+<details>
+<summary><b>VS Code</b></summary>
+
+Update your configuration file with the following. See [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) for more info.
+
+#### VS Code Remote Server Connection
+
+```json
+{
+  "servers": {
+    "dx-docs": {
+      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "type": "http"
+    }
+  },
+  "inputs": []
+}
+```
+
+</details>
+
+<details>
+<summary><b>GitHub Copilot Coding Agent</b></summary>
+You need to configure it in the repository settings. See [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp) for more info.
+
+1.  **Declare the MCP Server**: In the "Copilot" >> "Coding agent" panel of your repository settings, add an MCP Server declaration as follows:
+
+```json
+{
+  "mcpServers": {
+    "pagopa-dx": {
+      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "type": "http",
+      "tools": ["*"]
+    }
+  }
+}
+```
+
+2.  **Configure Authentication**: Add any necessary tokens or secrets (e.g., `COPILOT_MCP_...`) as secrets in the repository's Copilot configuration. This allows the coding agent to use them when querying the server.
+
+Once configured, Copilot can autonomously invoke the MCP server's tools during task execution, using it to access documentation context and improve the quality of its code generation.
+
+</details>
+
 ## Development
 
 This is a standard TypeScript project. To get started:
@@ -20,7 +89,7 @@ You can run the following scripts:
 - `pnpm --filter @pagopa/dx-mcpserver test`: Runs tests.
 - `pnpm --filter @pagopa/dx-mcpserver typecheck`: Checks types.
 
-## Docker
+### Docker
 
 To build the Docker container for this application, run the following command from the root of the monorepo:
 
