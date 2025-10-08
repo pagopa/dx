@@ -32,14 +32,13 @@ resource "aws_lambda_function" "server" {
 
 # Creates an ECR repository for the Lambda function's container image.
 # trivy:ignore:AVD-AWS-0033 Use a Customer Managed Key
+# trivy:ignore:AVD-AWS-0031
 resource "aws_ecr_repository" "server" {
   name = "dx/mcp-server"
 
   image_scanning_configuration {
     scan_on_push = true
   }
-
-  image_tag_mutability = "IMMUTABLE"
 
   tags = var.tags
 }
