@@ -24,5 +24,6 @@ catalog:
 
 onlyBuiltDependencies:
   - esbuild
+  - nx
 
 pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs
