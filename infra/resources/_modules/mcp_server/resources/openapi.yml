@@ -1,6 +1,6 @@
 openapi: "3.0.1"
 info:
-  title: "remote-mcp-by-api-gateway"
+  title: "mcp-api-gateway"
   version: "0.0.1"
 paths:
   /mcp:
@@ -85,8 +85,8 @@ paths:
             responseTemplates:
               application/json: >
                 {
-                  "authorization_servers":["${API_GW_FRONT_BASE_URL}"],
-                  "resource":"${API_GW_FRONT_BASE_URL}"
+                  "authorization_servers":["${API_DOMAIN_NAME}"],
+                  "resource":"${API_DOMAIN_NAME}"
                 }
         requestTemplates:
           application/json: '{"statusCode":200}'
@@ -161,7 +161,7 @@ paths:
                   "response_types_supported": ["code"],
                   "grant_types_supported": ["authorization_code"],
                   "code_challenge_methods_supported": ["S256"],
-                  "registration_endpoint": "${API_GW_FRONT_BASE_URL}/register"
+                  "registration_endpoint": "${API_DOMAIN_NAME}/register"
                 }
         passthroughBehavior: "when_no_match"
     options:
@@ -214,7 +214,7 @@ paths:
         type: "aws"
         credentials: ${API_GATEWAY_COGNITO_ROLE}
         httpMethod: "POST"
-        uri: "arn:aws:apigateway:ap-northeast-1:cognito-idp:action/CreateUserPoolClient"
+        uri: "arn:aws:apigateway:${REGION}:cognito-idp:action/CreateUserPoolClient"
         responses:
           default:
             statusCode: "200"
@@ -236,7 +236,7 @@ paths:
               "AllowedOAuthFlows": $input.json('$.response_types'),
               "AllowedOAuthFlowsUserPoolClient": true,
               "AllowedOAuthScopes": ["openid", "profile"],
-              "SupportedIdentityProviders": ["COGNITO"],
+              "SupportedIdentityProviders": ["COGNITO", "Google"],
               "UserPoolId": "${COGNITO_USER_POOL_ID}"
             }
         passthroughBehavior: "never"
@@ -310,12 +310,12 @@ x-amazon-apigateway-gateway-responses:
   MISSING_AUTHENTICATION_TOKEN:
     statusCode: 401
     responseParameters:
-      gatewayresponse.header.WWW-Authenticate: "'${API_GW_FRONT_BASE_URL}/.well-known/protected-resource'"
+      gatewayresponse.header.WWW-Authenticate: "'${API_DOMAIN_NAME}/.well-known/protected-resource'"
     responseTemplates:
       application/json: '{"message":$context.error.messageString}'
   UNAUTHORIZED:
     statusCode: 401
     responseParameters:
-      gatewayresponse.header.WWW-Authenticate: "'${API_GW_FRONT_BASE_URL}/.well-known/protected-resource'"
+      gatewayresponse.header.WWW-Authenticate: "'${API_DOMAIN_NAME}/.well-known/protected-resource'"
     responseTemplates:
       application/json: '{"message":$context.error.messageString}'
