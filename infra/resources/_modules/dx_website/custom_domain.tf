@@ -10,7 +10,7 @@ resource "azurerm_dns_txt_record" "validation" {
   resource_group_name = var.network_resource_group_name
   ttl                 = 300
   record {
-    value = azurerm_static_web_app_custom_domain.this.validation_token
+    value = azurerm_static_site_custom_domain.this.validation_token == "" ? "validated" : azurerm_static_site_custom_domain.this.validation_token
   }
 }
 
