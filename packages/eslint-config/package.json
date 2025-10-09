@@ -11,8 +11,6 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint --fix index.js",
-    "lint:check": "eslint index.js",
     "version": "yarn changeset version && yarn --mode update-lockfile",
     "release": "yarn build && changeset publish"
   },
