@@ -63,7 +63,7 @@ resource "aws_cognito_identity_provider" "google" {
   provider_details = {
     client_id        = data.aws_ssm_parameter.gsuite_oauth_client_id.value
     client_secret    = data.aws_ssm_parameter.gsuite_oauth_client_secret.value
-    authorize_scopes = "openid email profile"
+    authorize_scopes = "openid email profile offline_access"
   }
 
   # Map Google's user attributes to Cognito's user attributes.

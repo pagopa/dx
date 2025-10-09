@@ -30,6 +30,14 @@ resource "aws_api_gateway_rest_api" "main" {
 
 resource "aws_api_gateway_deployment" "this" {
   rest_api_id = aws_api_gateway_rest_api.main.id
+
+  triggers = {
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.main.body))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "this" {
@@ -55,35 +63,6 @@ resource "aws_api_gateway_stage" "this" {
 resource "aws_cloudwatch_log_group" "api_gateway_logs" {
   name              = "/aws/api-gateway/${aws_api_gateway_rest_api.main.name}"
   retention_in_days = 7
-}
-
-resource "aws_iam_role" "api_gateway_role" {
-  name = provider::awsdx::resource_name(merge(var.naming_config, {
-    name          = "apigw"
-    resource_type = "iam_role"
-  }))
-  assume_role_policy = data.aws_iam_policy_document.api_gateway_cognito_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "api_gateway_cognito" {
-  policy_arn = aws_iam_policy.api_gateway_cognito.arn
-  role       = aws_iam_role.api_gateway_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch_logs" {
-  role       = aws_iam_role.api_gateway_role.name
-  policy_arn = data.aws_iam_policy.api_gateway_cloudwatch_logs.arn
-}
-
-resource "aws_api_gateway_account" "logging" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_role.arn
-  depends_on          = [aws_iam_role_policy_attachment.api_gateway_cognito]
-}
-
-resource "aws_iam_policy" "api_gateway_cognito" {
-  name        = "ApiGatewayCognitoPolicy"
-  description = "Policy for API Gateway to access Cognito"
-  policy      = data.aws_iam_policy_document.api_gateway_cognito_policy.json
 }
 
 resource "aws_api_gateway_domain_name" "this" {
@@ -112,4 +91,35 @@ resource "aws_lambda_permission" "apigw_http" {
 
 resource "aws_api_gateway_account" "this" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_role.arn
+}
+
+
+#### IAM
+resource "aws_iam_role" "api_gateway_role" {
+  name = provider::awsdx::resource_name(merge(var.naming_config, {
+    name          = "apigw"
+    resource_type = "iam_role"
+  }))
+  assume_role_policy = data.aws_iam_policy_document.api_gateway_cognito_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_cognito" {
+  policy_arn = aws_iam_policy.api_gateway_cognito.arn
+  role       = aws_iam_role.api_gateway_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "api_gateway_cloudwatch_logs" {
+  role       = aws_iam_role.api_gateway_role.name
+  policy_arn = data.aws_iam_policy.api_gateway_cloudwatch_logs.arn
+}
+
+resource "aws_api_gateway_account" "logging" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_role.arn
+  depends_on          = [aws_iam_role_policy_attachment.api_gateway_cognito]
+}
+
+resource "aws_iam_policy" "api_gateway_cognito" {
+  name        = "ApiGatewayCognitoPolicy"
+  description = "Policy for API Gateway to access Cognito"
+  policy      = data.aws_iam_policy_document.api_gateway_cognito_policy.json
 }
