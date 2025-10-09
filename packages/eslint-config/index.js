@@ -43,6 +43,6 @@ export default [
     },
   },
   {
-    ignores: ["**/generated/*"],
+    ignores: ["**/generated/*", "**/dist/**", "**/bin/**"],
   },
 ];

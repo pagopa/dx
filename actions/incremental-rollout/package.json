@@ -8,7 +8,17 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint:check": "shellcheck *.sh"
+    "format:check": "prettier --check ."
+  },
+  "nx": {
+    "targets": {
+      "shellcheck": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "actions/incremental-rollout",
+          "command": "shellcheck *.sh"
+        }
+      }
+    }
   }
 }

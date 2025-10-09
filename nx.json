@@ -12,12 +12,18 @@
       "inputs": ["{projectRoot}/src/**/*.ts"],
       "cache": true
     },
-    "lint:check": {
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "cache": true
-    },
     "format:check": {
       "cache": true
+    },
+    "lint": {
+      "options": {
+        "fix": true
+      },
+      "configurations": {
+        "ci": {
+          "fix": false
+        }
+      }
     },
     "test": {
       "configurations": {
@@ -49,6 +55,12 @@
       "plugin": "@nx/vite/plugin",
       "options": {
         "testTargetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
       }
     }
   ]
