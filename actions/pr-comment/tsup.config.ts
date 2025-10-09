@@ -1,15 +1,15 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
+  bundle: true,
+  clean: true,
+  dts: false,
   entry: ["src/index.ts"],
   format: ["cjs"],
-  dts: false,
-  sourcemap: false,
-  clean: true,
   minify: true,
-  target: "node20",
-  bundle: true,
-  platform: "node",
   noExternal: [/.*/],
+  platform: "node",
+  sourcemap: false,
+  target: "node20",
   treeshake: true,
 });

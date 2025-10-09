@@ -5,6 +5,7 @@
     "@changesets/cli": "^2.29.5",
     "@devcontainers/cli": "^0.79.0",
     "@nx/docker": "21.6.3",
+    "@nx/eslint": "21.6.3",
     "@nx/vite": "21.6.3",
     "eslint": "catalog:",
     "nx": "21.6.3",
