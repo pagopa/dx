@@ -15,7 +15,7 @@ locals {
 
   aws_naming_config = {
     prefix          = "dx"
-    environment     = "p"
+    environment     = "p" # change to d
     region          = "eu-south-1"
     instance_number = 1
   }

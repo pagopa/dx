@@ -40,7 +40,7 @@ resource "azurerm_dns_cname_record" "api_gateway_custom" {
   zone_name           = var.dns.zone_name
   resource_group_name = var.dns.resource_group_name
   ttl                 = 300
-  record              = aws_apigatewayv2_domain_name.api_custom.domain_name_configuration[0].target_domain_name
+  record              = aws_api_gateway_domain_name.this.regional_domain_name
 }
 
 # Cognito auth custom domain CNAME
