@@ -47,16 +47,34 @@ resource "aws_apigatewayv2_integration" "lambda_proxy" {
 
 # Defines a route for the /mcp path with a proxy.
 resource "aws_apigatewayv2_route" "mcp" {
-  api_id    = aws_apigatewayv2_api.mcp_server.id
-  route_key = "ANY /mcp/{proxy+}"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
+  api_id             = aws_apigatewayv2_api.mcp_server.id
+  route_key          = "ANY /mcp/{proxy+}"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito_authorizer.id
 }
 
 # Defines the default route for the API Gateway.
 resource "aws_apigatewayv2_route" "default" {
-  api_id    = aws_apigatewayv2_api.mcp_server.id
-  route_key = "$default"
-  target    = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
+  api_id             = aws_apigatewayv2_api.mcp_server.id
+  route_key          = "$default"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda_proxy.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito_authorizer.id
+}
+
+# Cognito Authorizer for API Gateway.
+# This authorizer validates JWT tokens issued by the Cognito User Pool.
+resource "aws_apigatewayv2_authorizer" "cognito_authorizer" {
+  api_id           = aws_apigatewayv2_api.mcp_server.id
+  name             = "cognito-authorizer"
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+
+  jwt_configuration {
+    audience = [aws_cognito_user_pool_client.mcp_server.id]
+    issuer   = "https://cognito-idp.${var.naming_config.region}.amazonaws.com/${aws_cognito_user_pool.mcp_server.id}"
+  }
 }
 
 # Defines the default stage for the API Gateway.
