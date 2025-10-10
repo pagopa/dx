@@ -16,6 +16,11 @@ repos:
         language: script
         pass_filenames: false
         verbose: true
+      - id: terraform-graph-generator
+        name: Generate Terraform Graph
+        entry: infra/scripts/generate-terraform-graphs.sh
+        language: script
+        verbose: false
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.96.2
     hooks:

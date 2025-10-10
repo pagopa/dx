@@ -1,0 +1,12 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.azurerm_client_config.current" [label="data.azurerm_client_config.current"];
+  "azurerm_container_app_job.github_runner" [label="azurerm_container_app_job.github_runner"];
+  "azurerm_key_vault_access_policy.keyvault_containerapp" [label="azurerm_key_vault_access_policy.keyvault_containerapp"];
+  "azurerm_role_assignment.keyvault_containerapp" [label="azurerm_role_assignment.keyvault_containerapp"];
+  "azurerm_key_vault_access_policy.keyvault_containerapp" -> "data.azurerm_client_config.current";
+  "azurerm_key_vault_access_policy.keyvault_containerapp" -> "azurerm_container_app_job.github_runner";
+  "azurerm_role_assignment.keyvault_containerapp" -> "data.azurerm_client_config.current";
+  "azurerm_role_assignment.keyvault_containerapp" -> "azurerm_container_app_job.github_runner";
+}

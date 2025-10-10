@@ -54,6 +54,10 @@ services:
 
 This example is illustrative.
 
+## Diagram
+<!-- BEGIN_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

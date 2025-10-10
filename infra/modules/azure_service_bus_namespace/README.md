@@ -24,6 +24,10 @@ Patterns and advices on how use Service Bus can be found in [DX documentation](h
 
 A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-services-bus-namespace/tree/main/examples/complete) demonstrates all features.
 
+## Diagram
+<!-- BEGIN_TF_GRAPH -->
+<!-- END_TF_GRAPH -->
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
