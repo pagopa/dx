@@ -56,3 +56,9 @@ resource "azurerm_role_assignment" "contributor" {
   role_definition_name = "Contributor"
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
+
+resource "azurerm_role_assignment" "static_web_apps_list_secrets" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "PagoPA Static Web Apps List Secrets"
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
+}
