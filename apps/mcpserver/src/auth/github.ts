@@ -1,18 +1,17 @@
-import axios from "axios";
+import { Octokit } from "@octokit/rest";
+import { z } from "zod/v4";
 
 import { logger } from "../utils/logger.js";
 
-const GITHUB_API_URL = "https://api.github.com";
-// A list of required GitHub organizations, configurable via environment variable.
-const REQUIRED_ORGANIZATIONS = (
-  process.env["REQUIRED_ORGANIZATIONS"] || "pagopa"
-)
-  .split(",")
-  .map((org) => org.trim());
+const organizationsSchema = z
+  .array(z.string().nonempty())
+  .nonempty()
+  .transform((orgs) => orgs.map((org) => org.trim()))
+  .catch(["pagopa"]);
 
-type Org = {
-  login: string;
-};
+const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
+  process.env.REQUIRED_ORGANIZATIONS,
+);
 
 /**
  * Verifies that a user, identified by a GitHub personal access token, is a member
@@ -25,19 +24,14 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
     return false;
   }
 
+  const octokit = new Octokit({ auth: token });
+
   try {
-    // Fetches the user's organization memberships from the GitHub API.
-    const response = await axios.get(`${GITHUB_API_URL}/user/orgs`, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    // Fetches the user's organization memberships using Octokit.
+    const { data: organizations }: { data: { login: string }[] } =
+      await octokit.rest.orgs.listForAuthenticatedUser();
 
-    logger.info("GitHub API response:", response.data);
-
-    const organizations = response.data as Org[];
-    const isMember = organizations.some((org: Org) =>
+    const isMember = organizations.some((org) =>
       REQUIRED_ORGANIZATIONS.includes(org.login),
     );
 

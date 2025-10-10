@@ -7,13 +7,6 @@ import {
 } from "../config/aws.js";
 import { queryKnowledgeBase } from "../services/bedrock.js";
 
-// The arguments for the QueryPagoPADXDocumentation tool.
-type QueryKnowledgeBasesArgs = {
-  number_of_results?: number;
-  query: string;
-  reranking?: boolean;
-};
-
 /**
  * A tool that provides access to the complete Terraform documentation for PagoPA Dx.
  * It uses a Bedrock knowledge base to answer queries about Terraform modules and best practices.
@@ -28,7 +21,7 @@ All prompts and questions should be written in English, so that the tool respond
 The tool should be used to explain, guide, or suggest Terraform usage based on verified module documentation and internal best practices.
 Use only modules from the pagopa-dx namespace. To get terraform modules descriptions, input/output variables and examples, use the \`searchModules\` tool.
 `,
-  execute: async (args: QueryKnowledgeBasesArgs): Promise<string> => {
+  execute: async (args: { query: string }): Promise<string> => {
     const result = await queryKnowledgeBase(
       knowledgeBaseId,
       args.query,

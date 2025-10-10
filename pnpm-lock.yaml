@@ -215,12 +215,15 @@ importers:
       '@aws-sdk/client-bedrock-agent-runtime':
         specifier: ^3.583.0
         version: 3.901.0
+      '@octokit/rest':
+        specifier: ^22.0.0
+        version: 22.0.0
       axios:
         specifier: ^1.12.2
         version: 1.12.2
       fastmcp:
-        specifier: ^3.18.0
-        version: 3.19.0
+        specifier: ^3.19.1
+        version: 3.19.1
       pino:
         specifier: ^9.1.0
         version: 9.13.0
@@ -2344,8 +2347,8 @@ packages:
   '@microsoft/dynamicproto-js@2.0.3':
     resolution: {integrity: sha512-JTWTU80rMy3mdxOjjpaiDQsTLZ6YSGGqsjURsY6AUQtIj0udlF/jYmhdLZu8693ZIC0T1IwYnFa0+QeiMnziBA==}
 
-  '@modelcontextprotocol/sdk@1.19.1':
-    resolution: {integrity: sha512-3Y2h3MZKjec1eAqSTBclATlX+AbC6n1LgfVzRMJLt3v6w0RCYgwLrjbxPDbhsYHt6Wdqc/aCceNJYgj448ELQQ==}
+  '@modelcontextprotocol/sdk@1.20.0':
+    resolution: {integrity: sha512-kOQ4+fHuT4KbR2iq2IjeV32HiihueuOf1vJkq18z08CLZ1UQrTc8BXJpVfxZkq45+inLLD+D4xx4nBjUelJa4Q==}
     engines: {node: '>=18'}
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -2554,6 +2557,12 @@ packages:
     peerDependencies:
       '@octokit/core': '5'
 
+  '@octokit/plugin-request-log@6.0.0':
+    resolution: {integrity: sha512-UkOzeEN3W91/eBq9sPZNQ7sUBvYCqYbrrD8gTbBuGtHEuycE4/awMXcYvx6sVYo7LypPhmQwwpUe4Yyu4QZN5Q==}
+    engines: {node: '>= 20'}
+    peerDependencies:
+      '@octokit/core': '>=6'
+
   '@octokit/plugin-rest-endpoint-methods@10.4.1':
     resolution: {integrity: sha512-xV1b+ceKV9KytQe3zCVqjg+8GTGfDYwaT1ATU5isiUyVtlVAO3HNdzpS4sr4GBx4hxQ46s7ITtZrAsxG22+rVg==}
     engines: {node: '>= 18'}
@@ -2593,6 +2602,10 @@ packages:
   '@octokit/request@8.4.1':
     resolution: {integrity: sha512-qnB2+SY3hkCmBxZsR/MPCybNmbJe4KAlfWErXq+rBKkQJlbjdJeS85VI9r8UqeLYLvnAenU8Q1okM/0MBsAGXw==}
     engines: {node: '>= 18'}
+
+  '@octokit/rest@22.0.0':
+    resolution: {integrity: sha512-z6tmTu9BTnw51jYGulxrlernpsQYXpui1RK21vmXn8yF5bp6iX16yfTtJYGK5Mh1qDkvDOmp2n8sRMcQmR8jiA==}
+    engines: {node: '>= 20'}
 
   '@octokit/types@12.6.0':
     resolution: {integrity: sha512-1rhSOfRa6H9w4YwK0yrf5faDaDTb+yLyBUKOCV4xtCDB5VmIPqd/v9yr9o6SAzOAlRxMiRiCic6JVM1/kunVkw==}
@@ -5327,8 +5340,8 @@ packages:
     resolution: {integrity: sha512-pfX9uG9Ki0yekDHx2SiuRIyFdyAr1kMIMitPvb0YBo8SUfKvia7w7FIyd/l6av85pFYRhZscS75MwMnbvY+hcQ==}
     hasBin: true
 
-  fastmcp@3.19.0:
-    resolution: {integrity: sha512-wwqk+8+qjPT+FNF7h4cPrb90uWz6ezVQHZZSmlF7uhaYzhYikFrSorVwJvVfKXF5Ns2JgHkJUJkgjYg08YwTFQ==}
+  fastmcp@3.19.1:
+    resolution: {integrity: sha512-XiEFTW26i5lDStmWOCVhDx8v2jQfQvtd6KC4PHuRg9z5eoo8rP9YUt1yuzgPD4BByNTeksZnxGtXttr+GQK23Q==}
     hasBin: true
 
   fastq@1.19.1:
@@ -6474,8 +6487,8 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mcp-proxy@5.8.0:
-    resolution: {integrity: sha512-qNdLNQzpFGj80UXu473Z7ZwZqRYMG6bvf64Wnmqqiaz8SU0GHaVD7U9odW++xYLSEI6EEZNl7SH3Vjw5NEdLXw==}
+  mcp-proxy@5.8.1:
+    resolution: {integrity: sha512-tlBekDacLg8iR6pe9k0AnOEi52zn2JLOWY3fPmbL/rhO+MRYIjEMsrBVWHD+D7vbAjR+gmZIzMUbvg3TawjafQ==}
     hasBin: true
 
   mdast-util-directive@3.1.0:
@@ -12383,7 +12396,7 @@ snapshots:
     dependencies:
       '@nevware21/ts-utils': 0.12.5
 
-  '@modelcontextprotocol/sdk@1.19.1':
+  '@modelcontextprotocol/sdk@1.20.0':
     dependencies:
       ajv: 6.12.6
       content-type: 1.0.5
@@ -12623,6 +12636,10 @@ snapshots:
       '@octokit/core': 5.2.2
       '@octokit/types': 12.6.0
 
+  '@octokit/plugin-request-log@6.0.0(@octokit/core@7.0.3)':
+    dependencies:
+      '@octokit/core': 7.0.3
+
   '@octokit/plugin-rest-endpoint-methods@10.4.1(@octokit/core@5.2.2)':
     dependencies:
       '@octokit/core': 5.2.2
@@ -12670,6 +12687,13 @@ snapshots:
       '@octokit/request-error': 5.1.1
       '@octokit/types': 13.10.0
       universal-user-agent: 6.0.1
+
+  '@octokit/rest@22.0.0':
+    dependencies:
+      '@octokit/core': 7.0.3
+      '@octokit/plugin-paginate-rest': 13.1.1(@octokit/core@7.0.3)
+      '@octokit/plugin-request-log': 6.0.0(@octokit/core@7.0.3)
+      '@octokit/plugin-rest-endpoint-methods': 16.0.0(@octokit/core@7.0.3)
 
   '@octokit/types@12.6.0':
     dependencies:
@@ -15914,14 +15938,14 @@ snapshots:
     dependencies:
       strnum: 2.1.1
 
-  fastmcp@3.19.0:
+  fastmcp@3.19.1:
     dependencies:
-      '@modelcontextprotocol/sdk': 1.19.1
+      '@modelcontextprotocol/sdk': 1.20.0
       '@standard-schema/spec': 1.0.0
       execa: 9.6.0
       file-type: 21.0.0
       fuse.js: 7.1.0
-      mcp-proxy: 5.8.0
+      mcp-proxy: 5.8.1
       strict-event-emitter-types: 2.0.0
       undici: 7.16.0
       uri-templates: 0.2.0
@@ -17129,7 +17153,7 @@ snapshots:
 
   math-intrinsics@1.1.0: {}
 
-  mcp-proxy@5.8.0: {}
+  mcp-proxy@5.8.1: {}
 
   mdast-util-directive@3.1.0:
     dependencies:
