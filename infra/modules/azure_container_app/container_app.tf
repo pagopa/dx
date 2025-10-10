@@ -199,7 +199,7 @@ resource "azurerm_container_app" "this" {
 resource "azapi_resource" "this" {
   count = local.is_function_app ? 1 : 0
 
-  type      = "Microsoft.App/containerApps@2025-02-02-preview"
+  type      = "Microsoft.App/containerApps@2025-07-01"
   name      = local.function_app.name
   parent_id = local.resource_group_id
   location  = var.environment.location
@@ -242,8 +242,21 @@ resource "azapi_resource" "this" {
       template = {
         terminationGracePeriodSeconds = 30
         scale = {
-          minReplicas = local.replica_minimum
-          maxReplicas = local.replica_maximum
+          pollingInterval = 30
+          cooldownPeriod  = 300
+          minReplicas     = local.replica_minimum
+          maxReplicas     = local.replica_maximum
+
+          rules = [
+            {
+              name = "http-scaler",
+              http = {
+                metadata = {
+                  concurrentRequests = var.function_settings.concurrent_requests
+                }
+              }
+            }
+          ]
         }
 
         containers = [
@@ -267,7 +280,7 @@ resource "azapi_resource" "this" {
                     AzureWebJobsStorage__credential  = "managedidentity",
 
                     # https://techcommunity.microsoft.com/blog/appsonazureblog/how-to-store-function-apps-function-keys-in-a-key-vault/2639181
-                    AzureWebJobsSecretStorageType        = "keyVault",
+                    AzureWebJobsSecretStorageType        = "keyvault",
                     AzureWebJobsSecretStorageKeyVaultUri = "https://${var.function_settings.key_vault_name}.vault.azure.net",
                   },
                   # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
