@@ -29,6 +29,7 @@ const server = new FastMCP({
     // The returned object is accessible in the `context.session`.
     return {
       id: 1,
+      token: apiKey,
     };
   },
   instructions: serverInstructions,

@@ -17,18 +17,24 @@ export const SearchGitHubCodeTool = {
 Use this to find examples of specific code patterns, such as Terraform module usage.
 For example, search for "pagopa-dx/azure-function-app/azurerm" to find examples of the azure-function-app module usage.
 Returns file contents matching the search query.`,
-  execute: async (args: { query: string }): Promise<string> => {
+  execute: async (
+    args: { extension?: string; query: string },
+    context: { session?: { token?: string } },
+  ): Promise<string> => {
     const org = defaultOrg;
-    const token = process.env.GITHUB_TOKEN;
+    const token = context.session?.token;
 
     if (!token) {
-      throw new Error("GITHUB_TOKEN environment variable is required");
+      throw new Error("GitHub token not available in session");
     }
 
     const octokit = new Octokit({ auth: token });
 
     try {
-      const searchQuery = `${args.query} org:${org}`;
+      const extensionFilter = args.extension
+        ? ` extension:${args.extension}`
+        : "";
+      const searchQuery = `${args.query} org:${org}${extensionFilter}`;
       logger.info(`Searching GitHub: ${searchQuery}`);
 
       const { data } = await octokit.rest.search.code({
@@ -83,6 +89,12 @@ Returns file contents matching the search query.`,
   },
   name: "SearchGitHubCode",
   parameters: z.object({
+    extension: z
+      .string()
+      .optional()
+      .describe(
+        'File extension to filter results (e.g., "tf" for Terraform files, "py" for Python files). For example, you can use "tf" to find Terraform module usage examples.',
+      ),
     query: z
       .string()
       .describe(
