@@ -186,3 +186,17 @@ variable "autoscaler" {
   default     = null
   description = "Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/"
 }
+
+variable "function_settings" {
+  type = object({
+    key_vault_name                           = string
+    application_insights_connection_string   = string
+    application_insights_sampling_percentage = optional(number, 5)
+    has_durable_functions                    = optional(bool, false)
+    subnet_pep_id                            = string
+    private_dns_zone_resource_group_id       = string
+    action_group_ids                         = optional(set(string), [])
+    concurrent_requests                      = optional(number, 1000)
+  })
+  default = null
+}
