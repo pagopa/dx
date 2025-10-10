@@ -21,6 +21,7 @@ The server currently exposes the following capabilities:
 
 - **Tools**:
   - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the [DX documentation](https://dx.pagopa.it/).
+  - `SearchGitHubCode`: Searches for code snippets in specified GitHub organization (defaults to pagopa), allowing users to find real-world examples of code usage.
 - **Prompts**:
   - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
 
@@ -40,10 +41,12 @@ Update your configuration file with the following. See [VS Code MCP docs](https:
   "servers": {
     "dx-docs": {
       "url": "https://api.dev.dx.pagopa.it/mcp",
-      "type": "http"
+      "type": "http",
+      "headers": {
+        "x-gh-pat": "${env:GH_PAT}"
+      }
     }
-  },
-  "inputs": []
+  }
 }
 ```
 
@@ -61,13 +64,16 @@ You need to configure it in the repository settings. See [GitHub Copilot MCP doc
     "pagopa-dx": {
       "url": "https://api.dev.dx.pagopa.it/mcp",
       "type": "http",
-      "tools": ["*"]
+      "tools": ["*"],
+      "headers": {
+        "x-gh-pat": "$COPILOT_MCP_BOT_GH_PAT"
+      }
     }
   }
 }
 ```
 
-2.  **Configure Authentication**: Add any necessary tokens or secrets (e.g., `COPILOT_MCP_...`) as secrets in the repository's Copilot configuration. This allows the coding agent to use them when querying the server.
+2.  **Configure Authentication**: Add any necessary tokens or secrets (e.g., `COPILOT_MCP_BOT_GH_PAT`) as secrets in the repository's Copilot configuration. This allows the coding agent to use them when querying the server.
 
 Once configured, Copilot can autonomously invoke the MCP server's tools during task execution, using it to access documentation context and improve the quality of its code generation.
 
