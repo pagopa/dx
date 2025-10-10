@@ -9,18 +9,34 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
+  use_cases = {
+    default = {
+      sku              = "P1v3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+    }
+    high_load = {
+      sku              = "P2mv3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+    }
+  }
+
+  use_case_features = local.use_cases[var.use_case]
+
+  worker_process_count = local.worker_process_count_map[local.function_app.sku_name]
+
   app_service_plan = {
     enable = var.app_service_plan_id == null
     name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service_plan" }))
   }
 
   function_app = {
-    name                   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))
-    sku_name               = local.sku_name_mapping[local.tier]
-    zone_balancing_enabled = local.tier != "s"
-    is_slot_enabled        = local.tier == "s" ? 0 : 1
-    worker_process_count   = local.worker_process_count_mapping[local.tier]
-    has_durable            = var.has_durable_functions ? 1 : 0
+    name        = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))
+    sku_name    = var.size != null ? var.size : local.use_case_features.sku
+    has_durable = var.has_durable_functions ? 1 : 0
   }
 
   function_app_slot = {
@@ -32,8 +48,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = local.tier == "s" ? "LRS" : "ZRS"
-    name             = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
-    durable_name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
+    name         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
+    durable_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
   }
 }

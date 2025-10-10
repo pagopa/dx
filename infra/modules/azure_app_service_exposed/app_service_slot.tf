@@ -1,5 +1,5 @@
 resource "azurerm_linux_web_app_slot" "this" {
-  count = local.app_service.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   name = local.app_service_slot.name
 
@@ -14,7 +14,7 @@ resource "azurerm_linux_web_app_slot" "this" {
 
   site_config {
     http2_enabled                     = true
-    always_on                         = local.app_service.always_on
+    always_on                         = local.use_case_features.always_on
     vnet_route_all_enabled            = true
     health_check_path                 = var.health_check_path
     health_check_eviction_time_in_min = 2
