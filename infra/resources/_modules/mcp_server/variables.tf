@@ -26,18 +26,6 @@ variable "dns" {
   description = "DNS configuration for the MCP server, including zone name, resource group name, and custom domain name."
 }
 
-variable "cognito_config" {
-  description = "Configuration for the Cognito User Pool."
-  type = object({
-    callback_urls = list(string)
-    logout_urls   = list(string)
-  })
-  default = {
-    callback_urls = ["https://api.dev.dx.pagopa.it/mcp/auth/callback"]
-    logout_urls   = ["https://api.dev.dx.pagopa.it/mcp/auth/logout"]
-  }
-}
-
 variable "tags" {
   type        = map(string)
   description = "A map of tags to assign to the resources."
