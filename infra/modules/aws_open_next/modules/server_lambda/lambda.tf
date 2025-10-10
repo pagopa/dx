@@ -1,0 +1,122 @@
+resource "aws_lambda_function" "function" {
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+
+  function_name = local.function_name
+  description   = "OpenNext Server Lambda Function for project ${local.project}"
+
+  handler       = var.handler
+  runtime       = "nodejs${var.node_major_version}.x"
+  architectures = ["arm64"]
+  layers        = var.lambda_layers
+
+  role = aws_iam_role.lambda_role.arn
+
+  # kms_key_arn                    = var.kms_key_arn
+  # reserved_concurrent_executions = var.reserved_concurrent_executions
+
+  memory_size = var.memory_size
+  timeout     = var.timeout
+  publish     = true
+
+  tracing_config {
+    mode = "Active"
+  }
+
+  environment {
+    variables = merge({
+      BUCKET_NAME                        = var.assets_bucket.name,
+      BUCKET_KEY_PREFIX                  = "_assets",
+      CACHE_BUCKET_NAME                  = var.assets_bucket.name,
+      CACHE_BUCKET_REGION                = var.assets_bucket.region,
+      CACHE_BUCKET_KEY_PREFIX            = "_cache",
+      CACHE_DYNAMO_TABLE                 = var.isr_tags_ddb.name,
+      REVALIDATION_QUEUE_REGION          = var.environment.region,
+      REVALIDATION_QUEUE_URL             = var.isr_queue.url
+      OPEN_NEXT_FORCE_NON_EMPTY_RESPONSE = "true"
+      },
+    var.environment_variables)
+  }
+
+  dynamic "vpc_config" {
+    for_each = var.vpc == null ? [] : [1]
+
+    content {
+      security_group_ids = [aws_security_group.lambda[0].id]
+      subnet_ids         = var.vpc.private_subnets
+    }
+  }
+
+  # dynamic "dead_letter_config" {
+  #   for_each = var.dead_letter_config != null ? [true] : []
+
+  #   content {
+  #     target_arn = var.dead_letter_config.target_arn
+  #   }
+  # }
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [filename, source_code_hash]
+  }
+}
+
+resource "aws_lambda_alias" "production" {
+  name             = "production"
+  description      = "Production alias"
+  function_name    = aws_lambda_function.function.function_name
+  function_version = aws_lambda_function.function.version
+
+  lifecycle {
+    ignore_changes = [function_version]
+  }
+}
+
+#trivy:ignore:AVD-AWS-0017
+resource "aws_cloudwatch_log_group" "function_log_group" {
+  name              = "/aws/lambda/${aws_lambda_function.function.function_name}"
+  skip_destroy      = true
+  retention_in_days = 30
+  # kms_key_id        = var.log_group.kms_key_id
+  tags = var.tags
+}
+
+resource "aws_lambda_function_url" "function_url" {
+  function_name      = aws_lambda_function.function.function_name
+  qualifier          = aws_lambda_alias.production.name
+  authorization_type = "AWS_IAM"
+  invoke_mode        = var.is_streaming_enabled ? "RESPONSE_STREAM" : "BUFFERED"
+}
+
+#trivy:ignore:AVD-AWS-0067
+resource "aws_lambda_permission" "function_url_permission" {
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.function.function_name
+  qualifier              = aws_lambda_alias.production.name
+  principal              = "cloudfront.amazonaws.com"
+  function_url_auth_type = "AWS_IAM"
+}
+
+# alarms
+resource "aws_cloudwatch_metric_alarm" "lambda_error_alarm" {
+  count = var.enable_alarms ? 1 : 0
+
+  alarm_name          = "LambdaErrors-${local.function_name}"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 3
+
+  dimensions = {
+    FunctionName = local.function_name
+  }
+
+  alarm_description  = "Alarm when Lambda ${local.function_name} has more than 3 errors in 3 minutes"
+  treat_missing_data = "notBreaching"
+
+  alarm_actions = var.alarms_actions
+}
