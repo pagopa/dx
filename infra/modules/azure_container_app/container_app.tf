@@ -252,7 +252,7 @@ resource "azapi_resource" "this" {
               name = var.autoscaler.http_scalers[0].name,
               http = {
                 metadata = {
-                  concurrentRequests = var.autoscaler.http_scalers[0].concurrent_requests
+                  concurrentRequests = tostring(var.autoscaler.http_scalers[0].concurrent_requests)
                 }
               }
             }
