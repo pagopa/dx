@@ -28,14 +28,14 @@ locals {
   replica_minimum = try(var.autoscaler.replicas.minimum, local.sku.replicas.min)
   replica_maximum = try(var.autoscaler.replicas.maximum, local.sku.replicas.max)
 
-  is_function_app = var.function_settings != null
+  is_function_app = nonsensitive(var.function_settings != null)
 
   cae_id            = local.is_function_app ? provider::azurerm::parse_resource_id(var.container_app_environment_id) : null
   subscription_id   = local.is_function_app ? local.cae_id["subscription_id"] : null
   resource_group_id = local.is_function_app ? provider::azurerm::normalise_resource_id("/subscriptions/${local.subscription_id}/resourceGroups/${var.resource_group_name}") : null
 
   application_insights = {
-    enable = local.is_function_app ? nonsensitive(var.function_settings.application_insights_connection_string != null) : false
+    enable = nonsensitive(local.is_function_app ? (var.function_settings.application_insights_connection_string != null) : false)
   }
 
   function_app = {

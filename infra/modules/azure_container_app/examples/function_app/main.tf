@@ -8,6 +8,8 @@ resource "azurerm_resource_group" "example" {
   tags = local.tags
 }
 
+data "azurerm_subscription" "current" {}
+
 data "azurerm_virtual_network" "common" {
   name                = local.virtual_network.name
   resource_group_name = data.azurerm_resource_group.network.name
@@ -58,7 +60,7 @@ resource "dx_available_subnet_cidr" "next_cidr" {
 module "container_app_environment" {
   source = "../../../azure_container_app_environment"
 
-  environment         = local.environment
+  environment         = merge(local.environment, { instance_number = "02" })
   resource_group_name = azurerm_resource_group.example.name
 
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
@@ -76,7 +78,7 @@ module "container_app_environment" {
 module "container_app" {
   source = "../../"
 
-  environment         = local.environment
+  environment         = merge(local.environment, { instance_number = "05" })
   resource_group_name = azurerm_resource_group.example.name
 
   function_settings = {
@@ -89,15 +91,11 @@ module "container_app" {
 
   tier          = "m"
   revision_mode = "Single"
+  target_port   = 80
   container_app_templates = [
     {
-      image = "mcr.microsoft.com/azure-functions/dotnet8-quickstart-demo:1.0"
-      name  = "quickstart"
-
-      app_settings = {
-        key1 = "value1"
-        key2 = "value2"
-      }
+      image = "ghcr.io/pagopa/dotnetfunc:latest"
+      name  = "dotnet"
 
       liveness_probe = {
         path = "/"
@@ -105,9 +103,35 @@ module "container_app" {
     },
   ]
 
-  container_app_environment_id = module.container_app_environment.id
+  autoscaler = {
+    replicas = {
+      minimum = 0
+      maximum = 10
+    }
+  }
 
-  user_assigned_identity_id = module.container_app_environment.user_assigned_identity.id
+  container_app_environment_id = module.container_app_environment.id
+  user_assigned_identity_id    = module.container_app_environment.user_assigned_identity.id
 
   tags = local.tags
+}
+
+module "ca_kv" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 1.0"
+
+  subscription_id = data.azurerm_subscription.current.subscription_id
+  principal_id    = module.container_app.principal_id
+
+  key_vault = [
+    {
+      name                = data.azurerm_key_vault.common.name
+      resource_group_name = data.azurerm_key_vault.common.resource_group_name
+      has_rbac_support    = true
+      description         = "Allow Container App to write function keys"
+      roles = {
+        secrets = "writer"
+      }
+    }
+  ]
 }

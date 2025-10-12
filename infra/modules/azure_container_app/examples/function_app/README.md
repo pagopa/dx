@@ -13,6 +13,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_ca_kv"></a> [ca\_kv](#module\_ca\_kv) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_container_app"></a> [container\_app](#module\_container\_app) | ../../ | n/a |
 | <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | ../../../azure_container_app_environment | n/a |
 
@@ -27,6 +28,7 @@
 | [azurerm_log_analytics_workspace.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 | [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 | [azurerm_virtual_network.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs

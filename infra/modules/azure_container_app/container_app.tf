@@ -249,10 +249,10 @@ resource "azapi_resource" "this" {
 
           rules = [
             {
-              name = "http-scaler",
+              name = var.autoscaler.http_scalers[0].name,
               http = {
                 metadata = {
-                  concurrentRequests = var.function_settings.concurrent_requests
+                  concurrentRequests = var.autoscaler.http_scalers[0].concurrent_requests
                 }
               }
             }
@@ -313,59 +313,65 @@ resource "azapi_resource" "this" {
             )
 
             probes = [
-              # container.readiness_probe == null ? null :
-              # {
-              #   type = "Readiness"
-              #   httpGet = {
-              #     path   = container.readiness_probe.path
-              #     port   = var.target_port
-              #     scheme = container.readiness_probe.transport
-              #     httpHeaders = container.readiness_probe.header != null ? [
-              #       {
-              #         name  = container.readiness_probe.header.name
-              #         value = container.readiness_probe.header.value
-              #       }
-              #     ] : []
-              #   }
-              #   initialDelaySeconds = container.readiness_probe.initial_delay
-              #   timeoutSeconds      = container.readiness_probe.timeout
-              #   successThreshold    = container.readiness_probe.success_count_threshold
-              #   failureThreshold    = container.readiness_probe.failure_count_threshold
-              # },
-              {
-                type = "Liveness"
-                httpGet = {
-                  path   = container.liveness_probe.path
-                  port   = var.target_port
-                  scheme = container.liveness_probe.transport
-                  httpHeaders = container.liveness_probe.header != null ? [
-                    {
-                      name  = container.liveness_probe.header.name
-                      value = container.liveness_probe.header.value
+              for probe in concat(
+                [
+                  container.readiness_probe != null ? {
+                    type = "Readiness"
+                    httpGet = {
+                      path   = container.readiness_probe.path
+                      port   = var.target_port
+                      scheme = container.readiness_probe.transport
+                      httpHeaders = container.readiness_probe.header != null ? [
+                        {
+                          name  = container.readiness_probe.header.name
+                          value = container.readiness_probe.header.value
+                        }
+                      ] : []
                     }
-                  ] : []
-                }
-                initialDelaySeconds = container.liveness_probe.initial_delay
-                timeoutSeconds      = container.liveness_probe.timeout
-                failureThreshold    = container.liveness_probe.failure_count_threshold
-              },
-              # container.startup_probe == null ? null :
-              # {
-              #   type = "Startup"
-              #   httpGet = {
-              #     path   = container.startup_probe.path
-              #     port   = var.target_port
-              #     scheme = container.startup_probe.transport
-              #     httpHeaders = container.startup_probe.header != null ? [
-              #       {
-              #         name  = container.startup_probe.header.name
-              #         value = container.startup_probe.header.value
-              #       }
-              #     ] : []
-              #   }
-              #   timeoutSeconds   = container.startup_probe.timeout
-              #   failureThreshold = container.startup_probe.failure_count_threshold
-              # }
+                    initialDelaySeconds = container.readiness_probe.initial_delay
+                    timeoutSeconds      = container.readiness_probe.timeout
+                    successThreshold    = container.readiness_probe.success_count_threshold
+                    failureThreshold    = container.readiness_probe.failure_count_threshold
+                  } : null
+                ],
+                [
+                  {
+                    type = "Liveness"
+                    httpGet = {
+                      path   = container.liveness_probe.path
+                      port   = var.target_port
+                      scheme = container.liveness_probe.transport
+                      httpHeaders = container.liveness_probe.header != null ? [
+                        {
+                          name  = container.liveness_probe.header.name
+                          value = container.liveness_probe.header.value
+                        }
+                      ] : []
+                    }
+                    initialDelaySeconds = container.liveness_probe.initial_delay
+                    timeoutSeconds      = container.liveness_probe.timeout
+                    failureThreshold    = container.liveness_probe.failure_count_threshold
+                  }
+                ],
+                [
+                  container.startup_probe != null ? {
+                    type = "Startup"
+                    httpGet = {
+                      path   = container.startup_probe.path
+                      port   = var.target_port
+                      scheme = container.startup_probe.transport
+                      httpHeaders = container.startup_probe.header != null ? [
+                        {
+                          name  = container.startup_probe.header.name
+                          value = container.startup_probe.header.value
+                        }
+                      ] : []
+                    }
+                    timeoutSeconds   = container.startup_probe.timeout
+                    failureThreshold = container.startup_probe.failure_count_threshold
+                  } : null
+                ]
+              ) : probe if probe != null
             ]
           }
         ]

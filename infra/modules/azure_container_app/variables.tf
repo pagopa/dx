@@ -188,7 +188,10 @@ variable "autoscaler" {
     http_scalers = optional(list(object({
       name                = string
       concurrent_requests = number,
-    })), [])
+      })), [{
+      name                = "http-scaler"
+      concurrent_requests = 1000
+    }])
 
     custom_scalers = optional(list(object({
       name             = string
@@ -221,7 +224,6 @@ variable "function_settings" {
     subnet_pep_id                            = string
     private_dns_zone_resource_group_id       = string
     action_group_ids                         = optional(set(string), [])
-    concurrent_requests                      = optional(number, 1000)
   })
   default = null
 }
