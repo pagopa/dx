@@ -389,7 +389,10 @@ resource "azapi_resource" "this" {
   }
 
   schema_validation_enabled = false
-  response_export_values    = ["*"]
+  response_export_values = [
+    # "properties.configuration.ingress.fqdn",
+    "*"
+  ]
 
   depends_on = [
     azurerm_private_endpoint.st_blob,

@@ -9,7 +9,7 @@ output "name" {
 }
 
 output "resource_group_name" {
-  value       = try(azurerm_container_app.this[0].resource_group_name, null)
+  value       = try(azurerm_container_app.this[0].resource_group_name, var.resource_group_name)
   description = "The name of the Azure Resource Group where the Container App is deployed."
 }
 
