@@ -21,43 +21,45 @@ run "setup_tests" {
   }
 }
 
+variables {
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    domain          = "modules"
+    app_name        = "test"
+    instance_number = "01"
+  }
+
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Create a function app exposed for test"
+  }
+
+  resource_group_name = run.setup_tests.resource_group_name
+
+  app_settings      = {}
+  slot_app_settings = {}
+
+  health_check_path = "/health"
+}
+
 run "function_app_is_correct_plan" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
-
-    tags  = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create a function app exposed for test"
-    }
-
-    resource_group_name = run.setup_tests.resource_group_name
-    tier                = "m"
-
-    app_settings      = {}
-    slot_app_settings = {}
-
-    health_check_path = "/health"
-
+    use_case = "default"
   }
 
   assert {
-    condition     = azurerm_service_plan.this[0].sku_name == "P0v3"
-    error_message = "The App Service Plan is incorrect, have to be P0v3"
+    condition     = azurerm_service_plan.this[0].sku_name == "P1v3"
+    error_message = "The App Service Plan is incorrect, have to be P1v3"
   }
 
   assert {
@@ -116,37 +118,37 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition = azurerm_storage_account.durable_function == []
+    condition     = azurerm_storage_account.durable_function == []
     error_message = "The Durable Function App Storage Account should not be created"
   }
 
   assert {
-    condition = azurerm_role_assignment.function_storage_blob_data_owner != null
+    condition     = azurerm_role_assignment.function_storage_blob_data_owner != null
     error_message = "Function App must have role assignment to manage blobs in the storage account"
   }
 
   assert {
-    condition = azurerm_role_assignment.function_storage_account_contributor != null
+    condition     = azurerm_role_assignment.function_storage_account_contributor != null
     error_message = "Function App must have role assignment to manage the storage account"
   }
 
   assert {
-    condition = azurerm_role_assignment.function_storage_queue_data_contributor != null
+    condition     = azurerm_role_assignment.function_storage_queue_data_contributor != null
     error_message = "Function App must have role assignment to manage queues in the storage account"
   }
 
   assert {
-    condition = azurerm_role_assignment.staging_function_storage_blob_data_owner != null
+    condition     = azurerm_role_assignment.staging_function_storage_blob_data_owner != null
     error_message = "Function App staging slot must have role assignment to manage blobs in the storage account"
   }
 
   assert {
-    condition = azurerm_role_assignment.staging_function_storage_account_contributor != null
+    condition     = azurerm_role_assignment.staging_function_storage_account_contributor != null
     error_message = "Function App staging slot must have role assignment to manage the storage account"
   }
 
   assert {
-    condition = azurerm_role_assignment.staging_function_storage_queue_data_contributor != null
+    condition     = azurerm_role_assignment.staging_function_storage_queue_data_contributor != null
     error_message = "Function App staging slot must have role assignment to manage queues in the storage account"
   }
 
@@ -160,33 +162,7 @@ run "function_app_with_durable_function" {
   command = plan
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "01"
-    }
-
-    tags  = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app_exposed/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Create a function app exposed for test"
-    }
-
-    resource_group_name = run.setup_tests.resource_group_name
-    tier                = "m"
-
-    app_settings      = {}
-    slot_app_settings = {}
-
-    health_check_path = "/health"
+    use_case = "default"
 
     has_durable_functions = true
   }
@@ -230,4 +206,31 @@ run "function_app_with_durable_function" {
     condition     = azurerm_role_assignment.staging_durable_function_storage_table_data_contributor[0] != null
     error_message = "Function App staging slot must have role assignment to manage tables in the Durable Function storage account"
   }
+}
+
+run "function_app_override_size" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    size     = "P3mv3"
+  }
+
+  assert {
+    condition     = azurerm_service_plan.this[0].sku_name == "P3mv3"
+    error_message = "The Function App Plan is incorrect, have to be P3mv3"
+  }
+}
+
+run "function_app_override_size_fail" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    size     = "B1"
+  }
+
+  expect_failures = [
+    var.size,
+  ]
 }
