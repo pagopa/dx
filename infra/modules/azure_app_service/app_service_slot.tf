@@ -1,5 +1,5 @@
 resource "azurerm_linux_web_app_slot" "this" {
-  count = local.app_service.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   name = local.app_service_slot.name
 

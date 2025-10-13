@@ -6,7 +6,7 @@ import YAML from "yaml";
 
 import { Codemod } from "../../domain/codemod.js";
 import { getLatestCommitShaOrRef } from "./git.js";
-import { updateJSCodeReview } from "./update-code-review.js";
+import { updateJSCodeReviewJob } from "./update-code-review.js";
 import { migrateWorkflow } from "./use-azure-appsvc.js";
 
 type NodePackageManager = {
@@ -99,7 +99,7 @@ async function replacePMOccurrences(): Promise<void> {
       "https://yarnpkg.com/",
       "https://classic.yarnpkg.com/",
       /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) (\S+)\b/g,
-      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b)) /g,
+      /\b(yarn workspace|npm -(\b-workspace\b|\bw\b))\b/g,
       /\b(yarn install --immutable|npm ci)\b/g,
       /\b(yarn -q dlx|npx)\b/g,
       /\b(Yarn|npm)\b/gi,
@@ -108,7 +108,7 @@ async function replacePMOccurrences(): Promise<void> {
     to: [
       "https://pnpm.io/",
       "https://pnpm.io/",
-      "pnpm --filter $1",
+      "pnpm --filter $3",
       "pnpm --filter <package-selector>",
       "pnpm install --frozen-lockfile",
       "pnpm dlx",
@@ -128,7 +128,12 @@ async function updateDXWorkflows(): Promise<void> {
   // Get the latest commit sha from the main branch of the dx repository
   const sha = await getLatestCommitShaOrRef("pagopa", "dx");
   // Update the js_code_review workflow to use the latest commit sha
-  const ignore = await updateJSCodeReview(sha);
+  const results = await replaceInFile({
+    allowEmptyPaths: true,
+    files: [".github/workflows/*.yaml"],
+    processor: updateJSCodeReviewJob(sha),
+  });
+  const ignore = results.filter((r) => !r.hasChanged).map((r) => r.file);
   // Update the legacy deployment workflow to release-azure-appsvc-v1.yaml
   await replaceInFile({
     allowEmptyPaths: true,
@@ -223,6 +228,10 @@ const apply: Codemod["apply"] = async (info) => {
   // Replace yarn and npm occurrences in files and update workflows
   await replacePMOccurrences();
   await updateDXWorkflows();
+
+  // Add pnpm store to .gitignore
+  logger.info("Adding pnpm store to .gitignore...");
+  await fs.appendFile(".gitignore", "\n\n# PNPM\n.pnpm-store");
 
   // Set pnpm as the package manager
   logger.info("Setting pnpm as the package manager...");

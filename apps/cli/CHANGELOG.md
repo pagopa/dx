@@ -1,5 +1,18 @@
 # @pagopa/dx-cli
 
+## 0.8.2
+
+### Patch Changes
+
+- 90ac56c: Fix regex in `use-pnpm` codemod
+
+## 0.8.1
+
+### Patch Changes
+
+- d86e8d6: Add .pnpm-store to .gitignore
+- 6e1ec37: Update `update-code-review` codemod to support the latest version of the workflow
+
 ## 0.8.0
 
 ### Patch Changes

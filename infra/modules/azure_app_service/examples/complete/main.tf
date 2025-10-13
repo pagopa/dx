@@ -24,7 +24,7 @@ resource "azurerm_user_assigned_identity" "example" {
 module "azure_app_service" {
   source              = "../../"
   environment         = local.environment
-  tier                = "l"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
