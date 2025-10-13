@@ -21,7 +21,6 @@
 - [Platform Engineering Patterns for Scalable Software Delivery](https://www.infoq.com/presentations/platform-engineering-patterns-scalability)
 - [Stop Building Internal Tools Nobody Wants: A Platform Engineer’s Guide](https://www.ranthebuilder.cloud/post/platform-engineering-internal-tools-adoption-guide)
 
-
 ### Tech Talks
 
 - [Building a Platform People Actually Use (Sarah Wells)](https://www.youtube.com/watch?v=TELuVQGABnM)
