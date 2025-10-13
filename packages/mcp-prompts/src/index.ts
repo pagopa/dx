@@ -12,7 +12,6 @@ const getPrompts = async (): Promise<CatalogEntry[]> => {
 };
 
 export const promptsCatalog = {
-  version: "1.0.0",
   get prompts() {
     throw new Error("Use getPrompts() instead of promptsCatalog.prompts");
   },

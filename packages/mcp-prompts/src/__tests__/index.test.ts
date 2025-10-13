@@ -86,10 +86,6 @@ describe("mcp-prompts", () => {
   });
 
   describe("promptsCatalog", () => {
-    it("has correct version", () => {
-      expect(promptsModule.promptsCatalog.version).toBe("1.0.0");
-    });
-
     it("throws error when accessing prompts directly", () => {
       expect(() => promptsModule.promptsCatalog.prompts).toThrow(
         "Use getPrompts() instead of promptsCatalog.prompts",

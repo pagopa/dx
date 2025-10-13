@@ -42,6 +42,7 @@
     "build": "tsc",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
+    "start": "tsx src/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",

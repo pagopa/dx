@@ -8,12 +8,14 @@ export interface PromptDefinition {
   name: string;
   description: string;
   arguments: PromptArgument[];
-  load: (args: Record<string, unknown>) => Promise<{ content: { type: "text"; text: string }[] }>;
+  load: (
+    args: Record<string, unknown>,
+  ) => Promise<{ content: { type: "text"; text: string }[] }>;
 }
 
 export interface CatalogEntry {
   id: string;
-  version: string;
+  version?: string;
   category: string;
   enabled: boolean;
   tags: string[];
