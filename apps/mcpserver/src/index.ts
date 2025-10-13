@@ -1,8 +1,8 @@
+import { getEnabledPrompts } from "@pagopa/mcp-prompts";
 import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { serverInstructions } from "./config/server.js";
-import { GenerateTerraformConfigurationPrompt } from "./prompts/GenerateTerraformConfiguration.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 import { logger } from "./utils/logger.js";
@@ -39,7 +39,16 @@ const server = new FastMCP({
 
 logger.debug(`Server instructions: \n\n${serverInstructions}`);
 
-server.addPrompt(GenerateTerraformConfigurationPrompt);
+logger.debug(`Loading enabled prompts...`);
+
+getEnabledPrompts().then((prompts) => {
+  prompts.forEach((prompt) => {
+    logger.debug(`Adding prompt: ${prompt.name}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    server.addPrompt(prompt as any);
+    logger.debug(`Added prompt: ${prompt.name}`);
+  });
+});
 server.addTool(QueryPagoPADXDocumentationTool);
 server.addTool(SearchGitHubCodeTool);
 
