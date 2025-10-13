@@ -1,0 +1,56 @@
+{
+  "name": "savemoney-poc",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "CLI tool to analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "apps/savemoney-poc"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint --fix .",
+    "lint:check": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest run --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "bin": {
+    "dx": "./dist/index.js"
+  },
+  "keywords": [
+    "azure",
+    "cli",
+    "typescript",
+    "finops",
+    "DX"
+  ],
+  "dependencies": {
+    "@azure/arm-monitor": "^7.0.0",
+    "@azure/arm-resources": "^7.0.0",
+    "@azure/identity": "^4.13.0",
+    "commander": "^14.0.0",
+    "js-yaml": "^4.1.0",
+    "table": "^6.9.0"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^18.19.39",
+    "ts-node": "^10.9.2",
+    "tsup": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
