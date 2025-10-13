@@ -16,10 +16,10 @@
 ### Articles
 
 - [Don't get locked up into avoiding lock-in (Gregor Hohpe)](https://martinfowler.com/articles/oss-lockin.html)
-- [Engineering Excellence as a Journey: Platform Engineering, Culture, and Technical Leadership](https://www.infoq.com/podcasts/platform-engineering-culture-technical-leadership/)
-- [Platform Engineering: Evolution, Trends, and Future Impact on Software Delivery](https://www.infoq.com/presentations/platform-engineering-trends/)
+- [Engineering Excellence as a Journey: Platform Engineering, Culture, and Technical Leadership (Ganesh Datta, Shane Hastie)](https://www.infoq.com/podcasts/platform-engineering-culture-technical-leadership/)
+- [Platform Engineering: Evolution, Trends, and Future Impact on Software Delivery (Paula Kennedy)](https://www.infoq.com/presentations/platform-engineering-trends/)
 - [Platform Engineering Patterns for Scalable Software Delivery](https://www.infoq.com/presentations/platform-engineering-patterns-scalability)
-- [Stop Building Internal Tools Nobody Wants: A Platform Engineer’s Guide](https://www.ranthebuilder.cloud/post/platform-engineering-internal-tools-adoption-guide)
+- [Stop Building Internal Tools Nobody Wants: A Platform Engineer’s Guide (Ran Isenberg)](https://www.ranthebuilder.cloud/post/platform-engineering-internal-tools-adoption-guide)
 
 ### Tech Talks
 
