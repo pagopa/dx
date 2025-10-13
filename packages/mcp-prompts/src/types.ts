@@ -1,59 +1,26 @@
-/**
- * Represents a complete catalog entry for an MCP (Model Context Protocol) prompt.
- * This is the main structure that defines how prompts are organized and executed.
- */
-export interface CatalogEntry {
-  /** Category for grouping related prompts (e.g., "terraform", "azure") */
-  category: string;
-  /** Whether this prompt is active and available for use */
-  enabled: boolean;
-  /** Unique identifier for the prompt */
-  id: string;
-  /** Human-readable metadata for documentation and discovery */
-  metadata: {
-    /** Detailed description of what the prompt does */
-    description: string;
-    /** Optional usage examples to help users understand the prompt */
-    examples?: string[];
-    /** Short, user-friendly title */
-    title: string;
-  };
-  /** The actual prompt definition that will be executed */
-  prompt: PromptDefinition;
-  /** Tags for filtering and categorization */
-  tags: string[];
-  /** Version string, automatically injected during loading */
-  version?: string;
-}
-
-/**
- * The core prompt definition that contains the executable logic.
- * This follows the MCP specification for prompt structure.
- */
-export interface PromptDefinition {
-  /** Array of input parameters this prompt accepts */
-  arguments: PromptParameterDefinition[];
-  /** Brief description of the prompt's purpose */
-  description: string;
-  /**
-   * Function that generates the actual prompt content.
-   * @param args - Key-value pairs of arguments passed to the prompt
-   * @returns Promise resolving to MCP-formatted content with text block
-   */
-  load: (args: Record<string, unknown>) => Promise<string>;
-  /** Unique name identifier for the prompt */
+export interface PromptArgument {
   name: string;
-}
-
-/**
- * Defines an input parameter for a prompt (TypeScript version).
- * Used to validate and document what arguments a prompt expects.
- */
-export interface PromptParameterDefinition {
-  /** Human-readable description of what this argument is for */
   description: string;
-  /** Parameter name that will be used in the args object */
-  name: string;
-  /** Whether this argument must be provided */
   required: boolean;
+}
+
+export interface PromptDefinition {
+  name: string;
+  description: string;
+  arguments: PromptArgument[];
+  load: (args: Record<string, unknown>) => Promise<{ content: { type: "text"; text: string }[] }>;
+}
+
+export interface CatalogEntry {
+  id: string;
+  version: string;
+  category: string;
+  enabled: boolean;
+  tags: string[];
+  metadata: {
+    title: string;
+    description: string;
+    examples?: string[];
+  };
+  prompt: PromptDefinition;
 }

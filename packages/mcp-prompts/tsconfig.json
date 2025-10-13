@@ -5,6 +5,9 @@
     "rootDir": "./src",
     "sourceMap": true,
     "declaration": true,
-    "resolveJsonModule": true
-  }
+    "moduleResolution": "bundler",
+    "module": "ESNext"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["tsup.config.ts", "test.ts", "dist"]
 }

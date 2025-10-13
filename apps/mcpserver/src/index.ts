@@ -1,13 +1,10 @@
-import { getLogger } from "@logtape/logtape";
-import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
+import { getEnabledPrompts } from "@pagopa/mcp-prompts";
 import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
 import { serverInstructions } from "./config/server.js";
-import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
-import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 
@@ -53,22 +50,15 @@ logger.debug(`Server instructions: \n\n${serverInstructions}`);
 logger.debug(`Loading enabled prompts...`);
 
 getEnabledPrompts().then((prompts) => {
-  prompts.forEach((catalogEntry) => {
-    logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
-
-    // Apply logging decorator to the prompt
-    const decoratedPrompt = withPromptLogging(
-      catalogEntry.prompt,
-      catalogEntry.id,
-    );
-
-    server.addPrompt(decoratedPrompt);
-    logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
+  prompts.forEach((prompt) => {
+    logger.debug(`Adding prompt: ${prompt.name}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    server.addPrompt(prompt as any);
+    logger.debug(`Added prompt: ${prompt.name}`);
   });
 });
-
-server.addTool(withToolLogging(QueryPagoPADXDocumentationTool));
-server.addTool(withToolLogging(SearchGitHubCodeTool));
+server.addTool(QueryPagoPADXDocumentationTool);
+server.addTool(SearchGitHubCodeTool);
 
 // Starts the server in HTTP Stream mode.
 server.start({

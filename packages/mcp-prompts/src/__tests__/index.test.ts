@@ -1,95 +1,99 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as promptsModule from "../index.js";
+import * as loader from "../prompts/loader.js";
+
+vi.mock("../prompts/loader.js");
 
 describe("mcp-prompts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    promptsModule._resetCache();
   });
 
-  describe("getPrompts", () => {
-    it("loads prompts from Markdown sources", async () => {
-      const result = await promptsModule.getPrompts();
-
-      // Should load Markdown prompts from the default directory
-      expect(result.length).toBeGreaterThan(0);
-
-      // Check that known Markdown prompts are included
-      const expectedPromptIds = [
-        "generate-terraform-configuration",
-        "migrate-terraform-module",
-        "resolve-security-findings",
-      ];
-
-      const foundPrompts = result.filter((p) =>
-        expectedPromptIds.includes(p.id),
-      );
-
-      expect(foundPrompts.length).toBeGreaterThan(0);
-    });
-
-    it("injects version into all prompts", async () => {
-      const result = await promptsModule.getPrompts();
-
-      expect(result.length).toBeGreaterThan(0);
-      result.forEach((prompt) => {
-        expect(prompt.version).toBeDefined();
-        expect(typeof prompt.version).toBe("string");
-      });
-    });
-
-    it("loads prompts with proper structure", async () => {
-      const result = await promptsModule.getPrompts();
-
-      expect(result.length).toBeGreaterThan(0);
-
-      // Check that prompts have the expected structure
-      result.forEach((prompt) => {
-        expect(prompt).toHaveProperty("id");
-        expect(prompt).toHaveProperty("category");
-        expect(prompt).toHaveProperty("enabled");
-        expect(prompt).toHaveProperty("metadata");
-        expect(prompt).toHaveProperty("prompt");
-        expect(prompt).toHaveProperty("tags");
-        expect(prompt).toHaveProperty("version");
-      });
-    });
+  it("Call loader.loadPromptsand return value", async () => {
+    const mockPrompts = [
+      { id: "test", name: "Test", enabled: true, prompt: { name: "Test" } },
+    ];
+    vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
+    const result = await promptsModule.getEnabledPrompts();
+    expect(loader.loadPrompts).toHaveBeenCalled();
+    expect(result).toEqual([{ name: "Test" }]);
   });
 
   describe("getEnabledPrompts", () => {
     it("returns only enabled prompts", async () => {
+      const mockPrompts = [
+        {
+          enabled: true,
+          id: "enabled-prompt",
+          prompt: { name: "enabled" },
+        },
+        {
+          enabled: false,
+          id: "disabled-prompt",
+          prompt: { name: "disabled" },
+        },
+      ];
+
+      vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
+
       const result = await promptsModule.getEnabledPrompts();
 
-      expect(result.length).toBeGreaterThan(0);
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe("enabled");
+    });
+  });
 
-      // All should be enabled
-      result.forEach((prompt) => {
-        expect(prompt.enabled).toBe(true);
-      });
+  describe("getPromptById", () => {
+    it("returns prompt when found", async () => {
+      const mockPrompts = [
+        { id: "test-prompt", name: "Test Prompt" },
+        { id: "other-prompt", name: "Other Prompt" },
+      ];
+
+      vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
+
+      const result = await promptsModule.getPromptById("test-prompt");
+
+      expect(result).toEqual({ id: "test-prompt", name: "Test Prompt" });
     });
 
-    it("includes version in enabled prompts", async () => {
-      const result = await promptsModule.getEnabledPrompts();
+    it("returns undefined when not found", async () => {
+      vi.mocked(loader.loadPrompts).mockResolvedValue([]);
 
-      expect(result.length).toBeGreaterThan(0);
-      result.forEach((prompt) => {
-        expect(prompt.version).toBeDefined();
-        expect(typeof prompt.version).toBe("string");
-      });
+      const result = await promptsModule.getPromptById("nonexistent");
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe("getPromptsByCategory", () => {
+    it("returns enabled prompts from category", async () => {
+      const mockPrompts = [
+        { category: "terraform", enabled: true, id: "tf1" },
+        { category: "terraform", enabled: false, id: "tf2" },
+        { category: "azure", enabled: true, id: "az1" },
+      ];
+
+      vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
+
+      const result = await promptsModule.getPromptsByCategory("terraform");
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe("tf1");
+    });
+  });
+
+  describe("promptsCatalog", () => {
+    it("has correct version", () => {
+      expect(promptsModule.promptsCatalog.version).toBe("1.0.0");
     });
 
-    it("filters out disabled prompts", async () => {
-      const allPrompts = await promptsModule.getPrompts();
-      const enabledPrompts = await promptsModule.getEnabledPrompts();
-
-      // If there are any disabled prompts, enabled should be fewer than total
-      const disabledCount = allPrompts.filter((p) => !p.enabled).length;
-
-      if (disabledCount > 0) {
-        expect(enabledPrompts.length).toBeLessThan(allPrompts.length);
-      } else {
-        expect(enabledPrompts.length).toBe(allPrompts.length);
-      }
+    it("throws error when accessing prompts directly", () => {
+      expect(() => promptsModule.promptsCatalog.prompts).toThrow(
+        "Use getPrompts() instead of promptsCatalog.prompts",
+      );
     });
   });
 });

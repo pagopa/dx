@@ -22,8 +22,7 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@logtape/logtape": "^1.1.1",
     "@octokit/rest": "^22.0.0",
-    "@pagopa/dx-mcpprompts": "workspace:^",
-    "@pagopa/azure-tracing": "workspace:^",
+    "@pagopa/mcp-prompts": "workspace:^",
     "axios": "^1.12.2",
     "fastmcp": "^3.19.1",
     "zod": "^3.25.76"
