@@ -14,6 +14,15 @@ logger.info(
 
 export const region = process.env.AWS_REGION || "eu-central-1";
 
+// List of AWS regions that support reranking
+export const rerankingSupportedRegions = [
+  "ap-northeast-1",
+  "ca-central-1",
+  "eu-central-1",
+  "us-east-1",
+  "us-west-2",
+];
+
 let kbRuntimeClient: BedrockAgentRuntimeClient;
 
 try {

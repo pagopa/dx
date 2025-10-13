@@ -5,6 +5,7 @@ import {
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 
+import { rerankingSupportedRegions } from "../config/aws.js";
 import { logger } from "../utils/logger.js";
 
 export type QueryKnowledgeBasesOutput = {
@@ -17,12 +18,15 @@ type RerankingModelName = "AMAZON" | "COHERE";
 
 /**
  * Queries a Bedrock knowledge base with a given query, handling reranking and result serialization.
+ * This method interacts with the AWS Bedrock service to retrieve knowledge base results.
+ * It supports reranking of results in specific AWS regions using predefined models.
+ *
  * @param knowledgeBaseId The ID of the knowledge base to query.
  * @param query The natural language query.
  * @param kbAgentClient The Bedrock Agent Runtime client.
- * @param numberOfResults The maximum number of results to return.
- * @param reranking Whether to enable reranking of the results.
- * @param rerankingModelName The reranking model to use.
+ * @param numberOfResults The maximum number of results to return (default: 5).
+ * @param reranking Whether to enable reranking of the results (default: false).
+ * @param rerankingModelName The reranking model to use (default: AMAZON).
  * @returns A serialized string of the query results.
  */
 export async function queryKnowledgeBase(
@@ -36,16 +40,7 @@ export async function queryKnowledgeBase(
   const clientRegion = await kbAgentClient.config.region();
   let rerankingEnabled = reranking;
   // Reranking is only supported in specific AWS regions.
-  if (
-    reranking &&
-    ![
-      "ap-northeast-1",
-      "ca-central-1",
-      "eu-central-1",
-      "us-east-1",
-      "us-west-2",
-    ].includes(clientRegion)
-  ) {
+  if (reranking && !rerankingSupportedRegions.includes(clientRegion)) {
     logger.warn(`Reranking is not supported in region ${clientRegion}`);
     rerankingEnabled = false;
   }
@@ -99,6 +94,9 @@ export async function queryKnowledgeBase(
 
 /**
  * Resolves an S3 location from a knowledge base result to a public website URL.
+ * This method converts S3 URIs to publicly accessible URLs based on specific rules.
+ * If the location is not an S3 URI, it returns the original location.
+ *
  * @param location The original location object from the retrieval result.
  * @returns A new location object with a `WEB` type and a URL, or the original location if no conversion is needed.
  */
@@ -155,8 +153,27 @@ export function resolveToWebsiteUrl(
 
 /**
  * Serializes an array of knowledge base query results into a formatted string.
- * @param results An array of query results.
- * @returns A formatted string containing the content and location of each result.
+ * This method formats the results for better readability, including content, location, and score.
+ *
+ * Example:
+ * Input:
+ * ```json
+ * [
+ *   { "content": "Result 1 content", "location": { "webLocation": { "url": "https://example.com" } }, "score": 0.95 },
+ *   { "content": "Result 2 content", "location": null, "score": 0.85 }
+ * ]
+ * ```
+ *
+ * Output:
+ * ```
+ * Result 1 (Score: 0.9500):
+ * Result 1 content
+ * Location: https://example.com
+ *
+ * Result 2 (Score: 0.8500):
+ * Result 2 content
+ * Location: undefined
+ * ```
  */
 function serializeResults(results: QueryKnowledgeBasesOutput[]): string {
   return results
