@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-vi.mock("../../utils/logger", () => ({
-  logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  },
-}));
+
+import { logger } from "../../utils/logger.js";
 import * as githubAuth from "../github.js";
 
 describe("verifyGithubUser", () => {
@@ -18,8 +13,13 @@ describe("verifyGithubUser", () => {
     vi.mock("axios", () => ({
       default: { get: vi.fn().mockRejectedValue(new Error("fail")) },
     }));
+    const errorLog = vi.spyOn(logger, "error");
     const result = await githubAuth.verifyGithubUser("token");
     expect(result).toBe(false);
+    expect(errorLog).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Error),
+    );
   });
 
   it("returns false if user is not member of required org", async () => {
