@@ -17,29 +17,57 @@ import { pinoLambdaDestination } from "pino-lambda";
 const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 /**
- * Configured logger instance that adapts to the runtime environment.
- *
- * Configuration:
- * - Log level: Controlled by LOG_LEVEL env var, defaults to "info"
- * - Lambda mode: Structured JSON output for CloudWatch integration
- * - Development mode: Pretty-printed output with colors and formatting
- *
- * Usage: logger.info("message"), logger.error(error, "context")
+ * Default logger instance that adapts to the runtime environment.
+ * Used as fallback when no external logger is provided.
  */
-export const logger = pino(
+const defaultLogger = pino(
   {
-    // Allow runtime log level control via environment variable
     level: process.env.LOG_LEVEL || "info",
-    // Conditional configuration based on environment
     ...(isLambda
-      ? {} // Lambda: Use default structured JSON format
+      ? {}
       : {
-          // Development: Use pretty printing for better readability
           transport: {
             target: "pino-pretty",
           },
         }),
   },
-  // Lambda destination optimizes output for CloudWatch log parsing
   isLambda ? pinoLambdaDestination() : undefined,
 );
+
+/**
+ * Current logger instance - can be overridden by parent modules.
+ */
+let currentLogger = defaultLogger;
+
+/**
+ * Silent logger that discards all log messages.
+ * Useful for environments where logging should be completely disabled.
+ */
+export const silentLogger = {
+  debug: () => void 0,
+  error: () => void 0,
+  fatal: () => void 0,
+  info: () => void 0,
+  trace: () => void 0,
+  warn: () => void 0,
+} as typeof defaultLogger;
+
+/**
+ * Sets a custom logger instance for the package.
+ * Allows parent modules to inject their own logger configuration.
+ *
+ * @param customLogger - Logger instance to use (must have info, debug, error methods)
+ */
+export const setLogger = (customLogger: typeof defaultLogger) => {
+  currentLogger = customLogger;
+};
+
+/**
+ * Gets the current logger instance.
+ * Returns either the injected logger or the default one.
+ */
+export const logger = new Proxy(defaultLogger, {
+  get(target, prop) {
+    return currentLogger[prop as keyof typeof currentLogger];
+  },
+});
