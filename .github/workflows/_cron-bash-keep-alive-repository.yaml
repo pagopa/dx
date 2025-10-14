@@ -28,24 +28,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
 
-      - name: Calculate days since last commit
-        id: commit_date
-        run: |
-          LAST_COMMIT_DATE=$(git log -1 --format=%ct)
-          echo "Last commit date: $LAST_COMMIT_DATE"
-
-          CURRENT_DATE=$(date +%s)
-          echo "Current date: $CURRENT_DATE"
-
-          # Calculate how many days have passed since the last commit
-          DIFFERENCE=$(( ($CURRENT_DATE - $LAST_COMMIT_DATE) / 86400 ))
-          echo "Days since last commit: $DIFFERENCE"
-
-          echo "days_since_commit=$DIFFERENCE" >> $GITHUB_ENV
-
       - name: Keep Alive
-        # If 55 days have passed then execute the action which makes an empty push
-        if: steps.commit_date.outputs.days_since_commit >= '55' || inputs.bypass
-        uses: pagopa/dx/.github/actions/keep-alive@main
+        uses: pagopa/dx/actions/keep-alive@main
         with:
-          bot_token: ${{ secrets.BOT_GH_TOKEN }}
+          bypass: ${{ github.event.inputs.bypass || 'false' }}
+        env:
+          GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
