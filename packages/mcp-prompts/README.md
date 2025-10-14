@@ -29,7 +29,7 @@ const terraformPrompts = await getPromptsByCategory("terraform");
 
 ## Adding Prompts
 
-Create a new TypeScript file in `src/prompts/` directory. The loader automatically discovers and imports all prompt files:
+1. Create a new TypeScript file in `src/prompts/` directory:
 
 ```typescript
 // src/prompts/my-new-prompt.ts
@@ -67,9 +67,13 @@ export const myNewPrompt: CatalogEntry = {
 };
 ```
 
-### Key Points:
+2. Add the prompt to `src/prompts/index.ts`:
 
-- **File-based discovery**: Each prompt is a separate file in `src/prompts/`
-- **Automatic loading**: The loader scans for exported objects that conform to the `CatalogEntry` interface
-- **Version injection**: Package version is automatically added to each prompt
-- **MCP format**: The `load` function must return MCP-compatible content structure
+```typescript
+import { myNewPrompt } from "./my-new-prompt.js";
+
+export const prompts: CatalogEntry[] = [
+  generateTerraformConfiguration,
+  myNewPrompt, // Add your new prompt here
+];
+```
