@@ -19,7 +19,7 @@ for input_file in "$TEST_DIR"/*.input; do
   TEST_COUNT=$((TEST_COUNT + 1))
 
   # Execute script and save the result in tmp file
-  cat "$input_file" | "$SCRIPT_TO_TEST" --plan-file "test.txt" --sensitive-keys "hidden-link" --test > "$TMP_OUTPUT_FILE"
+  cat "$input_file" | "$SCRIPT_TO_TEST" --plan-file "test.txt" --sensitive-keys "hidden-link, test-sensible-key" --test > "$TMP_OUTPUT_FILE"
 
   # Check diff between tmp file and expected result file
   if ! diff -u "$TMP_OUTPUT_FILE" "$expected_file"; then
