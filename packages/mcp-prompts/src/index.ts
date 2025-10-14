@@ -15,21 +15,27 @@ export * from "./types.js";
 export { setLogger } from "./utils/logger.js";
 import type { CatalogEntry } from "./types.js";
 
-import { loadPrompts } from "./prompts/loader.js";
+import { prompts as allPrompts } from "./prompts/index.js";
 
 // In-memory cache to avoid re-scanning the filesystem on every request
 // This is critical for performance in serverless environments
 let _prompts: CatalogEntry[] | null = null;
 
 /**
- * Gets all prompts with lazy loading and caching.
- * First call scans the filesystem, subsequent calls return cached results.
+ * Gets all prompts with version injection and caching.
  *
  * @returns Promise<CatalogEntry[]> - Array of all available prompts
  */
 const getPrompts = async (): Promise<CatalogEntry[]> => {
   if (_prompts === null) {
-    _prompts = await loadPrompts();
+    // Get package version for injection
+    const packageJson = await import("../package.json", {
+      with: { type: "json" },
+    });
+    const version = packageJson.default.version;
+
+    // Inject version into all prompts
+    _prompts = allPrompts.map((prompt) => ({ ...prompt, version }));
   }
   return _prompts;
 };
