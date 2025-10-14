@@ -70,9 +70,9 @@ SED_EXPRESSIONS=()
 for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
   trimmed_key=$(echo "$key" | xargs)
   if [[ -n "$trimmed_key" ]]; then
-    # Matches an optional-quoted key followed by : or =, then a quoted value;
-    # it captures the left side and replaces the value with "[REDACTED]" (non-greedy match, case-insensitive).
-    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}\"?\s*[:=]\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
+    # Matches an optional-quoted key followed by =, then a quoted value;
+    # it captures the left side, check if contain the sensitive key and replaces the value with "[REDACTED]" (case-insensitive).
+    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}[^\"]*\"?\s*=\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
   fi
 done
 
