@@ -1,5 +1,23 @@
+/**
+ * Terraform Configuration Generator Prompt
+ *
+ * This prompt provides guidance for generating Terraform configurations that follow
+ * PagoPA DX best practices and conventions. It acts as an intelligent assistant
+ * that guides users through the process of creating infrastructure code.
+ *
+ * Key features:
+ * - Integrates with PagoPA DX documentation via QueryPagoPADXDocumentation tool
+ * - Promotes use of standardized DX modules from pagopa-dx namespace
+ * - Enforces proper folder structure and naming conventions
+ * - Provides contextual guidance based on user requirements
+ */
+
 import type { CatalogEntry } from "../types.js";
 
+/**
+ * Complete catalog entry for the Terraform configuration generator.
+ * This follows the MCP prompt specification and includes all necessary metadata.
+ */
 export const generateTerraformConfiguration: CatalogEntry = {
   category: "terraform",
   enabled: true,
@@ -24,6 +42,19 @@ export const generateTerraformConfiguration: CatalogEntry = {
     ],
     description:
       "Generates a Terraform configuration following PagoPA DX best practices.",
+    /**
+     * Generates the actual prompt content based on user requirements.
+     *
+     * This function creates a structured prompt that:
+     * 1. Acknowledges the user's specific requirements
+     * 2. Provides step-by-step guidance for using DX tools
+     * 3. Emphasizes best practices and conventions
+     * 4. Returns formatted text content for the MCP client
+     *
+     * @param args - Object containing optional requirements string
+     * @param args.requirements - User's specific infrastructure requirements
+     * @returns Promise resolving to formatted guidance text
+     */
     load: async (args: {
       requirements?: string;
     }) => `To generate a Terraform configuration for ${args.requirements || "any requirement"}, you must follow the PagoPA DX best practices.
