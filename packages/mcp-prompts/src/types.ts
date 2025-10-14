@@ -51,11 +51,9 @@ export interface PromptDefinition {
   /**
    * Function that generates the actual prompt content.
    * @param args - Key-value pairs of arguments passed to the prompt
-   * @returns Promise resolving to MCP-formatted content with text blocks
+   * @returns Promise resolving to MCP-formatted content with text block
    */
-  load: (args: Record<string, unknown>) => Promise<{
-    content: { text: string; type: "text" }[];
-  }>;
+  load: (args: Record<string, unknown>) => Promise<string>;
   /** Unique name identifier for the prompt */
   name: string;
 }

@@ -11,37 +11,65 @@ pnpm add @pagopa/dx-mcpprompts
 ## Usage
 
 ```typescript
-import { promptsCatalog, getEnabledPrompts } from "@pagopa/dx-mcpprompts";
+import {
+  getEnabledPrompts,
+  getPromptById,
+  getPromptsByCategory,
+} from "@pagopa/dx-mcpprompts";
 
 // Get all enabled prompts
-const prompts = getEnabledPrompts();
+const prompts = await getEnabledPrompts();
 
-// Access catalog metadata
-console.log(promptsCatalog.version);
-console.log(promptsCatalog.prompts);
+// Get specific prompt by ID
+const prompt = await getPromptById("generate-terraform-configuration");
+
+// Get prompts by category
+const terraformPrompts = await getPromptsByCategory("terraform");
 ```
 
 ## Adding Prompts
 
-Add new entries to the `prompts` array in `src/index.ts`:
+Create a new TypeScript file in `src/prompts/` directory. The loader automatically discovers and imports all prompt files:
 
 ```typescript
-{
-  id: "your-prompt-id",
-  version: "1.0.0",
+// src/prompts/my-new-prompt.ts
+import type { CatalogEntry } from "../types.js";
+
+export const myNewPrompt: CatalogEntry = {
+  id: "my-new-prompt",
   category: "category-name",
   enabled: true,
   tags: ["tag1", "tag2"],
   metadata: {
-    title: "Your Prompt Title",
-    description: "Brief description",
-    examples: ["Example usage"],
+    title: "My New Prompt",
+    description: "Brief description of what this prompt does",
+    examples: ["Example usage 1", "Example usage 2"],
   },
   prompt: {
-    name: "your-prompt-id",
+    name: "my-new-prompt",
     description: "Prompt description",
-    arguments: [],
-    load: async () => "Your prompt template",
+    arguments: [
+      {
+        name: "input",
+        description: "Input parameter description",
+        required: false,
+      },
+    ],
+    load: async (args: { input?: string }) => ({
+      content: [
+        {
+          type: "text" as const,
+          text: `Your prompt content here: ${args.input || "default"}`,
+        },
+      ],
+    }),
   },
-}
+};
 ```
+
+### Key Points:
+
+- **File-based discovery**: Each prompt is a separate file in `src/prompts/`
+- **Automatic loading**: The loader scans for exported objects that conform to the `CatalogEntry` interface
+- **Version injection**: Package version is automatically added to each prompt
+- **MCP format**: The `load` function must return MCP-compatible content structure
