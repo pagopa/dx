@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 import type { CatalogEntry } from "../types.js";
 
-import { logger } from "../utils/logger.js";
+// import { logger } from "../utils/logger.js";
 
 /**
  * Type guard to validate if an object conforms to the CatalogEntry interface.
@@ -72,7 +72,7 @@ const getPackageVersion = async (): Promise<string> => {
       );
       packageVersion = packageJson.version;
     } catch (e) {
-      logger.error(e, "Failed to read package.json version");
+      // logger.error(e, "Failed to read package.json version");
       packageVersion = "0.0.0";
     }
   }
@@ -99,18 +99,18 @@ const getPackageVersion = async (): Promise<string> => {
 export const loadPrompts = async (): Promise<CatalogEntry[]> => {
   const prompts: CatalogEntry[] = [];
   const promptsDir = `${__dirname}/prompts/`;
-  logger.debug(`Loading prompts from ${promptsDir}`);
+  // logger.debug(`Loading prompts from ${promptsDir}`);
   const version = await getPackageVersion();
-  logger.debug(`Package version: ${version}`);
+  // logger.debug(`Package version: ${version}`);
 
   return new Promise((resolve) => {
     readdir(promptsDir, async (err, files) => {
-      logger.debug(
-        `Found ${files.length} files in prompts directory\n\n${files.join("\n")}`,
-      );
+      // logger.debug(
+      //   `Found ${files.length} files in prompts directory\n\n${files.join("\n")}`,
+      // );
 
       if (err) {
-        logger.error(err, "Error reading prompts directory");
+        // logger.error(err, "Error reading prompts directory");
         resolve([]);
         return;
       }
@@ -130,7 +130,7 @@ export const loadPrompts = async (): Promise<CatalogEntry[]> => {
                 const value = module[key];
                 // Validate if export conforms to CatalogEntry interface
                 if (isCatalogEntry(value)) {
-                  logger.info(`Loaded prompt: ${value.id}`);
+                  // logger.info(`Loaded prompt: ${value.id}`);
                   // Inject version and add to catalog
                   prompts.push({ ...value, version } as CatalogEntry);
                 }
@@ -139,15 +139,15 @@ export const loadPrompts = async (): Promise<CatalogEntry[]> => {
           } catch (e) {
             // Log import failures but continue processing other files
             // This allows the system to be resilient to individual file issues
-            logger.debug(
-              e,
-              `Not loading prompt from file ${file} cause it is not a prompt module\n\n${e}`,
-            );
+            // logger.debug(
+            //   e,
+            //   `Not loading prompt from file ${file} cause it is not a prompt module\n\n${e}`,
+            // );
           }
         }
       }
 
-      logger.debug(`Loaded ${prompts.length} prompts total`);
+      // logger.debug(`Loaded ${prompts.length} prompts total`);
       resolve(prompts);
     });
   });
