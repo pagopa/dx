@@ -8,43 +8,23 @@ locals {
     name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
-  sku_mapping = {
-    "xs" = {
-      cpu    = 0.25
-      memory = "0.5Gi"
-      replicas = {
-        min = 0
-        max = 1
-      }
-    }
-    "s" = {
-      cpu    = 0.5
-      memory = "1Gi"
-      replicas = {
-        min = 1
-        max = 1
-      }
-    }
-    "m" = {
+
+  use_cases = {
+    default = {
       cpu    = 1.25
       memory = "2.5Gi"
       replicas = {
         min = 1
-        max = 2
-      }
-    }
-    "l" = {
-      cpu    = 2
-      memory = "4Gi"
-      replicas = {
-        min = 2
-        max = 4
+        max = 8
       }
     }
   }
 
-  sku = lookup(local.sku_mapping, var.tier, null)
+  use_case_features = local.use_cases[var.use_case]
 
-  replica_minimum = try(var.autoscaler.replicas.minimum, local.sku.replicas.min)
-  replica_maximum = try(var.autoscaler.replicas.maximum, local.sku.replicas.max)
+  cpu_size    = var.size != null ? var.size.cpu : local.use_case_features.cpu
+  memory_size = var.size != null ? var.size.memory : local.use_case_features.memory
+
+  replica_minimum = try(var.autoscaler.replicas.minimum, local.use_case_features.replicas.min)
+  replica_maximum = try(var.autoscaler.replicas.maximum, local.use_case_features.replicas.max)
 }
