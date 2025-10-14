@@ -20,6 +20,30 @@ import type { CatalogEntry } from "../types.js";
 
 import { logger } from "../utils/logger.js";
 
+/**
+ * Type guard to validate if an object conforms to the CatalogEntry interface.
+ * Performs runtime validation of all required properties and their types.
+ *
+ * @param obj - Object to validate
+ * @returns boolean - True if object is a valid CatalogEntry
+ */
+const isCatalogEntry = (obj: unknown): obj is CatalogEntry => {
+  if (!obj || typeof obj !== "object") return false;
+
+  const entry = obj as Record<string, unknown>;
+
+  return (
+    typeof entry.id === "string" &&
+    typeof entry.category === "string" &&
+    typeof entry.enabled === "boolean" &&
+    Array.isArray(entry.tags) &&
+    typeof entry.metadata === "object" &&
+    entry.metadata !== null &&
+    typeof entry.prompt === "object" &&
+    entry.prompt !== null
+  );
+};
+
 // Convert import.meta.url to __dirname equivalent for ESM compatibility
 // This is necessary because ESM doesn't provide __dirname by default
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -104,8 +128,8 @@ export const loadPrompts = async (): Promise<CatalogEntry[]> => {
               // Filter out inherited properties from prototype chain
               if (Object.prototype.hasOwnProperty.call(module, key)) {
                 const value = module[key];
-                // Check if export looks like a prompt definition (has 'id' property)
-                if (value && typeof value === "object" && "id" in value) {
+                // Validate if export conforms to CatalogEntry interface
+                if (isCatalogEntry(value)) {
                   logger.info(`Loaded prompt: ${value.id}`);
                   // Inject version and add to catalog
                   prompts.push({ ...value, version } as CatalogEntry);
