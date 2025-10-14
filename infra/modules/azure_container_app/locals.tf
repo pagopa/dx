@@ -15,7 +15,7 @@ locals {
       memory = "2.5Gi"
       replicas = {
         min = 1
-        max = 2
+        max = 8
       }
     }
   }

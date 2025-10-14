@@ -18,7 +18,7 @@ This Terraform module deploys an Azure Container App in a provided Azure Contain
 
 | Tier    | Description                                                    | CPU   | Memory | Replicas (Min-Max) |
 |---------|----------------------------------------------------------------|-------|--------|--------------------|
-| default | Low-load production environments.                              | 1.25  | 2.5Gi  | 1-2                |
+| default | Low-load production environments.                              | 1.25  | 2.5Gi  | 1-8                |
 
 ### Allowed Sizes
 
