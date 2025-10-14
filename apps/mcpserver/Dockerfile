@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:slim AS base
+FROM public.ecr.aws/docker/library/node:slim@sha256:c0eadb278e6b0b608681b359291592692979133567710eaa703d6f989f33c6c1 AS base
 
 # 1. Enable pnpm
 RUN corepack enable
@@ -23,11 +23,11 @@ RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
 
 
 # --- Final Image ---
-FROM public.ecr.aws/docker/library/node:slim
+FROM public.ecr.aws/docker/library/node:slim@sha256:c0eadb278e6b0b608681b359291592692979133567710eaa703d6f989f33c6c1
 WORKDIR /app
 
 # Copy the AWS Lambda Adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1@sha256:46d6625e68cbbdd2efab4a20245977664513f13ffef47915b000d431adcea0b4 /lambda-adapter /opt/extensions/lambda-adapter
 
 # Copy the pruned production-ready files from the build stage
 COPY --from=base /app/deploy .
