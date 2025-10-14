@@ -161,73 +161,55 @@ jobs:
           key: ${{ steps.cache-key.outputs.cache-key }}
 
       - name: Set Terraform Refresh Flag
+        id: set-refresh-flag
         if: github.event_name == 'pull_request'
         working-directory: ${{ steps.directory.outputs.dir }}
         env:
           CACHE_HIT: ${{ steps.tfplan-pr-cache.outputs.cache-hit }}
         run: |
           if [ "$CACHE_HIT" == "true" ]; then
-            echo "TF_PLAN_REFRESH_FLAG=-refresh=false -lock=false" >> $GITHUB_ENV
+            echo "disable_tf_plan_refresh=true" >> $GITHUB_OUTPUT
             echo "::notice::State will NOT be refreshed"
           else
-            echo "TF_PLAN_REFRESH_FLAG=" >> $GITHUB_ENV
+            echo "disable_tf_plan_refresh=false" >> $GITHUB_OUTPUT
             echo "::notice::State will be refreshed"
 
             echo "$(date)" > ./.pr_plan_marker
           fi
 
-      # Run Terraform Plan
-      # The plan output is saved in a file and then processed to remove unnecessary lines
-      # The step never fails but the result is checked in the next step
-      # This is because we want to post the plan output in the PR even if the plan fails
       - name: Terraform Plan
         id: plan
+        uses: pagopa/dx/actions/filter-terraform-plan@main
+        with:
+          base-path: ${{ steps.directory.outputs.dir }}
+          sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
+          no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
+
+      - name: Check Plan length
+        id: check-length
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          terraform plan \
-            -lock-timeout=120s \
-            -input=false \
-            -no-color \
-            $TF_PLAN_REFRESH_FLAG \
-            -out=plan.out 2>&1 | \
-            grep -v "hidden-link:" | \
-            tee tf_plan_stdout.txt
-
-          terraform show -no-color plan.out > full_plan.txt
-
-          # Extracts only the diff section from the Plan by skipping everything before the resource changes,
-          # and filters out non-essential log lines like state refreshes and reads.
-          if [ -s full_plan.txt ]; then
-            sed -n '/^  #/,$p' full_plan.txt | grep -Ev "hidden-link:|Refreshing state|state lock|Reading|Read" > filtered_plan.txt || echo "No changes detected." > filtered_plan.txt
-          else
-            echo "No plan output available." > filtered_plan.txt
-          fi
-
-          # The summary with number of resources to be added, changed, or destroyed (will be used in case the plan output is too long)
-          SUMMARY_LINE=$(grep -E "^Plan: [0-9]+ to (add|change|destroy|import)" tf_plan_stdout.txt || echo "No changes.")
-
           # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
-          if [ "$(wc -c < filtered_plan.txt)" -gt 60000 ]; then
+          if [ "$(wc -c < ${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"})" -gt 60000 ]; then
             echo "${SUMMARY_LINE}" > plan_output.txt
             echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT
           else
-            cat filtered_plan.txt > plan_output.txt
+            cat "${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"}" > plan_output.txt
             echo "COMPLETE_PLAN=true" >> $GITHUB_OUTPUT
           fi
-
-          # Error detection based on tf_plan_stdout.txt content
-          if grep -q "::error::Terraform exited with code" tf_plan_stdout.txt; then
-            echo "failed"
-            exit 1
-          fi
+        env:
+          SUMMARY_LINE: ${{ steps.plan.outputs.summary_line }}
+          PLAN_FILE_PATH: ${{ steps.plan.outputs.filtered_plan_path }}
+          WORKING_DIRECTORY: ${{ steps.directory.outputs.dir }}
 
       - name: Set Plan Output
         id: set-plan-output
+        if: always()
         env:
           WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
           PLAN_OUTCOME: ${{ steps.plan.outcome }}
-          COMPLETE_PLAN: ${{ steps.plan.outputs.COMPLETE_PLAN }}
+          COMPLETE_PLAN: ${{ steps.check-length.outputs.COMPLETE_PLAN }}
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
@@ -235,12 +217,16 @@ jobs:
           echo "<summary>Show Plan</summary>" >> message_body.txt
           echo "" >> message_body.txt
 
-          echo "\`\`\`hcl" >> message_body.txt
-          cat plan_output.txt >> message_body.txt
-          echo "\`\`\`" >> message_body.txt
+          if [ $PLAN_OUTCOME != 'success' ]; then
+            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          else
+            echo "\`\`\`hcl" >> message_body.txt
+            cat plan_output.txt >> message_body.txt
+            echo "\`\`\`" >> message_body.txt
 
-          if [ $COMPLETE_PLAN == 'false' ]; then
-            echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            if [ $COMPLETE_PLAN == 'false' ]; then
+              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            fi
           fi
 
           echo "" >> message_body.txt

@@ -4,19 +4,7 @@ import YAML from "yaml";
 
 import { Codemod } from "../../domain/codemod.js";
 import { getLatestCommitShaOrRef } from "./git.js";
-
-const isChildOf = (
-  path: Parameters<YAML.visitorFn<unknown>>[2],
-  key: string,
-) => {
-  const ancestor = path.at(-1);
-  return (
-    YAML.isPair(ancestor) &&
-    YAML.isScalar(ancestor.key) &&
-    typeof ancestor.key.value === "string" &&
-    ancestor.key.value === key
-  );
-};
+import { isChildOf } from "./yaml.js";
 
 export const migrateWorkflow =
   (sha: string) => (workflow: string, filename: string) => {
@@ -50,6 +38,11 @@ export const migrateWorkflow =
           ) {
             logger.debug("Adding disable_auto_staging_deploy");
             map.addIn(["with", "disable_auto_staging_deploy"], true);
+            map.set("permissions", {
+              attestations: "write",
+              contents: "read",
+              "id-token": "write",
+            });
             updated = true;
             return undefined;
           }

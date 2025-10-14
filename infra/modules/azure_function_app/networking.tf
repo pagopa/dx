@@ -180,7 +180,7 @@ resource "azurerm_private_endpoint" "function_sites" {
 }
 
 resource "azurerm_private_endpoint" "staging_function_sites" {
-  count = local.function_app.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   name                = local.function_app.pep_sites_staging
   location            = var.environment.location

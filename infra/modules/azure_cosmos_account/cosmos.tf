@@ -7,6 +7,7 @@ resource "azurerm_cosmosdb_account" "this" {
   automatic_failover_enabled    = true
   key_vault_key_id              = var.customer_managed_key.enabled ? var.customer_managed_key.key_vault_key_id : null
   public_network_access_enabled = var.force_public_network_access_enabled
+  local_authentication_disabled = true
 
   geo_location {
     location          = local.primary_location

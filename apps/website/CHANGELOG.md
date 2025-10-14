@@ -1,5 +1,18 @@
 # docs
 
+## 0.9.0
+
+### Minor Changes
+
+- 0d8e640: Added examples before / after DX in blog post
+
+## 0.8.5
+
+### Patch Changes
+
+- 1619aef: Update navbar items and enhance blog title styling
+- 88596b6: Refactor docs for Azure Static Web Apps
+
 ## 0.8.4
 
 ### Patch Changes
