@@ -1,13 +1,15 @@
 import { readdir, readFile } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import type { CatalogEntry } from "../types.js";
+
 import { logger } from "../utils/logger.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJsonPath = join(__dirname, "../../package.json");
 
-let packageVersion: string = "unknown"; // Default version if reading fails
+let packageVersion = "unknown"; // Default version if reading fails
 
 const getPackageVersion = async (): Promise<string> => {
   if (packageVersion === "unknown") {
@@ -51,10 +53,12 @@ export const loadPrompts = async (): Promise<CatalogEntry[]> => {
           try {
             const module = await import(`file://${join(promptsDir, file)}`);
             for (const key in module) {
-              const value = module[key];
-              if (value && typeof value === "object" && "id" in value) {
-                logger.info(`Loaded prompt: ${value.id}`);
-                prompts.push({ ...value, version } as CatalogEntry);
+              if (Object.prototype.hasOwnProperty.call(module, key)) {
+                const value = module[key];
+                if (value && typeof value === "object" && "id" in value) {
+                  logger.info(`Loaded prompt: ${value.id}`);
+                  prompts.push({ ...value, version } as CatalogEntry);
+                }
               }
             }
           } catch (e) {

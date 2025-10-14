@@ -1,4 +1,4 @@
-import { getEnabledPrompts } from "@pagopa/mcp-prompts";
+import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";

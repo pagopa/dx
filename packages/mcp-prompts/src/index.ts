@@ -1,5 +1,6 @@
 export * from "./types.js";
 import type { CatalogEntry } from "./types.js";
+
 import { loadPrompts } from "./prompts/loader.js";
 
 let _prompts: CatalogEntry[] | null = null;
