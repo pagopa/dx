@@ -164,7 +164,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
 
