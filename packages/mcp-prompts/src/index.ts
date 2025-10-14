@@ -12,7 +12,7 @@
  */
 
 export * from "./types.js";
-export { setLogger, silentLogger } from "./utils/logger.js";
+export { setLogger } from "./utils/logger.js";
 import type { CatalogEntry } from "./types.js";
 
 import { loadPrompts } from "./prompts/loader.js";

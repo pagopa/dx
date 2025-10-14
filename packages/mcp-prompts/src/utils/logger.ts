@@ -40,19 +40,6 @@ const defaultLogger = pino(
 let currentLogger = defaultLogger;
 
 /**
- * Silent logger that discards all log messages.
- * Useful for environments where logging should be completely disabled.
- */
-export const silentLogger = {
-  debug: () => void 0,
-  error: () => void 0,
-  fatal: () => void 0,
-  info: () => void 0,
-  trace: () => void 0,
-  warn: () => void 0,
-} as typeof defaultLogger;
-
-/**
  * Sets a custom logger instance for the package.
  * Allows parent modules to inject their own logger configuration.
  *
