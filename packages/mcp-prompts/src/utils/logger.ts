@@ -1,14 +1,18 @@
 import pino from "pino";
 import { pinoLambdaDestination } from "pino-lambda";
 
-const destination = pinoLambdaDestination();
+const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
 
 export const logger = pino(
   {
     level: process.env.LOG_LEVEL || "info",
-    transport: {
-      target: "pino-pretty",
-    },
+    ...(isLambda
+      ? {}
+      : {
+          transport: {
+            target: "pino-pretty",
+          },
+        }),
   },
-  destination,
+  isLambda ? pinoLambdaDestination() : undefined,
 );

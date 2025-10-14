@@ -13,11 +13,12 @@ describe("mcp-prompts", () => {
 
   it("Call loader.loadPromptsand return value", async () => {
     const mockPrompts = [
-      { id: "test", name: "Test", enabled: true, prompt: { name: "Test" } },
+      { enabled: true, id: "test", name: "Test", prompt: { name: "Test" } },
     ];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
     const result = await promptsModule.getEnabledPrompts();
-    expect(loader.loadPrompts).toHaveBeenCalled();
+    expect(loader.loadPrompts).toHaveBeenCalledWith();
     expect(result).toEqual([{ name: "Test" }]);
   });
 
@@ -36,6 +37,7 @@ describe("mcp-prompts", () => {
         },
       ];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
 
       const result = await promptsModule.getEnabledPrompts();
@@ -52,6 +54,7 @@ describe("mcp-prompts", () => {
         { id: "other-prompt", name: "Other Prompt" },
       ];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
 
       const result = await promptsModule.getPromptById("test-prompt");
@@ -76,6 +79,7 @@ describe("mcp-prompts", () => {
         { category: "azure", enabled: true, id: "az1" },
       ];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(loader.loadPrompts).mockResolvedValue(mockPrompts as any);
 
       const result = await promptsModule.getPromptsByCategory("terraform");

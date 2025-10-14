@@ -1,28 +1,26 @@
+export interface CatalogEntry {
+  category: string;
+  enabled: boolean;
+  id: string;
+  metadata: {
+    description: string;
+    examples?: string[];
+    title: string;
+  };
+  prompt: PromptDefinition;
+  tags: string[];
+  version?: string;
+}
+
 export interface PromptArgument {
-  name: string;
   description: string;
+  name: string;
   required: boolean;
 }
 
 export interface PromptDefinition {
-  name: string;
-  description: string;
   arguments: PromptArgument[];
-  load: (
-    args: Record<string, unknown>,
-  ) => Promise<{ content: { type: "text"; text: string }[] }>;
-}
-
-export interface CatalogEntry {
-  id: string;
-  version?: string;
-  category: string;
-  enabled: boolean;
-  tags: string[];
-  metadata: {
-    title: string;
-    description: string;
-    examples?: string[];
-  };
-  prompt: PromptDefinition;
+  description: string;
+  load: (args: Record<string, unknown>) => Promise<string>;
+  name: string;
 }

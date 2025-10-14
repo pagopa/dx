@@ -1,17 +1,17 @@
-# @pagopa/mcp-prompts
+# @pagopa/dx-mcpprompts
 
 Centralized catalog of MCP prompts for PagoPA DX tools.
 
 ## Installation
 
 ```bash
-pnpm add @pagopa/mcp-prompts
+pnpm add @pagopa/dx-mcpprompts
 ```
 
 ## Usage
 
 ```typescript
-import { promptsCatalog, getEnabledPrompts } from '@pagopa/mcp-prompts';
+import { promptsCatalog, getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 
 // Get all enabled prompts
 const prompts = getEnabledPrompts();
