@@ -1,60 +1,47 @@
 /**
- * Environment-aware logger configuration using Pino.
- *
- * This logger automatically adapts its output format based on the runtime environment:
- * - In AWS Lambda: Uses structured JSON logging optimized for CloudWatch
- * - In development: Uses pretty-printed, human-readable format
- *
- * The dual configuration ensures optimal performance in production while
- * maintaining developer experience during local development.
+ * Logger injection system for external logger management.
+ * Parent modules must provide a logger instance before using the package.
  */
 
-import pino from "pino";
-import { pinoLambdaDestination } from "pino-lambda";
-
-// Detect if we're running in AWS Lambda by checking for the function name environment variable
-// This is a reliable indicator that AWS sets automatically
-const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+interface Logger {
+  debug: (msg: string, ...args: unknown[]) => void;
+  error: (error: unknown, msg?: string, ...args: unknown[]) => void;
+  info: (msg: string, ...args: unknown[]) => void;
+}
 
 /**
- * Default logger instance that adapts to the runtime environment.
- * Used as fallback when no external logger is provided.
+ * Current logger instance - must be set by parent modules.
  */
-const defaultLogger = pino(
-  {
-    level: process.env.LOG_LEVEL || "info",
-    ...(isLambda
-      ? {}
-      : {
-          transport: {
-            target: "pino-pretty",
-          },
-        }),
-  },
-  isLambda ? pinoLambdaDestination() : undefined,
-);
+let currentLogger: Logger | null = null;
 
 /**
- * Current logger instance - can be overridden by parent modules.
- */
-let currentLogger = defaultLogger;
-
-/**
- * Sets a custom logger instance for the package.
- * Allows parent modules to inject their own logger configuration.
+ * Sets a logger instance for the package.
+ * Must be called before using any package functionality.
  *
- * @param customLogger - Logger instance to use (must have info, debug, error methods)
+ * @param customLogger - Logger instance to use
  */
-export const setLogger = (customLogger: typeof defaultLogger) => {
+export const setLogger = (customLogger: Logger) => {
   currentLogger = customLogger;
 };
 
 /**
  * Gets the current logger instance.
- * Returns either the injected logger or the default one.
+ * Throws error if no logger has been set.
  */
-export const logger = new Proxy(defaultLogger, {
-  get(target, prop) {
-    return currentLogger[prop as keyof typeof currentLogger];
+export const logger: Logger = {
+  debug: (msg: string, ...args: unknown[]) => {
+    if (!currentLogger)
+      throw new Error("Logger not initialized. Call setLogger() first.");
+    currentLogger.debug(msg, ...args);
   },
-});
+  error: (error: unknown, msg?: string, ...args: unknown[]) => {
+    if (!currentLogger)
+      throw new Error("Logger not initialized. Call setLogger() first.");
+    currentLogger.error(error, msg, ...args);
+  },
+  info: (msg: string, ...args: unknown[]) => {
+    if (!currentLogger)
+      throw new Error("Logger not initialized. Call setLogger() first.");
+    currentLogger.info(msg, ...args);
+  },
+};

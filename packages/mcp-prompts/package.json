@@ -25,10 +25,6 @@
     }
   },
   "types": "./dist/index.d.ts",
-  "dependencies": {
-    "pino": "^9.1.0",
-    "pino-lambda": "^4.4.1"
-  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
