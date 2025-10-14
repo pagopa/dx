@@ -97,7 +97,7 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_container_app.this.template[0].max_replicas == 2
+    condition     = azurerm_container_app.this.template[0].max_replicas == 8
     error_message = "The container app maximum replicas is not correct"
   }
 
