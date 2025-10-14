@@ -1,5 +1,58 @@
 # azure_container_app
 
+## 4.0.0
+
+### Major Changes
+
+- a0eb678: # Major Changes
+  1. Replace the `tier` variable with a new `use_case` variable for tiering configuration.
+  2. Add new variables `size` for cpu/memory override.
+  3. Update README documentation.
+  4. Update `autoscaler` variable to include minimum and maximum replica limits. If these are not defined, they default to `null` and the values from the `use_case` will be applied.
+
+  ## Upgrade Notes
+
+  | Old Value | New Value | Description                         |
+  | --------- | --------- | ----------------------------------- |
+  | xs        | _none_    | Does not exist anymore              |
+  | s         | _none_    | Does not exist anymore              |
+  | m         | default   | Ideal for `production` environments |
+  | l         | _none_    | Does not exist anymore              |
+
+  This change simplifies and clarifies the selection of Container App.
+
+  To migrate to this new major version:
+  1. Update the module version to `~> 4.0` in your Terraform configuration.
+  2. Update your `module` configuration to use the new `use_case` variable instead of `tier`.
+  3. Optionally, configure the new `size` variable to use the desired CPU/Memory configuration within the Container App.
+
+  For Example:
+  - **Before**
+
+    ```hcl
+    module "container_app" {
+      source  = "pagopa-dx/azure-container-app/azurerm"
+      version = "~> 3.0"
+      tier    = "m"
+      # ...other variables...
+    }
+    ```
+
+  - **After**
+
+    ```hcl
+    module "container_app" {
+      source  = "pagopa-dx/azure-container-app/azurerm"
+      version = "~> 4.0"
+      use_case = "default"
+      # ...other variables remain unchanged...
+    }
+    ```
+
+### Patch Changes
+
+- 329fd82: Added support to aws provider version 6
+
 ## 3.0.1
 
 ### Patch Changes
@@ -13,17 +66,14 @@
 - f2f4f1a: Set the azurerm provider at least to version `4.16.0` to ensure compatibility with new scaling features.
 
   New features:
-
   - Add support to scaling rules (both built-in and custom)
   - Add support to override default number of replicas
   - Set the termination grace period to 30 seconds
 
   Documentation:
-
   - Add documentation for scaling rules
 
   ### Upgrade Notes
-
   - Set the azurerm provider at least to version `4.16.0` as follows:
 
   ```hcl
@@ -60,16 +110,13 @@
 - b398ae3: The user-assigned managed identity is now used to authenticate the Container App with other Azure services.
 
   New features:
-
   - Add support to private Azure Container Registry
   - Add support to user-assigned managed identity
 
   Bug fixes:
-
   - The variable `readiness_probe.initial_delay` was unintentionally unused
 
   Documentation:
-
   - Add description for outputs
 
 ## 0.1.4
