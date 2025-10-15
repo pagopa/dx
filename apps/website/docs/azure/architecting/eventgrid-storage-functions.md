@@ -1,34 +1,150 @@
 # Migrating from Blob Trigger to EventGrid
 
-Upgrade your Azure Function Apps from polling-based blob triggers to push-based EventGrid for better performance, reliability, and scalability.
+Step-by-step guide to migrate Azure Function Apps from blob triggers to
+EventGrid.
 
-## Why Migrate?
+:::warning[When to Migrate] EventGrid is **strongly recommended** when your
+storage account contains **more than 10,000 blobs**. Blob triggers use polling
+which becomes inefficient at scale. :::
 
-### Blob Trigger Limitations
+## Why EventGrid?
 
-- **Polling-based**: Checks for new blobs every ~10 seconds, causing latency
-- **Missed events**: Can miss events under high load
-- **Limited filtering**: Only path patterns supported
-- **Slow scaling**: Takes time to scale for large containers
-- **No guarantees**: No built-in retry or dead-lettering
+| Aspect       | Blob Trigger         | EventGrid                    |
+| ------------ | -------------------- | ---------------------------- |
+| **Delivery** | Polling (~10s delay) | Push (sub-second)            |
+| **Scale**    | Slow for >10K blobs  | Instant                      |
+| **Retries**  | Function-level only  | Built-in (24h) + dead-letter |
+| **Latency**  | ~10s polling delay   | Sub-second push              |
 
-### EventGrid Benefits
+**References:**
 
-- **Push-based**: Sub-second event delivery
-- **Guaranteed delivery**: Built-in retries with exponential backoff
-- **Advanced filtering**: Filter by subject, data fields, and more
-- **Dead-lettering**: Failed events go to dead-letter queue
-- **High throughput**: Handles millions of events per second
-- **Better scaling**: Instant response to event volume
+- [Azure Functions blob trigger docs](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-blob-trigger)
+- [EventGrid overview](https://learn.microsoft.com/en-us/azure/event-grid/overview)
+- [EventGrid retry policy](https://learn.microsoft.com/en-us/azure/event-grid/delivery-and-retry)
 
 ## Migration Steps
 
-### Step 1: Update function.json
+### Step 1: Add Dependencies
 
-Change the trigger type from `blobTrigger` to `eventGridTrigger`:
+Update `package.json`:
 
 ```json
-// BEFORE: Blob Trigger
+{
+  "dependencies": {
+    "@azure/storage-blob": "^12.0.0",
+    "@azure/identity": "^4.0.0"
+  }
+}
+```
+
+### Step 2: Update Function Code
+
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+
+<Tabs>
+<TabItem value="before" label="Before (Blob Trigger)">
+
+```typescript
+import * as TE from "fp-ts/lib/TaskEither";
+import { pipe } from "fp-ts/lib/function";
+
+export const onBlobChangeEntryPoint = pipe(
+  onBlobChangeHandler(),
+  parseBlob,
+  toAzureFunctionHandler,
+);
+
+const parseBlob = ({ inputs }) =>
+  pipe(
+    inputs[0] as Buffer, // Blob content received directly
+    (blob) => blob.toString("utf-8"),
+    parseJson,
+    TE.fromEither,
+    TE.chainW((decodedItem) => processItem(decodedItem)),
+  );
+```
+
+</TabItem>
+<TabItem value="after" label="After (EventGrid)">
+
+```typescript
+import { BlobServiceClient } from "@azure/storage-blob";
+import { DefaultAzureCredential } from "@azure/identity";
+import * as TE from "fp-ts/lib/TaskEither";
+import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/lib/function";
+
+export const onBlobEventEntryPoint = pipe(
+  onBlobEventHandler(),
+  parseEventGridEvent,
+  toAzureFunctionHandler,
+);
+
+const parseEventGridEvent = ({ inputs }) =>
+  pipe(
+    inputs[0] as EventGridEvent, // Event metadata only
+    extractBlobInfo,
+    TE.fromEither,
+    TE.chainW(fetchAndProcessBlob),
+  );
+
+const extractBlobInfo = (event: EventGridEvent) =>
+  E.tryCatch(
+    () => ({
+      containerName: event.subject.split("/")[6],
+      blobName: event.subject.split("/").slice(8).join("/"),
+    }),
+    (e) => new Error(`Failed to extract blob info: ${e}`),
+  );
+
+const fetchAndProcessBlob = (blobInfo: BlobInfo) =>
+  pipe(
+    TE.tryCatch(
+      async () => {
+        const credential = new DefaultAzureCredential();
+        const blobServiceClient = new BlobServiceClient(
+          `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,
+          credential,
+        );
+        const blobClient = blobServiceClient
+          .getContainerClient(blobInfo.containerName)
+          .getBlobClient(blobInfo.blobName);
+
+        const downloadResponse = await blobClient.download();
+        const content = await streamToString(
+          downloadResponse.readableStreamBody,
+        );
+        return JSON.parse(content);
+      },
+      (e) => new Error(`Failed to fetch blob: ${e}`),
+    ),
+    TE.chainW(processItem),
+  );
+
+const streamToString = async (
+  stream: NodeJS.ReadableStream,
+): Promise<string> => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  return Buffer.concat(chunks).toString("utf-8");
+};
+```
+
+**Key changes:**
+
+- EventGrid provides event metadata, not blob content
+- Must fetch blob using Azure Storage SDK with managed identity
+- Use `DefaultAzureCredential` for RBAC authentication
+
+</TabItem>
+</Tabs>
+
+### Step 3: Update function.json
+
+<Tabs>
+<TabItem value="before" label="Before (Blob Trigger)">
+
+```json
 {
   "bindings": [
     {
@@ -42,8 +158,12 @@ Change the trigger type from `blobTrigger` to `eventGridTrigger`:
   "scriptFile": "../dist/main.js",
   "entryPoint": "onBlobChangeEntryPoint"
 }
+```
 
-// AFTER: EventGrid Trigger
+</TabItem>
+<TabItem value="after" label="After (EventGrid)">
+
+```json
 {
   "bindings": [
     {
@@ -57,104 +177,55 @@ Change the trigger type from `blobTrigger` to `eventGridTrigger`:
 }
 ```
 
-**Key changes:**
-- Remove `path` and `connection` (EventGrid handles routing)
-- Change `type` from `blobTrigger` to `eventGridTrigger`
-- Rename binding parameter (e.g., `blobContent` → `eventGridEvent`)
+</TabItem>
+</Tabs>
 
-### Step 2: Update Function Code
+### Step 4: Add Dead Letter Storage (Terraform)
 
-Adapt your handler to process EventGrid events instead of blob content:
+```hcl
+module "deadletter_storage" {
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.0"
 
-```typescript
-import { BlobServiceClient } from "@azure/storage-blob";
-import { DefaultAzureCredential } from "@azure/identity";
-import * as TE from "fp-ts/lib/TaskEither";
-import * as E from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
-
-// BEFORE: Blob Trigger - receives blob content directly
-export const onBlobChangeEntryPoint = pipe(
-  onBlobChangeHandler(),
-  parseBlob,
-  toAzureFunctionHandler,
-);
-
-const parseBlob = ({ inputs }) =>
-  pipe(
-    inputs[0] as Buffer,
-    (blob) => blob.toString("utf-8"),
-    parseJson,
-    TE.fromEither,
-    TE.chainW((decodedItem) => processItem(decodedItem)),
-  );
-
-// AFTER: EventGrid - receives event metadata, must fetch blob
-export const onBlobEventEntryPoint = pipe(
-  onBlobEventHandler(),
-  parseEventGridEvent,
-  toAzureFunctionHandler,
-);
-
-const parseEventGridEvent = ({ inputs }) =>
-  pipe(
-    inputs[0] as EventGridEvent,
-    extractBlobInfo,
-    TE.fromEither,
-    TE.chainW(fetchAndProcessBlob),
-  );
-
-const extractBlobInfo = (event: EventGridEvent) =>
-  E.tryCatch(
-    () => ({
-      url: event.data.url,
-      containerName: event.subject.split('/')[6],
-      blobName: event.subject.split('/').slice(8).join('/'),
-      contentType: event.data.contentType,
-    }),
-    (e) => new Error(`Failed to extract blob info: ${e}`),
-  );
-
-const fetchAndProcessBlob = (blobInfo: BlobInfo) =>
-  pipe(
-    TE.tryCatch(
-      async () => {
-        // Use DefaultAzureCredential for managed identity
-        const credential = new DefaultAzureCredential();
-        const blobServiceClient = new BlobServiceClient(
-          `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,
-          credential,
-        );
-        const containerClient = blobServiceClient.getContainerClient(blobInfo.containerName);
-        const blobClient = containerClient.getBlobClient(blobInfo.blobName);
-        
-        const downloadResponse = await blobClient.download();
-        const content = await streamToString(downloadResponse.readableStreamBody);
-        return JSON.parse(content);
-      },
-      (e) => new Error(`Failed to fetch blob: ${e}`),
-    ),
-    TE.chainW(processItem),
-  );
-
-const streamToString = async (stream: NodeJS.ReadableStream): Promise<string> => {
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) {
-    chunks.push(Buffer.from(chunk));
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "West Europe"
+    domain          = "core"
+    app_name        = "deadletter"
+    instance_number = "01"
   }
-  return Buffer.concat(chunks).toString('utf-8');
-};
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  containers = [{
+    name        = "eventgrid-deadletter"
+    access_type = "private"
+  }]
+}
 ```
 
-**Key changes:**
-- EventGrid provides event metadata, not blob content
-- Must fetch blob using Azure Storage SDK with managed identity
-- Extract blob info from event subject and data
-- Use `DefaultAzureCredential` for RBAC authentication
+### Step 5: Add RBAC Permissions (Terraform)
 
-### Step 3: Add EventGrid Subscription
+```hcl
+module "function_storage_role" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 1.0"
 
-Create the EventGrid subscription in Terraform:
+  principal_id    = module.function_app.function_app.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
+
+  storage_blob = [{
+    storage_account_name = module.storage_account.name
+    resource_group_name  = azurerm_resource_group.main.name
+    container_name       = "*"
+    role                 = "reader"
+    description          = "Allow function app to read blobs"
+  }]
+}
+```
+
+### Step 6: Add EventGrid Subscription (Terraform)
 
 ```hcl
 resource "azurerm_eventgrid_event_subscription" "blob_events" {
@@ -167,11 +238,8 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
     preferred_batch_size_in_kilobytes = 64
   }
 
-  included_event_types = [
-    "Microsoft.Storage.BlobCreated",
-  ]
+  included_event_types = ["Microsoft.Storage.BlobCreated"]
 
-  # Filter by container and file type
   subject_filter {
     subject_begins_with = "/blobServices/default/containers/uploads/"
     subject_ends_with   = ".json"
@@ -189,106 +257,42 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
 }
 ```
 
-### Step 4: Add Dead Letter Storage
+### Step 7: Deploy and Test
 
-Create a storage account for failed events:
+1. **Deploy infrastructure**: `terraform apply`
+2. **Deploy function code**: Deploy your updated function app
+3. **Test with sample blob**:
+   ```bash
+   az storage blob upload \
+     --account-name <storage-account> \
+     --container-name uploads \
+     --name test.json \
+     --file test.json
+   ```
+4. **Verify function execution**: Check Azure Portal for function logs
 
-```hcl
-module "deadletter_storage" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+### Step 8: Monitor and Validate
 
-  environment = {
-    prefix          = "dx"
-    env_short       = "d"
-    location        = "West Europe"
-    domain          = "core"
-    app_name        = "deadletter"
-    instance_number = "01"
-  }
+Compare metrics between old and new implementation:
 
-  resource_group_name = azurerm_resource_group.main.name
-  
-  containers = [
-    {
-      name        = "eventgrid-deadletter"
-      access_type = "private"
-    }
-  ]
-}
-```
+- **Latency**: EventGrid should be < 1s
+- **Success rate**: Should match blob trigger
+- **Event count**: Verify all events are processed
 
-### Step 5: Update Dependencies
+### Step 9: Remove Blob Trigger
 
-Add Azure Storage SDK and Identity library to your package.json:
+Once validated:
 
-```json
-{
-  "dependencies": {
-    "@azure/storage-blob": "^12.0.0",
-    "@azure/identity": "^4.0.0"
-  }
-}
-```
+1. Remove blob trigger function.json
+2. Remove blob trigger code
+3. Deploy final version
 
-## Testing the Migration
+## Complete Example
 
-### 1. Deploy Both Triggers
-
-Initially run both blob trigger and EventGrid in parallel:
+<details>
+<summary>Click to expand full Terraform configuration</summary>
 
 ```hcl
-# Keep existing blob trigger function
-# Add new EventGrid function with different name
-resource "azurerm_eventgrid_event_subscription" "blob_events" {
-  # ...
-  azure_function_endpoint {
-    function_id = "${module.function_app.function_app.id}/functions/onBlobEventNew"
-  }
-}
-```
-
-### 2. Monitor Both Functions
-
-Compare metrics:
-- Latency (EventGrid should be < 1s)
-- Success rate (should be equal)
-- Event count (should match)
-
-### 3. Validate EventGrid
-
-Upload test blobs and verify:
-```bash
-az storage blob upload \
-  --account-name <storage-account> \
-  --container-name uploads \
-  --name test.json \
-  --file test.json
-```
-
-Check both functions processed the blob.
-
-### 4. Remove Blob Trigger
-
-Once validated, remove the blob trigger function and rename EventGrid function.
-
-## Key Differences
-
-| Aspect | Blob Trigger | EventGrid |
-|--------|-------------|----------|
-| **Delivery** | Polling (~10s delay) | Push (sub-second) |
-| **Input** | Blob content directly | Event metadata only |
-| **Fetch blob** | Automatic | Manual (Azure SDK) |
-| **Filtering** | Path patterns | Advanced (subject, data) |
-| **Retries** | Function-level | Built-in + dead-letter |
-| **Scale** | Slow for large containers | Instant |
-| **Cost** | Lower for low volume | Better for high volume |
-| **Missed events** | Possible under load | Guaranteed delivery |
-
-## Complete Migration Example
-
-```hcl
-# Storage Account using PagoPA DX module
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
   version = "~> 2.0"
@@ -303,25 +307,13 @@ module "storage_account" {
   }
 
   resource_group_name = azurerm_resource_group.main.name
-  
-  containers = [
-    {
-      name        = "uploads"
-      access_type = "private"
-    },
-    {
-      name        = "archive"
-      access_type = "private"
-    }
-  ]
 
-  tags = {
-    Environment = "development"
-    Project     = "blob-processing"
-  }
+  containers = [
+    { name = "uploads", access_type = "private" },
+    { name = "archive", access_type = "private" }
+  ]
 }
 
-# Function App using PagoPA DX module
 module "function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
   version = "~> 4.0"
@@ -337,7 +329,7 @@ module "function_app" {
 
   resource_group_name = azurerm_resource_group.main.name
   subnet_pep_id      = data.azurerm_subnet.pep.id
-  
+
   virtual_network = {
     name                = "vnet-core"
     resource_group_name = "rg-network"
@@ -351,78 +343,92 @@ module "function_app" {
     FUNCTIONS_WORKER_RUNTIME = "node"
     STORAGE_ACCOUNT_NAME     = module.storage_account.name
     UPLOADS_CONTAINER        = "uploads"
-    ARCHIVE_CONTAINER        = "archive"
-  }
-
-  tags = {
-    Environment = "development"
-    Project     = "blob-processing"
   }
 }
 
-# RBAC permissions for blob access
-resource "azurerm_role_assignment" "function_storage_access" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = module.function_app.function_app.principal_id
+module "deadletter_storage" {
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.0"
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "West Europe"
+    domain          = "core"
+    app_name        = "deadletter"
+    instance_number = "01"
+  }
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  containers = [{
+    name        = "eventgrid-deadletter"
+    access_type = "private"
+  }]
+}
+
+module "function_storage_role" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 1.0"
+
+  principal_id    = module.function_app.function_app.principal_id
+  subscription_id = data.azurerm_subscription.current.subscription_id
+
+  storage_blob = [{
+    storage_account_name = module.storage_account.name
+    resource_group_name  = azurerm_resource_group.main.name
+    container_name       = "*"
+    role                 = "Storage Blob Data Contributor"
+    description          = "Allow function app to read/write blobs"
+  }]
+}
+
+resource "azurerm_eventgrid_event_subscription" "blob_events" {
+  name  = "blob-processing-events"
+  scope = module.storage_account.id
+
+  azure_function_endpoint {
+    function_id                       = "${module.function_app.function_app.id}/functions/onBlobEvent"
+    max_events_per_batch              = 1
+    preferred_batch_size_in_kilobytes = 64
+  }
+
+  included_event_types = ["Microsoft.Storage.BlobCreated"]
+
+  subject_filter {
+    subject_begins_with = "/blobServices/default/containers/uploads/"
+    subject_ends_with   = ".json"
+  }
+
+  retry_policy {
+    max_delivery_attempts = 30
+    event_time_to_live    = 1440
+  }
+
+  storage_blob_dead_letter_destination {
+    storage_account_id          = module.deadletter_storage.id
+    storage_blob_container_name = "eventgrid-deadletter"
+  }
 }
 ```
+
+</details>
 
 ## Rollback Plan
 
-If issues arise, revert to blob trigger:
+If issues arise:
 
-```hcl
-# Comment out EventGrid subscription
-# resource "azurerm_eventgrid_event_subscription" "blob_events" { ... }
-
-# Restore blob trigger function.json
-# Deploy previous version
-```
-
-## When to Use Each
-
-**Use Blob Trigger when:**
-- Low to medium volume (< 100 blobs/minute)
-- Simple path-based filtering is sufficient
-- You need the blob content immediately
-- Cost optimization is critical
-
-**Use EventGrid when:**
-- High volume (> 100 blobs/minute)
-- Need sub-second latency
-- Require advanced filtering
-- Need guaranteed delivery with dead-lettering
-- Processing large blobs (fetch on-demand)
-
-## RBAC Permissions
-
-Grant the Function App managed identity access to the storage account:
-
-```hcl
-# Required for reading blobs
-resource "azurerm_role_assignment" "function_storage_reader" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = module.function_app.function_app.principal_id
-}
-
-# Or use Contributor for read/write access
-resource "azurerm_role_assignment" "function_storage_contributor" {
-  scope                = module.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = module.function_app.function_app.principal_id
-}
-```
-
-**Note:** The PagoPA DX Function App module automatically enables system-assigned managed identity.
+1. **Comment out EventGrid subscription** in Terraform
+2. **Restore blob trigger function.json** from version control
+3. **Deploy previous function version**
+4. **Run** `terraform apply` to remove EventGrid subscription
 
 ## Best Practices
 
-- **RBAC over connection strings**: Use managed identity for secure, credential-free authentication
-- **Idempotency**: Handle duplicate events (EventGrid may deliver same event multiple times)
+- **Idempotency**: Handle duplicate events (EventGrid may deliver same event
+  multiple times)
 - **Error handling**: Let exceptions bubble up for EventGrid retry logic
 - **Monitoring**: Track EventGrid delivery metrics and dead-letter queue
-- **Filtering**: Use subject filters to reduce unnecessary function invocations
-- **Dead-lettering**: Monitor and process failed events from dead-letter queue
-- **Credential caching**: Reuse `DefaultAzureCredential` and `BlobServiceClient` instances
+- **Filtering**: Use subject filters to reduce unnecessary invocations
+- **Dead-letter monitoring**: Set up alerts when events land in dead-letter
+  storage
