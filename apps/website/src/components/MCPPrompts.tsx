@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 
-import CategoryOverviewCard from "./CategoryOverviewCard";
 import styles from "./MCPPrompts.module.css";
 import PromptCard from "./PromptCard";
 import { usePromptLoader } from "./usePromptLoader";
@@ -41,11 +40,6 @@ const getCategoryIcon = (category: string): string => {
 
 export default function MCPPrompts(): JSX.Element {
   const { error, loading, promptContents, prompts } = usePromptLoader();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [viewMode, setViewMode] = useState<"categories" | "prompts">(
-    "categories",
-  );
 
   if (loading) {
     return (
@@ -61,24 +55,7 @@ export default function MCPPrompts(): JSX.Element {
     );
   }
 
-  const filteredPrompts = prompts.filter((prompt) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      prompt.metadata.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prompt.metadata.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      prompt.tags.some((tag) =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-
-    const matchesCategory =
-      selectedCategory === "all" || prompt.category === selectedCategory;
-
-    return matchesSearch && matchesCategory;
-  });
-
-  const promptsByCategory = filteredPrompts.reduce(
+  const promptsByCategory = prompts.reduce(
     (acc, prompt) => {
       if (!acc[prompt.category]) {
         acc[prompt.category] = [];
@@ -89,117 +66,31 @@ export default function MCPPrompts(): JSX.Element {
     {} as Record<string, CatalogEntry[]>,
   );
 
-  const categories = Array.from(new Set(prompts.map((p) => p.category)));
-
   return (
     <div className={styles.promptsContainer}>
-      <div className={styles.controlsSection}>
-        <div className={styles.viewToggle}>
-          <button
-            className={`${styles.toggleButton} ${viewMode === "categories" ? styles.active : ""}`}
-            onClick={() => setViewMode("categories")}
-          >
-            📂 Categories
-          </button>
-          <button
-            className={`${styles.toggleButton} ${viewMode === "prompts" ? styles.active : ""}`}
-            onClick={() => {
-              setViewMode("prompts");
-              setSelectedCategory("all");
-              setSearchTerm("");
-            }}
-          >
-            📝 All Prompts
-          </button>
-        </div>
-        {viewMode === "prompts" && (
-          <>
-            <div className={styles.searchBox}>
-              <input
-                className={styles.searchInput}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search prompts..."
-                type="text"
-                value={searchTerm}
-              />
-            </div>
-            <div className={styles.filterBox}>
-              <select
-                className={styles.categoryFilter}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                value={selectedCategory}
-              >
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {getCategoryIcon(category)}{" "}
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        )}
-      </div>
-
-      {viewMode === "prompts" && (
-        <div className={styles.resultsInfo}>
-          {searchTerm || selectedCategory !== "all" ? (
-            <span>
-              Found {filteredPrompts.length} prompt
-              {filteredPrompts.length !== 1 ? "s" : ""}
+      {Object.entries(promptsByCategory).map(([category, categoryPrompts]) => (
+        <div className={styles.categorySection} key={category}>
+          <div className={styles.categoryHeader}>
+            <h2 className={styles.categoryTitle}>
+              {getCategoryIcon(category)}{" "}
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </h2>
+            <span className={styles.categoryCount}>
+              {categoryPrompts.length} prompts
             </span>
-          ) : (
-            <span>{prompts.length} total prompts</span>
-          )}
-        </div>
-      )}
-
-      {viewMode === "categories" ? (
-        <div className={styles.categoriesGrid}>
-          {categories.map((category) => {
-            const categoryPrompts = prompts.filter(
-              (p) => p.category === category,
-            );
-            return (
-              <CategoryOverviewCard
-                category={category}
-                icon={getCategoryIcon(category)}
-                key={category}
-                onExplore={() => {
-                  setSelectedCategory(category);
-                  setViewMode("prompts");
-                }}
-                promptCount={categoryPrompts.length}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        Object.entries(promptsByCategory).map(([category, categoryPrompts]) => (
-          <div className={styles.categorySection} key={category}>
-            <div className={styles.categoryHeader}>
-              <h2 className={styles.categoryTitle}>
-                {getCategoryIcon(category)}{" "}
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </h2>
-              <span className={styles.categoryCount}>
-                {categoryPrompts.length} prompts
-              </span>
-            </div>
-            <div className={styles.promptsGrid}>
-              {categoryPrompts.map((prompt) => (
-                <PromptCard
-                  content={promptContents[prompt.id]}
-                  icon={getCategoryIcon(prompt.category)}
-                  key={prompt.id}
-                  prompt={prompt}
-                />
-              ))}
-            </div>
           </div>
-        ))
-      )}
+          <div className={styles.promptsGrid}>
+            {categoryPrompts.map((prompt) => (
+              <PromptCard
+                content={promptContents[prompt.id]}
+                icon={getCategoryIcon(prompt.category)}
+                key={prompt.id}
+                prompt={prompt}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
