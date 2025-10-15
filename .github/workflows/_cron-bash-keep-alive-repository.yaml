@@ -21,7 +21,7 @@ jobs:
   keep_alive:
     runs-on: 'ubuntu-latest'
     permissions:
-      contents: read
+      contents: write
       actions: write
 
     steps:
@@ -32,5 +32,4 @@ jobs:
         uses: pagopa/dx/actions/keep-alive@main
         with:
           bypass: ${{ github.event.inputs.bypass || 'false' }}
-        env:
-          GH_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
+          bot_token: ${{ secrets.BOT_GH_TOKEN }}

@@ -6,12 +6,16 @@ inputs:
     description: Force the action to run regardless of the last commit date.
     required: false
     default: false
+  bot_token:
+    description: GitHub token for the bot account.
+    required: true
 
 runs:
   using: composite
   steps:
     - name: Calculate days since last commit
       id: commit_date
+      shell: bash
       run: |
         LAST_COMMIT_DATE=$(git log -1 --format=%ct)
         echo "Last commit date: $LAST_COMMIT_DATE"
@@ -25,14 +29,37 @@ runs:
 
         echo "days_since_commit=$DIFFERENCE" >> $GITHUB_OUTPUT
 
+    - name: Configure git user
+      if: steps.commit_date.outputs.days_since_commit >= 55 || inputs.bypass == 'true'
+      id: git_user
+      shell: bash
+      run: |
+        # Default values
+        GIT_NAME="github-actions[bot]"
+        GIT_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
+
+        GITHUB_USER=$(gh api user)
+
+        if [ "$(echo "$GITHUB_USER" | jq -r '.login')" != "null" ]; then
+          GIT_NAME=$(echo "$GITHUB_USER" | jq -r '.login')
+        else
+          GIT_NAME="$ACTOR"
+        fi
+
+        echo "Git user will be: $GIT_NAME <$GIT_EMAIL>"
+        git config --local user.name "$GIT_NAME"
+        git config --local user.email "$GIT_EMAIL"
+
+        echo "name=$GIT_NAME" >> $GITHUB_OUTPUT
+      env:
+        ACTOR: ${{ github.actor }}
+        GH_TOKEN: ${{ inputs.bot_token }}
+
     - name: keep-alive
       if: steps.commit_date.outputs.days_since_commit >= 55 || inputs.bypass == 'true'
       shell: bash
       run: |
-        git config --local user.email "dx-pagopa-github-bot@pagopa.it"
-        git config --local user.name "dx-pagopa-bot"
-
-        git commit --allow-empty -m "Keeping the repository alive" || echo "No changes to commit"
+        git commit --allow-empty -m "Keeping the repository alive by ${{ steps.git_user.outputs.name }} on $(date -u +'%Y-%m-%d')" || echo "No changes to commit"
         COMMIT_STATUS=$?
 
         if [ $COMMIT_STATUS -eq 0 ]; then

@@ -5,7 +5,7 @@ sidebar_position: 50
 # Keeping Scheduled GitHub Actions Alive
 
 The
-[Keep Alive action](https://github.com/pagopa/dx/tree/main/.github/actions/keep-alive)
+[Keep Alive action](https://github.com/pagopa/dx/tree/main/actions/keep-alive)
 is a utility that prevents GitHub repositories from becoming inactive by
 creating an empty commit and pushing it to the repository. This is particularly
 useful for maintaining GitHub Actions with scheduled triggers, which GitHub
@@ -54,15 +54,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Calculate days since last commit
-        id: commit_date
-        run: |
-          # Calculate days since last activity
-          LAST_COMMIT_DATE=$(git log -1 --format=%ct)
-          CURRENT_DATE=$(date +%s)
-          DIFFERENCE=$(( ($CURRENT_DATE - $LAST_COMMIT_DATE) / 86400 ))
-          echo "days_since_commit=$DIFFERENCE" >> $GITHUB_ENV
-
       # Use the Keep Alive action when needed
       - name: Keep Alive
         if: env.days_since_commit >= '55'
@@ -75,13 +66,11 @@ jobs:
 
 When implementing this pattern in your own repositories:
 
-1. **Adjust the threshold** - The 55-day threshold can be modified based on your
-   specific needs
-2. **Consider the schedule** - The daily check frequency can be adjusted
-3. **Configure the secret** - Create a personal access token with repository
-   write permissions and store it as a repository secret (e.g.,
-   `GITHUB_BOT_TOKEN`), then pass it to the `bot_token` input
-4. **Ensure proper permissions**:
+1. **Consider the schedule** - The daily check frequency can be adjusted
+2. **Configure the secret** - Create a personal access token with repository
+   `Contents` **Read & Write** permissions and store it as a repository secret (e.g.,
+   `GITHUB_BOT_TOKEN`)
+3. **Ensure proper permissions**:
    - The workflow requires `contents: write` to push commits
    - Enable `Read and Write permissions` for workflows inside repository
      settings
@@ -92,7 +81,7 @@ When implementing this pattern in your own repositories:
 
 :::note
 
-The action uses `bot_token` to make empty commits to the repository. It's
+The action uses `GITHUB_TOKEN` to make empty commits to the repository. It's
 recommended to create a Personal Access Token (PAT) using a bot account (such as
 `dx-pagopa-bot`) and add it as a secret to pass to the action. Note that the
 chosen bot account must be added to the list of pull request bypassers
