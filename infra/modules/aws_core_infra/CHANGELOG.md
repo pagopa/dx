@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5
+
+### Patch Changes
+
+- 329fd82: Added support to aws provider version 6
+
 ## 0.0.4
 
 ### Patch Changes
