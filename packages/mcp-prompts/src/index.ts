@@ -41,16 +41,6 @@ const getPrompts = async (): Promise<CatalogEntry[]> => {
 };
 
 /**
- * Legacy object that throws an error to guide users to the correct async API.
- * This prevents synchronous access to what should be an async operation.
- */
-export const promptsCatalog = {
-  get prompts() {
-    throw new Error("Use getPrompts() instead of promptsCatalog.prompts");
-  },
-};
-
-/**
  * Gets only the enabled prompts, returning just the PromptDefinition objects.
  * This is typically used by MCP servers to register available prompts.
  *
