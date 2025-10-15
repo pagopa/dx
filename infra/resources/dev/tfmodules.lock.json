@@ -1,9 +1,9 @@
 {
   "aws_core_values": {
-    "hash": "9856967355058d1d2adc2147efd9df809edc03ece8e3f22d8c99a9a392363e18",
-    "version": "0.1.1",
+    "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
+    "version": "0.1.2",
     "name": "aws_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.1"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
   },
   "azure_core_values": {
     "hash": "9d17c2786991abf8af52245d73bb724877914c4eb8f72389a831b5385878974e",
