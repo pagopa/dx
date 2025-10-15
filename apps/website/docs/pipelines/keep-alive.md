@@ -56,7 +56,6 @@ jobs:
 
       # Use the Keep Alive action when needed
       - name: Keep Alive
-        if: env.days_since_commit >= '55'
         uses: pagopa/dx/.github/actions/keep-alive@main
         with:
           bot_token: ${{ secrets.GITHUB_BOT_TOKEN }}
@@ -68,8 +67,8 @@ When implementing this pattern in your own repositories:
 
 1. **Consider the schedule** - The daily check frequency can be adjusted
 2. **Configure the secret** - Create a personal access token with repository
-   `Contents` **Read & Write** permissions and store it as a repository secret (e.g.,
-   `GITHUB_BOT_TOKEN`)
+   `Contents` **Read & Write** permissions and store it as a repository secret
+   (e.g., `GITHUB_BOT_TOKEN`)
 3. **Ensure proper permissions**:
    - The workflow requires `contents: write` to push commits
    - Enable `Read and Write permissions` for workflows inside repository

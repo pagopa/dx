@@ -10,9 +10,9 @@ This GitHub Action ensures that a repository remains active by making an empty c
 
 ## Inputs
 
-| Name    | Description                                      | Required | Default |
-|---------|--------------------------------------------------|----------|---------|
-| bypass  | Force the action to run regardless of conditions | false    | false   |
+| Name   | Description                                      | Required | Default |
+| ------ | ------------------------------------------------ | -------- | ------- |
+| bypass | Force the action to run regardless of conditions | false    | false   |
 
 ## Example Usage
 

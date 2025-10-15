@@ -15,11 +15,11 @@ on:
         default: false
         required: false
   schedule:
-    - cron: '0 0 * * *' # Run at 00:00 every day
+    - cron: "0 0 * * *" # Run at 00:00 every day
 
 jobs:
   keep_alive:
-    runs-on: 'ubuntu-latest'
+    runs-on: "ubuntu-latest"
     permissions:
       contents: write
       actions: write
