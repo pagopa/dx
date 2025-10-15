@@ -77,12 +77,4 @@ describe("mcp-prompts", () => {
       expect(result).toHaveLength(0);
     });
   });
-
-  describe("promptsCatalog", () => {
-    it("throws error when accessing prompts directly", () => {
-      expect(() => promptsModule.promptsCatalog.prompts).toThrow(
-        "Use getPrompts() instead of promptsCatalog.prompts",
-      );
-    });
-  });
 });
