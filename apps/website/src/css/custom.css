@@ -104,6 +104,10 @@
 /* Enhanced navbar styling */
 .navbar {
   box-shadow: 0 2px 20px rgba(0, 161, 176, 0.08);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
 }
 
 /* Footer enhancements */
@@ -135,6 +139,7 @@
 body {
   font-family: var(--ifm-font-family-base);
   font-weight: 400;
+  padding-top: var(--ifm-navbar-height);
 }
 
 h1 {
