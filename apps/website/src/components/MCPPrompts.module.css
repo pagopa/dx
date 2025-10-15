@@ -1,209 +1,4 @@
 /* MCP Prompts styling inspired by homepage design */
-.promptsContainer {
-  padding: 2rem 0;
-}
-
-.controlsSection {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
-}
-
-.viewToggle {
-  display: flex;
-  background: var(--ifm-color-emphasis-100);
-  border-radius: 8px;
-  padding: 0.25rem;
-}
-
-.toggleButton {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: transparent;
-  color: var(--ifm-color-emphasis-700);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.toggleButton.active {
-  background: var(--ifm-color-primary);
-  color: white;
-}
-
-[data-theme="dark"] .viewToggle {
-  background: #444950;
-}
-
-.categoriesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.categoryOverviewCard {
-  background: var(--ifm-background-color);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 161, 176, 0.08);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  cursor: pointer;
-}
-
-.categoryOverviewCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 161, 176, 0.16);
-}
-
-[data-theme="dark"] .categoryOverviewCard {
-  background: #242526;
-  border: 1px solid #444950;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-.categoryCardHeader {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem 2rem 1rem 2rem;
-}
-
-.categoryCardIcon {
-  font-size: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(
-    135deg,
-    var(--ifm-color-primary),
-    var(--ifm-color-primary-light)
-  );
-  border-radius: 20px;
-  color: white;
-  box-shadow: 0 8px 20px rgba(0, 161, 176, 0.3);
-}
-
-.categoryCardTitle {
-  font-size: 1.75rem;
-  font-weight: 500;
-  color: var(--ifm-font-color-base);
-  margin: 0;
-}
-
-.categoryCardDescription {
-  padding: 0 2rem;
-  color: var(--ifm-color-emphasis-700);
-  line-height: 1.6;
-  margin: 0 0 1.5rem 0;
-}
-
-.categoryCardFooter {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem 2rem 2rem;
-}
-
-.categoryCardCount {
-  font-size: 0.875rem;
-  color: var(--ifm-color-emphasis-600);
-  background: var(--ifm-color-emphasis-100);
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-weight: 500;
-}
-
-.categoryCardButton {
-  background: var(--ifm-color-primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.categoryCardButton:hover {
-  background: var(--ifm-color-primary-dark);
-  transform: translateX(2px);
-}
-
-.searchBox {
-  flex: 1;
-  max-width: 400px;
-}
-
-.searchInput {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--ifm-color-emphasis-200);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: var(--ifm-background-color);
-  color: var(--ifm-font-color-base);
-  transition: border-color 0.2s ease;
-}
-
-.searchInput:focus {
-  outline: none;
-  border-color: var(--ifm-color-primary);
-}
-
-[data-theme="dark"] .searchInput {
-  border-color: #444950;
-  background: #242526;
-}
-
-.filterBox {
-  min-width: 180px;
-}
-
-.categoryFilter {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--ifm-color-emphasis-200);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: var(--ifm-background-color);
-  color: var(--ifm-font-color-base);
-  cursor: pointer;
-}
-
-[data-theme="dark"] .categoryFilter {
-  border-color: #444950;
-  background: #242526;
-}
-
-.resultsInfo {
-  margin-bottom: 1.5rem;
-  color: var(--ifm-color-emphasis-600);
-  font-size: 0.875rem;
-}
-
-@media (max-width: 768px) {
-  .controlsSection {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .searchBox {
-    max-width: none;
-  }
-}
-
-.categorySection {
-  margin-bottom: 3rem;
-}
-
 .categoryHeader {
   display: flex;
   align-items: center;
@@ -211,10 +6,6 @@
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--ifm-color-emphasis-200);
-}
-
-[data-theme="dark"] .categoryHeader {
-  border-bottom-color: #444950;
 }
 
 .categoryTitle {
@@ -256,14 +47,8 @@
   box-shadow: 0 4px 20px rgba(0, 161, 176, 0.08);
   transition: all 0.3s ease;
   overflow: hidden;
-  height: 100%;
   border: 1px solid var(--ifm-color-emphasis-200);
   position: relative;
-}
-
-.promptCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 161, 176, 0.16);
 }
 
 [data-theme="dark"] .promptCard {
@@ -272,13 +57,8 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .promptCard:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-}
-
 .promptCardContent {
-  padding: 2rem;
-  height: 100%;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
 }
@@ -287,7 +67,7 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .promptIcon {
@@ -319,6 +99,22 @@
   color: var(--ifm-font-color-base);
   margin: 0 0 0.5rem 0;
   line-height: 1.3;
+}
+
+.promptIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.promptStatusBadge {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .promptIdContainer {
@@ -372,9 +168,10 @@
 .promptDescription {
   font-family: var(--ifm-font-family-base);
   color: var(--ifm-color-emphasis-700);
-  line-height: 1.6;
-  margin: 0 0 1.5rem 0;
+  line-height: 1.7;
+  margin: 0 0 1.25rem 0;
   flex-grow: 1;
+  font-size: 1rem;
 }
 
 .promptMeta {
@@ -411,15 +208,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .tag {
   background: var(--ifm-color-primary-lightest);
   color: var(--ifm-color-primary-dark);
-  padding: 0.25rem 0.75rem;
+  padding: 0.3rem 0.85rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -431,14 +228,14 @@
 }
 
 .promptExamples {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .examplesTitle {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ifm-color-emphasis-700);
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.6rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -450,11 +247,12 @@
 }
 
 .exampleItem {
-  padding: 0.5rem 0;
+  padding: 0.4rem 0;
   color: var(--ifm-color-emphasis-600);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   position: relative;
   padding-left: 1.5rem;
+  line-height: 1.5;
 }
 
 .exampleItem::before {
@@ -476,10 +274,10 @@
 }
 
 .argumentsTitle {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ifm-color-emphasis-700);
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.6rem 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -494,8 +292,9 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.5rem 0;
-  font-size: 0.875rem;
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .argumentName {
@@ -533,65 +332,21 @@
   line-height: 1.4;
 }
 
-.tabNavigation {
-  display: flex;
-  border-top: 1px solid var(--ifm-color-emphasis-200);
+.detailsContent {
   margin-top: 1rem;
 }
 
-[data-theme="dark"] .tabNavigation {
-  border-top-color: #444950;
-}
-
-.tabButton {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border: none;
-  background: var(--ifm-color-emphasis-100);
-  color: var(--ifm-color-emphasis-700);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border-bottom: 2px solid transparent;
-}
-
-.tabButton.activeTab {
-  background: var(--ifm-background-color);
-  color: var(--ifm-color-primary);
-  border-bottom-color: var(--ifm-color-primary);
-}
-
-[data-theme="dark"] .tabButton {
-  background: #444950;
-  color: var(--ifm-color-emphasis-700);
-}
-
-[data-theme="dark"] .tabButton.activeTab {
-  background: #242526;
-  color: var(--ifm-color-primary);
-}
-
-.tabContent {
-  height: 300px;
-  overflow-y: auto;
-}
-
-.detailsContent {
-  padding: 1rem;
-  height: 100%;
-  overflow-y: auto;
-}
-
 .previewContent {
-  padding: 1rem;
+  padding: 1.5rem;
   background: var(--ifm-color-emphasis-50);
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.875rem;
   line-height: 1.6;
   white-space: pre-wrap;
-  height: 100%;
   overflow-y: auto;
+  border-radius: 0;
+  height: 100%;
+  width: 100%;
 }
 
 [data-theme="dark"] .previewContent {
@@ -667,4 +422,91 @@
   .promptTitle {
     font-size: 1.25rem;
   }
+}
+
+/* Flip Card Styles */
+.flipContainer {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flipContainer.flipped {
+  transform: rotateY(180deg);
+}
+
+.flipFront,
+.flipBack {
+  position: absolute;
+  width: 100%;
+  height: 500px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flipBack {
+  transform: rotateY(180deg);
+}
+
+.flipButton {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.flipButtonIcon {
+  flex-shrink: 0;
+}
+
+.flipButtonText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.flipButton:hover {
+  background: transparent;
+  color: var(--ifm-color-primary);
+  width: auto;
+  padding: 0 1rem;
+}
+
+.flipButton:hover .flipButtonText {
+  max-width: 100px;
+  opacity: 1;
+  margin-left: 0.25rem;
+}
+
+.flipButton:active {
+  transform: scale(0.95);
+}
+
+[data-theme="dark"] .flipButton {
+  color: var(--ifm-font-color-base);
+}
+
+[data-theme="dark"] .flipButton:hover {
+  background: transparent;
+  color: var(--ifm-color-primary);
 }
