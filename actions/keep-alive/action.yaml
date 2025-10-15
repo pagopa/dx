@@ -36,8 +36,9 @@ runs:
       run: |
         # Set default values for git configuration
         # Use the official GitHub Actions bot account as default
+        # The email is GitHub's official noreply address for the github-actions bot
+        # Reference: https://api.github.com/users/github-actions%5Bbot%5D
         GIT_NAME="github-actions[bot]"
-        # This email is GitHub's official noreply address for the github-actions bot
         GIT_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
 
         # Attempt to get the authenticated user's information from GitHub API
