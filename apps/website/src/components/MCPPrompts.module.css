@@ -35,9 +35,9 @@
 
 .promptsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: 1fr;
   gap: 2rem;
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -49,6 +49,11 @@
   overflow: hidden;
   border: 1px solid var(--ifm-color-emphasis-200);
   position: relative;
+}
+
+.promptCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 161, 176, 0.12);
 }
 
 [data-theme="dark"] .promptCard {
@@ -95,7 +100,7 @@
 .promptTitle {
   font-family: var(--ifm-font-family-base);
   font-size: 1.5rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ifm-font-color-base);
   margin: 0 0 0.5rem 0;
   line-height: 1.3;
