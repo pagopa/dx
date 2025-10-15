@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import styles from "./MCPPrompts.module.css";
 
@@ -33,6 +33,15 @@ export default function PromptCard({
   icon,
   prompt,
 }: PromptCardProps): JSX.Element {
+  const [activeTab, setActiveTab] = useState<"details" | "preview">("details");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`/${prompt.id}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className={styles.promptCard}>
       <div className={styles.promptCardContent}>
@@ -40,7 +49,14 @@ export default function PromptCard({
           <div className={styles.promptIcon}>{icon}</div>
           <div className={styles.promptTitleSection}>
             <h3 className={styles.promptTitle}>{prompt.metadata.title}</h3>
-            <code className={styles.promptId}>{prompt.id}</code>
+            <button
+              className={styles.promptIdContainer}
+              onClick={handleCopy}
+              title="Copy command"
+            >
+              <code className={styles.promptId}>/{prompt.id}</code>
+              <span className={styles.copyIcon}>{copied ? "✓" : "📋"}</span>
+            </button>
           </div>
         </div>
 
@@ -69,48 +85,67 @@ export default function PromptCard({
           ))}
         </div>
 
-        {prompt.metadata.examples && prompt.metadata.examples.length > 0 && (
-          <div className={styles.promptExamples}>
-            <h4 className={styles.examplesTitle}>Examples</h4>
-            <ul className={styles.examplesList}>
-              {prompt.metadata.examples.map((example, index) => (
-                <li className={styles.exampleItem} key={index}>
-                  {example}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <div className={styles.tabNavigation}>
+          <button
+            className={`${styles.tabButton} ${activeTab === "details" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("details")}
+          >
+            Details
+          </button>
+          <button
+            className={`${styles.tabButton} ${activeTab === "preview" ? styles.activeTab : ""}`}
+            onClick={() => setActiveTab("preview")}
+          >
+            Preview
+          </button>
+        </div>
 
-        {prompt.prompt.arguments.length > 0 && (
-          <div className={styles.promptArguments}>
-            <h4 className={styles.argumentsTitle}>Arguments</h4>
-            <ul className={styles.argumentsList}>
-              {prompt.prompt.arguments.map((arg, index) => (
-                <li className={styles.argumentItem} key={index}>
-                  <span
-                    className={`${styles.argumentName} ${arg.required ? styles.argumentRequired : styles.argumentOptional}`}
-                  >
-                    {arg.name}
-                  </span>
-                  <span className={styles.argumentDescription}>
-                    {arg.description}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+        <div className={styles.tabContent}>
+          {activeTab === "details" ? (
+            <div className={styles.detailsContent}>
+              {prompt.metadata.examples &&
+                prompt.metadata.examples.length > 0 && (
+                  <div className={styles.promptExamples}>
+                    <h4 className={styles.examplesTitle}>Examples</h4>
+                    <ul className={styles.examplesList}>
+                      {prompt.metadata.examples.map((example, index) => (
+                        <li className={styles.exampleItem} key={index}>
+                          {example}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-      <div className={styles.hoverOverlay}>
-        <h4 className={styles.overlayTitle}>Prompt Content Preview</h4>
-        <div
-          className={styles.overlayContent}
-          dangerouslySetInnerHTML={{
-            __html: content || "Loading...",
-          }}
-        />
+              {prompt.prompt.arguments.length > 0 && (
+                <div className={styles.promptArguments}>
+                  <h4 className={styles.argumentsTitle}>Arguments</h4>
+                  <ul className={styles.argumentsList}>
+                    {prompt.prompt.arguments.map((arg, index) => (
+                      <li className={styles.argumentItem} key={index}>
+                        <span
+                          className={`${styles.argumentName} ${arg.required ? styles.argumentRequired : styles.argumentOptional}`}
+                        >
+                          {arg.name}
+                        </span>
+                        <span className={styles.argumentDescription}>
+                          {arg.description}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={styles.previewContent}
+              dangerouslySetInnerHTML={{
+                __html: content || "Loading...",
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
