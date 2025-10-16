@@ -117,8 +117,8 @@ of them, hard-to-detect concurrency problems could occur.
 
 :::tip
 
-Stick to the [naming convention](../azure/azure-naming-convention.md) when you
-create new resources. For queues, use
+Stick to the [naming convention](../../azure/azure-naming-convention.md) when
+you create new resources. For queues, use
 [the suffix](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations#integration)
 `sbq`.
 
@@ -208,8 +208,8 @@ service in order to post messages.
 
 :::tip
 
-Stick to the [naming convention](../azure/azure-naming-convention.md) when you
-create new resources. Use
+Stick to the [naming convention](../../azure/azure-naming-convention.md) when
+you create new resources. Use
 [the suffix](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations#integration)
 `sbt` for topics, and `sbts` for subscriptions.
 
