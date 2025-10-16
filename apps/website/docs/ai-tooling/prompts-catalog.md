@@ -4,12 +4,14 @@ sidebar_position: 11
 
 # Prompts Catalog
 
-Browse all available MCP prompts for the PagoPA DX ecosystem. Each prompt is a pre-configured command that helps you accomplish specific development tasks.
+Browse all available MCP prompts for the PagoPA DX ecosystem. Each prompt is a
+pre-configured command that helps you accomplish specific development tasks.
 
 <details>
 <summary><b>How to Use a Prompt</b></summary>
 
-Click on any **prompt ID** below to copy it. Then, use it in your AI assistant following this pattern:
+Click on any **prompt ID** below to copy it. Then, use it in your AI assistant
+following this pattern:
 
 ```text
 /mcp.<your-server-name>.<prompt-id>
@@ -17,13 +19,15 @@ Click on any **prompt ID** below to copy it. Then, use it in your AI assistant f
 
 ### Example
 
-If your MCP server is configured as `pagopa-dx` and you want to use the `generate-terraform-configuration` prompt:
+If your MCP server is configured as `pagopa-dx` and you want to use the
+`generate-terraform-configuration` prompt:
 
 ```text
 /mcp.pagopa-dx.generate-terraform-configuration
 ```
 
-The AI assistant will execute the prompt with the appropriate context from your workspace.
+The AI assistant will execute the prompt with the appropriate context from your
+workspace.
 
 </details>
 
