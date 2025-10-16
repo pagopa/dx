@@ -25,6 +25,15 @@ The server currently exposes the following capabilities:
 - **Prompts**:
   - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
 
+## Authentication
+
+The server requires a GitHub Personal Access Token (PAT) for authentication. The token must have the following permissions:
+
+- **Organization permissions:**
+  - Members: Read-only (to verify membership in the pagopa organization)
+
+The PAT should have access to **all public repositories** in the organization.
+
 ## How to use it
 
 This server can be used by any MCP-compliant client.
@@ -43,9 +52,17 @@ Update your configuration file with the following. See [VS Code MCP docs](https:
       "url": "https://api.dev.dx.pagopa.it/mcp",
       "type": "http",
       "headers": {
-        "x-gh-pat": "${env:GH_PAT}"
+        "x-gh-pat": "${input:github_mcp_pat}"
       }
-    }
+    },
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "github_mcp_pat",
+        "description": "GitHub Personal Access Token",
+        "password": true
+      }
+    ]
   }
 }
 ```
