@@ -19,14 +19,10 @@ module "server" {
   tags        = local.tags
 
   node_major_version    = var.node_major_version
-  timeout               = var.server.timeout
-  memory_size           = var.server.memory_size
-  handler               = var.server.handler
   environment_variables = var.server.environment_variables
   assets_bucket         = module.assets.bucket
   isr_tags_ddb          = module.isr_revalidation.ddb_tags_table
   isr_queue             = module.isr_revalidation.sqs_queue
-  is_streaming_enabled  = var.server.is_streaming_enabled
   lambda_layers         = var.server.lambda_layers
 
   enable_alarms  = var.enable_alarms
@@ -41,12 +37,8 @@ module "image_optimizer" {
   environment = var.environment
   tags        = local.tags
 
-  node_major_version    = var.node_major_version
-  timeout               = var.image_optimizer.timeout
-  memory_size           = var.image_optimizer.memory_size
-  handler               = var.image_optimizer.handler
-  environment_variables = var.image_optimizer.environment_variables
-  assets_bucket         = module.assets.bucket
+  node_major_version = var.node_major_version
+  assets_bucket      = module.assets.bucket
 }
 
 module "isr_revalidation" {
@@ -55,11 +47,7 @@ module "isr_revalidation" {
   environment = var.environment
   tags        = local.tags
 
-  node_major_version    = var.node_major_version
-  timeout               = var.isr_revalidation.timeout
-  memory_size           = var.isr_revalidation.memory_size
-  handler               = var.isr_revalidation.handler
-  environment_variables = var.isr_revalidation.environment_variables
+  node_major_version = var.node_major_version
 }
 
 module "initializer" {
@@ -68,11 +56,7 @@ module "initializer" {
   environment = var.environment
   tags        = local.tags
 
-  node_major_version    = var.node_major_version
-  timeout               = var.initializer.timeout
-  memory_size           = var.initializer.memory_size
-  handler               = var.initializer.handler
-  environment_variables = var.initializer.environment_variables
+  node_major_version = var.node_major_version
 
   isr_tags_ddb = module.isr_revalidation.ddb_tags_table
 }
@@ -83,8 +67,7 @@ module "cloudfront" {
   environment = var.environment
   tags        = local.tags
 
-  enable_waf           = var.enable_waf
-  are_previews_enabled = var.are_previews_enabled
+  enable_waf = var.enable_waf
 
   custom_domain = var.custom_domain
 

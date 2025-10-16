@@ -56,72 +56,14 @@ variable "vpc" {
 
 variable "server" {
   type = object({
-    timeout               = optional(number, 30)
-    memory_size           = optional(number, 1024)
-    handler               = optional(string, "index.handler")
     environment_variables = optional(map(string), {})
-    is_streaming_enabled  = optional(bool, false)
     lambda_layers         = optional(list(string), [])
   })
 
   description = "The server lambda function configuration."
   default = {
-    timeout               = 30
-    memory_size           = 1024
-    handler               = "index.handler"
     environment_variables = {}
-    is_streaming_enabled  = false
-  }
-}
-
-variable "image_optimizer" {
-  type = object({
-    timeout               = optional(number, 30)
-    memory_size           = optional(number, 1024)
-    handler               = optional(string, "index.handler")
-    environment_variables = optional(map(string), {})
-  })
-
-  description = "The image optimizer lambda function configuration."
-  default = {
-    timeout               = 30
-    memory_size           = 1024
-    handler               = "index.handler"
-    environment_variables = {}
-  }
-}
-
-variable "isr_revalidation" {
-  type = object({
-    timeout               = optional(number, 30)
-    memory_size           = optional(number, 1024)
-    handler               = optional(string, "index.handler")
-    environment_variables = optional(map(string), {})
-  })
-
-  description = "The ISR revalidation lambda function configuration."
-  default = {
-    timeout               = 30
-    memory_size           = 1024
-    handler               = "index.handler"
-    environment_variables = {}
-  }
-}
-
-variable "initializer" {
-  type = object({
-    timeout               = optional(number, 900)
-    memory_size           = optional(number, 256)
-    handler               = optional(string, "index.handler")
-    environment_variables = optional(map(string), {})
-  })
-
-  description = "The initializer lambda function configuration."
-  default = {
-    timeout               = 900
-    memory_size           = 256
-    handler               = "index.handler"
-    environment_variables = {}
+    lambda_layers         = []
   }
 }
 
@@ -139,12 +81,6 @@ variable "custom_headers" {
   }))
   description = "Custom headers to be added to the CloudFront distribution."
   default     = []
-}
-
-variable "are_previews_enabled" {
-  type        = bool
-  description = "Whether to enable previews. This feature is still under development and should be used with caution."
-  default     = false
 }
 
 variable "enable_alarms" {

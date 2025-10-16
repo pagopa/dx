@@ -39,7 +39,7 @@ No modules.
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | The environment variables to set for the lambda function. | `map(string)` | `{}` | no |
 | <a name="input_handler"></a> [handler](#input\_handler) | The function entrypoint in your code. The format is <filename>.<function\_name>. For example, if your code is in a file called index.js and the function name is handler, the value should be index.handler. | `string` | `"index.handler"` | no |
 | <a name="input_memory_size"></a> [memory\_size](#input\_memory\_size) | The amount of memory available to the function at runtime in MB. The default is 1024 MB. The maximum is 10240 MB. | `number` | `1024` | no |
-| <a name="input_node_major_version"></a> [node\_major\_version](#input\_node\_major\_version) | The major version of the runtime to use for the lambda function. Allowed values are 18, 20 or 22. | `string` | `"20"` | no |
+| <a name="input_node_major_version"></a> [node\_major\_version](#input\_node\_major\_version) | The major version of the runtime to use for the lambda function. Allowed values are 20 or 22. | `string` | `"20"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags | `map(any)` | n/a | yes |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | The maximum execution time for the function. The default is 30 seconds. The maximum is 900 seconds. | `number` | `30` | no |
 
