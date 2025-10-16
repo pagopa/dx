@@ -1,18 +1,10 @@
 name: "Install Application Insights OpenTelemetry SDK"
-description: "Installs Azure Monitor OpenTelemetry distro and related OpenTelemetry packages"
+description: "Installs Azure Monitor OpenTelemetry distro and related OpenTelemetry packages; flushes telemetry on post"
 author: "pagopa"
+
+inputs: {}
+
 runs:
-  using: "composite"
-  steps:
-    - name: Install Application Insights OpenTelemetry SDK
-      shell: bash
-      run: |
-        npm i --save \
-          @azure/monitor-opentelemetry \
-          @opentelemetry/api \
-          @opentelemetry/api-logs \
-          @opentelemetry/auto-instrumentations-node \
-          @opentelemetry/sdk-metrics \
-          @opentelemetry/resources \
-          @opentelemetry/semantic-conventions \
-          @opentelemetry/sdk-trace-base
+  using: "node24"
+  main: "dist/index.js"
+  post: "dist/post.js"
