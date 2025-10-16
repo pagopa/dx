@@ -127,7 +127,7 @@ variable "initializer" {
 
 variable "enable_waf" {
   type        = bool
-  description = "Whether to enable WAF for enhanced protection."
+  description = "Whether to enable WAF for enhanced protection. Enable this for sensitive production environments. Be aware that enabling WAF will incur additional costs."
   default     = false
 }
 
