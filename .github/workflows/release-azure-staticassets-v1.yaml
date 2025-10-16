@@ -15,7 +15,7 @@ on:
         description: The name of the build output directory.
         type: string
         required: false
-        default: 'dist'
+        default: "dist"
       storage_account_name:
         description: Azure Storage account name where the assets will be uploaded.
         type: string
@@ -55,7 +55,7 @@ on:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
         type: string
         required: false
-        default: ''
+        default: ""
       use_cdn_classic:
         description: Set to true to use Azure CDN Classic instead of Front Door (default is Front Door).
         type: boolean

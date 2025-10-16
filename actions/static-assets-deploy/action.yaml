@@ -46,7 +46,6 @@ inputs:
     required: false
     default: "."
 
-
 runs:
   using: composite
   steps:
@@ -56,54 +55,45 @@ runs:
       shell: bash
       run: |
         az storage blob sync \
-          --container ${{ inputs.blob_container_name }} \
-          --account-name ${{ inputs.storage_account_name }} \
+          --container ${{ env.BLOB_CONTAINER_NAME }} \
+          --account-name ${{ env.STORAGE_ACCOUNT_NAME }} \
           --source "${{ env.FOLDER_NAME }}"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
         WORKING_DIRECTORY: ${{ inputs.working_directory || '.' }}
+        BLOB_CONTAINER_NAME: ${{ inputs.blob_container_name }}
+        STORAGE_ACCOUNT_NAME: ${{ inputs.storage_account_name }}
 
-    ## Purge - Selective paths (CDN Classic)
+    ## Purge - Selective paths
     - name: Purge selected files
-      if: ${{ inputs.use_cdn_classic == 'true' && inputs.selective_purge_paths != '' }}
+      if: ${{ inputs.selective_purge_paths != '' }}
       shell: bash
       run: |
-        az cdn endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
-          --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+        az $AZ_RESOURCE endpoint purge \
+          --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+          --endpoint-name ${{ env.ENDPOINT_NAME }} \
+          --profile-name ${{ env.PROFILE_NAME }} \
+          --content-paths $(echo "${{ env.CONTENT_PATHS }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+      env:
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        PROFILE_NAME: ${{ inputs.profile_name }}
+        ENDPOINT_NAME: ${{ inputs.endpoint_name }}
+        CONTENT_PATHS: ${{ inputs.selective_purge_paths }}
+        AZ_RESOURCE: ${{ inputs.use_cdn_classic && 'cdn' || 'afd' }}
 
-    ## Purge - All files (CDN Classic)
+    ## Purge - All files
     - name: Purge all files
-      if: ${{ inputs.use_cdn_classic == 'true' && inputs.selective_purge_paths == '' }}
+      if: ${{ inputs.selective_purge_paths == '' }}
       shell: bash
       run: |
-        az cdn endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
+        az $AZ_RESOURCE endpoint purge \
+          --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+          --endpoint-name ${{ env.ENDPOINT_NAME }} \
+          --profile-name ${{ env.PROFILE_NAME }} \
           --content-paths "/*"
-
-    ## Purge - Selective paths (Front Door)
-    - name: Purge selected files
-      if: ${{ inputs.use_cdn_classic != 'true' && inputs.selective_purge_paths != '' }}
-      shell: bash
-      run: |
-        az afd endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
-          --content-paths $(echo "${{ inputs.selective_purge_paths }}" | sed -e "s/\([^ ]*\)/'\1'/g")
-
-    ## Purge - All files (Front Door)
-    - name: Purge all files
-      if: ${{ inputs.use_cdn_classic != 'true' && inputs.selective_purge_paths == '' }}
-      shell: bash
-      run: |
-        az afd endpoint purge \
-          --resource-group ${{ inputs.resource_group_name }} \
-          --endpoint-name ${{ inputs.endpoint_name }} \
-          --profile-name ${{ inputs.profile_name }} \
-          --content-paths "/*"
+      env:
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        PROFILE_NAME: ${{ inputs.profile_name }}
+        ENDPOINT_NAME: ${{ inputs.endpoint_name }}
+        AZ_RESOURCE: ${{ inputs.use_cdn_classic && 'cdn' || 'afd' }}
