@@ -74,13 +74,13 @@ runs:
           --resource-group $RESOURCE_GROUP_NAME \
           --endpoint-name $ENDPOINT_NAME \
           --profile-name $PROFILE_NAME \
-          --content-paths $(echo "${{ env.CONTENT_PATHS }}" | sed -e "s/\([^ ]*\)/'\1'/g")
+          --content-paths $(echo "$CONTENT_PATHS" | sed -e "s/\([^ ]*\)/'\1'/g")
       env:
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
         PROFILE_NAME: ${{ inputs.profile_name }}
         ENDPOINT_NAME: ${{ inputs.endpoint_name }}
         CONTENT_PATHS: ${{ inputs.selective_purge_paths }}
-        AZ_RESOURCE: ${{ inputs.use_cdn_classic && 'cdn' || 'afd' }}
+        AZ_RESOURCE: ${{ inputs.use_cdn_classic == 'true' && 'cdn' || 'afd' }}
 
     ## Purge - All files
     - name: Purge all files
@@ -88,12 +88,12 @@ runs:
       shell: bash
       run: |
         az $AZ_RESOURCE endpoint purge \
-          --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-          --endpoint-name ${{ env.ENDPOINT_NAME }} \
-          --profile-name ${{ env.PROFILE_NAME }} \
+          --resource-group $RESOURCE_GROUP_NAME \
+          --endpoint-name $ENDPOINT_NAME \
+          --profile-name $PROFILE_NAME \
           --content-paths "/*"
       env:
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
         PROFILE_NAME: ${{ inputs.profile_name }}
         ENDPOINT_NAME: ${{ inputs.endpoint_name }}
-        AZ_RESOURCE: ${{ inputs.use_cdn_classic && 'cdn' || 'afd' }}
+        AZ_RESOURCE: ${{ inputs.use_cdn_classic == 'true' && 'cdn' || 'afd' }}
