@@ -40,3 +40,10 @@ runs:
         key: ${{ runner.os }}-turbo-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-turbo-
+
+    - name: Export Package Manager
+      shell: bash
+      env:
+        package_manager: ${{ steps.detect-pm.outputs.package-manager }}
+      run: |
+        echo "NODE_PACKAGE_MANAGER=$package_manager" >> "$GITHUB_ENV"
