@@ -1,10 +1,14 @@
 {
   "name": "install-application-insights-otel-sdk-action",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
-  "main": "dist/index.js",
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
   "scripts": {
-    "build": "mkdir -p dist && cp src/index.js dist/index.js && cp src/post.js dist/post.js"
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@azure/monitor-opentelemetry": "^1.4.0",
