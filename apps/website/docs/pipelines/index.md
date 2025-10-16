@@ -37,7 +37,7 @@ New to DX pipelines? Start here:
   Deploy containerized applications
 - **[Static Web Apps](../azure/static-websites/build-deploy-static-web-app.md)** -
   Deploy static sites with CDN
-- **[CDN Deployment](../azure/static-websites/build-deploy-cdn-static-site.md)** -
+- **[Static Assets Deployment](../azure/static-websites/build-deploy-static-assets.md)** -
   Deploy to Azure CDN
 
 ### 🏗️ Infrastructure Automation
