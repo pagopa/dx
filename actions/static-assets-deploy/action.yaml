@@ -56,8 +56,8 @@ runs:
       run: |
         az storage blob sync \
           --container $BLOB_CONTAINER_NAME \
-          --account-name $env.STORAGE_ACCOUNT_NAME \
-          --source "$env.FOLDER_NAME"
+          --account-name $STORAGE_ACCOUNT_NAME \
+          --source "$FOLDER_NAME"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
