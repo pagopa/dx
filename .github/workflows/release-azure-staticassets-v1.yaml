@@ -1,7 +1,7 @@
-name: Build and Deploy Static Site to Azure CDN
+name: Build and Deploy Static Site to Azure
 
 # This reusable workflow builds a static application from a monorepo workspace,
-# uploads the assets to an Azure Storage Account, and deploys them via Azure CDN.
+# uploads the assets to an Azure Storage Account, and deploys them via Azure Front Door or Azure CDN Classic.
 # It is designed to be called by other workflows.
 
 on:
@@ -56,6 +56,11 @@ on:
         type: string
         required: false
         default: ''
+      use_cdn_classic:
+        description: Set to true to use Azure CDN Classic instead of Front Door (default is Front Door).
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -81,7 +86,7 @@ jobs:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
           WORKSPACE_NAME: ${{ inputs.workspace_name }}
-      
+
       - name: Get Artifact path
         id: get-artifact-path
         working-directory: ${{ steps.build-package.outputs.workspace-path }}
@@ -126,8 +131,9 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy Assets and Purge CDN
-        uses: pagopa/dx/.github/actions/cdn-code-deploy@main
+        uses: pagopa/dx/actions/static-assets-deploy@main
         with:
+          use_cdn_classic: ${{ env.USE_CDN_CLASSIC }}
           storage_account_name: ${{ env.STORAGE_ACCOUNT_NAME }}
           blob_container_name: "${{ env.BLOB_CONTAINER_NAME }}"
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
@@ -140,3 +146,4 @@ jobs:
           CDN_PROFILE_NAME: ${{ inputs.profile_name }}
           CDN_ENDPOINT_NAME: ${{ inputs.endpoint_name }}
           BLOB_CONTAINER_NAME: ${{ inputs.blob_container_name }}
+          USE_CDN_CLASSIC: ${{ inputs.use_cdn_classic && 'true' || 'false' }}

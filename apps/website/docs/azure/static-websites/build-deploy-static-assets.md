@@ -2,14 +2,14 @@
 sidebar_position: 3
 ---
 
-# Deploying a Static Site to Azure CDN
+# Deploying a Static Site to Azure
 
 The
-[Build and Deploy a Static Site to Azure CDN](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-cdn-v1.yaml)
+[Build and Deploy a Static Site to Azure](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-staticassets-v1.yaml)
 is a reusable workflow (`workflow_call`) that automates the build and deployment
 of a static application from a monorepo. It handles everything from dependency
-installation to purging the Azure CDN cache, ensuring a streamlined and
-consistent deployment process.
+installation to purging the cache on Azure Front Door or Azure CDN Classic,
+ensuring a streamlined and consistent deployment process.
 
 ## How It Works
 
@@ -32,14 +32,15 @@ security:
    - Waits for the `build` job to complete successfully.
    - Downloads the build artifact.
    - Logs into Azure using OIDC credentials configured as GitHub secrets.
-   - Calls the `pagopa/dx/.github/actions/cdn-code-deploy@main` action to handle
+   - Calls the `pagopa/dx/actions/static-assets-deploy@main` action to handle
      the final deployment steps:
      - Syncing the artifact's contents to the specified Azure Storage container.
-     - Purging the Azure CDN endpoint to serve the latest version of the assets.
+     - Purging the cache on Azure Front Door (default) or Azure CDN Classic to
+       serve the latest version of the assets.
 
 :::note
 
-For more information about the `cdn-code-deploy` action, refer to the
+For more information about the `static-assets-deploy` action, refer to the
 [documentation](./cdn-deploy.md).
 
 :::
@@ -62,15 +63,16 @@ on:
 
 jobs:
   deploy_to_cdn:
-    uses: pagopa/dx/.github/workflows/release-azure-cdn-v1.yaml@main # Path to the reusable workflow
+    uses: pagopa/dx/.github/workflows/release-azure-staticassets-v1.yaml@main # Path to the reusable workflow
     secrets: inherit
     with:
       workspace_name: "my-static-app" # The 'name' from the app's package.json
       storage_account_name: "your-storage-account-name"
       resource_group_name: "your-resource-group-name"
-      profile_name: "your-cdn-profile-name"
-      endpoint_name: "your-cdn-endpoint-name"
+      profile_name: "your-frontdoor-profile-name"
+      endpoint_name: "your-frontdoor-endpoint-name"
       environment: "infra-dev"
+      use_cdn_classic: false # Set to true if using Azure CDN Classic instead of Front Door
 ```
 
 When implementing this workflow:
