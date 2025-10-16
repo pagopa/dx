@@ -6,5 +6,5 @@ inputs: {}
 
 runs:
   using: "node24"
-  main: "dist/index.js"
-  post: "dist/post.js"
+  main: "main.js"
+  post: "post.js"
