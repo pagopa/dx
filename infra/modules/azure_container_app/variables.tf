@@ -30,14 +30,33 @@ variable "container_app_environment_id" {
 
 # ------------ CONTAINER APP ------------ #
 
-variable "tier" {
+variable "use_case" {
   type        = string
-  description = "The offer type for the Container. Valid values are 'xs', 's', 'm' and 'l'."
-  default     = "s"
+  description = "Container app use case. Allowed values: 'default'."
+  default     = "default"
 
   validation {
-    condition     = contains(["xs", "s", "m", "l"], var.tier)
-    error_message = "Valid values for tier are 'xs', 's', 'm' and 'l'."
+    condition     = contains(["default"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\"."
+  }
+}
+
+variable "size" {
+  type = object({
+    cpu    = number
+    memory = string
+  })
+  default     = null
+  description = "Container app memory and cpu sizes. For allowed values consult table at https://learn.microsoft.com/en-us/azure/container-apps/containers#allocations. If not set, it will be determined by the use_case."
+
+  validation {
+    condition = var.size == null || (
+      var.size.cpu >= 0.25 &&
+      var.size.cpu <= 4 &&
+      floor(var.size.cpu / 0.25) == var.size.cpu / 0.25 && # multiple of 0.25
+      var.size.memory == "${var.size.cpu * 2}Gi"
+    )
+    error_message = "CPU must be between 0.25 and 4 in steps of 0.25, and memory must equal cpu*2 (e.g. 0.25→0.5Gi, 1→2Gi, 4→8Gi)."
   }
 }
 
@@ -151,10 +170,10 @@ variable "acr_registry" {
 
 variable "autoscaler" {
   type = object({
-    replicas = object({
+    replicas = optional(object({
       minimum = number
       maximum = number
-    })
+    }), null)
 
     azure_queue_scalers = optional(list(object({
       queue_name   = string
@@ -185,4 +204,10 @@ variable "autoscaler" {
 
   default     = null
   description = "Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/"
+
+  validation {
+    condition     = var.autoscaler == null || var.autoscaler.replicas == null || (var.autoscaler.replicas.minimum >= 0 && var.autoscaler.replicas.maximum >= var.autoscaler.replicas.minimum && var.autoscaler.replicas.maximum > 0)
+    error_message = "Replicas minimum must be >= 0 and maximum must be >= minimum, but never 0."
+  }
+
 }

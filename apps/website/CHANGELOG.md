@@ -1,5 +1,11 @@
 # docs
 
+## 0.9.0
+
+### Minor Changes
+
+- 0d8e640: Added examples before / after DX in blog post
+
 ## 0.8.5
 
 ### Patch Changes
