@@ -41,7 +41,7 @@ security:
 :::note
 
 For more information about the `static-assets-deploy` action, refer to the
-[documentation](./cdn-deploy.md).
+[documentation](./static-assets-deploy.md).
 
 :::
 

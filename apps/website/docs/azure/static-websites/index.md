@@ -16,6 +16,6 @@ a smooth deployment and management of your static web applications.
 - **[Deploy Static Assets to Azure CDN](./build-deploy-static-assets.md)**:
   Step-by-step instructions for the workflow that automates build and deployment
   of static assets to Azure CDN.
-- **[Deploying Assets to CDN](./static-assets-deploy.md)**: Utility guide for
-  deploying assets to Content Delivery Networks with selective cache purging
+- **[Deploying Assets](./static-assets-deploy.md)**: Utility guide for deploying
+  assets to Frontdoor or Content Delivery Networks with selective cache purging
   capabilities.
