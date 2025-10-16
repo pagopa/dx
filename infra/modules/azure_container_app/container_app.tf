@@ -390,8 +390,10 @@ resource "azapi_resource" "this" {
 
   schema_validation_enabled = false
   response_export_values = [
-    # "properties.configuration.ingress.fqdn",
-    "*"
+    "properties.configuration",
+    "properties.environmentId",
+    "properties.provisioningState",
+    "properties.runningStatus",
   ]
 
   depends_on = [
