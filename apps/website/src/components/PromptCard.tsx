@@ -26,10 +26,7 @@ interface PromptCardProps {
   prompt: CatalogEntry;
 }
 
-export default function PromptCard({
-  content,
-  prompt,
-}: PromptCardProps): JSX.Element {
+export default function PromptCard({ prompt }: PromptCardProps): JSX.Element {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
