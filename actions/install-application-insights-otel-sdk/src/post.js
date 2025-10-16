@@ -2,12 +2,12 @@ const core = require("@actions/core");
 
 async function post() {
   try {
-    if (core.getState("otel_init") !== "true") {
-      core.warning("OTel not initialized earlier, skipping flush.");
-      return;
-    }
+    // if (core.getState("otel_init") !== "true") {
+    //   core.warning("OTel not initialized earlier, skipping flush.");
+    //   return;
+    // }
 
-    core.info("Flushing OpenTelemetry providers...");
+    // core.info("Flushing OpenTelemetry providers...");
 
     const { metrics, trace } = require("@opentelemetry/api");
     const { logs } = require("@opentelemetry/api-logs");
