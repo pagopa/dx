@@ -74,7 +74,8 @@ The GH PAT authentication is done via a prompt, so you will be asked to enter it
 
 <details>
 <summary><b>GitHub Copilot Coding Agent</b></summary>
-You need to configure it in the repository settings. See [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/using-github-copilot/using-extensions-to-integrate-external-tools-with-copilot-chat) for more info.
+
+You need to configure it in the repository settings. See [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp) for more info.
 
 1.  **Declare the MCP Server**: In the "Copilot" >> "Coding agent" panel of your repository settings, add an MCP Server declaration as follows:
 
