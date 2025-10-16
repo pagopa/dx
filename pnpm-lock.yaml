@@ -12,12 +12,30 @@ catalogs:
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
+    '@types/semver':
+      specifier: ^7.7.1
+      version: 7.7.1
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
     eslint:
       specifier: ^9.30.0
       version: 9.32.0
+    execa:
+      specifier: ^9.6.0
+      version: 9.6.0
+    neverthrow:
+      specifier: ^8.2.0
+      version: 8.2.0
+    plop:
+      specifier: ^4.0.2
+      version: 4.0.2
+    prettier:
+      specifier: 3.6.2
+      version: 3.6.2
+    semver:
+      specifier: ^7.7.2
+      version: 7.7.2
     tsup:
       specifier: ^8.5.0
       version: 8.5.0
@@ -278,9 +296,6 @@ importers:
       '@microsoft/docusaurus-plugin-application-insights':
         specifier: ^4.0.1
         version: 4.0.1(@docusaurus/core@3.8.1(@mdx-js/react@3.1.0(@types/react@18.3.23)(react@18.3.1))(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@docusaurus/types@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@docusaurus/utils-validation@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@pagopa/dx-mcpprompts':
-        specifier: workspace:^
-        version: link:../../packages/mcp-prompts
       prism-react-renderer:
         specifier: ^2.3.0
         version: 2.4.1(react@18.3.1)
