@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.2
+
+### Patch Changes
+
+- 8ad73d8: Enhance documentation about the authentication process
+
 ## 0.0.1
 
 ### Patch Changes
