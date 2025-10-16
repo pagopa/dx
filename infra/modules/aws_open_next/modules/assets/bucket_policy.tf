@@ -1,4 +1,6 @@
 data "aws_iam_policy_document" "read_assets_bucket" {
+  # Allows CloudFront to read static assets (JS, CSS, images) from the S3 bucket.
+  # This enables CloudFront to serve cached content without direct public access to S3.
   statement {
     effect    = "Allow"
     actions   = ["s3:GetObject*"]
