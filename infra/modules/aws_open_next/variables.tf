@@ -33,13 +33,13 @@ variable "custom_domain" {
 
 variable "node_major_version" {
   type        = string
-  description = "The major version of the runtime to use for the lambda function. Allowed values are 18, 20 or 22."
-  default     = "20"
+  description = "The major version of the runtime to use for the lambda function. Allowed values are 20 or 22."
+  default     = "22"
 
-  # Validate that the major version is 18, 20 or 22
+  # Validate that the major version is 20 or 22
   validation {
-    condition     = contains(["18", "20", "22"], var.node_major_version)
-    error_message = "The major version must be one of the following: 18, 20, 22"
+    condition     = contains(["20", "22"], var.node_major_version)
+    error_message = "The major version must be one of the following: 20, 22"
   }
 }
 
