@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.0.2
+
+### Patch Changes
+
+- 78255e9: Use private endpoint private ip address if exists instead of the native APIM IP
+
 ## 2.0.1
 
 ### Patch Changes
