@@ -1,15 +1,19 @@
-# Migrating from Blob Trigger to EventGrid
+# Using EventGrid with Storage Accounts and Azure Functions
 
-Step-by-step guide to migrate Azure Function Apps from blob triggers to
-EventGrid.
+This is a step-by-step guide to configure Blob Triggers in an Azure Function App
+using EventGrid for efficient event-driven processing.
 
-:::warning[When to Migrate] EventGrid is **strongly recommended** when your
-storage account contains **more than 10,000 blobs**. Blob triggers use polling
-which becomes inefficient at scale. :::
+:::warning
+
+Using EventGrid is **strongly recommended** when your storage account contains
+**more than 10,000 blobs**. Blob triggers use polling which becomes inefficient
+at scale.
+
+:::
 
 ## Why EventGrid?
 
-| Aspect       | Blob Trigger         | EventGrid                    |
+| Method       | Blob Trigger         | EventGrid                    |
 | ------------ | -------------------- | ---------------------------- |
 | **Delivery** | Polling (~10s delay) | Push (sub-second)            |
 | **Scale**    | Slow for >10K blobs  | Instant                      |
@@ -22,165 +26,11 @@ which becomes inefficient at scale. :::
 - [EventGrid overview](https://learn.microsoft.com/en-us/azure/event-grid/overview)
 - [EventGrid retry policy](https://learn.microsoft.com/en-us/azure/event-grid/delivery-and-retry)
 
-## Migration Steps
+## Implementation Steps
 
-### Step 1: Add Dependencies
+### Step 1: Configure Dead Letter Storage
 
-Update `package.json`:
-
-```json
-{
-  "dependencies": {
-    "@azure/storage-blob": "^12.0.0",
-    "@azure/identity": "^4.0.0"
-  }
-}
-```
-
-### Step 2: Update Function Code
-
-import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
-
-<Tabs>
-<TabItem value="before" label="Before (Blob Trigger)">
-
-```typescript
-import * as TE from "fp-ts/lib/TaskEither";
-import { pipe } from "fp-ts/lib/function";
-
-export const onBlobChangeEntryPoint = pipe(
-  onBlobChangeHandler(),
-  parseBlob,
-  toAzureFunctionHandler,
-);
-
-const parseBlob = ({ inputs }) =>
-  pipe(
-    inputs[0] as Buffer, // Blob content received directly
-    (blob) => blob.toString("utf-8"),
-    parseJson,
-    TE.fromEither,
-    TE.chainW((decodedItem) => processItem(decodedItem)),
-  );
-```
-
-</TabItem>
-<TabItem value="after" label="After (EventGrid)">
-
-```typescript
-import { BlobServiceClient } from "@azure/storage-blob";
-import { DefaultAzureCredential } from "@azure/identity";
-import * as TE from "fp-ts/lib/TaskEither";
-import * as E from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
-
-export const onBlobEventEntryPoint = pipe(
-  onBlobEventHandler(),
-  parseEventGridEvent,
-  toAzureFunctionHandler,
-);
-
-const parseEventGridEvent = ({ inputs }) =>
-  pipe(
-    inputs[0] as EventGridEvent, // Event metadata only
-    extractBlobInfo,
-    TE.fromEither,
-    TE.chainW(fetchAndProcessBlob),
-  );
-
-const extractBlobInfo = (event: EventGridEvent) =>
-  E.tryCatch(
-    () => ({
-      containerName: event.subject.split("/")[6],
-      blobName: event.subject.split("/").slice(8).join("/"),
-    }),
-    (e) => new Error(`Failed to extract blob info: ${e}`),
-  );
-
-const fetchAndProcessBlob = (blobInfo: BlobInfo) =>
-  pipe(
-    TE.tryCatch(
-      async () => {
-        const credential = new DefaultAzureCredential();
-        const blobServiceClient = new BlobServiceClient(
-          `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,
-          credential,
-        );
-        const blobClient = blobServiceClient
-          .getContainerClient(blobInfo.containerName)
-          .getBlobClient(blobInfo.blobName);
-
-        const downloadResponse = await blobClient.download();
-        const content = await streamToString(
-          downloadResponse.readableStreamBody,
-        );
-        return JSON.parse(content);
-      },
-      (e) => new Error(`Failed to fetch blob: ${e}`),
-    ),
-    TE.chainW(processItem),
-  );
-
-const streamToString = async (
-  stream: NodeJS.ReadableStream,
-): Promise<string> => {
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
-  return Buffer.concat(chunks).toString("utf-8");
-};
-```
-
-**Key changes:**
-
-- EventGrid provides event metadata, not blob content
-- Must fetch blob using Azure Storage SDK with managed identity
-- Use `DefaultAzureCredential` for RBAC authentication
-
-</TabItem>
-</Tabs>
-
-### Step 3: Update function.json
-
-<Tabs>
-<TabItem value="before" label="Before (Blob Trigger)">
-
-```json
-{
-  "bindings": [
-    {
-      "name": "blobContent",
-      "type": "blobTrigger",
-      "direction": "in",
-      "path": "%CONTAINER_NAME%/{name}",
-      "connection": "STORAGE_CONNECTION_STRING"
-    }
-  ],
-  "scriptFile": "../dist/main.js",
-  "entryPoint": "onBlobChangeEntryPoint"
-}
-```
-
-</TabItem>
-<TabItem value="after" label="After (EventGrid)">
-
-```json
-{
-  "bindings": [
-    {
-      "type": "eventGridTrigger",
-      "name": "eventGridEvent",
-      "direction": "in"
-    }
-  ],
-  "scriptFile": "../dist/main.js",
-  "entryPoint": "onBlobEventEntryPoint"
-}
-```
-
-</TabItem>
-</Tabs>
-
-### Step 4: Add Dead Letter Storage (Terraform)
+Create a storage account for EventGrid dead-letter messages:
 
 ```hcl
 module "deadletter_storage" {
@@ -205,7 +55,9 @@ module "deadletter_storage" {
 }
 ```
 
-### Step 5: Add RBAC Permissions (Terraform)
+### Step 2: Configure RBAC Permissions
+
+Grant the Function App permission to read blobs:
 
 ```hcl
 module "function_storage_role" {
@@ -225,7 +77,9 @@ module "function_storage_role" {
 }
 ```
 
-### Step 6: Add EventGrid Subscription (Terraform)
+### Step 3: Create EventGrid Subscription
+
+Configure EventGrid to trigger your Function App on blob events:
 
 ```hcl
 resource "azurerm_eventgrid_event_subscription" "blob_events" {
@@ -257,10 +111,28 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
 }
 ```
 
-### Step 7: Deploy and Test
+### Step 4: Configure Function Binding
+
+Update your `function.json` to use EventGrid trigger:
+
+```json
+{
+  "bindings": [
+    {
+      "type": "eventGridTrigger",
+      "name": "eventGridEvent",
+      "direction": "in"
+    }
+  ],
+  "scriptFile": "../dist/main.js",
+  "entryPoint": "onBlobEventEntryPoint"
+}
+```
+
+### Step 5: Deploy and Test
 
 1. **Deploy infrastructure**: `terraform apply`
-2. **Deploy function code**: Deploy your updated function app
+2. **Deploy function code**: Deploy your Function App
 3. **Test with sample blob**:
    ```bash
    az storage blob upload \
@@ -271,21 +143,14 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
    ```
 4. **Verify function execution**: Check Azure Portal for function logs
 
-### Step 8: Monitor and Validate
+### Step 6: Monitor and Validate
 
-Compare metrics between old and new implementation:
+Monitor the following metrics:
 
-- **Latency**: EventGrid should be < 1s
-- **Success rate**: Should match blob trigger
-- **Event count**: Verify all events are processed
-
-### Step 9: Remove Blob Trigger
-
-Once validated:
-
-1. Remove blob trigger function.json
-2. Remove blob trigger code
-3. Deploy final version
+- **Latency**: EventGrid should deliver events in < 1s
+- **Success rate**: Verify all events are processed successfully
+- **Event count**: Ensure all blob creation events trigger the function
+- **Dead-letter queue**: Monitor for failed events
 
 ## Complete Example
 
@@ -378,7 +243,7 @@ module "function_storage_role" {
     storage_account_name = module.storage_account.name
     resource_group_name  = azurerm_resource_group.main.name
     container_name       = "*"
-    role                 = "Storage Blob Data Contributor"
+    role                 = "reader"
     description          = "Allow function app to read/write blobs"
   }]
 }
@@ -413,15 +278,6 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
 ```
 
 </details>
-
-## Rollback Plan
-
-If issues arise:
-
-1. **Comment out EventGrid subscription** in Terraform
-2. **Restore blob trigger function.json** from version control
-3. **Deploy previous function version**
-4. **Run** `terraform apply` to remove EventGrid subscription
 
 ## Best Practices
 
