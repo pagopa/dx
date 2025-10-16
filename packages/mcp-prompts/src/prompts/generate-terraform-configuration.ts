@@ -59,13 +59,14 @@ export const generateTerraformConfiguration: CatalogEntry = {
       requirements?: string;
     }) => `To generate a Terraform configuration for ${args.requirements || "any requirement"}, you must follow the PagoPA DX best practices.
 
-You can find information about the "infrastructure folder structure", "Using DX terraform modules", "Using DX terraform provider" and other conventions by using the \`QueryPagoPADXDocumentation\` tool. For example, you can ask "what is the infrastructure folder structure?", but you must ask for the other information as well.
+You can find information about the "infrastructure folder structure", "Using DX terraform modules", "Using DX terraform provider" and other conventions by using the \`QueryPagoPADXDocumentation\` tool. For example, you can ask "what is the infrastructure folder structure?". You can ask for the other information you may need as well.
 It's suggested to call the \`QueryPagoPADXDocumentation\` tool multiple times to gather all the necessary information using simple and scoped questions.
 
 When generating the configuration, remember to:
-1.  Use existing Terraform modules from the \`pagopa-dx\` namespace whenever possible. You can search for them using the \`searchModules\` tool.
-2.  Strictly follow the correct folder structure for infrastructure resources.
-3.  Generate HCL code that is clean, readable, and well-documented.`,
+1.  Always us existing Terraform modules from the \`pagopa-dx\` namespace for cloud resources you have to create (for example azure storage account use the terraform module pagopa-dx/azure-storage-account/azurerm). You can search for them using the \`searchModules\` tool.
+2.  Always use the dx providers' functions and resources to set the name of cloud resources (using the resource_name function) and to set subnets cidrs (using the dx_available_subnet_cidr resource). You can search for them using the \`getProviderDocs\` tool.
+3.  Strictly follow the correct folder structure for infrastructure resources.
+4.  Generate HCL code that is clean, readable, and well-documented.`,
     name: "generate-terraform-configuration",
   },
   tags: ["terraform", "infrastructure", "dx"],
