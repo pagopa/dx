@@ -25,7 +25,7 @@ module "server" {
   isr_queue             = module.isr_revalidation.sqs_queue
   lambda_layers         = var.server.lambda_layers
 
-  enable_alarms  = var.enable_alarms
+  enable_alarms  = local.enable_alarms
   alarms_actions = var.alarms_actions
 
   vpc = var.vpc
