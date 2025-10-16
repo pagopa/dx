@@ -1,0 +1,16 @@
+{
+  "name": "keep-alive",
+  "description": "Action to keep the repository alive. If 55 days have passed since the last commit, it makes an empty push.",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "github",
+    "action",
+    "dx",
+    "repository",
+    "keep-alive"
+  ],
+  "scripts": {},
+  "devDependencies": {}
+}
