@@ -52,8 +52,8 @@ New to DX pipelines? Start here:
 ### 🛠️ Build & Package
 
 - **Docker Image Build** - Build and push container images
-- **[CDN Deploy](../azure/static-websites/cdn-deploy.md)** - Deploy assets to
-  content delivery networks
+- **[Static App Deploy](../azure/static-websites/static-assets-deploy.md)** -
+  Deploy assets to content delivery networks
 
 ## Getting Started
 
