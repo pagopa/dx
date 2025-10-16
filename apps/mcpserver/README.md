@@ -42,6 +42,7 @@ This server can be used by any MCP-compliant client.
 <summary><b>VS Code</b></summary>
 
 Update your configuration file with the following. See [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) for more info.
+The GH PAT authentication is done via a prompt, so you will be asked to enter it the first time you use the server.
 
 #### VS Code Remote Server Connection
 
