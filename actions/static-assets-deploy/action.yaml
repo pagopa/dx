@@ -55,9 +55,9 @@ runs:
       shell: bash
       run: |
         az storage blob sync \
-          --container ${{ env.BLOB_CONTAINER_NAME }} \
-          --account-name ${{ env.STORAGE_ACCOUNT_NAME }} \
-          --source "${{ env.FOLDER_NAME }}"
+          --container $BLOB_CONTAINER_NAME \
+          --account-name $env.STORAGE_ACCOUNT_NAME \
+          --source "$env.FOLDER_NAME"
       working-directory: ${{ env.WORKING_DIRECTORY }}
       env:
         FOLDER_NAME: ${{ inputs.sync_dir_name || 'dist' }}
@@ -71,9 +71,9 @@ runs:
       shell: bash
       run: |
         az $AZ_RESOURCE endpoint purge \
-          --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-          --endpoint-name ${{ env.ENDPOINT_NAME }} \
-          --profile-name ${{ env.PROFILE_NAME }} \
+          --resource-group $RESOURCE_GROUP_NAME \
+          --endpoint-name $ENDPOINT_NAME \
+          --profile-name $PROFILE_NAME \
           --content-paths $(echo "${{ env.CONTENT_PATHS }}" | sed -e "s/\([^ ]*\)/'\1'/g")
       env:
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
