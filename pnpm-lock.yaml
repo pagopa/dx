@@ -85,6 +85,8 @@ importers:
 
   actions/filter-terraform-plan: {}
 
+  actions/keep-alive: {}
+
   actions/pr-comment:
     dependencies:
       '@actions/core':
