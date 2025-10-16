@@ -27,7 +27,7 @@ The server currently exposes the following capabilities:
 
 ## Authentication
 
-The server requires a [GitHub Personal Access Token (fine-grained)](https://github.com/settings/personal-access-tokens) for authentication. The token must have the following permissions:
+The server requires a [GitHub Personal Access Token (fine-grained)](https://github.com/settings/personal-access-tokens) for authentication. The token must have the following settings:
 
 - **Resource owner:**
   - Choose the **pagopa** organization
