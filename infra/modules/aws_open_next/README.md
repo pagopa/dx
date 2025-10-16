@@ -1,5 +1,7 @@
 # DX - AWS OpenNext Module
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/aws-open-next/aws?label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-role-assignments%2Fazurerm%2Flatest&logo=terraform)
+
 This Terraform module deploys a complete serverless infrastructure for Next.js applications on AWS using the [OpenNext](https://open-next.js.org/) framework. OpenNext is an open-source implementation that enables you to deploy Next.js applications to AWS with full support for SSG, SSR, ISR, and API routes using Lambda functions and CloudFront.
 
 ## 🚀 Features
