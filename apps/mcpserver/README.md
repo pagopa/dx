@@ -103,7 +103,9 @@ Once configured, Copilot can autonomously invoke the MCP server's tools during t
 <details>
 <summary><b>GitHub Copilot CLI</b></summary>
 
-To use the MCP server with [GitHub Copilot CLI](https://github.com/features/copilot/cli/), run `/mcp add` and follow the guided wizard:
+To use the MCP server with [GitHub Copilot CLI](https://github.com/features/copilot/cli/), run the cli with `copilot` and prompt `/mcp add` to start the configuration of the MCP server
+
+Follow the guided wizard to start using the DX MCP server:
 
 1. **Server Name**: `dx-docs`
 2. **Server Type**: `2` (HTTP)
