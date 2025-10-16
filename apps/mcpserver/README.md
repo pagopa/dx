@@ -27,12 +27,14 @@ The server currently exposes the following capabilities:
 
 ## Authentication
 
-The server requires a GitHub Personal Access Token (PAT) for authentication. The token must have the following permissions:
+The server requires a [GitHub Personal Access Token (fine-grained)](https://github.com/settings/personal-access-tokens) for authentication. The token must have the following permissions:
 
+- **Resource owner:**
+  - Choose the **pagopa** organization
+- **Repository access:**
+  - Public Repositories (read-only)
 - **Organization permissions:**
   - Members: Read-only (to verify membership in the pagopa organization)
-
-The PAT should have access to **all public repositories** in the organization.
 
 ## How to use it
 
@@ -72,7 +74,7 @@ The GH PAT authentication is done via a prompt, so you will be asked to enter it
 
 <details>
 <summary><b>GitHub Copilot Coding Agent</b></summary>
-You need to configure it in the repository settings. See [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp) for more info.
+You need to configure it in the repository settings. See [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/using-github-copilot/using-extensions-to-integrate-external-tools-with-copilot-chat) for more info.
 
 1.  **Declare the MCP Server**: In the "Copilot" >> "Coding agent" panel of your repository settings, add an MCP Server declaration as follows:
 
@@ -94,6 +96,21 @@ You need to configure it in the repository settings. See [GitHub Copilot MCP doc
 2.  **Configure Authentication**: Add any necessary tokens or secrets (e.g., `COPILOT_MCP_BOT_GH_PAT`) as secrets in the repository's Copilot configuration. This allows the coding agent to use them when querying the server.
 
 Once configured, Copilot can autonomously invoke the MCP server's tools during task execution, using it to access documentation context and improve the quality of its code generation.
+
+</details>
+
+<details>
+<summary><b>GitHub Copilot CLI</b></summary>
+
+To use the MCP server with [GitHub Copilot CLI](https://github.com/features/copilot/cli/), run `/mcp add` and follow the guided wizard:
+
+1. **Server Name**: `dx-docs`
+2. **Server Type**: `2` (HTTP)
+3. **URL**: `https://api.dev.dx.pagopa.it/mcp`
+4. **HTTP Headers**: `{"x-gh-pat": "<your-gh-PAT>"}`
+5. **Tools**: `*` (leave as is)
+
+Use `Tab` to navigate between fields and `Ctrl+S` to save.
 
 </details>
 
