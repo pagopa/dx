@@ -1,7 +1,7 @@
 name: "Setup Telemetry"
 description: "Initialize telemetry session and flush queued events in post"
-author: "pagopa"
+
 runs:
-  using: "node24"
-  main: "main.js"
-  post: "post.js"
+  using: "node20"
+  main: "dist/index.js"
+  post: "dist/post.js"

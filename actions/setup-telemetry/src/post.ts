@@ -1,8 +1,16 @@
-const fs = require("fs");
+/**
+ * Post-step telemetry flush.
+ * Replays queued events written to the NDJSON file during the session and flushes them
+ * via Azure Monitor's OpenTelemetry distribution.
+ */
+import { readFileSync, existsSync } from "fs";
 
-async function post() {
+async function post(): Promise<void> {
   try {
+    // Dynamic requires keep build simple; if bundling later they'll be resolved statically.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { logs } = require("@opentelemetry/api-logs");
 
     const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
@@ -21,14 +29,17 @@ async function post() {
       .getLoggerProvider()
       .getLogger("workflow-logger", "1.0.0");
 
-    if (eventsFile && fs.existsSync(eventsFile)) {
-      const lines = fs
-        .readFileSync(eventsFile, "utf-8")
+    if (eventsFile && existsSync(eventsFile)) {
+      const lines = readFileSync(eventsFile, "utf-8")
         .split(/\n/)
         .filter((l) => l.trim().length);
       for (const line of lines) {
         try {
-          const ev = JSON.parse(line);
+          const ev = JSON.parse(line) as {
+            name?: string;
+            body?: string;
+            attributes?: Record<string, string>;
+          };
           logger.emit({
             body: ev.body || ev.name,
             attributes: {
@@ -38,19 +49,21 @@ async function post() {
             },
           });
         } catch (e) {
-          console.warn(`Failed to parse event line: ${e.message}`);
+          const msg = e instanceof Error ? e.message : String(e);
+          console.warn(`Failed to parse event line: ${msg}`);
         }
       }
     } else {
       console.log("No events file found or empty");
     }
 
-    // Flush
+    // Flush logs provider (SDK may not always expose forceFlush)
     await logs.getLoggerProvider().forceFlush?.();
     await new Promise((r) => setTimeout(r, 500));
     console.log("Telemetry flushed");
   } catch (err) {
-    console.warn(`Post telemetry failed: ${err.message}`);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`Post telemetry failed: ${msg}`);
   }
 }
 
