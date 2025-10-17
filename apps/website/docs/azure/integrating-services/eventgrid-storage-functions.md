@@ -83,27 +83,33 @@ Configure EventGrid to trigger your Function App on blob events:
 
 ```hcl
 resource "azurerm_eventgrid_event_subscription" "blob_events" {
+  # Required fields
   name  = "blob-processing-events"
   scope = module.storage_account.id
 
+  # Required: endpoint configuration
   azure_function_endpoint {
     function_id                       = "${module.function_app.function_app.id}/functions/onBlobEvent"
     max_events_per_batch              = 1
     preferred_batch_size_in_kilobytes = 64
   }
 
+  # Optional: filter specific event types
   included_event_types = ["Microsoft.Storage.BlobCreated"]
 
+  # Optional: filter events by subject pattern
   subject_filter {
     subject_begins_with = "/blobServices/default/containers/uploads/"
     subject_ends_with   = ".json"
   }
 
+  # Optional: configure retry behavior
   retry_policy {
     max_delivery_attempts = 30
     event_time_to_live    = 1440  # 24 hours
   }
 
+  # Optional: dead-letter destination for failed events
   storage_blob_dead_letter_destination {
     storage_account_id          = module.deadletter_storage.id
     storage_blob_container_name = "eventgrid-deadletter"
@@ -111,23 +117,38 @@ resource "azurerm_eventgrid_event_subscription" "blob_events" {
 }
 ```
 
-### Step 4: Configure Function Binding
+### Step 4: Configure Function Code
 
-Update your `function.json` to use EventGrid trigger:
+Create your EventGrid trigger function using the Azure Functions v4 programming
+model:
 
-```json
-{
-  "bindings": [
-    {
-      "type": "eventGridTrigger",
-      "name": "eventGridEvent",
-      "direction": "in"
-    }
-  ],
-  "scriptFile": "../dist/main.js",
-  "entryPoint": "onBlobEventEntryPoint"
+```typescript
+import { app, InvocationContext, EventGridEvent } from "@azure/functions";
+
+export async function onBlobEvent(
+  event: EventGridEvent,
+  context: InvocationContext,
+): Promise<void> {
+  context.log("EventGrid event received:", event);
+
+  // Extract blob information from the event
+  const blobUrl = event.data.url;
+  const blobName = blobUrl.split("/").pop();
+
+  context.log(`Processing blob: ${blobName}`);
+
+  // Your blob processing logic here
+  // e.g., download blob, process content, store results
 }
+
+app.eventGrid("onBlobEvent", {
+  handler: onBlobEvent,
+});
 ```
+
+:::info The v4 programming model uses decorators and doesn't require
+`function.json` files. The function name in `app.eventGrid()` must match the
+function name in the EventGrid subscription's `function_id`. :::
 
 ### Step 5: Deploy and Test
 
