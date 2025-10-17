@@ -123,4 +123,4 @@ jobs:
           NPM_REGISTRY: ${{ inputs.npmRegistry }}
           GENERATED_CODE_DIR: ${{ env.GENERATED_CODE_DIR }}
         run: npm publish --access public --registry "$NPM_REGISTRY"
-        working-directory: " ${{ env.GENERATED_CODE_DIR }}"
+        working-directory: "${{ env.GENERATED_CODE_DIR }}"
