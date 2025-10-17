@@ -1,4 +1,4 @@
-const core = require("@actions/core");
+// Lightweight implementation without @actions/core (dependency not vendored)
 const fs = require("fs");
 const path = ".otel-session";
 
@@ -10,12 +10,18 @@ async function run() {
     if (!fs.existsSync(eventsFile)) {
       fs.writeFileSync(eventsFile, "");
     }
-    // Export environment variables for subsequent steps
-    core.exportVariable("OTEL_EVENT_FILE", eventsFile);
-    core.exportVariable("OTEL_SESSION_START", start.toString());
-    core.info(`Telemetry session started. Events file: ${eventsFile}`);
+    // Export environment variables for subsequent steps via GITHUB_ENV
+    const githubEnv = process.env.GITHUB_ENV;
+    if (!githubEnv) {
+      console.error('GITHUB_ENV not defined; cannot export variables');
+    } else {
+      fs.appendFileSync(githubEnv, `OTEL_EVENT_FILE=${eventsFile}\n`);
+      fs.appendFileSync(githubEnv, `OTEL_SESSION_START=${start}\n`);
+    }
+    console.log(`Telemetry session started. Events file: ${eventsFile}`);
   } catch (err) {
-    core.setFailed(err.message);
+  console.error('setup-telemetry failed:', err.message);
+  process.exit(1);
   }
 }
 

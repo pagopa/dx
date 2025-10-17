@@ -1,20 +1,20 @@
-const core = require("@actions/core");
 const fs = require("fs");
 
 async function post() {
   try {
+    const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
+    const { logs } = require("@opentelemetry/api-logs");
+
     const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
     const durationMs = startMs ? Date.now() - startMs : 0;
     const eventsFile = process.env.OTEL_EVENT_FILE;
-    core.info(`Post telemetry: duration=${durationMs}ms file=${eventsFile}`);
-
-    const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
-    const { logs } = require("@opentelemetry/api-logs");
+    console.log(`Post telemetry: duration=${durationMs}ms file=${eventsFile}`);
 
     useAzureMonitor({
       azureMonitorExporterOptions: {
         connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
       },
+      enableLiveMetrics: false,
     });
 
     const logger = logs
@@ -38,19 +38,19 @@ async function post() {
             },
           });
         } catch (e) {
-          core.warning(`Failed to parse event line: ${e.message}`);
+          console.warn(`Failed to parse event line: ${e.message}`);
         }
       }
     } else {
-      core.info("No events file found or empty");
+      console.log("No events file found or empty");
     }
 
     // Flush
     await logs.getLoggerProvider().forceFlush?.();
     await new Promise((r) => setTimeout(r, 500));
-    core.info("Telemetry flushed");
+    console.log("Telemetry flushed");
   } catch (err) {
-    core.warning(`Post telemetry failed: ${err.message}`);
+    console.warn(`Post telemetry failed: ${err.message}`);
   }
 }
 
