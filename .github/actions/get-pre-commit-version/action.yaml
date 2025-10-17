@@ -52,7 +52,7 @@ runs:
           curl "https://ghcr.io/token?scope=repository:${USER_IMAGE}:pull" |
           awk -F'"' '$0=$4'
         )"
-        
+
         # Query the GitHub Container Registry (GHCR) API for the manifest list digest
         DIGEST=$(curl -D - \
          -H "Authorization: Bearer $TOKEN" \
