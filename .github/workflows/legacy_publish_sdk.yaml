@@ -60,17 +60,22 @@ jobs:
 
 
       - name: Generate client and definitions
+        env:
+          GENERATOR_PACKAGE_NAME: ${{ inputs.generatorPackageName }}
+          OPENAPI_SPEC_PATH: ${{ inputs.openapiSpecPath }}
+          GENERATED_CODE_DIR: ${{ env.GENERATED_CODE_DIR }}
+          CODE_GEN_PACKAGE_NAME_PARAM: ${{ env.CODE_GEN_PACKAGE_NAME_PARAM }}
         run: |-
           set -euo pipefail
-          PACKAGE=${{ inputs.generatorPackageName }}
+          PACKAGE="$GENERATOR_PACKAGE_NAME"
 
           # If the application use a specific version of the generator package, use it; otherwise, just use latest version from the registry
           # Warning: yarn only is supported
-          CODEGEN_VERSION=$(yarn list --depth=0 | grep $PACKAGE |  grep -Eo "([0-9]+\.)+[0-9]+" || echo '*')
+          CODEGEN_VERSION=$(yarn list --depth=0 | grep "$PACKAGE" |  grep -Eo "([0-9]+\.)+[0-9]+" || echo '*')
 
           # Execute the generator fetching the specific package from the registry
-          npx -p $PACKAGE@$CODEGEN_VERSION gen-api-sdk --api-spec ${{ inputs.openapiSpecPath }} \
-            --out-dir ${{ env.GENERATED_CODE_DIR }} ${{ env.CODE_GEN_PACKAGE_NAME_PARAM }} --request-types --response-decoders --client
+          npx -p "$PACKAGE@$CODEGEN_VERSION" gen-api-sdk --api-spec "$OPENAPI_SPEC_PATH" \
+            --out-dir "$GENERATED_CODE_DIR" $CODE_GEN_PACKAGE_NAME_PARAM --request-types --response-decoders --client
 
         working-directory: "${{ inputs.apiProjectDir }}"
 
@@ -115,5 +120,8 @@ jobs:
           file_path: ${{ env.GENERATED_CODE_DIR }}
 
       - name: Publish
-        run: npm publish --access public --registry ${{ inputs.npmRegistry }}
+        env:
+          NPM_REGISTRY: ${{ inputs.npmRegistry }}
+          GENERATED_CODE_DIR: ${{ env.GENERATED_CODE_DIR }}
+        run: npm publish --access public --registry "$NPM_REGISTRY"
         working-directory: " ${{ env.GENERATED_CODE_DIR }}"
