@@ -2,17 +2,17 @@
 
 Centralized catalog of MCP prompts for PagoPA DX tools.
 
+## Usage
+
+> **Note**: If you're looking for end-user documentation on how to use these prompts with GitHub Copilot and other AI tools, please visit the [DX documentation page](https://dx.pagopa.it/docs/ai-tooling/prompts-catalog)
+
+The following instructions are for **contributors** who want to programmatically consume or add prompts to the catalog.
+
 ## Installation
 
 ```bash
 pnpm add @pagopa/dx-mcpprompts
 ```
-
-## Usage
-
-> **Note**: If you're looking for end-user documentation on how to use these prompts with GitHub Copilot and other AI tools, please visit [https://dx.pagopa.it/docs/ai-tooling/](https://dx.pagopa.it/docs/ai-tooling/)
-
-The following instructions are for **contributors** who want to programmatically consume or add prompts to the catalog.
 
 ### Consuming Prompts
 
