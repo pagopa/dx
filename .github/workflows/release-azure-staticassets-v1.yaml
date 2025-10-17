@@ -24,7 +24,7 @@ on:
         description: Blob container name within the Azure Storage account.
         type: string
         required: false
-        default: '\$web'
+        default: "$web"
       resource_group_name:
         description: CDN resource group name.
         type: string
