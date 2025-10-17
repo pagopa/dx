@@ -122,10 +122,12 @@ jobs:
             }
 
       - name: Make Zip File
+        env:
+          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
         run: |
-          cd ./${{ env.BUNDLE_NAME }}
-          zip -r ./${{ env.BUNDLE_NAME }}.zip .
-          mv ${{ env.BUNDLE_NAME }}.zip ../${{ env.BUNDLE_NAME }}.zip
+          cd "./$BUNDLE_NAME"
+          zip -r "./$BUNDLE_NAME.zip" .
+          mv "$BUNDLE_NAME.zip" "../$BUNDLE_NAME.zip"
           cd ..
 
       - name: Upload Artifact
