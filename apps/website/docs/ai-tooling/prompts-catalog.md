@@ -7,8 +7,7 @@ sidebar_position: 11
 Browse all available MCP prompts for the PagoPA DX ecosystem. Each prompt is a
 pre-configured command that helps you accomplish specific development tasks.
 
-<details>
-<summary><b>How to Use a Prompt</b></summary>
+## How to Use a Prompt
 
 Click on any **prompt ID** below to copy it. Then, use it in your AI assistant
 following this pattern:
@@ -28,8 +27,6 @@ If your MCP server is configured as `pagopa-dx` and you want to use the
 
 The AI assistant will execute the prompt with the appropriate context from your
 workspace.
-
-</details>
 
 ---
 
