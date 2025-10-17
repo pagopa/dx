@@ -81,16 +81,16 @@ runs:
         BUILD_PLATFORMS: ${{ inputs.build_platforms }}
         SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
       with:
-        context: ${{ inputs.dockerfile_context }}
-        file: ${{ inputs.dockerfile_path }}
+        context: ${{ env.DOCKERFILE_CONTEXT }}
+        file: ${{ env.DOCKERFILE_PATH }}
         push: ${{ inputs.push_to_registry }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         annotations: ${{ steps.meta.outputs.annotations }}
         cache-from: type=gha
         cache-to: type=gha,mode=min
-        build-args: ${{ inputs.build_args }}
-        platforms: ${{ inputs.build_platforms }}
+        build-args: ${{ env.BUILD_ARGS }}
+        platforms: ${{ env.BUILD_PLATFORMS }}
         provenance: false
 
     # Create an entry in github.com/org/repo/attestations

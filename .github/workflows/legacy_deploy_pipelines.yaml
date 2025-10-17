@@ -22,7 +22,7 @@ on:
         description: The health probe path exposed by the Function App.
         type: string
         required: false
-        default: '/info'
+        default: "/info"
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
