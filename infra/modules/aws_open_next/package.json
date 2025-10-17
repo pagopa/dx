@@ -1,6 +1,6 @@
 {
   "name": "aws_open_next",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "provider": "aws",
   "description": "Deploy a serverless and scalable OpenNext solution on AWS"
