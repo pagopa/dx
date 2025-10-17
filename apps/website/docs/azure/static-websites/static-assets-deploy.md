@@ -17,7 +17,7 @@ The action performs the following steps:
 
 1. Synchronizes the specified directory with the Azure Blob Storage container.
 2. Purges the cache on Azure Front Door (default) or Azure CDN Classic:
-   - Optionally purges specific paths if `selective_purge_paths` is provided.
+   - Optionally purges specific paths if `purge_paths` is provided.
    - If no specific paths are provided, purges the entire cache.
 
 ## Usage
@@ -51,7 +51,7 @@ jobs:
           resource_group_name: "your-resource-group-name"
           profile_name: "your-frontdoor-profile-name"
           endpoint_name: "your-frontdoor-endpoint-name"
-          selective_purge_paths: "./path/file1 ./path/file2"
+          purge_paths: "./path/file1 ./path/file2"
           sync_dir_name: "dist"
           working_directory: "."
 ```
@@ -82,7 +82,7 @@ jobs:
           resource_group_name: "your-resource-group-name"
           profile_name: "your-cdn-profile-name"
           endpoint_name: "your-cdn-endpoint-name"
-          selective_purge_paths: "./path/file1 ./path/file2"
+          purge_paths: "./path/file1 ./path/file2"
           sync_dir_name: "dist"
           working_directory: "."
 ```
@@ -93,7 +93,7 @@ When implementing this action in your repository:
    `use_cdn_classic: true` to use Azure CDN Classic.
 2. **Adjust paths** - Ensure `sync_dir_name` and `working_directory` match your
    project structure.
-3. **Selective purge** - Use `selective_purge_paths` to optimize cache purging
-   for specific files or directories.
+3. **Selective purge** - Use `purge_paths` to optimize cache purging for
+   specific files or directories.
 4. **Permissions** - Ensure the Azure CLI is authenticated and has the necessary
    permissions to access the storage account and Front Door/CDN.
