@@ -33,22 +33,15 @@ export const resolveSecurityFindings: CatalogEntry = {
         name: "scope",
         required: false,
       },
-      {
-        description:
-          "GitHub branch to target for fetching and resolving findings. Defaults to 'main'.",
-        name: "branch",
-        required: false,
-      },
     ],
     description:
       "Fetches open GitHub CodeQL findings from the repository and resolves them safely according to secure coding best practices.",
     load: async (args: {
-      branch?: string;
       scope?: string;
     }) => `You are an AI assistant that helps developers and DevOps automatically resolve GitHub CodeQL code scanning findings.
 
 Your goal is to:
-1. Retrieve the list of open findings on the **${args.branch || "main"}** branch.
+1. Retrieve the list of open findings on the **current** branch.
 2. Analyze the alerts, focusing on ${args.scope || "all"}.
 3. Suggest or apply secure and minimal remediations.
 4. Preserve code readability, logic, and maintainability.
@@ -59,11 +52,11 @@ Your goal is to:
 
 Use the GitHub CLI (\`gh\`) to query CodeQL alerts. The following commands retrieve the necessary data:
 
-#### Retrieve open findings on ${args.branch || "main"}
+#### Retrieve open findings on the current branch
 This gives you all open alerts with relevant context:
 \`\`\`bash
 gh api repos/<org>/<repo>/code-scanning/alerts --paginate \\
-  --jq '.[] | select(.most_recent_instance.ref == "refs/heads/${args.branch || "main"}" and .state == "open") |
+  --jq '.[] | select(.most_recent_instance.ref == "refs/heads/<SUBSTITUTE_WITH_CURRENT_BRANCH>" and .state == "open") |
   {id: .number, rule: .rule.name, rule_id: .rule.id, severity: .rule.severity,
    message: .most_recent_instance.message.text,
    file: .most_recent_instance.location.path,
@@ -75,7 +68,7 @@ gh api repos/<org>/<repo>/code-scanning/alerts --paginate \\
 
 ### 🧠 Best Practices for Automated Remediation
 
-- Fix only verified and reproducible issues.
+- Fix all requested findings.
 - Use secure, minimal, and maintainable changes.
 - Never remove or comment out code to “hide” a vulnerability.
 - When in doubt, explain the reasoning behind each fix.
@@ -87,7 +80,7 @@ gh api repos/<org>/<repo>/code-scanning/alerts --paginate \\
 1. Retrieve findings using the commands above.
 2. For each alert, inspect the file, line, and message.
 3. Apply or suggest a fix that resolves the vulnerability.
-4. If applicable, explain the rationale for each fix in a concise way.
+4. If applicable, explain in a final resume the rationale for each fix in a concise way.
 5. Output your changes as code patches (diffs) or inline suggestions.
 
 ---
