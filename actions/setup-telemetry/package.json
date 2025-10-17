@@ -1,7 +1,6 @@
 {
-  "name": "install-application-insights-otel-sdk-action",
+  "name": "setup-telemetry-action",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
   "devDependencies": {
     "prettier": "catalog:"
