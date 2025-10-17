@@ -1,0 +1,21 @@
+name: "Log Telemetry Event"
+description: "Append a telemetry event to the session file"
+runs:
+  using: "composite"
+  steps:
+    - name: Append event
+      shell: bash
+      run: |
+        if [ -z "$OTEL_EVENT_FILE" ]; then echo "OTEL_EVENT_FILE not set" >&2; exit 1; fi
+        echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\"}}" >> "$OTEL_EVENT_FILE"
+inputs:
+  name:
+    description: "Event name"
+    required: true
+  body:
+    description: "Event body/message"
+    required: true
+  source:
+    description: "Source identifier"
+    required: false
+    default: "workflow"
