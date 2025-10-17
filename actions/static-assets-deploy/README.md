@@ -1,4 +1,4 @@
-# Static Assets Deploy
+# Azure Static Assets Deploy
 
 A GitHub Action to deploy static assets to Azure Storage and invalidate cache on Azure Front Door or Azure CDN Classic.
 
@@ -13,17 +13,17 @@ The action is designed to be flexible and supports both modern Azure Front Door 
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `use_cdn_classic` | Set to `true` to use Azure CDN Classic instead of Front Door | No | `false` |
-| `storage_account_name` | Azure Storage account name where the assets will be uploaded | Yes | - |
-| `blob_container_name` | Blob container name within the Azure Storage account | Yes | - |
-| `resource_group_name` | Resource group name | Yes | - |
-| `profile_name` | Profile name associated with the endpoint | Yes | - |
-| `endpoint_name` | Endpoint name where the assets will be served | Yes | - |
-| `selective_purge_paths` | List of relative paths for files to include in the purge. Leave empty to purge all files | No | - |
-| `sync_dir_name` | Path to the files directory | No | `dist` |
-| `working_directory` | The path of the directory containing the folder to be synchronized | No | `.` |
+| Input                   | Description                                                                              | Required | Default |
+| ----------------------- | ---------------------------------------------------------------------------------------- | -------- | ------- |
+| `use_cdn_classic`       | Set to `true` to use Azure CDN Classic instead of Front Door                             | No       | `false` |
+| `storage_account_name`  | Azure Storage account name where the assets will be uploaded                             | Yes      | -       |
+| `blob_container_name`   | Blob container name within the Azure Storage account                                     | Yes      | -       |
+| `resource_group_name`   | Resource group name                                                                      | Yes      | -       |
+| `profile_name`          | Profile name associated with the endpoint                                                | Yes      | -       |
+| `endpoint_name`         | Endpoint name where the assets will be served                                            | Yes      | -       |
+| `selective_purge_paths` | List of relative paths for files to include in the purge. Leave empty to purge all files | No       | -       |
+| `sync_dir_name`         | Path to the files directory                                                              | No       | `dist`  |
+| `working_directory`     | The path of the directory containing the folder to be synchronized                       | No       | `.`     |
 
 ### Selective Purge Paths
 

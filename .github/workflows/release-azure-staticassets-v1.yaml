@@ -57,7 +57,7 @@ on:
         required: false
         default: ""
       use_cdn_classic:
-        description: Set to true to use Azure CDN Classic instead of Front Door (default is Front Door).
+        description: Set to true to use Azure CDN Classic (Deprecated) instead of Front Door (default is Front Door).
         type: boolean
         required: false
         default: false

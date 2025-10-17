@@ -72,7 +72,7 @@ jobs:
       profile_name: "your-frontdoor-profile-name"
       endpoint_name: "your-frontdoor-endpoint-name"
       environment: "infra-dev"
-      use_cdn_classic: false # Set to true if using Azure CDN Classic instead of Front Door
+      use_cdn_classic: false # Set to true if using Azure CDN Classic (Deprecated) instead of Front Door
 ```
 
 When implementing this workflow:

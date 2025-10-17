@@ -56,7 +56,7 @@ jobs:
           working_directory: "."
 ```
 
-### Using Azure CDN Classic
+### Using Azure CDN Classic (Deprecated)
 
 ```yaml
 name: Deploy Static Assets
