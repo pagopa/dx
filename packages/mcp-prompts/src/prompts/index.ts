@@ -8,6 +8,7 @@
 import type { CatalogEntry } from "../types.js";
 
 import { generateTerraformConfiguration } from "./generate-terraform-configuration.js";
+import { migrateTerraformModule } from "./migrate-terraform-module.js";
 import { resolveSecurityFindings } from "./resolve-security-findings.js";
 
 /**
@@ -17,4 +18,5 @@ import { resolveSecurityFindings } from "./resolve-security-findings.js";
 export const prompts: CatalogEntry[] = [
   generateTerraformConfiguration,
   resolveSecurityFindings,
+  migrateTerraformModule,
 ];
