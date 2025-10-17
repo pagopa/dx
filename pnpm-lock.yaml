@@ -153,9 +153,27 @@ importers:
         specifier: ^1.9.0
         version: 1.37.0
     devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
+      '@tsconfig/node22':
+        specifier: 'catalog:'
+        version: 22.0.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.16.2
+      eslint:
+        specifier: 'catalog:'
+        version: 9.32.0(jiti@2.6.0)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(typescript@5.8.3)(yaml@2.8.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
 
   actions/static-assets-deploy: {}
 
