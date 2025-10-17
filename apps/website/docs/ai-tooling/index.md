@@ -81,6 +81,22 @@ for more info.
 }
 ```
 
+### GitHub Copilot CLI
+
+To use the MCP server with
+[GitHub Copilot CLI](https://github.com/features/copilot/cli/), run the cli with
+`copilot` and prompt `/mcp add` to start the configuration of the MCP server
+
+Follow the guided wizard to start using the DX MCP server:
+
+1. **Server Name**: `pagopa-dx`
+2. **Server Type**: `2` (HTTP)
+3. **URL**: `https://api.dev.dx.pagopa.it/mcp`
+4. **HTTP Headers**: `{"x-gh-pat": "<your-gh-PAT>"}`
+5. **Tools**: `*` (leave as is)
+
+Use `Tab` to navigate between fields and `Ctrl+S` to save.
+
 ## Available Capabilities
 
 ### Tools
