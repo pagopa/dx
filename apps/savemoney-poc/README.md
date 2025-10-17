@@ -16,21 +16,41 @@ This command-line interface (CLI) tool analyzes Azure resources in read-only mod
 ## Prerequisites
 
 1. **Node.js**: Version 16 or later.
-2. **Azure Credentials**: The script uses `DefaultAzureCredential`, which supports various authentication methods. The simplest way is to run `az login` from your terminal before launching the script.
-3. **Dependency Installation**:
+2. **Azure Credentials**: The tool uses `DefaultAzureCredential`, which supports various authentication methods. The simplest way is to run `az login` from your terminal before launching the tool.
+3. **Installation**:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Usage
 
-### Basic Command
+### Build the Project
 
-To run the script, use `ts-node` (for development) or compile it to JavaScript first (`npm run build`).
+First, compile the TypeScript code:
 
 ```bash
-npx ts-node src/index.ts [options]
+pnpm build
+```
+
+### Run the Tool
+
+After building, you can run the tool using:
+
+```bash
+node dist/index.js [options]
+```
+
+Or if installed globally/as a binary:
+
+```bash
+azure-resource-analyzer [options]
+```
+
+For development with auto-rebuild:
+
+```bash
+pnpm dev
 ```
 
 ### Options
@@ -69,7 +89,7 @@ This file allows you to pre-configure the most common parameters.
 1. **Quick analysis with table output (default):**
 
    ```bash
-   npx ts-node src/index.ts
+   node dist/index.js
    ```
 
    _(You will be prompted for Tenant ID and Subscription ID if not otherwise configured)_
@@ -77,23 +97,53 @@ This file allows you to pre-configure the most common parameters.
 2. **Using a configuration file for a 60-day analysis:**
 
    ```bash
-   npx ts-node src/index.ts --config ./config.json
+   node dist/index.js --config ./config.json
    ```
 
 3. **Generating a detailed report for AI analysis:**
 
    ```bash
-   npx ts-node src/index.ts --format detailed-json > report_for_ai.json
+   node dist/index.js --format detailed-json > report_for_ai.json
    ```
 
 4. **Analysis of the last 7 days with YAML output:**
 
    ```bash
-   npx ts-node src/index.ts --days 7 --format yaml
+   node dist/index.js --days 7 --format yaml
    ```
 
 5. **Analysis focused on a specific location (`westeurope`):**
 
    ```bash
-   npx ts-node src/index.ts --location westeurope
+   node dist/index.js --location westeurope
    ```
+
+## Development
+
+### Type Checking
+
+```bash
+pnpm typecheck
+```
+
+### Linting
+
+```bash
+pnpm lint        # Auto-fix issues
+pnpm lint:check  # Check without fixing
+```
+
+### Testing
+
+```bash
+pnpm test              # Run tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage report
+```
+
+### Formatting
+
+```bash
+pnpm format        # Format code
+pnpm format:check  # Check formatting
+```

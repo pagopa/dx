@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * mark-unused-resources.ts
+ * Azure Resource Analyzer CLI
  *
- * Read-only CLI that analyzes Azure resources and reports
+ * A read-only CLI tool that analyzes Azure resources and reports
  * potentially unused or cost-inefficient ones.
  *
- * It does NOT modify, tag, or delete any resource.
+ * Features:
+ * - Multi-subscription support
+ * - Metric-based analysis using Azure Monitor
+ * - Multiple output formats (table, JSON, YAML, detailed-JSON)
+ * - Configurable via CLI options, environment variables, or config file
+ *
+ * This tool does NOT modify, tag, or delete any resources.
  */
 
 import { MonitorClient } from "@azure/arm-monitor";
@@ -348,7 +354,14 @@ async function generateReport(
 }
 
 /**
- * Fetches a specific metric for a resource.
+ * Fetches a specific metric for a resource from Azure Monitor.
+ *
+ * @param monitorClient - The Azure Monitor client instance
+ * @param resourceId - The Azure resource ID
+ * @param metricName - The name of the metric to fetch (e.g., "Percentage CPU")
+ * @param aggregation - The aggregation type (e.g., "Average", "Total")
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns The metric value or null if unavailable
  */
 async function getMetric(
   monitorClient: MonitorClient,
@@ -358,7 +371,7 @@ async function getMetric(
   timespanDays: number,
 ): Promise<null | number> {
   try {
-    const timespan = `P${timespanDays}D`; // Use dynamic timespan
+    const timespan = `P${timespanDays}D`;
     const result = await monitorClient.metrics.list(resourceId, {
       aggregation,
       metricnames: metricName,
@@ -366,42 +379,42 @@ async function getMetric(
     });
 
     const metricData = result.value[0]?.timeseries?.[0]?.data?.[0];
-    let value: null | number = null;
-    if (metricData) {
-      // Aggregation can be "average", "total", etc.
-      if (
-        aggregation.toLowerCase() === "average" &&
-        typeof metricData.average === "number"
-      ) {
-        value = metricData.average;
-      } else if (
-        aggregation.toLowerCase() === "total" &&
-        typeof metricData.total === "number"
-      ) {
-        value = metricData.total;
-      } else if (
-        aggregation.toLowerCase() === "minimum" &&
-        typeof metricData.minimum === "number"
-      ) {
-        value = metricData.minimum;
-      } else if (
-        aggregation.toLowerCase() === "maximum" &&
-        typeof metricData.maximum === "number"
-      ) {
-        value = metricData.maximum;
-      } else if (
-        aggregation.toLowerCase() === "count" &&
-        typeof metricData.count === "number"
-      ) {
-        value = metricData.count;
-      }
+    if (!metricData) {
+      return null;
     }
 
-    return typeof value === "number" ? value : null;
+    const aggregationLower = aggregation.toLowerCase();
+
+    if (
+      aggregationLower === "average" &&
+      typeof metricData.average === "number"
+    ) {
+      return metricData.average;
+    }
+    if (aggregationLower === "total" && typeof metricData.total === "number") {
+      return metricData.total;
+    }
+    if (
+      aggregationLower === "minimum" &&
+      typeof metricData.minimum === "number"
+    ) {
+      return metricData.minimum;
+    }
+    if (
+      aggregationLower === "maximum" &&
+      typeof metricData.maximum === "number"
+    ) {
+      return metricData.maximum;
+    }
+    if (aggregationLower === "count" && typeof metricData.count === "number") {
+      return metricData.count;
+    }
+
+    return null;
   } catch (error) {
     console.error(
-      `Failed to get metric ${metricName} for ${resourceId}:`,
-      error,
+      `Failed to fetch metric ${metricName} for resource ${resourceId}:`,
+      error instanceof Error ? error.message : error,
     );
     return null;
   }
@@ -409,13 +422,27 @@ async function getMetric(
 
 async function loadConfig(configPath?: string): Promise<Config> {
   if (configPath && fs.existsSync(configPath)) {
-    const configContent = fs.readFileSync(configPath, "utf-8");
-    const config = JSON.parse(configContent);
-    return {
-      ...config,
-      preferredLocation: config.preferredLocation || "italynorth",
-      timespanDays: config.timespanDays || 30,
-    };
+    try {
+      const configContent = fs.readFileSync(configPath, "utf-8");
+      const config = JSON.parse(configContent);
+
+      // Validate required fields
+      if (!config.tenantId || !config.subscriptionIds) {
+        throw new Error(
+          "Config file must contain 'tenantId' and 'subscriptionIds'",
+        );
+      }
+
+      return {
+        ...config,
+        preferredLocation: config.preferredLocation || "italynorth",
+        timespanDays: config.timespanDays || 30,
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to load config file: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   console.log(
@@ -427,11 +454,9 @@ async function loadConfig(configPath?: string): Promise<Config> {
   const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
     ? process.env.ARM_SUBSCRIPTION_ID.split(",")
     : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
-  // const timespanDaysStr = await prompt("Enter timespan in days for metrics (default: 30): ");
-  // const timespanDays = timespanDaysStr ? parseInt(timespanDaysStr, 10) : 30;
 
   return {
-    preferredLocation: "italynorth", // Default value if not provided in config file
+    preferredLocation: "italynorth",
     subscriptionIds,
     tenantId,
     timespanDays: 30,
@@ -452,27 +477,33 @@ async function prompt(question: string): Promise<string> {
 }
 
 program
-  .name("mark-unused-resources")
+  .name("azure-resource-analyzer")
+  .version("0.0.0")
   .description(
     "Analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
   )
   .option("-c, --config <path>", "Path to configuration file (JSON)")
   .option(
     "-f, --format <format>",
-    "Report format (json, yaml, table, detailed-json)",
+    "Report format: json, yaml, table, or detailed-json",
     "table",
   )
   .option(
     "-l, --location <string>",
-    "Preferred location where resources are deployed",
+    "Preferred Azure location for resources",
     "italynorth",
   )
-  .option("-d, --days <number>", "Timespan in days for metrics analysis", "30")
+  .option("-d, --days <number>", "Number of days for metrics analysis", "30")
   .action(async (options) => {
-    const config = await loadConfig(options.config);
-    config.timespanDays = parseInt(options.days, 10) || config.timespanDays;
-    config.preferredLocation = options.location || config.preferredLocation;
-    await analyzeResources(config, options.format);
+    try {
+      const config = await loadConfig(options.config);
+      config.timespanDays = parseInt(options.days, 10) || config.timespanDays;
+      config.preferredLocation = options.location || config.preferredLocation;
+      await analyzeResources(config, options.format);
+    } catch (error) {
+      console.error("Error:", error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
   });
 
 program.parse(process.argv);

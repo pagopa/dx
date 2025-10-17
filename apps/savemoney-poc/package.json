@@ -8,6 +8,14 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/savemoney-poc"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
@@ -25,7 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "dx": "./dist/index.js"
+    "azure-resource-analyzer": "./dist/index.js"
   },
   "keywords": [
     "azure",
