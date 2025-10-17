@@ -10,6 +10,12 @@ pnpm add @pagopa/dx-mcpprompts
 
 ## Usage
 
+> **Note**: If you're looking for end-user documentation on how to use these prompts with GitHub Copilot and other AI tools, please visit [https://dx.pagopa.it/docs/ai-tooling/](https://dx.pagopa.it/docs/ai-tooling/)
+
+The following instructions are for **contributors** who want to programmatically consume or add prompts to the catalog.
+
+### Consuming Prompts
+
 ```typescript
 import {
   getEnabledPrompts,
