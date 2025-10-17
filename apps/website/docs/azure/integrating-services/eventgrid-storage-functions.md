@@ -146,9 +146,13 @@ app.eventGrid("onBlobEvent", {
 });
 ```
 
-:::info The v4 programming model uses decorators and doesn't require
-`function.json` files. The function name in `app.eventGrid()` must match the
-function name in the EventGrid subscription's `function_id`. :::
+:::info
+
+The v4 programming model uses decorators and doesn't require `function.json`
+files. The function name in `app.eventGrid()` must match the function name in
+the EventGrid subscription's `function_id`.
+
+:::
 
 ### Step 5: Deploy and Test
 
