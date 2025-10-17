@@ -17,7 +17,7 @@ export const resolveSecurityFindings: CatalogEntry = {
   id: "resolve-security-findings",
   metadata: {
     description:
-      "Analyzes and resolves GitHub CodeQL security findings. Guides the agent to retrieve and fix open code scanning alerts on a branch using the GitHub CLI.",
+      "Analyzes and resolves GitHub CodeQL security findings. Guides the agent to retrieve and fix open code scanning alerts on the main branch using the GitHub CLI.",
     examples: [
       "Fix all open CodeQL findings on the main branch",
       "Resolve only 'external/cwe/cwe-079' findings in the dx repository",
@@ -41,7 +41,7 @@ export const resolveSecurityFindings: CatalogEntry = {
     }) => `You are an AI assistant that helps developers and DevOps automatically resolve GitHub CodeQL code scanning findings.
 
 Your goal is to:
-1. Retrieve the list of open findings on the **current** branch.
+1. Retrieve the list of open findings on the **main** branch.
 2. Analyze the alerts, focusing on ${args.scope || "all"}.
 3. Suggest or apply secure and minimal remediations.
 4. Preserve code readability, logic, and maintainability.
@@ -52,11 +52,11 @@ Your goal is to:
 
 Use the GitHub CLI (\`gh\`) to query CodeQL alerts. The following commands retrieve the necessary data:
 
-#### Retrieve open findings on the current branch
+#### Retrieve open findings on the main branch
 This gives you all open alerts with relevant context:
 \`\`\`bash
 gh api repos/<org>/<repo>/code-scanning/alerts --paginate \\
-  --jq '.[] | select(.most_recent_instance.ref == "refs/heads/<SUBSTITUTE_WITH_CURRENT_BRANCH>" and .state == "open") |
+  --jq '.[] | select(.most_recent_instance.ref == "refs/heads/<discover what is the main branch>" and .state == "open") |
   {id: .number, rule: .rule.name, rule_id: .rule.id, severity: .rule.severity,
    message: .most_recent_instance.message.text,
    file: .most_recent_instance.location.path,
