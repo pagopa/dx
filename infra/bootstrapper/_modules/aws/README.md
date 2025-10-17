@@ -5,10 +5,6 @@
 
 No requirements.
 
-## Providers
-
-No providers.
-
 ## Modules
 
 | Name | Source | Version |

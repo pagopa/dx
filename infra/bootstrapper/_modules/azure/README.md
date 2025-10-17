@@ -5,14 +5,6 @@
 
 No requirements.
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.6.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.46.0 |
-| <a name="provider_github"></a> [github](#provider\_github) | 6.6.0 |
-
 ## Modules
 
 | Name | Source | Version |

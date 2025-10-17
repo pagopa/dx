@@ -5,13 +5,6 @@
 
 No requirements.
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
-| <a name="provider_dx"></a> [dx](#provider\_dx) | n/a |
-
 ## Modules
 
 No modules.
