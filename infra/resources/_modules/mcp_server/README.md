@@ -5,13 +5,6 @@
 
 No requirements.
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.3 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.48.0 |
-
 ## Modules
 
 No modules.
