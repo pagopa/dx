@@ -22,8 +22,8 @@ and capabilities.
 The DX MCP Server provides AI assistants with access to:
 
 1. **📚 PagoPA DX Documentation**: Query the complete
-   [DX technical documentation](https://dx.pagopa.it/) using natural language
-   through Amazon Bedrock Knowledge Bases
+   [DX technical documentation](https://dx.pagopa.it/docs) using natural
+   language
 2. **🔍 GitHub Code Search**: Search for real-world code examples across
    PagoPA's GitHub repositories
 3. **🎯 Smart Prompts**: Pre-configured prompts designed for common tasks like
@@ -40,8 +40,7 @@ You'll need:
 
 ### Configuration
 
-<details>
-<summary><b>VS Code / GitHub Copilot</b></summary>
+### VS Code / GitHub Copilot
 
 Add the following to your MCP configuration file. See
 [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
@@ -61,10 +60,7 @@ for details.
 }
 ```
 
-</details>
-
-<details>
-<summary><b>GitHub Copilot Coding Agent</b></summary>
+### GitHub Copilot Coding Agent
 
 Configure in your repository settings under "Copilot" >> "Coding agent". See
 [GitHub Copilot MCP docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/extend-coding-agent-with-mcp)
@@ -84,8 +80,6 @@ for more info.
   }
 }
 ```
-
-</details>
 
 ## Available Capabilities
 
