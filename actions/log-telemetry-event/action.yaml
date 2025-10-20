@@ -1,12 +1,33 @@
 name: "Log Telemetry Event"
 description: "Append a telemetry event to the session file"
+
+inputs:
+  name:
+    description: "Event name"
+    required: true
+  body:
+    description: "(Optional) Event body/message plain text"
+    required: false
+    default: ""
+  source:
+    description: "Source identifier"
+    required: false
+    default: "workflow"
+  is_exception:
+    description: "If 'true', logs this event as an exception instead of a custom event"
+    required: false
+    default: "false"
+
 runs:
   using: "composite"
   steps:
     - name: Append event
       shell: bash
       run: |
-        if [ -z "$OTEL_EVENT_FILE" ]; then echo "OTEL_EVENT_FILE not set" >&2; exit 1; fi
+        if [ -z "$OTEL_EVENT_FILE" ]; then
+          echo "OTEL_EVENT_FILE not set" >&2; exit 1;
+        fi
+
         CORR_ID=${OTEL_CORRELATION_ID:-""}
         BODY_JSON_SAFE=$(echo "${INPUT_BODY}" | sed 's/"/\\"/g')
         NAME_JSON_SAFE=$(echo "${INPUT_NAME}" | sed 's/"/\\"/g')
@@ -24,19 +45,3 @@ runs:
         else
           echo "{\"name\":\"$NAME_JSON_SAFE\",\"body\":\"$BODY_JSON_SAFE\",\"attributes\":{${ATTR_BASE}}}" >> "$OTEL_EVENT_FILE"
         fi
-inputs:
-  name:
-    description: "Event name"
-    required: true
-  body:
-    description: "(Optional) Event body/message plain text"
-    required: false
-    default: ""
-  source:
-    description: "Source identifier"
-    required: false
-    default: "workflow"
-  is_exception:
-    description: "If 'true', logs this event as an exception instead of a custom event"
-    required: false
-    default: "false"
