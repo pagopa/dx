@@ -12,15 +12,24 @@ async function post(): Promise<void> {
   console.log(`Post telemetry: duration=${durationMs}ms`);
   console.log(`Post telemetry: file=${eventsFile}`);
 
-  const workflowName =
-    process.env.GITHUB_WORKFLOW || process.env.GITHUB_ACTION || "";
+  const workflowName = process.env.GITHUB_WORKFLOW || "";
   const runId = process.env.GITHUB_RUN_ID;
-  const repo =
-    process.env.GITHUB_ACTION_REPOSITORY || process.env.GITHUB_REPOSITORY;
+  const trigger = process.env.GITHUB_EVENT_NAME;
+  const attempt = process.env.GITHUB_RUN_ATTEMPT;
+  const repo = process.env.GITHUB_REPOSITORY;
   const actor = process.env.GITHUB_ACTOR;
   const workflowURL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+  const actionPath = process.env.GITHUB_ACTION_PATH;
+
+  const { resourceFromAttributes } = require("@opentelemetry/resources");
+  const resource = resourceFromAttributes({
+    "service.name": workflowName,
+    "service.instance.id": runId,
+    "service.namespace": "dx",
+  });
 
   useAzureMonitor({
+    resource,
     azureMonitorExporterOptions: {
       connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
@@ -37,8 +46,11 @@ async function post(): Promise<void> {
       "cicd.pipeline.task.run.url.full": workflowURL,
       "cicd.pipeline.repository": repo,
       "cicd.pipeline.author": actor,
-      "cicd.pipeline.duration_ms": durationMs.toString(),
+      "cicd.pipeline.run.duration": durationMs.toString(),
+      "cicd.pipeline.event": trigger,
       "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
+      "cicd.pipeline.attempt": attempt,
+      "cdcd.pipeline.path": actionPath,
       "error.type": "",
     },
   });
