@@ -28,6 +28,7 @@ async function post(): Promise<void> {
     const logger = logs
       .getLoggerProvider()
       .getLogger("workflow-logger", "1.0.0");
+    const correlationId = process.env.OTEL_CORRELATION_ID || "";
 
     if (eventsFile && existsSync(eventsFile)) {
       const lines = readFileSync(eventsFile, "utf-8")
@@ -45,6 +46,7 @@ async function post(): Promise<void> {
             attributes: {
               "microsoft.custom_event.name": ev.name || "CustomEvent",
               "otel.workflow.duration_ms": durationMs.toString(),
+              ...(correlationId && { "correlation.id": correlationId }),
               ...ev.attributes,
             },
           });
