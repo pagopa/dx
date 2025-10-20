@@ -44,7 +44,7 @@ jobs:
           docker_image_description: "DX MCP Server Docker Image"
           docker_image_authors: "PagoPA DX"
           build_platforms: linux/amd64
-          push_to_registry: true
+          push_to_registry: false
 
       - name: Get ECR image URI
         id: push-ecr
