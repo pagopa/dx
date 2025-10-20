@@ -23,29 +23,40 @@ runs:
   steps:
     - name: Append event
       shell: bash
+      env:
+        INPUT_NAME: ${{inputs.name }}
+        INPUT_BODY: ${{inputs.body}}
+        INPUT_SOURCE: ${{inputs.source}}
+        INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
       run: |
         if [ -z "$OTEL_EVENT_FILE" ]; then
           echo "OTEL_EVENT_FILE not set" >&2; exit 1;
         fi
 
-        # Escape JSON inputs (very small surface; if body contains newlines they are preserved)
-        esc() { echo "$1" | sed 's/"/\\"/g'; }
-        NAME=$(esc "$INPUT_NAME")
-        BODY=$(esc "$INPUT_BODY")
-        SOURCE=$(esc "$INPUT_SOURCE")
-        REPO=$(esc "$GITHUB_REPOSITORY")
-        ACTOR=$(esc "$GITHUB_ACTOR")
-        CORR_ID=${OTEL_CORRELATION_ID:-""}
-        EXC_RAW=${INPUT_IS_EXCEPTION:-"false"}
-        if [ "$EXC_RAW" = "true" ] || [ "$EXC_RAW" = "1" ]; then
+        # esc() { echo "$1" | sed 's/"/\\"/g'; }
+        # NAME=
+        # BODY=$(esc "$INPUT_BODY")
+        # SOURCE=$(esc "$INPUT_SOURCE")
+        # REPO=$(esc "$GITHUB_REPOSITORY")
+        # ACTOR=$(esc "$GITHUB_ACTOR")
+        # CORR_ID=${OTEL_CORRELATION_ID:-""}
+        # EXC_RAW=${INPUT_IS_EXCEPTION:-"false"}
+
+        echo "is exception: $INPUT_IS_EXCEPTION"
+
+        if [ "$INPUT_IS_EXCEPTION" = "true" ] || [ "$INPUT_IS_EXCEPTION" = "true" ]; then
           EXC=true
         else
           EXC=false
         fi
-        # Contract (NDJSON line):
+
         # { "name": string, "body": string, "exception": boolean, "attributes": { "repo": string, "actor": string, "source": string, "correlation_id": string? } }
-        ATTR="\"repo\":\"$REPO\",\"actor\":\"$ACTOR\",\"source\":\"$SOURCE\""
-        if [ -n "$CORR_ID" ]; then
-          ATTR="$ATTR,\"correlation_id\":\"$CORR_ID\""
-        fi
-        echo "{\"name\":\"$NAME\",\"body\":\"$BODY\",\"exception\":$EXC,\"attributes\":{${ATTR}}}" >> "$OTEL_EVENT_FILE"
+
+        # ATTR="\"repo\":\"$REPO\",\"actor\":\"$ACTOR\",\"source\":\"$SOURCE\""
+        # if [ -n "$CORR_ID" ]; then
+        #   ATTR="$ATTR,\"correlation_id\":\"$CORR_ID\""
+        # fi
+
+        echo "{\"name\":\"$NAME\",\"body\":\"$BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+
+        cat "$OTEL_EVENT_FILE"
