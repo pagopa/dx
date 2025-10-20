@@ -1,45 +1,33 @@
-/**
- * Post-step telemetry flush.
- * Replays queued events written to the NDJSON file during the session and flushes them
- * via Azure Monitor's OpenTelemetry distribution.
- */
 import { readFileSync, existsSync } from "fs";
 import { trace, context as otelContext } from "@opentelemetry/api";
 
 async function post(): Promise<void> {
   try {
-    // Dynamic requires keep build simple; if bundling later they'll be resolved statically.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { logs } = require("@opentelemetry/api-logs");
+    const { resourceFromAttributes } = require("@opentelemetry/resources");
+    // const {
+    //   SemanticResourceAttributes,
+    // } = require("@opentelemetry/semantic-conventions");
 
     const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
     const durationMs = startMs ? Date.now() - startMs : 0;
     const eventsFile = process.env.OTEL_EVENT_FILE;
-    console.log(`Post telemetry: duration=${durationMs}ms file=${eventsFile}`);
+    console.log(`Post telemetry: duration=${durationMs}ms`);
+    console.log(`Post telemetry: file=${eventsFile}`);
 
     // Cloud role name = workflow name; instance = run id
     const workflowName =
-      process.env.GITHUB_WORKFLOW ||
-      process.env.GITHUB_ACTION ||
-      "github-workflow";
-    const runId = process.env.GITHUB_RUN_ID || "unknown-run";
+      process.env.GITHUB_WORKFLOW || process.env.GITHUB_ACTION;
+    const runId = process.env.GITHUB_RUN_ID;
     const repo =
       process.env.GITHUB_ACTION_REPOSITORY || process.env.GITHUB_REPOSITORY;
-    const actor = process.env.GITHUB_ACTOR || "unknown";
-    // Dynamic require of resource libs to avoid version mismatches with Azure Monitor distribution
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { resourceFromAttributes } = require("@opentelemetry/resources");
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const {
-      SemanticResourceAttributes,
-    } = require("@opentelemetry/semantic-conventions");
+    const actor = process.env.GITHUB_ACTOR;
 
     const resource = resourceFromAttributes({
-      [SemanticResourceAttributes.SERVICE_NAME]: workflowName,
-      [SemanticResourceAttributes.SERVICE_INSTANCE_ID]: runId,
-      [SemanticResourceAttributes.SERVICE_NAMESPACE]: "dx",
+      ["service.name"]: workflowName,
+      ["service.instance.id"]: runId,
+      ["service.namespace"]: "dx",
     });
 
     useAzureMonitor({
