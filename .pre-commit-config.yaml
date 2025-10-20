@@ -26,7 +26,7 @@ repos:
           - --hook-config=--create-file-if-not-exist=true
           - --args=--hide providers
           - --args=--lockfile=false
-        files: ^infra/(?:.*/)_?modules/
+        files: ^infra/(?:.*/)?_?modules/.*
       - id: terraform_docs
         name: terraform_docs on resources
         args:
