@@ -69,94 +69,62 @@ async function post(): Promise<void> {
     const lines = readFileSync(eventsFile, "utf-8")
       .split(/\n/)
       .filter((l) => l.trim().length);
-
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
       for (const line of lines) {
         let ev: {
-          name?: string;
-          body?: string;
+          name: string;
+          body: string;
+          exception: boolean;
           attributes?: Record<string, string>;
-          exception?: unknown;
-        } = {};
-
+        } | null = null;
         try {
           ev = JSON.parse(line);
-        } catch (e) {
+        } catch {
           console.warn("Skipping malformed telemetry line");
           continue;
         }
-        // Robust exception detection: boolean, string, raw line, or attribute flag
-        const isException =
-          ev.exception === true ||
-          ev.exception === "true" ||
-          /"exception"\s*:\s*true/.test(line) ||
-          ev.attributes?.exception === "true";
-        console.log(
-          `Parsed event name=${ev.name} exceptionRaw=${String(ev.exception)} detectedException=${isException}`,
-        );
-
-        const baseAttrs: Record<string, string> = {
-          "Service Type": "GitHub Workflow",
+        if (!ev) continue;
+        const attrs = {
           "ci.pipeline.repo": repo,
           "ci.pipeline.run.id": runId,
           "enduser.id": actor,
           ...ev.attributes,
         };
-
-        if (isException) {
-          // Record exception on span (OpenTelemetry semantic event -> Azure Monitor exception telemetry)
+        if (ev.exception) {
           span.recordException({
             name: ev.name || "Exception",
-            message: (ev.body || ev.name || "Exception") as string,
+            message: ev.body || ev.name,
           });
           span.setStatus({
             code: SpanStatusCode.ERROR,
-            message: (ev.body || ev.name || "Exception") as string,
+            message: ev.body || ev.name,
           });
-          // Emit also as log (kept for searchability)
-          // logger.emit({
-          //   body: ev.body || ev.name,
-          //   severityNumber: 17,
-          //   attributes: {
-          //     "microsoft.custom_event.name": ev.name || "Exception",
-          //     "exception.type": ev.name || "Exception",
-          //     "exception.message": ev.body || ev.name || "Exception",
-          //     ...baseAttrs,
-          //   },
-          // });
+          logger.emit({
+            body: ev.body || ev.name,
+            severityNumber: 17,
+            attributes: {
+              "microsoft.custom_event.name": ev.name || "Exception",
+              "exception.type": ev.name || "Exception",
+              "exception.message": ev.body || ev.name || "Exception",
+              ...attrs,
+            },
+          });
         } else {
-          console.log("Emitting log");
-          // logger.emit({
-          //   body: ev.body || ev.name,
-          //   attributes: {
-          //     "microsoft.custom_event.name": ev.name || "CustomEvent",
-          //     ...baseAttrs,
-          //   },
-          // });
+          logger.emit({
+            body: ev.body || ev.name,
+            attributes: {
+              "microsoft.custom_event.name": ev.name || "CustomEvent",
+              ...attrs,
+            },
+          });
         }
       }
-
-      // logger.emit({
-      //   body: `Workflow completed in ${durationMs}ms`,
-      //   attributes: {
-      //     "microsoft.custom_event.name": "WorkflowCompleted",
-      //     // trace_id: operationTraceId,
-      //     // operation_id: operationTraceId,
-      //     "workflow.duration_ms": durationMs.toString(),
-      //     "workflow.name": workflowName,
-      //     "workflow.run_id": runId,
-      //     "workflow.repository": repo,
-      //     "workflow.author": actor,
-      //     "Service Type": "GitHub Workflow",
-      //   },
-      // });
     });
   } else {
     console.log("No events file found or empty");
   }
 
   span.end();
-  // Flush logs provider (SDK may not always expose forceFlush)
   await logs.getLoggerProvider().forceFlush?.();
   await new Promise((r) => setTimeout(r, 2000));
   console.log("Telemetry flushed");
