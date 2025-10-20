@@ -1,3 +1,4 @@
-'use strict';var fs=require('fs');var r=".otel-session";function a(){let e=Date.now();fs.mkdirSync(r,{recursive:true});let n=`${r}/events.ndjson`;return fs.existsSync(n)||fs.writeFileSync(n,""),{eventsFile:n,start:e}}function l(e,n){let t=process.env.GITHUB_ENV;if(!t){console.error("GITHUB_ENV not defined; cannot export variables");return}fs.appendFileSync(t,`OTEL_EVENT_FILE=${e}
-`),fs.appendFileSync(t,`OTEL_SESSION_START=${n}
-`);}async function E(){try{let{eventsFile:e,start:n}=a();l(e,n),console.log(`Telemetry session started. Events file: ${e}`);}catch(e){let n=e instanceof Error?e.message:String(e);console.error("setup-telemetry failed:",n),process.exit(1);}}E();
+'use strict';var fs=require('fs'),crypto=require('crypto');var s=".otel-session";function E(){let e=Date.now();fs.mkdirSync(s,{recursive:true});let n=`${s}/events.ndjson`;fs.existsSync(n)||fs.writeFileSync(n,"");let t=crypto.randomUUID();return {eventsFile:n,start:e,correlationId:t}}function d(e,n,t){let r=process.env.GITHUB_ENV;if(!r){console.error("GITHUB_ENV not defined; cannot export variables");return}fs.appendFileSync(r,`OTEL_EVENT_FILE=${e}
+`),fs.appendFileSync(r,`OTEL_SESSION_START=${n}
+`),fs.appendFileSync(r,`OTEL_CORRELATION_ID=${t}
+`);}async function m(){try{let{eventsFile:e,start:n,correlationId:t}=E();d(e,n,t),console.log(`Telemetry session started. Events file: ${e} correlationId=${t}`);}catch(e){let n=e instanceof Error?e.message:String(e);console.error("setup-telemetry failed:",n),process.exit(1);}}m();
