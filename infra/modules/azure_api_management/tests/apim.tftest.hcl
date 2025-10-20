@@ -235,11 +235,11 @@ run "autoscale_validation_default_out_of_range" {
 
   variables {
     environment = {
-      prefix    = "dx"
-      env_short = "d"
-      location  = "italynorth"
-      domain    = "modules"
-      app_name  = "test"
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
       instance_number = "01"
     }
 
