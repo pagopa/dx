@@ -54,7 +54,7 @@ jobs:
         run: |
           IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
-          docker tag $IMAGE_URI
+          docker tag $IMAGE_NAME:latest $IMAGE_URI
           docker push $IMAGE_URI
 
           echo "image-uri=$IMAGE_URI" >> $GITHUB_OUTPUT
