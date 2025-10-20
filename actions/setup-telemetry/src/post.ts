@@ -1,32 +1,31 @@
 import { readFileSync, existsSync } from "fs";
 import { randomUUID } from "crypto";
-import { trace, context as otelContext } from "@opentelemetry/api";
+import { trace, context as otelContext, SpanKind } from "@opentelemetry/api";
 
 async function post(): Promise<void> {
   const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
   const { logs } = require("@opentelemetry/api-logs");
 
   const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
-  const durationMs = startMs ? Date.now() - startMs : 0;
   const eventsFile = process.env.OTEL_EVENT_FILE;
-  console.log(`Post telemetry: duration=${durationMs}ms`);
   console.log(`Post telemetry: file=${eventsFile}`);
 
-  const workflowName = process.env.GITHUB_WORKFLOW || "";
-  const runId = process.env.GITHUB_RUN_ID;
-  const trigger = process.env.GITHUB_EVENT_NAME;
-  const attempt = process.env.GITHUB_RUN_ATTEMPT;
-  const repo = process.env.GITHUB_REPOSITORY;
-  const actor = process.env.GITHUB_ACTOR;
+  const workflowName = process.env.GITHUB_WORKFLOW || "github-workflow";
+  const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
+  const runId = process.env.GITHUB_RUN_ID || "";
+  const trigger = process.env.GITHUB_EVENT_NAME || "";
+  const attempt = process.env.GITHUB_RUN_ATTEMPT || "";
+  const repo = process.env.GITHUB_REPOSITORY || "";
+  const actor = process.env.GITHUB_ACTOR || "";
   const workflowURL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
   const actionPath = process.env.GITHUB_ACTION_PATH || "";
-  const action = process.env.GITHUB_ACTION_REPOSITORY || "";
 
   const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
-    "service.name": action,
+    "service.name": workflowRef,
     "service.instance.id": runId,
     "service.namespace": "dx",
+    "enduser.id": actor,
   });
 
   useAzureMonitor({
@@ -41,18 +40,23 @@ async function post(): Promise<void> {
   const correlationId = process.env.OTEL_CORRELATION_ID || "";
   const tracer = trace.getTracer("workflow-tracer");
   const span = tracer.startSpan(workflowName, {
+    kind: SpanKind.SERVER,
+    startTime: new Date(startMs),
     attributes: {
       "cicd.pipeline.action.name": workflowName,
-      "cicd.pipeline.task.run.id": runId,
-      "cicd.pipeline.task.run.url.full": workflowURL,
-      "cicd.pipeline.repository": repo,
-      "cicd.pipeline.author": actor,
-      "cicd.pipeline.run.duration": durationMs.toString(),
-      "cicd.pipeline.event": trigger,
-      "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
+      "cicd.pipeline.run.id": runId,
       "cicd.pipeline.attempt": attempt,
+      "cicd.pipeline.trigger": trigger,
+      "cicd.pipeline.repository": repo,
+      "cicd.pipeline.run.url.full": workflowURL,
+      "cicd.pipeline.author": actor,
+      "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
       "cdcd.pipeline.path": actionPath,
       "error.type": "",
+      "service.name": workflowName,
+      "service.instance.id": runId,
+      "service.namespace": "dx",
+      "Service Type": "GitHub Workflow",
     },
   });
   const operationTraceId =
@@ -74,28 +78,30 @@ async function post(): Promise<void> {
           exception?: boolean;
         };
 
-        const commonAttributes = {
-          trace_id: operationTraceId,
-          operation_id: operationTraceId,
+        const baseAttrs: Record<string, string> = {
+          "Service Type": "GitHub Workflow",
+          "ci.pipeline.repo": repo,
+          "ci.pipeline.run.id": runId,
+          "enduser.id": actor,
           ...ev.attributes,
-        } as Record<string, string>;
+        };
 
         if (ev.exception) {
-          // logger.emit({
-          //   body: ev.body || ev.name,
-          //   severityNumber: 17, // Error
-          //   attributes: {
-          //     "microsoft.custom_event.name": ev.name || "Exception",
-          //     "exception.type": ev.name || "Exception",
-          //     ...commonAttributes,
-          //   },
-          // });
+          logger.emit({
+            body: ev.body || ev.name,
+            severityNumber: 17,
+            attributes: {
+              "microsoft.custom_event.name": ev.name || "Exception",
+              "exception.type": ev.name || "Exception",
+              ...baseAttrs,
+            },
+          });
         } else {
           // logger.emit({
           //   body: ev.body || ev.name,
           //   attributes: {
           //     "microsoft.custom_event.name": ev.name || "CustomEvent",
-          //     ...commonAttributes,
+          //     ...baseAttrs,
           //   },
           // });
         }
