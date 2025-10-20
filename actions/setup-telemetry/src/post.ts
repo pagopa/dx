@@ -1,6 +1,11 @@
 import { readFileSync, existsSync } from "fs";
 import { randomUUID } from "crypto";
-import { trace, context as otelContext, SpanKind } from "@opentelemetry/api";
+import {
+  trace,
+  context as otelContext,
+  SpanKind,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 
 async function post(): Promise<void> {
   const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
@@ -80,8 +85,15 @@ async function post(): Promise<void> {
           console.warn("Skipping malformed telemetry line");
           continue;
         }
-
-        const isException = ev.exception === true || ev.exception === "true";
+        // Robust exception detection: boolean, string, raw line, or attribute flag
+        const isException =
+          ev.exception === true ||
+          ev.exception === "true" ||
+          /"exception"\s*:\s*true/.test(line) ||
+          ev.attributes?.exception === "true";
+        console.log(
+          `Parsed event name=${ev.name} exceptionRaw=${String(ev.exception)} detectedException=${isException}`,
+        );
 
         const baseAttrs: Record<string, string> = {
           "Service Type": "GitHub Workflow",
@@ -92,16 +104,26 @@ async function post(): Promise<void> {
         };
 
         if (isException) {
-          logger.emit({
-            body: ev.body || ev.name,
-            severityNumber: 17,
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "Exception",
-              "exception.type": ev.name || "Exception",
-              "exception.message": ev.body || ev.name || "Exception",
-              ...baseAttrs,
-            },
+          // Record exception on span (OpenTelemetry semantic event -> Azure Monitor exception telemetry)
+          span.recordException({
+            name: ev.name || "Exception",
+            message: (ev.body || ev.name || "Exception") as string,
           });
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: (ev.body || ev.name || "Exception") as string,
+          });
+          // Emit also as log (kept for searchability)
+          // logger.emit({
+          //   body: ev.body || ev.name,
+          //   severityNumber: 17,
+          //   attributes: {
+          //     "microsoft.custom_event.name": ev.name || "Exception",
+          //     "exception.type": ev.name || "Exception",
+          //     "exception.message": ev.body || ev.name || "Exception",
+          //     ...baseAttrs,
+          //   },
+          // });
         } else {
           console.log("Emitting log");
           // logger.emit({
