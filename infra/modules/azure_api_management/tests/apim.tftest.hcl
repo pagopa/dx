@@ -53,8 +53,8 @@ run "apim_is_correct_plan" {
       verbosity           = "error"
     }
 
-    subnet_id                     = run.setup_tests.subnet_id
-    subnet_pep_id                 = run.setup_tests.pep_id
+    subnet_id     = run.setup_tests.subnet_id
+    subnet_pep_id = run.setup_tests.pep_id
   }
 
   # Checks some assertions
@@ -235,11 +235,11 @@ run "autoscale_validation_default_out_of_range" {
 
   variables {
     environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
+      prefix    = "dx"
+      env_short = "d"
+      location  = "italynorth"
+      domain    = "modules"
+      app_name  = "test"
       instance_number = "01"
     }
 
