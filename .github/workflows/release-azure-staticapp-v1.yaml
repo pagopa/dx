@@ -66,11 +66,12 @@ concurrency:
 env:
   BUNDLE_NAME: bundle
   OUTPUT_DIR: ${{ inputs.output_dir }}
+  SCM_DO_BUILD_DURING_DEPLOYMENT: false
 
 jobs:
   build:
     name: Build Artifact
-    runs-on:  ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
     steps:
       - name: Checkout
