@@ -48,12 +48,12 @@ Custom Terraform provider for Azure resources:
 
 ### 📋 Best Practices
 
+- **[IaC Folder structure](./infra-folder-structure.md)** - Organize
+  Infrastructure as Code
 - **[Pre-commit hooks](./pre-commit-terraform.md)** - Validate and format
   Terraform code
 - **[Azure naming conventions](../azure/azure-naming-convention.md)** -
   Consistent resource naming
-- **[Folder structure](./infra-folder-structure.md)** - Organize Infrastructure
-  as Code
 
 ## Azure Resources Guide
 
