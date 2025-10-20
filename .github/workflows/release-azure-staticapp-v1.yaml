@@ -109,8 +109,8 @@ jobs:
       id-token: write
       contents: read
       pull-requests: write
-    env:
-      SCM_DO_BUILD_DURING_DEPLOYMENT: false
+    # env:
+    #   SCM_DO_BUILD_DURING_DEPLOYMENT: false
 
     steps:
       - name: Checkout
@@ -150,6 +150,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
+          skip_app_build: true
 
       - name: Delete Preview and Deploy production
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -159,3 +160,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           app_location: "./${{ env.OUTPUT_DIR }}"
           action: "close"
+          skip_app_build: true
