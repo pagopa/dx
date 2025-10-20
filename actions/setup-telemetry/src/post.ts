@@ -53,10 +53,6 @@ async function post(): Promise<void> {
       "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
       "cdcd.pipeline.path": actionPath,
       "error.type": "",
-      "service.name": workflowName,
-      "service.instance.id": runId,
-      "service.namespace": "dx",
-      "Service Type": "GitHub Workflow",
     },
   });
   const operationTraceId =
@@ -71,12 +67,21 @@ async function post(): Promise<void> {
 
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
       for (const line of lines) {
-        const ev = JSON.parse(line) as {
+        let ev: {
           name?: string;
           body?: string;
           attributes?: Record<string, string>;
-          exception?: boolean;
-        };
+          exception?: unknown;
+        } = {};
+
+        try {
+          ev = JSON.parse(line);
+        } catch (e) {
+          console.warn("Skipping malformed telemetry line");
+          continue;
+        }
+
+        const isException = ev.exception === true || ev.exception === "true";
 
         const baseAttrs: Record<string, string> = {
           "Service Type": "GitHub Workflow",
@@ -86,17 +91,19 @@ async function post(): Promise<void> {
           ...ev.attributes,
         };
 
-        if (ev.exception) {
+        if (isException) {
           logger.emit({
             body: ev.body || ev.name,
             severityNumber: 17,
             attributes: {
               "microsoft.custom_event.name": ev.name || "Exception",
               "exception.type": ev.name || "Exception",
+              "exception.message": ev.body || ev.name || "Exception",
               ...baseAttrs,
             },
           });
         } else {
+          console.log("Emitting log");
           // logger.emit({
           //   body: ev.body || ev.name,
           //   attributes: {
