@@ -23,6 +23,8 @@ async function post(): Promise<void> {
   const actor = process.env.GITHUB_ACTOR || "";
   const workflowURL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
   const actionPath = process.env.GITHUB_ACTION_PATH || "";
+  const nodePackageManager = process.env.NODE_PACKAGE_MANAGER || "";
+  const tfVersion = process.env.TERRAFORM_VERSION || "";
 
   const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
@@ -56,6 +58,10 @@ async function post(): Promise<void> {
       "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
       "cdcd.pipeline.path": actionPath,
       "error.type": "",
+      ...(nodePackageManager
+        ? { "node.package_manager": nodePackageManager }
+        : {}),
+      ...(tfVersion ? { "terraform.version": tfVersion } : {}),
     },
   });
 
