@@ -108,18 +108,9 @@ Use `Tab` to navigate between fields and `Ctrl+S` to save.
 ### Prompts
 
 The server provides a collection of intelligent prompts for common development
-tasks. These prompts understand PagoPA's conventions and best practices.
-
-import Link from '@docusaurus/Link';
-
-<div style={{ textAlign: 'center', margin: '2rem 0' }}>
-  <Link
-    className="button button--primary button--lg"
-    to="/docs/ai-tooling/prompts-catalog"
-    style={{ paddingTop: '1rem', paddingBottom: '0rem', color: 'white', fontWeight: 'bold' }}>
-    📚 Browse Available Prompts
-  </Link>
-</div>
+tasks. These prompts give guidelines to the agent on PagoPA's conventions and
+best practices. Explore them in the
+[DX prompts catalog](/docs/ai-tooling/prompts-catalog).
 
 ## Learn More
 
