@@ -7,7 +7,13 @@ runs:
       shell: bash
       run: |
         if [ -z "$OTEL_EVENT_FILE" ]; then echo "OTEL_EVENT_FILE not set" >&2; exit 1; fi
-        echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\"}}" >> "$OTEL_EVENT_FILE"
+        CORR_ID=${OTEL_CORRELATION_ID:-""}
+        # Write event with correlation id if available
+        if [ -n "$CORR_ID" ]; then
+          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\",\"correlation.id\":\"$CORR_ID\"}}" >> "$OTEL_EVENT_FILE"
+        else
+          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\"}}" >> "$OTEL_EVENT_FILE"
+        fi
 inputs:
   name:
     description: "Event name"
