@@ -5,13 +5,13 @@ runs:
   using: "composite"
 
   steps:
-    - name: Check AWS and Azure credentials
-      shell: bash
-      run: |
-        if [ -z "$ROLE_ARN" ] && { [ -z "$ARM_CLIENT_ID" ] || [ -z "$ARM_TENANT_ID" ] || [ -z "$ARM_SUBSCRIPTION_ID" ]; }; then
-          echo "No cloud credentials provided. Please set either ROLE_ARN for AWS or ARM_CLIENT_ID, ARM_TENANT_ID, and ARM_SUBSCRIPTION_ID for Azure."
-          exit 1
-        fi
+    # - name: Check AWS and Azure credentials
+    #   shell: bash
+    #   run: |
+    #     if [ -z "$ROLE_ARN" ] && { [ -z "$ARM_CLIENT_ID" ] || [ -z "$ARM_TENANT_ID" ] || [ -z "$ARM_SUBSCRIPTION_ID" ]; }; then
+    #       echo "No cloud credentials provided. Please set either ROLE_ARN for AWS or ARM_CLIENT_ID, ARM_TENANT_ID, and ARM_SUBSCRIPTION_ID for Azure."
+    #       exit 1
+    #     fi
 
     - name: Azure Login
       if: env.ARM_CLIENT_ID && env.ARM_TENANT_ID && env.ARM_SUBSCRIPTION_ID
