@@ -1,5 +1,4 @@
 import { readFileSync, existsSync } from "fs";
-import { randomUUID } from "crypto";
 import {
   trace,
   context as otelContext,
@@ -42,7 +41,6 @@ async function post(): Promise<void> {
   });
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
-  const correlationId = process.env.OTEL_CORRELATION_ID || "";
   const tracer = trace.getTracer("workflow-tracer");
   const span = tracer.startSpan(workflowName, {
     kind: SpanKind.SERVER,
@@ -60,15 +58,12 @@ async function post(): Promise<void> {
       "error.type": "",
     },
   });
-  const operationTraceId =
-    span.spanContext().traceId ||
-    correlationId ||
-    randomUUID().replace(/-/g, "").slice(0, 32);
 
   if (eventsFile && existsSync(eventsFile)) {
     const lines = readFileSync(eventsFile, "utf-8")
       .split(/\n/)
       .filter((l) => l.trim().length);
+
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
       for (const line of lines) {
         let ev: {
@@ -77,19 +72,23 @@ async function post(): Promise<void> {
           exception: boolean;
           attributes?: Record<string, string>;
         } | null = null;
+
         try {
           ev = JSON.parse(line);
         } catch {
-          console.warn("Skipping malformed telemetry line");
+          console.warn("Skipping malformed telemetry line: " + line);
           continue;
         }
+
         if (!ev) continue;
+
         const attrs = {
           "ci.pipeline.repo": repo,
           "ci.pipeline.run.id": runId,
           "enduser.id": actor,
           ...ev.attributes,
         };
+
         if (ev.exception) {
           span.recordException({
             name: ev.name || "Exception",
@@ -98,16 +97,6 @@ async function post(): Promise<void> {
           span.setStatus({
             code: SpanStatusCode.ERROR,
             message: ev.body || ev.name,
-          });
-          logger.emit({
-            body: ev.body || ev.name,
-            severityNumber: 17,
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "Exception",
-              "exception.type": ev.name || "Exception",
-              "exception.message": ev.body || ev.name || "Exception",
-              ...attrs,
-            },
           });
         } else {
           logger.emit({
@@ -125,6 +114,7 @@ async function post(): Promise<void> {
   }
 
   span.end();
+
   await logs.getLoggerProvider().forceFlush?.();
   await new Promise((r) => setTimeout(r, 2000));
   console.log("Telemetry flushed");
