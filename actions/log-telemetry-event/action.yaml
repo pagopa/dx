@@ -8,20 +8,35 @@ runs:
       run: |
         if [ -z "$OTEL_EVENT_FILE" ]; then echo "OTEL_EVENT_FILE not set" >&2; exit 1; fi
         CORR_ID=${OTEL_CORRELATION_ID:-""}
-        # Write event with correlation id if available
+        BODY_JSON_SAFE=$(echo "${INPUT_BODY}" | sed 's/"/\\"/g')
+        NAME_JSON_SAFE=$(echo "${INPUT_NAME}" | sed 's/"/\\"/g')
+        SOURCE_JSON_SAFE=$(echo "${INPUT_SOURCE}" | sed 's/"/\\"/g')
+        REPO_JSON_SAFE=$(echo "${GITHUB_ACTION_REPOSITORY}" | sed 's/"/\\"/g')
+        ACTOR_JSON_SAFE=$(echo "${GITHUB_ACTOR}" | sed 's/"/\\"/g')
+        SERVICE_TYPE="GitHub Workflow"
+        EXC_FLAG=${INPUT_IS_EXCEPTION:-"false"}
+        ATTR_BASE="\"source\":\"$SOURCE_JSON_SAFE\",\"Service Type\":\"$SERVICE_TYPE\",\"workflow.repository\":\"$REPO_JSON_SAFE\",\"workflow.author\":\"$ACTOR_JSON_SAFE\""
         if [ -n "$CORR_ID" ]; then
-          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\",\"correlation.id\":\"$CORR_ID\"}}" >> "$OTEL_EVENT_FILE"
+          ATTR_BASE="$ATTR_BASE,\"correlation.id\":\"$CORR_ID\""
+        fi
+        if [ "$EXC_FLAG" = "true" ]; then
+          echo "{\"name\":\"$NAME_JSON_SAFE\",\"body\":\"$BODY_JSON_SAFE\",\"exception\":true,\"attributes\":{${ATTR_BASE}}}" >> "$OTEL_EVENT_FILE"
         else
-          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"attributes\":{\"source\":\"$INPUT_SOURCE\"}}" >> "$OTEL_EVENT_FILE"
+          echo "{\"name\":\"$NAME_JSON_SAFE\",\"body\":\"$BODY_JSON_SAFE\",\"attributes\":{${ATTR_BASE}}}" >> "$OTEL_EVENT_FILE"
         fi
 inputs:
   name:
     description: "Event name"
     required: true
   body:
-    description: "Event body/message"
-    required: true
+    description: "(Optional) Event body/message plain text"
+    required: false
+    default: ""
   source:
     description: "Source identifier"
     required: false
     default: "workflow"
+  is_exception:
+    description: "If 'true', logs this event as an exception instead of a custom event"
+    required: false
+    default: "false"
