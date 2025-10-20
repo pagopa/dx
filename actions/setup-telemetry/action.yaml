@@ -5,3 +5,8 @@ runs:
   using: "node20"
   main: "dist/index.js"
   post: "dist/post.js"
+
+inputs:
+  connection_string:
+    description: "Azure Application Insights connection string"
+    required: true

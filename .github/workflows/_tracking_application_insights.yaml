@@ -19,7 +19,6 @@ jobs:
       RESOURCE_GROUP_NAME: "dx-d-itn-common-rg-01"
       INGESTION_ENDPOINT: ${{secrets.INGESTION_ENDPOINT}}
       INSTRUMENTATION_KEY: ${{secrets.INSTRUMENTATION_KEY}}
-      APPLICATIONINSIGHTS_CONNECTION_STRING: ${{secrets.APPI_CONNECTION_STRING}}
 
     steps:
       - name: Checkout
@@ -40,6 +39,8 @@ jobs:
 
       - name: Setup Telemetry Session
         uses: pagopa/dx/actions/setup-telemetry@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          connection_string: ${{ secrets.APPI_CONNECTION_STRING }}
 
       - name: Do random work and collect output
         run: |
