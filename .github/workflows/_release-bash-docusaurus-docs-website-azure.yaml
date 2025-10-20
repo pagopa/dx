@@ -15,7 +15,7 @@ on:
 
 jobs:
   deploy_to_static_web_app:
-    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
+    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@fix-update-static-webapp-workflow-warning #main # Path to the reusable workflow
     secrets: inherit
     with:
       workspace_name: "docs" # The 'name' from the app's package.json
