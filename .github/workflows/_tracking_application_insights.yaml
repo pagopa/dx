@@ -25,8 +25,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
 
       - name: Install Application Insights Classic SDK
         if: ${{ inputs.use_otel == 'false' }}
