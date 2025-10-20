@@ -51,16 +51,14 @@ jobs:
       - name: Log collected result as telemetry event
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
-          name: WorkflowResult
+          name: Number of Items
           body: ${{ env.WORK_RESULT }}
-          source: synthetic-test
 
       - name: Log sample exception
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
           name: SampleError
           body: "Simulated failure for telemetry"
-          source: synthetic-test
           is_exception: "true"
 
       # - name: Track event via OpenTelemetry SDK
