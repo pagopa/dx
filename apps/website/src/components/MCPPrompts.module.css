@@ -218,7 +218,7 @@
 
 .tag {
   background: var(--ifm-color-primary-lightest);
-  color: var(--ifm-color-primary-dark);
+  color: var(--ifm-font-color-base);
   padding: 0.3rem 0.85rem;
   border-radius: 12px;
   font-size: 0.8rem;
@@ -229,7 +229,7 @@
 
 [data-theme="dark"] .tag {
   background: var(--ifm-color-primary-dark);
-  color: var(--ifm-color-primary-lightest);
+  color: var(--ifm-font-color-base);
 }
 
 .promptExamples {
