@@ -66,23 +66,23 @@ async function post(): Promise<void> {
 
         if (ev.exception) {
           // Emit as exception via logs (Azure Monitor maps exception severity)
-          logger.emit({
-            body: ev.body || ev.name,
-            severityNumber: 17, // Error
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "Exception",
-              "exception.type": ev.name || "Exception",
-              ...commonAttributes,
-            },
-          });
+          // logger.emit({
+          //   body: ev.body || ev.name,
+          //   severityNumber: 17, // Error
+          //   attributes: {
+          //     "microsoft.custom_event.name": ev.name || "Exception",
+          //     "exception.type": ev.name || "Exception",
+          //     ...commonAttributes,
+          //   },
+          // });
         } else {
-          logger.emit({
-            body: ev.body || ev.name,
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "CustomEvent",
-              ...commonAttributes,
-            },
-          });
+          // logger.emit({
+          //   body: ev.body || ev.name,
+          //   attributes: {
+          //     "microsoft.custom_event.name": ev.name || "CustomEvent",
+          //     ...commonAttributes,
+          //   },
+          // });
         }
       }
 
@@ -90,8 +90,8 @@ async function post(): Promise<void> {
         body: `Workflow completed in ${durationMs}ms`,
         attributes: {
           "microsoft.custom_event.name": "WorkflowCompleted",
-          trace_id: operationTraceId,
-          operation_id: operationTraceId,
+          // trace_id: operationTraceId,
+          // operation_id: operationTraceId,
           "workflow.duration_ms": durationMs.toString(),
           "workflow.name": workflowName,
           "workflow.run_id": runId,
