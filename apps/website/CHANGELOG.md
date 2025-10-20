@@ -1,5 +1,13 @@
 # docs
 
+## 0.9.1
+
+### Patch Changes
+
+- ca5c98f: Moved Azure DX Provider docs to Azure section
+- 8de28e9: Move CDN docs to static assets (CDN and FrontDoor)
+- 15917a5: Document storage account eventgrid trigger
+
 ## 0.9.0
 
 ### Minor Changes
