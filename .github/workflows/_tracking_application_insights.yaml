@@ -65,143 +65,151 @@ jobs:
           body: ${{ env.WORK_RESULT_2 }}
           source: synthetic-test
 
-      - name: Track event via OpenTelemetry SDK
-        uses: actions/github-script@v8
-        if: ${{ inputs.use_otel == 'true' }}
+      - name: Log sample exception
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
-          script: |
-            const { useAzureMonitor, AzureMonitorOpenTelemetryOptions } = require("@azure/monitor-opentelemetry");
+          name: SampleError
+          body: "Simulated failure for telemetry"
+          source: synthetic-test
+          is_exception: "true"
 
-            // Rename 'context' to avoid clashing with the GitHub Actions runtime 'context' variable
-            const { metrics, trace, context: otelContext } = require("@opentelemetry/api");
-            const { logs } = require("@opentelemetry/api-logs");
+      # - name: Track event via OpenTelemetry SDK
+      #   uses: actions/github-script@v8
+      #   if: ${{ inputs.use_otel == 'true' }}
+      #   with:
+      #     script: |
+      #       const { useAzureMonitor, AzureMonitorOpenTelemetryOptions } = require("@azure/monitor-opentelemetry");
 
-            const { resourceFromAttributes } = require("@opentelemetry/resources");
-            const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
+      #       // Rename 'context' to avoid clashing with the GitHub Actions runtime 'context' variable
+      #       const { metrics, trace, context: otelContext } = require("@opentelemetry/api");
+      #       const { logs } = require("@opentelemetry/api-logs");
 
-            // Set Cloud Role Name and Instance
-            const customResource = resourceFromAttributes({
-              [SemanticResourceAttributes.SERVICE_NAME]: process.env.GITHUB_ACTION,
-              [SemanticResourceAttributes.SERVICE_NAMESPACE]: "dx",
-              //[SemanticResourceAttributes.SERVICE_INSTANCE_ID]: "my-instance",
-              [SemanticResourceAttributes.ENDUSER_ID]: process.env.GITHUB_ACTOR,
-            });
+      #       const { resourceFromAttributes } = require("@opentelemetry/resources");
+      #       const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
 
-            const options = {
-              resource: customResource,
-              azureMonitorExporterOptions: {
-                connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING
-              },
-              enableLiveMetrics: true
-            };
+      #       // Set Cloud Role Name and Instance
+      #       const customResource = resourceFromAttributes({
+      #         [SemanticResourceAttributes.SERVICE_NAME]: process.env.GITHUB_ACTION,
+      #         [SemanticResourceAttributes.SERVICE_NAMESPACE]: "dx",
+      #         //[SemanticResourceAttributes.SERVICE_INSTANCE_ID]: "my-instance",
+      #         [SemanticResourceAttributes.ENDUSER_ID]: process.env.GITHUB_ACTOR,
+      #       });
 
-            useAzureMonitor(options);
+      #       const options = {
+      #         resource: customResource,
+      #         azureMonitorExporterOptions: {
+      #           connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING
+      #         },
+      #         enableLiveMetrics: true
+      #       };
 
-            const tracer = trace.getTracer("workflow-tracer");
-            const span = tracer.startSpan("workflow-run", {
-              attributes: {
-                "workflow.name": process.env.GITHUB_ACTION,
-                "workflow.run_id": process.env.GITHUB_RUN_ID,
-                "workflow.repo": process.env.GITHUB_ACTION_REPOSITORY
-              }
-            });
+      #       useAzureMonitor(options);
 
-            const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
+      #       const tracer = trace.getTracer("workflow-tracer");
+      #       const span = tracer.startSpan("workflow-run", {
+      #         attributes: {
+      #           "workflow.name": process.env.GITHUB_ACTION,
+      #           "workflow.run_id": process.env.GITHUB_RUN_ID,
+      #           "workflow.repo": process.env.GITHUB_ACTION_REPOSITORY
+      #         }
+      #       });
 
-            otelContext.with(trace.setSpan(otelContext.active(), span), () => {
-              const meter =  metrics.getMeter("testMeter");
-              let histogram = meter.createHistogram("histogram");
-              histogram.record(1, { "testKey": "testValue" });
+      #       const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
 
-              logger.emit({
-                body: 'Hello World!',
-                attributes: {
-                  "microsoft.custom_event.name": "test-event-name",
-                  "additional_attrs": "val1"
-                },
-              });
+      #       otelContext.with(trace.setSpan(otelContext.active(), span), () => {
+      #         const meter =  metrics.getMeter("testMeter");
+      #         let histogram = meter.createHistogram("histogram");
+      #         histogram.record(1, { "testKey": "testValue" });
 
-              logger.emit({
-                body: 'Hello World!',
-                attributes: {
-                  "microsoft.custom_event.name": "test-event-name 2",
-                  "additional_attrs": "val2"
-                },
-              });
-            });
+      #         logger.emit({
+      #           body: 'Hello World!',
+      #           attributes: {
+      #             "microsoft.custom_event.name": "test-event-name",
+      #             "additional_attrs": "val1"
+      #           },
+      #         });
 
-            span.end();
+      #         logger.emit({
+      #           body: 'Hello World!',
+      #           attributes: {
+      #             "microsoft.custom_event.name": "test-event-name 2",
+      #             "additional_attrs": "val2"
+      #           },
+      #         });
+      #       });
 
-      - name: Track event via Classic SDK
-        uses: actions/github-script@v8
-        if: ${{ inputs.use_otel == 'false' }}
-        with:
-          script: |
-            const appInsights = require("applicationinsights");
-            appInsights.setup(process.env.APPINSIGHTS_CONNECTION_STRING)
-              .setAutoCollectConsole(false)
-              .setAutoCollectExceptions(false)
-              .setAutoCollectDependencies(false)
-              .setAutoCollectRequests(false)
-              .start();
+      #       span.end();
 
-            const client = appInsights.defaultClient;
-            client.trackEvent({ name: "WorkflowStarted" });
+      # - name: Track event via Classic SDK
+      #   uses: actions/github-script@v8
+      #   if: ${{ inputs.use_otel == 'false' }}
+      #   with:
+      #     script: |
+      #       const appInsights = require("applicationinsights");
+      #       appInsights.setup(process.env.APPINSIGHTS_CONNECTION_STRING)
+      #         .setAutoCollectConsole(false)
+      #         .setAutoCollectExceptions(false)
+      #         .setAutoCollectDependencies(false)
+      #         .setAutoCollectRequests(false)
+      #         .start();
 
-            console.log("Tracking event via JS");
+      #       const client = appInsights.defaultClient;
+      #       client.trackEvent({ name: "WorkflowStarted" });
 
-            //useAzureMonitor();
+      #       console.log("Tracking event via JS");
 
-            //console.log("Azure monitor setup");
+      #       //useAzureMonitor();
 
-            // const meter =  metrics.getMeter("testMeter");
-            // let counter = meter.createCounter("counter");
-            // counter.add(1, { "testKey": "testValue" });
+      #       //console.log("Azure monitor setup");
 
-            // console.log("exception threw");
+      #       // const meter =  metrics.getMeter("testMeter");
+      #       // let counter = meter.createCounter("counter");
+      #       // counter.add(1, { "testKey": "testValue" });
 
-            // const openTelemetry = ApplicationInsights(
-            // {
-            //   azureMonitorExporterOptions: {
-            //     connectionString: ${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }},
-            //   }
-            // });
+      #       // console.log("exception threw");
 
-            // const appInsights = new ApplicationInsights({ config: {
-            //   connectionString: '${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }}',
-            //   /* ...Other Configuration Options... */
-            // } });
-            // appInsights.loadAppInsights();
+      #       // const openTelemetry = ApplicationInsights(
+      #       // {
+      #       //   azureMonitorExporterOptions: {
+      #       //     connectionString: ${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }},
+      #       //   }
+      #       // });
 
-            // appInsights.trackEvent({ name: 'Open Telemtry', properties: { customProperty: 'custom property value' } });
-            // appInsights.flush();
+      #       // const appInsights = new ApplicationInsights({ config: {
+      #       //   connectionString: '${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }}',
+      #       //   /* ...Other Configuration Options... */
+      #       // } });
+      #       // appInsights.loadAppInsights();
 
-      - name: Track event via REST API
-        if: false
-        run: |
-          echo "logging event to AI"
+      #       // appInsights.trackEvent({ name: 'Open Telemtry', properties: { customProperty: 'custom property value' } });
+      #       // appInsights.flush();
 
-          curl -X POST ${INGESTION_ENDPOINT}/v2/track \
-            -H "Content-Type: application/json" \
-            -d '[
-              {
-                "ver": 1,
-                "name": ""Microsoft.ApplicationInsights.Metric",
-                "time": "'$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")'",
-                "sampleRate": 100,
-                "iKey": "${{ env.INSTRUMENTATION_KEY }}",
-                "data": {
-                  "baseType": "EventData",
-                  "baseData": {
-                    "ver": 2,
-                    "name": "Workflow completed",
-                    "duration": "00.00:00:10",
-                    "message": "Sample workflow Result",
-                    "properties": {
-                      "job": "build",
-                      "status": "success"
-                    }
-                  }
-                }
-              }
-            ]'
+      # - name: Track event via REST API
+      #   if: false
+      #   run: |
+      #     echo "logging event to AI"
+
+      #     curl -X POST ${INGESTION_ENDPOINT}/v2/track \
+      #       -H "Content-Type: application/json" \
+      #       -d '[
+      #         {
+      #           "ver": 1,
+      #           "name": ""Microsoft.ApplicationInsights.Metric",
+      #           "time": "'$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")'",
+      #           "sampleRate": 100,
+      #           "iKey": "${{ env.INSTRUMENTATION_KEY }}",
+      #           "data": {
+      #             "baseType": "EventData",
+      #             "baseData": {
+      #               "ver": 2,
+      #               "name": "Workflow completed",
+      #               "duration": "00.00:00:10",
+      #               "message": "Sample workflow Result",
+      #               "properties": {
+      #                 "job": "build",
+      #                 "status": "success"
+      #               }
+      #             }
+      #           }
+      #         }
+      #       ]'
