@@ -10,6 +10,7 @@ problem resolutions, patterns, and more.
 # Key Topics
 
 - [Following Azure Naming Convention](./azure-naming-convention.md)
+- [Using DX Azure Terraform Provider](./using-azure-registry-provider.md)
 - [Creating and Managing Azure Policies](./policies/)
 - [Configuring Identity and Access Management](./iam/)
 - [Leveraging API Management](./apim/)
