@@ -73,6 +73,37 @@ variable "autoscale" {
     scale_in_cooldown             = "PT30M"
   }
   description = "Configuration for autoscaling rules on capacity metrics."
+
+  validation {
+      condition = var.autoscale.enabled == false || local.use_case_features.zones == null || (
+        var.autoscale.minimum_instances % length(local.use_case_features.zones) == 0 &&
+        var.autoscale.maximum_instances % length(local.use_case_features.zones) == 0 &&
+        var.autoscale.default_instances % length(local.use_case_features.zones) == 0 &&
+        tonumber(var.autoscale.scale_out_value) % length(local.use_case_features.zones) == 0 &&
+        tonumber(var.autoscale.scale_in_value) % length(local.use_case_features.zones) == 0
+      )
+      error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. Current values: minimum_instances=${var.autoscale.minimum_instances}, maximum_instances=${var.autoscale.maximum_instances}, default_instances=${var.autoscale.default_instances}, scale_out_value=${var.autoscale.scale_out_value}, scale_in_value=${var.autoscale.scale_in_value}. This ensures proper distribution across availability zones."
+    }
+
+  validation {
+    condition     = var.autoscale.minimum_instances <= var.autoscale.default_instances && var.autoscale.default_instances <= var.autoscale.maximum_instances
+    error_message = "The default_instances must be between minimum_instances and maximum_instances."
+  }
+
+  validation {
+    condition     = var.autoscale.minimum_instances > 0
+    error_message = "The minimum_instances must be greater than 0."
+  }
+
+  validation {
+    condition     = tonumber(var.autoscale.scale_out_value) > 0
+    error_message = "The scale_out_value must be greater than 0."
+  }
+
+  validation {
+    condition     = tonumber(var.autoscale.scale_in_value) > 0
+    error_message = "The scale_in_value must be greater than 0."
+  }
 }
 
 #------------#
