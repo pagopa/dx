@@ -25,6 +25,7 @@ async function post(): Promise<void> {
   const actionPath = process.env.GITHUB_ACTION_PATH || "";
   const nodePackageManager = process.env.NODE_PACKAGE_MANAGER || "";
   const tfVersion = process.env.TERRAFORM_VERSION || "";
+  const CSPs = process.env.CSP_LIST || "";
 
   const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
@@ -62,6 +63,7 @@ async function post(): Promise<void> {
         ? { "node.package_manager": nodePackageManager }
         : {}),
       ...(tfVersion ? { "terraform.version": tfVersion } : {}),
+      ...(CSPs ? { "cloud.provider_list": CSPs } : {}),
     },
   });
 
