@@ -48,22 +48,11 @@ jobs:
           echo "WORK_RESULT=$FILE_COUNT" >> $GITHUB_ENV
           echo "Computed result: $FILE_COUNT"
 
-      - name: Do random work (again) and collect output
-        run: |
-          echo "WORK_RESULT_2=bucket" >> $GITHUB_ENV
-
       - name: Log collected result as telemetry event
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
           name: WorkflowResult
           body: ${{ env.WORK_RESULT }}
-          source: synthetic-test
-
-      - name: Log collected result (again) as telemetry event
-        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
-        with:
-          name: WorkflowResult
-          body: ${{ env.WORK_RESULT_2 }}
           source: synthetic-test
 
       - name: Log sample exception
