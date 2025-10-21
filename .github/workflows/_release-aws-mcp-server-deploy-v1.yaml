@@ -8,8 +8,8 @@ on:
   push:
     tags:
       - "@pagopa/dx-mcpserver@*"
-    branches:
-      - feat-action-for-mcp-deploy
+    # branches:
+    #   - feat-action-for-mcp-deploy
 
 jobs:
   build:
@@ -24,6 +24,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      packages: read
 
     steps:
       - name: Checkout
@@ -36,29 +37,51 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
-      - name: Docker Build
+      - name: Docker Build and Push to GHCR
         uses: pagopa/dx/.github/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           dockerfile_path: "apps/mcpserver/Dockerfile"
           docker_image_name: "${{ env.IMAGE_NAME }}"
           docker_image_description: "DX MCP Server Docker Image"
           docker_image_authors: "PagoPA DX"
           build_platforms: linux/amd64
-          push_to_registry: false
+          push_to_registry: true
 
-      - name: Get ECR image URI
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull from GHCR and Push to ECR
         id: push-ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
+          GHCR_IMAGE: ghcr.io/${{ env.IMAGE_NAME }}
         run: |
-          IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+          # Pull the image from GitHub Container Registry
+          echo "Pulling image from GHCR..."
+          docker pull $GHCR_IMAGE:$IMAGE_TAG
 
-          docker tag $IMAGE_NAME:latest $IMAGE_URI
-          docker push $IMAGE_URI
+          # Tag for ECR with both commit SHA and latest
+          ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
+          ECR_IMAGE_LATEST="$ECR_REGISTRY/$IMAGE_NAME:latest"
 
-          echo "image-uri=$IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "✅ Image URI: $IMAGE_URI"
+          echo "Tagging images for ECR..."
+          docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_IMAGE_URI
+          docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_IMAGE_LATEST
+
+          # Push to ECR
+          echo "Pushing to ECR..."
+          docker push $ECR_IMAGE_URI
+          docker push $ECR_IMAGE_LATEST
+
+          echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
+          echo "✅ Image pulled from GHCR and pushed to ECR: $ECR_IMAGE_URI"
 
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
