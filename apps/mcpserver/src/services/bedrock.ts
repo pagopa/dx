@@ -7,6 +7,7 @@ import {
 import { getLogger } from "@logtape/logtape";
 
 import { rerankingSupportedRegions } from "../config/aws.js";
+import { logger } from "../config/logging.js";
 
 export type QueryKnowledgeBasesOutput = {
   content: string;

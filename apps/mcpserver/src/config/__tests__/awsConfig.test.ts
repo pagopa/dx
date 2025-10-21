@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-
+import { describe, expect, it, vi } from "vitest";
+vi.mock("../logging", () => ({
+  logger: {
+    debug: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+  },
+}));
 import * as awsConfig from "../aws.js";
 
 describe("aws config", () => {

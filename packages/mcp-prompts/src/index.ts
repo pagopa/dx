@@ -11,10 +11,10 @@
  */
 
 export * from "./types.js";
-export { setLogger } from "./utils/logger.js";
 import type { CatalogEntry } from "./types.js";
 
 import { prompts as allPrompts } from "./prompts/index.js";
+import { logger } from "./utils/logger.js";
 
 /**
  * Gets all prompts with version injection.
@@ -22,6 +22,8 @@ import { prompts as allPrompts } from "./prompts/index.js";
  * @returns Promise<CatalogEntry[]> - Array of all available prompts
  */
 export const getPrompts = async (): Promise<CatalogEntry[]> => {
+  logger.debug("Loading prompts catalog...");
+
   // Get package version for injection
   const packageJson = await import("../package.json", {
     with: { type: "json" },
@@ -29,7 +31,11 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
   const version = packageJson.default.version;
 
   // Inject version into all prompts
-  return allPrompts.map((prompt) => ({ ...prompt, version }));
+  const prompts = allPrompts.map((prompt) => ({ ...prompt, version }));
+
+  logger.debug(`Loaded ${prompts.length} prompts (version: ${version})`);
+
+  return prompts;
 };
 
 /**
@@ -40,5 +46,11 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
  */
 export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
   const prompts = await getPrompts();
-  return prompts.filter((p) => p.enabled);
+  const enabledPrompts = prompts.filter((p) => p.enabled);
+
+  logger.info(
+    `Returning ${enabledPrompts.length} enabled prompts out of ${prompts.length} total`,
+  );
+
+  return enabledPrompts;
 };

@@ -7,36 +7,23 @@
  * - Local: stdout → console
  *
  * Log level is controlled via the LOG_LEVEL environment variable.
- *
- * Usage:
- * Instead of importing a global logger, use getLogger directly in each module:
- *
- * import { getLogger } from "@logtape/logtape";
- * const logger = getLogger(["mcpserver", "module-name"]);
- * logger.info("Message");
  */
 
-import { configure, getConsoleSink, type LogLevel } from "@logtape/logtape";
-import { z } from "zod";
+import {
+  configure,
+  getConsoleSink,
+  getLogger,
+  type LogLevel,
+} from "@logtape/logtape";
 
 /**
- * Zod schema for validating log levels.
- * Based on LogTape's LogLevel type.
+ * Logger instance for the MCP server.
+ * Use this throughout the mcpserver codebase.
  */
-const DEFAULT_LOG_LEVEL: LogLevel = "info";
-
-const logLevelSchema = z
-  .enum(["debug", "info", "warning", "error"])
-  .catch(DEFAULT_LOG_LEVEL);
+export const logger = getLogger(["mcpserver"]);
 
 export async function configureLogging() {
-  const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel;
-  if (logLevel !== process.env.LOG_LEVEL) {
-    // Use console.warn for this early logging before LogTape is configured
-    console.warn(
-      `Invalid log level: ${process.env.LOG_LEVEL}. Using ${DEFAULT_LOG_LEVEL}`,
-    );
-  }
+  const logLevel = (process.env.LOG_LEVEL || "info") as LogLevel;
 
   await configure({
     loggers: [

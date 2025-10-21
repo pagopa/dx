@@ -2,6 +2,8 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod/v4";
 
+import { logger } from "../config/logging.js";
+
 const organizationsSchema = z
   .array(z.string().nonempty())
   .nonempty()
@@ -48,7 +50,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
 
     return isMember;
   } catch (error) {
-    logger.error("Error verifying GitHub organization membership", { error });
+    logger.error("Error verifying GitHub organization membership:", { error });
     return false;
   }
 }

@@ -2,6 +2,8 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
+import { logger } from "../config/logging.js";
+
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
 /**

@@ -6,39 +6,18 @@ settings:
 
 catalogs:
   default:
-    '@tsconfig/node22':
-      specifier: 22.0.2
-      version: 22.0.2
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
-    '@types/semver':
-      specifier: ^7.7.1
-      version: 7.7.1
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
     eslint:
       specifier: ^9.30.0
       version: 9.32.0
-    execa:
-      specifier: ^9.6.0
-      version: 9.6.0
-    neverthrow:
-      specifier: ^8.2.0
-      version: 8.2.0
-    plop:
-      specifier: ^4.0.2
-      version: 4.0.2
     prettier:
       specifier: 3.6.2
       version: 3.6.2
-    semver:
-      specifier: ^7.7.2
-      version: 7.7.2
-    tsup:
-      specifier: ^8.5.0
-      version: 8.5.0
     typescript:
       specifier: ~5.8.3
       version: 5.8.3
@@ -489,6 +468,10 @@ importers:
         version: 3.6.2
 
   packages/mcp-prompts:
+    dependencies:
+      '@logtape/logtape':
+        specifier: ^1.0.4
+        version: 1.0.4
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
@@ -14472,7 +14455,7 @@ snapshots:
 
   axios@1.12.2:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.1)
+      follow-redirects: 1.15.9
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -16062,6 +16045,8 @@ snapshots:
   flat@5.0.2: {}
 
   flatted@3.3.3: {}
+
+  follow-redirects@1.15.9: {}
 
   follow-redirects@1.15.9(debug@4.4.1):
     optionalDependencies:
