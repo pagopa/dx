@@ -82,7 +82,7 @@ jobs:
         run: |
           # Pull the image from GitHub Container Registry
           echo "Pulling image from GHCR..."
-          docker pull $GH_IMAGE_NAME:feat-action-for-mcp-deploy #latest
+          docker pull $GHCR_IMAGE:feat-action-for-mcp-deploy #latest
 
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
