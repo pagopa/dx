@@ -24,7 +24,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      packages: read
+      packages: write
 
     steps:
       - name: Checkout
