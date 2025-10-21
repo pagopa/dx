@@ -46,11 +46,13 @@ jobs:
         id: push-ecr
         env:
           SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
+          ECR_IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          ECR_IMAGE_LATEST: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
         with:
           context: "."
           file: apps/mcpserver/Dockerfile
           push: false
-          tags: $ECR_IMAGE_URI,$ECR_IMAGE_LATEST
+          tags: "${{ env.ECR_IMAGE_URI }},${{ env.ECR_IMAGE_LATEST}}"
           cache-from: type=gha
           cache-to: type=gha,mode=min
           platforms: linux/arm64
