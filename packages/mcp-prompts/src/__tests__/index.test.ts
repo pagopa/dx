@@ -37,6 +37,27 @@ describe("mcp-prompts", () => {
     vi.clearAllMocks();
   });
 
+  describe("getPrompts", () => {
+    it("returns all prompts including disabled ones", async () => {
+      const result = await promptsModule.getPrompts();
+
+      expect(result).toHaveLength(3);
+      expect(result[0].id).toBe("test-prompt");
+      expect(result[1].id).toBe("disabled-prompt");
+      expect(result[2].id).toBe("azure-prompt");
+    });
+
+    it("injects version into all prompts", async () => {
+      const result = await promptsModule.getPrompts();
+
+      expect(result).toHaveLength(3);
+      result.forEach((prompt) => {
+        expect(prompt.version).toBeDefined();
+        expect(typeof prompt.version).toBe("string");
+      });
+    });
+  });
+
   describe("getEnabledPrompts", () => {
     it("returns only enabled prompts", async () => {
       const result = await promptsModule.getEnabledPrompts();
@@ -45,35 +66,45 @@ describe("mcp-prompts", () => {
       expect(result[0].prompt.name).toBe("test");
       expect(result[1].prompt.name).toBe("azure");
     });
-  });
 
-  describe("getPromptById", () => {
-    it("returns prompt when found", async () => {
-      const result = await promptsModule.getPromptById("test-prompt");
+    it("returns empty array when no prompts are enabled", async () => {
+      // Mock with all disabled prompts
+      vi.resetModules();
+      vi.doMock("../prompts/index.js", () => ({
+        prompts: [
+          {
+            category: "terraform",
+            enabled: false,
+            id: "disabled-1",
+            metadata: { title: "Disabled 1" },
+            prompt: { name: "disabled1" },
+            tags: [],
+          },
+          {
+            category: "azure",
+            enabled: false,
+            id: "disabled-2",
+            metadata: { title: "Disabled 2" },
+            prompt: { name: "disabled2" },
+            tags: [],
+          },
+        ],
+      }));
 
-      expect(result?.id).toBe("test-prompt");
-      expect(result?.category).toBe("terraform");
-    });
-
-    it("returns undefined when not found", async () => {
-      const result = await promptsModule.getPromptById("nonexistent");
-
-      expect(result).toBeUndefined();
-    });
-  });
-
-  describe("getPromptsByCategory", () => {
-    it("returns enabled prompts from category", async () => {
-      const result = await promptsModule.getPromptsByCategory("terraform");
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("test-prompt");
-    });
-
-    it("returns empty array for category with no enabled prompts", async () => {
-      const result = await promptsModule.getPromptsByCategory("nonexistent");
+      const module = await import("../index.js");
+      const result = await module.getEnabledPrompts();
 
       expect(result).toHaveLength(0);
+    });
+
+    it("includes version in enabled prompts", async () => {
+      const result = await promptsModule.getEnabledPrompts();
+
+      expect(result).toHaveLength(2);
+      result.forEach((prompt) => {
+        expect(prompt.version).toBeDefined();
+        expect(typeof prompt.version).toBe("string");
+      });
     });
   });
 });

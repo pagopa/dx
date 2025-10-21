@@ -21,7 +21,7 @@ import { prompts as allPrompts } from "./prompts/index.js";
  *
  * @returns Promise<CatalogEntry[]> - Array of all available prompts
  */
-const getPrompts = async (): Promise<CatalogEntry[]> => {
+export const getPrompts = async (): Promise<CatalogEntry[]> => {
   // Get package version for injection
   const packageJson = await import("../package.json", {
     with: { type: "json" },
@@ -42,29 +42,3 @@ export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
   const prompts = await getPrompts();
   return prompts.filter((p) => p.enabled);
 };
-
-/**
- * Finds a specific prompt by its unique identifier.
- *
- * @param id - The unique prompt identifier to search for
- * @returns Promise<CatalogEntry | undefined> - The matching prompt or undefined if not found
- */
-export const getPromptById = async (id: string) => {
-  const prompts = await getPrompts();
-  const promptsById = new Map(prompts.map((p) => [p.id, p]));
-  return promptsById.get(id);
-};
-
-/**
- * Filters prompts by category, returning only enabled ones.
- * Useful for organizing prompts by domain (e.g., "terraform", "azure").
- *
- * @param category - The category to filter by
- * @returns Promise<CatalogEntry[]> - Array of enabled prompts in the specified category
- */
-export const getPromptsByCategory = async (category: string) => {
-  const prompts = await getPrompts();
-  return prompts.filter((p) => p.category === category && p.enabled);
-};
-
-export { getPrompts };

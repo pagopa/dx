@@ -17,20 +17,13 @@ pnpm add @pagopa/dx-mcpprompts
 ### Consuming Prompts
 
 ```typescript
-import {
-  getEnabledPrompts,
-  getPromptById,
-  getPromptsByCategory,
-} from "@pagopa/dx-mcpprompts";
+import { getEnabledPrompts, getPrompts } from "@pagopa/dx-mcpprompts";
 
 // Get all enabled prompts
 const prompts = await getEnabledPrompts();
 
-// Get specific prompt by ID
-const prompt = await getPromptById("generate-terraform-configuration");
-
-// Get prompts by category
-const terraformPrompts = await getPromptsByCategory("terraform");
+// Get all prompts (including disabled ones)
+const allPrompts = await getPrompts();
 ```
 
 ## Adding Prompts
