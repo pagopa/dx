@@ -8,55 +8,39 @@ on:
   push:
     tags:
       - "@pagopa/dx-mcpserver@*"
-    # branches:
-    #   - feat-action-for-mcp-deploy
-
-env:
-  IMAGE_NAME: dx/mcp-server
-  GH_IMAGE_NAME: pagopa/dx-mcp-server
-  IMAGE_TAG: ${{ github.sha }}
-
-permissions:
-  contents: write
-  packages: write
-  actions: read
-  id-token: write
-  attestations: write
 
 jobs:
-  build:
-    name: Build MCP and publish Docker Image on GHCR
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Docker Build and Push to GHCR
-        uses: pagopa/dx/.github/actions/docker-build-push@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          dockerfile_path: "apps/mcpserver/Dockerfile"
-          docker_image_name: "${{ env.GH_IMAGE_NAME }}"
-          docker_image_description: "DX MCP Server Docker Image"
-          docker_image_authors: "PagoPA DX"
-          build_platforms: linux/amd64
-          push_to_registry: false # true
-
-  deploy:
-    name: Deploy MCP on AWS Lambda
-    needs: build
+  build-and-deploy:
+    name: Build and Deploy MCP on AWS Lambda
     runs-on: ubuntu-latest
     environment: infra-dev-ci # cd
     env:
       AWS_REGION: eu-central-1
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
+      IMAGE_NAME: dx/mcp-server
+      IMAGE_TAG: ${{ github.sha }}
+    permissions:
+      contents: write
+      packages: read
+      actions: read
+      id-token: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Docker Build
+        uses: pagopa/dx/.github/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: "apps/mcpserver/Dockerfile"
+          docker_image_name: "${{ env.IMAGE_NAME }}"
+          docker_image_description: "DX MCP Server Docker Image"
+          docker_image_authors: "PagoPA DX"
+          build_platforms: linux/amd64
+          push_to_registry: false
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -65,37 +49,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
-      - name: Container registry Login
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ env.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull from GHCR and Push to ECR
+      - name: Push to ECR
         id: push-ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          GHCR_IMAGE: ghcr.io/${{ env.GH_IMAGE_NAME }}
+          GHCR_IMAGE: ghcr.io/${{ env.IMAGE_NAME }}
         run: |
-          # Pull the image from GitHub Container Registry
-          echo "Pulling image from GHCR..."
-          docker pull $GHCR_IMAGE:feat-action-for-mcp-deploy #latest
-
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
           echo "Tagging images for ECR..."
-          docker tag $GHCR_IMAGE:feat-action-for-mcp-deploy $ECR_IMAGE_URI
+          docker tag $GHCR_IMAGE:latest $ECR_IMAGE_URI
 
           # Push to ECR
           echo "Pushing to ECR..."
           docker push $ECR_IMAGE_URI
 
           echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
-          echo "✅ Image pulled from GHCR and pushed to ECR: $ECR_IMAGE_URI"
+          echo "✅ Image pushed to ECR: $ECR_IMAGE_URI"
 
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
