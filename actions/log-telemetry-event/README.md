@@ -4,7 +4,7 @@ Lightweight producer for workflow telemetry. Appends lines to a session NDJSON f
 
 ## Why NDJSON
 
-Using a line‑delimited JSON (NDJSON) instead of a single JSON array allwos to:
+Using a line‑delimited JSON (NDJSON) instead of a single JSON array allows to:
 
 - Keeping the entire structure in memory
 - Array opening/closing coordination between multiple steps
