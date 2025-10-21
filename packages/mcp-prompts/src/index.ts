@@ -2,10 +2,9 @@
  * MCP Prompts Package - Main Entry Point
  *
  * This package provides a catalog system for Model Context Protocol (MCP) prompts.
- * It handles dynamic loading, caching, and filtering of prompt definitions.
+ * It handles loading and filtering of prompt definitions.
  *
  * Key features:
- * - Lazy loading with in-memory caching
  * - Category-based filtering
  * - Enable/disable functionality
  * - Version injection from package.json
@@ -17,27 +16,20 @@ import type { CatalogEntry } from "./types.js";
 
 import { prompts as allPrompts } from "./prompts/index.js";
 
-// In-memory cache to avoid re-scanning the filesystem on every request
-// This is critical for performance in serverless environments
-let _prompts: CatalogEntry[] | null = null;
-
 /**
- * Gets all prompts with version injection and caching.
+ * Gets all prompts with version injection.
  *
  * @returns Promise<CatalogEntry[]> - Array of all available prompts
  */
 const getPrompts = async (): Promise<CatalogEntry[]> => {
-  if (_prompts === null) {
-    // Get package version for injection
-    const packageJson = await import("../package.json", {
-      with: { type: "json" },
-    });
-    const version = packageJson.default.version;
+  // Get package version for injection
+  const packageJson = await import("../package.json", {
+    with: { type: "json" },
+  });
+  const version = packageJson.default.version;
 
-    // Inject version into all prompts
-    _prompts = allPrompts.map((prompt) => ({ ...prompt, version }));
-  }
-  return _prompts;
+  // Inject version into all prompts
+  return allPrompts.map((prompt) => ({ ...prompt, version }));
 };
 
 /**
@@ -48,7 +40,7 @@ const getPrompts = async (): Promise<CatalogEntry[]> => {
  */
 export const getEnabledPrompts = async () => {
   const prompts = await getPrompts();
-  return prompts.filter(p => p.enabled);
+  return prompts.filter((p) => p.enabled);
 };
 
 /**
@@ -59,10 +51,8 @@ export const getEnabledPrompts = async () => {
  */
 export const getPromptById = async (id: string) => {
   const prompts = await getPrompts();
-  for (const p of prompts) {
-    if (p.id === id) return p;
-  }
-  return undefined;
+  const promptsById = new Map(prompts.map((p) => [p.id, p]));
+  return promptsById.get(id);
 };
 
 /**
@@ -74,19 +64,7 @@ export const getPromptById = async (id: string) => {
  */
 export const getPromptsByCategory = async (category: string) => {
   const prompts = await getPrompts();
-  const filtered = [];
-  for (const p of prompts) {
-    if (p.category === category && p.enabled) filtered.push(p);
-  }
-  return filtered;
+  return prompts.filter((p) => p.category === category && p.enabled);
 };
 
 export { getPrompts };
-
-/**
- * Clears the internal cache, forcing a reload on next access.
- * Used primarily for testing to ensure clean state between test runs.
- */
-export const _resetCache = () => {
-  _prompts = null;
-};

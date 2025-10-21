@@ -35,7 +35,6 @@ vi.mock("../prompts/index.js", () => ({
 describe("mcp-prompts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    promptsModule._resetCache();
   });
 
   describe("getEnabledPrompts", () => {
@@ -43,8 +42,8 @@ describe("mcp-prompts", () => {
       const result = await promptsModule.getEnabledPrompts();
 
       expect(result).toHaveLength(2);
-      expect(result[0].name).toBe("test");
-      expect(result[1].name).toBe("azure");
+      expect(result[0].prompt.name).toBe("test");
+      expect(result[1].prompt.name).toBe("azure");
     });
   });
 
