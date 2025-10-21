@@ -1,3 +1,3 @@
 output "values" {
-  value = module.azure
+  value = merge(module.azure, module.aws)
 }
