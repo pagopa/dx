@@ -70,7 +70,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on:  ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
 
     steps:
       - name: Checkout
@@ -148,6 +148,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
+          skip_app_build: true
 
       - name: Delete Preview and Deploy production
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -157,3 +158,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           app_location: "./${{ env.OUTPUT_DIR }}"
           action: "close"
+          skip_app_build: true
