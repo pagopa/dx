@@ -1,3 +1,4 @@
+import { getPrompts, setLogger } from "@pagopa/dx-mcpprompts";
 import { useEffect, useState } from "react";
 
 interface CatalogEntry {
@@ -43,7 +44,6 @@ export const usePromptLoader = () => {
 
   const loadPromptsData = async () => {
     try {
-      const { getPrompts, setLogger } = await import("@pagopa/dx-mcpprompts");
       setLogger(silentLogger);
       const allPrompts = await getPrompts();
       setPrompts(allPrompts);
