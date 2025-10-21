@@ -44,11 +44,25 @@ jobs:
         with:
           connection_string: ${{ secrets.APPI_CONNECTION_STRING }}
 
+      - name: Open a child span for random work
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          name: Random work
+          span_phase: start
+
       - name: Do random work and collect output
+        shell: bash
         run: |
           FILE_COUNT=$(ls -1 | wc -l)
           echo "WORK_RESULT=$FILE_COUNT" >> $GITHUB_ENV
           echo "Computed result: $FILE_COUNT"
+          sleep 5s
+
+      - name: end a child span for random work
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          name: Random work
+          span_phase: end
 
       - name: Log collected result as telemetry event
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
@@ -56,12 +70,12 @@ jobs:
           name: Number of Items
           body: ${{ env.WORK_RESULT }}
 
-      - name: Log sample exception
-        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
-        with:
-          name: SampleError
-          body: "Simulated failure for telemetry"
-          is_exception: "true"
+      # - name: Log sample exception
+      #   uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+      #   with:
+      #     name: SampleError
+      #     body: "Simulated failure for telemetry"
+      #     is_exception: "true"
 
       # - name: Track event via OpenTelemetry SDK
       #   uses: actions/github-script@v8

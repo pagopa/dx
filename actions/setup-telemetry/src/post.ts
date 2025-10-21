@@ -26,6 +26,7 @@ async function post(): Promise<void> {
   const nodePackageManager = process.env.NODE_PACKAGE_MANAGER || "";
   const tfVersion = process.env.TERRAFORM_VERSION || "";
   const CSPs = process.env.CSP_LIST || "";
+  const pipelineResult = process.env.PIPELINE_RESULT || "success"; // cancellation, error, failure, skip, success, timeout
 
   const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
@@ -56,7 +57,7 @@ async function post(): Promise<void> {
       "cicd.pipeline.repository": repo,
       "cicd.pipeline.run.url.full": workflowURL,
       "cicd.pipeline.author": actor,
-      "cicd.pipeline.result": "success", // TODO: update the value to: cancellation, error, failure, skip, success, timeout
+      "cicd.pipeline.result": pipelineResult,
       "cdcd.pipeline.path": actionPath,
       "error.type": "",
       ...(nodePackageManager
@@ -72,23 +73,59 @@ async function post(): Promise<void> {
       .split(/\n/)
       .filter((l) => l.trim().length);
 
+    interface SpanMarker {
+      start?: Date;
+      end?: Date;
+    }
+    const spanMarkers: Record<string, SpanMarker[]> = {};
+
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
       for (const line of lines) {
-        let ev: {
-          name: string;
-          body: string;
-          exception: boolean;
-          attributes?: Record<string, string>;
-        } | null = null;
+        // Span marker shape examples:
+        // {"span":"build","startSpan":"2025-01-01T10:00:00.000Z"}
+        // {"span":"build","endSpan":"2025-01-01T10:05:00.000Z"}
+        let parsed: any = null;
 
         try {
-          ev = JSON.parse(line);
+          parsed = JSON.parse(line);
         } catch {
           console.warn("Skipping malformed telemetry line: " + line);
           continue;
         }
+        if (!parsed) continue;
 
-        if (!ev) continue;
+        // Span marker branch
+        if (parsed.span && (parsed.startSpan || parsed.endSpan)) {
+          const arr = (spanMarkers[parsed.span] =
+            spanMarkers[parsed.span] || []);
+          // Choose the current open marker or create new
+          let current = arr[arr.length - 1];
+          if (!current || (current.start && current.end)) {
+            current = {};
+            arr.push(current);
+          }
+          if (parsed.startSpan) {
+            current.start = new Date(parsed.startSpan);
+          }
+          if (parsed.endSpan) {
+            // If end arrives before start (out-of-order), start a new marker with only end to avoid corrupting previous
+            if (!current || !current.start) {
+              current = { end: new Date(parsed.endSpan) };
+              arr.push(current);
+            } else {
+              current.end = new Date(parsed.endSpan);
+            }
+          }
+          continue;
+        }
+
+        // Regular event branch
+        const ev: {
+          name: string;
+          body: string;
+          exception: boolean;
+          attributes?: Record<string, string>;
+        } = parsed;
 
         const attrs = {
           "ci.pipeline.repo": repo,
@@ -115,6 +152,23 @@ async function post(): Promise<void> {
               ...attrs,
             },
           });
+        }
+      }
+
+      // After processing events, create child spans for completed markers
+      for (const [spanName, occurrences] of Object.entries(spanMarkers)) {
+        for (const marker of occurrences) {
+          if (!marker.start || !marker.end) continue; // incomplete pair
+          if (marker.end < marker.start) continue; // invalid ordering
+          const child = tracer.startSpan(
+            spanName,
+            {
+              kind: SpanKind.INTERNAL,
+              startTime: marker.start,
+            },
+            trace.setSpan(otelContext.active(), span),
+          );
+          child.end(marker.end);
         }
       }
     });
