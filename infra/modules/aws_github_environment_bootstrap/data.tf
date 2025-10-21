@@ -66,8 +66,11 @@ data "aws_iam_policy_document" "ecr_push_access" {
       "ecr:CompleteLayerUpload",
       "ecr:GetAuthorizationToken",
       "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
       "ecr:InitiateLayerUpload",
       "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
       "ecr:PutImage"
     ]
     resources = ["*"]
