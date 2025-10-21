@@ -36,7 +36,8 @@ The DX MCP Server provides AI assistants with access to:
 You'll need:
 
 - An MCP-compliant AI assistant (GitHub Copilot, VS Code with Copilot, etc.)
-- A GitHub Personal Access Token (PAT) with appropriate permissions
+- A GitHub Personal Access Token (PAT) with
+  [appropriate permissions](https://github.com/pagopa/dx/blob/main/apps/mcpserver/README.md#authentication)
 
 ### Configuration
 
