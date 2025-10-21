@@ -58,6 +58,8 @@ jobs:
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
+          docker images
+
           echo "Tagging images for ECR..."
           docker tag $GHCR_IMAGE:feat-action-for-mcp-deploy $ECR_IMAGE_URI
 
