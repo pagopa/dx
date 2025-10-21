@@ -11,31 +11,24 @@ on:
     # branches:
     #   - feat-action-for-mcp-deploy
 
+env:
+  IMAGE_NAME: dx/mcp-server
+  IMAGE_TAG: ${{ github.sha }}
+
+permissions:
+  contents: write
+  packages: write
+  actions: read
+  id-token: write
+
 jobs:
   build:
-    name: Build MCP Docker Image
+    name: Build MCP and publish Docker Image on GHCR
     runs-on: ubuntu-latest
-    environment: infra-dev-ci # cd
-    env:
-      AWS_REGION: eu-central-1
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
-      IMAGE_NAME: dx/mcp-server
-    permissions:
-      id-token: write
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
       - name: Docker Build and Push to GHCR
         uses: pagopa/dx/.github/actions/docker-build-push@main
@@ -49,23 +42,45 @@ jobs:
           build_platforms: linux/amd64
           push_to_registry: true
 
-      # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    name: Deploy MCP on AWS Lambda
+    needs: build
+    runs-on: ubuntu-latest
+    environment: infra-dev-ci # cd
+    env:
+      AWS_REGION: eu-central-1
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
+
+      - name: Container registry Login
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull from GHCR and Push to ECR
         id: push-ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
           GHCR_IMAGE: ghcr.io/${{ env.IMAGE_NAME }}
         run: |
           # Pull the image from GitHub Container Registry
           echo "Pulling image from GHCR..."
-          docker pull $GHCR_IMAGE:$IMAGE_TAG
+          docker pull $GHCR_IMAGE:latest
 
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
