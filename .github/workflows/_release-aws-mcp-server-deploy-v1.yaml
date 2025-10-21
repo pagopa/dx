@@ -25,6 +25,7 @@ jobs:
       packages: read
       actions: read
       id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -50,15 +51,30 @@ jobs:
 
           echo "Building and pushing Docker image to ECR..."
           docker buildx build \
-            --platform linux/amd64 \
+            --platform linux/arm64 \
             --file apps/mcpserver/Dockerfile \
             --tag $ECR_IMAGE_URI \
             --tag $ECR_IMAGE_LATEST \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=min \
             --push \
+            --metadata-file /tmp/build-metadata.json \
             .
 
+          # Extract digest from metadata
+          DIGEST=$(jq -r '."containerimage.digest"' /tmp/build-metadata.json)
+
           echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "✅ Image built and pushed to ECR: $ECR_IMAGE_URI"
+          echo "✅ Image digest: $DIGEST"
+
+      - name: Generate Artifact Attestation
+        uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
+        with:
+          subject-name: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push-ecr.outputs.digest }}
+          push-to-registry: false
 
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
