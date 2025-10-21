@@ -63,7 +63,7 @@ async function post(): Promise<void> {
         ? { "node.package_manager": nodePackageManager }
         : {}),
       ...(tfVersion ? { "terraform.version": tfVersion } : {}),
-      ...(CSPs ? { "cloud.provider_list": CSPs } : {}),
+      ...(CSPs ? { "cloud_provider.enabled": CSPs } : {}),
     },
   });
 
@@ -106,6 +106,7 @@ async function post(): Promise<void> {
             code: SpanStatusCode.ERROR,
             message: ev.body || ev.name,
           });
+          span.setAttribute("cicd.pipeline.result", "error");
         } else {
           logger.emit({
             body: ev.body || ev.name,
