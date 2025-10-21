@@ -58,3 +58,18 @@ data "aws_iam_policy_document" "github_assume_role_policy" {
     }
   }
 }
+
+data "aws_iam_policy_document" "ecr_push_access" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:CompleteLayerUpload",
+      "ecr:GetAuthorizationToken",
+      "ecr:UploadLayerPart",
+      "ecr:InitiateLayerUpload",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:PutImage"
+    ]
+    resources = ["*"]
+  }
+}
