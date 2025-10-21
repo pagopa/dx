@@ -48,11 +48,7 @@ const getPrompts = async (): Promise<CatalogEntry[]> => {
  */
 export const getEnabledPrompts = async () => {
   const prompts = await getPrompts();
-  const enabled = [];
-  for (const p of prompts) {
-    if (p.enabled) enabled.push(p.prompt);
-  }
-  return enabled;
+  return prompts.filter(p => p.enabled);
 };
 
 /**
