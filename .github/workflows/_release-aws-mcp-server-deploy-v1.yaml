@@ -55,19 +55,20 @@ jobs:
             --file apps/mcpserver/Dockerfile \
             --tag $ECR_IMAGE_URI \
             --tag $ECR_IMAGE_LATEST \
-            --cache-from type=gha,scope=mcp-server \
-            --cache-to type=gha,mode=max,scope=mcp-server \
+            --cache-from type=gha \
+            --cache-to type=gha,mode=min \
             --provenance=false \
+            --push \
             --metadata-file /tmp/build-metadata.json \
             .
 
-          # # Extract digest from metadata
-          # DIGEST=$(jq -r '."containerimage.digest"' /tmp/build-metadata.json)
+      #     # Extract digest from metadata
+      #     DIGEST=$(jq -r '."containerimage.digest"' /tmp/build-metadata.json)
 
-          # echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
-          # echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          # echo "✅ Image built and pushed to ECR: $ECR_IMAGE_URI"
-          # echo "✅ Image digest: $DIGEST"
+      #     echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
+      #     echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+      #     echo "✅ Image built and pushed to ECR: $ECR_IMAGE_URI"
+      #     echo "✅ Image digest: $DIGEST"
 
       # - name: Generate Artifact Attestation
       #   uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
