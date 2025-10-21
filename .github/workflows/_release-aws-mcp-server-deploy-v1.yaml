@@ -86,16 +86,13 @@ jobs:
 
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
-          ECR_IMAGE_LATEST="$ECR_REGISTRY/$IMAGE_NAME:latest"
 
           echo "Tagging images for ECR..."
-          docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_IMAGE_URI
-          docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_IMAGE_LATEST
+          docker tag $GHCR_IMAGE:feat-action-for-mcp-deploy $ECR_IMAGE_URI
 
           # Push to ECR
           echo "Pushing to ECR..."
           docker push $ECR_IMAGE_URI
-          docker push $ECR_IMAGE_LATEST
 
           echo "image-uri=$ECR_IMAGE_URI" >> $GITHUB_OUTPUT
           echo "✅ Image pulled from GHCR and pushed to ECR: $ECR_IMAGE_URI"
