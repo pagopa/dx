@@ -50,11 +50,10 @@ logger.debug(`Server instructions: \n\n${serverInstructions}`);
 logger.debug(`Loading enabled prompts...`);
 
 getEnabledPrompts().then((prompts) => {
-  prompts.forEach((prompt) => {
-    logger.debug(`Adding prompt: ${prompt.name}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    server.addPrompt(prompt as any);
-    logger.debug(`Added prompt: ${prompt.name}`);
+  prompts.forEach((catalogEntry) => {
+    logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
+    server.addPrompt(catalogEntry.prompt);
+    logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
   });
 });
 server.addTool(QueryPagoPADXDocumentationTool);

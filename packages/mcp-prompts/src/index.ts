@@ -33,12 +33,12 @@ const getPrompts = async (): Promise<CatalogEntry[]> => {
 };
 
 /**
- * Gets only the enabled prompts, returning just the PromptDefinition objects.
+ * Gets only the enabled prompts, returning the full CatalogEntry objects.
  * This is typically used by MCP servers to register available prompts.
  *
- * @returns Promise<PromptDefinition[]> - Array of enabled prompt definitions
+ * @returns Promise<CatalogEntry[]> - Array of enabled catalog entries
  */
-export const getEnabledPrompts = async () => {
+export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
   const prompts = await getPrompts();
   return prompts.filter((p) => p.enabled);
 };
