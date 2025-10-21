@@ -59,7 +59,7 @@ jobs:
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
 
           echo "Tagging images for ECR..."
-          docker tag $GHCR_IMAGE $ECR_IMAGE_URI
+          docker tag $IMAGE_NAME $ECR_IMAGE_URI
 
           # Push to ECR
           echo "Pushing to ECR..."
