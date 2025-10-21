@@ -42,7 +42,7 @@ jobs:
           docker_image_description: "DX MCP Server Docker Image"
           docker_image_authors: "PagoPA DX"
           build_platforms: linux/amd64
-          push_to_registry: true
+          push_to_registry: false # true
 
   deploy:
     name: Deploy MCP on AWS Lambda
@@ -82,7 +82,7 @@ jobs:
         run: |
           # Pull the image from GitHub Container Registry
           echo "Pulling image from GHCR..."
-          docker pull $GH_IMAGE_NAME:latest
+          docker pull $GH_IMAGE_NAME:feat-action-for-mcp-deploy #latest
 
           # Tag for ECR with both commit SHA and latest
           ECR_IMAGE_URI="$ECR_REGISTRY/$IMAGE_NAME:$IMAGE_TAG"
