@@ -81,9 +81,6 @@ async function post(): Promise<void> {
 
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
       for (const line of lines) {
-        // Span marker shape examples:
-        // {"span":"build","startSpan":"2025-01-01T10:00:00.000Z"}
-        // {"span":"build","endSpan":"2025-01-01T10:05:00.000Z"}
         let parsed: any = null;
 
         try {
@@ -160,6 +157,7 @@ async function post(): Promise<void> {
         for (const marker of occurrences) {
           if (!marker.start || !marker.end) continue; // incomplete pair
           if (marker.end < marker.start) continue; // invalid ordering
+
           const child = tracer.startSpan(
             spanName,
             {
