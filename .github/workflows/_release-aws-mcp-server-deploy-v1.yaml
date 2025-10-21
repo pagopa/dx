@@ -55,10 +55,9 @@ jobs:
             --file apps/mcpserver/Dockerfile \
             --tag $ECR_IMAGE_URI \
             --tag $ECR_IMAGE_LATEST \
-            --cache-from type=gha \
-            --cache-to type=gha,mode=min \
+            --cache-from type=gha,scope=mcp-server \
+            --cache-to type=gha,mode=max,scope=mcp-server \
             --provenance=false \
-            --push \
             --metadata-file /tmp/build-metadata.json \
             .
 
