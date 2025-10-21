@@ -1,47 +1,28 @@
 /**
- * Logger injection system for external logger management.
- * Parent modules must provide a logger instance before using the package.
- */
-
-interface Logger {
-  debug: (msg: string, ...args: unknown[]) => void;
-  error: (error: unknown, msg?: string, ...args: unknown[]) => void;
-  info: (msg: string, ...args: unknown[]) => void;
-}
-
-/**
- * Current logger instance - must be set by parent modules.
- */
-let currentLogger: Logger | null = null;
-
-/**
- * Sets a logger instance for the package.
- * Must be called before using any package functionality.
+ * LogTape logger instance for the mcp-prompts package.
  *
- * @param customLogger - Logger instance to use
+ * LogTape is a pluggable logging framework that allows consumers
+ * to configure logging behavior according to their needs.
+ *
+ * Consumers can configure logging using LogTape's configure() function:
+ *
+ * @example
+ * ```typescript
+ * import { configure, getConsoleSink } from "@logtape/logtape";
+ *
+ * await configure({
+ *   loggers: [
+ *     { category: ["mcp-prompts"], lowestLevel: "debug", sinks: ["console"] }
+ *   ],
+ *   sinks: {
+ *     console: getConsoleSink()
+ *   }
+ * });
+ * ```
+ *
+ * @see https://logtape.org/
  */
-export const setLogger = (customLogger: Logger) => {
-  currentLogger = customLogger;
-};
 
-/**
- * Gets the current logger instance.
- * Throws error if no logger has been set.
- */
-export const logger: Logger = {
-  debug: (msg: string, ...args: unknown[]) => {
-    if (!currentLogger)
-      throw new Error("Logger not initialized. Call setLogger() first.");
-    currentLogger.debug(msg, ...args);
-  },
-  error: (error: unknown, msg?: string, ...args: unknown[]) => {
-    if (!currentLogger)
-      throw new Error("Logger not initialized. Call setLogger() first.");
-    currentLogger.error(error, msg, ...args);
-  },
-  info: (msg: string, ...args: unknown[]) => {
-    if (!currentLogger)
-      throw new Error("Logger not initialized. Call setLogger() first.");
-    currentLogger.info(msg, ...args);
-  },
-};
+import { getLogger } from "@logtape/logtape";
+
+export const logger = getLogger(["mcp-prompts"]);

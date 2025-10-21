@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
-import { logger } from "../utils/logger.js";
+import { logger } from "../config/logging.js";
 
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
@@ -67,7 +67,7 @@ Returns file contents matching the search query.`,
             }
             return null;
           } catch (error) {
-            logger.error(error, `Error fetching file ${item.path}`);
+            logger.error(`Error fetching file ${item.path}`, { error });
             return null;
           }
         }),
@@ -83,7 +83,7 @@ Returns file contents matching the search query.`,
         total_results: data.total_count,
       });
     } catch (error) {
-      logger.error(error, "Error searching GitHub code");
+      logger.error("Error searching GitHub code", { error });
       throw error;
     }
   },

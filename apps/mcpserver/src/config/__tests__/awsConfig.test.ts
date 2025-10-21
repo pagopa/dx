@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-vi.mock("../../utils/logger", () => ({
+vi.mock("../logging", () => ({
   logger: {
+    debug: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),

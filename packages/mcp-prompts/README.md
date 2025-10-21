@@ -26,6 +26,27 @@ const prompts = await getEnabledPrompts();
 const allPrompts = await getPrompts();
 ```
 
+### Logging
+
+This package uses [LogTape](https://logtape.org/) for logging. LogTape is a pluggable logging framework that allows you to configure logging behavior according to your needs.
+
+To configure logging:
+
+```typescript
+import { configure, getConsoleSink } from "@logtape/logtape";
+
+await configure({
+  loggers: [
+    { category: ["mcp-prompts"], lowestLevel: "debug", sinks: ["console"] },
+  ],
+  sinks: {
+    console: getConsoleSink(),
+  },
+});
+```
+
+By default, if you don't configure LogTape, logs will be silently ignored.
+
 ## Adding Prompts
 
 1. Create a new TypeScript file in `src/prompts/` directory:

@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { z } from "zod/v4";
 
-import { logger } from "../utils/logger.js";
+import { logger } from "../config/logging.js";
 
 const organizationsSchema = z
   .array(z.string().nonempty())
@@ -36,7 +36,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
     );
 
     if (isMember) {
-      logger.info(
+      logger.debug(
         `User is a member of one of the required organizations: ${REQUIRED_ORGANIZATIONS.join(", ")}`,
       );
     } else {
@@ -47,7 +47,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
 
     return isMember;
   } catch (error) {
-    logger.error(error, "Error verifying GitHub organization membership:");
+    logger.error("Error verifying GitHub organization membership:", { error });
     return false;
   }
 }

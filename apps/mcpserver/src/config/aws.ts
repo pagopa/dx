@@ -1,6 +1,6 @@
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 
-import { logger } from "../utils/logger.js";
+import { logger } from "./logging.js";
 
 // When true, enables reranking for the Bedrock knowledge base queries.
 export const kbRerankingEnabled =
@@ -8,7 +8,7 @@ export const kbRerankingEnabled =
   "true";
 export const knowledgeBaseId = process.env.BEDROCK_KNOWLEDGE_BASE_ID || "";
 
-logger.info(
+logger.debug(
   `Default reranking enabled: ${kbRerankingEnabled} (from BEDROCK_KB_RERANKING_ENABLED)`,
 );
 
@@ -29,7 +29,7 @@ try {
   // Initializes the Bedrock Agent Runtime client with the specified region.
   kbRuntimeClient = new BedrockAgentRuntimeClient({ region });
 } catch (e) {
-  logger.error(e, "Error getting bedrock agent client");
+  logger.error("Error getting bedrock agent client", { error: e });
   process.exit(1);
 }
 

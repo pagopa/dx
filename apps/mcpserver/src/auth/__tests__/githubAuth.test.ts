@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { logger } from "../../utils/logger.js";
+import { logger } from "../../config/logging.js";
 import * as githubAuth from "../github.js";
 
 vi.mock("@octokit/rest");
@@ -34,8 +34,8 @@ describe("verifyGithubUser", () => {
     const result = await githubAuth.verifyGithubUser("token");
     expect(result).toBe(false);
     expect(errorLog).toHaveBeenCalledWith(
-      expect.any(Error),
       "Error verifying GitHub organization membership:",
+      { error: expect.any(Error) },
     );
   });
 

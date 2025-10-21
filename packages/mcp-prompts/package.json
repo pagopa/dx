@@ -25,6 +25,9 @@
     }
   },
   "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@logtape/logtape": "^1.0.4"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",

@@ -6,7 +6,7 @@ import {
 } from "@aws-sdk/client-bedrock-agent-runtime";
 
 import { rerankingSupportedRegions } from "../config/aws.js";
-import { logger } from "../utils/logger.js";
+import { logger } from "../config/logging.js";
 
 export type QueryKnowledgeBasesOutput = {
   content: string;
