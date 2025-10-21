@@ -110,7 +110,7 @@ Use `Tab` to navigate between fields and `Ctrl+S` to save.
 The server provides a collection of intelligent prompts for common development
 tasks. These prompts give guidelines to the agent on PagoPA's conventions and
 best practices. Explore them in the
-[DX prompts catalog](/docs/ai-tooling/prompts-catalog).
+[DX prompts catalog](/docs/coding-with-ai/prompts-catalog).
 
 ## Learn More
 
