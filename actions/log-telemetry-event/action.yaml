@@ -38,7 +38,7 @@ runs:
 
         echo "is exception: $INPUT_IS_EXCEPTION"
 
-        if [ "$INPUT_IS_EXCEPTION" = "true" ] || [ "$INPUT_IS_EXCEPTION" = "true" ]; then
+        if [ "$INPUT_IS_EXCEPTION" = "true" ]; then
           EXC=true
         else
           EXC=false
