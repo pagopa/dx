@@ -37,7 +37,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           dockerfile_path: "apps/mcpserver/Dockerfile"
-          dockerfile_context: "./apps/mcpserver"
           docker_image_name: "${{ env.IMAGE_NAME }}"
           docker_image_description: "DX MCP Server Docker Image"
           docker_image_authors: "PagoPA DX"
