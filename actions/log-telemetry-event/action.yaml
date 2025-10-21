@@ -16,15 +16,21 @@ inputs:
     required: false
     default: "false"
 
+  span_phase:
+    description: "(Optional) 'start' to mark span start, 'end' to mark span end"
+    required: false
+    default: ""
+
 runs:
   using: "composite"
   steps:
-    - name: Append event
+    - name: Append event / span marker
       shell: bash
       env:
         INPUT_NAME: ${{inputs.name }}
         INPUT_BODY: ${{inputs.body}}
         INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
+        INPUT_SPAN_PHASE: ${{inputs.span_phase}}
       run: |
         if [ -z "$OTEL_EVENT_FILE" ]; then
           echo "OTEL_EVENT_FILE not set" >&2; exit 1;
@@ -38,6 +44,20 @@ runs:
           EXC=false
         fi
 
-        echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+        NOW_ISO=$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ')
+
+        if [ -n "$INPUT_NAME" ] && [ -n "$INPUT_SPAN_PHASE" ]; then
+          # Validate phase
+          if [ "$INPUT_SPAN_PHASE" = "start" ]; then
+            echo "{\"span\":\"$INPUT_NAME\",\"startSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
+          elif [ "$INPUT_SPAN_PHASE" = "end" ]; then
+            echo "{\"span\":\"$INPUT_NAME\",\"endSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
+          else
+            echo "Unknown span_phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
+            echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+          fi
+        else
+          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+        fi
 
         cat "$OTEL_EVENT_FILE"
