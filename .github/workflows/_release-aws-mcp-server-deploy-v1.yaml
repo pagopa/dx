@@ -13,7 +13,7 @@ jobs:
   build-and-deploy:
     name: Build and Deploy MCP on AWS Lambda
     runs-on: ubuntu-latest
-    environment: app-dev-cd
+    environment: app-dev-ci
     env:
       AWS_REGION: eu-central-1
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
@@ -46,6 +46,15 @@ jobs:
         run: |
           echo "ECR_IMAGE_URI=$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" >> $GITHUB_ENV
           echo "ECR_IMAGE_LATEST=$REGISTRY/$IMAGE_NAME:latest" >> $GITHUB_ENV
+
+          # Extract tag name if workflow was triggered by a tag push
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            echo "ECR_IMAGE_TAG=$REGISTRY/$IMAGE_NAME:$TAG_NAME" >> $GITHUB_ENV
+            echo "✅ Triggered by tag: $TAG_NAME"
+          else
+            echo "ℹ️  Not triggered by a tag"
+          fi
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
 
@@ -58,7 +67,10 @@ jobs:
           context: "."
           file: apps/mcpserver/Dockerfile
           push: true
-          tags: "${{ env.ECR_IMAGE_URI }},${{ env.ECR_IMAGE_LATEST}}"
+          tags: |
+            ${{ env.ECR_IMAGE_URI }}
+            ${{ env.ECR_IMAGE_LATEST}}
+            ${{ env.ECR_IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=min
           platforms: linux/arm64
