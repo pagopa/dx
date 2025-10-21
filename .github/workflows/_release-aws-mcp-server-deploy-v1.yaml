@@ -57,6 +57,7 @@ jobs:
             --tag $ECR_IMAGE_LATEST \
             --cache-from type=gha \
             --cache-to type=gha,mode=min \
+            --provenance=false \
             --push \
             --metadata-file /tmp/build-metadata.json \
             .
