@@ -1,15 +1,15 @@
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import {
   context as otelContext,
   SpanKind,
   SpanStatusCode,
   trace,
 } from "@opentelemetry/api";
+import { logs } from "@opentelemetry/api-logs";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import { existsSync, readFileSync } from "fs";
 
 async function post(): Promise<void> {
-  const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
-  const { logs } = require("@opentelemetry/api-logs");
-
   const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
   const eventsFile = process.env.OTEL_EVENT_FILE;
   console.log(`Post telemetry: file=${eventsFile}`);
@@ -28,7 +28,6 @@ async function post(): Promise<void> {
   const CSPs = process.env.CSP_LIST || "";
   const pipelineResult = process.env.PIPELINE_RESULT || "success"; // cancellation, error, failure, skip, success, timeout
 
-  const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
     "enduser.id": actor,
     "service.instance.id": runId,
