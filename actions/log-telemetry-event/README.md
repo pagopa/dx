@@ -2,15 +2,6 @@
 
 Lightweight producer for workflow telemetry. Appends lines to a session NDJSON file consumed later by `setup-telemetry`.
 
-## Why NDJSON
-
-Using a line‑delimited JSON (NDJSON) instead of a single JSON array allows to:
-
-- Avoids keeping the entire structure in memory
-- Avoids array opening/closing coordination between multiple steps
-- Avoids concurrency issues (each step independently appends a line)
-
-Each invocation adds exactly one line; the post processor (`setup-telemetry`) streams them safely.
 
 ## Prerequisite
 
