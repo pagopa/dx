@@ -48,7 +48,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
 
     return isMember;
   } catch (error) {
-    logger.error("Error verifying GitHub organization membership:", { error });
+    logger.error("Error verifying GitHub organization membership", { error });
     return false;
   }
 }
