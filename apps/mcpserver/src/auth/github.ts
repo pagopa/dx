@@ -1,7 +1,6 @@
+import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod/v4";
-
-import { logger } from "../config/logging.js";
 
 const organizationsSchema = z
   .array(z.string().nonempty())
@@ -20,6 +19,8 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
  * @returns A boolean indicating whether the user is a member of a required organization.
  */
 export async function verifyGithubUser(token: string): Promise<boolean> {
+  const logger = getLogger(["mcpserver", "github-auth"]);
+
   if (!token) {
     return false;
   }
