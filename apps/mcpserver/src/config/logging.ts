@@ -23,20 +23,15 @@ import { z } from "zod";
  * Zod schema for validating log levels.
  * Based on LogTape's LogLevel type.
  */
-const logLevelSchema = z.enum(["debug", "info", "warning", "error"]);
+const DEFAULT_LOG_LEVEL = "info";
+ 
+const logLevelSchema = z.enum(["debug", "info", "warning", "error"]).default(DEFAULT_LOG_LEVEL);
 
 export async function configureLogging() {
-  const rawLogLevel = process.env.LOG_LEVEL || "info";
-  const parseResult = logLevelSchema.safeParse(rawLogLevel);
-
-  if (!parseResult.success) {
-    // Log the error and use a safe default
-    console.warn(
-      `Invalid LOG_LEVEL "${rawLogLevel}". Must be one of: ${logLevelSchema.options.join(", ")}. Using "info" as default.`,
-    );
+  const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL).catch(DEFAULT_LOG_LEVEL);
+  if (logLevel != process.env.LOG_LEVEL) {
+     logger.warn("Invalid log level: {logLevel}. Using {default}", { logLevel: process.env.LOG_LEVEL, default: DEFAULT_LOG_LEVEL });
   }
-
-  const logLevel: LogLevel = parseResult.success ? parseResult.data : "info";
 
   await configure({
     loggers: [
