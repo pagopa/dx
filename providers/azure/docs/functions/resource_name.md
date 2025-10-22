@@ -91,6 +91,7 @@ The following table lists the resource types and their abbreviations used in the
 | cosmos_db                                 |      cosmos      |
 | cosmos_db_nosql                           |      cosno       |
 | cosmos_private_endpoint                   |    cosno-pep     |
+| customer_key_cosmos_db_nosql              |    cosno-cmk     |
 | customer_key_storage_account              |      stcmk       |
 | durable_function_storage_account          |       stfd       |
 | eventhub_namespace                        |      evhns       |

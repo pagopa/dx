@@ -120,12 +120,12 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"private_endpoint_subnet": "pep-snet",
 
 		// Databases
-		"cosmos_db":          "cosmos",
-		"cosmos_db_nosql":    "cosno",
-		"postgresql":         "psql",
-		"postgresql_replica": "psql-replica",
-		"redis_cache":        "redis",
-		"mysql":              "mysql",
+		"cosmos_db_nosql":              "cosno",
+    "customer_key_cosmos_db_nosql": "cosno-cmk",
+		"postgresql":                   "psql",
+		"postgresql_replica":           "psql-replica",
+		"redis_cache":                  "redis",
+		"mysql":                        "mysql",
 
 		// Integration
 		"eventhub_namespace":   "evhns",
