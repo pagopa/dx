@@ -159,28 +159,6 @@ Consistent approaches across teams:
 
 [**View All Conventions →**](github/index.md)
 
-## Getting Support
-
-The [DX team](https://github.com/orgs/pagopa/teams/engineering-team-devex) is
-here to help:
-
-- **Questions?** Open a [GitHub issue](https://github.com/pagopa/dx/issues)
-- **Bug reports** Use our issue templates for faster resolution
-- **Feature requests** We're always looking for ways to improve
-- **Direct support** Available for teams adopting DX golden paths
-
-## Stay Connected
-
-**📖 [Read our blog](https://dx.pagopa.it/blog)** for the latest updates and
-feature announcements
-
-**⭐ [Watch our repository](https://github.com/pagopa/dx)** to stay informed
-about new releases
-
-**🐛
-[Report issues or suggest improvements](https://github.com/pagopa/dx/issues)** -
-we welcome your feedback!
-
 ## Contributing
 
 We're building this platform together! Whether you're fixing a typo or proposing
@@ -198,8 +176,7 @@ to understand how you can get involved and make a meaningful impact.
 
 Not sure which path to take? Check out our
 [conventions overview](github/index.md) to understand how we organize work at
-PagoPA, or reach out to the DX team on
-[GitHub](https://github.com/pagopa/dx/issues).
+PagoPA, or visit our [support page](support.md) to get help from the DX team.
 
 :::
 
