@@ -2,30 +2,31 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { logger } from "../../config/logging.js";
 import * as githubAuth from "../github.js";
 
 vi.mock("@octokit/rest");
+vi.mock("@logtape/logtape");
 
 describe("verifyGithubUser", () => {
-  let loggerSpy: {
-    debug: ReturnType<typeof vi.spyOn>;
-    error: ReturnType<typeof vi.spyOn>;
-    warn: ReturnType<typeof vi.spyOn>;
+  const mockLogger = {
+    category: ["test"],
+    debug: vi.fn(),
+    emit: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+    getChild: vi.fn(),
+    info: vi.fn(),
+    parent: null,
+    trace: vi.fn(),
+    warn: vi.fn(),
+    warning: vi.fn(),
+    with: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.REQUIRED_ORGANIZATIONS = "pagopa";
-
-    // Get logger and spy on its methods - no need for special configuration
-    const logger = getLogger(["mcpserver", "github-auth"]);
-
-    loggerSpy = {
-      debug: vi.spyOn(logger, "debug"),
-      error: vi.spyOn(logger, "error"),
-      warn: vi.spyOn(logger, "warn"),
-    };
+    vi.mocked(getLogger).mockReturnValue(mockLogger);
   });
 
   it("returns false if no token is provided", async () => {
@@ -48,7 +49,7 @@ describe("verifyGithubUser", () => {
     );
     const result = await githubAuth.verifyGithubUser("token");
     expect(result).toBe(false);
-    expect(errorLog).toHaveBeenCalledWith(
+    expect(mockLogger.error).toHaveBeenCalledWith(
       "Error verifying GitHub organization membership:",
       { error: expect.any(Error) },
     );

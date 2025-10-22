@@ -1,8 +1,8 @@
+import { getLogger } from "@logtape/logtape";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
-import { logger } from "./config/logging.js";
 import { configureLogging } from "./config/logging.js";
 import { serverInstructions } from "./config/server.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
@@ -11,6 +11,7 @@ import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 // Configure logging
 await configureLogging();
 
+const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
 
 // Authentication is enabled based on the AUTH_REQUIRED environment variable.

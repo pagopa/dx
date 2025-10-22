@@ -1,7 +1,7 @@
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 import { getLogger } from "@logtape/logtape";
 
-import { logger } from "./logging.js";
+const logger = getLogger(["mcpserver", "aws-config"]);
 
 // When true, enables reranking for the Bedrock knowledge base queries.
 export const kbRerankingEnabled =

@@ -2,8 +2,6 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod/v4";
 
-import { logger } from "../config/logging.js";
-
 const organizationsSchema = z
   .array(z.string().nonempty())
   .nonempty()
