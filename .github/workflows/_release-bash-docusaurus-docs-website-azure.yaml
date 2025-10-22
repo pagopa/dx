@@ -4,10 +4,8 @@ on:
   push:
     branches:
       - main
-      - feed-mcp-server-knowledgebase-with-docs-updates
     paths:
       - "apps/website/**" # Trigger only when this app changes
-      - ".github/workflows/_release-bash-docusaurus-docs-website-azure.yaml"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -17,7 +15,7 @@ on:
 
 jobs:
   deploy_to_static_web_app:
-    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@feed-mcp-server-knowledgebase-with-docs-updates # Path to the reusable workflow
+    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
     secrets: inherit
     with:
       workspace_name: "docs" # The 'name' from the app's package.json
@@ -27,10 +25,10 @@ jobs:
       environment: "app-prod"
 
   feed_docs_knowledge_base:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    # Only if a changeset PR is merged
+    if: github.event_name == 'push' && github.actor == 'dx-pagopa-bot'
     name: Update MCP Server Knowledge Base
-    # environment: app-prod-cd
-    environment: app-dev-cd
+    environment: app-prod-cd
     needs: deploy_to_static_web_app
     runs-on: ubuntu-latest
     permissions:
