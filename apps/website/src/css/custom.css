@@ -214,6 +214,25 @@ strong {
   box-shadow: 0 4px 12px rgba(38, 179, 194, 0.4) !important;
 }
 
+/* Legacy/deprecated items styling in sidebar */
+.menu__link[href*="/legacy/"],
+.menu__list-item[class*="legacy"] .menu__link {
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.menu__link[href*="/legacy/"]:hover,
+.menu__list-item[class*="legacy"] .menu__link:hover {
+  opacity: 0.7;
+}
+
+/* Add a deprecation indicator to legacy section */
+.menu__link[href*="/legacy/"]:not([href$="/legacy/"]):before {
+  content: "⚠️ ";
+  font-style: normal;
+  opacity: 0.6;
+}
+
 /* Button typography */
 .button {
   font-family: var(--ifm-font-family-base);
