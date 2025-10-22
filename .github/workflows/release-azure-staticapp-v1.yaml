@@ -58,6 +58,10 @@ on:
         type: string
         required: false
         default: ""
+    outputs:
+      bundle_name:
+        description: The name of the bundle used for artifact storage
+        value: ${{ jobs.build.outputs.bundle_name }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) && 'cd' || 'ci' }}
@@ -71,6 +75,8 @@ jobs:
   build:
     name: Build Artifact
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    outputs:
+      bundle_name: ${{ env.BUNDLE_NAME }}
 
     steps:
       - name: Checkout
