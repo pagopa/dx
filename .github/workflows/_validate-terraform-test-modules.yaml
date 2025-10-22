@@ -75,12 +75,22 @@ jobs:
         working-directory: infra/modules/${{ matrix.module }}
         run: |
           set -euo
-
           terraform init -input=false
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}
         run: |
-          set -euo
+          set -euo pipefail
 
-          terraform test
+          if [ -f tests/unit.tftest.hcl ]; then
+            terraform test -filter='tests/unit.tftest.hcl'
+          else
+            # legacy tests
+            terraform test
+          fi
+
+          if [ -f tests/contract.tftest.hcl ]; then
+            terraform test -filter='tests/contract.tftest.hcl'
+          else
+            echo "No contract tests found, skipping"
+          fi
