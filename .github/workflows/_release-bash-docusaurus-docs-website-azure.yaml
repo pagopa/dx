@@ -29,9 +29,12 @@ jobs:
   feed_docs_knowledge_base:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     name: Update MCP Server Knowledge Base
+    # environment: app-prod-cd
     environment: app-dev-cd
     needs: deploy_to_static_web_app
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     env:
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: eu-central-1
