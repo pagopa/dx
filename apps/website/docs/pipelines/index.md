@@ -116,13 +116,8 @@ Moving from older workflows? Check our migration guides:
 deprecated workflows that are no longer maintained. New projects should use the
 current workflows documented above. :::
 
-## Getting Support
-
-- **Workflow issues?** Open an issue on the
-  [DX repository](https://github.com/pagopa/dx/issues)
-- **Feature requests** We welcome suggestions for new workflows
-
 :::tip **Pipeline Best Practices** Follow our
 [Git conventions](../github/git/index.md) and
 [pull request guidelines](../github/pull-requests/index.md) to get the most out
-of DX pipelines. :::
+of DX pipelines. For questions or issues, visit our
+[support page](../support.md). :::
