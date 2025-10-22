@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-AWS-0057 IAM policy document uses wildcarded action 's3:*Object'
 data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
   statement {
     sid = "ListObjectsInBucket"
