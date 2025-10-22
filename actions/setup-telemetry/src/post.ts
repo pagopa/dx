@@ -1,10 +1,10 @@
-import { readFileSync, existsSync } from "fs";
 import {
-  trace,
   context as otelContext,
   SpanKind,
   SpanStatusCode,
+  trace,
 } from "@opentelemetry/api";
+import { existsSync, readFileSync } from "fs";
 
 async function post(): Promise<void> {
   const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
@@ -30,35 +30,33 @@ async function post(): Promise<void> {
 
   const { resourceFromAttributes } = require("@opentelemetry/resources");
   const resource = resourceFromAttributes({
-    "service.name": workflowRef,
-    "service.instance.id": runId,
-    "service.namespace": "dx",
     "enduser.id": actor,
+    "service.instance.id": runId,
+    "service.name": workflowRef,
+    "service.namespace": "dx",
   });
 
   useAzureMonitor({
-    resource,
     azureMonitorExporterOptions: {
       connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
     enableLiveMetrics: false,
+    resource,
   });
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
   const span = tracer.startSpan(workflowName, {
-    kind: SpanKind.SERVER,
-    startTime: new Date(startMs),
     attributes: {
-      "cicd.pipeline.action.name": workflowName,
-      "cicd.pipeline.run.id": runId,
-      "cicd.pipeline.attempt": attempt,
-      "cicd.pipeline.trigger": trigger,
-      "cicd.pipeline.repository": repo,
-      "cicd.pipeline.run.url.full": workflowURL,
-      "cicd.pipeline.author": actor,
-      "cicd.pipeline.result": pipelineResult,
       "cdcd.pipeline.path": actionPath,
+      "cicd.pipeline.action.name": workflowName,
+      "cicd.pipeline.attempt": attempt,
+      "cicd.pipeline.author": actor,
+      "cicd.pipeline.repository": repo,
+      "cicd.pipeline.result": pipelineResult,
+      "cicd.pipeline.run.id": runId,
+      "cicd.pipeline.run.url.full": workflowURL,
+      "cicd.pipeline.trigger": trigger,
       "error.type": "",
       ...(nodePackageManager
         ? { "node.package_manager": nodePackageManager }
@@ -66,6 +64,8 @@ async function post(): Promise<void> {
       ...(tfVersion ? { "terraform.version": tfVersion } : {}),
       ...(CSPs ? { "cloud_provider.enabled": CSPs } : {}),
     },
+    kind: SpanKind.SERVER,
+    startTime: new Date(startMs),
   });
 
   if (eventsFile && existsSync(eventsFile)) {
@@ -74,8 +74,8 @@ async function post(): Promise<void> {
       .filter((l) => l.trim().length);
 
     interface SpanMarker {
-      start?: Date;
       end?: Date;
+      start?: Date;
     }
     const spanMarkers: Record<string, SpanMarker[]> = {};
 
@@ -118,10 +118,10 @@ async function post(): Promise<void> {
 
         // Regular event branch
         const ev: {
-          name: string;
+          attributes?: Record<string, string>;
           body: string;
           exception: boolean;
-          attributes?: Record<string, string>;
+          name: string;
         } = parsed;
 
         const attrs = {
@@ -133,8 +133,8 @@ async function post(): Promise<void> {
 
         if (ev.exception) {
           span.recordException({
-            name: ev.name || "Exception",
             message: ev.body || ev.name,
+            name: ev.name || "Exception",
           });
           span.setStatus({
             code: SpanStatusCode.ERROR,
@@ -143,11 +143,11 @@ async function post(): Promise<void> {
           span.setAttribute("cicd.pipeline.result", "error");
         } else {
           logger.emit({
-            body: ev.body || ev.name,
             attributes: {
               "microsoft.custom_event.name": ev.name || "CustomEvent",
               ...attrs,
             },
+            body: ev.body || ev.name,
           });
         }
       }

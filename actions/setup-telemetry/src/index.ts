@@ -1,22 +1,7 @@
-import { mkdirSync, existsSync, writeFileSync, appendFileSync } from "fs";
 import { randomUUID } from "crypto";
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 
 const SESSION_DIR = ".otel-session";
-
-function startSession(): {
-  eventsFile: string;
-  start: number;
-  correlationId: string;
-} {
-  const start = Date.now();
-  mkdirSync(SESSION_DIR, { recursive: true });
-  const eventsFile = `${SESSION_DIR}/events.ndjson`;
-  if (!existsSync(eventsFile)) {
-    writeFileSync(eventsFile, "");
-  }
-  const correlationId = randomUUID();
-  return { eventsFile, start, correlationId };
-}
 
 function exportEnv(
   eventsFile: string,
@@ -40,7 +25,7 @@ function exportEnv(
 
 async function run(): Promise<void> {
   try {
-    const { eventsFile, start, correlationId } = startSession();
+    const { correlationId, eventsFile, start } = startSession();
     exportEnv(eventsFile, start, correlationId);
     console.log(
       `Telemetry session started. Events file: ${eventsFile} correlationId=${correlationId}`,
@@ -50,6 +35,21 @@ async function run(): Promise<void> {
     console.error("setup-telemetry failed:", message);
     process.exit(1);
   }
+}
+
+function startSession(): {
+  correlationId: string;
+  eventsFile: string;
+  start: number;
+} {
+  const start = Date.now();
+  mkdirSync(SESSION_DIR, { recursive: true });
+  const eventsFile = `${SESSION_DIR}/events.ndjson`;
+  if (!existsSync(eventsFile)) {
+    writeFileSync(eventsFile, "");
+  }
+  const correlationId = randomUUID();
+  return { correlationId, eventsFile, start };
 }
 
 run();
