@@ -65,9 +65,9 @@ We welcome contributions! If you'd like to contribute to DX:
 
 The DX team provides support for:
 
-- ✅ **Infrastructure as Code** - Terraform modules and best practices
+- ✅ **Infrastructure as Code** - Terraform modules, providers and best
+  practices
 - ✅ **CI/CD Pipelines** - GitHub Actions workflows and automation
-- ✅ **Azure Resources** - DX Azure provider and naming conventions
 - ✅ **Development Tools** - Pre-commit hooks, linters, and formatters
 - ✅ **Collaboration Practices** - Git workflows and pull request guidelines
 - ✅ **Documentation** - All DX-related documentation and guides
