@@ -5,28 +5,26 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as githubAuth from "../github.js";
 
 vi.mock("@octokit/rest");
-vi.mock("@logtape/logtape");
 
 describe("verifyGithubUser", () => {
-  const mockLogger = {
-    category: ["test"],
-    debug: vi.fn(),
-    emit: vi.fn(),
-    error: vi.fn(),
-    fatal: vi.fn(),
-    getChild: vi.fn(),
-    info: vi.fn(),
-    parent: null,
-    trace: vi.fn(),
-    warn: vi.fn(),
-    warning: vi.fn(),
-    with: vi.fn(),
+  let loggerSpy: {
+    debug: ReturnType<typeof vi.spyOn>;
+    error: ReturnType<typeof vi.spyOn>;
+    warn: ReturnType<typeof vi.spyOn>;
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.REQUIRED_ORGANIZATIONS = "pagopa";
-    vi.mocked(getLogger).mockReturnValue(mockLogger);
+
+    // Get logger and spy on its methods - no need for special configuration
+    const logger = getLogger(["mcpserver", "github-auth"]);
+
+    loggerSpy = {
+      debug: vi.spyOn(logger, "debug"),
+      error: vi.spyOn(logger, "error"),
+      warn: vi.spyOn(logger, "warn"),
+    };
   });
 
   it("returns false if no token is provided", async () => {
@@ -49,8 +47,8 @@ describe("verifyGithubUser", () => {
     );
     const result = await githubAuth.verifyGithubUser("token");
     expect(result).toBe(false);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      "Error verifying GitHub organization membership:",
+    expect(loggerSpy.error).toHaveBeenCalledWith(
+      "Error verifying GitHub organization membership",
       { error: expect.any(Error) },
     );
   });

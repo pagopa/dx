@@ -1,12 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
-vi.mock("../../config/logging", () => ({
-  logger: {
-    debug: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-  },
-}));
+import { getLogger } from "@logtape/logtape";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { queryKnowledgeBase } from "../bedrock.js";
 
 describe("queryKnowledgeBase", () => {
