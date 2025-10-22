@@ -84,7 +84,7 @@ resource "azurerm_role_assignment" "kv_cosmos_uai" {
 }
 
 resource "azurerm_key_vault_key" "cmk" {
-  name            = "dx-d-itn-tests-cdb-cosmos-cmk-01" # provider::dx::resource_name(merge(local.naming_config, { resource_type = "key", name = "cosmos-cmk" }))
+  name            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "customer_key_cosmos_db_nosql" }))
   key_vault_id    = azurerm_key_vault.kv.id
   key_type        = "RSA"
   key_size        = 2048
