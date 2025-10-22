@@ -46,6 +46,7 @@ jobs:
           file_path: "./${{ env.OUTPUT_DIR }}"
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+      # Upload only markdown files to the knowledge base bucket deleting objects that don't exist anymore
       - shell: bash
         run: |
           echo "Deploying documentation to knowledge base..."
