@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
       "s3:ListBucket",
     ]
     resources = [
-      "arn:aws:s3:::dx-${var.environment.env_short}-euc1-docs-knowledge-base-s3-01",
+      "arn:aws:s3:::dx-${var.environment.env_short}-euc1-docs-kb-s3-01",
     ]
   }
 
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
       "s3:*Object",
     ]
     resources = [
-      "arn:aws:s3:::dx-${var.environment.env_short}-euc1-docs-knowledge-base-s3-01/*",
+      "arn:aws:s3:::dx-${var.environment.env_short}-euc1-docs-kb-s3-01/*",
     ]
   }
 }
@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
 # Create an IAM policy resource from the policy document
 # This policy will be attached to roles that need access to the docs knowledge base S3 bucket
 resource "aws_iam_policy" "docs_knowledge_base_policy" {
-  name        = "dx-${var.environment.env_short}-euc1-docs-knowledge-base-policy-01"
+  name        = "dx-${var.environment.env_short}-euc1-docs-kb-policy-01"
   description = "IAM policy for MCP Server Docs Knowledge Base S3 access"
   policy      = data.aws_iam_policy_document.rw_docs_knowledge_base_policy.json
 }
