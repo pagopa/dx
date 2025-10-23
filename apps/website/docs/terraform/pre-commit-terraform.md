@@ -97,15 +97,9 @@ If you encounter issues with the pre-commit hooks or Terraform lock files:
 
 ---
 
-## Getting Support
+:::tip **Need Help?**
 
-The DevEx team is here to help you successfully implement and use Registry
-modules. If you encounter any challenges:
+For support with pre-commit hooks or Registry modules, visit our
+[support page](../support.md).
 
-- Join the `#team_devex_help` channel for direct support
-- Provide specific error messages or pipeline logs when seeking help
-- Share your repository structure and Terraform configuration paths
-
-Remember, these changes are designed to enhance our infrastructure management
-while maintaining security. Don't hesitate to reach out for assistance as you
-implement these new requirements.
+:::

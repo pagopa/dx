@@ -104,6 +104,92 @@ To call a function, use the syntax:
 
 :::
 
+## Resources
+
+The DX Azure provider includes resources to simplify infrastructure management
+and automate common tasks.
+
+### dx_available_subnet_cidr Resource
+
+The `dx_available_subnet_cidr` resource automatically finds an available CIDR
+block for a new subnet within a specified Azure Virtual Network. This resource
+analyzes existing subnets and allocates a non-overlapping CIDR block, making it
+easier to manage subnet creation without manual CIDR calculations.
+
+#### Inputs
+
+| Name                 | Type    | Required | Description                                                                                                                                                                         |
+| -------------------- | ------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `virtual_network_id` | String  | Yes      | The Azure Resource ID of the Virtual Network (format: `/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}`). |
+| `prefix_length`      | Integer | Yes      | The desired prefix length for the new subnet CIDR (e.g., 24 for /24). Must be larger than the VNet prefix and smaller or equal to 29.                                               |
+
+#### Outputs
+
+| Name         | Type   | Description                           |
+| ------------ | ------ | ------------------------------------- |
+| `id`         | String | A unique identifier for the resource. |
+| `cidr_block` | String | The allocated available CIDR block.   |
+
+#### Example
+
+```hcl
+resource "dx_available_subnet_cidr" "next_cidr" {
+  virtual_network_id = azurerm_virtual_network.example.id
+  prefix_length      = 24  # For a /24 subnet
+}
+
+resource "azurerm_subnet" "new_subnet" {
+  name                 = "example-subnet"
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.example.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr.cidr_block]
+}
+```
+
+:::tip
+
+When creating multiple subnets, use `depends_on` to ensure CIDR blocks are
+allocated sequentially and prevent overlaps:
+
+```hcl
+resource "dx_available_subnet_cidr" "next_cidr_1" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 24
+}
+
+resource "azurerm_subnet" "new_subnet_1" {
+  name                 = "my-new-subnet-1"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr_1.cidr_block]
+}
+
+resource "dx_available_subnet_cidr" "next_cidr_2" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 29
+
+  depends_on = [azurerm_subnet.new_subnet_1]
+}
+
+resource "azurerm_subnet" "new_subnet_2" {
+  name                 = "my-new-subnet-2"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = [dx_available_subnet_cidr.next_cidr_2.cidr_block]
+}
+```
+
+:::
+
+:::note
+
+The `dx_available_subnet_cidr` resource is a virtual resource that doesn't
+create an actual Azure resource. It only calculates and reserves a CIDR block in
+your Terraform state. Changing either `virtual_network_id` or `prefix_length`
+after creation requires recreating the resource.
+
+:::
+
 ## Semantic Versioning
 
 The DX Azure provider follows [semantic versioning](https://semver.org/), which
@@ -123,15 +209,3 @@ patches. For example:
 When publishing a new release, ensure the version tag starts with a `v` (e.g.,
 `v0.1.0`) as required by the
 [Terraform Registry](https://developer.hashicorp.com/terraform/registry/providers/publishing#creating-a-github-release).
-
-## Getting Support
-
-For assistance with the DX Azure provider:
-
-- Join the `#team_devex_help` channel for direct support.
-- Provide specific error messages or logs when seeking help.
-- Share your Terraform configuration and provider setup details.
-
-The DX Azure provider is designed to simplify and standardize Azure resource
-management. Don't hesitate to reach out for help as you integrate it into your
-workflows.
