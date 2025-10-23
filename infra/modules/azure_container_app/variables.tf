@@ -100,7 +100,7 @@ variable "container_app_templates" {
       }))
       initial_delay    = optional(number, 30)
       interval_seconds = optional(number, 10)
-      path             = string
+      path             = optional(string, "")
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
     })
@@ -113,7 +113,7 @@ variable "container_app_templates" {
       }))
       interval_seconds        = optional(number, 10)
       initial_delay           = optional(number, 30)
-      path                    = string
+      path                    = optional(string, "")
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
       transport               = optional(string, "HTTP")

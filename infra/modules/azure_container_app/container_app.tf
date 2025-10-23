@@ -199,7 +199,7 @@ resource "azurerm_container_app" "this" {
 resource "azapi_resource" "this" {
   count = local.is_function_app ? 1 : 0
 
-  type      = "Microsoft.App/containerApps@2025-07-01"
+  type      = "Microsoft.App/containerApps@2025-02-02-preview"
   name      = local.function_app.name
   parent_id = local.resource_group_id
   location  = var.environment.location
@@ -212,7 +212,7 @@ resource "azapi_resource" "this" {
   }
 
   body = {
-    kind = "functionapp"
+    # kind = "functionapp"
     properties = {
       environmentId = var.container_app_environment_id
       configuration = {
@@ -388,7 +388,7 @@ resource "azapi_resource" "this" {
     ]
   }
 
-  schema_validation_enabled = false
+  schema_validation_enabled = true
   response_export_values = [
     "properties.configuration",
     "properties.environmentId",
