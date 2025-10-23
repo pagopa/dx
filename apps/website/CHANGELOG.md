@@ -1,5 +1,11 @@
 # docs
 
+## 0.9.2
+
+### Patch Changes
+
+- e0a46c7: Add Getting Support page, and minor refinement for deprecated pages
+
 ## 0.9.1
 
 ### Patch Changes
