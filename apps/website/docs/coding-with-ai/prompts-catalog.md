@@ -30,6 +30,6 @@ workspace.
 
 ---
 
-import MCPPrompts from '@site/src/components/MCPPrompts';
+import MCPPrompts from '@site/src/components/MCPPromptsStatic';
 
 <MCPPrompts />

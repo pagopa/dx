@@ -47,6 +47,7 @@ const config: Config = {
         language: ["en"],
       },
     ],
+    [require.resolve("./src/plugins/prompt-loader.ts"), {}],
     [
       require.resolve("./src/plugins/analytics-with-consent.ts"),
       {
