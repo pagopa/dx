@@ -1,13 +1,143 @@
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import {
   context as otelContext,
+  Span,
   SpanKind,
   SpanStatusCode,
   trace,
 } from "@opentelemetry/api";
-import { logs } from "@opentelemetry/api-logs";
+import { Logger, logs } from "@opentelemetry/api-logs";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { existsSync, readFileSync } from "fs";
+import { promises as fs } from "fs";
+
+// Telemetry line models
+interface EventLine {
+  attributes?: Record<string, string>;
+  body?: string;
+  endSpan?: undefined;
+  exception?: boolean;
+  name: string;
+  span?: undefined;
+  startSpan?: undefined;
+}
+
+interface SpanEndLine {
+  endSpan: string;
+  span: string;
+  startSpan?: undefined;
+}
+
+interface SpanMarker {
+  end?: Date;
+  start?: Date;
+}
+
+interface SpanStartLine {
+  endSpan?: undefined;
+  span: string;
+  startSpan: string;
+}
+
+type TelemetryLine = EventLine | SpanEndLine | SpanStartLine;
+
+function buildChildSpans(
+  markers: Record<string, SpanMarker[]>,
+  tracer: ReturnType<typeof trace.getTracer>,
+  root: Span,
+) {
+  for (const [name, occurrences] of Object.entries(markers)) {
+    for (const m of occurrences) {
+      if (!m.start || !m.end) continue;
+      if (m.end < m.start) continue;
+      const child = tracer.startSpan(
+        name,
+        { kind: SpanKind.INTERNAL, startTime: m.start },
+        trace.setSpan(otelContext.active(), root),
+      );
+      child.end(m.end);
+    }
+  }
+}
+
+function emitEvent(
+  ev: EventLine,
+  span: Span,
+  actor: string,
+  repo: string,
+  runId: string,
+  logger: Logger,
+) {
+  const attrs = {
+    "ci.pipeline.repo": repo,
+    "ci.pipeline.run.id": runId,
+    "enduser.id": actor,
+    ...ev.attributes,
+  };
+
+  if (ev.exception) {
+    span.recordException({
+      message: ev.body || ev.name,
+      name: ev.name || "Exception",
+    });
+    span.setStatus({ code: SpanStatusCode.ERROR, message: ev.body || ev.name });
+    span.setAttribute("cicd.pipeline.result", "error");
+  } else {
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": ev.name || "CustomEvent",
+        ...attrs,
+      },
+      body: ev.body || ev.name,
+    });
+  }
+}
+
+function handleSpanMarker(
+  line: SpanEndLine | SpanStartLine,
+  markers: Record<string, SpanMarker[]>,
+) {
+  const arr = (markers[line.span] = markers[line.span] || []);
+  let current = arr[arr.length - 1];
+
+  if (!current || (current.start && current.end)) {
+    current = {};
+    arr.push(current);
+  }
+
+  if ("startSpan" in line && line.startSpan)
+    current.start = new Date(line.startSpan);
+
+  if ("endSpan" in line && line.endSpan) {
+    if (!current.start) {
+      current = { end: new Date(line.endSpan) };
+      arr.push(current);
+    } else {
+      current.end = new Date(line.endSpan);
+    }
+  }
+}
+
+function isSpanMarkerLine(l: TelemetryLine): l is SpanEndLine | SpanStartLine {
+  return (
+    typeof l === "object" &&
+    l !== null &&
+    "span" in l &&
+    (Object.prototype.hasOwnProperty.call(l, "startSpan") ||
+      Object.prototype.hasOwnProperty.call(l, "endSpan"))
+  );
+}
+
+function parseTelemetryLine(raw: string): null | TelemetryLine {
+  try {
+    const obj = JSON.parse(raw);
+    return (
+      typeof obj === "object" && obj !== null ? obj : null
+    ) as null | TelemetryLine;
+  } catch {
+    console.warn("Skipping malformed telemetry line: " + raw);
+    return null;
+  }
+}
 
 async function post(): Promise<void> {
   const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
@@ -67,117 +197,54 @@ async function post(): Promise<void> {
     startTime: new Date(startMs),
   });
 
-  if (eventsFile && existsSync(eventsFile)) {
-    const lines = readFileSync(eventsFile, "utf-8")
-      .split(/\n/)
-      .filter((l) => l.trim().length);
-
-    interface SpanMarker {
-      end?: Date;
-      start?: Date;
-    }
-    const spanMarkers: Record<string, SpanMarker[]> = {};
-
-    otelContext.with(trace.setSpan(otelContext.active(), span), () => {
-      for (const line of lines) {
-        let parsed: any = null;
-
-        try {
-          parsed = JSON.parse(line);
-        } catch {
-          console.warn("Skipping malformed telemetry line: " + line);
-          continue;
-        }
-        if (!parsed) continue;
-
-        // Span marker branch
-        if (parsed.span && (parsed.startSpan || parsed.endSpan)) {
-          const arr = (spanMarkers[parsed.span] =
-            spanMarkers[parsed.span] || []);
-          // Choose the current open marker or create new
-          let current = arr[arr.length - 1];
-          if (!current || (current.start && current.end)) {
-            current = {};
-            arr.push(current);
-          }
-          if (parsed.startSpan) {
-            current.start = new Date(parsed.startSpan);
-          }
-          if (parsed.endSpan) {
-            // If end arrives before start (out-of-order), start a new marker with only end to avoid corrupting previous
-            if (!current || !current.start) {
-              current = { end: new Date(parsed.endSpan) };
-              arr.push(current);
-            } else {
-              current.end = new Date(parsed.endSpan);
-            }
-          }
-          continue;
-        }
-
-        // Regular event branch
-        const ev: {
-          attributes?: Record<string, string>;
-          body: string;
-          exception: boolean;
-          name: string;
-        } = parsed;
-
-        const attrs = {
-          "ci.pipeline.repo": repo,
-          "ci.pipeline.run.id": runId,
-          "enduser.id": actor,
-          ...ev.attributes,
-        };
-
-        if (ev.exception) {
-          span.recordException({
-            message: ev.body || ev.name,
-            name: ev.name || "Exception",
-          });
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: ev.body || ev.name,
-          });
-          span.setAttribute("cicd.pipeline.result", "error");
-        } else {
-          logger.emit({
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "CustomEvent",
-              ...attrs,
-            },
-            body: ev.body || ev.name,
-          });
-        }
-      }
-
-      // After processing events, create child spans for completed markers
-      for (const [spanName, occurrences] of Object.entries(spanMarkers)) {
-        for (const marker of occurrences) {
-          if (!marker.start || !marker.end) continue; // incomplete pair
-          if (marker.end < marker.start) continue; // invalid ordering
-
-          const child = tracer.startSpan(
-            spanName,
-            {
-              kind: SpanKind.INTERNAL,
-              startTime: marker.start,
-            },
-            trace.setSpan(otelContext.active(), span),
-          );
-          child.end(marker.end);
-        }
-      }
-    });
-  } else {
-    console.log("No events file found or empty");
-  }
+  const lines = await readEventsFile(eventsFile);
+  if (lines.length)
+    processTelemetryLines(lines, span, tracer, actor, repo, runId, logger);
+  else console.log("No events file found or empty");
 
   span.end();
 
-  await logs.getLoggerProvider().forceFlush?.();
-  await new Promise((r) => setTimeout(r, 2000));
+  // brief delay to allow async exporter flush
+  await new Promise((r) => setTimeout(r, 1200));
   console.log("Telemetry flushed");
+}
+
+function processTelemetryLines(
+  lines: string[],
+  span: Span,
+  tracer: ReturnType<typeof trace.getTracer>,
+  actor: string,
+  repo: string,
+  runId: string,
+  logger: Logger,
+) {
+  const markers: Record<string, SpanMarker[]> = {};
+  otelContext.with(trace.setSpan(otelContext.active(), span), () => {
+    for (const raw of lines) {
+      const parsed = parseTelemetryLine(raw);
+      if (!parsed) continue;
+
+      if (isSpanMarkerLine(parsed)) {
+        handleSpanMarker(parsed, markers);
+        continue;
+      }
+      emitEvent(parsed as EventLine, span, actor, repo, runId, logger);
+    }
+    buildChildSpans(markers, tracer, span);
+  });
+}
+
+async function readEventsFile(path?: string): Promise<string[]> {
+  if (!path) return [];
+  try {
+    const content = await fs.readFile(path, "utf-8");
+    return content
+      .split(/\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 post();
