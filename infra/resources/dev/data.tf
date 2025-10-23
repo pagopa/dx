@@ -46,3 +46,14 @@ data "azurerm_private_dns_zone" "tests_peps" {
 }
 
 data "aws_caller_identity" "current" {}
+
+data "azurerm_subscription" "current" {}
+
+data "azurerm_resource_group" "dx" {
+  name = provider::dx::resource_name(merge(local.environment, { resource_type = "resource_group", name = "devex" }))
+}
+
+data "azurerm_user_assigned_identity" "infra_cd" {
+  name                = provider::dx::resource_name(merge(local.environment, { resource_type = "managed_identity", domain = "devex", name = "infra-github-cd" }))
+  resource_group_name = data.azurerm_resource_group.dx.name
+}
