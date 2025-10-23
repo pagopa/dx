@@ -89,6 +89,7 @@ jobs:
       pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -145,8 +146,6 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
-        env:
-          TFPLAN_FILE: tfplan-${{ github.sha }}
         run: |
           set -o pipefail
 
@@ -159,7 +158,6 @@ jobs:
       - name: Upload Terraform Bundle as Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         env:
-          TFPLAN_FILE: tfplan-${{ github.sha }}
           TERRAFORM_DIR: ${{ steps.directory.outputs.dir }}
         with:
           name: terraform-bundle
@@ -180,6 +178,7 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -206,8 +205,6 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        env:
-          TFPLAN_FILE: tfplan-${{ github.sha }}
         run: |
           set -o pipefail
 

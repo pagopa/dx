@@ -131,6 +131,8 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_USE_OIDC: true
+      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+      FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
 
     steps:
       - name: Download Artifact
@@ -142,9 +144,6 @@ jobs:
         uses: pagopa/dx/.github/actions/azure-login@main
 
       - name: Check if the custom warm-up is configured
-        env:
-          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-          FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
         run: |
           WARMUP_SETTINGS=$(az webapp config appsettings list \
             --resource-group "$RESOURCE_GROUP_NAME" \
@@ -156,9 +155,6 @@ jobs:
           fi
 
       - name: Clear the routing rules
-        env:
-          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-          FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
         run: |
           az webapp traffic-routing clear \
             --resource-group "$RESOURCE_GROUP_NAME" \
@@ -166,10 +162,6 @@ jobs:
 
       - name: Deploy to Production
         if: ${{ inputs.use_staging_slot == false }}
-        env:
-          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-          FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
-          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
         run: |
           az webapp deploy \
             --resource-group "$RESOURCE_GROUP_NAME" \
@@ -180,10 +172,6 @@ jobs:
 
       - name: Deploy to Staging Slot
         if: ${{ inputs.use_staging_slot == true }}
-        env:
-          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-          FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
-          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
         run: |
           az webapp deploy \
             --resource-group "$RESOURCE_GROUP_NAME" \
@@ -195,9 +183,6 @@ jobs:
 
       - name: Swap Staging and Production Slots
         if: ${{ inputs.use_staging_slot == true }}
-        env:
-          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-          FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
         run: |
           az webapp deployment slot swap \
             --resource-group "$RESOURCE_GROUP_NAME" \

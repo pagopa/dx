@@ -21,7 +21,6 @@ runs:
       env:
         DEFAULT_VERSION: ${{ inputs.default_version }}
       run: |
-        # Default version sourced from env.DEFAULT_VERSION (set from input)
         PRE_COMMIT_VERSION="$DEFAULT_VERSION"
 
         if ! command -v yq &>/dev/null; then

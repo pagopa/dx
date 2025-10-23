@@ -124,11 +124,10 @@ jobs:
       - name: Make Zip File
         env:
           BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
+        working-directory: "./${{ env.BUNDLE_NAME }}"
         run: |
-          cd "./$BUNDLE_NAME"
           zip -r "./$BUNDLE_NAME.zip" .
           mv "$BUNDLE_NAME.zip" "../$BUNDLE_NAME.zip"
-          cd ..
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
