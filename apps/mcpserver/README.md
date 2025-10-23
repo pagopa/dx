@@ -38,7 +38,7 @@ The GH PAT authentication is done via a prompt, so you will be asked to enter it
 {
   "servers": {
     "dx-docs": {
-      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
       "headers": {
         "x-gh-pat": "${input:github_mcp_pat}"
@@ -66,7 +66,7 @@ You need to configure it in the repository settings. See [GitHub Copilot MCP doc
 {
   "mcpServers": {
     "pagopa-dx": {
-      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
       "tools": ["*"],
       "headers": {
@@ -89,7 +89,7 @@ Follow the guided wizard to start using the DX MCP server:
 
 1. **Server Name**: `dx-docs`
 2. **Server Type**: `2` (HTTP)
-3. **URL**: `https://api.dev.dx.pagopa.it/mcp`
+3. **URL**: `https://api.dx.pagopa.it/mcp`
 4. **HTTP Headers**: `{"x-gh-pat": "<your-gh-PAT>"}`
 5. **Tools**: `*` (leave as is)
 
