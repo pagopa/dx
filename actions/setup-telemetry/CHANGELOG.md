@@ -1,1 +1,1 @@
-# Install Setup Telemetry
+# setup-telemetry action
