@@ -1,11 +1,40 @@
 # Setup Telemetry Action
 
-Sets up OpenTelemetry instrumentation for a workflow run, queues events locally (NDJSON), then flushes them to Azure Application Insights in the post phase, creating:
+Initializes [OpenTelemetry](https://opentelemetry.io/) for the current workflow run, buffering telemetry as NDJSON and flushing it during the post step to [Azure Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview). This action seeds the session and prepares the empty NDJSON queue file, while [`pagopa/dx/actions/log-telemetry-event`](../log-telemetry-event/README.md) is responsible for appending event records and span markers.
 
-- A root workflow span
-- Custom events
-- Exceptions (on the root span)
-- Child spans reconstructed from markers
+## Usage Example
+
+```yaml
+- name: Setup Telemetry Session
+  uses: pagopa/dx/actions/setup-telemetry@VERSION
+  with:
+    connection_string: ${{ secrets.APPI_CONNECTION_STRING }}
+
+- name: Start build span
+  uses: pagopa/dx/actions/log-telemetry-event@VERSION
+  with:
+    span_name: build
+    span_phase: start
+
+- name: Build
+  run: pnpm build
+
+- name: End build span
+  uses: pagopa/dx/actions/log-telemetry-event@VERSION
+  with:
+    span_name: build
+    span_phase: end
+
+- name: Log result value
+  uses: pagopa/dx/actions/log-telemetry-event@VERSION
+  with:
+    name: ArtifactCount
+    body: "42"
+
+- name: Mark failure (optional)
+  if: failure()
+  run: echo "PIPELINE_RESULT=failure" >> $GITHUB_ENV
+```
 
 ## Lifecycle
 
@@ -99,40 +128,6 @@ Use them only for hot paths where duration matters (build, test, deploy step gro
 ## Pipeline Result Strategy
 
 Currently trusts `PIPELINE_RESULT` if set; otherwise starts as `success` then flips to `error` upon first exception. You can extend by exporting more granular outcomes (`failure`, `cancelled`, `skipped`, `timed_out`) before post.
-
-## Usage Example
-
-```yaml
-- name: Setup Telemetry Session
-  uses: pagopa/dx/actions/setup-telemetry@VERSION
-  with:
-    connection_string: ${{ secrets.APPI_CONNECTION_STRING }}
-
-- name: Start build span
-  uses: pagopa/dx/actions/log-telemetry-event@VERSION
-  with:
-    span_name: build
-    span_phase: start
-
-- name: Build
-  run: pnpm build
-
-- name: End build span
-  uses: pagopa/dx/actions/log-telemetry-event@VERSION
-  with:
-    span_name: build
-    span_phase: end
-
-- name: Log result value
-  uses: pagopa/dx/actions/log-telemetry-event@VERSION
-  with:
-    name: ArtifactCount
-    body: "42"
-
-- name: Mark failure (optional)
-  if: failure()
-  run: echo "PIPELINE_RESULT=failure" >> $GITHUB_ENV
-```
 
 ## Error Handling & Resilience
 
