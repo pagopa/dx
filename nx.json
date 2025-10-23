@@ -3,14 +3,25 @@
   "parallel": 10,
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*.ts"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**",
+        "{projectRoot}/bin/**"
+      ],
       "cache": true
     },
     "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*.ts"
+      ],
       "cache": true
     },
     "format:check": {
