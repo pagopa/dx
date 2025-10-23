@@ -81,7 +81,7 @@ az network private-endpoint-connection approve \
   --description "<DESCRIPTION>"
 ```
 
-::: info
+:::info
 
 It is recommended to add a meaningful description to the connection, indicating
 who is trying to connect and why this connection is necessary to facilitate the

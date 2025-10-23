@@ -45,9 +45,9 @@ foster effective collaboration across teams using git and GitHub.
 4. Address code review feedback
 5. Merge with [auto-merge](./pull-requests/auto-merge.md) when ready
 
-## Getting Support
+:::tip
 
-- **Questions about collaboration practices?** Open an issue on the
-  [DX repository](https://github.com/pagopa/dx/issues)
-- **Suggest improvements** We welcome feedback on collaboration workflows
-- **Request new collaboration tools** for scenarios not yet covered
+For questions about collaboration practices or to suggest improvements, visit
+our [support page](../support.md).
+
+:::
