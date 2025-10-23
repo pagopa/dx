@@ -5,7 +5,7 @@
 # trivy:ignore:AVD-AWS-0090
 resource "aws_s3_bucket" "mcp_knowledge_base" {
   bucket = provider::awsdx::resource_name(merge(var.naming_config, {
-    name          = "docs-knowledge-base"
+    name          = "docs-kb"
     resource_type = "s3_bucket"
   }))
 }
