@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.0.3
+
+### Patch Changes
+
+- 4122d6c: Validate autoscaling parameters according to zone redundancy
+
 ## 2.0.2
 
 ### Patch Changes
