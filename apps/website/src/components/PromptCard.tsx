@@ -1,25 +1,7 @@
+import { type CatalogEntry } from "@pagopa/dx-mcpprompts";
 import React, { useState } from "react";
 
 import styles from "./MCPPrompts.module.css";
-
-interface CatalogEntry {
-  category: string;
-  id: string;
-  metadata: {
-    description: string;
-    examples?: string[];
-    title: string;
-  };
-  prompt: {
-    arguments: {
-      description: string;
-      name: string;
-      required: boolean;
-    }[];
-  };
-  tags: string[];
-  version?: string;
-}
 
 interface PromptCardProps {
   content: string;
