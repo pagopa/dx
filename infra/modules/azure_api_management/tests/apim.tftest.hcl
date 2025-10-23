@@ -190,7 +190,7 @@ run "apim_test_zones_public_ip" {
     subnet_id                     = run.setup_tests.subnet_id
     virtual_network_type_internal = true
 
-    # Provide valid autoscale values (multiples of 2 for high_load zone redundancy)
+    # Provide valid autoscale values (multiples of the number of zones, which is 2 in this test, for high_load zone redundancy)
     autoscale = {
       enabled                       = true
       minimum_instances             = 2
