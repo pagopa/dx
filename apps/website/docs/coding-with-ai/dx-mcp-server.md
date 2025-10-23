@@ -51,7 +51,7 @@ for details.
 {
   "servers": {
     "pagopa-dx": {
-      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
       "headers": {
         "x-gh-pat": "${env:GH_PAT}"
@@ -71,7 +71,7 @@ for more info.
 {
   "mcpServers": {
     "pagopa-dx": {
-      "url": "https://api.dev.dx.pagopa.it/mcp",
+      "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
       "tools": ["*"],
       "headers": {
@@ -92,7 +92,7 @@ Follow the guided wizard to start using the DX MCP server:
 
 1. **Server Name**: `pagopa-dx`
 2. **Server Type**: `2` (HTTP)
-3. **URL**: `https://api.dev.dx.pagopa.it/mcp`
+3. **URL**: `https://api.dx.pagopa.it/mcp`
 4. **HTTP Headers**: `{"x-gh-pat": "<your-gh-PAT>"}`
 5. **Tools**: `*` (leave as is)
 
