@@ -69,11 +69,11 @@ You will get a brief list of migration identifiers. Use one of them with
 
 ##### Current Codemods
 
-| identifier           | description                                                                               |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `use-pnpm`           | Migrate the project to use pnpm (lockfile import, workspace rewriting, workflow updates). |
-| `use-azure-appsvc`   | Modernize legacy deploy workflows to the unified release-azure-appsvc reusable workflow.  |
-| `update-code-review` | Update js_code_review workflow reference to latest commit with required permissions.      |
+| identifier           | description                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `use-pnpm`           | Migrate the project to use pnpm (lockfile import, workspace rewriting, workflow updates).                                              |
+| `use-azure-appsvc`   | Migrate `web_app_deploy` and `function_app_deploy` to [`release-azure-appsvc`](./azure/application-deployment/release-azure-appsvc.md) |
+| `update-code-review` | Update [`js_code_review`](./typescript/code-review.md) workflow reference to latest commit with required permissions.                  |
 
 #### Apply a Codemod
 
