@@ -23,10 +23,10 @@ __swap_versions() {
 
 case $resource_type in
   "appsvc")
-    source ./azure-appsvc.sh
+    source azure-appsvc.sh
     ;;
   "containerapp")
-    source ./azure-containerapp.sh
+    source azure-containerapp.sh
     ;;
   *)
     echo "::error::Unsupported resource type: $resource_type"
