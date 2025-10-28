@@ -59,7 +59,6 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
       throw error;
     }
   } else {
-    logger.error(`Markdown prompts directory does not exist: ${markdownDir}`);
     throw new Error(`Prompts directory not found: ${markdownDir}`);
   }
 
