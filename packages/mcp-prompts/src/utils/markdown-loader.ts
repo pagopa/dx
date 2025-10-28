@@ -78,7 +78,7 @@ export function convertToMCPCatalogEntry(
       })),
       description: frontmatter.description,
       load: async (args: Record<string, unknown>) => {
-        // Replace placeholders in content with actual argument values using functional style
+        // Replace placeholders in content with actual argument values
         const processedWithArgs = Object.entries(args).reduce(
           (currentContent, [key, value]) =>
             createTemplateReplacer(key, value)(currentContent),
@@ -131,7 +131,7 @@ export async function loadMarkdownPrompts(
       `Found ${markdownFiles.length} markdown files in ${promptsDir}`,
     );
 
-    // Process all markdown files concurrently using functional approach
+    // Process all markdown files concurrently
     const parseResults = await Promise.allSettled(
       markdownFiles.map(async (file) => {
         const filepath = join(promptsDir, file);
@@ -228,7 +228,6 @@ export function resolvePromptsDirectory(): string {
   const currentDir = fileURLToPath(new URL(".", currentFileUrl));
 
   // Check if we're running from src/ (development) or dist/ (compiled)
-  // Use path.sep for cross-platform compatibility and check path segments
   const pathSegments = currentDir.split(sep);
   const isSrcPath = pathSegments.includes("src");
 

@@ -11,7 +11,6 @@ import { convertToMCPCatalogEntry } from "../utils/markdown-loader.js";
 describe("Markdown Prompt Loader", () => {
   it("should parse a markdown prompt with frontmatter", async () => {
     // This tests the parser with a mock markdown content
-    // For now, we'll test the conversion logic directly
     const frontmatter = {
       arguments: [
         {

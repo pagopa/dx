@@ -1,7 +1,4 @@
-/**
- * Tests for prompts directory configuration functionality.
- * Since we now use a fixed path within the package, these tests are simplified.
- */
+// Tests for prompts directory configuration functionality.
 
 import { describe, expect, it } from "vitest";
 
