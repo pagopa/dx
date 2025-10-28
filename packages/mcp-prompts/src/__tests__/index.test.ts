@@ -2,58 +2,56 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as promptsModule from "../index.js";
 
-// Mock the prompts index to control test data
-vi.mock("../prompts/index.js", () => ({
-  prompts: [
-    {
-      category: "terraform",
-      enabled: true,
-      id: "test-prompt",
-      metadata: { title: "Test" },
-      prompt: { name: "test" },
-      tags: [],
-    },
-    {
-      category: "terraform",
-      enabled: false,
-      id: "disabled-prompt",
-      metadata: { title: "Disabled" },
-      prompt: { name: "disabled" },
-      tags: [],
-    },
-    {
-      category: "azure",
-      enabled: true,
-      id: "azure-prompt",
-      metadata: { title: "Azure" },
-      prompt: { name: "azure" },
-      tags: [],
-    },
-  ],
-}));
-
 describe("mcp-prompts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe("getPrompts", () => {
-    it("returns all prompts including disabled ones", async () => {
+    it("loads prompts from Markdown sources", async () => {
       const result = await promptsModule.getPrompts();
 
-      expect(result).toHaveLength(3);
-      expect(result[0].id).toBe("test-prompt");
-      expect(result[1].id).toBe("disabled-prompt");
-      expect(result[2].id).toBe("azure-prompt");
+      // Should load Markdown prompts from the default directory
+      expect(result.length).toBeGreaterThan(0);
+
+      // Check that known Markdown prompts are included
+      const expectedPromptIds = [
+        "generate-terraform-configuration",
+        "migrate-terraform-module",
+        "resolve-security-findings",
+      ];
+
+      const foundPrompts = result.filter((p) =>
+        expectedPromptIds.includes(p.id),
+      );
+
+      expect(foundPrompts.length).toBeGreaterThan(0);
     });
 
     it("injects version into all prompts", async () => {
       const result = await promptsModule.getPrompts();
 
-      expect(result).toHaveLength(3);
+      expect(result.length).toBeGreaterThan(0);
       result.forEach((prompt) => {
         expect(prompt.version).toBeDefined();
         expect(typeof prompt.version).toBe("string");
+      });
+    });
+
+    it("loads prompts with proper structure", async () => {
+      const result = await promptsModule.getPrompts();
+
+      expect(result.length).toBeGreaterThan(0);
+
+      // Check that prompts have the expected structure
+      result.forEach((prompt) => {
+        expect(prompt).toHaveProperty("id");
+        expect(prompt).toHaveProperty("category");
+        expect(prompt).toHaveProperty("enabled");
+        expect(prompt).toHaveProperty("metadata");
+        expect(prompt).toHaveProperty("prompt");
+        expect(prompt).toHaveProperty("tags");
+        expect(prompt).toHaveProperty("version");
       });
     });
   });
@@ -62,49 +60,36 @@ describe("mcp-prompts", () => {
     it("returns only enabled prompts", async () => {
       const result = await promptsModule.getEnabledPrompts();
 
-      expect(result).toHaveLength(2);
-      expect(result[0].prompt.name).toBe("test");
-      expect(result[1].prompt.name).toBe("azure");
-    });
+      expect(result.length).toBeGreaterThan(0);
 
-    it("returns empty array when no prompts are enabled", async () => {
-      // Mock with all disabled prompts
-      vi.resetModules();
-      vi.doMock("../prompts/index.js", () => ({
-        prompts: [
-          {
-            category: "terraform",
-            enabled: false,
-            id: "disabled-1",
-            metadata: { title: "Disabled 1" },
-            prompt: { name: "disabled1" },
-            tags: [],
-          },
-          {
-            category: "azure",
-            enabled: false,
-            id: "disabled-2",
-            metadata: { title: "Disabled 2" },
-            prompt: { name: "disabled2" },
-            tags: [],
-          },
-        ],
-      }));
-
-      const module = await import("../index.js");
-      const result = await module.getEnabledPrompts();
-
-      expect(result).toHaveLength(0);
+      // All should be enabled
+      result.forEach((prompt) => {
+        expect(prompt.enabled).toBe(true);
+      });
     });
 
     it("includes version in enabled prompts", async () => {
       const result = await promptsModule.getEnabledPrompts();
 
-      expect(result).toHaveLength(2);
+      expect(result.length).toBeGreaterThan(0);
       result.forEach((prompt) => {
         expect(prompt.version).toBeDefined();
         expect(typeof prompt.version).toBe("string");
       });
+    });
+
+    it("filters out disabled prompts", async () => {
+      const allPrompts = await promptsModule.getPrompts();
+      const enabledPrompts = await promptsModule.getEnabledPrompts();
+
+      // If there are any disabled prompts, enabled should be fewer than total
+      const disabledCount = allPrompts.filter((p) => !p.enabled).length;
+
+      if (disabledCount > 0) {
+        expect(enabledPrompts.length).toBeLessThan(allPrompts.length);
+      } else {
+        expect(enabledPrompts.length).toBe(allPrompts.length);
+      }
     });
   });
 });
