@@ -143,28 +143,6 @@ Invalid prompts are logged and excluded from the catalog, allowing other prompts
    pnpm test
    pnpm build
    ```
-5. **Verify loading**:
-   ```bash
-   node -e "import('./dist/index.js').then(m => m.getPrompts()).then(console.log)"
-   ```
-
-### Testing Your Prompt
-
-```typescript
-// Test script example
-import { getPrompts } from "./dist/index.js";
-
-const prompts = await getPrompts();
-const myPrompt = prompts.find((p) => p.id === "my-new-prompt");
-
-if (myPrompt) {
-  const result = await myPrompt.prompt.load({
-    required_arg: "test_value",
-    optional_arg: "custom_value",
-  });
-  console.log("Generated content:", result);
-}
-```
 
 ### Best Practices
 
@@ -173,9 +151,8 @@ if (myPrompt) {
 3. **Include examples**: Show typical use cases in the frontmatter
 4. **Use appropriate categories**: Helps with organization and filtering
 5. **Add default values**: For optional arguments to improve UX
-6. **Test edge cases**: What happens with missing arguments?
-7. **Keep content focused**: One clear purpose per prompt
-8. **Use proper Markdown**: Headers, lists, code blocks for clarity
+6. **Keep content focused**: One clear purpose per prompt
+7. **Use proper Markdown**: Headers, lists, code blocks for clarity
 
 ## Package Architecture
 
@@ -191,6 +168,3 @@ This package is consumed by:
 
 - **MCP Server** (`apps/mcpserver`): Exposes prompts to AI tools via MCP protocol
 - **Documentation Website** (`apps/website`): Displays prompt catalog and examples
-- **CLI Tools**: For development, testing, and automation scripts
-
-The package is designed to be self-contained with no external configuration required.
