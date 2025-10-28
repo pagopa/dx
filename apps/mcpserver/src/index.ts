@@ -48,15 +48,20 @@ logger.debug(`Server instructions: \n\n${serverInstructions}`);
 
 logger.debug(`Loading enabled prompts...`);
 
-getEnabledPrompts().then((prompts) => {
-  prompts.forEach((catalogEntry) => {
-    logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
-    server.addPrompt(catalogEntry.prompt);
-    logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
-  });
+// Load prompts asynchronously and wait for completion before starting server
+const enabledPrompts = await getEnabledPrompts();
+enabledPrompts.forEach((catalogEntry) => {
+  logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
+  server.addPrompt(catalogEntry.prompt);
+  logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
 });
+
+logger.info(`Loaded ${enabledPrompts.length} enabled prompts`);
+
 server.addTool(QueryPagoPADXDocumentationTool);
 server.addTool(SearchGitHubCodeTool);
+
+logger.info("Starting server...");
 
 // Starts the server in HTTP Stream mode.
 server.start({
