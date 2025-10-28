@@ -2,34 +2,6 @@
 
 A TypeScript package for managing Markdown-based prompts with YAML frontmatter, designed for AI assistants and the Model Context Protocol (MCP). This package provides a self-contained collection of validated prompts that can be consumed programmatically or served via MCP servers.
 
-## Installation
-
-```bash
-pnpm add @pagopa/dx-mcpprompts
-```
-
-## Quick Usage
-
-```typescript
-import { getEnabledPrompts, getPrompts } from "@pagopa/dx-mcpprompts";
-
-// Get only enabled prompts
-const activePrompts = await getEnabledPrompts();
-
-// Get all prompts (including disabled)
-const allPrompts = await getPrompts();
-
-// Use a specific prompt
-const prompt = activePrompts.find((p) => p.id === "my-prompt");
-if (prompt) {
-  const content = await prompt.prompt.load({
-    argument_name: "value",
-    optional_arg: "custom_value",
-  });
-  console.log(content);
-}
-```
-
 ## Creating New Prompts
 
 ### 1. File Structure
