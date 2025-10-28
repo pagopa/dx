@@ -4,12 +4,12 @@ on:
       dockerfile_path:
         type: string
         required: false
-        default: './Dockerfile'
+        default: "./Dockerfile"
         description: Dockerfile path
       dockerfile_context:
         type: string
         required: false
-        default: '.'
+        default: "."
         description: Dockerfile build context
       docker_image_name:
         type: string
@@ -48,7 +48,7 @@ on:
         required: true
       script_language:
         type: string
-        default: 'typescript (npm)'
+        default: "typescript (npm)"
         required: false
         description: Define the language and package manager of the script to run to check for errors during canary deployment. Available only when Revision Mode is set to Multiple. Supports 'typescript (npm)', 'typescript (yarn)' values only.
       script_name:
@@ -74,7 +74,6 @@ jobs:
       packages: write
 
     steps:
-
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         name: Checkout
 
@@ -111,7 +110,6 @@ jobs:
       SCRIPT_LANGUAGE: ${{ inputs.script_language }}
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -189,10 +187,18 @@ jobs:
         run: |
           set -euo
 
+          # It is not stated in the documentation, but according to "az cli" validation:
+          # "A revision suffix must consist of lower case alphanumeric characters or '-',
+          # start with a letter or number, end with an alphanumeric character and cannot have '--'."
+
+          # Generate a random 4-char lowercase alphanumeric suffix
+          SUFFIX=$(openssl rand -base64 8 | tr -dc 'a-z0-9' | head -c 4)
+
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
             --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
             --from-revision "$CURRENT_REVISION" \
+            --revision-suffix "$SUFFIX" \
             --query "properties.latestRevisionName" \
             --output tsv)
 
