@@ -7,7 +7,7 @@
 
 import matter from "gray-matter";
 import { readdir, readFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { extname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { CatalogEntry } from "../types.js";
@@ -135,16 +135,11 @@ export async function loadMarkdownPrompts(
     const parseResults = await Promise.allSettled(
       markdownFiles.map(async (file) => {
         const filepath = join(promptsDir, file);
-        try {
-          const parsedPrompt = await parseMarkdownPrompt(filepath);
-          logger.debug(
-            `Successfully parsed prompt: ${parsedPrompt.frontmatter.id}`,
-          );
-          return parsedPrompt;
-        } catch (error) {
-          logger.error(`Failed to parse ${file}`, { error });
-          throw error; // This will be caught by Promise.allSettled
-        }
+        const parsedPrompt = await parseMarkdownPrompt(filepath);
+        logger.debug(
+          `Successfully parsed prompt: ${parsedPrompt.frontmatter.id}`,
+        );
+        return parsedPrompt;
       }),
     );
 
@@ -214,7 +209,11 @@ export async function parseMarkdownPrompt(
     // Validate the complete parsed prompt
     return ParsedMarkdownPromptSchema.parse(parsedPrompt);
   } catch (error) {
-    throw new Error(`Failed to parse markdown prompt ${filepath}: ${error}`);
+    throw new Error(
+      `Failed to parse markdown prompt ${filepath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }
 
@@ -229,7 +228,11 @@ export function resolvePromptsDirectory(): string {
   const currentDir = fileURLToPath(new URL(".", currentFileUrl));
 
   // Check if we're running from src/ (development) or dist/ (compiled)
-  if (currentDir.includes("/src/")) {
+  // Use path.sep for cross-platform compatibility and check path segments
+  const pathSegments = currentDir.split(sep);
+  const isSrcPath = pathSegments.includes("src");
+
+  if (isSrcPath) {
     // Development: from src/utils/ -> ../prompts/
     return join(currentDir, "..", "prompts");
   } else {
