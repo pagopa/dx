@@ -64,7 +64,7 @@ No modules.
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_secondary_geo_locations"></a> [secondary\_geo\_locations](#input\_secondary\_geo\_locations) | Secondary geo locations for Cosmos DB account. Failover priority determines the order in which regions will take over in case of a regional outage. If failover priority is not set, the items order is used. | <pre>list(object({<br/>    location          = optional(string, null)<br/>    failover_priority = optional(number, null)<br/>    zone_redundant    = optional(bool, true)<br/>  }))</pre> | `[]` | no |
-| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
+| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Specifies the use case for the Cosmos DB Account. Allowed values are 'default' and 'development'. | `string` | `"default"` | no |
 
