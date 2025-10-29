@@ -20,7 +20,7 @@ GitHub Action for building and pushing Docker images to multiple container regis
 | `dockerfile_context`       | No       | `.`                        | Docker build context path                          |
 | `docker_image_name`        | No       | `${{ github.repository }}` | Docker image name                                  |
 | `docker_image_description` | **Yes**  | -                          | Image description (used in OCI labels)             |
-| `docker_image_authors`     | No       | `PagoPA`                   | Image authors                                      |
+| `docker_image_authors`     | No       | ``                         | Image authors                                      |
 | `build_args`               | No       | -                          | Build arguments in `KEY=VALUE` format (multiline)  |
 | `build_platforms`          | No       | `linux/amd64`              | Target platforms (e.g., `linux/amd64,linux/arm64`) |
 | `registry`                 | No       | `ghcr`                     | Registry type: `ghcr` or `ecr`                     |
