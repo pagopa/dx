@@ -97,13 +97,15 @@ runs:
       id: set-registry-url
       shell: bash
       run: |
-        if [ "$REGISTRY_CHOICE" = "aws" && "$PUSH_TO_REGISTRY" == "true" ]; then
-          echo "registry_url=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_OUTPUT
+        # if [ "$REGISTRY_CHOICE" = "aws" && "$PUSH_TO_REGISTRY" == "true" ]; then
+        if [ "$REGISTRY_CHOICE" = "aws" ]; then
+          echo "registry_url=$ECR_REGISTRY" >> $GITHUB_OUTPUT
         else
           echo "registry_url=ghcr.io" >> $GITHUB_OUTPUT
         fi
       env:
         REGISTRY_CHOICE: ${{ steps.set-up-registry.outputs.choice }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         PUSH_TO_REGISTRY: ${{ inputs.push_to_registry }}
 
     - name: Determine Configuration for Tags
