@@ -178,6 +178,7 @@ runs:
         push-to-registry: false
 
     - name: Output Image Tags - TEST
+      shell: bash
       run: |
         echo "Image Tags: ${{ steps.meta.outputs.tags }}"
         echo "Image Digest: ${{ steps.push_registry.outputs.digest }}"
