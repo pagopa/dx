@@ -1,5 +1,5 @@
 name: Docker Build and Push
-description: Build and optionally push a Docker image to a container registry (ghcr, ECR)
+description: Build and optionally push a Docker image to a container registry (GitHub or Amazon Elastic Container Registry)
 
 inputs:
   dockerfile_path:
@@ -20,12 +20,17 @@ inputs:
   docker_image_authors:
     required: false
     default: ""
-    description: "Authors names set as image label (comma separated)"
   build_args:
     required: false
-    description: "List of build arguments to use for Dockerfile build, given in env=value format."
+    description: |
+      List of build arguments for the Dockerfile build, in YAML list format (one key=value per line), e.g.:
+        ```
+        build_args: |
+          key1=value1
+          key2=value2
+        ```
   build_platforms:
-    required: false
+    required: true
     default: linux/amd64
     description: "Image runtime platform, supports multiple values"
   registry:
@@ -36,10 +41,10 @@ inputs:
     required: false
     default: "true"
     description: "Push the image to the registry"
-  ecr_tag_name:
+  additional_tag:
     required: false
     default: ""
-    description: "ECR tag name, optional tag to apply to the image in addition to sha and latest"
+    description: "Optional tag to apply to the image"
 
 outputs:
   image_tags:
@@ -97,7 +102,8 @@ runs:
       id: set-registry-url
       shell: bash
       run: |
-        if [ "$REGISTRY_CHOICE" = "ecr" ] && [ "$PUSH_TO_REGISTRY" = "true" ]; then
+        # if [ "$REGISTRY_CHOICE" = "ecr" ] && [ "$PUSH_TO_REGISTRY" = "true" ]; then
+        if [ "$REGISTRY_CHOICE" = "ecr" ]; then
           echo "registry_url=$ECR_REGISTRY" >> $GITHUB_OUTPUT
         else
           echo "registry_url=ghcr.io" >> $GITHUB_OUTPUT
@@ -113,37 +119,44 @@ runs:
       id: tag-config
       shell: bash
       env:
-        CHOICE: ${{ steps.set-up-registry.outputs.choice }}
-        REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
-        IMAGE_NAME: ${{ inputs.docker_image_name }}
-        GITHUB_SHA: ${{ github.sha }}
-        TAG_NAME: ${{ inputs.ecr_tag_name }}
-        ENABLE_SEMVER_MAJOR: ${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+        # CHOICE: ${{ steps.set-up-registry.outputs.choice }}
+        # REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
+        # IMAGE_NAME: ${{ inputs.docker_image_name }}
+        # GITHUB_SHA: ${{ github.sha }}
+        ADDITIONAL_TAG: ${{ inputs.additional_tag }}
+        # ENABLE_SEMVER_MAJOR: ${{ !startsWith(github.ref, 'refs/tags/v0.') }}
       run: |
-        if [ "$CHOICE" = "ecr" ]; then
-          #  Use ECR tagging format with SHA, latest, and optional tag name
-          ECR_IMAGE_SHA=$REGISTRY_URL/$IMAGE_NAME:$GITHUB_SHA
-          ECR_IMAGE_LATEST=$REGISTRY_URL/$IMAGE_NAME:latest
+        # if [ "$CHOICE" = "ecr" ]; then
+        #   #  Use ECR tagging format with SHA, latest, and optional tag name
+        #   ECR_IMAGE_SHA=$REGISTRY_URL/$IMAGE_NAME:$GITHUB_SHA
+        #   ECR_IMAGE_LATEST=$REGISTRY_URL/$IMAGE_NAME:latest
 
-          echo "tags<<EOF" >> $GITHUB_OUTPUT
-          echo "$ECR_IMAGE_LATEST" >> $GITHUB_OUTPUT
-          echo "$ECR_IMAGE_SHA" >> $GITHUB_OUTPUT
-          if [ -n "$TAG_NAME" ]; then
-            ECR_IMAGE_TAG="$REGISTRY_URL/$IMAGE_NAME:$TAG_NAME"
-            echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
-          fi
-          echo "EOF" >> $GITHUB_OUTPUT
+        #   echo "tags<<EOF" >> $GITHUB_OUTPUT
+        #   echo "$ECR_IMAGE_LATEST" >> $GITHUB_OUTPUT
+        #   echo "$ECR_IMAGE_SHA" >> $GITHUB_OUTPUT
+        #   if [ -n "$ADDITIONAL_TAG" ]; then
+        #     ECR_IMAGE_TAG="$REGISTRY_URL/$IMAGE_NAME:$TAG_NAME"
+        #     echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
+        #   fi
+        #   echo "EOF" >> $GITHUB_OUTPUT
 
-        elif [ "$CHOICE" = "ghcr" ]; then
-          # Use docker/metadata-action tagging format
-          echo "tags<<EOF" >> $GITHUB_OUTPUT
-          echo "type=raw,value=latest,enable={{is_default_branch}}" >> $GITHUB_OUTPUT
-          echo "type=semver,pattern={{version}}" >> $GITHUB_OUTPUT
-          echo "type=semver,pattern={{major}}.{{minor}}" >> $GITHUB_OUTPUT
-          echo "type=semver,pattern={{major}},enable=${ENABLE_SEMVER_MAJOR}" >> $GITHUB_OUTPUT
-          echo "type=ref,event=branch" >> $GITHUB_OUTPUT
-          echo "type=sha" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        # elif [ "$CHOICE" = "ghcr" ]; then
+        #   # Use docker/metadata-action tagging format
+        #   echo "tags<<EOF" >> $GITHUB_OUTPUT
+        #   echo "type=raw,value=latest,enable={{is_default_branch}}" >> $GITHUB_OUTPUT
+        #   echo "type=semver,pattern={{version}}" >> $GITHUB_OUTPUT
+        #   echo "type=semver,pattern={{major}}.{{minor}}" >> $GITHUB_OUTPUT
+        #   echo "type=semver,pattern={{major}},enable=${ENABLE_SEMVER_MAJOR}" >> $GITHUB_OUTPUT
+        #   echo "type=ref,event=branch" >> $GITHUB_OUTPUT
+        #   echo "type=sha" >> $GITHUB_OUTPUT
+        #   if [ -n "$ADDITIONAL_TAG" ]; then
+        #     ECR_IMAGE_TAG="$REGISTRY_URL/$IMAGE_NAME:$TAG_NAME"
+        #     echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
+        #   fi
+        #   echo "EOF" >> $GITHUB_OUTPUT
+        # fi
+        if [ -n "$ADDITIONAL_TAG" ]; then
+          echo "tags=$TAG_NAME" >> $GITHUB_OUTPUT
         fi
 
     - name: Docker Meta
@@ -158,6 +171,12 @@ runs:
       with:
         images: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
         tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+          type=ref,event=branch
+          type=sha
           ${{ steps.tag-config.outputs.tags }}
         labels: |
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}

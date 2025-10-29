@@ -55,7 +55,7 @@ jobs:
 
       - name: Build and Push to ECR
         id: build-and-push
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@feat-action-for-docker-build-push # main
         with:
           registry: ecr
           dockerfile_path: apps/mcpserver/Dockerfile
