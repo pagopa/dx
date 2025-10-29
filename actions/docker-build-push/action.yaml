@@ -102,10 +102,11 @@ runs:
       run: |
         # if [ "$REGISTRY_CHOICE" = "ecr" ] && [ "$PUSH_TO_REGISTRY" = "true" ]; then
         if [ "$REGISTRY_CHOICE" = "ecr" ]; then
-          echo "registry_url=$ECR_REGISTRY" >> $GITHUB_OUTPUT
+          REGISTRY_URL="$ECR_REGISTRY"
         else
-          echo "registry_url=ghcr.io" >> $GITHUB_OUTPUT
+          REGISTRY_URL="ghcr.io"
         fi
+        echo "registry_url=$REGISTRY_URL" >> $GITHUB_OUTPUT
         echo "image_uri=$REGISTRY_URL/$IMAGE_NAME" >> $GITHUB_OUTPUT
       env:
         REGISTRY_CHOICE: ${{ steps.set-up-registry.outputs.choice }}
@@ -177,7 +178,4 @@ runs:
     - name: Output Image Tags - TEST
       shell: bash
       run: |
-        echo "Image Tags: ${{ steps.meta.outputs.tags }}"
-        echo "Image Digest: ${{ steps.push_registry.outputs.digest }}"
-        echo "Registry URI: ${{ steps.set-registry-url.outputs.registry_url }}"
         echo "Image URI: ${{ steps.set-registry-url.outputs.image_uri }}"
