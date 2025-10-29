@@ -15,16 +15,14 @@
 export * from "./schemas.js";
 export * from "./types.js";
 export * from "./utils/markdown-loader.js";
-
-import { existsSync } from "node:fs";
+import { getLogger } from "@logtape/logtape";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { CatalogEntry } from "./types.js";
 
-import { logger } from "./utils/logger.js";
-import {
-  loadMarkdownPromptsAsCatalog,
-  resolvePromptsDirectory,
-} from "./utils/markdown-loader.js";
+import { loadMarkdownPromptsAsCatalog } from "./utils/markdown-loader.js";
 
 /**
  * Gets all prompts from Markdown sources with version injection.
@@ -32,6 +30,7 @@ import {
  * @returns Promise<CatalogEntry[]> - Array of all available prompts
  */
 export const getPrompts = async (): Promise<CatalogEntry[]> => {
+  const logger = getLogger("mcp-prompts");
   logger.debug("Loading prompts catalog...");
 
   // Get package version for injection
@@ -41,25 +40,26 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
   const version = packageJson.default.version;
 
   // Resolve the prompts directory (defaults to src/prompts)
-  const markdownDir = resolvePromptsDirectory();
+  const dirname = fileURLToPath(new URL(".", import.meta.url));
+  const promptDir = path.join(dirname, "..", "prompts");
+  console.log("Prompts directory resolved to:", promptDir);
+
   let markdownPrompts: CatalogEntry[] = [];
 
-  if (existsSync(markdownDir)) {
-    try {
-      markdownPrompts = await loadMarkdownPromptsAsCatalog(markdownDir);
-      markdownPrompts = markdownPrompts.map((prompt) => ({
+  try {
+    await fs.access(promptDir);
+    markdownPrompts = (await loadMarkdownPromptsAsCatalog(promptDir)).map(
+      (prompt) => ({
         ...prompt,
         version,
-      }));
-      logger.debug(`Loaded ${markdownPrompts.length} Markdown prompts`);
-    } catch (error) {
-      logger.error(`Failed to load Markdown prompts from ${markdownDir}`, {
-        error,
-      });
-      throw error;
-    }
-  } else {
-    throw new Error(`Prompts directory not found: ${markdownDir}`);
+      }),
+    );
+    logger.debug(`Loaded ${markdownPrompts.length} Markdown prompts`);
+  } catch (error) {
+    logger.error(`Failed to load Markdown prompts from ${promptDir}`, {
+      error,
+    });
+    throw error;
   }
 
   logger.info(
@@ -76,6 +76,7 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
  * @returns Promise<CatalogEntry[]> - Array of enabled catalog entries
  */
 export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
+  const logger = getLogger("mcp-prompts");
   const prompts = await getPrompts();
   const enabledPrompts = prompts.filter((p) => p.enabled);
 
@@ -85,3 +86,7 @@ export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
 
   return enabledPrompts;
 };
+
+getPrompts().then((prompts) => {
+  console.log(`MCP Prompts package initialized with ${prompts.length} prompts`);
+});

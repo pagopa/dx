@@ -14,7 +14,8 @@
     "dx"
   ],
   "files": [
-    "dist"
+    "dist",
+    "prompts"
   ],
   "main": "./dist/index.js",
   "exports": {
@@ -36,20 +37,18 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "tsup": "catalog:",
     "tsx": "^4.20.6",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsc",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:manual": "tsx test.ts"
+    "test:coverage": "vitest run --coverage"
   }
 }

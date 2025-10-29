@@ -5,19 +5,18 @@
  * frontmatter as MCP prompts, with validation using Zod schemas.
  */
 
+import { getLogger } from "@logtape/logtape";
 import matter from "gray-matter";
-import { readdir, readFile } from "node:fs/promises";
-import { extname, join, sep } from "node:path";
-import { fileURLToPath } from "node:url";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 
 import type { CatalogEntry } from "../types.js";
 
 import {
-  MarkdownPromptFrontmatterSchema,
+  MarkdownPromptFrontmatterSchema as markdownPromptFrontmatterSchema,
   type ParsedMarkdownPrompt,
-  ParsedMarkdownPromptSchema,
+  ParsedMarkdownPromptSchema as parsedMarkdownPromptSchema,
 } from "../schemas.js";
-import { logger } from "./logger.js";
 
 // Functional utilities for template processing
 const createTemplateReplacer =
@@ -31,15 +30,7 @@ const extractVariableName = (template: string): string =>
   template.replace(/\{\{\s*|\s*\}\}/g, "");
 
 const isMarkdownFile = (filename: string): boolean =>
-  extname(filename).toLowerCase() === ".md";
-
-const isFulfilled = <T>(
-  result: PromiseSettledResult<T>,
-): result is PromiseFulfilledResult<T> => result.status === "fulfilled";
-
-const isRejected = <T>(
-  result: PromiseSettledResult<T>,
-): result is PromiseRejectedResult => result.status === "rejected";
+  path.extname(filename).toLowerCase() === ".md";
 
 const createDefaultReplacer =
   (arguments_: ParsedMarkdownPrompt["frontmatter"]["arguments"]) =>
@@ -77,40 +68,11 @@ export function convertToMCPCatalogEntry(
         required: arg.required,
       })),
       description: frontmatter.description,
-      load: async (args: Record<string, unknown>) => {
-        // Replace placeholders in content with actual argument values
-        const processedWithArgs = Object.entries(args).reduce(
-          (currentContent, [key, value]) =>
-            createTemplateReplacer(key, value)(currentContent),
-          content,
-        );
-
-        // Replace any remaining unreplaced templates with default values
-        const remainingTemplates =
-          processedWithArgs.match(/\{\{\s*([^}]+)\s*\}\}/g) ?? [];
-
-        const defaultReplacer = createDefaultReplacer(frontmatter.arguments);
-
-        return remainingTemplates.reduce(
-          (currentContent, template) =>
-            defaultReplacer(currentContent, template),
-          processedWithArgs,
-        );
-      },
+      load: createPromptLoader(content, frontmatter.arguments),
       name: frontmatter.id,
     },
     tags: frontmatter.tags,
   };
-}
-
-/**
- * Gets the default prompts directory relative to this module.
- *
- * @deprecated Use resolvePromptsDirectory() instead for better flexibility
- * @returns string - Absolute path to the prompts directory
- */
-export function getDefaultPromptsDirectory(): string {
-  return resolvePromptsDirectory();
 }
 
 /**
@@ -122,9 +84,10 @@ export function getDefaultPromptsDirectory(): string {
 export async function loadMarkdownPrompts(
   promptsDir: string,
 ): Promise<ParsedMarkdownPrompt[]> {
+  const logger = getLogger("mcp-prompts");
   try {
     // Read all files in the prompts directory
-    const files = await readdir(promptsDir);
+    const files = await fs.readdir(promptsDir);
     const markdownFiles = files.filter(isMarkdownFile);
 
     logger.debug(
@@ -134,26 +97,27 @@ export async function loadMarkdownPrompts(
     // Process all markdown files concurrently
     const parseResults = await Promise.allSettled(
       markdownFiles.map(async (file) => {
-        const filepath = join(promptsDir, file);
-        const parsedPrompt = await parseMarkdownPrompt(filepath);
-        logger.debug(
+        const filepath = path.join(promptsDir, file);
+        let parsedPrompt: ParsedMarkdownPrompt;
+        try {
+          parsedPrompt = await parseMarkdownPrompt(filepath);
+        } catch (error) {
+          logger.error(`Error parsing markdown prompt at ${filepath}`, {
+            error,
+          });
+          throw error;
+        }
+        logger.warn(
           `Successfully parsed prompt: ${parsedPrompt.frontmatter.id}`,
         );
         return parsedPrompt;
       }),
     );
 
-    // Extract successful results and log failed ones
+    // Extract successful results
     const parsedPrompts = parseResults
-      .filter(isFulfilled)
+      .filter((p) => p.status === "fulfilled")
       .map((result) => result.value);
-
-    // Log failed parses
-    parseResults.filter(isRejected).forEach((result) => {
-      logger.error("Failed to parse a markdown prompt", {
-        reason: result.reason,
-      });
-    });
 
     logger.info(
       `Loaded ${parsedPrompts.length} markdown prompts from ${promptsDir}`,
@@ -191,13 +155,13 @@ export async function parseMarkdownPrompt(
 ): Promise<ParsedMarkdownPrompt> {
   try {
     // Read the file content
-    const fileContent = await readFile(filepath, "utf-8");
+    const fileContent = await fs.readFile(filepath, "utf-8");
 
     // Parse frontmatter and content using gray-matter
     const { content, data } = matter(fileContent);
 
     // Validate frontmatter using Zod schema
-    const frontmatter = MarkdownPromptFrontmatterSchema.parse(data);
+    const frontmatter = markdownPromptFrontmatterSchema.parse(data);
 
     // Create the parsed prompt object
     const parsedPrompt = {
@@ -207,7 +171,7 @@ export async function parseMarkdownPrompt(
     };
 
     // Validate the complete parsed prompt
-    return ParsedMarkdownPromptSchema.parse(parsedPrompt);
+    return parsedMarkdownPromptSchema.parse(parsedPrompt);
   } catch (error) {
     throw new Error(
       `Failed to parse markdown prompt ${filepath}: ${
@@ -218,24 +182,33 @@ export async function parseMarkdownPrompt(
 }
 
 /**
- * Gets the prompts directory - always uses the default directory within the package.
+ * Creates a prompt loader function that processes template placeholders.
  *
- * @returns string - Absolute path to the prompts directory (src/prompts)
+ * @param content - The raw markdown content with template placeholders
+ * @param arguments_ - The argument definitions from frontmatter
+ * @returns Async function that loads and processes the prompt with provided arguments
  */
-export function resolvePromptsDirectory(): string {
-  // Use default directory within the package
-  const currentFileUrl = import.meta.url;
-  const currentDir = fileURLToPath(new URL(".", currentFileUrl));
+function createPromptLoader(
+  content: string,
+  arguments_: ParsedMarkdownPrompt["frontmatter"]["arguments"],
+) {
+  return async (args: Record<string, unknown>) => {
+    // Replace placeholders in content with actual argument values
+    const processedWithArgs = Object.entries(args).reduce(
+      (currentContent, [key, value]) =>
+        createTemplateReplacer(key, value)(currentContent),
+      content,
+    );
 
-  // Check if we're running from src/ (development) or dist/ (compiled)
-  const pathSegments = currentDir.split(sep);
-  const isSrcPath = pathSegments.includes("src");
+    // Replace any remaining unreplaced templates with default values
+    const remainingTemplates =
+      processedWithArgs.match(/\{\{\s*([^}]+)\s*\}\}/g) ?? [];
 
-  if (isSrcPath) {
-    // Development: from src/utils/ -> ../prompts/
-    return join(currentDir, "..", "prompts");
-  } else {
-    // Compiled: from dist/ -> ./prompts/ (copied by build to dist/prompts/)
-    return join(currentDir, "prompts");
-  }
+    const defaultReplacer = createDefaultReplacer(arguments_);
+
+    return remainingTemplates.reduce(
+      (currentContent, template) => defaultReplacer(currentContent, template),
+      processedWithArgs,
+    );
+  };
 }
