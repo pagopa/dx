@@ -99,7 +99,7 @@ jobs:
           docker rmi ghcr.io/$IMAGE_NAME:$IMAGE_TAG || true
 
       - name: Docker Build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@feat-action-for-docker-build-push # main
         if: needs.found_sha.outputs.latest_digest != steps.old_digest.outputs.digest || github.event_name == 'push'
         with:
           dockerfile_path: "./containers/self-hosted-runner/Dockerfile"
