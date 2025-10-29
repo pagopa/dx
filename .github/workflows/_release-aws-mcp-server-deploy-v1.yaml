@@ -55,7 +55,7 @@ jobs:
 
       - name: Build and Push to ECR
         id: build-and-push
-        uses: pagopa/dx/actions/docker-build-push@feat-action-for-docker-build-push # main
+        uses: pagopa/dx/actions/docker-build-push@main
         with:
           registry: ecr
           dockerfile_path: apps/mcpserver/Dockerfile
@@ -65,7 +65,7 @@ jobs:
           docker_image_name: ${{ env.IMAGE_NAME }}
           build_platforms: linux/arm64
           push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
-          ecr_tag_name: ${{ steps.check-tag.outputs.TAG_NAME }}
+          ecr_tag_name: ${{ inputs.dry_run && 'dry-run-tag' || steps.check-tag.outputs.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
