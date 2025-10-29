@@ -17,7 +17,7 @@ COPY ./packages ./packages
 # 5. Install ALL dependencies for mcpserver and its workspace dependencies
 RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
-RUN npx turbo build --filter @pagopa/dx-mcpserver
+RUN pnpx turbo build --filter @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
 
