@@ -33,10 +33,7 @@ export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
       logger.debug(`Tool executed: ${toolName} - ${JSON.stringify(eventData)}`);
 
       // Emit custom event to Azure Application Insights
-      emitCustomEvent("ToolExecuted", {
-        arguments: JSON.stringify(toolArgs),
-        toolName,
-      })("mcpserver");
+      emitCustomEvent("ToolExecuted", eventData)("mcpserver");
 
       try {
         // Call the original execute function and return the result
