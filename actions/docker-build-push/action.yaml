@@ -50,9 +50,6 @@ outputs:
   image_tags:
     description: "The tags applied to the built image"
     value: ${{ steps.meta.outputs.tags }}
-  image_digest:
-    description: "The digest of the built image"
-    value: ${{ steps.push_registry.outputs.digest }}
   registry_uri:
     description: "The registry URI used for the image"
     value: ${{ steps.set-registry-url.outputs.registry_url }}
@@ -109,7 +106,7 @@ runs:
         else
           echo "registry_url=ghcr.io" >> $GITHUB_OUTPUT
         fi
-        echo "image_uri=$$REGISTRY_URL/$IMAGE_NAME" >> $GITHUB_OUTPUT
+        echo "image_uri=$REGISTRY_URL/$IMAGE_NAME" >> $GITHUB_OUTPUT
       env:
         REGISTRY_CHOICE: ${{ steps.set-up-registry.outputs.choice }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}

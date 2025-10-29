@@ -32,7 +32,6 @@ GitHub Action for building and pushing Docker images to multiple container regis
 | Output         | Description                                |
 | -------------- | ------------------------------------------ |
 | `image_tags`   | Complete list of tags applied to the image |
-| `image_digest` | SHA256 digest of the built image           |
 | `registry_uri` | Full URI of the registry used              |
 | `image_uri`    | The full image URI including tag           |
 
