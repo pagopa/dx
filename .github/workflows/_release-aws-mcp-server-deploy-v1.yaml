@@ -5,6 +5,12 @@ description: |
 
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run the workflow for testing purposes (does not push the image)"
+        required: false
+        default: false
+        type: boolean
   push:
     tags:
       - "@pagopa/dx-mcpserver@*"
@@ -54,16 +60,18 @@ jobs:
           registry: ecr
           dockerfile_path: apps/mcpserver/Dockerfile
           dockerfile_context: "."
+          docker_image_description: "DX MCP Server"
           docker_image_name: ${{ env.IMAGE_NAME }}
           build_platforms: inux/arm64
-          push_to_registry: true
-          ecr_tag_name: ${{ steps.check-tag.outputs.TAG_NAME }}
+          push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
+          ecr_tag_name: ${{ inputs.dry_run && 'dry-run-tag' || steps.check-tag.outputs.TAG_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Lambda
+        if: inputs.dry_run == false
         uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
         with:
           function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
           package-type: Image
-          image-uri: ${{ steps.build-and-push.outputs.ecr_image_uri }}
+          image-uri: ${{ steps.build-and-push.outputs.registry_uri }}
