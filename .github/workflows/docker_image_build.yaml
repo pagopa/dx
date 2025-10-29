@@ -47,7 +47,7 @@ jobs:
         name: Checkout
 
       - name: Docker Build
-        uses: pagopa/dx/actions/docker-build-push@feat-action-for-docker-build-push # main
+        uses: pagopa/dx/actions/docker-build-push@main
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
