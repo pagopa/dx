@@ -127,6 +127,10 @@ runs:
         ADDITIONAL_TAG: ${{ inputs.additional_tag }}
         # ENABLE_SEMVER_MAJOR: ${{ !startsWith(github.ref, 'refs/tags/v0.') }}
       run: |
+        if [ -n "$ADDITIONAL_TAG" ]; then
+          echo "Tag passed: $ADDITIONAL_TAG"
+          echo "tags=$ADDITIONAL_TAG" >> $GITHUB_OUTPUT
+        fi
         # if [ "$CHOICE" = "ecr" ]; then
         #   #  Use ECR tagging format with SHA, latest, and optional tag name
         #   ECR_IMAGE_SHA=$REGISTRY_URL/$IMAGE_NAME:$GITHUB_SHA
@@ -156,9 +160,6 @@ runs:
         #   fi
         #   echo "EOF" >> $GITHUB_OUTPUT
         # fi
-        if [ -n "$ADDITIONAL_TAG" ]; then
-          echo "tags=$TAG_NAME" >> $GITHUB_OUTPUT
-        fi
 
     - name: Docker Meta
       id: meta
