@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -31,9 +31,17 @@ func main() {
 }
 
 func probeHandler(w http.ResponseWriter, r *http.Request) {
-	endpoint := os.Getenv("COSMOS_ENDPOINT")
-	dbName := os.Getenv("COSMOS_DB")
-	containerName := os.Getenv("COSMOS_CONTAINER")
+	q := r.URL.Query()
+
+	endpoint := fmt.Sprintf("https://%s.documents.azure.com:443", q.Get("endpoint"))
+	dbName := q.Get("db")
+	containerName := q.Get("container")
+
+	if endpoint == "" || dbName == "" || containerName == "" {
+		http.Error(w, `{"status":"fail","error":"missing required query params: endpoint, db, container"}`, http.StatusBadRequest)
+		return
+	}
+
 	itemID := strconv.Itoa(random.Random(01, 1000))
 
 	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
