@@ -22,10 +22,10 @@ GitHub Action for building and pushing Docker images to multiple container regis
 | `docker_image_description` | **Yes**  | -                          | Image description (used in OCI labels)             |
 | `docker_image_authors`     | No       | ``                         | Image authors                                      |
 | `build_args`               | No       | -                          | Build arguments in `KEY=VALUE` format (multiline)  |
-| `build_platforms`          | No       | `linux/amd64`              | Target platforms (e.g., `linux/amd64,linux/arm64`) |
+| `build_platforms`          | **Yes**  | `linux/amd64`              | Target platforms (e.g., `linux/amd64,linux/arm64`) |
 | `registry`                 | No       | `ghcr`                     | Registry type: `ghcr` or `ecr`                     |
 | `push_to_registry`         | No       | `true`                     | If `false`, only builds without pushing            |
-| `ecr_tag_name`             | No       | ``                         | Optional tag to apply to the image                 |
+| `additional_tag`           | No       | ``                         | Optional tag to apply to the image                 |
 
 ## Outputs
 
@@ -38,9 +38,7 @@ GitHub Action for building and pushing Docker images to multiple container regis
 
 ## Tagging Strategy
 
-The action automatically applies different tags based on the registry type:
-
-### GHCR (GitHub Container Registry)
+The action automatically applies different tags:
 
 - `latest` - only on the default branch
 - `<version>` - for semantic tags (e.g., `v1.2.3` → `1.2.3`)
@@ -48,12 +46,7 @@ The action automatically applies different tags based on the registry type:
 - `<major>` - for semantic tags excluding v0.x (e.g., `v1.2.3` → `1`)
 - `<branch-name>` - branch name for branch pushes
 - `sha-<commit>` - commit SHA (first 7 characters)
-
-### ECR (AWS Elastic Container Registry)
-
-- `latest` - always applied
-- `<commit-sha>` - full commit SHA (no prefix, no truncation), always applied
-- `<custom-tag>` - custom tag via `ecr_tag_name` input (optional)
+- `<custom-tag>` - custom tag via `additional_tag` input (optional)
 
 > **Note**: ECR uses explicit tags for better control. All three tags can be applied simultaneously for maximum traceability. The commit SHA tag uses the full commit SHA, not a truncated or prefixed version.
 
@@ -133,7 +126,7 @@ jobs:
         uses: pagopa/dx/actions/docker-build-push@main
         with:
           registry: ecr
-          ecr_tag_name: ${{ steps.version.outputs.tag }}
+          additional_tag: ${{ steps.version.outputs.tag }}
           docker_image_name: my-app
           docker_image_description: "My Application"
           dockerfile_path: ./Dockerfile

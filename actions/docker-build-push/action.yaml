@@ -116,51 +116,6 @@ runs:
         PUSH_TO_REGISTRY: ${{ inputs.push_to_registry }}
         IMAGE_NAME: ${{ inputs.docker_image_name }}
 
-    - name: Determine Configuration for Tags
-      id: tag-config
-      shell: bash
-      env:
-        # CHOICE: ${{ steps.set-up-registry.outputs.choice }}
-        # REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
-        # IMAGE_NAME: ${{ inputs.docker_image_name }}
-        # GITHUB_SHA: ${{ github.sha }}
-        ADDITIONAL_TAG: ${{ inputs.additional_tag }}
-        # ENABLE_SEMVER_MAJOR: ${{ !startsWith(github.ref, 'refs/tags/v0.') }}
-      run: |
-        if [ -n "$ADDITIONAL_TAG" ]; then
-          echo "Tag passed: $ADDITIONAL_TAG"
-          echo "tags=$ADDITIONAL_TAG" >> $GITHUB_OUTPUT
-        fi
-        # if [ "$CHOICE" = "ecr" ]; then
-        #   #  Use ECR tagging format with SHA, latest, and optional tag name
-        #   ECR_IMAGE_SHA=$REGISTRY_URL/$IMAGE_NAME:$GITHUB_SHA
-        #   ECR_IMAGE_LATEST=$REGISTRY_URL/$IMAGE_NAME:latest
-
-        #   echo "tags<<EOF" >> $GITHUB_OUTPUT
-        #   echo "$ECR_IMAGE_LATEST" >> $GITHUB_OUTPUT
-        #   echo "$ECR_IMAGE_SHA" >> $GITHUB_OUTPUT
-        #   if [ -n "$ADDITIONAL_TAG" ]; then
-        #     ECR_IMAGE_TAG="$REGISTRY_URL/$IMAGE_NAME:$TAG_NAME"
-        #     echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
-        #   fi
-        #   echo "EOF" >> $GITHUB_OUTPUT
-
-        # elif [ "$CHOICE" = "ghcr" ]; then
-        #   # Use docker/metadata-action tagging format
-        #   echo "tags<<EOF" >> $GITHUB_OUTPUT
-        #   echo "type=raw,value=latest,enable={{is_default_branch}}" >> $GITHUB_OUTPUT
-        #   echo "type=semver,pattern={{version}}" >> $GITHUB_OUTPUT
-        #   echo "type=semver,pattern={{major}}.{{minor}}" >> $GITHUB_OUTPUT
-        #   echo "type=semver,pattern={{major}},enable=${ENABLE_SEMVER_MAJOR}" >> $GITHUB_OUTPUT
-        #   echo "type=ref,event=branch" >> $GITHUB_OUTPUT
-        #   echo "type=sha" >> $GITHUB_OUTPUT
-        #   if [ -n "$ADDITIONAL_TAG" ]; then
-        #     ECR_IMAGE_TAG="$REGISTRY_URL/$IMAGE_NAME:$TAG_NAME"
-        #     echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
-        #   fi
-        #   echo "EOF" >> $GITHUB_OUTPUT
-        # fi
-
     - name: Docker Meta
       id: meta
       uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
@@ -170,6 +125,7 @@ runs:
         AUTHORS: ${{ inputs.docker_image_authors }}
         REPOSITORY: ${{ github.repository }}
         REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
+        ADDITIONAL_TAG: ${{ inputs.additional_tag }}
       with:
         images: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
         tags: |
@@ -178,8 +134,9 @@ runs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
           type=ref,event=branch
+          type=ref,event=tag
           type=sha
-          ${{ steps.tag-config.outputs.tags }}
+          ${{ env.ADDITIONAL_TAG }}
         labels: |
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description=${{ env.DESCRIPTION }}
@@ -219,3 +176,10 @@ runs:
         subject-name: ${{ steps.set-registry-url.outputs.image_uri }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
         push-to-registry: false
+
+    - name: Output Image Tags - TEST
+      run: |
+        echo "Image Tags: ${{ steps.meta.outputs.tags }}"
+        echo "Image Digest: ${{ steps.push_registry.outputs.digest }}"
+        echo "Registry URI: ${{ steps.set-registry-url.outputs.registry_url }}"
+        echo "Image URI: ${{ steps.set-registry-url.outputs.image_uri }}"
