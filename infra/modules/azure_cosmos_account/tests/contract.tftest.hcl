@@ -198,3 +198,16 @@ run "valid_cmk" {
     error_message = "identity.type must be UserAssigned when CMK is enabled"
   }
 }
+
+run "public_connection" {
+  command = plan
+
+  variables {
+    force_public_network_access_enabled = true
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.sql) == 0
+    error_message = "No Private Endpoint must be created when public network access is enabled"
+  }
+}
