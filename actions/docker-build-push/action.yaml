@@ -1,0 +1,198 @@
+name: Docker Build and Push
+description: Build and optionally push a Docker image to a container registry (GHCR, ECR)
+
+inputs:
+  dockerfile_path:
+    required: false
+    default: "./Dockerfile"
+    description: Dockerfile path
+  dockerfile_context:
+    required: false
+    default: "."
+    description: Dockerfile build context
+  docker_image_name:
+    required: false
+    default: ${{ github.repository }}
+    description: Docker image name, defaults to repository name
+  docker_image_description:
+    required: true
+    description: Image description set as image label
+  docker_image_authors:
+    required: false
+    default: ""
+    description: Authors names set as image label
+  build_args:
+    description: List of build arguments to use for Dockerfile build, given in env=value format.
+    required: false
+  build_platforms:
+    required: false
+    default: linux/amd64
+    description: Image runtime platform, supports multiple values
+  registry:
+    required: false
+    default: ghcr
+    description: Container registry to push the image to (values: ghcr, ecr)
+  push_to_registry:
+    required: false
+    default: "true"
+    description: Push the image to the registry
+  ecr_tag_name:
+    required: false
+    default: ""
+    description: ECR tag name, optional tag to apply to the image in addition to sha and latest
+
+outputs:
+  image_tags:
+    description: "The tags applied to the built image"
+    value: ${{ steps.meta.outputs.tags }}
+  image_digest:
+    description: "The digest of the built image"
+    value: ${{ steps.push_registry.outputs.digest }}
+  registry_uri:
+    description: "The registry URI used for the image"
+    value: ${{ steps.set-registry-url.outputs.registry_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Docker buildx
+      uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+    - name: Set up registry
+      id: set-up-registry
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+      run: |
+        choice=""
+        REGISTRY_LOWER=$(echo "$REGISTRY" | tr '[:upper:]' '[:lower:]')
+
+        if [ "$REGISTRY_LOWER" = "ecr" ]; then
+          echo "Logging in to Amazon ECR"
+          choice="aws"
+        elif [ "$REGISTRY_LOWER" = "ghcr" ]; then
+          echo "Using GitHub Container Registry"
+          choice="github"
+        else
+          echo "Unsupported registry: $REGISTRY"
+          exit 1
+        fi
+        echo "choice=$choice" >> $GITHUB_OUTPUT
+
+    - name: Log in to the Container registry
+      id: login-github
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+      if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'github' }}
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ env.GITHUB_TOKEN }}
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'aws' }}
+      uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
+
+    - name: Set Registry URL
+      id: set-registry-url
+      shell: bash
+      run: |
+        if [ "$REGISTRY_CHOICE" = "aws" && "$PUSH_TO_REGISTRY" == "true" ]; then
+          echo "registry_url=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_OUTPUT
+        else
+          echo "registry_url=ghcr.io" >> $GITHUB_OUTPUT
+        fi
+      env:
+        REGISTRY_CHOICE: ${{ steps.set-up-registry.outputs.choice }}
+        PUSH_TO_REGISTRY: ${{ inputs.push_to_registry }}
+
+    - name: Determine Configuration for Tags
+      id: tag-config
+      shell: bash
+      env:
+        REGISTRY: ${{ steps.set-registry-url.outputs.registry_url }}
+        IMAGE_NAME: ${{ inputs.docker_image_name }}
+        GITHUB_SHA: ${{ github.sha }}
+        TAG_NAME: ${{ inputs.ecr_tag_name }}
+      run: |
+        if [ "${{ steps.set-up-registry.outputs.choice }}" = "aws" ]; then
+          #  Use ECR tagging format with SHA, latest, and optional tag name
+          ECR_IMAGE_SHA=$REGISTRY/$IMAGE_NAME:$GITHUB_SHA
+          ECR_IMAGE_LATEST=$REGISTRY/$IMAGE_NAME:latest
+
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$ECR_IMAGE_LATEST" >> $GITHUB_OUTPUT
+          echo "$ECR_IMAGE_SHA" >> $GITHUB_OUTPUT
+          if [ -n "$TAG_NAME" ]; then
+            ECR_IMAGE_TAG="$REGISTRY/$IMAGE_NAME:$TAG_NAME"
+            echo "$ECR_IMAGE_TAG" >> $GITHUB_OUTPUT
+          fi
+          echo "EOF" >> $GITHUB_OUTPUT
+
+        elif [ "${{ steps.set-up-registry.outputs.choice }}" = "github" ]; then
+          # Use docker/metadata-action tagging format
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "type=raw,value=latest,enable={{is_default_branch}}" >> $GITHUB_OUTPUT
+          echo "type=semver,pattern={{version}}" >> $GITHUB_OUTPUT
+          echo "type=semver,pattern={{major}}.{{minor}}" >> $GITHUB_OUTPUT
+          echo "type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}" >> $GITHUB_OUTPUT
+          echo "type=ref,event=branch" >> $GITHUB_OUTPUT
+          echo "type=sha" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Docker Meta
+      id: meta
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+      env:
+        IMAGE_NAME: ${{ inputs.docker_image_name }}
+        DESCRIPTION: "${{ inputs.docker_image_description }}"
+        AUTHORS: ${{ inputs.docker_image_authors }}
+        REPOSITORY: ${{ github.repository }}
+        REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
+      with:
+        images: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
+        tags: |
+          ${{ steps.tag-config.outputs.tags }}
+        labels: |
+          org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+          org.opencontainers.image.description=${{ env.DESCRIPTION }}
+          org.opencontainers.image.authors=${{ env.AUTHORS }}
+          org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
+          org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
+
+    - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
+      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      id: push_registry
+      env:
+        DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
+        DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
+        BUILD_ARGS: ${{ inputs.build_args }}
+        BUILD_PLATFORMS: ${{ inputs.build_platforms }}
+        SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
+      with:
+        context: ${{ env.DOCKERFILE_CONTEXT }}
+        file: ${{ env.DOCKERFILE_PATH }}
+        push: ${{ inputs.push_to_registry }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        annotations: ${{ steps.meta.outputs.annotations }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=min
+        build-args: ${{ env.BUILD_ARGS }}
+        platforms: ${{ env.BUILD_PLATFORMS }}
+        provenance: false
+
+    # Create an entry in github.com/org/repo/attestations
+    # to verify the provenance of the image through
+    # e.g. gh attestation verify oci://<img-uri> --owner org
+    - name: Generate Artifact Attestation
+      uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
+      if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'github' }}
+      env:
+        IMAGE_NAME: ${{ inputs.docker_image_name }}
+        REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
+      with:
+        subject-name: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
+        subject-digest: ${{ steps.push_registry.outputs.digest }}
+        push-to-registry: false

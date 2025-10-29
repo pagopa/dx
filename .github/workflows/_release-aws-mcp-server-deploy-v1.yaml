@@ -19,7 +19,6 @@ jobs:
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
       IMAGE_NAME: dx/mcp-server
-      IMAGE_TAG: ${{ github.sha }}
     permissions:
       contents: write
       packages: read
@@ -34,58 +33,37 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
-
-      - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
-
-      - name: Define URIs
-        id: define-uris
+      - name: Check for Tag
+        id: check-tag
         run: |
-          echo "ECR_IMAGE_URI=$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" >> $GITHUB_ENV
-          echo "ECR_IMAGE_LATEST=$REGISTRY/$IMAGE_NAME:latest" >> $GITHUB_ENV
+          TAG_NAME=""
 
           # Extract tag name if workflow was triggered by a tag push
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG_NAME="${GITHUB_REF#refs/tags/}"
-            echo "ECR_IMAGE_TAG=$REGISTRY/$IMAGE_NAME:$TAG_NAME" >> $GITHUB_ENV
+            echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
             echo "✅ Triggered by tag: $TAG_NAME"
           else
             echo "ℹ️  Not triggered by a tag"
           fi
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
 
       - name: Build and Push to ECR
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        id: push-ecr
+        id: build-and-push
+        uses: pagopa/dx/actions/docker-build-push@feat-action-for-docker-build-push # main
+        with:
+          registry: ecr
+          dockerfile_path: apps/mcpserver/Dockerfile
+          dockerfile_context: "."
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          build_platforms: inux/arm64
+          push_to_registry: true
+          ecr_tag_name: ${{ steps.check-tag.outputs.TAG_NAME }}
         env:
-          SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
-        with:
-          context: "."
-          file: apps/mcpserver/Dockerfile
-          push: true
-          tags: |
-            ${{ env.ECR_IMAGE_URI }}
-            ${{ env.ECR_IMAGE_LATEST}}
-            ${{ env.ECR_IMAGE_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
-          platforms: linux/arm64
-          provenance: false
-
-      - name: Generate Artifact Attestation
-        uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
-        with:
-          subject-name: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push-ecr.outputs.digest }}
-          push-to-registry: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
         with:
           function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
           package-type: Image
-          image-uri: ${{ env.ECR_IMAGE_URI }}
+          image-uri: ${{ steps.build-and-push.outputs.ecr_image_uri }}
