@@ -21,6 +21,11 @@ __swap_versions() {
   echo "::error::__swap_versions not implemented for this resource type."
 }
 
+# shellcheck disable=SC2317
+__finalize() {
+  echo "::error::__finalize not implemented for this resource type."
+}
+
 case $resource_type in
   "appsvc")
     source azure-appsvc.sh
@@ -91,6 +96,10 @@ swap_versions() {
   __swap_versions "$resource_group_name" "$resource_name"
 }
 
+finalize() {
+  __finalize "$resource_group_name" "$resource_name"
+}
+
 if [[ -r ./canary-monitor.sh ]]; then
   log_canary_event 0
   currentPercentage=0
@@ -142,9 +151,7 @@ if [[ -r ./canary-monitor.sh ]]; then
     fi
   done
   echo "::endgroup::"
-  echo "Finalizing rollout by setting traffic to 100% production"
-  set_traffic 0
-  swap_versions
+  finalize
   echo "Rollout completed successfully. Traffic is now fully on production."
   log_canary_event 100
   post_canary_gh_summary "Rollout completed. Traffic is now fully on production."

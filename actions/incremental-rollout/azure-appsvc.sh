@@ -28,3 +28,12 @@ __swap_versions() {
     --slot staging \
     --target-slot production
 }
+
+__finalize() {
+  local resource_group_name="$1"
+  local webapp_name="$2"
+  local staging_percentage="$3"
+  echo "Finalizing rollout by setting traffic to 100% production"
+  __set_traffic "$resource_group_name" "$webapp_name" 0
+  __swap_versions "$resource_group_name" "$webapp_name"
+}
