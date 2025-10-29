@@ -23,6 +23,7 @@
     "@logtape/logtape": "^1.1.1",
     "@octokit/rest": "^22.0.0",
     "@pagopa/dx-mcpprompts": "workspace:^",
+    "@pagopa/azure-tracing": "workspace:^",
     "axios": "^1.12.2",
     "fastmcp": "^3.19.1",
     "zod": "^3.25.76"
