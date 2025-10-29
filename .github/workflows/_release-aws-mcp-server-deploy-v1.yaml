@@ -47,7 +47,7 @@ jobs:
           # Extract tag name if workflow was triggered by a tag push
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             TAG_NAME="${GITHUB_REF#refs/tags/}"
-            echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+            echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
             echo "✅ Triggered by tag: $TAG_NAME"
           else
             echo "ℹ️  Not triggered by a tag"
@@ -65,7 +65,7 @@ jobs:
           docker_image_name: ${{ env.IMAGE_NAME }}
           build_platforms: linux/arm64
           push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
-          ecr_tag_name: ${{ inputs.dry_run && 'dry-run-tag' || steps.check-tag.outputs.TAG_NAME }}
+          ecr_tag_name: ${{ inputs.dry_run && 'dry-run-tag' || steps.check-tag.outputs.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -75,4 +75,4 @@ jobs:
         with:
           function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
           package-type: Image
-          image-uri: ${{ steps.build-and-push.outputs.registry_uri }}
+          image-uri: ${{ steps.build-and-push.outputs.image_uri }}

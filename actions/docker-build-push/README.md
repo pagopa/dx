@@ -34,6 +34,7 @@ GitHub Action for building and pushing Docker images to multiple container regis
 | `image_tags`   | Complete list of tags applied to the image |
 | `image_digest` | SHA256 digest of the built image           |
 | `registry_uri` | Full URI of the registry used              |
+| `image_uri`    | The full image URI including tag           |
 
 ## Tagging Strategy
 
@@ -51,10 +52,10 @@ The action automatically applies different tags based on the registry type:
 ### ECR (AWS Elastic Container Registry)
 
 - `latest` - always applied
-- `sha-<commit>` - commit SHA (first 7 characters), always applied
+- `<commit-sha>` - full commit SHA (no prefix, no truncation), always applied
 - `<custom-tag>` - custom tag via `ecr_tag_name` input (optional)
 
-> **Note**: ECR uses explicit tags for better control. All three tags can be applied simultaneously for maximum traceability.
+> **Note**: ECR uses explicit tags for better control. All three tags can be applied simultaneously for maximum traceability. The commit SHA tag uses the full commit SHA, not a truncated or prefixed version.
 
 ## Usage Examples
 
