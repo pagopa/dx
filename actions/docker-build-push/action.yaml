@@ -1,45 +1,45 @@
 name: Docker Build and Push
-description: Build and optionally push a Docker image to a container registry (GHCR, ECR)
+description: Build and optionally push a Docker image to a container registry (ghcr, ECR)
 
 inputs:
   dockerfile_path:
     required: false
     default: "./Dockerfile"
-    description: Dockerfile path
+    description: "Dockerfile path"
   dockerfile_context:
     required: false
     default: "."
-    description: Dockerfile build context
+    description: "Dockerfile build context"
   docker_image_name:
     required: false
     default: ${{ github.repository }}
-    description: Docker image name, defaults to repository name
+    description: "Docker image name, defaults to repository name"
   docker_image_description:
     required: true
-    description: Image description set as image label
+    description: "Image description set as image label"
   docker_image_authors:
     required: false
     default: ""
-    description: Authors names set as image label
+    description: "Authors names set as image label"
   build_args:
-    description: List of build arguments to use for Dockerfile build, given in env=value format.
+    description: "List of build arguments to use for Dockerfile build, given in env=value format."
     required: false
   build_platforms:
     required: false
     default: linux/amd64
-    description: Image runtime platform, supports multiple values
+    description: "Image runtime platform, supports multiple values"
   registry:
     required: false
     default: ghcr
-    description: Container registry to push the image to (values: ghcr, ecr)
+    description: "Container registry to push the image to (values: ghcr, ecr)"
   push_to_registry:
     required: false
     default: "true"
-    description: Push the image to the registry
+    description: "Push the image to the registry"
   ecr_tag_name:
     required: false
     default: ""
-    description: ECR tag name, optional tag to apply to the image in addition to sha and latest
+    description: "ECR tag name, optional tag to apply to the image in addition to sha and latest"
 
 outputs:
   image_tags:
