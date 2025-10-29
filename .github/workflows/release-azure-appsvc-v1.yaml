@@ -323,7 +323,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Swap Staging and Production Slots
-        uses: pagopa/dx/actions/incremental-rollout@feats/unify-incremental-rollout-apis
+        uses: pagopa/dx/actions/incremental-rollout@main
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.WEB_APP_NAME }}

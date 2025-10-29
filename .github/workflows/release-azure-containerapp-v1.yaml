@@ -98,7 +98,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CONTAINER_APP_NAME: ${{ inputs.container_app }}
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-      SCRIPT_LANGUAGE: ${{ inputs.script_language }}
 
     steps:
       - name: Checkout
@@ -244,7 +243,7 @@ jobs:
           echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
 
       - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@feats/unify-incremental-rollout-apis
+        uses: pagopa/dx/actions/incremental-rollout@main
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
