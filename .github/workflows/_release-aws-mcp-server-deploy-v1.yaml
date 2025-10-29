@@ -61,6 +61,7 @@ jobs:
           dockerfile_path: apps/mcpserver/Dockerfile
           dockerfile_context: "."
           docker_image_description: "DX MCP Server"
+          docker_image_authors: "DevEx"
           docker_image_name: ${{ env.IMAGE_NAME }}
           build_platforms: linux/arm64
           push_to_registry: ${{ inputs.dry_run && 'false' || 'true' }}
