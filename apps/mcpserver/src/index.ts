@@ -4,12 +4,16 @@ import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { configureLogging } from "./config/logging.js";
+import { configureAzureMonitoring } from "./config/monitoring.js";
 import { serverInstructions } from "./config/server.js";
+import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
+import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 
 // Configure logging
 await configureLogging();
+await configureAzureMonitoring();
 
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
@@ -51,12 +55,20 @@ logger.debug(`Loading enabled prompts...`);
 getEnabledPrompts().then((prompts) => {
   prompts.forEach((catalogEntry) => {
     logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
-    server.addPrompt(catalogEntry.prompt);
+
+    // Apply logging decorator to the prompt
+    const decoratedPrompt = withPromptLogging(
+      catalogEntry.prompt,
+      catalogEntry.id,
+    );
+
+    server.addPrompt(decoratedPrompt);
     logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
   });
 });
-server.addTool(QueryPagoPADXDocumentationTool);
-server.addTool(SearchGitHubCodeTool);
+
+server.addTool(withToolLogging(QueryPagoPADXDocumentationTool));
+server.addTool(withToolLogging(SearchGitHubCodeTool));
 
 // Starts the server in HTTP Stream mode.
 server.start({
