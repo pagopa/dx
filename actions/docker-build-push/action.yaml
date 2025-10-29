@@ -92,16 +92,14 @@ runs:
 
     - name: Log in to Amazon ECR
       id: login-ecr
-      # if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'ecr' }}
-      if: ${{ steps.set-up-registry.outputs.choice == 'ecr' }}
+      if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'ecr' }}
       uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
     - name: Set Registry URL
       id: set-registry-url
       shell: bash
       run: |
-        # if [ "$REGISTRY_CHOICE" = "ecr" ] && [ "$PUSH_TO_REGISTRY" = "true" ]; then
-        if [ "$REGISTRY_CHOICE" = "ecr" ]; then
+        if [ "$REGISTRY_CHOICE" = "ecr" ] && [ "$PUSH_TO_REGISTRY" = "true" ]; then
           REGISTRY_URL="$ECR_REGISTRY"
         else
           REGISTRY_URL="ghcr.io"
@@ -174,8 +172,3 @@ runs:
         subject-name: ${{ steps.set-registry-url.outputs.image_uri }}
         subject-digest: ${{ steps.push_registry.outputs.digest }}
         push-to-registry: false
-
-    - name: Output Image Tags - TEST
-      shell: bash
-      run: |
-        echo "Image URI: ${{ steps.set-registry-url.outputs.image_uri }}"
