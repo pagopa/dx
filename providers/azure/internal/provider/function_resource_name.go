@@ -47,6 +47,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"container_app_job":         "caj",
 		"container_app":             "ca",
 		"container_app_environment": "cae",
+		"container_instance":        "ci",
 
 		// Storage
 		"storage_account":                  "st",
@@ -112,16 +113,17 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"public_ip": "pip",
 
 		// Subnets
-		"subnet":                  "snet",
-		"app_subnet":              "app-snet",
-		"apim_subnet":             "apim-snet",
-		"function_subnet":         "func-snet",
-		"container_app_subnet":    "cae-snet",
-		"private_endpoint_subnet": "pep-snet",
+		"subnet":                    "snet",
+		"app_subnet":                "app-snet",
+		"apim_subnet":               "apim-snet",
+		"function_subnet":           "func-snet",
+		"container_app_subnet":      "cae-snet",
+		"container_instance_subnet": "ci-snet",
+		"private_endpoint_subnet":   "pep-snet",
 
 		// Databases
 		"cosmos_db_nosql":              "cosno",
-    "customer_key_cosmos_db_nosql": "cosno-cmk",
+		"customer_key_cosmos_db_nosql": "cosno-cmk",
 		"postgresql":                   "psql",
 		"postgresql_replica":           "psql-replica",
 		"redis_cache":                  "redis",
