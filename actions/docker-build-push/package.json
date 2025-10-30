@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/docker-build-push",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "GitHub Action for building and pushing Docker images to multiple container registries (GHCR, ECR)",
   "type": "module",
   "private": true,

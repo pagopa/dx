@@ -1,5 +1,12 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [a36ee88]
+  - @pagopa/dx-mcpprompts@0.0.2
+
 ## 0.0.3
 
 ### Patch Changes
