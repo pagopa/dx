@@ -1,5 +1,11 @@
 # azure_cosmos_account
 
+## 0.3.1
+
+### Patch Changes
+
+- 12c2a31: Fix configuration when forcing public access
+
 ## 0.3.0
 
 ### Minor Changes
