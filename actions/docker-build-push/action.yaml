@@ -41,10 +41,6 @@ inputs:
     required: false
     default: "true"
     description: "Push the image to the registry"
-  additional_tag:
-    required: false
-    default: ""
-    description: "Optional tag to apply to the image"
 
 outputs:
   image_tags:
@@ -121,7 +117,6 @@ runs:
         AUTHORS: ${{ inputs.docker_image_authors }}
         REPOSITORY: ${{ github.repository }}
         REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
-        ADDITIONAL_TAG: ${{ inputs.additional_tag }}
       with:
         images: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}
         tags: |
@@ -132,7 +127,6 @@ runs:
           type=ref,event=branch
           type=ref,event=tag
           type=sha
-          ${{ env.ADDITIONAL_TAG }}
         labels: |
           org.opencontainers.image.title=${{ env.IMAGE_NAME }}
           org.opencontainers.image.description=${{ env.DESCRIPTION }}

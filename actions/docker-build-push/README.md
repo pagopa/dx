@@ -25,7 +25,6 @@ GitHub Action for building and pushing Docker images to multiple container regis
 | `build_platforms`          | **Yes**  | `linux/amd64`              | Target platforms (e.g., `linux/amd64,linux/arm64`) |
 | `registry`                 | No       | `ghcr`                     | Registry type: `ghcr` or `ecr`                     |
 | `push_to_registry`         | No       | `true`                     | If `false`, only builds without pushing            |
-| `additional_tag`           | No       | ``                         | Optional tag to apply to the image                 |
 
 ## Outputs
 
@@ -45,9 +44,6 @@ The action automatically applies different tags:
 - `<major>` - for semantic tags excluding v0.x (e.g., `v1.2.3` → `1`)
 - `<branch-name>` - branch name for branch pushes
 - `sha-<commit>` - commit SHA (first 7 characters)
-- `<custom-tag>` - custom tag via `additional_tag` input (optional)
-
-> **Note**: ECR uses explicit tags for better control. All three tags can be applied simultaneously for maximum traceability. The commit SHA tag uses the full commit SHA, not a truncated or prefixed version.
 
 ## Usage Examples
 
@@ -85,6 +81,7 @@ jobs:
           docker_image_description: "My Application"
           dockerfile_path: ./Dockerfile
           dockerfile_context: .
+          build_platforms: linux/amd64,linux/arm64
 ```
 
 ### AWS Elastic Container Registry (ECR)
@@ -130,10 +127,10 @@ jobs:
           docker_image_description: "My Application"
           dockerfile_path: ./Dockerfile
           dockerfile_context: .
+          build_platforms: linux/arm64
 ```
 
 > **Note**: For ECR, the `aws-actions/amazon-ecr-login` action is executed automatically. You only need to configure AWS credentials beforehand.
-> **Tip**: Use `ecr_tag_name` to apply version tags or environment identifiers (e.g., `v1.2.3`, `stable`, `prod`).
 
 ## Registry Prerequisites
 
