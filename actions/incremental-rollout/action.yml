@@ -27,7 +27,7 @@ runs:
       shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
+      run: echo "$GITHUB_ACTION_PATH" >> "$GITHUB_PATH"
 
     - name: Incremental Rollout to Staging Slot
       shell: bash
