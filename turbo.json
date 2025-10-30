@@ -25,6 +25,9 @@
     },
     "test-integration": {
       "inputs": ["**/*.tf", "**/integration.tftest.hcl"]
+    },
+    "test-e2e": {
+      "inputs": ["*.tf", "**/*.tf", "**/*.go", "**/*.mod", "**/Dockerfile"]
     }
   }
 }
