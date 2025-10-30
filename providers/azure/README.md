@@ -205,6 +205,8 @@ The following table lists the resource types and their abbreviations used in the
 | container_app_job                         |       caj        |
 | container_app_private_endpoint            |     cae-pep      |
 | container_app_subnet                      |     cae-snet     |
+| container_instance                        |        ci        |
+| container_instance_subnet                 |     ci-snet      |
 | cosmos_db                                 |      cosmos      |
 | cosmos_db_nosql                           |      cosno       |
 | cosmos_private_endpoint                   |    cosno-pep     |
