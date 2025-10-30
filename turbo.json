@@ -24,7 +24,7 @@
       "outputs": ["coverage"]
     },
     "test-e2e": {
-      "inputs": ["*.tf", "**/*.tf", "**/*.go", "**/*.mod", "**/Dockerfile"]
+      "inputs": ["**/*.tf", "**/*.go", "**/*.mod", "**/Dockerfile"]
     }
   }
 }
