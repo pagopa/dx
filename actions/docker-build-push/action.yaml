@@ -16,10 +16,10 @@ inputs:
     description: "Docker image name, defaults to repository name"
   docker_image_description:
     required: true
-    description: "Image description set as image label"
+    description: "Image description set as image label."
   docker_image_authors:
-    required: false
-    default: ""
+    required: true
+    description: "Author(s) of the image, required for labeling. Can be the organization and/or team names, comma separated."
   build_args:
     required: false
     description: |
