@@ -31,8 +31,9 @@ inputs:
         ```
   build_platforms:
     required: true
-    default: linux/amd64
-    description: "Image runtime platform, supports multiple values"
+    description: |
+      Target platform(s) for the image. Common values: linux/amd64, linux/arm64, linux/arm/v7, linux/386.
+      Multiple platforms can be specified as comma-separated list (e.g., 'linux/amd64,linux/arm64').
   registry:
     required: false
     default: ghcr
@@ -68,7 +69,7 @@ runs:
         REGISTRY_LOWER=$(echo "$REGISTRY" | tr '[:upper:]' '[:lower:]')
 
         if [ "$REGISTRY_LOWER" = "ecr" ]; then
-          echo "Logging in to Amazon ECR"
+          echo "Logging into Amazon ECR"
         elif [ "$REGISTRY_LOWER" = "ghcr" ]; then
           echo "Using GitHub Container Registry"
         else

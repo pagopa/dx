@@ -14,17 +14,17 @@ GitHub Action for building and pushing Docker images to multiple container regis
 
 ## Inputs
 
-| Input                      | Required | Default                    | Description                                                          |
-| -------------------------- | -------- | -------------------------- | -------------------------------------------------------------------- |
-| `dockerfile_path`          | No       | `./Dockerfile`             | Path to the Dockerfile                                               |
-| `dockerfile_context`       | No       | `.`                        | Docker build context path                                            |
-| `docker_image_name`        | No       | `${{ github.repository }}` | Docker image name                                                    |
-| `docker_image_description` | **Yes**  | -                          | Image description (used in OCI labels)                               |
-| `docker_image_authors`     | **Yes**  | ``                         | Image authors (used in OCI labels), can be organization and/or teams |
-| `build_args`               | No       | -                          | Build arguments in `KEY=VALUE` format (multiline)                    |
-| `build_platforms`          | **Yes**  | `linux/amd64`              | Target platforms (e.g., `linux/amd64,linux/arm64`)                   |
-| `registry`                 | No       | `ghcr`                     | Registry type: `ghcr` or `ecr`                                       |
-| `push_to_registry`         | No       | `true`                     | If `false`, only builds without pushing                              |
+| Input                      | Required | Default                    | Description                                                                                                                                                                |
+| -------------------------- | -------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dockerfile_path`          | No       | `./Dockerfile`             | Path to the Dockerfile                                                                                                                                                     |
+| `dockerfile_context`       | No       | `.`                        | Docker build context path                                                                                                                                                  |
+| `docker_image_name`        | No       | `${{ github.repository }}` | Docker image name                                                                                                                                                          |
+| `docker_image_description` | **Yes**  | -                          | Image description (used in OCI labels)                                                                                                                                     |
+| `docker_image_authors`     | **Yes**  | -                          | Image authors (used in OCI labels), can be organization and/or teams                                                                                                       |
+| `build_args`               | No       | -                          | Build arguments in `KEY=VALUE` format (multiline)                                                                                                                          |
+| `build_platforms`          | **Yes**  | -                          | Target platforms (e.g., `linux/amd64,linux/arm64`). See [Docker buildx platform docs](https://docs.docker.com/reference/cli/docker/buildx/build/#platform) for all options |
+| `registry`                 | No       | `ghcr`                     | Registry type: `ghcr` or `ecr`                                                                                                                                             |
+| `push_to_registry`         | No       | `true`                     | If `false`, only builds without pushing                                                                                                                                    |
 
 ## Outputs
 
