@@ -7,6 +7,7 @@ on:
   push:
     tags:
       - "@pagopa/dx-mcpserver@**"
+      - "@pagopa/dx-mcpprompts@**"
   workflow_dispatch:
 
 jobs:
