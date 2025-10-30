@@ -1,19 +1,19 @@
 name: Deploy MCP Server
-description: |
-  Automated workflow to build MCP Server Docker image and deploy it to
-  AWS Lambda when changes are made or new tags are pushed
+
+# Automated workflow to build MCP Server Docker image and deploy it to
+# AWS Lambda when changes are made or new tags are pushed
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - "@pagopa/dx-mcpserver@**"
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     name: Build and Deploy MCP on AWS Lambda
     runs-on: ubuntu-latest
-    environment: app-dev-cd
+    environment: app-prod-cd
     env:
       AWS_REGION: eu-central-1
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
