@@ -10,6 +10,7 @@ problem resolutions, patterns, and more.
 # Key Topics
 
 - [Following Azure Naming Convention](./azure-naming-convention.md)
+- [Using DX Azure Terraform Provider](./using-azure-registry-provider.md)
 - [Creating and Managing Azure Policies](./policies/)
 - [Configuring Identity and Access Management](./iam/)
 - [Leveraging API Management](./apim/)
@@ -17,5 +18,5 @@ problem resolutions, patterns, and more.
 - [Connecting Azure Resources Securely](./networking/)
 - [Deploying Applications to Azure](./application-deployment/)
 - [Hosting Static Websites on Azure](./static-websites/)
-- [Managing Azure Service Bus using Terraform](./using-service-bus.md)
+- [Integrating Azure services](./integrating-services/)
 - [Archiving Data for Decommissioned Projects](./archive-data.md)

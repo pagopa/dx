@@ -13,6 +13,13 @@ locals {
     instance_number = 1
   }
 
+  aws_naming_config = {
+    prefix          = "dx"
+    environment     = "p"
+    region          = "eu-south-1"
+    instance_number = 1
+  }
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"

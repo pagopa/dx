@@ -22,12 +22,15 @@ runs:
     - name: Check inputs and set defaults
       id: check-values
       shell: bash
+      env:
+        INPUT_ID: ${{ inputs.id }}
+        INPUT_TITLE: ${{ inputs.title }}
       run: |
         set -eu
-        if [ "${{ inputs.title }}" == "" ]; then
-          title="*${{ inputs.id }}*"
+        if [ "$INPUT_TITLE" == "" ]; then
+          title="*$INPUT_ID*"
         else
-          title="${{ inputs.title }}"
+          title="$INPUT_TITLE"
         fi
 
         echo "title=$title" >> "$GITHUB_OUTPUT"
@@ -35,27 +38,30 @@ runs:
     # Reference: https://github.com/slackapi/slack-github-action
     - name: Slack Notification
       uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+      env:
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}
+        INPUT_ID: ${{ inputs.id }}
+        INPUT_TEXT: ${{ inputs.text }}
+        TITLE: ${{ steps.check-values.outputs.title }}
       with:
         payload: |
           {
-            "text": "${{ inputs.id }}",
+            "text": "$INPUT_ID",
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ steps.check-values.outputs.title }}"
+                  "text": "$TITLE"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ inputs.text }}"
+                  "text": "$INPUT_TEXT"
                 }
               }
             ]
           }
-      env:
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}

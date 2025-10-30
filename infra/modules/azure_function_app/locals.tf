@@ -18,22 +18,40 @@ locals {
     name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_subnet" }))
   }
 
+  use_cases = {
+    default = {
+      sku              = "P1v3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+      alerts           = true
+    }
+    high_load = {
+      sku              = "P2mv3"
+      zone_balancing   = true
+      slot             = true
+      replication_type = "ZRS"
+      alerts           = true
+    }
+  }
+
+  use_case_features = local.use_cases[var.use_case]
+
+  worker_process_count = local.worker_process_count_map[local.function_app.sku_name]
+
   app_service_plan = {
     enable = var.app_service_plan_id == null
     name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service_plan" }))
   }
 
   function_app = {
-    name                   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))
-    sku_name               = local.sku_name_mapping[local.tier]
-    zone_balancing_enabled = local.tier != "s"
-    is_slot_enabled        = local.tier == "s" ? 0 : 1
-    has_existing_subnet    = var.subnet_id != null
-    pep_sites              = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_private_endpoint" }))
-    pep_sites_staging      = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_slot_private_endpoint" }))
-    alert                  = "[${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))}] Health Check Failed"
-    worker_process_count   = local.worker_process_count_mapping[local.tier]
-    has_durable            = var.has_durable_functions ? 1 : 0
+    name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))
+    sku_name            = var.size != null ? var.size : local.use_case_features.sku
+    has_existing_subnet = var.subnet_id != null
+    pep_sites           = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_private_endpoint" }))
+    pep_sites_staging   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_slot_private_endpoint" }))
+    alert               = "[${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_app" }))}] Health Check Failed"
+    has_durable         = var.has_durable_functions ? 1 : 0
   }
 
   function_app_slot = {
@@ -45,17 +63,16 @@ locals {
   }
 
   storage_account = {
-    replication_type = local.tier == "s" ? "LRS" : "ZRS"
-    name             = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
-    durable_name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
-    pep_blob_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_blob_private_endpoint" }))
-    pep_file_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_file_private_endpoint" }))
-    pep_queue_name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_queue_private_endpoint" }))
-    pep_dblob_name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_blob_private_endpoint" }))
-    pep_dfile_name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_file_private_endpoint" }))
-    pep_dqueue_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_queue_private_endpoint" }))
-    pep_dtable_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_table_private_endpoint" }))
-    alert            = "[${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))}] Low Availability"
+    name            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
+    durable_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
+    pep_blob_name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_blob_private_endpoint" }))
+    pep_file_name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_file_private_endpoint" }))
+    pep_queue_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_queue_private_endpoint" }))
+    pep_dblob_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_blob_private_endpoint" }))
+    pep_dfile_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_file_private_endpoint" }))
+    pep_dqueue_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_queue_private_endpoint" }))
+    pep_dtable_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "dfunction_table_private_endpoint" }))
+    alert           = "[${provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))}] Low Availability"
   }
 
   private_dns_zone = {

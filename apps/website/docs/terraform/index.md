@@ -48,12 +48,12 @@ Custom Terraform provider for Azure resources:
 
 ### 📋 Best Practices
 
+- **[IaC Folder structure](./infra-folder-structure.md)** - Organize
+  Infrastructure as Code
 - **[Pre-commit hooks](./pre-commit-terraform.md)** - Validate and format
   Terraform code
 - **[Azure naming conventions](../azure/azure-naming-convention.md)** -
   Consistent resource naming
-- **[Folder structure](./infra-folder-structure.md)** - Organize Infrastructure
-  as Code
 
 ## Azure Resources Guide
 
@@ -80,15 +80,10 @@ Help improve DX infrastructure tools:
 - **[Testing and validation](./pre-commit-terraform.md)** - Ensure quality and
   consistency
 
-## Getting Support
-
-- **Issues with modules?** Open an issue on the
-  [DX repository](https://github.com/pagopa/dx/issues)
-- **Feature requests** We welcome suggestions for new modules
-
 :::tip **Infrastructure as Code Best Practices**
 
 Follow our [Infrastructure as Code guidelines](./infra-folder-structure.md) to
-ensure consistency across projects and teams.
+ensure consistency across projects and teams. For issues or feature requests,
+visit our [support page](../support.md).
 
 :::

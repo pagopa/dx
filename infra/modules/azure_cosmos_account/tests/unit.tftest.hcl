@@ -35,7 +35,7 @@ variables {
     {
       location          = "westeurope"
       failover_priority = 1
-      zone_redundant    = true
+      zone_redundant    = false
     }
   ]
 
@@ -71,7 +71,6 @@ override_data {
   }
 }
 
-// Assert Cosmos DB account baseline properties
 run "cosmos_account_basics" {
   command = plan
 
@@ -128,17 +127,16 @@ run "consistency_policy_custom_bounded" {
   }
 }
 
-// Assert private endpoint wiring at plan time
 run "private_endpoint_sql" {
   command = plan
 
   assert {
-    condition     = azurerm_private_endpoint.sql.subnet_id == var.subnet_pep_id
+    condition     = azurerm_private_endpoint.sql[0].subnet_id == var.subnet_pep_id
     error_message = "Private Endpoint must target provided PEP subnet"
   }
 
   assert {
-    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql[0].private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "Private Endpoint subresource_names must contain 'Sql'"
   }
 }

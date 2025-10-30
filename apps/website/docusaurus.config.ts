@@ -165,6 +165,12 @@ const config: Config = {
         { label: "Docs", position: "left", to: "/docs" },
         { label: "Blog", position: "left", to: "/blog" },
         {
+          className: "navbar-support-link",
+          label: "Support",
+          position: "left",
+          to: "/docs/support",
+        },
+        {
           href: "https://github.com/pagopa/dx",
           label: "GitHub",
           position: "right",

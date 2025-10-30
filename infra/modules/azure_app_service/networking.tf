@@ -20,7 +20,7 @@ resource "azurerm_private_endpoint" "app_service_sites" {
 }
 
 resource "azurerm_private_endpoint" "staging_app_service_sites" {
-  count = local.app_service.is_slot_enabled
+  count = local.use_case_features.slot ? 1 : 0
 
   name                = local.app_service_slot.private_endpoint_name
   location            = var.environment.location
