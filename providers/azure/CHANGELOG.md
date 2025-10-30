@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.7.1
+
+### Patch Changes
+
+- 1a2e810: Add support for Container Instance abbreviation
+
 ## 0.7.0
 
 ### Minor Changes
