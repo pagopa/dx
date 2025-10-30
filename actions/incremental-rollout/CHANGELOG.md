@@ -1,5 +1,11 @@
 # incremental-rollout
 
+## 0.2.1
+
+### Patch Changes
+
+- a70b6f0: Fix potential code injection finding
+
 ## 0.2.0
 
 ### Minor Changes
