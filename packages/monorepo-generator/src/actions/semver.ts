@@ -1,6 +1,8 @@
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { SemVer } from "semver";
 
+export type FetchSemverFn = () => ResultAsync<null | SemVer, Error>;
+
 /**
  * Fetches the latest semantic version using the provided fetch function and writes
  * a formatted version string into the given `answers` object under `answerKey`.
@@ -17,7 +19,7 @@ import { SemVer } from "semver";
  *   `Error` if the fetch fails or yields an invalid version.
  */
 export const fetchLatestSemver = async (
-  fetchSemverFn: () => ResultAsync<null | SemVer, Error>,
+  fetchSemverFn: FetchSemverFn,
   answers: Record<string, unknown>,
   answerKey: string,
   semverFormatFn: (semver: SemVer) => string = (semver) => semver.toString(),

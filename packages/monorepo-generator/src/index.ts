@@ -180,7 +180,7 @@ const getActions = ({
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
   getPreCommitTerraformLatestRelease({ octokitClient }),
-  getLatestNodeVersion({ octokitClient }),
+  getLatestNodeVersion(),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),
