@@ -1,4 +1,4 @@
-name: Validate E2E Cosmos Account - Network Access
+name: Validate App for E2E Cosmos Account - Network Access
 
 on:
   workflow_dispatch:
