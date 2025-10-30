@@ -1,70 +1,77 @@
 package test
 
 import (
-	"encoding/json"
+	"crypto/tls"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
-	"github.com/gruntwork-io/terratest/modules/azure"
+	httpHelper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/stretchr/testify/assert"
+	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-type Item struct {
-	Id        string  `json:"id"`
-	Category  string  `json:"category"`
-	Name      string  `json:"name"`
-	Quantity  int     `json:"quantity"`
-	Price     float64 `json:"price"`
-	Clearance bool    `json:"clearance"`
-}
+func TestCosmosDBNetworkAccess(t *testing.T) {
+	fixtureFolder := "../examples/network_access"
 
-func TestCosmosDBAccess(t *testing.T) {
-	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-		TerraformDir: "../examples/access",
+	test_structure.RunTestStage(t, "setup", func() {
+		terraformOptions := &terraform.Options{
+			TerraformDir: fixtureFolder,
+		}
+
+		test_structure.SaveTerraformOptions(t, fixtureFolder, terraformOptions)
+
+		terraform.InitAndApply(t, terraformOptions)
 	})
 
-	defer terraform.Destroy(t, terraformOptions)
-	assert.True(t, true)
+	test_structure.RunTestStage(t, "validate_public_cosmos", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
 
-	terraform.InitAndApply(t, terraformOptions)
+		privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
+		publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
+		publicAccountName := terraform.Output(t, terraformOptions, "public_account_name")
 
-	credentials, err := azidentity.NewDefaultAzureCredential(nil)
-	assert.NoError(t, err)
+		invokeApp(t, publicApp, publicAccountName, 200)
+		invokeApp(t, privateApp, publicAccountName, 200)
+	})
 
-	subscriptionID := "35e6e3b2-4388-470e-a1b9-ad3bc34326d1" // terraform.Output(t, terraformOptions, "subscription_id")
-	resourceGroupName := "dx-d-itn-e2e-cdb-rg-01"            // terraform.Output(t, terraformOptions, "resource_group_name")
-	accountName := "dx-d-itn-public-e2e-cosno-01"            // terraform.Output(t, terraformOptions, "account_name")
+	test_structure.RunTestStage(t, "validate_private_cosmos", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
 
-	cosmosAccount := azure.GetCosmosDBAccount(t, subscriptionID, resourceGroupName, accountName)
-	// assert.Equal(t, accountName, *cosmosAccount.Name)
-	// // assert.Equal(t, azcosmos.DatabaseAccountKindGlobalDocumentDB, cosmosAccount.Kind, "unexpected type")
+		privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
+		publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
+		privateAccountName := terraform.Output(t, terraformOptions, "private_account_name")
 
-	client, err := azcosmos.NewClient(accountName, credentials, nil)
-	assert.NoError(t, err)
+		invokeApp(t, publicApp, privateAccountName, 400)
+		invokeApp(t, privateApp, privateAccountName, 200)
+	})
 
-	dbClient, err := client.NewDatabase("db")
-	assert.NoError(t, err)
+	test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+		terraform.Destroy(t, terraformOptions)
+	})
+}
 
-	containerClient, err := dbClient.NewContainer("items")
-	assert.NoError(t, err)
+func invokeApp(t *testing.T, appIPAddress string, cosmosName string, expectedStatus int) {
 
-	item := Item{
-		Id:        "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
-		Category:  "gear-surf-surfboards",
-		Name:      "Yamba Surfboard",
-		Quantity:  12,
-		Price:     850.00,
-		Clearance: false,
-	}
+	url := fmt.Sprintf("http://%s:8080/probe?endpoint=%s&db=db&container=items", appIPAddress, cosmosName)
 
-	partitionKey := azcosmos.NewPartitionKeyString("pk")
-	itemBytes, err := json.Marshal(item)
-	assert.NoError(t, err)
+	tlsConfig := tls.Config{}
+	maxRetries := 10
+	delay := 5 * time.Second
 
-	resp, err := containerClient.UpsertItem(t.Context(), partitionKey, itemBytes, nil)
-	assert.NoError(t, err)
-
-	assert.True(t, resp.RawResponse.StatusCode == 201 || resp.RawResponse.StatusCode == 200, "unexpected status code")
+	httpHelper.HttpGetWithRetryWithCustomValidation(t, url, &tlsConfig, maxRetries, delay, func(statusCode int, body string) bool {
+		if statusCode != expectedStatus {
+			return false
+		}
+		trimmed := strings.TrimSpace(body)
+		if expectedStatus == 200 {
+			return trimmed == "{\"status\":\"ok\"}"
+		}
+		if expectedStatus == 400 {
+			return strings.HasPrefix(trimmed, "{\"status\":\"fail\",\"error\":\"")
+		}
+		return false
+	})
 }
