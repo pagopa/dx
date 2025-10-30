@@ -34,7 +34,7 @@ resource "azurerm_cosmosdb_sql_container" "private_items" {
   resource_group_name = azurerm_resource_group.e2e_cdb.name
   account_name        = module.private_cosmos_account.name
   database_name       = azurerm_cosmosdb_sql_database.private_db.name
-  partition_key_paths = ["/pk"]
+  partition_key_paths = ["/id"]
 }
 
 resource "azurerm_container_group" "public_app" {
@@ -116,22 +116,6 @@ resource "azurerm_container_group" "private_app" {
   ]
 
   tags = local.tags
-}
-
-resource "azurerm_cosmosdb_sql_role_assignment" "infra_ci_public" {
-  resource_group_name = azurerm_resource_group.e2e_cdb.name
-  account_name        = module.public_cosmos_account.name
-  role_definition_id  = "${module.public_cosmos_account.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
-  principal_id        = "16b5a2ec-b378-41cf-954c-b086e32f8202"
-  scope               = "${module.public_cosmos_account.id}/dbs/${azurerm_cosmosdb_sql_database.public_db.name}/colls/${azurerm_cosmosdb_sql_container.public_items.name}"
-}
-
-resource "azurerm_cosmosdb_sql_role_assignment" "infra_ci_private" {
-  resource_group_name = azurerm_resource_group.e2e_cdb.name
-  account_name        = module.private_cosmos_account.name
-  role_definition_id  = "${module.private_cosmos_account.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
-  principal_id        = "16b5a2ec-b378-41cf-954c-b086e32f8202"
-  scope               = "${module.private_cosmos_account.id}/dbs/${azurerm_cosmosdb_sql_database.private_db.name}/colls/${azurerm_cosmosdb_sql_container.private_items.name}"
 }
 
 resource "azurerm_cosmosdb_sql_role_assignment" "ci_private_cosmos_public_app" {

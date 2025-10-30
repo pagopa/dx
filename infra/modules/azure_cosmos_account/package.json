@@ -7,7 +7,7 @@
   "scripts": {
     "tf-init": "terraform init",
     "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
-    "test:contract": "terraform test -filter='tests/contract.tftest.hcl",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'",
     "test:integration": "terraform test -filter='tests/integration.tftest.hcl'",
     "test-e2e": "go test -v -timeout 1h ./tests"
   }

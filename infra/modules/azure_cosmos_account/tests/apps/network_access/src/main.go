@@ -30,6 +30,8 @@ func main() {
 	}
 }
 
+const cosmosOperationTimeout = 4 * time.Second
+
 func probeHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
@@ -42,9 +44,9 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	itemID := strconv.Itoa(random.Random(01, 1000))
+	itemID := strconv.Itoa(random.Random(1, 1000))
 
-	ctx, cancel := context.WithTimeout(r.Context(), 4*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), cosmosOperationTimeout)
 	defer cancel()
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
@@ -75,7 +77,11 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		Id:   itemID,
 		Name: "probe",
 	}
-	body, _ := json.Marshal(item)
+	body, err := json.Marshal(item)
+	if err != nil {
+		fail(w, "marshal error", err)
+		return
+	}
 	pk := azcosmos.NewPartitionKeyString(itemID)
 
 	_, err = c.UpsertItem(ctx, pk, body, nil)

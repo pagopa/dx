@@ -32,8 +32,8 @@ func TestCosmosDBNetworkAccess(t *testing.T) {
 		publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
 		publicAccountName := terraform.Output(t, terraformOptions, "public_account_name")
 
-		invokeApp(t, publicApp, publicAccountName, 200)
-		invokeApp(t, privateApp, publicAccountName, 200)
+		probeCosmosEndpoint(t, publicApp, publicAccountName, 200)
+		probeCosmosEndpoint(t, privateApp, publicAccountName, 200)
 	})
 
 	test_structure.RunTestStage(t, "validate_private_cosmos", func() {
@@ -43,8 +43,8 @@ func TestCosmosDBNetworkAccess(t *testing.T) {
 		publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
 		privateAccountName := terraform.Output(t, terraformOptions, "private_account_name")
 
-		invokeApp(t, publicApp, privateAccountName, 400)
-		invokeApp(t, privateApp, privateAccountName, 200)
+		probeCosmosEndpoint(t, publicApp, privateAccountName, 400)
+		probeCosmosEndpoint(t, privateApp, privateAccountName, 200)
 	})
 
 	test_structure.RunTestStage(t, "teardown", func() {
@@ -53,7 +53,7 @@ func TestCosmosDBNetworkAccess(t *testing.T) {
 	})
 }
 
-func invokeApp(t *testing.T, appIPAddress string, cosmosName string, expectedStatus int) {
+func probeCosmosEndpoint(t *testing.T, appIPAddress string, cosmosName string, expectedStatus int) {
 
 	url := fmt.Sprintf("http://%s:8080/probe?endpoint=%s&db=db&container=items", appIPAddress, cosmosName)
 
