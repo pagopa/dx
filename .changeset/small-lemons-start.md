@@ -1,5 +1,5 @@
 ---
-"swap-appsvc-slot": patch
+"incremental-rollout": patch
 ---
 
 Fix potential code injection finding
