@@ -4,9 +4,9 @@ import {
   RetrievalResultLocation,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
+import { getLogger } from "@logtape/logtape";
 
 import { rerankingSupportedRegions } from "../config/aws.js";
-import { logger } from "../utils/logger.js";
 
 export type QueryKnowledgeBasesOutput = {
   content: string;
@@ -37,6 +37,7 @@ export async function queryKnowledgeBase(
   reranking = false,
   rerankingModelName: RerankingModelName = "AMAZON",
 ): Promise<string> {
+  const logger = getLogger(["mcpserver", "bedrock"]);
   const clientRegion = await kbAgentClient.config.region();
   let rerankingEnabled = reranking;
   // Reranking is only supported in specific AWS regions.

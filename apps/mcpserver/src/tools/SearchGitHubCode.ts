@@ -1,7 +1,6 @@
+import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
-
-import { logger } from "../utils/logger.js";
 
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
@@ -21,6 +20,7 @@ Returns file contents matching the search query.`,
     args: { extension?: string; query: string },
     context: { session?: { token?: string } },
   ): Promise<string> => {
+    const logger = getLogger(["mcpserver", "github-search"]);
     const org = defaultOrg;
     const token = context.session?.token;
 
@@ -67,7 +67,7 @@ Returns file contents matching the search query.`,
             }
             return null;
           } catch (error) {
-            logger.error(error, `Error fetching file ${item.path}`);
+            logger.error(`Error fetching file ${item.path}`, { error });
             return null;
           }
         }),
@@ -83,7 +83,7 @@ Returns file contents matching the search query.`,
         total_results: data.total_count,
       });
     } catch (error) {
-      logger.error(error, "Error searching GitHub code");
+      logger.error("Error searching GitHub code", { error });
       throw error;
     }
   },

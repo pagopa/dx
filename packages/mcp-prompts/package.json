@@ -1,39 +1,42 @@
 {
-  "name": "@pagopa/dx-mcpserver",
-  "version": "0.0.2",
+  "name": "@pagopa/dx-mcpprompts",
+  "version": "0.0.0",
   "type": "module",
-  "description": "An MCP server that support developers using DX tools.",
+  "description": "Centralized catalog of MCP prompts for PagoPA DX tools",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "apps/mcpserver"
+    "directory": "packages/mcp-prompts"
   },
   "keywords": [
-    "DX",
-    "MCP"
+    "mcp",
+    "prompts",
+    "dx"
   ],
   "files": [
-    "dist"
+    "dist",
+    "prompts"
   ],
-  "bin": {
-    "dx": "./dist/index.js"
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
   },
+  "types": "./dist/index.d.ts",
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@logtape/logtape": "^1.1.1",
-    "@octokit/rest": "^22.0.0",
-    "@pagopa/dx-mcpprompts": "workspace:^",
-    "@pagopa/azure-tracing": "workspace:^",
-    "axios": "^1.12.2",
-    "fastmcp": "^3.19.1",
-    "zod": "^3.25.76"
+    "@logtape/logtape": "^1.0.4",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsx": "^4.20.6",
     "typescript": "catalog:",
     "vitest": "catalog:"
@@ -42,10 +45,9 @@
     "build": "tsc",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
-    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   }

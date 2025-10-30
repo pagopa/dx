@@ -1,7 +1,6 @@
+import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod/v4";
-
-import { logger } from "../utils/logger.js";
 
 const organizationsSchema = z
   .array(z.string().nonempty())
@@ -20,6 +19,8 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
  * @returns A boolean indicating whether the user is a member of a required organization.
  */
 export async function verifyGithubUser(token: string): Promise<boolean> {
+  const logger = getLogger(["mcpserver", "github-auth"]);
+
   if (!token) {
     return false;
   }
@@ -36,7 +37,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
     );
 
     if (isMember) {
-      logger.info(
+      logger.debug(
         `User is a member of one of the required organizations: ${REQUIRED_ORGANIZATIONS.join(", ")}`,
       );
     } else {
@@ -47,7 +48,7 @@ export async function verifyGithubUser(token: string): Promise<boolean> {
 
     return isMember;
   } catch (error) {
-    logger.error(error, "Error verifying GitHub organization membership:");
+    logger.error("Error verifying GitHub organization membership", { error });
     return false;
   }
 }

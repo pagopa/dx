@@ -8,18 +8,25 @@ import {
 import { queryKnowledgeBase } from "../services/bedrock.js";
 
 /**
- * A tool that provides access to the complete Terraform documentation for PagoPA Dx.
- * It uses a Bedrock knowledge base to answer queries about Terraform modules and best practices.
+ * A tool that provides access to the complete PagoPA DX documentation.
+ * It uses a Bedrock knowledge base to answer queries about DX tools, patterns, and best practices.
  */
 export const QueryPagoPADXDocumentationTool = {
   annotations: {
-    title: "Query PagoPA DX Terraform documentation",
+    title: "Query PagoPA DX documentation",
   },
-  description: `This tool provides access to the complete Terraform documentation for PagoPA Dx.
-Use this knowledge base to generate or review Terraform configurations aligned with the official PagoPA Dx module conventions.
-All prompts and questions should be written in English, so that the tool responds using English resource and variable names.
-The tool should be used to explain, guide, or suggest Terraform usage based on verified module documentation and internal best practices.
-Use only modules from the pagopa-dx namespace. To get terraform modules descriptions, input/output variables and examples, use the \`searchModules\` tool.
+  description: `This tool provides access to the complete PagoPA DX documentation covering:
+- Getting started, monorepo setup, dev containers, and GitHub collaboration
+- Git workflows and pull requests
+- DX pipelines setup and management
+- TypeScript development (npm scripts, ESLint, code review)
+- Terraform (folder structure, DX modules, Azure provider, pre-commit hooks, validation, deployment, drift detection)
+- Azure development (naming conventions, policies, IAM, API Management, monitoring, networking, deployments, static websites, Service Bus, data archiving)
+- Container development (Docker images)
+- Contributing to DX (Azure provider, Terraform modules, documentation)
+
+All prompts and questions should be written in English.
+For Terraform module details (input/output variables, examples), use the \`searchModules\` tool.
 `,
   execute: async (args: { query: string }): Promise<string> => {
     const result = await queryKnowledgeBase(
