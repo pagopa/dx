@@ -44,7 +44,7 @@ jobs:
           docker_image_authors: "DevEx"
           docker_image_name: ${{ env.IMAGE_NAME }}
           build_platforms: linux/arm64
-          push_to_registry: 'true'
+          push_to_registry: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
