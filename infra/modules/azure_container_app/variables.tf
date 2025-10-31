@@ -50,7 +50,8 @@ variable "size" {
   description = "Container app memory and cpu sizes. For allowed values consult table at https://learn.microsoft.com/en-us/azure/container-apps/containers#allocations. If not set, it will be determined by the use_case."
 
   validation {
-    condition = var.size == null || (
+    condition = (var.size == null ?
+      true :
       var.size.cpu >= 0.25 &&
       var.size.cpu <= 4 &&
       floor(var.size.cpu / 0.25) == var.size.cpu / 0.25 && # multiple of 0.25
