@@ -13,9 +13,20 @@ locals {
     default = {
       cpu    = 1.25
       memory = "2.5Gi"
+      alerts = false
       replicas = {
         min = 1
         max = 8
+      }
+    }
+    function_app = {
+      cpu                  = 1.25
+      memory               = "2.5Gi"
+      alerts               = true
+      worker_process_count = "2"
+      replicas = {
+        min = 3
+        max = 50
       }
     }
   }
@@ -25,8 +36,8 @@ locals {
   cpu_size    = var.size != null ? var.size.cpu : local.use_case_features.cpu
   memory_size = var.size != null ? var.size.memory : local.use_case_features.memory
 
-  replica_minimum = try(var.autoscaler.replicas.minimum, local.sku.replicas.min)
-  replica_maximum = try(var.autoscaler.replicas.maximum, local.sku.replicas.max)
+  replica_minimum = try(var.autoscaler.replicas.minimum, local.use_case_features.replicas.min)
+  replica_maximum = try(var.autoscaler.replicas.maximum, local.use_case_features.replicas.max)
 
   is_function_app = nonsensitive(var.function_settings != null)
 
@@ -44,7 +55,7 @@ locals {
   }
 
   storage_account = {
-    replication_type = var.tier == "s" ? "LRS" : "ZRS"
+    replication_type = "ZRS"
     name             = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_storage_account" }))
     durable_name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "durable_function_storage_account" }))
     pep_blob_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "function_blob_private_endpoint" }))

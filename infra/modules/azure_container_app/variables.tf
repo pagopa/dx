@@ -36,8 +36,8 @@ variable "use_case" {
   default     = "default"
 
   validation {
-    condition     = contains(["default"], var.use_case)
-    error_message = "Allowed values for \"use_case\" are \"default\"."
+    condition     = contains(["default", "function_app"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\" and \"function_app\"."
   }
 }
 

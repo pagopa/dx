@@ -89,7 +89,7 @@ module "container_app" {
     application_insights_connection_string = data.azurerm_application_insights.common.connection_string
   }
 
-  tier          = "m"
+  use_case      = "function_app"
   revision_mode = "Single"
   target_port   = 80
   container_app_templates = [

@@ -265,8 +265,8 @@ resource "azapi_resource" "this" {
             name  = container.name == "" ? split(":", split("/", container.image)[length(split("/", container.image)) - 1])[0] : container.name
             image = container.image
             resources = {
-              cpu    = local.sku.cpu    # local.ca_sku_name_mapping.cpu[local.tier]
-              memory = local.sku.memory # local.ca_sku_name_mapping.memory[local.tier]
+              cpu    = local.cpu_size
+              memory = local.memory_size
             }
 
             env = concat(
@@ -274,7 +274,7 @@ resource "azapi_resource" "this" {
                 for name, value in merge(
                   {
                     # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
-                    FUNCTIONS_WORKER_PROCESS_COUNT = local.sku.worker_process_count
+                    FUNCTIONS_WORKER_PROCESS_COUNT = local.use_case_features.worker_process_count
 
                     AzureWebJobsStorage__accountName = azurerm_storage_account.this[0].name,
                     AzureWebJobsStorage__credential  = "managedidentity",

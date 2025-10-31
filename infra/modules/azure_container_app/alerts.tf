@@ -1,5 +1,5 @@
 resource "azurerm_monitor_metric_alert" "storage_account_health_check" {
-  count = var.tier != "s" && local.is_function_app ? 1 : 0
+  count = local.use_case_features.alerts ? 1 : 0
 
   name                = local.storage_account.alert
   resource_group_name = var.resource_group_name
