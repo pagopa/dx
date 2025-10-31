@@ -247,16 +247,47 @@ resource "azapi_resource" "this" {
           minReplicas     = local.replica_minimum
           maxReplicas     = local.replica_maximum
 
-          rules = [
-            {
-              name = var.autoscaler.http_scalers[0].name,
-              http = {
-                metadata = {
-                  concurrentRequests = tostring(var.autoscaler.http_scalers[0].concurrent_requests)
+          rules = var.autoscaler != null ? [
+            for rule in concat(
+              [
+                for http_scaler in var.autoscaler.http_scalers : {
+                  name = http_scaler.name
+                  http = {
+                    metadata = {
+                      concurrentRequests = tostring(http_scaler.concurrent_requests)
+                    }
+                  }
                 }
-              }
-            }
-          ]
+              ],
+              [
+                for queue_scaler in var.autoscaler.azure_queue_scalers : {
+                  name = queue_scaler.queue_name
+                  azureQueue = {
+                    queueName   = queue_scaler.queue_name
+                    queueLength = queue_scaler.queue_length
+
+                    identity    = var.user_assigned_identity_id
+                    accountName = queue_scaler.storage_account_name
+                  }
+                }
+              ],
+              [
+                for custom_scaler in var.autoscaler.custom_scalers : {
+                  name = custom_scaler.name
+                  custom = {
+                    type     = custom_scaler.custom_rule_type
+                    metadata = custom_scaler.metadata
+                    auth = custom_scaler.authentication != null ? [
+                      {
+                        secretRef        = replace(lower(custom_scaler.authentication.secret_name), "_", "-")
+                        triggerParameter = custom_scaler.authentication.trigger_parameter
+                      }
+                    ] : null
+                  }
+                }
+              ]
+            ) : rule if rule != null
+          ] : null
         }
 
         containers = [
@@ -390,10 +421,7 @@ resource "azapi_resource" "this" {
 
   schema_validation_enabled = true
   response_export_values = [
-    "properties.configuration",
-    "properties.environmentId",
-    "properties.provisioningState",
-    "properties.runningStatus",
+    "properties.configuration.ingress.fqdn",
   ]
 
   depends_on = [

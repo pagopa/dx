@@ -177,13 +177,14 @@ variable "autoscaler" {
     }), null)
 
     azure_queue_scalers = optional(list(object({
-      queue_name   = string
-      queue_length = number
+      storage_account_name = string
+      queue_name           = string
+      queue_length         = number
 
-      authentication = object({
+      authentication = optional(object({
         secret_name       = string
         trigger_parameter = string
-      })
+      }))
     })), [])
 
     http_scalers = optional(list(object({
@@ -214,6 +215,18 @@ variable "autoscaler" {
     error_message = "Replicas minimum must be >= 0 and maximum must be >= minimum, but never 0."
   }
 
+  validation {
+    condition = (var.autoscaler == null ?
+      true :
+      (length(var.autoscaler.azure_queue_scalers) > 0 ?
+        (var.use_case == "function_app" ?
+          var.autoscaler.azure_queue_scalers[0].authentication == null :
+        var.autoscaler.azure_queue_scalers[0].authentication != null)
+      : true)
+    )
+
+    error_message = "If \"use_case\" is not set to \"function_app\", the authentication uses the connection string and therefore the \"authentication\" block is mandatory. Otherwise, it must not be provided as auth is based on the user-assigned managed identity"
+  }
 }
 
 variable "function_settings" {
