@@ -15,6 +15,7 @@
     "version": "changeset version && pnpm i --lockfile-only",
     "release": "pnpm build && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
-    "sbom-validate": "sh sbom.sh --validate"
+    "sbom-validate": "sh sbom.sh --validate",
+    "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js"
   }
 }
