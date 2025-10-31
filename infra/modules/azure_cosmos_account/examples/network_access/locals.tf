@@ -1,10 +1,19 @@
 locals {
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/tests/azure_cosmos_account"
+    ManagementTeam = "Developer Experience"
+    TestSuite      = "e2e"
+  }
+
   environment = {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    domain          = "modules"
-    app_name        = "test"
+    app_name        = "e2e"
     instance_number = "01"
   }
 
@@ -12,30 +21,20 @@ locals {
     prefix          = local.environment.prefix,
     environment     = local.environment.env_short,
     location        = local.environment.location,
-    domain          = local.environment.domain,
     name            = local.environment.app_name,
     instance_number = tonumber(local.environment.instance_number),
   }
 
   virtual_network = {
     name = provider::dx::resource_name(merge(local.naming_config, {
-      domain        = "",
-      name          = "common",
+      name          = "e2e",
       resource_type = "virtual_network"
     }))
     resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      domain        = "",
-      name          = "network",
+      name          = "e2e",
       resource_type = "resource_group"
     }))
   }
 
-  tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Dev"
-    Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/modules/azure_cosmos_account/examples/minimum"
-    ManagementTeam = "Developer Experience"
-  }
+  docker_image = "ghcr.io/pagopa/e2e-cosmos-network-access:latest"
 }
