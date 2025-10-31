@@ -1,0 +1,5 @@
+'use strict';var crypto=require('crypto'),fs=require('fs');var s=".otel-session";function S(e,n,r){let t=process.env.GITHUB_ENV;if(!t){console.error("GITHUB_ENV not defined; cannot export variables");return}fs.appendFileSync(t,`OTEL_EVENT_FILE=${e}
+`),fs.appendFileSync(t,`OTEL_SESSION_START=${n}
+`),fs.appendFileSync(t,`OTEL_CORRELATION_ID=${r}
+`);let i=process.env.INPUT_CONNECTION_STRING;fs.appendFileSync(t,`APPLICATIONINSIGHTS_CONNECTION_STRING=${i}
+`);}async function E(){try{let{correlationId:e,eventsFile:n,start:r}=N();S(n,r,e),console.log(`Telemetry session started. Events file: ${n} correlationId=${e}`);}catch(e){let n=e instanceof Error?e.message:String(e);console.error("setup-telemetry failed:",n),process.exit(1);}}function N(){let e=Date.now();fs.mkdirSync(s,{recursive:true});let n=`${s}/events.ndjson`;return fs.existsSync(n)||fs.writeFileSync(n,""),{correlationId:crypto.randomUUID(),eventsFile:n,start:e}}E();
