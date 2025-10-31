@@ -32,7 +32,6 @@ export const makeCli = (
     program.addCommand(makeInitCommand());
   }
 
-  program.addCommand(makeVersionCommand());
   program.addCommand(makeInfoCommand(deps, config));
 
   return program;
