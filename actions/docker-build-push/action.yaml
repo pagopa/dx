@@ -52,7 +52,7 @@ outputs:
     value: ${{ steps.set-registry-url.outputs.registry_url }}
   image_uri:
     description: "The full image URI including tag"
-    value: ${{ steps.set-registry-url.outputs.image_uri }}
+    value: "${{ steps.set-registry-url.outputs.image_uri }}:${{ steps.meta.outputs.version }}"
 
 runs:
   using: composite
