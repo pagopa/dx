@@ -59,6 +59,10 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
   );
 
   if (resultsContainer) {
+    // Debounce results tracking to avoid tracking on every keystroke
+    let resultsTimeout: NodeJS.Timeout;
+    let lastTrackedQuery = "";
+
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
@@ -72,24 +76,41 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
             searchInput.value &&
             searchInput.value.trim().length >= 2
           ) {
-            // Count the search results - include various result containers
-            const results = resultsContainer.querySelectorAll(
-              '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
-            );
+            const currentQuery = searchInput.value.trim();
 
-            // Extract result data
-            const searchResults = extractSearchResults(resultsContainer);
+            // Clear previous timeout
+            clearTimeout(resultsTimeout);
 
-            // Clear any pending debounced tracking since we have real results now
-            clearPendingTimeout();
+            // Debounce the results tracking
+            resultsTimeout = setTimeout(() => {
+              // Only track if query has changed or this is a new search
+              if (currentQuery !== lastTrackedQuery) {
+                // Count the search results - include various result containers
+                const results = resultsContainer.querySelectorAll(
+                  '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
+                );
 
-            // Track search with results - this is the MAIN tracking event
-            trackSearchEvent(
-              searchInput.value,
-              "results",
-              results.length,
-              searchResults,
-            );
+                // Only track if there are actually results
+                if (results.length > 0) {
+                  // Extract result data
+                  const searchResults = extractSearchResults(resultsContainer);
+
+                  // Clear any pending debounced tracking since we have real results now
+                  clearPendingTimeout();
+
+                  // Track search with results - this is the MAIN tracking event
+                  trackSearchEvent(
+                    currentQuery,
+                    "results",
+                    results.length,
+                    searchResults,
+                  );
+
+                  // Remember the last tracked query
+                  lastTrackedQuery = currentQuery;
+                }
+              }
+            }, 500); // Wait 500ms for results to stabilize
           }
         }
       });
@@ -101,11 +122,17 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
     });
 
     // Cleanup function
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(resultsTimeout);
+      observer.disconnect();
+    };
   }
 
   // If no specific results container found, observe document body for dynamic dropdowns
   // This catches cases where search dropdowns are created dynamically (like DocSearch)
+  let documentResultsTimeout: NodeJS.Timeout;
+  let lastDocumentTrackedQuery = "";
+
   const documentObserver = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
@@ -134,21 +161,38 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
             searchInput.value &&
             searchInput.value.trim().length >= 2
           ) {
-            // Count results in the new dropdown and extract their data
-            const resultElements = newDropdown.querySelectorAll(
-              '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
-            );
+            const currentQuery = searchInput.value.trim();
 
-            // Extract result data
-            const searchResultTitles = extractSearchResults(newDropdown);
+            // Clear previous timeout
+            clearTimeout(documentResultsTimeout);
 
-            clearPendingTimeout();
-            trackSearchEvent(
-              searchInput.value,
-              "results",
-              resultElements.length,
-              searchResultTitles,
-            );
+            // Debounce the results tracking
+            documentResultsTimeout = setTimeout(() => {
+              // Only track if query has changed or this is a new search
+              if (currentQuery !== lastDocumentTrackedQuery) {
+                // Count results in the new dropdown and extract their data
+                const resultElements = newDropdown.querySelectorAll(
+                  '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
+                );
+
+                // Only track if there are actually results
+                if (resultElements.length > 0) {
+                  // Extract result data
+                  const searchResultTitles = extractSearchResults(newDropdown);
+
+                  clearPendingTimeout();
+                  trackSearchEvent(
+                    currentQuery,
+                    "results",
+                    resultElements.length,
+                    searchResultTitles,
+                  );
+
+                  // Remember the last tracked query
+                  lastDocumentTrackedQuery = currentQuery;
+                }
+              }
+            }, 500); // Wait 500ms for results to stabilize
           }
         }
       }
@@ -161,51 +205,10 @@ const observeSearchResults = (clearPendingTimeout: () => void) => {
     subtree: true,
   });
 
-  return () => documentObserver.disconnect();
-};
-
-// Function to manually check for search results (for immediate checking)
-const checkForSearchResults = (
-  query: string,
-  clearPendingTimeout: () => void,
-) => {
-  if (!query || query.trim().length < 2) {
-    return;
-  }
-
-  // Try to find any visible results containers
-  const possibleContainers = document.querySelectorAll(
-    '[class*="searchResultsColumn"], [class*="search-result"], .search-results, [class*="DocSearch-Dropdown"], [class*="aa-dropdown"], [id*="listbox"], [role="listbox"], [class*="searchDropdown"], [aria-expanded="true"] + [role="listbox"]',
-  );
-
-  for (const container of Array.from(possibleContainers)) {
-    // Check if this container has visible results
-    const results = container.querySelectorAll(
-      '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"]',
-    );
-
-    if (results.length > 0) {
-      // Check if results are actually visible (not just in DOM)
-      const visibleResults = Array.from(results).filter((result) => {
-        const element = result as Element;
-        const rect = element.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-      });
-
-      if (visibleResults.length > 0) {
-        // Extract result data from this container
-        const searchResultTitles = extractSearchResults(container);
-        clearPendingTimeout();
-        trackSearchEvent(
-          query,
-          "results",
-          visibleResults.length,
-          searchResultTitles,
-        );
-        return; // Found results, no need to check other containers
-      }
-    }
-  }
+  return () => {
+    clearTimeout(documentResultsTimeout);
+    documentObserver.disconnect();
+  };
 };
 
 // Function to extract Docusaurus search results (no direct links)
@@ -323,31 +326,28 @@ export function useSearchTracking() {
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
 
-    // Debounce function to avoid tracking every keystroke
+    // Search timeout for cleanup
     let searchTimeout: NodeJS.Timeout;
-    const debounceDelay = 1000; // 1 second delay - longer since we mainly care about results
+    let lastInputTrackedQuery = "";
 
-    // Track when user stops typing for a while (backup tracking)
+    // Debounced tracking for input (fallback when mutation observers don't catch everything)
     const debouncedTrackSearch = (query: string) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
-        // Only track typing if no results have been tracked recently for this query
-        // This serves as a fallback for searches that don't trigger result changes
-        trackSearchEvent(query, "input");
-      }, debounceDelay);
+        // Only track if query has changed to avoid duplicates
+        if (query !== lastInputTrackedQuery) {
+          trackSearchEvent(query, "input");
+          lastInputTrackedQuery = query;
+        }
+      }, 1500); // 1.5 second delay - balances responsiveness with avoiding keystroke tracking
     };
 
-    // Track search input changes (mainly for backup tracking)
+    // Track search input changes (with proper debouncing)
     const handleSearchInput = (event: Event) => {
       const target = event.target as HTMLInputElement;
       if (target && target.value && target.value.trim().length >= 2) {
-        // Only start the debounce timer as a backup
+        // Use debounced tracking as fallback
         debouncedTrackSearch(target.value);
-
-        // Also check immediately for any results that might already be visible
-        setTimeout(() => {
-          checkForSearchResults(target.value, clearPendingTimeout);
-        }, 100); // Small delay to let results appear
       }
     };
 
