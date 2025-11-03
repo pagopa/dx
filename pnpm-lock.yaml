@@ -331,6 +331,9 @@ importers:
       '@types/react':
         specifier: ^18.0.38
         version: 18.3.23
+      '@types/react-dom':
+        specifier: ^19.2.2
+        version: 19.2.2(@types/react@18.3.23)
       docusaurus-plugin-llms:
         specifier: ^0.2.2
         version: 0.2.2(@docusaurus/core@3.8.1(@mdx-js/react@3.1.0(@types/react@18.3.23)(react@18.3.1))(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))
@@ -3737,6 +3740,11 @@ packages:
 
   '@types/range-parser@1.2.7':
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
+
+  '@types/react-dom@19.2.2':
+    resolution: {integrity: sha512-9KQPoO6mZCi7jcIStSnlOWn2nEF3mNmyr3rIAsGnAbQKYbRLyqmeSc39EVgtxXVia+LMT8j3knZLAZAh+xLmrw==}
+    peerDependencies:
+      '@types/react': ^19.2.0
 
   '@types/react-router-config@5.0.11':
     resolution: {integrity: sha512-WmSAg7WgqW7m4x8Mt4N6ZyKz0BubSj/2tVUMsAHp+Yd2AMwcSbeFq9WympT19p5heCFmF97R9eD5uUR/t4HEqw==}
@@ -13974,6 +13982,10 @@ snapshots:
   '@types/qs@6.14.0': {}
 
   '@types/range-parser@1.2.7': {}
+
+  '@types/react-dom@19.2.2(@types/react@18.3.23)':
+    dependencies:
+      '@types/react': 18.3.23
 
   '@types/react-router-config@5.0.11':
     dependencies:
