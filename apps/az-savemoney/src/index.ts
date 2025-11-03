@@ -222,9 +222,9 @@ async function analyzeNic(
 
     debugLog(`[DEBUG] NIC Details for ${nicName}:`, nicDetails);
 
-    // Check if NIC is not attached to any VM
-    if (!nicDetails.virtualMachine) {
-      reason += "NIC not attached to any VM. ";
+    // Check if NIC is not attached to any VM or private endpoint
+    if (!nicDetails.virtualMachine && !nicDetails.privateEndpoint) {
+      reason += "NIC not attached to any VM or private endpoint. ";
     }
 
     // Check if NIC has no public IP
@@ -785,7 +785,7 @@ program
   .option(
     "-f, --format <format>",
     "Report format: json, yaml, table, or detailed-json (default: table, detailed-json with --debug)",
-    "table",
+    DEBUG_MODE ? "detailed-json" : "table",
   )
   .option(
     "-l, --location <string>",
@@ -804,7 +804,7 @@ program
       config.preferredLocation = options.location || config.preferredLocation;
 
       // If debug mode is enabled and format is not explicitly set, use detailed-json
-      const format = options.format || (DEBUG_MODE ? "detailed-json" : "table");
+      const format = DEBUG_MODE ? "detailed-json" : options.format;
 
       await analyzeResources(config, format);
     } catch (error) {
