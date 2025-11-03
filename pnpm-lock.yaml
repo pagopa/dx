@@ -227,6 +227,9 @@ importers:
       '@octokit/rest':
         specifier: ^22.0.0
         version: 22.0.0
+      '@pagopa/azure-tracing':
+        specifier: workspace:^
+        version: link:../../packages/azure-tracing
       '@pagopa/dx-mcpprompts':
         specifier: workspace:^
         version: link:../../packages/mcp-prompts

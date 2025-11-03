@@ -4,12 +4,16 @@ import { FastMCP } from "fastmcp";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { configureLogging } from "./config/logging.js";
+import { configureAzureMonitoring } from "./config/monitoring.js";
 import { serverInstructions } from "./config/server.js";
+import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
+import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
 import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
 import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 
 // Configure logging
 await configureLogging();
+await configureAzureMonitoring();
 
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
@@ -48,20 +52,23 @@ logger.debug(`Server instructions: \n\n${serverInstructions}`);
 
 logger.debug(`Loading enabled prompts...`);
 
-// Load prompts asynchronously and wait for completion before starting server
-const enabledPrompts = await getEnabledPrompts();
-enabledPrompts.forEach((catalogEntry) => {
-  logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
-  server.addPrompt(catalogEntry.prompt);
-  logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
+getEnabledPrompts().then((prompts) => {
+  prompts.forEach((catalogEntry) => {
+    logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
+
+    // Apply logging decorator to the prompt
+    const decoratedPrompt = withPromptLogging(
+      catalogEntry.prompt,
+      catalogEntry.id,
+    );
+
+    server.addPrompt(decoratedPrompt);
+    logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
+  });
 });
 
-logger.info(`Loaded ${enabledPrompts.length} enabled prompts`);
-
-server.addTool(QueryPagoPADXDocumentationTool);
-server.addTool(SearchGitHubCodeTool);
-
-logger.info("Starting server...");
+server.addTool(withToolLogging(QueryPagoPADXDocumentationTool));
+server.addTool(withToolLogging(SearchGitHubCodeTool));
 
 // Starts the server in HTTP Stream mode.
 server.start({
