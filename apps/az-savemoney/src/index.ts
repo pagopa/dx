@@ -195,8 +195,6 @@ async function analyzeDisk(
 async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
-  monitorClient: MonitorClient,
-  timespanDays: number,
 ) {
   debugLog(`[DEBUG] analyzeNic - Resource:`, resource);
   const costRisk: "high" | "low" | "medium" = "medium";
@@ -237,18 +235,9 @@ async function analyzeNic(
       reason += "No public IP assigned. ";
     }
 
-    // Check network metrics for low usage
-    const networkIn = await getMetric(
-      monitorClient,
-      resource.id,
-      "PacketsInDDoS",
-      "Total",
-      timespanDays,
-    );
-
-    if (networkIn !== null && networkIn < 1000) {
-      reason += `Very low network packets (${networkIn}). `;
-    }
+    // Note: Network Interface metrics are not available for Private Endpoint NICs
+    // and most Azure NICs don't expose standard traffic metrics through Azure Monitor
+    // The primary checks (attachment to VM and public IP assignment) are sufficient
   } catch (error) {
     console.warn(
       `Failed to get NIC details for ${nicName}: ${error instanceof Error ? error.message : error}`,
@@ -306,16 +295,17 @@ async function analyzePublicIp(
     }
 
     // Check network metrics for low usage
-    const packetsIn = await getMetric(
+    const bytesInDDoS = await getMetric(
       monitorClient,
       resource.id,
-      "PacketsInDDoS",
+      "BytesInDDoS",
       "Total",
       timespanDays,
     );
 
-    if (packetsIn !== null && packetsIn < 100) {
-      reason += `Very low packet count (${packetsIn}). `;
+    if (bytesInDDoS !== null && bytesInDDoS < 1000000) {
+      // Less than 1MB total in 30 days
+      reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB). `;
     }
   } catch (error) {
     console.warn(
@@ -376,12 +366,7 @@ async function analyzeResource(
     case "microsoft.network/networkinterfaces":
       result = {
         ...result,
-        ...(await analyzeNic(
-          resource,
-          networkClient,
-          monitorClient,
-          timespanDays,
-        )),
+        ...(await analyzeNic(resource, networkClient)),
       };
       break;
     case "microsoft.network/publicipaddresses":
