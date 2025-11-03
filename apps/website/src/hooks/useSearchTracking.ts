@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { hasAnalyticsConsent } from "../utils/analytics-consent";
 
@@ -16,199 +16,38 @@ declare global {
 // Function to track search queries with results
 const trackSearchEvent = (
   query: string,
-  searchType: "input" | "results" | "submit" = "input",
+  searchType: string,
   resultCount?: number,
   resultTitles?: string[],
 ) => {
-  // Only track if user has consented to analytics
-  if (!hasAnalyticsConsent() || !window.appInsights) {
+  // Check if analytics tracking is enabled
+  if (!hasAnalyticsConsent()) {
+    return;
+  }
+
+  if (!window.appInsights) {
+    return;
+  }
+
+  // Only track for queries with at least 2 characters
+  if (!query || query.trim().length < 2) {
     return;
   }
 
   try {
-    // Don't track empty queries or very short queries (< 2 characters)
-    if (!query || query.trim().length < 2) {
-      return;
-    }
-
     window.appInsights.trackEvent({
       name: "Search_Event",
       properties: {
-        hasResults: resultCount !== undefined ? resultCount > 0 : undefined,
-        pathname: window.location.pathname,
         query: query.trim(),
-        queryLength: query.trim().length,
-        resultCount: resultCount ?? undefined,
-        resultTitles: resultTitles ?? undefined,
+        resultCount: resultCount || 0,
+        resultTitles: resultTitles || [],
         searchType,
         timestamp: new Date().toISOString(),
-        url: window.location.href,
       },
     });
   } catch {
-    // Silent error handling for production
+    // Silently fail if tracking fails
   }
-};
-
-// Function to observe search results - this is our PRIMARY tracking method
-// Works for both header search bar dropdowns and dedicated search page results
-const observeSearchResults = (clearPendingTimeout: () => void) => {
-  // Look for the search results container - include both header search dropdown and search page
-  const resultsContainer = document.querySelector(
-    '[class*="searchResultsColumn"], [class*="search-result"], .search-results, [class*="DocSearch-Dropdown"], [class*="aa-dropdown"], [class*="searchBox"] + div, .DocSearch-Dropdown-Container, [id*="listbox"], [role="listbox"], [class*="searchDropdown"], [class*="dropdownMenu"]',
-  );
-
-  if (resultsContainer) {
-    // Debounce results tracking to avoid tracking on every keystroke
-    let resultsTimeout: NodeJS.Timeout;
-    let lastTrackedQuery = "";
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-          // Try to get the current search query from the input - include header search and page search
-          const searchInput = document.querySelector(
-            'input[type="text"][placeholder*="Search"], input[name="q"], .DocSearch-Input, [class*="searchBox"] input, input[placeholder*="search"], .navbar__search-input, input[class*="searchInput"], input[aria-label="Search"]',
-          ) as HTMLInputElement;
-
-          if (
-            searchInput &&
-            searchInput.value &&
-            searchInput.value.trim().length >= 2
-          ) {
-            const currentQuery = searchInput.value.trim();
-
-            // Clear previous timeout
-            clearTimeout(resultsTimeout);
-
-            // Debounce the results tracking
-            resultsTimeout = setTimeout(() => {
-              // Only track if query has changed or this is a new search
-              if (currentQuery !== lastTrackedQuery) {
-                // Count the search results - include various result containers
-                const results = resultsContainer.querySelectorAll(
-                  '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
-                );
-
-                // Only track if there are actually results
-                if (results.length > 0) {
-                  // Extract result data
-                  const searchResults = extractSearchResults(resultsContainer);
-
-                  // Clear any pending debounced tracking since we have real results now
-                  clearPendingTimeout();
-
-                  // Track search with results - this is the MAIN tracking event
-                  trackSearchEvent(
-                    currentQuery,
-                    "results",
-                    results.length,
-                    searchResults,
-                  );
-
-                  // Remember the last tracked query
-                  lastTrackedQuery = currentQuery;
-                }
-              }
-            }, 500); // Wait 500ms for results to stabilize
-          }
-        }
-      });
-    });
-
-    observer.observe(resultsContainer, {
-      childList: true,
-      subtree: true,
-    });
-
-    // Cleanup function
-    return () => {
-      clearTimeout(resultsTimeout);
-      observer.disconnect();
-    };
-  }
-
-  // If no specific results container found, observe document body for dynamic dropdowns
-  // This catches cases where search dropdowns are created dynamically (like DocSearch)
-  let documentResultsTimeout: NodeJS.Timeout;
-  let lastDocumentTrackedQuery = "";
-
-  const documentObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
-        // Check if a search dropdown was just added
-        const newDropdown = Array.from(mutation.addedNodes).find((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
-            return (
-              element.matches &&
-              element.matches(
-                '[class*="DocSearch-Dropdown"], [class*="aa-dropdown"], [class*="search-dropdown"], [id*="listbox"], [role="listbox"], [class*="searchDropdown"], [class*="dropdownMenu"]',
-              )
-            );
-          }
-          return false;
-        }) as Element;
-
-        if (newDropdown) {
-          // Search dropdown appeared, try to track the current query
-          const searchInput = document.querySelector(
-            'input[type="text"][placeholder*="Search"], input[name="q"], .DocSearch-Input, [class*="searchBox"] input, input[placeholder*="search"], .navbar__search-input, input[class*="searchInput"], input[aria-label="Search"]',
-          ) as HTMLInputElement;
-
-          if (
-            searchInput &&
-            searchInput.value &&
-            searchInput.value.trim().length >= 2
-          ) {
-            const currentQuery = searchInput.value.trim();
-
-            // Clear previous timeout
-            clearTimeout(documentResultsTimeout);
-
-            // Debounce the results tracking
-            documentResultsTimeout = setTimeout(() => {
-              // Only track if query has changed or this is a new search
-              if (currentQuery !== lastDocumentTrackedQuery) {
-                // Count results in the new dropdown and extract their data
-                const resultElements = newDropdown.querySelectorAll(
-                  '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
-                );
-
-                // Only track if there are actually results
-                if (resultElements.length > 0) {
-                  // Extract result data
-                  const searchResultTitles = extractSearchResults(newDropdown);
-
-                  clearPendingTimeout();
-                  trackSearchEvent(
-                    currentQuery,
-                    "results",
-                    resultElements.length,
-                    searchResultTitles,
-                  );
-
-                  // Remember the last tracked query
-                  lastDocumentTrackedQuery = currentQuery;
-                }
-              }
-            }, 500); // Wait 500ms for results to stabilize
-          }
-        }
-      }
-    });
-  });
-
-  // Observe the document body for dynamic dropdowns
-  documentObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  return () => {
-    clearTimeout(documentResultsTimeout);
-    documentObserver.disconnect();
-  };
 };
 
 // Function to extract Docusaurus search results (no direct links)
@@ -322,36 +161,193 @@ const extractSearchResults = (resultsContainer: Element): string[] => {
   return extractLinkedResults(resultsContainer);
 };
 
-export function useSearchTracking() {
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
+// Helper function to create results container observer
+const createResultsObserver = (
+  resultsContainer: Element,
+  clearPendingTimeout: () => void,
+) => {
+  let resultsTimeout: NodeJS.Timeout;
+  let lastTrackedQuery = "";
 
-    // Search timeout for cleanup
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+        const searchInput = document.querySelector(
+          'input[type="text"][placeholder*="Search"], input[name="q"], .DocSearch-Input, [class*="searchBox"] input, input[placeholder*="search"], .navbar__search-input, input[class*="searchInput"], input[aria-label="Search"]',
+        ) as HTMLInputElement;
+
+        if (
+          searchInput &&
+          searchInput.value &&
+          searchInput.value.trim().length >= 2
+        ) {
+          const currentQuery = searchInput.value.trim();
+          clearTimeout(resultsTimeout);
+
+          resultsTimeout = setTimeout(() => {
+            if (currentQuery !== lastTrackedQuery) {
+              const results = resultsContainer.querySelectorAll(
+                '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
+              );
+
+              if (results.length > 0) {
+                const searchResults = extractSearchResults(resultsContainer);
+                clearPendingTimeout();
+                trackSearchEvent(
+                  currentQuery,
+                  "results",
+                  results.length,
+                  searchResults,
+                );
+                lastTrackedQuery = currentQuery;
+              }
+            }
+          }, 500);
+        }
+      }
+    });
+  });
+
+  observer.observe(resultsContainer, {
+    childList: true,
+    subtree: true,
+  });
+
+  return () => {
+    clearTimeout(resultsTimeout);
+    observer.disconnect();
+  };
+};
+
+// Helper function to create dynamic dropdown observer
+const createDynamicDropdownObserver = (clearPendingTimeout: () => void) => {
+  let documentResultsTimeout: NodeJS.Timeout;
+  let lastDocumentTrackedQuery = "";
+
+  const documentObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "childList" && mutation.addedNodes.length > 0) {
+        const newDropdown = Array.from(mutation.addedNodes).find((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+            return (
+              element.matches &&
+              element.matches(
+                '[class*="DocSearch-Dropdown"], [class*="aa-dropdown"], [class*="search-dropdown"], [id*="listbox"], [role="listbox"], [class*="searchDropdown"], [class*="dropdownMenu"], .dropdownMenu_XBat, [id^="searchBar_"], [class*="searchBar"]',
+              )
+            );
+          }
+          return false;
+        }) as Element;
+
+        if (newDropdown) {
+          const dropdownObserver = new MutationObserver((dropdownMutations) => {
+            dropdownMutations.forEach((mutation) => {
+              if (
+                mutation.type === "childList" ||
+                mutation.type === "attributes"
+              ) {
+                const searchInput = document.querySelector(
+                  'input[type="text"][placeholder*="Search"], input[name="q"], .DocSearch-Input, [class*="searchBox"] input, input[placeholder*="search"], .navbar__search-input, input[class*="searchInput"], input[aria-label="Search"]',
+                ) as HTMLInputElement;
+
+                if (
+                  searchInput &&
+                  searchInput.value &&
+                  searchInput.value.trim().length >= 2
+                ) {
+                  const currentQuery = searchInput.value.trim();
+                  clearTimeout(documentResultsTimeout);
+
+                  documentResultsTimeout = setTimeout(() => {
+                    if (currentQuery !== lastDocumentTrackedQuery) {
+                      const resultElements = newDropdown.querySelectorAll(
+                        '[class*="searchResult"], .search-result-item, li, .DocSearch-Hit, [class*="aa-suggestion"], [class*="searchResultItem"], [role="option"], [class*="suggestion"]',
+                      );
+
+                      if (resultElements.length > 0) {
+                        const searchResultTitles =
+                          extractSearchResults(newDropdown);
+                        clearPendingTimeout();
+                        trackSearchEvent(
+                          currentQuery,
+                          "results",
+                          resultElements.length,
+                          searchResultTitles,
+                        );
+                        lastDocumentTrackedQuery = currentQuery;
+                      }
+                    }
+                  }, 300);
+                }
+              }
+            });
+          });
+
+          dropdownObserver.observe(newDropdown, {
+            attributeFilter: ["style", "class"],
+            attributes: true,
+            childList: true,
+            subtree: true,
+          });
+        }
+      }
+    });
+  });
+
+  documentObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  return () => {
+    clearTimeout(documentResultsTimeout);
+    documentObserver.disconnect();
+  };
+};
+
+export const useSearchTracking = () => {
+  const observeSearchResults = useCallback(
+    (clearPendingTimeout: () => void) => {
+      // Look for the search results container
+      const resultsContainer = document.querySelector(
+        '[class*="searchResultsColumn"], [class*="search-result"], .search-results, [class*="DocSearch-Dropdown"], [class*="aa-dropdown"], [class*="searchBox"] + div, .DocSearch-Dropdown-Container, [id*="listbox"], [role="listbox"], [class*="searchDropdown"], [class*="dropdownMenu"], .dropdownMenu_XBat, [id^="searchBar_"]',
+      );
+
+      if (resultsContainer) {
+        return createResultsObserver(resultsContainer, clearPendingTimeout);
+      }
+
+      return createDynamicDropdownObserver(clearPendingTimeout);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
     let searchTimeout: NodeJS.Timeout;
     let lastInputTrackedQuery = "";
 
-    // Debounced tracking for input (fallback when mutation observers don't catch everything)
     const debouncedTrackSearch = (query: string) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
-        // Only track if query has changed to avoid duplicates
         if (query !== lastInputTrackedQuery) {
           trackSearchEvent(query, "input");
           lastInputTrackedQuery = query;
         }
-      }, 1500); // 1.5 second delay - balances responsiveness with avoiding keystroke tracking
+      }, 1500);
     };
 
-    // Track search input changes (with proper debouncing)
     const handleSearchInput = (event: Event) => {
       const target = event.target as HTMLInputElement;
       if (target && target.value && target.value.trim().length >= 2) {
-        // Use debounced tracking as fallback
         debouncedTrackSearch(target.value);
       }
     };
 
-    // Track search form submissions
     const handleSearchSubmit = (event: Event) => {
       const form = event.target as HTMLFormElement;
       const input = form.querySelector(
@@ -359,15 +355,12 @@ export function useSearchTracking() {
       ) as HTMLInputElement;
 
       if (input && input.value) {
-        // Clear any pending debounced calls since this is an explicit submit
         clearTimeout(searchTimeout);
         trackSearchEvent(input.value, "submit");
       }
     };
 
-    // Add event listeners for search inputs
     const addSearchListeners = () => {
-      // Find search inputs - include header search bar and page search
       const searchInputs = document.querySelectorAll(
         'input[type="text"][placeholder*="Search"], input[name="q"], input[placeholder*="search"], [class*="searchBox"] input, .DocSearch-Input, input[class*="DocSearch"], input[aria-label*="search"], .navbar__search-input, input[class*="searchInput"]',
       );
@@ -376,7 +369,6 @@ export function useSearchTracking() {
         input.addEventListener("input", handleSearchInput);
       });
 
-      // Find search forms - include header and page search forms
       const searchForms = document.querySelectorAll(
         'form[role="search"], form[class*="search"], form:has(input[placeholder*="Search"]), form:has(.DocSearch-Input), [class*="DocSearch-Form"]',
       );
@@ -385,7 +377,6 @@ export function useSearchTracking() {
         form.addEventListener("submit", handleSearchSubmit);
       });
 
-      // Cleanup function
       return () => {
         searchInputs.forEach((input) => {
           input.removeEventListener("input", handleSearchInput);
@@ -396,26 +387,21 @@ export function useSearchTracking() {
       };
     };
 
-    // Clear timeout function to share between components
     const clearPendingTimeout = () => {
       clearTimeout(searchTimeout);
     };
 
-    // Initialize tracking with delay to ensure search components are rendered
     const searchCleanup = addSearchListeners();
     const resultsCleanup = observeSearchResults(clearPendingTimeout);
 
-    // Also re-initialize when route changes (for SPA navigation)
     const handleRouteChange = () => {
       setTimeout(() => {
         addSearchListeners();
       }, 500);
     };
 
-    // Listen for route changes
     window.addEventListener("popstate", handleRouteChange);
 
-    // Cleanup function
     return () => {
       if (searchCleanup) {
         searchCleanup();
@@ -426,5 +412,5 @@ export function useSearchTracking() {
       clearTimeout(searchTimeout);
       window.removeEventListener("popstate", handleRouteChange);
     };
-  }, []);
-}
+  }, [observeSearchResults]);
+};
