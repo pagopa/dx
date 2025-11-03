@@ -15,7 +15,10 @@
  * This tool does NOT modify, tag, or delete any resources.
  */
 
+import { WebSiteManagementClient } from "@azure/arm-appservice";
+import { ComputeManagementClient } from "@azure/arm-compute";
 import { MonitorClient } from "@azure/arm-monitor";
+import { NetworkManagementClient } from "@azure/arm-network";
 import * as armResources from "@azure/arm-resources";
 import { DefaultAzureCredential } from "@azure/identity";
 import { Command } from "commander";
@@ -25,6 +28,9 @@ import * as readline from "readline";
 import { table } from "table";
 
 const program = new Command();
+
+// Global debug flag
+let DEBUG_MODE = false;
 
 interface Config {
   preferredLocation: string;
@@ -53,55 +59,274 @@ interface ResourceReport {
   type: string;
 }
 
-function analyzeAppServicePlan(resource: armResources.GenericResource) {
-  const costRisk: "high" | "low" | "medium" = "medium";
-  if (resource.properties?.numberOfSites === 0) {
+async function analyzeAppServicePlan(
+  resource: armResources.GenericResource,
+  webSiteClient: WebSiteManagementClient,
+  monitorClient: MonitorClient,
+  timespanDays: number,
+) {
+  debugLog(`[DEBUG] analyzeAppServicePlan - Resource:`, resource);
+  const costRisk: "high" | "low" | "medium" = "high";
+  let reason = "";
+
+  if (!resource.id) {
     return {
       costRisk,
-      reason: "App Service Plan has no associated apps. ",
-      suspectedUnused: true,
+      reason: "Resource ID is missing.",
+      suspectedUnused: false,
     };
   }
-  return { costRisk, reason: "", suspectedUnused: false };
-}
 
-function analyzeDisk(resource: armResources.GenericResource) {
-  const costRisk: "high" | "low" | "medium" = "medium";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if ((resource.properties as any)?.diskState?.toLowerCase() === "unattached") {
-    return { costRisk, reason: "Disk is unattached. ", suspectedUnused: true };
+  // Extract resource group and App Service Plan name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const planName = resourceParts[8];
+
+  try {
+    // Get detailed App Service Plan information
+    const planDetails = await webSiteClient.appServicePlans.get(
+      resourceGroupName,
+      planName,
+    );
+
+    debugLog(`[DEBUG] App Service Plan Details for ${planName}:`, planDetails);
+
+    // Check if the plan has no apps
+    if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
+      reason += "App Service Plan has no apps deployed. ";
+    }
+
+    // Check CPU and Memory metrics
+    const cpuPercentage = await getMetric(
+      monitorClient,
+      resource.id,
+      "CpuPercentage",
+      "Average",
+      timespanDays,
+    );
+
+    const memoryPercentage = await getMetric(
+      monitorClient,
+      resource.id,
+      "MemoryPercentage",
+      "Average",
+      timespanDays,
+    );
+
+    if (cpuPercentage !== null && cpuPercentage < 5) {
+      reason += `Very low CPU usage (${cpuPercentage.toFixed(2)}%). `;
+    }
+
+    if (memoryPercentage !== null && memoryPercentage < 10) {
+      reason += `Very low memory usage (${memoryPercentage.toFixed(2)}%). `;
+    }
+
+    // Check if it's an oversized plan (Premium tier with low usage)
+    if (
+      planDetails.sku?.tier?.includes("Premium") &&
+      cpuPercentage &&
+      cpuPercentage < 10
+    ) {
+      reason += "Premium tier with low resource utilization. ";
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get App Service Plan details for ${planName}: ${error instanceof Error ? error.message : error}`,
+    );
+    reason += "Could not retrieve detailed App Service Plan information. ";
   }
-  return { costRisk, reason: "", suspectedUnused: false };
+
+  const suspectedUnused = reason.length > 0;
+  return { costRisk, reason: reason.trim(), suspectedUnused };
 }
 
-function analyzeNic(resource: armResources.GenericResource) {
-  const costRisk: "high" | "low" | "medium" = "low";
-  if (
-    !resource.properties?.virtualMachine &&
-    !resource.properties?.privateEndpoint
-  ) {
+async function analyzeDisk(
+  resource: armResources.GenericResource,
+  computeClient: ComputeManagementClient,
+) {
+  debugLog(`[DEBUG] analyzeDisk - Resource:`, resource);
+  const costRisk: "high" | "low" | "medium" = "medium";
+
+  if (!resource.id) {
     return {
       costRisk,
-      reason: "Network interface is not attached. ",
-      suspectedUnused: true,
+      reason: "Resource ID is missing.",
+      suspectedUnused: false,
     };
   }
+
+  // Extract resource group and disk name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const diskName = resourceParts[8];
+
+  try {
+    // Get the actual disk details to check attachment state
+    const diskDetails = await computeClient.disks.get(
+      resourceGroupName,
+      diskName,
+    );
+
+    debugLog(`[DEBUG] Disk Details for ${diskName}:`, diskDetails);
+
+    // Check if disk is unattached
+    if (
+      diskDetails.diskState?.toLowerCase() === "unattached" ||
+      !diskDetails.managedBy
+    ) {
+      return {
+        costRisk,
+        reason: "Disk is unattached. ",
+        suspectedUnused: true,
+      };
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get disk details for ${diskName}: ${error instanceof Error ? error.message : error}`,
+    );
+    // Fallback to checking properties if API call fails
+    // Note: GenericResource doesn't have diskState property
+    // Without API access, we can't determine if disk is unattached
+  }
+
   return { costRisk, reason: "", suspectedUnused: false };
 }
 
-function analyzePublicIp(resource: armResources.GenericResource) {
+async function analyzeNic(
+  resource: armResources.GenericResource,
+  networkClient: NetworkManagementClient,
+  monitorClient: MonitorClient,
+  timespanDays: number,
+) {
+  debugLog(`[DEBUG] analyzeNic - Resource:`, resource);
   const costRisk: "high" | "low" | "medium" = "medium";
-  if (!resource.properties?.ipConfiguration) {
+  let reason = "";
+
+  if (!resource.id) {
     return {
       costRisk,
-      reason: "Public IP is not associated. ",
-      suspectedUnused: true,
+      reason: "Resource ID is missing.",
+      suspectedUnused: false,
     };
   }
-  return { costRisk, reason: "", suspectedUnused: false };
+
+  // Extract resource group and NIC name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const nicName = resourceParts[8];
+
+  try {
+    // Get detailed NIC information
+    const nicDetails = await networkClient.networkInterfaces.get(
+      resourceGroupName,
+      nicName,
+    );
+
+    debugLog(`[DEBUG] NIC Details for ${nicName}:`, nicDetails);
+
+    // Check if NIC is not attached to any VM
+    if (!nicDetails.virtualMachine) {
+      reason += "NIC not attached to any VM. ";
+    }
+
+    // Check if NIC has no public IP
+    const hasPublicIP = nicDetails.ipConfigurations?.some(
+      (config) => config.publicIPAddress,
+    );
+    if (!hasPublicIP) {
+      reason += "No public IP assigned. ";
+    }
+
+    // Check network metrics for low usage
+    const networkIn = await getMetric(
+      monitorClient,
+      resource.id,
+      "PacketsInDDoS",
+      "Total",
+      timespanDays,
+    );
+
+    if (networkIn !== null && networkIn < 1000) {
+      reason += `Very low network packets (${networkIn}). `;
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get NIC details for ${nicName}: ${error instanceof Error ? error.message : error}`,
+    );
+    reason += "Could not retrieve detailed NIC information. ";
+  }
+
+  const suspectedUnused = reason.length > 0;
+  return { costRisk, reason: reason.trim(), suspectedUnused };
 }
 
-// --- Analysis Hooks ---
+async function analyzePublicIp(
+  resource: armResources.GenericResource,
+  networkClient: NetworkManagementClient,
+  monitorClient: MonitorClient,
+  timespanDays: number,
+) {
+  debugLog(`[DEBUG] analyzePublicIp - Resource:`, resource);
+  const costRisk: "high" | "low" | "medium" = "medium";
+  let reason = "";
+
+  if (!resource.id) {
+    return {
+      costRisk,
+      reason: "Resource ID is missing.",
+      suspectedUnused: false,
+    };
+  }
+
+  // Extract resource group and public IP name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const publicIpName = resourceParts[8];
+
+  try {
+    // Get detailed Public IP information
+    const publicIpDetails = await networkClient.publicIPAddresses.get(
+      resourceGroupName,
+      publicIpName,
+    );
+
+    debugLog(`[DEBUG] Public IP Details for ${publicIpName}:`, publicIpDetails);
+
+    // Check if Public IP is not associated with any resource
+    if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
+      reason += "Public IP not associated with any resource. ";
+    }
+
+    // Check if it's a static IP that might be unused
+    if (
+      publicIpDetails.publicIPAllocationMethod === "Static" &&
+      !publicIpDetails.ipConfiguration
+    ) {
+      reason += "Static IP not in use. ";
+    }
+
+    // Check network metrics for low usage
+    const packetsIn = await getMetric(
+      monitorClient,
+      resource.id,
+      "PacketsInDDoS",
+      "Total",
+      timespanDays,
+    );
+
+    if (packetsIn !== null && packetsIn < 100) {
+      reason += `Very low packet count (${packetsIn}). `;
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get Public IP details for ${publicIpName}: ${error instanceof Error ? error.message : error}`,
+    );
+    reason += "Could not retrieve detailed Public IP information. ";
+  }
+
+  const suspectedUnused = reason.length > 0;
+  return { costRisk, reason: reason.trim(), suspectedUnused };
+}
 
 /**
  * Dispatches analysis to the appropriate function based on resource type.
@@ -109,6 +334,9 @@ function analyzePublicIp(resource: armResources.GenericResource) {
 async function analyzeResource(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
+  computeClient: ComputeManagementClient,
+  networkClient: NetworkManagementClient,
+  webSiteClient: WebSiteManagementClient,
   preferredLocation: string,
   timespanDays: number,
 ): Promise<{
@@ -132,19 +360,40 @@ async function analyzeResource(
   // Route to type-specific analysis hooks
   switch (type) {
     case "microsoft.compute/disks":
-      result = { ...result, ...analyzeDisk(resource) };
+      result = { ...result, ...(await analyzeDisk(resource, computeClient)) };
       break;
     case "microsoft.compute/virtualmachines":
       result = {
         ...result,
-        ...(await analyzeVM(resource, monitorClient, timespanDays)),
+        ...(await analyzeVM(
+          resource,
+          monitorClient,
+          computeClient,
+          timespanDays,
+        )),
       };
       break;
     case "microsoft.network/networkinterfaces":
-      result = { ...result, ...analyzeNic(resource) };
+      result = {
+        ...result,
+        ...(await analyzeNic(
+          resource,
+          networkClient,
+          monitorClient,
+          timespanDays,
+        )),
+      };
       break;
     case "microsoft.network/publicipaddresses":
-      result = { ...result, ...analyzePublicIp(resource) };
+      result = {
+        ...result,
+        ...(await analyzePublicIp(
+          resource,
+          networkClient,
+          monitorClient,
+          timespanDays,
+        )),
+      };
       break;
     case "microsoft.storage/storageaccounts":
       result = {
@@ -153,7 +402,15 @@ async function analyzeResource(
       };
       break;
     case "microsoft.web/serverfarms":
-      result = { ...result, ...analyzeAppServicePlan(resource) };
+      result = {
+        ...result,
+        ...(await analyzeAppServicePlan(
+          resource,
+          webSiteClient,
+          monitorClient,
+          timespanDays,
+        )),
+      };
       break;
     default:
       result.reason += "No specific analysis for this resource type. ";
@@ -170,6 +427,8 @@ async function analyzeResource(
 
   return { ...result, reason: result.reason.trim() };
 }
+
+// --- Analysis Hooks ---
 
 /**
  * Main logic — analyze resources for all subscriptions.
@@ -189,12 +448,27 @@ async function analyzeResources(
       subscriptionId.trim(),
     );
     const monitorClient = new MonitorClient(credential, subscriptionId.trim());
+    const computeClient = new ComputeManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+    const networkClient = new NetworkManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+    const webSiteClient = new WebSiteManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
 
     // Use the async iterator to avoid memory explosion for large environments
     for await (const resource of resourceClient.resources.list()) {
       const { costRisk, reason, suspectedUnused } = await analyzeResource(
         resource,
         monitorClient,
+        computeClient,
+        networkClient,
+        webSiteClient,
         config.preferredLocation,
         config.timespanDays,
       );
@@ -228,6 +502,7 @@ async function analyzeStorageAccount(
   monitorClient: MonitorClient,
   timespanDays: number,
 ) {
+  debugLog(`[DEBUG] analyzeStorageAccount - Resource:`, resource);
   const costRisk: "high" | "low" | "medium" = "medium";
   if (!resource.id) {
     return {
@@ -257,19 +532,12 @@ async function analyzeStorageAccount(
 async function analyzeVM(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
+  computeClient: ComputeManagementClient,
   timespanDays: number,
 ) {
+  debugLog(`[DEBUG] analyzeVM - Resource:`, resource);
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
-
-  // Check power state
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const vmStatus = (resource.properties as any)?.instanceView?.statuses?.find(
-    (s: { code: string }) => s.code.startsWith("PowerState/"),
-  );
-  if (vmStatus?.code === "PowerState/deallocated") {
-    return { costRisk, reason: "VM is deallocated. ", suspectedUnused: true };
-  }
 
   if (!resource.id) {
     return {
@@ -277,6 +545,39 @@ async function analyzeVM(
       reason: "Resource ID is missing.",
       suspectedUnused: false,
     };
+  }
+
+  // Extract resource group and VM name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const vmName = resourceParts[8];
+
+  try {
+    // Get the actual VM instance view to check power state
+    const instanceView = await computeClient.virtualMachines.instanceView(
+      resourceGroupName,
+      vmName,
+    );
+
+    debugLog(`[DEBUG] VM Instance View for ${vmName}:`, instanceView);
+
+    // Check power state from instance view
+    const vmStatus = instanceView.statuses?.find((s: { code?: string }) =>
+      s.code?.startsWith("PowerState/"),
+    );
+
+    if (vmStatus?.code === "PowerState/deallocated") {
+      return { costRisk, reason: "VM is deallocated. ", suspectedUnused: true };
+    }
+
+    if (vmStatus?.code === "PowerState/stopped") {
+      return { costRisk, reason: "VM is stopped. ", suspectedUnused: true };
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get VM instance view for ${vmName}: ${error instanceof Error ? error.message : error}`,
+    );
+    // Continue with metric analysis if instance view fails
   }
 
   // Check metrics for low utilization
@@ -305,6 +606,19 @@ async function analyzeVM(
   }
 
   return { costRisk, reason, suspectedUnused: reason.length > 0 };
+}
+
+/**
+ * Debug logging function - only logs if DEBUG_MODE is enabled
+ */
+function debugLog(message: string, object?: unknown) {
+  if (DEBUG_MODE) {
+    if (object !== undefined) {
+      console.log(message, JSON.stringify(object, null, 2));
+    } else {
+      console.log(message);
+    }
+  }
 }
 
 /**
@@ -485,7 +799,7 @@ program
   .option("-c, --config <path>", "Path to configuration file (JSON)")
   .option(
     "-f, --format <format>",
-    "Report format: json, yaml, table, or detailed-json",
+    "Report format: json, yaml, table, or detailed-json (default: table, detailed-json with --debug)",
     "table",
   )
   .option(
@@ -494,12 +808,20 @@ program
     "italynorth",
   )
   .option("-d, --days <number>", "Number of days for metrics analysis", "30")
+  .option("--debug", "Enable debug logging")
   .action(async (options) => {
     try {
+      // Set debug mode based on command line flag
+      DEBUG_MODE = options.debug || false;
+
       const config = await loadConfig(options.config);
       config.timespanDays = parseInt(options.days, 10) || config.timespanDays;
       config.preferredLocation = options.location || config.preferredLocation;
-      await analyzeResources(config, options.format);
+
+      // If debug mode is enabled and format is not explicitly set, use detailed-json
+      const format = options.format || (DEBUG_MODE ? "detailed-json" : "table");
+
+      await analyzeResources(config, format);
     } catch (error) {
       console.error("Error:", error instanceof Error ? error.message : error);
       process.exit(1);

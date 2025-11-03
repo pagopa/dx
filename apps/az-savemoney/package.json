@@ -1,12 +1,12 @@
 {
-  "name": "savemoney-poc",
+  "name": "dx-az-savemoney",
   "version": "0.0.0",
   "type": "module",
   "description": "CLI tool to analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "apps/savemoney-poc"
+    "directory": "apps/az-savemoney"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -43,7 +43,10 @@
     "DX"
   ],
   "dependencies": {
+    "@azure/arm-appservice": "^17.0.0",
+    "@azure/arm-compute": "^23.1.0",
     "@azure/arm-monitor": "^7.0.0",
+    "@azure/arm-network": "^34.1.0",
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "^4.13.0",
     "commander": "^14.0.0",
@@ -54,10 +57,10 @@
     "@pagopa/eslint-config": "workspace:^",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^18.19.39",
-    "ts-node": "^10.9.2",
-    "tsup": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "ts-node": "^10.9.2",
+    "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

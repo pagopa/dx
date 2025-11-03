@@ -266,11 +266,20 @@ importers:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)
 
-  apps/savemoney-poc:
+  apps/az-savemoney:
     dependencies:
+      '@azure/arm-appservice':
+        specifier: ^17.0.0
+        version: 17.0.0
+      '@azure/arm-compute':
+        specifier: ^23.1.0
+        version: 23.1.0
       '@azure/arm-monitor':
         specifier: ^7.0.0
         version: 7.0.0
+      '@azure/arm-network':
+        specifier: ^34.1.0
+        version: 34.1.0
       '@azure/arm-resources':
         specifier: ^7.0.0
         version: 7.0.0
@@ -861,9 +870,21 @@ packages:
     resolution: {integrity: sha512-nBrLsEWm4J2u5LpAPjxADTlq3trDgVZZXHNKabeXZtpq3d3AbN/KGO82R87rdDz5/lYB024rtEf10/q0urNgsA==}
     engines: {node: '>=18.0.0'}
 
+  '@azure/arm-appservice@17.0.0':
+    resolution: {integrity: sha512-y83gR6MiEv6NOj8dg6c1f+yy/DjUjagC6Fi3bwIB12Hjgzi6S65wUL6TmD28Kc693OVVwMzJWFUyQmrZu84Dlw==}
+    engines: {node: '>=20.0.0'}
+
+  '@azure/arm-compute@23.1.0':
+    resolution: {integrity: sha512-B79Ttt8t4cQBmBai9yddAvlHnJEWXuLJG0ehje5719qVRKDcJRg7i65tzHcvVIz1dF8Mtbh4JoZScoZMqtBvBw==}
+    engines: {node: '>=20.0.0'}
+
   '@azure/arm-monitor@7.0.0':
     resolution: {integrity: sha512-RtCLRc/29bqaaf5iuUOmJvc5XDolN/icFhlKC/rXXKTtmwB3sKymaOZbNHnOM4P0nJYpS5QIo7Nzvh4M3Wj+FA==}
     engines: {node: '>=12.0.0'}
+
+  '@azure/arm-network@34.1.0':
+    resolution: {integrity: sha512-9yCdZPt9D2EYWEVZKWTLmG8mrXD4iclMycpV/xSVkzwiOIueTCRPF33ubyusYSOMgqovVVwijvC7NwwtTdXt0Q==}
+    engines: {node: '>=20.0.0'}
 
   '@azure/arm-resources@7.0.0':
     resolution: {integrity: sha512-ezC1YLuPp1bh0GQFALcBvBxAB+9H5O0ynS40jp1t6hTlYe2t61cSplM3M4+4+nt9FCFZOjQSgAwj4KWYb8gruA==}
@@ -9979,9 +10000,45 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  '@azure/arm-appservice@17.0.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.10.0
+      '@azure/core-client': 1.10.0
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.22.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/arm-compute@23.1.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
+      '@azure/core-auth': 1.10.0
+      '@azure/core-client': 1.10.0
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.22.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
   '@azure/arm-monitor@7.0.0':
     dependencies:
       '@azure/abort-controller': 1.1.0
+      '@azure/core-auth': 1.10.0
+      '@azure/core-client': 1.10.0
+      '@azure/core-lro': 2.7.2
+      '@azure/core-paging': 1.6.2
+      '@azure/core-rest-pipeline': 1.22.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@azure/arm-network@34.1.0':
+    dependencies:
+      '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.10.0
       '@azure/core-client': 1.10.0
       '@azure/core-lro': 2.7.2

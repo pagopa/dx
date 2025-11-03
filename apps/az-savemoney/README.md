@@ -1,4 +1,4 @@
-# Azure Resource Analyzer CLI
+# DX Azure Save Money
 
 This command-line interface (CLI) tool analyzes Azure resources in read-only mode to identify potential cost inefficiencies and underutilized resources. It does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
 
