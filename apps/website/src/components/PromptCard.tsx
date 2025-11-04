@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import styles from "./MCPPrompts.module.css";
 
 interface PromptCardProps {
-  content: string;
   prompt: CatalogEntry;
 }
 
