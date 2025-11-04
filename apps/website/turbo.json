@@ -3,7 +3,8 @@
   "tasks": {
     "build": {
       "inputs": ["src/**", "docs/**", "blog/**"],
-      "outputs": ["build/**", ".docusaurus/**"]
+      "outputs": ["build/**", ".docusaurus/**"],
+      "dependsOn": ["^build"]
     }
   }
 }
