@@ -1,5 +1,14 @@
 # docs
 
+## 0.9.3
+
+### Patch Changes
+
+- 2c90daa: Fix broken links in Azure docs
+- 324e584: Avoid tracking each keystroke while searching the website
+- 6f8f23b: Add `onBrokenAnchors` so the website build fails whit any invalid
+  link
+
 ## 0.9.2
 
 ### Patch Changes
