@@ -347,8 +347,13 @@ resource "azapi_resource" "this" {
               for probe in concat(
                 [
                   container.readiness_probe != null ? {
-                    type = "Readiness"
-                    httpGet = {
+                    type                = "Readiness"
+                    initialDelaySeconds = container.readiness_probe.initial_delay
+                    timeoutSeconds      = container.readiness_probe.timeout
+                    successThreshold    = container.readiness_probe.success_count_threshold
+                    failureThreshold    = container.readiness_probe.failure_count_threshold
+
+                    httpGet = container.readiness_probe.transport != "TCP" ? {
                       path   = container.readiness_probe.path
                       port   = var.target_port
                       scheme = container.readiness_probe.transport
@@ -358,17 +363,21 @@ resource "azapi_resource" "this" {
                           value = container.readiness_probe.header.value
                         }
                       ] : []
-                    }
-                    initialDelaySeconds = container.readiness_probe.initial_delay
-                    timeoutSeconds      = container.readiness_probe.timeout
-                    successThreshold    = container.readiness_probe.success_count_threshold
-                    failureThreshold    = container.readiness_probe.failure_count_threshold
+                    } : null
+
+                    tcpSocket = container.readiness_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
                   } : null
                 ],
                 [
                   {
-                    type = "Liveness"
-                    httpGet = {
+                    type                = "Liveness"
+                    initialDelaySeconds = container.liveness_probe.initial_delay
+                    timeoutSeconds      = container.liveness_probe.timeout
+                    failureThreshold    = container.liveness_probe.failure_count_threshold
+
+                    httpGet = container.liveness_probe.transport != "TCP" ? {
                       path   = container.liveness_probe.path
                       port   = var.target_port
                       scheme = container.liveness_probe.transport
@@ -378,16 +387,20 @@ resource "azapi_resource" "this" {
                           value = container.liveness_probe.header.value
                         }
                       ] : []
-                    }
-                    initialDelaySeconds = container.liveness_probe.initial_delay
-                    timeoutSeconds      = container.liveness_probe.timeout
-                    failureThreshold    = container.liveness_probe.failure_count_threshold
+                    } : null
+
+                    tcpSocket = container.liveness_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
                   }
                 ],
                 [
                   container.startup_probe != null ? {
-                    type = "Startup"
-                    httpGet = {
+                    type             = "Startup"
+                    timeoutSeconds   = container.startup_probe.timeout
+                    failureThreshold = container.startup_probe.failure_count_threshold
+
+                    httpGet = container.startup_probe.transport != "TCP" ? {
                       path   = container.startup_probe.path
                       port   = var.target_port
                       scheme = container.startup_probe.transport
@@ -397,9 +410,12 @@ resource "azapi_resource" "this" {
                           value = container.startup_probe.header.value
                         }
                       ] : []
-                    }
-                    timeoutSeconds   = container.startup_probe.timeout
-                    failureThreshold = container.startup_probe.failure_count_threshold
+                    } : null
+
+                    tcpSocket = container.startup_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
+
                   } : null
                 ]
               ) : probe if probe != null
