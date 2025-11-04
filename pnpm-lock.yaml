@@ -6,18 +6,39 @@ settings:
 
 catalogs:
   default:
+    '@tsconfig/node22':
+      specifier: 22.0.2
+      version: 22.0.2
     '@types/node':
       specifier: ^22.16.2
       version: 22.16.2
+    '@types/semver':
+      specifier: ^7.7.1
+      version: 7.7.1
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
     eslint:
       specifier: ^9.30.0
       version: 9.32.0
+    execa:
+      specifier: ^9.6.0
+      version: 9.6.0
+    neverthrow:
+      specifier: ^8.2.0
+      version: 8.2.0
+    plop:
+      specifier: ^4.0.2
+      version: 4.0.2
     prettier:
       specifier: 3.6.2
       version: 3.6.2
+    semver:
+      specifier: ^7.7.2
+      version: 7.7.2
+    tsup:
+      specifier: ^8.5.0
+      version: 8.5.0
     typescript:
       specifier: ~5.8.3
       version: 5.8.3
@@ -62,7 +83,15 @@ importers:
         specifier: 'catalog:'
         version: 3.6.2
 
+  actions/docker-build-push: {}
+
   actions/filter-terraform-plan: {}
+
+  actions/incremental-rollout:
+    devDependencies:
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
 
   actions/keep-alive: {}
 
@@ -107,12 +136,6 @@ importers:
         version: 3.1.0(typescript@5.8.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
 
   actions/static-assets-deploy: {}
-
-  actions/swap-appsvc-slot:
-    devDependencies:
-      prettier:
-        specifier: 'catalog:'
-        version: 3.6.2
 
   apps/cli:
     dependencies:
@@ -204,6 +227,9 @@ importers:
       '@octokit/rest':
         specifier: ^22.0.0
         version: 22.0.0
+      '@pagopa/azure-tracing':
+        specifier: workspace:^
+        version: link:../../packages/azure-tracing
       '@pagopa/dx-mcpprompts':
         specifier: workspace:^
         version: link:../../packages/mcp-prompts
@@ -232,6 +258,9 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
@@ -271,9 +300,6 @@ importers:
       '@microsoft/docusaurus-plugin-application-insights':
         specifier: ^4.0.1
         version: 4.0.1(@docusaurus/core@3.8.1(@mdx-js/react@3.1.0(@types/react@18.3.23)(react@18.3.1))(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@docusaurus/types@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@docusaurus/utils-validation@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@pagopa/dx-mcpprompts':
-        specifier: workspace:^
-        version: link:../../packages/mcp-prompts
       prism-react-renderer:
         specifier: ^2.3.0
         version: 2.4.1(react@18.3.1)
@@ -470,6 +496,12 @@ importers:
       '@logtape/logtape':
         specifier: ^1.0.4
         version: 1.0.4
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
@@ -486,9 +518,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.32.0(jiti@2.6.0)
-      tsup:
-        specifier: 'catalog:'
-        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.8.3)(yaml@2.8.1)
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
@@ -547,6 +576,9 @@ importers:
       vitest-mock-extended:
         specifier: ^3.1.0
         version: 3.1.0(typescript@5.8.3)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
 
   packages/pnpm-plugin-pagopa: {}
 
@@ -9183,6 +9215,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -14450,7 +14485,7 @@ snapshots:
 
   axios@1.12.2:
     dependencies:
-      follow-redirects: 1.15.9
+      follow-redirects: 1.15.9(debug@4.4.1)
       form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -16040,8 +16075,6 @@ snapshots:
   flat@5.0.2: {}
 
   flatted@3.3.3: {}
-
-  follow-redirects@1.15.9: {}
 
   follow-redirects@1.15.9(debug@4.4.1):
     optionalDependencies:
@@ -20400,5 +20433,7 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zwitch@2.0.4: {}

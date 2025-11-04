@@ -5,8 +5,11 @@ inputs:
   resource_group_name:
     description: "Azure Resource Group name"
     required: true
-  web_app_name:
+  resource_name:
     description: "Azure Web App name"
+    required: true
+  resource_type:
+    description: "Type of Azure resource (e.g., 'appsvc' or 'containerapp')"
     required: true
 
 runs:
@@ -24,11 +27,12 @@ runs:
       shell: bash
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
+      run: echo "$GITHUB_ACTION_PATH" >> "$GITHUB_PATH"
 
     - name: Incremental Rollout to Staging Slot
       shell: bash
       env:
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-        WEB_APP_NAME: ${{ inputs.web_app_name }}
-      run: rollout.sh "$RESOURCE_GROUP_NAME" "$WEB_APP_NAME"
+        RESOURCE_NAME: ${{ inputs.resource_name }}
+        RESOURCE_TYPE: ${{ inputs.resource_type }}
+      run: rollout.sh "$RESOURCE_GROUP_NAME" "$RESOURCE_NAME" "$RESOURCE_TYPE"

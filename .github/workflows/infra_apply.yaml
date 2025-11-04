@@ -89,6 +89,7 @@ jobs:
       pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -150,18 +151,20 @@ jobs:
 
           terraform plan \
             -lock-timeout=120s \
-            -out=tfplan-${{ github.sha }} \
+            -out="$TFPLAN_FILE" \
             -input=false \
             | grep -v "hidden-link:"
 
       - name: Upload Terraform Bundle as Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        env:
+          TERRAFORM_DIR: ${{ steps.directory.outputs.dir }}
         with:
           name: terraform-bundle
           path: |
-            ${{ steps.directory.outputs.dir }}/tfplan-${{ github.sha }}
-            ${{ steps.directory.outputs.dir }}/.terraform.lock.hcl
-            ${{ steps.directory.outputs.dir }}/.terraform/modules/
+            ${{ env.TERRAFORM_DIR }}/${{ env.TFPLAN_FILE }}
+            ${{ env.TERRAFORM_DIR }}/.terraform.lock.hcl
+            ${{ env.TERRAFORM_DIR }}/.terraform/modules/
           retention-days: 7
 
   tf_apply:
@@ -175,6 +178,7 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -208,5 +212,5 @@ jobs:
             -lock-timeout=120s \
             -auto-approve \
             -input=false \
-            tfplan-${{ github.sha }} \
+            "$TFPLAN_FILE" \
             | grep -v "hidden-link:"

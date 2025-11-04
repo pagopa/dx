@@ -27,25 +27,12 @@ export interface CatalogEntry {
 }
 
 /**
- * Defines an input parameter for a prompt.
- * Used to validate and document what arguments a prompt expects.
- */
-export interface PromptArgument {
-  /** Human-readable description of what this argument is for */
-  description: string;
-  /** Parameter name that will be used in the args object */
-  name: string;
-  /** Whether this argument must be provided */
-  required: boolean;
-}
-
-/**
  * The core prompt definition that contains the executable logic.
  * This follows the MCP specification for prompt structure.
  */
 export interface PromptDefinition {
   /** Array of input parameters this prompt accepts */
-  arguments: PromptArgument[];
+  arguments: PromptParameterDefinition[];
   /** Brief description of the prompt's purpose */
   description: string;
   /**
@@ -56,4 +43,17 @@ export interface PromptDefinition {
   load: (args: Record<string, unknown>) => Promise<string>;
   /** Unique name identifier for the prompt */
   name: string;
+}
+
+/**
+ * Defines an input parameter for a prompt (TypeScript version).
+ * Used to validate and document what arguments a prompt expects.
+ */
+export interface PromptParameterDefinition {
+  /** Human-readable description of what this argument is for */
+  description: string;
+  /** Parameter name that will be used in the args object */
+  name: string;
+  /** Whether this argument must be provided */
+  required: boolean;
 }
