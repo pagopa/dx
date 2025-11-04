@@ -6,5 +6,6 @@
     "sourceMap": true,
     "declaration": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": ["tsup.config.ts"]
 }
