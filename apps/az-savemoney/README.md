@@ -24,6 +24,7 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                               |
 | **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<1MB) |
 | **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                           |
+| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces   |
 | **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<100 in timespan)                                           |
 
 ### Generic Checks

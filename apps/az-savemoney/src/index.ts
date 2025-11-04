@@ -273,6 +273,91 @@ async function analyzeNic(
 }
 
 /**
+ * Analyzes Private Endpoints to identify unused or misconfigured endpoints.
+ *
+ * @param resource - The Azure private endpoint resource to analyze
+ * @param networkClient - Azure Network management client
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
+async function analyzePrivateEndpoint(
+  resource: armResources.GenericResource,
+  networkClient: NetworkManagementClient,
+) {
+  debugLog(`[DEBUG] analyzePrivateEndpoint - Resource:`, resource);
+  const costRisk: "high" | "low" | "medium" = "medium";
+  let reason = "";
+
+  if (!resource.id) {
+    return {
+      costRisk,
+      reason: "Resource ID is missing.",
+      suspectedUnused: false,
+    };
+  }
+
+  // Extract resource group and private endpoint name from resource ID
+  const resourceParts = resource.id.split("/");
+  const resourceGroupName = resourceParts[4];
+  const privateEndpointName = resourceParts[8];
+
+  try {
+    // Get detailed Private Endpoint information
+    const privateEndpointDetails = await networkClient.privateEndpoints.get(
+      resourceGroupName,
+      privateEndpointName,
+    );
+
+    debugLog(
+      `[DEBUG] Private Endpoint Details for ${privateEndpointName}:`,
+      privateEndpointDetails,
+    );
+
+    // Check if Private Endpoint has no private link service connection
+    if (
+      !privateEndpointDetails.privateLinkServiceConnections ||
+      privateEndpointDetails.privateLinkServiceConnections.length === 0
+    ) {
+      reason +=
+        "Private Endpoint has no private link service connections configured. ";
+    }
+
+    // Check connection state
+    const hasFailedConnection =
+      privateEndpointDetails.privateLinkServiceConnections?.some(
+        (connection) =>
+          connection.privateLinkServiceConnectionState?.status === "Rejected" ||
+          connection.privateLinkServiceConnectionState?.status ===
+            "Disconnected",
+      );
+
+    if (hasFailedConnection) {
+      reason += "Private Endpoint has rejected or disconnected connections. ";
+    }
+
+    // Check if Private Endpoint has network interfaces
+    if (
+      !privateEndpointDetails.networkInterfaces ||
+      privateEndpointDetails.networkInterfaces.length === 0
+    ) {
+      reason += "Private Endpoint has no network interfaces attached. ";
+    }
+
+    // Check subnet configuration
+    if (!privateEndpointDetails.subnet) {
+      reason += "Private Endpoint is not associated with a subnet. ";
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to get Private Endpoint details for ${privateEndpointName}: ${error instanceof Error ? error.message : error}`,
+    );
+    reason += "Could not retrieve detailed Private Endpoint information. ";
+  }
+
+  const suspectedUnused = reason.length > 0;
+  return { costRisk, reason: reason.trim(), suspectedUnused };
+}
+
+/**
  * Analyzes Public IP addresses to find unassociated or unused IPs.
  *
  * @param resource - The Azure public IP resource to analyze
@@ -375,6 +460,27 @@ async function analyzeResource(
   reason: string;
   suspectedUnused: boolean;
 }> {
+  /**
+   * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
+   */
+  const mergeResults = (
+    baseResult: {
+      costRisk: "high" | "low" | "medium";
+      reason: string;
+      suspectedUnused: boolean;
+    },
+    specificResult: {
+      costRisk: "high" | "low" | "medium";
+      reason: string;
+      suspectedUnused: boolean;
+    },
+  ) => ({
+    costRisk: specificResult.costRisk,
+    reason: baseResult.reason + specificResult.reason,
+    suspectedUnused:
+      baseResult.suspectedUnused || specificResult.suspectedUnused,
+  });
+
   const type = resource.type?.toLowerCase() || "";
   let result = {
     costRisk: "low" as "high" | "low" | "medium",
@@ -390,54 +496,60 @@ async function analyzeResource(
 
   // Route to type-specific analysis hooks
   switch (type) {
-    case "microsoft.compute/disks":
-      result = { ...result, ...(await analyzeDisk(resource, computeClient)) };
+    case "microsoft.compute/disks": {
+      const diskResult = await analyzeDisk(resource, computeClient);
+      result = mergeResults(result, diskResult);
       break;
-    case "microsoft.compute/virtualmachines":
-      result = {
-        ...result,
-        ...(await analyzeVM(
-          resource,
-          monitorClient,
-          computeClient,
-          timespanDays,
-        )),
-      };
+    }
+    case "microsoft.compute/virtualmachines": {
+      const vmResult = await analyzeVM(
+        resource,
+        monitorClient,
+        computeClient,
+        timespanDays,
+      );
+      result = mergeResults(result, vmResult);
       break;
-    case "microsoft.network/networkinterfaces":
-      result = {
-        ...result,
-        ...(await analyzeNic(resource, networkClient)),
-      };
+    }
+    case "microsoft.network/networkinterfaces": {
+      const nicResult = await analyzeNic(resource, networkClient);
+      result = mergeResults(result, nicResult);
       break;
-    case "microsoft.network/publicipaddresses":
-      result = {
-        ...result,
-        ...(await analyzePublicIp(
-          resource,
-          networkClient,
-          monitorClient,
-          timespanDays,
-        )),
-      };
+    }
+    case "microsoft.network/privateendpoints": {
+      const peResult = await analyzePrivateEndpoint(resource, networkClient);
+      result = mergeResults(result, peResult);
       break;
-    case "microsoft.storage/storageaccounts":
-      result = {
-        ...result,
-        ...(await analyzeStorageAccount(resource, monitorClient, timespanDays)),
-      };
+    }
+    case "microsoft.network/publicipaddresses": {
+      const pipResult = await analyzePublicIp(
+        resource,
+        networkClient,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, pipResult);
       break;
-    case "microsoft.web/serverfarms":
-      result = {
-        ...result,
-        ...(await analyzeAppServicePlan(
-          resource,
-          webSiteClient,
-          monitorClient,
-          timespanDays,
-        )),
-      };
+    }
+    case "microsoft.storage/storageaccounts": {
+      const storageResult = await analyzeStorageAccount(
+        resource,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, storageResult);
       break;
+    }
+    case "microsoft.web/serverfarms": {
+      const aspResult = await analyzeAppServicePlan(
+        resource,
+        webSiteClient,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, aspResult);
+      break;
+    }
     default:
       result.reason += "No specific analysis for this resource type. ";
       break;
@@ -861,7 +973,7 @@ program
   .option("-c, --config <path>", "Path to configuration file (JSON)")
   .option(
     "-f, --format <format>",
-    "Report format: json, yaml, table, or detailed-json (default: table, detailed-json with --debug)",
+    "Report format: json, yaml, table, or detailed-json (default: table)",
     DEBUG_MODE ? "detailed-json" : "table",
   )
   .option(
@@ -880,10 +992,7 @@ program
       config.timespanDays = parseInt(options.days, 10) || config.timespanDays;
       config.preferredLocation = options.location || config.preferredLocation;
 
-      // If debug mode is enabled and format is not explicitly set, use detailed-json
-      const format = DEBUG_MODE ? "detailed-json" : options.format;
-
-      await analyzeResources(config, format);
+      await analyzeResources(config, options.format);
     } catch (error) {
       console.error("Error:", error instanceof Error ? error.message : error);
       process.exit(1);
