@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts"],
+      "inputs": ["src/**/*.ts", "docs/**", "blog/**"],
       "outputs": ["dist/**", "bin/**", "build/**", ".docusaurus/**"]
     },
     "typecheck": {
