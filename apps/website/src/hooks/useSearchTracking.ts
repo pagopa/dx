@@ -24,6 +24,7 @@ const trackSearchEvent = (
   if (!hasAnalyticsConsent() || !window.appInsights) {
     return;
   }
+  console.debug("Analytics consent given, proceeding to track search event.");
 
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < MIN_QUERY_LENGTH) {
@@ -106,32 +107,33 @@ export const useSearchTracking = (): void => {
     };
 
     const attachListeners = (): (() => void) => {
-      // Find Docusaurus search input
-      const searchInput = document.querySelector<HTMLInputElement>(
+      // Find all Docusaurus search inputs
+      const searchInputs = document.querySelectorAll<HTMLInputElement>(
         '.DocSearch-Input, input[type="search"], input[aria-label*="Search"]',
       );
 
-      // Find search form
-      const searchForm = document.querySelector<HTMLFormElement>(
+      // Find all search forms
+      const searchForms = document.querySelectorAll<HTMLFormElement>(
         'form[role="search"], .DocSearch-Form',
       );
 
-      if (searchInput) {
+      searchInputs.forEach((searchInput) => {
+        console.log("Attaching input listener to search input:", searchInput);
         searchInput.addEventListener("input", handleInput);
-      }
+      });
 
-      if (searchForm) {
+      searchForms.forEach((searchForm) => {
         searchForm.addEventListener("submit", handleSubmit);
-      }
+      });
 
       // Cleanup function
       return () => {
-        if (searchInput) {
+        searchInputs.forEach((searchInput) => {
           searchInput.removeEventListener("input", handleInput);
-        }
-        if (searchForm) {
+        });
+        searchForms.forEach((searchForm) => {
           searchForm.removeEventListener("submit", handleSubmit);
-        }
+        });
       };
     };
 
