@@ -21,12 +21,12 @@ and capabilities.
 
 The DX MCP Server provides AI assistants with access to:
 
-1. **📚 PagoPA DX Documentation**: Query the complete
+1. **PagoPA DX Documentation**: Query the complete
    [DX technical documentation](https://dx.pagopa.it/docs) using natural
    language
-2. **🔍 GitHub Code Search**: Search for real-world code examples across
-   PagoPA's GitHub repositories
-3. **🎯 Smart Prompts**: Pre-configured prompts designed for common tasks like
+2. **GitHub Code Search**: Search for real-world code examples across PagoPA's
+   GitHub repositories
+3. **Smart Prompts**: Pre-configured prompts designed for common tasks like
    Terraform configuration, code review, and infrastructure analysis
 
 ## Getting Started
