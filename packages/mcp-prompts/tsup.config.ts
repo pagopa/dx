@@ -7,6 +7,7 @@ export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm", "cjs"],
   platform: "node",
+  shims: true, // Enable shims for import.meta.url in CommonJS
   sourcemap: true,
   splitting: false,
   tsconfig: "./tsconfig.json",
