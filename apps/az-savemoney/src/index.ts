@@ -74,7 +74,12 @@ async function analyzeAppServicePlan(
   monitorClient: MonitorClient,
   timespanDays: number,
 ) {
-  debugLog(`[DEBUG] analyzeAppServicePlan - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "App Service Plan (microsoft.web/serverfarms)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
 
@@ -98,7 +103,7 @@ async function analyzeAppServicePlan(
       planName,
     );
 
-    debugLog(`[DEBUG] App Service Plan Details for ${planName}:`, planDetails);
+    debugLog("App Service Plan API details:", planDetails);
 
     // Check if the plan has no apps
     if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
@@ -146,7 +151,9 @@ async function analyzeAppServicePlan(
   }
 
   const suspectedUnused = reason.length > 0;
-  return { costRisk, reason: reason.trim(), suspectedUnused };
+  const result = { costRisk, reason: reason.trim(), suspectedUnused };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -160,7 +167,12 @@ async function analyzeDisk(
   resource: armResources.GenericResource,
   computeClient: ComputeManagementClient,
 ) {
-  debugLog(`[DEBUG] analyzeDisk - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Managed Disk (microsoft.compute/disks)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "medium";
 
   if (!resource.id) {
@@ -183,18 +195,20 @@ async function analyzeDisk(
       diskName,
     );
 
-    debugLog(`[DEBUG] Disk Details for ${diskName}:`, diskDetails);
+    debugLog("Disk API details:", diskDetails);
 
     // Check if disk is unattached
     if (
       diskDetails.diskState?.toLowerCase() === "unattached" ||
       !diskDetails.managedBy
     ) {
-      return {
+      const result = {
         costRisk,
         reason: "Disk is unattached. ",
         suspectedUnused: true,
       };
+      debugLogAnalysisResult(result);
+      return result;
     }
   } catch (error) {
     console.warn(
@@ -205,7 +219,9 @@ async function analyzeDisk(
     // Without API access, we can't determine if disk is unattached
   }
 
-  return { costRisk, reason: "", suspectedUnused: false };
+  const result = { costRisk, reason: "", suspectedUnused: false };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -219,7 +235,12 @@ async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
 ) {
-  debugLog(`[DEBUG] analyzeNic - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Network Interface (microsoft.network/networkinterfaces)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
 
@@ -243,7 +264,7 @@ async function analyzeNic(
       nicName,
     );
 
-    debugLog(`[DEBUG] NIC Details for ${nicName}:`, nicDetails);
+    debugLog("NIC API details:", nicDetails);
 
     // Check if NIC is not attached to any VM or private endpoint
     if (!nicDetails.virtualMachine && !nicDetails.privateEndpoint) {
@@ -269,7 +290,9 @@ async function analyzeNic(
   }
 
   const suspectedUnused = reason.length > 0;
-  return { costRisk, reason: reason.trim(), suspectedUnused };
+  const result = { costRisk, reason: reason.trim(), suspectedUnused };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -283,7 +306,12 @@ async function analyzePrivateEndpoint(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
 ) {
-  debugLog(`[DEBUG] analyzePrivateEndpoint - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Private Endpoint (microsoft.network/privateendpoints)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
 
@@ -307,10 +335,7 @@ async function analyzePrivateEndpoint(
       privateEndpointName,
     );
 
-    debugLog(
-      `[DEBUG] Private Endpoint Details for ${privateEndpointName}:`,
-      privateEndpointDetails,
-    );
+    debugLog("Private Endpoint API details:", privateEndpointDetails);
 
     // Check if Private Endpoint has no private link service connection
     if (
@@ -354,7 +379,9 @@ async function analyzePrivateEndpoint(
   }
 
   const suspectedUnused = reason.length > 0;
-  return { costRisk, reason: reason.trim(), suspectedUnused };
+  const result = { costRisk, reason: reason.trim(), suspectedUnused };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -372,7 +399,12 @@ async function analyzePublicIp(
   monitorClient: MonitorClient,
   timespanDays: number,
 ) {
-  debugLog(`[DEBUG] analyzePublicIp - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Public IP (microsoft.network/publicipaddresses)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
 
@@ -396,7 +428,7 @@ async function analyzePublicIp(
       publicIpName,
     );
 
-    debugLog(`[DEBUG] Public IP Details for ${publicIpName}:`, publicIpDetails);
+    debugLog("Public IP API details:", publicIpDetails);
 
     // Check if Public IP is not associated with any resource
     if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
@@ -432,7 +464,9 @@ async function analyzePublicIp(
   }
 
   const suspectedUnused = reason.length > 0;
-  return { costRisk, reason: reason.trim(), suspectedUnused };
+  const result = { costRisk, reason: reason.trim(), suspectedUnused };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -649,7 +683,12 @@ async function analyzeStorageAccount(
   monitorClient: MonitorClient,
   timespanDays: number,
 ) {
-  debugLog(`[DEBUG] analyzeStorageAccount - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Storage Account (microsoft.storage/storageaccounts)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "medium";
   if (!resource.id) {
     return {
@@ -667,13 +706,17 @@ async function analyzeStorageAccount(
   );
   if (transactions !== null && transactions < 100) {
     // Very low transactions
-    return {
+    const result = {
       costRisk,
       reason: `Very low transaction count (${transactions}). `,
       suspectedUnused: true,
     };
+    debugLogAnalysisResult(result);
+    return result;
   }
-  return { costRisk, reason: "", suspectedUnused: false };
+  const result = { costRisk, reason: "", suspectedUnused: false };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -691,7 +734,12 @@ async function analyzeVM(
   computeClient: ComputeManagementClient,
   timespanDays: number,
 ) {
-  debugLog(`[DEBUG] analyzeVM - Resource:`, resource);
+  debugLogResourceStart(
+    resource.name || "unknown",
+    "Virtual Machine (microsoft.compute/virtualmachines)",
+  );
+  debugLog("Resource details:", resource);
+
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
 
@@ -715,7 +763,7 @@ async function analyzeVM(
       vmName,
     );
 
-    debugLog(`[DEBUG] VM Instance View for ${vmName}:`, instanceView);
+    debugLog("VM Instance View:", instanceView);
 
     // Check power state from instance view
     const vmStatus = instanceView.statuses?.find((s: { code?: string }) =>
@@ -723,11 +771,23 @@ async function analyzeVM(
     );
 
     if (vmStatus?.code === "PowerState/deallocated") {
-      return { costRisk, reason: "VM is deallocated. ", suspectedUnused: true };
+      const result = {
+        costRisk,
+        reason: "VM is deallocated. ",
+        suspectedUnused: true,
+      };
+      debugLogAnalysisResult(result);
+      return result;
     }
 
     if (vmStatus?.code === "PowerState/stopped") {
-      return { costRisk, reason: "VM is stopped. ", suspectedUnused: true };
+      const result = {
+        costRisk,
+        reason: "VM is stopped. ",
+        suspectedUnused: true,
+      };
+      debugLogAnalysisResult(result);
+      return result;
     }
   } catch (error) {
     console.warn(
@@ -761,7 +821,9 @@ async function analyzeVM(
     reason += `Low network traffic. `;
   }
 
-  return { costRisk, reason, suspectedUnused: reason.length > 0 };
+  const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
+  debugLogAnalysisResult(result);
+  return result;
 }
 
 /**
@@ -777,6 +839,42 @@ function debugLog(message: string, object?: unknown) {
     } else {
       console.log(message);
     }
+  }
+}
+
+/**
+ * Logs the analysis result for a resource.
+ *
+ * @param result - The analysis result object
+ */
+function debugLogAnalysisResult(result: {
+  costRisk: "high" | "low" | "medium";
+  reason: string;
+  suspectedUnused: boolean;
+}) {
+  if (DEBUG_MODE) {
+    console.log("\n📊 ANALYSIS RESULT:");
+    console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
+    console.log(
+      `   Suspected Unused: ${result.suspectedUnused ? "YES" : "NO"}`,
+    );
+    console.log(`   Reason: ${result.reason || "No issues found"}`);
+    console.log("=".repeat(80) + "\n");
+  }
+}
+
+/**
+ * Logs a resource analysis header with visual separator.
+ *
+ * @param resourceName - Name of the resource being analyzed
+ * @param resourceType - Type of the resource
+ */
+function debugLogResourceStart(resourceName: string, resourceType: string) {
+  if (DEBUG_MODE) {
+    console.log("\n" + "=".repeat(80));
+    console.log(`🔍 ANALYZING: ${resourceName}`);
+    console.log(`   Type: ${resourceType}`);
+    console.log("=".repeat(80));
   }
 }
 
