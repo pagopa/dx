@@ -7,5 +7,5 @@
     "declaration": true,
     "resolveJsonModule": true
   },
-  "exclude": ["tsup.config.ts"]
+  "exclude": ["tsup.config.ts", "dist"]
 }
