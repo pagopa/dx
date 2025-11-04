@@ -9,6 +9,9 @@
   gap: 2rem;
   max-width: 900px;
   margin: 0 auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .promptCard {
@@ -127,6 +130,9 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .tag {
@@ -170,8 +176,8 @@
 
 .argumentsList {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
 .argumentItem {

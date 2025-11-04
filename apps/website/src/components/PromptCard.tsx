@@ -17,46 +17,43 @@ export default function PromptCard({ prompt }: PromptCardProps): JSX.Element {
   };
 
   return (
-    <div className={styles.promptCard}>
+    <article className={styles.promptCard}>
       <div className={styles.promptCardContent}>
-        <div className={styles.promptHeader}>
+        <header className={styles.promptHeader}>
           <div className={styles.promptTitleSection}>
             <h3 className={styles.promptTitle}>{prompt.metadata.title}</h3>
             <div className={styles.promptIdRow}>
               <button
+                aria-label="Copy command ID to clipboard"
                 className={styles.promptIdContainer}
                 onClick={handleCopy}
-                title="Click to copy command ID"
               >
-                <span
-                  style={{
-                    fontSize: "0.75rem",
-                    marginRight: "4px",
-                    opacity: 0.7,
-                  }}
-                >
-                  ID:
-                </span>
+                <span className={styles.idLabel}>ID:</span>
                 <code className={styles.promptId}>{prompt.id}</code>
-                <span className={styles.copyIcon}>{copied ? "✓" : "⿻"}</span>
+                <span aria-hidden="true" className={styles.copyIcon}>
+                  {copied ? "✓" : "⿻"}
+                </span>
               </button>
+              <span aria-live="polite" className="sr-only">
+                {copied ? "Command ID copied to clipboard" : ""}
+              </span>
             </div>
           </div>
-        </div>
+        </header>
 
         <p className={styles.promptDescription}>
           {prompt.metadata.description}
         </p>
 
-        <div className={styles.promptTags}>
+        <ul className={styles.promptTags}>
           {prompt.tags.map((tag, index) => (
-            <span className={styles.tag} key={index}>
+            <li className={styles.tag} key={index}>
               {tag}
-            </span>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        <div className={styles.detailsContent}>
+        <section className={styles.detailsContent}>
           {prompt.prompt.arguments.length > 0 && (
             <div className={styles.promptArguments}>
               <h4 className={styles.argumentsTitle}>Arguments</h4>
@@ -76,8 +73,8 @@ export default function PromptCard({ prompt }: PromptCardProps): JSX.Element {
               </ul>
             </div>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </article>
   );
 }

@@ -15,19 +15,21 @@ export default function MCPPrompts(): JSX.Element {
 
   if (!prompts) {
     return (
-      <div className={styles.loadingState}>
-        <div>Loading MCP prompts...</div>
-      </div>
+      <section className={styles.loadingState}>
+        <p>Loading MCP prompts...</p>
+      </section>
     );
   }
 
   return (
-    <div className={styles.promptsContainer}>
-      <div className={styles.promptsGrid}>
+    <section className={styles.promptsContainer}>
+      <ul className={styles.promptsGrid}>
         {prompts.map((prompt) => (
-          <PromptCard key={prompt.id} prompt={prompt} />
+          <li key={prompt.id}>
+            <PromptCard prompt={prompt} />
+          </li>
         ))}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }
