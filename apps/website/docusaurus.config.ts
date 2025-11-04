@@ -18,6 +18,7 @@ const config: Config = {
   markdown: {
     mermaid: true,
   },
+  onBrokenAnchors: "throw",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
