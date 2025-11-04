@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"],
-      "outputs": ["dist/**", "bin/**"]
+      "outputs": ["dist/**", "bin/**", "build/**", ".docusaurus/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
