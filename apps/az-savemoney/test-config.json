@@ -1,6 +1,0 @@
-{
-  "tenantId": "test-tenant-id",
-  "subscriptionIds": ["test-subscription-id"],
-  "preferredLocation": "italynorth",
-  "timespanDays": 30
-}
