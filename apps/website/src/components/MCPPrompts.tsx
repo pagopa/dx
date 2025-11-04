@@ -1,22 +1,24 @@
-import { type CatalogEntry, getPrompts } from "@pagopa/dx-mcpprompts";
-import React, { useEffect, useState } from "react";
+import type { CatalogEntry } from "@pagopa/dx-mcpprompts";
+
+import { usePluginData } from "@docusaurus/useGlobalData";
+import React from "react";
 
 import styles from "./MCPPrompts.module.css";
 import PromptCard from "./PromptCard";
 
+interface MCPPromptsPluginData {
+  prompts: CatalogEntry[];
+}
+
 export default function MCPPrompts(): JSX.Element {
-  const [prompts, setPromptData] = useState<CatalogEntry[] | null>(null);
+  const { prompts } = usePluginData(
+    "mcp-prompts-loader",
+  ) as MCPPromptsPluginData;
 
-  useEffect(() => {
-    getPrompts().then((data) => {
-      setPromptData(data);
-    });
-  }, []);
-
-  if (!prompts) {
+  if (!prompts || prompts.length === 0) {
     return (
       <section className={styles.loadingState}>
-        <p>Loading MCP prompts...</p>
+        <p>No MCP prompts available.</p>
       </section>
     );
   }
