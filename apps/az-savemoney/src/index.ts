@@ -59,6 +59,15 @@ interface ResourceReport {
   type: string;
 }
 
+/**
+ * Analyzes App Service Plans for unused capacity and oversized tiers.
+ *
+ * @param resource - The Azure resource to analyze
+ * @param webSiteClient - Azure App Service management client
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzeAppServicePlan(
   resource: armResources.GenericResource,
   webSiteClient: WebSiteManagementClient,
@@ -140,6 +149,13 @@ async function analyzeAppServicePlan(
   return { costRisk, reason: reason.trim(), suspectedUnused };
 }
 
+/**
+ * Analyzes managed disks to detect unattached volumes.
+ *
+ * @param resource - The Azure disk resource to analyze
+ * @param computeClient - Azure Compute management client
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzeDisk(
   resource: armResources.GenericResource,
   computeClient: ComputeManagementClient,
@@ -192,6 +208,13 @@ async function analyzeDisk(
   return { costRisk, reason: "", suspectedUnused: false };
 }
 
+/**
+ * Analyzes Network Interfaces to find unattached NICs.
+ *
+ * @param resource - The Azure network interface resource to analyze
+ * @param networkClient - Azure Network management client
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
@@ -249,6 +272,15 @@ async function analyzeNic(
   return { costRisk, reason: reason.trim(), suspectedUnused };
 }
 
+/**
+ * Analyzes Public IP addresses to find unassociated or unused IPs.
+ *
+ * @param resource - The Azure public IP resource to analyze
+ * @param networkClient - Azure Network management client
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzePublicIp(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
@@ -320,6 +352,15 @@ async function analyzePublicIp(
 
 /**
  * Dispatches analysis to the appropriate function based on resource type.
+ *
+ * @param resource - The Azure resource to analyze
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param computeClient - Azure Compute management client
+ * @param networkClient - Azure Network management client
+ * @param webSiteClient - Azure App Service management client
+ * @param preferredLocation - Preferred Azure region for resources
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
  */
 async function analyzeResource(
   resource: armResources.GenericResource,
@@ -413,10 +454,11 @@ async function analyzeResource(
   return { ...result, reason: result.reason.trim() };
 }
 
-// --- Analysis Hooks ---
-
 /**
  * Main logic — analyze resources for all subscriptions.
+ *
+ * @param config - Configuration object with subscription IDs and settings
+ * @param format - Output format (json, yaml, table, or detailed-json)
  */
 async function analyzeResources(
   config: Config,
@@ -482,6 +524,14 @@ async function analyzeResources(
   await generateReport(allReports, format);
 }
 
+/**
+ * Analyzes Storage Accounts for low transaction activity.
+ *
+ * @param resource - The Azure storage account resource to analyze
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzeStorageAccount(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
@@ -514,6 +564,15 @@ async function analyzeStorageAccount(
   return { costRisk, reason: "", suspectedUnused: false };
 }
 
+/**
+ * Analyzes Virtual Machines for deallocated/stopped state and low resource utilization.
+ *
+ * @param resource - The Azure virtual machine resource to analyze
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param computeClient - Azure Compute management client
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
 async function analyzeVM(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
@@ -594,7 +653,10 @@ async function analyzeVM(
 }
 
 /**
- * Debug logging function - only logs if DEBUG_MODE is enabled
+ * Debug logging function - only logs if DEBUG_MODE is enabled.
+ *
+ * @param message - The message to log
+ * @param object - Optional object to stringify and log
  */
 function debugLog(message: string, object?: unknown) {
   if (DEBUG_MODE) {
@@ -607,7 +669,10 @@ function debugLog(message: string, object?: unknown) {
 }
 
 /**
- * Generates the final report.
+ * Generates the final report in the specified format.
+ *
+ * @param report - Array of detailed resource reports
+ * @param format - Output format (json, yaml, table, or detailed-json)
  */
 async function generateReport(
   report: DetailedResourceReport[],
@@ -719,6 +784,12 @@ async function getMetric(
   }
 }
 
+/**
+ * Loads configuration from file, environment variables, or interactive prompts.
+ *
+ * @param configPath - Optional path to JSON configuration file
+ * @returns Configuration object with subscription IDs and settings
+ */
 async function loadConfig(configPath?: string): Promise<Config> {
   if (configPath && fs.existsSync(configPath)) {
     try {
@@ -762,6 +833,12 @@ async function loadConfig(configPath?: string): Promise<Config> {
   };
 }
 
+/**
+ * Prompts user for input via stdin.
+ *
+ * @param question - The question to display to the user
+ * @returns User's input as a string
+ */
 async function prompt(question: string): Promise<string> {
   const rl = readline.createInterface({
     input: process.stdin,
