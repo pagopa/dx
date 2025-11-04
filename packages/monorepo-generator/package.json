@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -36,7 +36,8 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "^3.2.4",
-    "vitest-mock-extended": "^3.1.0"
+    "vitest-mock-extended": "^3.1.0",
+    "zod": "^4.1.12"
   },
   "scripts": {
     "build": "tsup",

@@ -65,7 +65,12 @@ module "container_app" {
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  tier          = "xs"
+  use_case = "default"
+  size = {
+    cpu    = 1
+    memory = "2Gi"
+  }
+
   revision_mode = "Single"
   container_app_templates = [
     {

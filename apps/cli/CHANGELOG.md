@@ -1,5 +1,29 @@
 # @pagopa/dx-cli
 
+## 0.8.2
+
+### Patch Changes
+
+- 90ac56c: Fix regex in `use-pnpm` codemod
+
+## 0.8.1
+
+### Patch Changes
+
+- d86e8d6: Add .pnpm-store to .gitignore
+- 6e1ec37: Update `update-code-review` codemod to support the latest version of the workflow
+
+## 0.8.0
+
+### Patch Changes
+
+- 2caf863: Remove `ENABLE_CODEMODS` feature flag
+- 99516d2: `use-azure-appsvc` codemod now adds `permissions` to the updated GitHub Action workflow
+- f989fa7: Add support for `npm`, migrate `packageExtensions`, use `workspace:` protocol
+- Updated dependencies [13374c8]
+- Updated dependencies [13374c8]
+  - @pagopa/monorepo-generator@0.8.0
+
 ## 0.7.0
 
 ### Minor Changes

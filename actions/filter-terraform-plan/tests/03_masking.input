@@ -1,0 +1,17 @@
+normal_value = "Keep Me"
+
+hidden-link = "http://sensitive_test.link"
+hidden-links = "http://non_sensitive_test.link"
+very-hidden-link = "http://non_sensitive_test.link"
+
+hiddden-link = "http://non_sensitive_test.link"
+
+hidden-link: /app-insights-conn-string         = "InstrumentationKey=000000-000000-000000-000000;IngestionEndpoint=https://westeurope-3.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=000000-000000-000000-000000"
+hidden-link: /app-insights-instrumentation-key = "000000-000000-000000-000000"
+hidden-link: /app-insights-resource-id         = "/subscriptions/***/resourceGroups/XXXXX/providers/microsoft.insights/components/XXXXX"
+
+test-sensible-key       = "test"
+test-super-sensible-key = "test"
+sensible-key            = "test"
+hide-test-sensible-key  = "test"
+test-sensible-key-hide  = "test"

@@ -1,5 +1,11 @@
 # aws_core_values_exporter
 
+## 0.1.2
+
+### Patch Changes
+
+- 329fd82: Added support to aws provider version 6
+
 ## 0.1.1
 
 ### Patch Changes

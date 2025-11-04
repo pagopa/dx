@@ -26,6 +26,8 @@ interface ActionsDependencies {
   templatesPath: string;
 }
 
+import { getLatestNodeVersion } from "./actions/node.js";
+
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
@@ -225,6 +227,7 @@ const getActions = ({
   getDxGitHubBootstrapLatestTag({ octokitClient }),
   getTerraformLatestRelease({ octokitClient }),
   getPreCommitTerraformLatestRelease({ octokitClient }),
+  getLatestNodeVersion(),
   ...getDotFiles(templatesPath),
   ...getMonorepoFiles(templatesPath),
   ...getTerraformRepositoryFile(templatesPath),

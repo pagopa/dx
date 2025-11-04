@@ -26,6 +26,12 @@ variable "resource_group_name" {
 variable "subnet_pep_id" {
   type        = string
   description = "The ID of the subnet designated for private endpoints."
+  default     = null
+
+  validation {
+    condition     = var.force_public_network_access_enabled || (!var.force_public_network_access_enabled && var.subnet_pep_id != null)
+    error_message = "The value is mandatory if \"force_public_network_access_enabled\" is set to false."
+  }
 }
 
 variable "use_case" {

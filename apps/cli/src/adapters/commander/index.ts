@@ -26,10 +26,8 @@ export const makeCli = (
     .version(__CLI_VERSION__);
 
   program.addCommand(makeDoctorCommand(deps, config));
+  program.addCommand(makeCodemodCommand(cliDeps));
 
-  if (process.env.ENABLE_CODEMODS) {
-    program.addCommand(makeCodemodCommand(cliDeps));
-  }
   if (process.env.ENABLE_INIT_COMMAND) {
     program.addCommand(makeInitCommand());
   }

@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 ---
 
 # Using DX Terraform Modules
@@ -227,15 +227,10 @@ solve eventual issues during module/provider upgrades, see the
 
 :::
 
-## Getting Support
+:::tip **Need Help?**
 
-The DevEx team is here to help you successfully implement and use Registry
-modules. If you encounter any challenges:
+For support with Registry modules implementation, visit our
+[support page](../support.md). The DevEx team is ready to help you with any
+challenges you encounter.
 
-- Join the `#team_devex_help` channel for direct support
-- Provide specific error messages or pipeline logs when seeking help
-- Share your repository structure and Terraform configuration paths
-
-Remember, these changes are designed to enhance our infrastructure management
-while maintaining security. Don't hesitate to reach out for assistance as you
-implement these new requirements.
+:::

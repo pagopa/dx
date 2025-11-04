@@ -4,7 +4,7 @@ resource "azurerm_storage_account" "this" {
   resource_group_name      = var.resource_group_name
   account_tier             = "Standard"
   account_kind             = "StorageV2"
-  account_replication_type = local.storage_account.replication_type
+  account_replication_type = local.use_case_features.replication_type
 
   public_network_access_enabled   = false
   shared_access_key_enabled       = false
@@ -22,7 +22,7 @@ resource "azurerm_storage_account" "durable_function" {
   resource_group_name      = var.resource_group_name
   account_tier             = "Standard"
   account_kind             = "StorageV2"
-  account_replication_type = local.storage_account.replication_type
+  account_replication_type = local.use_case_features.replication_type
 
   public_network_access_enabled   = false
   shared_access_key_enabled       = false

@@ -37,7 +37,7 @@ New to DX pipelines? Start here:
   Deploy containerized applications
 - **[Static Web Apps](../azure/static-websites/build-deploy-static-web-app.md)** -
   Deploy static sites with CDN
-- **[CDN Deployment](../azure/static-websites/build-deploy-cdn-static-site.md)** -
+- **[Static Assets Deployment](../azure/static-websites/build-deploy-static-assets.md)** -
   Deploy to Azure CDN
 
 ### 🏗️ Infrastructure Automation
@@ -52,8 +52,8 @@ New to DX pipelines? Start here:
 ### 🛠️ Build & Package
 
 - **Docker Image Build** - Build and push container images
-- **[CDN Deploy](../azure/static-websites/cdn-deploy.md)** - Deploy assets to
-  content delivery networks
+- **[Static App Deploy](../azure/static-websites/static-assets-deploy.md)** -
+  Deploy assets to content delivery networks
 
 ## Getting Started
 
@@ -116,13 +116,8 @@ Moving from older workflows? Check our migration guides:
 deprecated workflows that are no longer maintained. New projects should use the
 current workflows documented above. :::
 
-## Getting Support
-
-- **Workflow issues?** Open an issue on the
-  [DX repository](https://github.com/pagopa/dx/issues)
-- **Feature requests** We welcome suggestions for new workflows
-
 :::tip **Pipeline Best Practices** Follow our
 [Git conventions](../github/git/index.md) and
 [pull request guidelines](../github/pull-requests/index.md) to get the most out
-of DX pipelines. :::
+of DX pipelines. For questions or issues, visit our
+[support page](../support.md). :::

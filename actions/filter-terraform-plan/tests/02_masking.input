@@ -1,0 +1,18 @@
+password = "f75ea0e53e7bd57412e4b060e607f7"
+Password = "75778f7425be4db0369d09af37a6bd57412e4b060e607f7"
+PASSWORD = "5778f746c2b9a83dea0e53e7bd57412e4b060e607f7"
+DBPassword = "78f7425be4db0369d09af37a6"
+
+apiKey = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+api_key = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3c"
+testAPIKey = "5994471abb011174b4f511b99806da59b3caf5a9c173cacfc5"
+
+AccessKey = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+AccountKey = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+Password = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+secret = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+SecretToken = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+AuthToken = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+auth_token = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+access_key = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"
+connection_string = "2afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5"

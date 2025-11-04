@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_codebuild
 
+## 1.0.2
+
+### Patch Changes
+
+- 329fd82: Added support to aws provider version 6
+
 ## 1.0.1
 
 ### Patch Changes

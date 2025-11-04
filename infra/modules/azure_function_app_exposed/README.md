@@ -2,6 +2,37 @@
 
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-function-app-exposed/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-function-app-exposed%2Fazurerm%2Flatest)
 
+This module deploys an Azure Function App with public exposure, suitable for scenarios where the Function App must be accessible from the internet.
+
+## Features
+
+- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes
+- **Staging Slot**: Includes a staging slot for zero-downtime deployments
+- **App Service Plan**: Uses a Linux App Service Plan (can be created or reused)
+- **Public Exposure**: The Function App is accessible from the public internet
+- **Durable Functions**: Optional support for Durable Functions with dedicated storage
+
+## Use cases Comparison
+
+| Use case  | Description                      | Staging Slot | Multi AZ | Worker Processes |
+| --------- | -------------------------------- | ------------ | -------- | ---------------- |
+| default   | Above average production tier    | Yes          | Yes      | 2                |
+| high_load | High-performance production tier | Yes          | Yes      | 8                |
+
+### Allowed Sizes
+
+The SKU name is determined by the use case, but if you want to override it, you can set the `size` variable.
+The allowed sizes are:
+
+- P0v3
+- P1v3
+- P2mv3
+- P3mv3
+
+## Usage Example
+
+For a complete example, see the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app-exposed/tree/main/examples/complete) folder in this repository.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -51,12 +82,13 @@ No modules.
 | <a name="input_java_version"></a> [java\_version](#input\_java\_version) | The version of Java to use for the Function App runtime. | `string` | `17` | no |
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | The version of Node.js to use for the Function App runtime. | `number` | `20` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
+| <a name="input_size"></a> [size](#input\_size) | App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2mv3', 'P3mv3'. If not set, it will be determined by the use\_case. | `string` | `null` | no |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | A map of application settings specific to the staging slot of the Function App. | `map(string)` | `{}` | no |
 | <a name="input_stack"></a> [stack](#input\_stack) | The runtime stack for the Function App. Allowed values are 'node' and 'java'. | `string` | `"node"` | no |
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | A list of application setting names that should remain constant and not be swapped between slots. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl', 'xxl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility. | `string` | `"l"` | no |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Function App use case. Allowed values: 'default', 'high\_load'. | `string` | `"default"` | no |
 
 ## Outputs
 

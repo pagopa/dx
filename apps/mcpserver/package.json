@@ -1,0 +1,52 @@
+{
+  "name": "@pagopa/dx-mcpserver",
+  "version": "0.0.4",
+  "type": "module",
+  "description": "An MCP server that support developers using DX tools.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "apps/mcpserver"
+  },
+  "keywords": [
+    "DX",
+    "MCP"
+  ],
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "dx": "./dist/index.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
+    "@logtape/logtape": "^1.1.1",
+    "@octokit/rest": "^22.0.0",
+    "@pagopa/dx-mcpprompts": "workspace:^",
+    "@pagopa/azure-tracing": "workspace:^",
+    "axios": "^1.12.2",
+    "fastmcp": "^3.19.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "^4.20.6",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "start": "tsx src/index.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  }
+}

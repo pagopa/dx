@@ -1,0 +1,19 @@
+Test mode enabled.
+--- Executing Plan ---
+normal_value = "Keep Me"
+
+hidden-link = "[REDACTED]"
+hidden-links = "[REDACTED]"
+very-hidden-link = "[REDACTED]"
+
+hiddden-link = "http://non_sensitive_test.link"
+
+hidden-link: /app-insights-conn-string         = "[REDACTED]"
+hidden-link: /app-insights-instrumentation-key = "[REDACTED]"
+hidden-link: /app-insights-resource-id         = "[REDACTED]"
+
+test-sensible-key       = "[REDACTED]"
+test-super-sensible-key = "test"
+sensible-key            = "test"
+hide-test-sensible-key  = "[REDACTED]"
+test-sensible-key-hide  = "[REDACTED]"

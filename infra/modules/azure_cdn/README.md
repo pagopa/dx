@@ -13,6 +13,7 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 - **Routing Rules**: Allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
 
 ### Routing rules
+
 The module returns the id of a FrontDoor rule set via the `rule_set_id` output. The user can then implement ad-hoc rules for the created FrontDoor endpoint as follows:
 
 ```
@@ -52,11 +53,12 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 
 ### Custom domains
 
-The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS. 
+The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS.
 
 However, for apex domains (domains where the host_name equals to the dns zone name specified in custom_domains.dns.zone_name), Azure CDN does not support managed certificates. An example is `apex.foo.com`, where `apex.foo.com` is the DNS zone name.
 
 In the case of apex domains, it's possible to refer to the following configuration example:
+
 ```
 data "azurerm_key_vault" "kv" {
   name = provider::dx::resource_name(merge(local.naming_config, {
@@ -98,6 +100,7 @@ module "azure_cdn" {
   ...
 }
 ```
+
 In these cases, you must provide custom certificate information through the custom_certificate object, specifying details for a certificate generated according to the "Azure - TLS Certificati con Let's Encrypt" confluence page.
 
 ## Usage Example
@@ -154,6 +157,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
+| <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the CDN FrontDoor Profile |
 | <a name="output_name"></a> [name](#output\_name) | The name of the CDN FrontDoor Profile |
 | <a name="output_origin_group_id"></a> [origin\_group\_id](#output\_origin\_group\_id) | The ID of the CDN FrontDoor Origin Group |

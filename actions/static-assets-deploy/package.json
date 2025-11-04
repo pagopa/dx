@@ -1,0 +1,21 @@
+{
+  "name": "static-assets-deploy",
+  "description": "Action to deploy static assets to Azure Storage",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "github",
+    "action",
+    "dx",
+    "cdn",
+    "frontdoor",
+    "azure",
+    "storage",
+    "static",
+    "assets",
+    "deploy"
+  ],
+  "scripts": {},
+  "devDependencies": {}
+}
