@@ -24,7 +24,6 @@ const trackSearchEvent = (
   if (!hasAnalyticsConsent() || !window.appInsights) {
     return;
   }
-  console.debug("Analytics consent given, proceeding to track search event.");
 
   const trimmedQuery = query.trim();
   if (trimmedQuery.length < MIN_QUERY_LENGTH) {
