@@ -1,5 +1,5 @@
 /**
- * Azure Resource Analyzer CLI
+ * DX Azure Save Money
  *
  * A read-only CLI tool that analyzes Azure resources and reports
  * potentially unused or cost-inefficient ones.
@@ -30,27 +30,27 @@ const program = new Command();
 // Global debug flag
 let DEBUG_MODE = false;
 
-type AnalysisResult = {
+export type AnalysisResult = {
   costRisk: "high" | "low" | "medium";
   reason: string;
   suspectedUnused: boolean;
 };
 
-type Config = {
+export type Config = {
   preferredLocation: string;
   subscriptionIds: string[];
   tenantId: string;
   timespanDays: number;
 };
 
-type CostRisk = "high" | "low" | "medium";
+export type CostRisk = "high" | "low" | "medium";
 
-type DetailedResourceReport = {
+export type DetailedResourceReport = {
   analysis: AnalysisResult;
   resource: armResources.GenericResource; // The original resource object from Azure
 };
 
-type ResourceReport = {
+export type ResourceReport = {
   costRisk: CostRisk;
   location?: string;
   name: string;
@@ -60,6 +60,21 @@ type ResourceReport = {
   suspectedUnused: boolean;
   type: string;
 };
+
+/**
+ * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
+ */
+export function mergeResults(
+  baseResult: AnalysisResult,
+  specificResult: AnalysisResult,
+): AnalysisResult {
+  return {
+    costRisk: specificResult.costRisk,
+    reason: baseResult.reason + specificResult.reason,
+    suspectedUnused:
+      baseResult.suspectedUnused || specificResult.suspectedUnused,
+  };
+}
 
 /**
  * Analyzes App Service Plans for unused capacity and oversized tiers.
@@ -492,19 +507,6 @@ async function analyzeResource(
   preferredLocation: string,
   timespanDays: number,
 ): Promise<AnalysisResult> {
-  /**
-   * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
-   */
-  const mergeResults = (
-    baseResult: AnalysisResult,
-    specificResult: AnalysisResult,
-  ): AnalysisResult => ({
-    costRisk: specificResult.costRisk,
-    reason: baseResult.reason + specificResult.reason,
-    suspectedUnused:
-      baseResult.suspectedUnused || specificResult.suspectedUnused,
-  });
-
   const type = resource.type?.toLowerCase() || "";
   let result = {
     costRisk: "low" as "high" | "low" | "medium",
