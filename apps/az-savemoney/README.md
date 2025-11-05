@@ -36,7 +36,7 @@ All resources are also checked for:
 
 ## Prerequisites
 
-1. **Node.js**: Version 16 or later.
+1. **Node.js**: Version 22.
 2. **Azure Credentials**: The tool uses `DefaultAzureCredential`, which supports various authentication methods. The simplest way is to run `az login` from your terminal before launching the tool.
 3. **Installation**:
 
@@ -58,8 +58,16 @@ pnpm build
 
 After building, you can run the tool using:
 
+#### Option 1: Run directly with Node.js
+
 ```bash
-pnpm dist/index.js [options]
+node dist/index.js [options]
+```
+
+Or if installed as a CLI via package.json "bin" entry:
+
+```bash
+pnpm dx-az-savemoney [options]
 ```
 
 For development with auto-rebuild:

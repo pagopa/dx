@@ -8,14 +8,6 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/az-savemoney"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
   "files": [
     "dist"
   ],
@@ -55,8 +47,9 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^18.19.39",
+    "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",

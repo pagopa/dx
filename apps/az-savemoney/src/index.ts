@@ -32,24 +32,28 @@ const program = new Command();
 // Global debug flag
 let DEBUG_MODE = false;
 
-interface Config {
+type AnalysisResult = {
+  costRisk: "high" | "low" | "medium";
+  reason: string;
+  suspectedUnused: boolean;
+};
+
+type Config = {
   preferredLocation: string;
   subscriptionIds: string[];
   tenantId: string;
   timespanDays: number;
-}
+};
 
-interface DetailedResourceReport {
-  analysis: {
-    costRisk: "high" | "low" | "medium";
-    reason: string;
-    suspectedUnused: boolean;
-  };
+type CostRisk = "high" | "low" | "medium";
+
+type DetailedResourceReport = {
+  analysis: AnalysisResult;
   resource: armResources.GenericResource; // The original resource object from Azure
-}
+};
 
-interface ResourceReport {
-  costRisk: "high" | "low" | "medium";
+type ResourceReport = {
+  costRisk: CostRisk;
   location?: string;
   name: string;
   reason: string;
@@ -57,7 +61,7 @@ interface ResourceReport {
   subscriptionId: string;
   suspectedUnused: boolean;
   type: string;
-}
+};
 
 /**
  * Analyzes App Service Plans for unused capacity and oversized tiers.
@@ -489,26 +493,14 @@ async function analyzeResource(
   webSiteClient: WebSiteManagementClient,
   preferredLocation: string,
   timespanDays: number,
-): Promise<{
-  costRisk: "high" | "low" | "medium";
-  reason: string;
-  suspectedUnused: boolean;
-}> {
+): Promise<AnalysisResult> {
   /**
    * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
    */
   const mergeResults = (
-    baseResult: {
-      costRisk: "high" | "low" | "medium";
-      reason: string;
-      suspectedUnused: boolean;
-    },
-    specificResult: {
-      costRisk: "high" | "low" | "medium";
-      reason: string;
-      suspectedUnused: boolean;
-    },
-  ) => ({
+    baseResult: AnalysisResult,
+    specificResult: AnalysisResult,
+  ): AnalysisResult => ({
     costRisk: specificResult.costRisk,
     reason: baseResult.reason + specificResult.reason,
     suspectedUnused:
@@ -847,11 +839,7 @@ function debugLog(message: string, object?: unknown) {
  *
  * @param result - The analysis result object
  */
-function debugLogAnalysisResult(result: {
-  costRisk: "high" | "low" | "medium";
-  reason: string;
-  suspectedUnused: boolean;
-}) {
+function debugLogAnalysisResult(result: AnalysisResult) {
   if (DEBUG_MODE) {
     console.log("\n📊 ANALYSIS RESULT:");
     console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
