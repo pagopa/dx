@@ -33,7 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "azure-resource-analyzer": "./dist/index.js"
+    "dx-az-savemoney": "./dist/index.js"
   },
   "keywords": [
     "azure",
