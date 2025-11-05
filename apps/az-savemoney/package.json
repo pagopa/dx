@@ -9,7 +9,7 @@
     "directory": "apps/az-savemoney"
   },
   "files": [
-    "dist"
+    "bin"
   ],
   "scripts": {
     "build": "tsup",
@@ -18,14 +18,14 @@
     "lint:check": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "start": "node dist/index.js",
+    "start": "node bin/index.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest run --watch",
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "dx-az-savemoney": "./dist/index.js"
+    "dx-az-savemoney": "./bin/index.js"
   },
   "keywords": [
     "azure",

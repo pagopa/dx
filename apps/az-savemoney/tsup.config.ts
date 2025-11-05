@@ -1,10 +1,14 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
+  banner: {
+    js: "#!/usr/bin/env node",
+  },
   clean: true,
-  dts: true, // Generate declaration file (.d.ts)
+  dts: false,
   entry: ["src/index.ts"],
-  format: ["esm"], // Generate ESM (.js) files
-  sourcemap: true,
-  splitting: false,
+  format: ["esm"],
+  outDir: "bin",
+  target: "esnext",
+  tsconfig: "./tsconfig.json",
 });

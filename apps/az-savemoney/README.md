@@ -61,7 +61,7 @@ After building, you can run the tool using:
 #### Option 1: Run directly with Node.js
 
 ```bash
-node dist/index.js [options]
+node bin/index.js [options]
 ```
 
 Or if installed as a CLI via package.json "bin" entry:
@@ -113,7 +113,7 @@ This file allows you to pre-configure the most common parameters.
 1. **Quick analysis with table output (default):**
 
    ```bash
-   pnpm dist/index.js
+   pnpm bin/index.js
    ```
 
    _(You will be prompted for Tenant ID and Subscription ID if not otherwise configured)_
@@ -121,31 +121,31 @@ This file allows you to pre-configure the most common parameters.
 2. **Using a configuration file for a 60-day analysis:**
 
    ```bash
-   pnpm dist/index.js --config ./config.json
+   pnpm bin/index.js --config ./config.json
    ```
 
 3. **Generating a detailed report for AI analysis:**
 
    ```bash
-   pnpm dist/index.js --format detailed-json > report_for_ai.json
+   pnpm bin/index.js --format detailed-json > report_for_ai.json
    ```
 
 4. **Analysis of the last 7 days with YAML output:**
 
    ```bash
-   pnpm dist/index.js --days 7 --format yaml
+   pnpm bin/index.js --days 7 --format yaml
    ```
 
 5. **Analysis focused on a specific location (`westeurope`):**
 
    ```bash
-   pnpm dist/index.js --location westeurope
+   pnpm bin/index.js --location westeurope
    ```
 
 6. **Enable debug mode for detailed logging:**
 
    ```bash
-   pnpm dist/index.js --debug
+   pnpm bin/index.js --debug
    ```
 
 ## Development
