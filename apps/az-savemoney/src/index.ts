@@ -1063,8 +1063,7 @@ async function prompt(question: string): Promise<string> {
 }
 
 program
-  .name("azure-resource-analyzer")
-  .version("0.0.0")
+  .name("dx-az-save-money")
   .description(
     "Analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
   )
