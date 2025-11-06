@@ -137,75 +137,14 @@ importers:
 
   actions/static-assets-deploy: {}
 
-  apps/az-savemoney:
-    dependencies:
-      '@azure/arm-appservice':
-        specifier: ^17.0.0
-        version: 17.0.0
-      '@azure/arm-compute':
-        specifier: ^23.1.0
-        version: 23.1.0
-      '@azure/arm-monitor':
-        specifier: ^7.0.0
-        version: 7.0.0
-      '@azure/arm-network':
-        specifier: ^34.1.0
-        version: 34.1.0
-      '@azure/arm-resources':
-        specifier: ^7.0.0
-        version: 7.0.0
-      '@azure/identity':
-        specifier: ^4.13.0
-        version: 4.13.0
-      commander:
-        specifier: ^14.0.0
-        version: 14.0.0
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      table:
-        specifier: ^6.9.0
-        version: 6.9.0
-    devDependencies:
-      '@pagopa/eslint-config':
-        specifier: workspace:^
-        version: link:../../packages/eslint-config
-      '@tsconfig/node22':
-        specifier: 'catalog:'
-        version: 22.0.2
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.16.2
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
-      eslint:
-        specifier: 'catalog:'
-        version: 9.32.0(jiti@2.6.0)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.6.2
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.16.2)(typescript@5.8.3)
-      tsup:
-        specifier: 'catalog:'
-        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.8.3)(yaml@2.8.1)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.8.3
-      vitest:
-        specifier: 'catalog:'
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)
-
   apps/cli:
     dependencies:
       '@logtape/logtape':
         specifier: ^1.0.0
         version: 1.0.4
+      '@pagopa/dx-savemoney':
+        specifier: workspace:^
+        version: link:../../packages/savemoney
       '@pagopa/monorepo-generator':
         specifier: workspace:^
         version: link:../../packages/monorepo-generator
@@ -648,6 +587,70 @@ importers:
         version: 4.1.12
 
   packages/pnpm-plugin-pagopa: {}
+
+  packages/savemoney:
+    dependencies:
+      '@azure/arm-appservice':
+        specifier: ^17.0.0
+        version: 17.0.0
+      '@azure/arm-compute':
+        specifier: ^23.1.0
+        version: 23.1.0
+      '@azure/arm-monitor':
+        specifier: ^7.0.0
+        version: 7.0.0
+      '@azure/arm-network':
+        specifier: ^34.1.0
+        version: 34.1.0
+      '@azure/arm-resources':
+        specifier: ^7.0.0
+        version: 7.0.0
+      '@azure/identity':
+        specifier: ^4.13.0
+        version: 4.13.0
+      commander:
+        specifier: ^14.0.0
+        version: 14.0.0
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
+      table:
+        specifier: ^6.9.0
+        version: 6.9.0
+    devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@tsconfig/node22':
+        specifier: 'catalog:'
+        version: 22.0.2
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.16.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 3.2.4(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
+      eslint:
+        specifier: 'catalog:'
+        version: 9.32.0(jiti@2.6.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@types/node@22.16.2)(typescript@5.8.3)
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.8.3)(yaml@2.8.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.16.2)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)
 
   providers/aws: {}
 

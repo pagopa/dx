@@ -1,15 +1,24 @@
 {
-  "name": "dx-az-savemoney",
+  "name": "@pagopa/dx-savemoney",
   "version": "0.0.0",
   "type": "module",
-  "description": "CLI tool to analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
+  "description": "Azure resource analyzer for finding unused or cost-inefficient resources.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "apps/az-savemoney"
+    "directory": "apps/savemoney"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "files": [
-    "bin"
+    "bin",
+    "src"
   ],
   "scripts": {
     "build": "tsup",
@@ -25,7 +34,7 @@
     "typecheck": "tsc --noEmit"
   },
   "bin": {
-    "dx-az-savemoney": "./bin/index.js"
+    "dx-savemoney": "./bin/cli.js"
   },
   "keywords": [
     "azure",

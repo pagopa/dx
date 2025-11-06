@@ -1,7 +1,7 @@
 /**
- * DX Azure Save Money
+ * Azure Resource Analyzer
  *
- * A read-only CLI tool that analyzes Azure resources and reports
+ * A read-only tool that analyzes Azure resources and reports
  * potentially unused or cost-inefficient ones.
  *
  * Features:
@@ -19,13 +19,10 @@ import { MonitorClient } from "@azure/arm-monitor";
 import { NetworkManagementClient } from "@azure/arm-network";
 import * as armResources from "@azure/arm-resources";
 import { DefaultAzureCredential } from "@azure/identity";
-import { Command } from "commander";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import * as readline from "readline";
 import { table } from "table";
-
-const program = new Command();
 
 // Global debug flag
 let DEBUG_MODE = false;
@@ -62,7 +59,136 @@ export type ResourceReport = {
 };
 
 /**
+ * Main logic — analyze resources for all subscriptions.
+ *
+ * @param config - Configuration object with subscription IDs and settings
+ * @param format - Output format (json, yaml, table, or detailed-json)
+ */
+/**
+ * Analyzes resources in multiple Azure subscriptions and generates a report.
+ *
+ * @param config - Configuration with subscription IDs, tenant ID, and analysis settings
+ * @param format - Output format (table, json, yaml, or detailed-json)
+ */
+export async function analyzeResources(
+  config: Config,
+  format: "detailed-json" | "json" | "table" | "yaml",
+) {
+  const credential = new DefaultAzureCredential();
+  const allReports: DetailedResourceReport[] = [];
+
+  for (const subscriptionId of config.subscriptionIds) {
+    console.log(`\n🔹 Analyzing subscription: ${subscriptionId}`);
+
+    const resourceClient = new armResources.ResourceManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+    const monitorClient = new MonitorClient(credential, subscriptionId.trim());
+    const computeClient = new ComputeManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+    const networkClient = new NetworkManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+    const webSiteClient = new WebSiteManagementClient(
+      credential,
+      subscriptionId.trim(),
+    );
+
+    // Use the async iterator to avoid memory explosion for large environments
+    for await (const resource of resourceClient.resources.list()) {
+      const { costRisk, reason, suspectedUnused } = await analyzeResource(
+        resource,
+        monitorClient,
+        computeClient,
+        networkClient,
+        webSiteClient,
+        config.preferredLocation,
+        config.timespanDays,
+      );
+
+      if (suspectedUnused) {
+        allReports.push({
+          analysis: {
+            costRisk,
+            reason: reason || "No specific findings.",
+            suspectedUnused,
+          },
+          resource: resource,
+        });
+      }
+    }
+  }
+
+  // Sort to make the output more readable
+  allReports.sort((a, b) => {
+    if (a.analysis.costRisk === b.analysis.costRisk)
+      return (a.resource.name ?? "").localeCompare(b.resource.name ?? "");
+    const order = { high: 0, low: 2, medium: 1 };
+    return order[a.analysis.costRisk] - order[b.analysis.costRisk];
+  });
+
+  await generateReport(allReports, format);
+}
+
+/**
+ * Loads configuration from file, environment variables, or interactive prompts.
+ *
+ * @param configPath - Optional path to JSON configuration file
+ * @returns Configuration object with subscription IDs and settings
+ */
+export async function loadConfig(configPath?: string): Promise<Config> {
+  if (configPath && fs.existsSync(configPath)) {
+    try {
+      const configContent = fs.readFileSync(configPath, "utf-8");
+      const config = JSON.parse(configContent);
+
+      // Validate required fields
+      if (!config.tenantId || !config.subscriptionIds) {
+        throw new Error(
+          "Config file must contain 'tenantId' and 'subscriptionIds'",
+        );
+      }
+
+      return {
+        ...config,
+        preferredLocation: config.preferredLocation || "italynorth",
+        timespanDays: config.timespanDays || 30,
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to load config file: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  console.log(
+    "Configuration file not found. Checking environment variables...",
+  );
+
+  const tenantId =
+    process.env.ARM_TENANT_ID || (await prompt("Enter Tenant ID: "));
+  const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
+    ? process.env.ARM_SUBSCRIPTION_ID.split(",")
+    : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
+
+  return {
+    preferredLocation: "italynorth",
+    subscriptionIds,
+    tenantId,
+    timespanDays: 30,
+  };
+}
+
+/**
  * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
+ *
+ * @param baseResult - The base analysis result
+ * @param specificResult - The specific analysis result to merge
+ * @returns Merged analysis result
  */
 export function mergeResults(
   baseResult: AnalysisResult,
@@ -74,6 +200,33 @@ export function mergeResults(
     suspectedUnused:
       baseResult.suspectedUnused || specificResult.suspectedUnused,
   };
+}
+
+/**
+ * Prompts user for input via stdin.
+ *
+ * @param question - The question to display to the user
+ * @returns User's input as a string
+ */
+export async function prompt(question: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) =>
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer);
+    }),
+  );
+}
+
+/**
+ * Sets the debug mode for logging.
+ * @param enabled - Whether debug logging should be enabled
+ */
+export function setDebugMode(enabled: boolean) {
+  DEBUG_MODE = enabled;
 }
 
 /**
@@ -593,76 +746,6 @@ async function analyzeResource(
 }
 
 /**
- * Main logic — analyze resources for all subscriptions.
- *
- * @param config - Configuration object with subscription IDs and settings
- * @param format - Output format (json, yaml, table, or detailed-json)
- */
-async function analyzeResources(
-  config: Config,
-  format: "detailed-json" | "json" | "table" | "yaml",
-) {
-  const credential = new DefaultAzureCredential();
-  const allReports: DetailedResourceReport[] = [];
-
-  for (const subscriptionId of config.subscriptionIds) {
-    console.log(`\n🔹 Analyzing subscription: ${subscriptionId}`);
-
-    const resourceClient = new armResources.ResourceManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const monitorClient = new MonitorClient(credential, subscriptionId.trim());
-    const computeClient = new ComputeManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const networkClient = new NetworkManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const webSiteClient = new WebSiteManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-
-    // Use the async iterator to avoid memory explosion for large environments
-    for await (const resource of resourceClient.resources.list()) {
-      const { costRisk, reason, suspectedUnused } = await analyzeResource(
-        resource,
-        monitorClient,
-        computeClient,
-        networkClient,
-        webSiteClient,
-        config.preferredLocation,
-        config.timespanDays,
-      );
-
-      if (suspectedUnused) {
-        allReports.push({
-          analysis: {
-            costRisk,
-            reason: reason || "No specific findings.",
-            suspectedUnused,
-          },
-          resource: resource,
-        });
-      }
-    }
-  }
-
-  // Sort to make the output more readable
-  allReports.sort((a, b) => {
-    if (a.analysis.costRisk === b.analysis.costRisk)
-      return (a.resource.name ?? "").localeCompare(b.resource.name ?? "");
-    const order = { high: 0, low: 2, medium: 1 };
-    return order[a.analysis.costRisk] - order[b.analysis.costRisk];
-  });
-
-  await generateReport(allReports, format);
-}
-
-/**
  * Analyzes Storage Accounts for low transaction activity.
  *
  * @param resource - The Azure storage account resource to analyze
@@ -981,107 +1064,3 @@ async function getMetric(
     return null;
   }
 }
-
-/**
- * Loads configuration from file, environment variables, or interactive prompts.
- *
- * @param configPath - Optional path to JSON configuration file
- * @returns Configuration object with subscription IDs and settings
- */
-async function loadConfig(configPath?: string): Promise<Config> {
-  if (configPath && fs.existsSync(configPath)) {
-    try {
-      const configContent = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(configContent);
-
-      // Validate required fields
-      if (!config.tenantId || !config.subscriptionIds) {
-        throw new Error(
-          "Config file must contain 'tenantId' and 'subscriptionIds'",
-        );
-      }
-
-      return {
-        ...config,
-        preferredLocation: config.preferredLocation || "italynorth",
-        timespanDays: config.timespanDays || 30,
-      };
-    } catch (error) {
-      throw new Error(
-        `Failed to load config file: ${error instanceof Error ? error.message : error}`,
-      );
-    }
-  }
-
-  console.log(
-    "Configuration file not found. Checking environment variables...",
-  );
-
-  const tenantId =
-    process.env.ARM_TENANT_ID || (await prompt("Enter Tenant ID: "));
-  const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
-    ? process.env.ARM_SUBSCRIPTION_ID.split(",")
-    : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
-
-  return {
-    preferredLocation: "italynorth",
-    subscriptionIds,
-    tenantId,
-    timespanDays: 30,
-  };
-}
-
-/**
- * Prompts user for input via stdin.
- *
- * @param question - The question to display to the user
- * @returns User's input as a string
- */
-async function prompt(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) =>
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer);
-    }),
-  );
-}
-
-program
-  .name("dx-az-save-money")
-  .description(
-    "Analyze Azure resources and generate a report of potentially unused or cost-inefficient ones.",
-  )
-  .option("-c, --config <path>", "Path to configuration file (JSON)")
-  .option(
-    "-f, --format <format>",
-    "Report format: json, yaml, table, or detailed-json (default: table)",
-    DEBUG_MODE ? "detailed-json" : "table",
-  )
-  .option(
-    "-l, --location <string>",
-    "Preferred Azure location for resources",
-    "italynorth",
-  )
-  .option("-d, --days <number>", "Number of days for metrics analysis", "30")
-  .option("--debug", "Enable debug logging")
-  .action(async (options) => {
-    try {
-      // Set debug mode based on command line flag
-      DEBUG_MODE = options.debug || false;
-
-      const config = await loadConfig(options.config);
-      config.timespanDays = parseInt(options.days, 10) || config.timespanDays;
-      config.preferredLocation = options.location || config.preferredLocation;
-
-      await analyzeResources(config, options.format);
-    } catch (error) {
-      console.error("Error:", error instanceof Error ? error.message : error);
-      process.exit(1);
-    }
-  });
-
-program.parse(process.argv);

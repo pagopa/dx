@@ -6,7 +6,7 @@ export default defineConfig({
   },
   clean: true,
   dts: false,
-  entry: ["src/index.ts"],
+  entry: ["src/cli.ts"],
   format: ["esm"],
   outDir: "bin",
   target: "esnext",

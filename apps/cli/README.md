@@ -71,6 +71,59 @@ Checking monorepo scripts...
 ✅ Monorepo scripts are correctly set up
 ```
 
+#### `savemoney`
+
+Analyze CSP resources for cost optimization opportunities. Currently this command helps identify unused or underutilized Azure resources that could be costing you money.
+
+```bash
+dx savemoney azure [options]
+```
+
+**Options:**
+
+- `-c, --config <path>`: Path to configuration file (JSON)
+- `-f, --format <format>`: Report format - `json`, `yaml`, `table`, or `detailed-json` (default: `table`)
+- `-l, --location <string>`: Preferred Azure location for resources (default: `italynorth`)
+- `-d, --days <number>`: Number of days for metrics analysis (default: `30`)
+- `--debug`: Enable debug logging
+
+**Example usage:**
+
+```bash
+# Analyze with default settings (interactive prompts)
+dx savemoney azure
+
+# Use a configuration file
+dx savemoney azure --config config.json
+
+# Output as JSON with debug logging
+dx savemoney azure --format json --debug
+
+# Analyze with specific timespan
+dx savemoney azure --days 60 --location italynorth
+```
+
+**Configuration file example (`config.json`):**
+
+```json
+{
+  "tenantId": "your-tenant-id",
+  "subscriptionIds": ["subscription-1", "subscription-2"],
+  "preferredLocation": "italynorth",
+  "timespanDays": 30
+}
+```
+
+This command analyzes:
+
+- **Virtual Machines**: Deallocated or stopped VMs, low CPU usage
+- **Managed Disks**: Unattached disks
+- **Network Interfaces**: Unattached NICs
+- **Public IP Addresses**: Unassociated static IPs
+- **Storage Accounts**: Low transaction counts
+- **App Service Plans**: Empty plans or oversized tiers
+- **Private Endpoints**: Unused or misconfigured endpoints
+
 ### Global Options
 
 - `--version, -V`: Display version number
