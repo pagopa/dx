@@ -13,6 +13,7 @@ module "github_repository" {
     has_downloads          = true
     has_projects           = true
     has_issues             = true
+    app_cd_policy_tags     = ["@pagopa/dx-mcpserver@**"]
     homepage_url           = "https://dx.pagopa.it/docs/"
     pull_request_bypassers = ["/dx-pagopa-bot"]
     environments           = ["dev", "prod"]

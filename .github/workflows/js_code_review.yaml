@@ -3,6 +3,9 @@ name: "Code Review"
 on:
   workflow_call: {}
 
+permissions:
+  pull-requests: write
+
 jobs:
   js_code_review:
     runs-on: ubuntu-latest
@@ -17,6 +20,19 @@ jobs:
       - name: Node Setup
         id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Post Plan on PR
+        id: comment
+        if: steps.node-setup.outputs.package-manager != 'pnpm' && github.event_name == 'pull_request'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body: |
+            ### ⚠️ Deprecation Notice
+            Starting **January 16th, 2026**, the DX workflows will no longer support npm and yarn. All new builds will be required to use [**pnpm**](https://pnpm.io).
+
+            > [!TIP]
+            > Ready to make the switch? To help with the transition, we've published a **migration guide** on our blog, [check out the announcement for more details](https://dx.pagopa.it/blog/migrating-to-pnpm/).
+          search-pattern: "Deprecation Notice"
 
       - name: Install dependencies (Yarn)
         if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}

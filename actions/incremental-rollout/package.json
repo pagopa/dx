@@ -1,0 +1,14 @@
+{
+  "name": "incremental-rollout",
+  "version": "0.2.1",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint:check": "shellcheck *.sh"
+  }
+}

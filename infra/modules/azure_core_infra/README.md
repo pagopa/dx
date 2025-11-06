@@ -87,6 +87,8 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | <a name="output_opex_resource_group_id"></a> [opex\_resource\_group\_id](#output\_opex\_resource\_group\_id) | The ID of the OPEX resource group. |
 | <a name="output_opex_resource_group_name"></a> [opex\_resource\_group\_name](#output\_opex\_resource\_group\_name) | The name of the OPEX resource group. |
 | <a name="output_private_dns_zones"></a> [private\_dns\_zones](#output\_private\_dns\_zones) | List of private DNS zones linked to the virtual network. |
+| <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | The ID of the Azure subscription. |
+| <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | The ID of the Azure tenant. |
 | <a name="output_test_resource_group_id"></a> [test\_resource\_group\_id](#output\_test\_resource\_group\_id) | The ID of the test resource group (null if testing is disabled). |
 | <a name="output_test_resource_group_name"></a> [test\_resource\_group\_name](#output\_test\_resource\_group\_name) | The name of the test resource group (null if testing is disabled). |
 | <a name="output_vpn_fqdns"></a> [vpn\_fqdns](#output\_vpn\_fqdns) | The FQDNs for virtual network gateway. |

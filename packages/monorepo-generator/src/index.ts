@@ -7,13 +7,6 @@ import { Octokit } from "octokit";
 import { z } from "zod/v4";
 
 import {
-  addPagoPaPnpmPlugin,
-  configureChangesets,
-  configureDevContainer,
-  enablePnpm,
-  installRootDependencies,
-} from "./actions/pnpm.js";
-import {
   getAwsProviderLatestRelease,
   getAzureadProviderLatestRelease,
   getAzurermProviderLatestRelease,
@@ -50,6 +43,14 @@ interface ActionsDependencies {
 }
 type CSP = z.infer<typeof answersSchema.shape.csp>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
+
+import {
+  addPagoPaPnpmPlugin,
+  configureChangesets,
+  configureDevContainer,
+  enablePnpm,
+  installRootDependencies,
+} from "./actions/pnpm.js";
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {

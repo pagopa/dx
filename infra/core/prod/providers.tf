@@ -9,6 +9,16 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
     }
+
+    azuredx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0.0"
+    }
+
+    awsdx = {
+      source  = "pagopa-dx/aws"
+      version = "~> 0.0"
+    }
   }
 
   backend "azurerm" {
@@ -22,4 +32,20 @@ terraform {
 # Default provider configuration
 provider "azurerm" {
   features {}
+}
+
+provider "aws" {
+  region = local.aws_environment.region
+}
+
+provider "awsdx" {
+  prefix      = local.aws_environment.prefix
+  environment = local.aws_environment.env_short
+  region      = local.aws_environment.region
+}
+
+provider "azuredx" {
+  prefix      = local.azure_environment.prefix
+  environment = local.azure_environment.env_short
+  location    = local.azure_environment.location
 }

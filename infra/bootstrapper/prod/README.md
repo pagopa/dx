@@ -17,6 +17,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_aws"></a> [aws](#module\_aws) | ../_modules/aws | n/a |
 | <a name="module_azure"></a> [azure](#module\_azure) | ../_modules/azure | n/a |
 
 ## Resources

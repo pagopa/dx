@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.2.0
+
+### Minor Changes
+
+- dc2120f: Enable enableEtags property on the KEDA scale rule to mitigate rate limit issue with GitHub
+
 ## 1.1.3
 
 ### Patch Changes

@@ -1,1 +1,8 @@
-{}
+{
+  "azure_core_values": {
+    "hash": "9d17c2786991abf8af52245d73bb724877914c4eb8f72389a831b5385878974e",
+    "version": "0.2.4",
+    "name": "azure_core_values_exporter",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.2.4"
+  }
+}

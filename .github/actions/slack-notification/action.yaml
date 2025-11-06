@@ -22,12 +22,15 @@ runs:
     - name: Check inputs and set defaults
       id: check-values
       shell: bash
+      env:
+        INPUT_ID: ${{ inputs.id }}
+        INPUT_TITLE: ${{ inputs.title }}
       run: |
         set -eu
-        if [ "${{ inputs.title }}" == "" ]; then
-          title="*${{ inputs.id }}*"
+        if [ "$INPUT_TITLE" == "" ]; then
+          title="*$INPUT_ID*"
         else
-          title="${{ inputs.title }}"
+          title="$INPUT_TITLE"
         fi
 
         echo "title=$title" >> "$GITHUB_OUTPUT"

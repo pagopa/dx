@@ -23,3 +23,31 @@ jobs:
       static_web_app_name: "dx-p-itn-website-stapp-01"
       resource_group_name: "dx-p-itn-common-rg-01"
       environment: "app-prod"
+
+  feed_docs_knowledge_base:
+    # Only if a changeset PR is merged
+    if: github.event_name == 'push' && github.actor == 'dx-pagopa-bot'
+    name: Update MCP Server Knowledge Base
+    environment: app-prod-cd
+    needs: deploy_to_static_web_app
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    env:
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      AWS_REGION: eu-central-1
+      BUCKET_NAME: dx-p-euc1-docs-kb-s3-01
+      OUTPUT_DIR: "upload"
+    steps:
+      - name: Download Artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: ${{ needs.deploy_to_static_web_app.outputs.bundle_name }}
+          file_path: "./${{ env.OUTPUT_DIR }}"
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+      # Upload only markdown files to the knowledge base bucket deleting objects that don't exist anymore
+      - shell: bash
+        run: |
+          echo "Deploying documentation to knowledge base..."
+          aws s3 sync ./${OUTPUT_DIR}/ s3://${BUCKET_NAME}/ --exclude "*" --include "*.md" --include "*.mdx" --delete

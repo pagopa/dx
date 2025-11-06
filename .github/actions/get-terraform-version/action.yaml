@@ -21,12 +21,14 @@ runs:
     - name: Get Terraform Version
       id: get-terraform-version-action
       shell: bash
+      env:
+        DEFAULT_VERSION: ${{ inputs.default_version }}
+        OVERRIDE_VERSION: ${{ inputs.override_version }}
       run: |
         # Default version provided via input
-        DEFAULT_VERSION="${{ inputs.default_version }}"
-        TERRAFORM_VERSION="${{ inputs.default_version }}"
+        TERRAFORM_VERSION="$DEFAULT_VERSION"
 
-        if [ "${{ inputs.override_version }}" == "" ]; then
+        if [ "$OVERRIDE_VERSION" == "" ]; then
           # Check for the .terraform-version file
           if [ -f ".terraform-version" ]; then
               TERRAFORM_VERSION=$(cat .terraform-version)
@@ -43,8 +45,8 @@ runs:
               echo "No .terraform-version file found. Defaulting to ${TERRAFORM_VERSION}"
           fi
         else
-          TERRAFORM_VERSION=${{ inputs.override_version }}
+          TERRAFORM_VERSION="$OVERRIDE_VERSION"
         fi
 
         # Output the Terraform version
-        echo "terraform_version=$TERRAFORM_VERSION" >> $GITHUB_OUTPUT
+        echo "terraform_version=$TERRAFORM_VERSION" >> "$GITHUB_OUTPUT"

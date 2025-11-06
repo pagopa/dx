@@ -1,3 +1,13 @@
+output "subscription_id" {
+  description = "The ID of the Azure subscription."
+  value       = data.azurerm_client_config.current.subscription_id
+}
+
+output "tenant_id" {
+  description = "The ID of the Azure tenant."
+  value       = data.azurerm_client_config.current.tenant_id
+}
+
 output "common_resource_group_name" {
   description = "The name of the common resource group."
   value       = azurerm_resource_group.common.name
@@ -17,7 +27,6 @@ output "network_resource_group_id" {
   description = "The ID of the network resource group."
   value       = azurerm_resource_group.network.id
 }
-
 
 output "test_resource_group_name" {
   description = "The name of the test resource group (null if testing is disabled)."

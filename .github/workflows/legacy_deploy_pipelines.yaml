@@ -22,7 +22,7 @@ on:
         description: The health probe path exposed by the Function App.
         type: string
         required: false
-        default: '/info'
+        default: "/info"
       use_staging_slot:
         description: True if artifact should be deployed to staging slot
         type: boolean
@@ -122,11 +122,12 @@ jobs:
             }
 
       - name: Make Zip File
+        env:
+          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
+        working-directory: "./${{ env.BUNDLE_NAME }}"
         run: |
-          cd ./${{ env.BUNDLE_NAME }}
-          zip -r ./${{ env.BUNDLE_NAME }}.zip .
-          mv ${{ env.BUNDLE_NAME }}.zip ../${{ env.BUNDLE_NAME }}.zip
-          cd ..
+          zip -r "./$BUNDLE_NAME.zip" .
+          mv "$BUNDLE_NAME.zip" "../$BUNDLE_NAME.zip"
 
       - name: Upload Artifact
         uses: pagopa/dx/.github/actions/upload-artifact@main
@@ -162,35 +163,48 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}
+        env:
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+          APP_NAME: ${{ inputs.app_name }}
+          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
           az webapp deploy \
-            --resource-group ${{ inputs.resource_group_name }} \
-            --name ${{ inputs.app_name }} \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$APP_NAME" \
+            --src-path  "$WORKSPACE/$BUNDLE_NAME.zip" \
             --type zip \
             --async false \
             | grep -v "hidden-link:"
 
       - name: Deploy to Staging Slot
         if: ${{ inputs.use_staging_slot == true }}
+        env:
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+          APP_NAME: ${{ inputs.app_name }}
+          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
+          WORKSPACE: ${{ github.workspace }}
         run: |
           az webapp deploy \
-            --resource-group ${{ inputs.resource_group_name }} \
-            --name ${{ inputs.app_name }} \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --name "$APP_NAME" \
             --slot staging \
-            --src-path  ${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip \
+            --src-path  "$WORKSPACE/$BUNDLE_NAME.zip" \
             --type zip \
             --async false \
             | grep -v "hidden-link:"
 
       - name: Ping Staging Health
         if: ${{ inputs.use_staging_slot == true }}
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
         run: |
           curl \
             --retry 5 \
             --retry-max-time 120 \
             --retry-all-errors \
-            -f 'https://${{ inputs.app_name }}-staging.azurewebsites.net${{ inputs.health_check_path }}'
+            -f "https://$APP_NAME-staging.azurewebsites.net$HEALTH_CHECK_PATH"
 
       - name: Swap Staging and Production Slots
         if: ${{ inputs.use_staging_slot == true }}

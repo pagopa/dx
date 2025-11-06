@@ -14,7 +14,13 @@ that the name is unique within its scope, defined by the resource type. This
 makes it easier to manage and organize resources within your enterprise
 infrastructure.
 
----
+:::info
+
+The DX Azure Terraform Provider includes a function to generate resource names
+according to this convention. For more information, refer to the
+[Using DX Azure Terraform Provider](./using-azure-registry-provider.md) guide.
+
+:::
 
 The following is a description of the naming convention to be followed:
 

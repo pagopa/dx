@@ -2,6 +2,40 @@
 
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-function-app/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-function-app%2Fazurerm%2Flatest)
 
+This module deploys an Azure Function App with a strong opinionated configuration for networking, security, and deployment strategy. It is ideal for scenarios where you need your Function App to be private and securely integrated with Azure resources.
+
+## Features
+
+- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes
+- **Staging Slot**: Includes a staging slot for zero-downtime deployments
+- **App Service Plan**: Uses a Linux App Service Plan (can be created or reused)
+- **Private Endpoints**: Ensures private connectivity for the Function App and its storage accounts
+- **Subnet**: Manages subnet creation or reuse for outbound connectivity
+- **Durable Functions**: Optional support for Durable Functions with dedicated storage
+- **Monitoring**: Integrates with Application Insights and sets up health check alerts
+
+## Use cases Comparison
+
+| Use case  | Description                      | Staging Slot | Multi AZ | Worker Processes |
+| --------- | -------------------------------- | ------------ | -------- | ---------------- |
+| default   | Above average production tier    | Yes          | Yes      | 2                |
+| high_load | High-performance production tier | Yes          | Yes      | 8                |
+
+### Allowed Sizes
+
+The SKU name is determined by the use case, but if you want to override it, you can set the `size` variable.
+The allowed sizes are:
+
+- P0v3
+- P1v3
+- P1mv3
+- P2mv3
+- P3mv3
+
+## Usage Example
+
+For a complete example, see the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/complete) folder in this repository.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -74,6 +108,7 @@ No modules.
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | The version of Node.js to use for the Function App runtime. | `number` | `20` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
+| <a name="input_size"></a> [size](#input\_size) | App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2mv3', 'P3mv3'. If not set, it will be determined by the use\_case. | `string` | `null` | no |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | A map of application settings specific to the staging slot of the Function App. | `map(string)` | `{}` | no |
 | <a name="input_stack"></a> [stack](#input\_stack) | The runtime stack for the Function App. Allowed values are 'node' and 'java'. | `string` | `"node"` | no |
 | <a name="input_sticky_app_setting_names"></a> [sticky\_app\_setting\_names](#input\_sticky\_app\_setting\_names) | A list of application setting names that should remain constant and not be swapped between slots. | `list(string)` | `[]` | no |
@@ -82,8 +117,8 @@ No modules.
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet designated for private endpoints. | `string` | n/a | yes |
 | <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints) | Enable service endpoints for the subnet used by the Function App. Set this only if dependencies do not use private endpoints. | <pre>object({<br/>    cosmos  = optional(bool, false)<br/>    storage = optional(bool, false)<br/>    web     = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_tier"></a> [tier](#input\_tier) | Resource tiers depending on workload. Allowed values are 's', 'm', 'l', 'xl'. Legacy values 'premium', 'standard', 'test' are also supported for backward compatibility. | `string` | `"l"` | no |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Function App use case. Allowed values: 'default', 'high\_load'. | `string` | `"default"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Details of the virtual network where the subnet for the Function App will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs

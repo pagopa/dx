@@ -18,9 +18,9 @@ runs:
     - name: Get Pre-Commit Terraform Version
       id: get-pre-commit-version-action
       shell: bash
+      env:
+        DEFAULT_VERSION: ${{ inputs.default_version }}
       run: |
-        # Default version from input
-        DEFAULT_VERSION="${{ inputs.default_version }}"
         PRE_COMMIT_VERSION="$DEFAULT_VERSION"
 
         if ! command -v yq &>/dev/null; then
@@ -51,7 +51,7 @@ runs:
           curl "https://ghcr.io/token?scope=repository:${USER_IMAGE}:pull" |
           awk -F'"' '$0=$4'
         )"
-        
+
         # Query the GitHub Container Registry (GHCR) API for the manifest list digest
         DIGEST=$(curl -D - \
          -H "Authorization: Bearer $TOKEN" \

@@ -1,17 +1,17 @@
-name: 'Build Workspace'
-description: 'Builds a workspace in a monorepo and handles dependencies.'
+name: "Build Workspace"
+description: "Builds a workspace in a monorepo and handles dependencies."
 
 inputs:
   workspace_name:
-    description: 'The name of the workspace to build.'
+    description: "The name of the workspace to build."
     required: true
 
 outputs:
   package-manager:
-    description: 'The package manager used in the monorepo (npm, yarn, or pnpm).'
+    description: "The package manager used in the monorepo (npm, yarn, or pnpm)."
     value: ${{ steps.node-setup.outputs.package-manager }}
   workspace-path:
-    description: 'The path to the built workspace.'
+    description: "The path to the built workspace."
     value: ${{ steps.get-workspace-path.outputs.workspace-path }}
 
 runs:
@@ -24,7 +24,7 @@ runs:
     - name: Install dependencies (pnpm)
       if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
       shell: bash
-      run: pnpm --filter $WORKSPACE_NAME install
+      run: pnpm --filter "$WORKSPACE_NAME..." install
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}
 

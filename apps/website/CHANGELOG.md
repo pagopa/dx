@@ -1,5 +1,32 @@
 # docs
 
+## 0.9.2
+
+### Patch Changes
+
+- e0a46c7: Add Getting Support page, and minor refinement for deprecated pages
+
+## 0.9.1
+
+### Patch Changes
+
+- ca5c98f: Moved Azure DX Provider docs to Azure section
+- 8de28e9: Move CDN docs to static assets (CDN and FrontDoor)
+- 15917a5: Document storage account eventgrid trigger
+
+## 0.9.0
+
+### Minor Changes
+
+- 0d8e640: Added examples before / after DX in blog post
+
+## 0.8.5
+
+### Patch Changes
+
+- 1619aef: Update navbar items and enhance blog title styling
+- 88596b6: Refactor docs for Azure Static Web Apps
+
 ## 0.8.4
 
 ### Patch Changes

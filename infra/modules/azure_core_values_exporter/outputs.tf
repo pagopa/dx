@@ -1,3 +1,13 @@
+output "subscription_id" {
+  description = "The ID of the Azure subscription."
+  value       = try(local.core_outputs.values.subscription_id, null)
+}
+
+output "tenant_id" {
+  description = "The ID of the Azure tenant."
+  value       = try(local.core_outputs.values.tenant_id, null)
+}
+
 output "common_resource_group_name" {
   description = "The name of the common resource group."
   value       = local.core_outputs.values.common_resource_group_name

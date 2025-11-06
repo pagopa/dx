@@ -32,3 +32,8 @@ output "rule_set_id" {
   description = "The ID of the CDN FrontDoor Rule Set"
   value       = azurerm_cdn_frontdoor_rule_set.this.id
 }
+
+output "endpoint_id" {
+  description = "The ID of the CDN FrontDoor Endpoint"
+  value       = azurerm_cdn_frontdoor_endpoint.this.id
+}

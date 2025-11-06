@@ -48,3 +48,17 @@ resource "aws_iam_role_policy_attachment" "app_cd_admin_ecs" {
   role       = aws_iam_role.app_cd.name
   policy_arn = data.aws_iam_policy.ecs_admin_access.arn
 }
+
+resource "aws_iam_policy" "ecr_push_access" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = var.environment.domain
+    name          = "ecr-push"
+    resource_type = "iam_role_policy"
+  }))
+  policy = data.aws_iam_policy_document.ecr_push_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "app_cd_ecr_access" {
+  role       = aws_iam_role.app_cd.name
+  policy_arn = aws_iam_policy.ecr_push_access.arn
+}

@@ -13,28 +13,32 @@ runs:
       id: detect-pm
       shell: bash
       run: |
+        write_output() {
+          echo "package-manager=$1" >> "$GITHUB_OUTPUT"
+          echo "Detected package manager: $1"
+          if [ "$1" != "pnpm" ]; then
+            echo "::warning::Starting January 16th, 2026, yarn and npm will no longer be supported by this workflow. All new builds will be required to use pnpm, read more at https://dx.pagopa.it/blog/migrating-to-pnpm/"
+          fi
+          exit 0
+        }
+
         # First, try to detect from package.json packageManager field
         if [ -f "package.json" ]; then
           PACKAGE_MANAGER=$(jq -r '.packageManager // empty' package.json 2>/dev/null | cut -d'@' -f1)
-
           if [ -n "$PACKAGE_MANAGER" ]; then
-            echo "package-manager=$PACKAGE_MANAGER" >> $GITHUB_OUTPUT
-            echo "Detected package manager from package.json: $PACKAGE_MANAGER"
+            write_output "$PACKAGE_MANAGER"
             exit 0
           fi
         fi
 
         # Fall back to lock file detection
         if [ -f "yarn.lock" ]; then
-          echo "package-manager=yarn" >> $GITHUB_OUTPUT
-          echo "Detected package manager from lock file: yarn"
+          write_output "yarn"
         elif [ -f "pnpm-lock.yaml" ]; then
-          echo "package-manager=pnpm" >> $GITHUB_OUTPUT
-          echo "Detected package manager from lock file: pnpm"
+          write_output "pnpm"
         elif [ -f "package-lock.json" ]; then
-          echo "package-manager=npm" >> $GITHUB_OUTPUT
-          echo "Detected package manager from lock file: npm"
+          write_output "npm"
         else
-          echo "package-manager=npm" >> $GITHUB_OUTPUT
           echo "No package manager detected, defaulting to npm"
+          write_output "npm"
         fi

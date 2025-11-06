@@ -52,7 +52,20 @@ Create the following dotfiles at the root of your repository:
 - `.tflint.hcl`: Configure TFLint for Terraform linting.
 - `.trivyignore`: Define rules for Trivy vulnerability scanning.
 
-### Authenticating with GitHub for Terraform Operations
+### Managing GitHub Repository via Terraform
+
+It is recommended to manage your GitHub repository configuration using
+Terraform. This allows you to maintain your repository settings as code,
+ensuring consistency and ease of management. The module
+[github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/latest)
+streamlines this process.
+
+1. Create a folder named `infra/repository` at the root of your repository.
+2. Define the module in this folder. Refer to the
+   [module README](https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/latest?tab=readme)
+   for detailed instructions.
+
+#### Authenticating with GitHub for Terraform Operations
 
 Changes to your repository via Terraform are applied from your local machine
 using the `terraform apply` command. This requires authentication with GitHub to
@@ -67,7 +80,7 @@ Then, use one of the following methods to authenticate with GitHub:
 1. Using the [GitHub CLI](https://cli.github.com/) (recommended)
 2. Using a Personal Access Token (PAT)
 
-#### Authenticate with GH CLI (recommended)
+##### Authenticate with GH CLI (recommended)
 
 Open your shell and run the command:
 
@@ -79,7 +92,7 @@ gh auth login
 
 Follow the instructions on screen and you are ready to go.
 
-#### Authenticate with PAT token
+##### Authenticate with PAT token
 
 To apply changes to your repository via Terraform, you can authenticate using a
 Personal Access Token (PAT). A single PAT with the following permissions is
@@ -87,11 +100,6 @@ required for all repositories managed through Terraform:
 
 - `read`: `metadata`
 - `read+write`: `variables`, `administration`, `environments`, `secrets`
-
-If you already have a PAT configured with these permissions, you may skip the
-next section.
-
-##### Create the GitHub PAT
 
 If you do not already have a Personal Access Token (PAT), follow these steps:
 
@@ -122,20 +130,36 @@ PATs have an expiration date.
 
 :::
 
-### Link GitHub to Azure
+### Link GitHub to AWS, Azure or both
 
-Follow GitHub best practices and connect your repository to Azure using the
-[azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-Terraform module.
+:::info[Requirements]
+
+Before starting, ensure you have a stored secret in the target CSP containing a
+PAT token that will be used by the Bootstrap module to configure the GitHub
+self-hosted runner. The PAT must have the following permissions:
+
+- Repository permissions:
+  - Actions: read only
+  - Administration: read and write
+  - Metadata: read only
+- List of repositories:
+  - The target repository
+
+The PAT's user owner must also have the `Admin` role on the target GitHub
+repository.
+
+:::
+
+Once the GitHub repository is created, link it to your cloud provider(s) using
+the proper Terraform module:
 
 1. Create a folder named `infra/bootstrapper` at the root of your repository.
-2. Define the module in this folder. Refer to the
-   [module README](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest?tab=readme)
-   for detailed instructions.
+2. For AWS, use
+   [aws-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/aws/latest)
+3. For Azure, use
+   [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
 
-For more information, see the
-[related blog post](https://dx.pagopa.it/blog/devex-azure-bootstrap-0.1-alpha)
-and the [IAM Framework documentation](azure/iam/azure-iam.md).
+Note, you can use both modules in the same repository if needed.
 
 :::info[Azure Permissions for Initial Setup]
 
@@ -145,12 +169,12 @@ Azure account that has the `Role Based Access Control Administrator` and
 
 Within the PagoPA context, you can obtain the necessary RBAC role by opening a
 Pull Request against the company Azure authorization repository, adding this
-administrative user to the `io-p-adgroup-rbac-admins` team. For example:
+administrative roles to the product Engineering Leader. For example in Azure:
 
 ```terraform
   ...
   {
-    name = "io-p-adgroup-rbac-admins"
+    name = "io-p-adgroup-eng-leader-team"
     members = [
       ...
       "eng.lead.or.delegate@example.com", // Add the user's email here
@@ -162,8 +186,3 @@ administrative user to the `io-p-adgroup-rbac-admins` team. For example:
   },
   ...
 ```
-
-This step is crucial for the `azure-github-environment-bootstrap` module to
-correctly set up the necessary resources and permissions in Azure during the
-first local apply. Subsequent applies can be automated with a GitHub Workflow.
-:::

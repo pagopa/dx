@@ -1,0 +1,22 @@
+```hcl
+module "azure_apim" {
+  source = "../../"
+
+  environment         = local.environment
+  resource_group_name = azurerm_resource_group.example.name
+  use_case            = "high_load"
+
+  # Change this values
+  publisher_email = "example@pagopa.it"
+  publisher_name  = "Example Publisher"
+
+  virtual_network = {
+    name                = local.virtual_network.name
+    resource_group_name = local.virtual_network.resource_group_name
+  }
+  subnet_id                     = azurerm_subnet.example.id
+  virtual_network_type_internal = true
+
+  tags = local.tags
+}
+```

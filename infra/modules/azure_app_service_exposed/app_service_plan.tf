@@ -6,7 +6,7 @@ resource "azurerm_service_plan" "this" {
   resource_group_name    = var.resource_group_name
   os_type                = "Linux"
   sku_name               = local.app_service.sku_name
-  zone_balancing_enabled = local.app_service.zone_balancing_enabled
+  zone_balancing_enabled = local.use_case_features.zone_balancing
 
   tags = local.tags
 }

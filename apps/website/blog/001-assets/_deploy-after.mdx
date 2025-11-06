@@ -1,0 +1,19 @@
+```yaml
+name: Deploy (op-func)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  op_func_deploy:
+    uses: pagopa/dx/.github/workflows/web_app_deploy.yaml@add-web-app-deploy-workflow
+    name: Deploy
+    secrets: inherit
+    with:
+      workspace_name: op-func
+      environment: app-prod
+      resource_group_name: io-p-weu-fims-rg-01
+      web_app_name: io-p-weu-fims-op-func-01
+      use_staging_slot: false
+      use_private_agent: true
+```

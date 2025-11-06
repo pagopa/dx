@@ -17,17 +17,30 @@ locals {
     ) : []
   }
 
+  use_cases = {
+    default = {
+      sku            = "P1v3"
+      slot           = true
+      zone_balancing = true
+    }
+    high_load = {
+      sku            = "P2v3"
+      slot           = true
+      zone_balancing = true
+    }
+  }
+
+  use_case_features = local.use_cases[var.use_case]
+
   app_service_plan = {
     enable = var.app_service_plan_id == null
   }
 
   app_service = {
-    name                   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service" }))
-    sku_name               = local.sku_name_mapping[local.tier]
-    has_existing_subnet    = var.subnet_id != null
-    zone_balancing_enabled = local.tier != "s"
-    is_slot_enabled        = local.tier == "s" ? 0 : 1
-    private_endpoint_name  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_private_endpoint" }))
+    name                  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service" }))
+    sku_name              = var.size != null ? var.size : local.use_case_features.sku
+    has_existing_subnet   = var.subnet_id != null
+    private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_private_endpoint" }))
   }
 
   app_service_slot = {

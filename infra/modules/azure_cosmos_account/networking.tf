@@ -1,7 +1,6 @@
-#
-# Private endpoints
-#
 resource "azurerm_private_endpoint" "sql" {
+  count = var.force_public_network_access_enabled ? 0 : 1
+
   name                = local.private_endpoint_name
   location            = var.environment.location
   resource_group_name = var.resource_group_name

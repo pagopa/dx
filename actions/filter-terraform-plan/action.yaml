@@ -1,0 +1,42 @@
+name: "Run and Filter Terraform Plan"
+description: "Executes terraform plan, removes sensitive information from the output, and strips all unnecessary log lines."
+
+inputs:
+  base-path:
+    description: "The directory where terraform plan will be executed. (Defaults to the root of the repository)"
+    required: false
+    default: "."
+  no-refresh:
+    description: "If true, the terraform plan will be executed with the -refresh=false and -lock=false flags."
+    required: false
+    default: "false"
+  sensitive-keys:
+    description: "A comma-separated list of sensitive keys to filter from the plan output."
+    required: true
+
+outputs:
+  summary_line:
+    description: "A summary line indicating the number of resources to be added, changed, or destroyed."
+    value: ${{ steps.plan.outputs.summary_line }}
+  filtered_plan_path:
+    description: "The path to the file containing the filtered output of the `terraform plan` command."
+    value: ${{ steps.plan.outputs.filtered_plan_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Terraform Plan and Filter Output
+      id: plan
+      working-directory: ${{ inputs.base-path }}
+      shell: bash
+      run: |
+        bash $GITHUB_ACTION_PATH/run_plan.sh
+
+        # --- Define outputs ---
+        echo "filtered_plan_path=$WORKING_DIRECTORY/$PLAN_FILE" >> $GITHUB_OUTPUT
+      env:
+        WORKING_DIRECTORY: ${{ inputs.base-path }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        SENSITIVE_KEYS: ${{ inputs.sensitive-keys }}
+        NO_REFRESH: ${{ inputs.no-refresh }}
+        PLAN_FILE: filtered_plan.txt

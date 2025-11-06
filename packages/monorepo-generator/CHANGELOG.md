@@ -1,5 +1,15 @@
 # @pagopa/monorepo-generator
 
+## 0.8.0
+
+### Minor Changes
+
+- 13374c8: Ask environment information when running the generator
+
+### Patch Changes
+
+- 13374c8: Validate value for `repoName` prompt; it cannot be empty.
+
 ## 0.6.0
 
 ### Minor Changes

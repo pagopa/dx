@@ -17,7 +17,7 @@ repos:
         pass_filenames: false
         verbose: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.96.2
+    rev: v1.102.0
     hooks:
       - id: terraform_fmt
       - id: terraform_docs
@@ -25,7 +25,8 @@ repos:
         args:
           - --hook-config=--create-file-if-not-exist=true
           - --args=--hide providers
-        files: ^infra/modules/.*
+          - --args=--lockfile=false
+        files: ^infra/(?:.*/)?_?modules/.*
       - id: terraform_docs
         name: terraform_docs on resources
         args:
@@ -33,9 +34,8 @@ repos:
         exclude: |
           (?x)^(
             infra/modules/.*?|
-            providers/.*?|
-            infra\/bootstrapper\/(?:.*\/)?(?:_?modules)\/.*
-            infra\/resources\/(?:.*\/)?(?:_?modules)\/.*
+            infra\/(?:.*\/)_?modules\/.*|
+            providers\/.*
             )$
       - id: terraform_tflint
         args:
@@ -53,4 +53,5 @@ repos:
         args:
           - --args=--skip-dirs="**/.terraform"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
+          - --args=--tf-exclude-downloaded-modules
           - --hook-config=--parallelism-limit=1

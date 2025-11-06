@@ -5,14 +5,6 @@
 
 No requirements.
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 3.6.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.46.0 |
-| <a name="provider_github"></a> [github](#provider\_github) | 6.6.0 |
-
 ## Modules
 
 | Name | Source | Version |
@@ -27,6 +19,7 @@ No requirements.
 | Name | Type |
 |------|------|
 | [azurerm_role_assignment.contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.static_web_apps_list_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.storage_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.user_access_administrator](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [github_actions_environment_secret.appi_instrumentation_key](https://registry.terraform.io/providers/hashicorp/github/latest/docs/resources/actions_environment_secret) | resource |
