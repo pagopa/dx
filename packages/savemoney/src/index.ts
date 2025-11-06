@@ -59,13 +59,7 @@ export type ResourceReport = {
 };
 
 /**
- * Main logic — analyze resources for all subscriptions.
- *
- * @param config - Configuration object with subscription IDs and settings
- * @param format - Output format (json, yaml, table, or detailed-json)
- */
-/**
- * Analyzes resources in multiple Azure subscriptions and generates a report.
+ * Main logic — Analyzes resources in multiple Azure subscriptions and generates a report.
  *
  * @param config - Configuration with subscription IDs, tenant ID, and analysis settings
  * @param format - Output format (table, json, yaml, or detailed-json)

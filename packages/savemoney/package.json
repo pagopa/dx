@@ -6,7 +6,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "apps/savemoney"
+    "directory": "packages/savemoney"
   },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
