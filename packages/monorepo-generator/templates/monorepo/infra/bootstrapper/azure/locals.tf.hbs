@@ -14,8 +14,8 @@ locals {
   }
 
   tags = {
-    CreatedBy      = "DX CLI"
+    CreatedBy      = "Terraform"
     Environment    = "{{ environment }}"
-    Source         = "https://github.com/pagopa/dx/tree/main/infra/modules/azure_github_environment_bootstrap/examples/single_environment"
+    Source         = "https://github.com/pagopa/{{ repoName }}/tree/main/infra/bootstrapper/{{ environment }}"
   }
 }
