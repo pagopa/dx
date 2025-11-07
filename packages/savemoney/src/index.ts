@@ -34,11 +34,9 @@ import * as yaml from "js-yaml";
 import * as readline from "readline";
 import { table } from "table";
 
-export type AnalysisResult = {
-  costRisk: "high" | "low" | "medium";
-  reason: string;
-  suspectedUnused: boolean;
-};
+import type { AnalysisResult, CostRisk } from "./types.js";
+
+import { mergeResults } from "./types.js";
 
 export type Config = {
   debug?: boolean;
@@ -47,8 +45,6 @@ export type Config = {
   tenantId: string;
   timespanDays: number;
 };
-
-export type CostRisk = "high" | "low" | "medium";
 
 export type DetailedResourceReport = {
   analysis: AnalysisResult;
@@ -347,25 +343,6 @@ export async function loadConfig(configPath?: string): Promise<Config> {
     subscriptionIds,
     tenantId,
     timespanDays: 30,
-  };
-}
-
-/**
- * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.
- *
- * @param baseResult - The base analysis result
- * @param specificResult - The specific analysis result to merge
- * @returns Merged analysis result
- */
-export function mergeResults(
-  baseResult: AnalysisResult,
-  specificResult: AnalysisResult,
-): AnalysisResult {
-  return {
-    costRisk: specificResult.costRisk,
-    reason: baseResult.reason + specificResult.reason,
-    suspectedUnused:
-      baseResult.suspectedUnused || specificResult.suspectedUnused,
   };
 }
 
