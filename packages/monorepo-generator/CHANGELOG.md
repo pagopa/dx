@@ -1,5 +1,15 @@
 # @pagopa/monorepo-generator
 
+## 0.8.3
+
+### Patch Changes
+
+- 6c76c1d: Generate the `.node-version` file with the latest Node version available
+- 6c76c1d: Update .gitignore template ignoring `node` related stuff
+
+  Since the generator is highly bound to pnpm, the `.gitignore` file lists
+  the `node` related stuff to be ignored.
+
 ## 0.8.0
 
 ### Minor Changes
