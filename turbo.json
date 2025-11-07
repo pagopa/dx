@@ -23,6 +23,12 @@
       "inputs": ["src/**/*.ts"],
       "outputs": ["coverage"]
     },
+    "test-unit": {
+      "inputs": ["**/*.tf", "**/unit.tftest.hcl"]
+    },
+    "test-contract": {
+      "inputs": ["**/*.tf", "**/contract.tftest.hcl"]
+    },
     "test-integration": {
       "inputs": ["**/*.tf", "**/integration.tftest.hcl"]
     },
