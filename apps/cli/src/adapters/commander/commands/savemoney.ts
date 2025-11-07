@@ -32,14 +32,14 @@ export const makeSavemoneyCommand = () =>
           try {
             // Load configuration
             const config: Config = await loadConfig(options.config);
-            config.timespanDays =
-              Number.parseInt(options.days, 10) || config.timespanDays;
-            config.preferredLocation =
-              options.location || config.preferredLocation;
-            config.debug = options.debug || false;
-
+            const finalConfig: Config = {
+              ...config,
+              preferredLocation: options.location || config.preferredLocation,
+              timespanDays:
+                Number.parseInt(options.days, 10) || config.timespanDays,
+            };
             // Run analysis
-            await analyzeResources(config, options.format);
+            await analyzeResources(finalConfig, options.format);
           } catch (error) {
             this.error(
               `Analysis failed: ${error instanceof Error ? error.message : error}`,
