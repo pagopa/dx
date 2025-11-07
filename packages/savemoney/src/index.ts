@@ -1,17 +1,27 @@
 /**
- * Azure Resource Analyzer
+ * SaveMoney Package
  *
- * A read-only tool that analyzes Azure resources and reports
- * potentially unused or cost-inefficient ones.
+ * A tool that analyzes cloud resources and reports potentially unused
+ * or cost-inefficient ones.
  *
  * Features:
- * - Multi-subscription support
- * - Metric-based analysis using Azure Monitor
+ * - Multi-cloud support (Azure, AWS planned)
+ * - Metric-based analysis
  * - Multiple output formats (table, JSON, YAML, detailed-JSON)
  * - Configurable via CLI options, environment variables, or config file
  *
  * This tool does NOT modify, tag, or delete any resources.
  */
+
+// Export common types
+export * from "./types.js";
+
+// Export Azure module for new usage pattern
+import * as azureModule from "./azure/index.js";
+export const azure = azureModule;
+
+// Original implementation below - kept for backward compatibility
+// =================================================================
 
 import { WebSiteManagementClient } from "@azure/arm-appservice";
 import { ComputeManagementClient } from "@azure/arm-compute";
@@ -57,6 +67,112 @@ export type ResourceReport = {
   suspectedUnused: boolean;
   type: string;
 };
+
+/**
+ * Dispatches analysis to the appropriate function based on resource type.
+ *
+ * @param resource - The Azure resource to analyze
+ * @param monitorClient - Azure Monitor client for metrics
+ * @param computeClient - Azure Compute management client
+ * @param networkClient - Azure Network management client
+ * @param webSiteClient - Azure App Service management client
+ * @param preferredLocation - Preferred Azure region for resources
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns Analysis result with cost risk, reason, and usage status
+ */
+export async function analyzeResource(
+  resource: armResources.GenericResource,
+  monitorClient: MonitorClient,
+  computeClient: ComputeManagementClient,
+  networkClient: NetworkManagementClient,
+  webSiteClient: WebSiteManagementClient,
+  preferredLocation: string,
+  timespanDays: number,
+): Promise<AnalysisResult> {
+  const type = resource.type?.toLowerCase() || "";
+  let result = {
+    costRisk: "low" as "high" | "low" | "medium",
+    reason: "",
+    suspectedUnused: false,
+  };
+
+  // Generic check: lack of tags is a common sign of unmanaged resources.
+  if (!resource.tags || Object.keys(resource.tags).length === 0) {
+    result.suspectedUnused = true;
+    result.reason += "No tags found. ";
+  }
+
+  // Route to type-specific analysis hooks
+  switch (type) {
+    case "microsoft.compute/disks": {
+      const diskResult = await analyzeDisk(resource, computeClient);
+      result = mergeResults(result, diskResult);
+      break;
+    }
+    case "microsoft.compute/virtualmachines": {
+      const vmResult = await analyzeVM(
+        resource,
+        monitorClient,
+        computeClient,
+        timespanDays,
+      );
+      result = mergeResults(result, vmResult);
+      break;
+    }
+    case "microsoft.network/networkinterfaces": {
+      const nicResult = await analyzeNic(resource, networkClient);
+      result = mergeResults(result, nicResult);
+      break;
+    }
+    case "microsoft.network/privateendpoints": {
+      const peResult = await analyzePrivateEndpoint(resource, networkClient);
+      result = mergeResults(result, peResult);
+      break;
+    }
+    case "microsoft.network/publicipaddresses": {
+      const pipResult = await analyzePublicIp(
+        resource,
+        networkClient,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, pipResult);
+      break;
+    }
+    case "microsoft.storage/storageaccounts": {
+      const storageResult = await analyzeStorageAccount(
+        resource,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, storageResult);
+      break;
+    }
+    case "microsoft.web/serverfarms": {
+      const aspResult = await analyzeAppServicePlan(
+        resource,
+        webSiteClient,
+        monitorClient,
+        timespanDays,
+      );
+      result = mergeResults(result, aspResult);
+      break;
+    }
+    default:
+      result.reason += "No specific analysis for this resource type. ";
+      break;
+  }
+
+  // Generic check for location
+  if (
+    resource.location &&
+    !resource.location.toLowerCase().includes(preferredLocation.toLowerCase())
+  ) {
+    result.reason += `Resource not in preferred location (${preferredLocation}). `;
+  }
+
+  return { ...result, reason: result.reason.trim() };
+}
 
 /**
  * Main logic — Analyzes resources in multiple Azure subscriptions and generates a report.
@@ -126,6 +242,55 @@ export async function analyzeResources(
   });
 
   await generateReport(allReports, format);
+}
+
+/**
+ * Generates the final report in the specified format.
+ *
+ * @param report - Array of detailed resource reports
+ * @param format - Output format (json, yaml, table, or detailed-json)
+ */
+export async function generateReport(
+  report: DetailedResourceReport[],
+  format: "detailed-json" | "json" | "table" | "yaml",
+) {
+  if (format === "detailed-json") {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  // For other formats, we extract the summary data.
+  const summaryReport: ResourceReport[] = report.map((r) => ({
+    costRisk: r.analysis.costRisk,
+    location: r.resource.location ?? "",
+    name: r.resource.name ?? "unknown",
+    reason: r.analysis.reason,
+    resourceGroup: r.resource.id?.split("/")[4],
+    subscriptionId: r.resource.id?.split("/")[2] ?? "unknown",
+    suspectedUnused: r.analysis.suspectedUnused,
+    type: r.resource.type ?? "unknown",
+  }));
+
+  if (format === "json") {
+    console.log(JSON.stringify(summaryReport, null, 2));
+  } else if (format === "yaml") {
+    console.log(yaml.dump(summaryReport));
+  } else {
+    const tableData = [
+      ["Name", "Type", "Resource Group", "Risk", "Unused", "Reason"],
+      ...summaryReport.map((r) => [
+        r.name,
+        r.type,
+        r.resourceGroup || "N/A",
+        r.costRisk,
+        r.suspectedUnused ? "Yes" : "No",
+        r.reason,
+      ]),
+    ];
+
+    const output = table(tableData);
+    console.log(output);
+  }
 }
 
 /**
@@ -634,112 +799,6 @@ async function analyzePublicIp(
 }
 
 /**
- * Dispatches analysis to the appropriate function based on resource type.
- *
- * @param resource - The Azure resource to analyze
- * @param monitorClient - Azure Monitor client for metrics
- * @param computeClient - Azure Compute management client
- * @param networkClient - Azure Network management client
- * @param webSiteClient - Azure App Service management client
- * @param preferredLocation - Preferred Azure region for resources
- * @param timespanDays - Number of days to look back for metrics
- * @returns Analysis result with cost risk, reason, and usage status
- */
-async function analyzeResource(
-  resource: armResources.GenericResource,
-  monitorClient: MonitorClient,
-  computeClient: ComputeManagementClient,
-  networkClient: NetworkManagementClient,
-  webSiteClient: WebSiteManagementClient,
-  preferredLocation: string,
-  timespanDays: number,
-): Promise<AnalysisResult> {
-  const type = resource.type?.toLowerCase() || "";
-  let result = {
-    costRisk: "low" as "high" | "low" | "medium",
-    reason: "",
-    suspectedUnused: false,
-  };
-
-  // Generic check: lack of tags is a common sign of unmanaged resources.
-  if (!resource.tags || Object.keys(resource.tags).length === 0) {
-    result.suspectedUnused = true;
-    result.reason += "No tags found. ";
-  }
-
-  // Route to type-specific analysis hooks
-  switch (type) {
-    case "microsoft.compute/disks": {
-      const diskResult = await analyzeDisk(resource, computeClient);
-      result = mergeResults(result, diskResult);
-      break;
-    }
-    case "microsoft.compute/virtualmachines": {
-      const vmResult = await analyzeVM(
-        resource,
-        monitorClient,
-        computeClient,
-        timespanDays,
-      );
-      result = mergeResults(result, vmResult);
-      break;
-    }
-    case "microsoft.network/networkinterfaces": {
-      const nicResult = await analyzeNic(resource, networkClient);
-      result = mergeResults(result, nicResult);
-      break;
-    }
-    case "microsoft.network/privateendpoints": {
-      const peResult = await analyzePrivateEndpoint(resource, networkClient);
-      result = mergeResults(result, peResult);
-      break;
-    }
-    case "microsoft.network/publicipaddresses": {
-      const pipResult = await analyzePublicIp(
-        resource,
-        networkClient,
-        monitorClient,
-        timespanDays,
-      );
-      result = mergeResults(result, pipResult);
-      break;
-    }
-    case "microsoft.storage/storageaccounts": {
-      const storageResult = await analyzeStorageAccount(
-        resource,
-        monitorClient,
-        timespanDays,
-      );
-      result = mergeResults(result, storageResult);
-      break;
-    }
-    case "microsoft.web/serverfarms": {
-      const aspResult = await analyzeAppServicePlan(
-        resource,
-        webSiteClient,
-        monitorClient,
-        timespanDays,
-      );
-      result = mergeResults(result, aspResult);
-      break;
-    }
-    default:
-      result.reason += "No specific analysis for this resource type. ";
-      break;
-  }
-
-  // Generic check for location
-  if (
-    resource.location &&
-    !resource.location.toLowerCase().includes(preferredLocation.toLowerCase())
-  ) {
-    result.reason += `Resource not in preferred location (${preferredLocation}). `;
-  }
-
-  return { ...result, reason: result.reason.trim() };
-}
-
-/**
  * Analyzes Storage Accounts for low transaction activity.
  *
  * @param resource - The Azure storage account resource to analyze
@@ -940,55 +999,6 @@ function debugLogResourceStart(resourceName: string, resourceType: string) {
     console.log(`🔍 ANALYZING: ${resourceName}`);
     console.log(`   Type: ${resourceType}`);
     console.log("=".repeat(80));
-  }
-}
-
-/**
- * Generates the final report in the specified format.
- *
- * @param report - Array of detailed resource reports
- * @param format - Output format (json, yaml, table, or detailed-json)
- */
-async function generateReport(
-  report: DetailedResourceReport[],
-  format: "detailed-json" | "json" | "table" | "yaml",
-) {
-  if (format === "detailed-json") {
-    console.log(JSON.stringify(report, null, 2));
-    return;
-  }
-
-  // For other formats, we extract the summary data.
-  const summaryReport: ResourceReport[] = report.map((r) => ({
-    costRisk: r.analysis.costRisk,
-    location: r.resource.location ?? "",
-    name: r.resource.name ?? "unknown",
-    reason: r.analysis.reason,
-    resourceGroup: r.resource.id?.split("/")[4],
-    subscriptionId: r.resource.id?.split("/")[2] ?? "unknown",
-    suspectedUnused: r.analysis.suspectedUnused,
-    type: r.resource.type ?? "unknown",
-  }));
-
-  if (format === "json") {
-    console.log(JSON.stringify(summaryReport, null, 2));
-  } else if (format === "yaml") {
-    console.log(yaml.dump(summaryReport));
-  } else {
-    const tableData = [
-      ["Name", "Type", "Resource Group", "Risk", "Unused", "Reason"],
-      ...summaryReport.map((r) => [
-        r.name,
-        r.type,
-        r.resourceGroup || "N/A",
-        r.costRisk,
-        r.suspectedUnused ? "Yes" : "No",
-        r.reason,
-      ]),
-    ];
-
-    const output = table(tableData);
-    console.log(output);
   }
 }
 

@@ -3,7 +3,7 @@ import lintRules from "@pagopa/eslint-config";
 export default [
   ...lintRules,
   {
-    ignores: ["bin/**"],
+    ignores: ["bin/**", "dist/**"],
   },
   {
     rules: {
