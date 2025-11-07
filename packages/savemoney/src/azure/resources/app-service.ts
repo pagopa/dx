@@ -30,12 +30,14 @@ export async function analyzeAppServicePlan(
   webSiteClient: WebSiteManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "App Service Plan (microsoft.web/serverfarms)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -60,7 +62,7 @@ export async function analyzeAppServicePlan(
       planName,
     );
 
-    debugLog("App Service Plan API details:", planDetails);
+    debugLog(debug, "App Service Plan API details:", planDetails);
 
     // Check if the plan has no apps
     if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
@@ -109,6 +111,6 @@ export async function analyzeAppServicePlan(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }

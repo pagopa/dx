@@ -27,12 +27,14 @@ export async function analyzeStorageAccount(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Storage Account (microsoft.storage/storageaccounts)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   if (!resource.id) {
@@ -56,10 +58,10 @@ export async function analyzeStorageAccount(
       reason: `Very low transaction count (${transactions}). `,
       suspectedUnused: true,
     };
-    debugLogAnalysisResult(result);
+    debugLogAnalysisResult(debug, result);
     return result;
   }
   const result = { costRisk, reason: "", suspectedUnused: false };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }

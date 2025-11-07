@@ -7,4 +7,3 @@
 export * from "./analyzer.js";
 export * from "./config.js";
 export * from "./types.js";
-export { setDebugMode } from "./utils.js";

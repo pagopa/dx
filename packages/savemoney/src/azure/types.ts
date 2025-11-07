@@ -10,6 +10,7 @@ import type { AnalysisResult, BaseConfig, CostRisk } from "../types.js";
  * Azure configuration extending base config
  */
 export type AzureConfig = BaseConfig & {
+  debug?: boolean;
   subscriptionIds: string[];
   tenantId: string;
 };

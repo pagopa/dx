@@ -30,12 +30,14 @@ export async function analyzePublicIp(
   networkClient: NetworkManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Public IP (microsoft.network/publicipaddresses)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -60,7 +62,7 @@ export async function analyzePublicIp(
       publicIpName,
     );
 
-    debugLog("Public IP API details:", publicIpDetails);
+    debugLog(debug, "Public IP API details:", publicIpDetails);
 
     // Check if Public IP is not associated with any resource
     if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
@@ -97,6 +99,6 @@ export async function analyzePublicIp(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }

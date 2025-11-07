@@ -6,16 +6,15 @@ import type { MonitorClient } from "@azure/arm-monitor";
 
 import type { AnalysisResult } from "../types.js";
 
-let DEBUG_MODE = false;
-
 /**
  * Logs a debug message, optionally with an object.
  *
+ * @param debug - Whether debug logging is enabled
  * @param message - The message to log
  * @param object - Optional object to stringify and log
  */
-export function debugLog(message: string, object?: unknown) {
-  if (DEBUG_MODE) {
+export function debugLog(debug: boolean, message: string, object?: unknown) {
+  if (debug) {
     if (object !== undefined) {
       console.log(message, JSON.stringify(object, null, 2));
     } else {
@@ -27,10 +26,11 @@ export function debugLog(message: string, object?: unknown) {
 /**
  * Logs the analysis result for a resource.
  *
+ * @param debug - Whether debug logging is enabled
  * @param result - The analysis result object
  */
-export function debugLogAnalysisResult(result: AnalysisResult) {
-  if (DEBUG_MODE) {
+export function debugLogAnalysisResult(debug: boolean, result: AnalysisResult) {
+  if (debug) {
     console.log("\n📊 ANALYSIS RESULT:");
     console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
     console.log(
@@ -44,14 +44,16 @@ export function debugLogAnalysisResult(result: AnalysisResult) {
 /**
  * Logs a resource analysis header with visual separator.
  *
+ * @param debug - Whether debug logging is enabled
  * @param resourceName - Name of the resource being analyzed
  * @param resourceType - Type of the resource
  */
 export function debugLogResourceStart(
+  debug: boolean,
   resourceName: string,
   resourceType: string,
 ) {
-  if (DEBUG_MODE) {
+  if (debug) {
     console.log("\n" + "=".repeat(80));
     console.log(`🔍 ANALYZING: ${resourceName}`);
     console.log(`   Type: ${resourceType}`);
@@ -124,12 +126,4 @@ export async function getMetric(
     );
     return null;
   }
-}
-
-/**
- * Sets the debug mode for logging.
- * @param enabled - Whether debug logging should be enabled
- */
-export function setDebugMode(enabled: boolean) {
-  DEBUG_MODE = enabled;
 }

@@ -23,6 +23,7 @@ import {
  * @param monitorClient - Azure Monitor client for fetching metrics
  * @param computeClient - Azure Compute client for VM details
  * @param timespanDays - Number of days to analyze metrics
+ * @param debug - Whether debug logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeVM(
@@ -30,12 +31,14 @@ export async function analyzeVM(
   monitorClient: MonitorClient,
   computeClient: ComputeManagementClient,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Virtual Machine (microsoft.compute/virtualmachines)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -60,7 +63,7 @@ export async function analyzeVM(
       vmName,
     );
 
-    debugLog("VM Instance View:", instanceView);
+    debugLog(debug, "VM Instance View:", instanceView);
 
     // Check power state from instance view
     const vmStatus = instanceView.statuses?.find((s: { code?: string }) =>
@@ -73,7 +76,7 @@ export async function analyzeVM(
         reason: "VM is deallocated. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(result);
+      debugLogAnalysisResult(debug, result);
       return result;
     }
 
@@ -83,7 +86,7 @@ export async function analyzeVM(
         reason: "VM is stopped. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(result);
+      debugLogAnalysisResult(debug, result);
       return result;
     }
   } catch (error) {
@@ -119,6 +122,6 @@ export async function analyzeVM(
   }
 
   const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }

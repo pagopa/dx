@@ -34,9 +34,6 @@ import * as yaml from "js-yaml";
 import * as readline from "readline";
 import { table } from "table";
 
-// Global debug flag
-let DEBUG_MODE = false;
-
 export type AnalysisResult = {
   costRisk: "high" | "low" | "medium";
   reason: string;
@@ -44,6 +41,7 @@ export type AnalysisResult = {
 };
 
 export type Config = {
+  debug?: boolean;
   preferredLocation: string;
   subscriptionIds: string[];
   tenantId: string;
@@ -88,6 +86,7 @@ export async function analyzeResource(
   webSiteClient: WebSiteManagementClient,
   preferredLocation: string,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   const type = resource.type?.toLowerCase() || "";
   let result = {
@@ -105,7 +104,7 @@ export async function analyzeResource(
   // Route to type-specific analysis hooks
   switch (type) {
     case "microsoft.compute/disks": {
-      const diskResult = await analyzeDisk(resource, computeClient);
+      const diskResult = await analyzeDisk(resource, computeClient, debug);
       result = mergeResults(result, diskResult);
       break;
     }
@@ -115,17 +114,22 @@ export async function analyzeResource(
         monitorClient,
         computeClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, vmResult);
       break;
     }
     case "microsoft.network/networkinterfaces": {
-      const nicResult = await analyzeNic(resource, networkClient);
+      const nicResult = await analyzeNic(resource, networkClient, debug);
       result = mergeResults(result, nicResult);
       break;
     }
     case "microsoft.network/privateendpoints": {
-      const peResult = await analyzePrivateEndpoint(resource, networkClient);
+      const peResult = await analyzePrivateEndpoint(
+        resource,
+        networkClient,
+        debug,
+      );
       result = mergeResults(result, peResult);
       break;
     }
@@ -135,6 +139,7 @@ export async function analyzeResource(
         networkClient,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, pipResult);
       break;
@@ -144,6 +149,7 @@ export async function analyzeResource(
         resource,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, storageResult);
       break;
@@ -154,6 +160,7 @@ export async function analyzeResource(
         webSiteClient,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, aspResult);
       break;
@@ -218,6 +225,7 @@ export async function analyzeResources(
         webSiteClient,
         config.preferredLocation,
         config.timespanDays,
+        config.debug || false,
       );
 
       if (suspectedUnused) {
@@ -381,14 +389,6 @@ export async function prompt(question: string): Promise<string> {
 }
 
 /**
- * Sets the debug mode for logging.
- * @param enabled - Whether debug logging should be enabled
- */
-export function setDebugMode(enabled: boolean) {
-  DEBUG_MODE = enabled;
-}
-
-/**
  * Analyzes App Service Plans for unused capacity and oversized tiers.
  *
  * @param resource - The Azure resource to analyze
@@ -402,12 +402,14 @@ async function analyzeAppServicePlan(
   webSiteClient: WebSiteManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "App Service Plan (microsoft.web/serverfarms)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -432,7 +434,7 @@ async function analyzeAppServicePlan(
       planName,
     );
 
-    debugLog("App Service Plan API details:", planDetails);
+    debugLog(debug, "App Service Plan API details:", planDetails);
 
     // Check if the plan has no apps
     if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
@@ -481,7 +483,7 @@ async function analyzeAppServicePlan(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -495,12 +497,14 @@ async function analyzeAppServicePlan(
 async function analyzeDisk(
   resource: armResources.GenericResource,
   computeClient: ComputeManagementClient,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Managed Disk (microsoft.compute/disks)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
 
@@ -524,7 +528,7 @@ async function analyzeDisk(
       diskName,
     );
 
-    debugLog("Disk API details:", diskDetails);
+    debugLog(debug, "Disk API details:", diskDetails);
 
     // Check if disk is unattached
     if (
@@ -536,7 +540,7 @@ async function analyzeDisk(
         reason: "Disk is unattached. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(result);
+      debugLogAnalysisResult(debug, result);
       return result;
     }
   } catch (error) {
@@ -549,7 +553,7 @@ async function analyzeDisk(
   }
 
   const result = { costRisk, reason: "", suspectedUnused: false };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -563,12 +567,14 @@ async function analyzeDisk(
 async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Network Interface (microsoft.network/networkinterfaces)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -593,7 +599,7 @@ async function analyzeNic(
       nicName,
     );
 
-    debugLog("NIC API details:", nicDetails);
+    debugLog(debug, "NIC API details:", nicDetails);
 
     // Check if NIC is not attached to any VM or private endpoint
     if (!nicDetails.virtualMachine && !nicDetails.privateEndpoint) {
@@ -620,7 +626,7 @@ async function analyzeNic(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -634,12 +640,14 @@ async function analyzeNic(
 async function analyzePrivateEndpoint(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Private Endpoint (microsoft.network/privateendpoints)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -664,7 +672,7 @@ async function analyzePrivateEndpoint(
       privateEndpointName,
     );
 
-    debugLog("Private Endpoint API details:", privateEndpointDetails);
+    debugLog(debug, "Private Endpoint API details:", privateEndpointDetails);
 
     // Check if Private Endpoint has no private link service connection
     if (
@@ -709,7 +717,7 @@ async function analyzePrivateEndpoint(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -727,12 +735,14 @@ async function analyzePublicIp(
   networkClient: NetworkManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Public IP (microsoft.network/publicipaddresses)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -757,7 +767,7 @@ async function analyzePublicIp(
       publicIpName,
     );
 
-    debugLog("Public IP API details:", publicIpDetails);
+    debugLog(debug, "Public IP API details:", publicIpDetails);
 
     // Check if Public IP is not associated with any resource
     if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
@@ -794,7 +804,7 @@ async function analyzePublicIp(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -810,12 +820,14 @@ async function analyzeStorageAccount(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Storage Account (microsoft.storage/storageaccounts)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   if (!resource.id) {
@@ -839,11 +851,11 @@ async function analyzeStorageAccount(
       reason: `Very low transaction count (${transactions}). `,
       suspectedUnused: true,
     };
-    debugLogAnalysisResult(result);
+    debugLogAnalysisResult(debug, result);
     return result;
   }
   const result = { costRisk, reason: "", suspectedUnused: false };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
@@ -861,12 +873,14 @@ async function analyzeVM(
   monitorClient: MonitorClient,
   computeClient: ComputeManagementClient,
   timespanDays: number,
+  debug = false,
 ) {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Virtual Machine (microsoft.compute/virtualmachines)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -891,7 +905,7 @@ async function analyzeVM(
       vmName,
     );
 
-    debugLog("VM Instance View:", instanceView);
+    debugLog(debug, "VM Instance View:", instanceView);
 
     // Check power state from instance view
     const vmStatus = instanceView.statuses?.find((s: { code?: string }) =>
@@ -904,7 +918,7 @@ async function analyzeVM(
         reason: "VM is deallocated. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(result);
+      debugLogAnalysisResult(debug, result);
       return result;
     }
 
@@ -914,7 +928,7 @@ async function analyzeVM(
         reason: "VM is stopped. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(result);
+      debugLogAnalysisResult(debug, result);
       return result;
     }
   } catch (error) {
@@ -950,18 +964,19 @@ async function analyzeVM(
   }
 
   const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
 
 /**
- * Debug logging function - only logs if DEBUG_MODE is enabled.
+ * Debug logging function - only logs if debug is enabled.
  *
+ * @param debug - Whether debug logging is enabled
  * @param message - The message to log
  * @param object - Optional object to stringify and log
  */
-function debugLog(message: string, object?: unknown) {
-  if (DEBUG_MODE) {
+function debugLog(debug: boolean, message: string, object?: unknown) {
+  if (debug) {
     if (object !== undefined) {
       console.log(message, JSON.stringify(object, null, 2));
     } else {
@@ -975,8 +990,8 @@ function debugLog(message: string, object?: unknown) {
  *
  * @param result - The analysis result object
  */
-function debugLogAnalysisResult(result: AnalysisResult) {
-  if (DEBUG_MODE) {
+function debugLogAnalysisResult(debug: boolean, result: AnalysisResult) {
+  if (debug) {
     console.log("\n📊 ANALYSIS RESULT:");
     console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
     console.log(
@@ -993,8 +1008,12 @@ function debugLogAnalysisResult(result: AnalysisResult) {
  * @param resourceName - Name of the resource being analyzed
  * @param resourceType - Type of the resource
  */
-function debugLogResourceStart(resourceName: string, resourceType: string) {
-  if (DEBUG_MODE) {
+function debugLogResourceStart(
+  debug: boolean,
+  resourceName: string,
+  resourceType: string,
+) {
+  if (debug) {
     console.log("\n" + "=".repeat(80));
     console.log(`🔍 ANALYZING: ${resourceName}`);
     console.log(`   Type: ${resourceType}`);

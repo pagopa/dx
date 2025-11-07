@@ -1,10 +1,6 @@
 import type { Config } from "@pagopa/dx-savemoney";
 
-import {
-  analyzeResources,
-  loadConfig,
-  setDebugMode,
-} from "@pagopa/dx-savemoney";
+import { analyzeResources, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
 export const makeSavemoneyCommand = () =>
@@ -34,15 +30,13 @@ export const makeSavemoneyCommand = () =>
         .option("--debug", "Enable debug logging")
         .action(async function (options) {
           try {
-            // Set debug mode
-            setDebugMode(options.debug || false);
-
             // Load configuration
             const config: Config = await loadConfig(options.config);
             config.timespanDays =
               Number.parseInt(options.days, 10) || config.timespanDays;
             config.preferredLocation =
               options.location || config.preferredLocation;
+            config.debug = options.debug || false;
 
             // Run analysis
             await analyzeResources(config, options.format);

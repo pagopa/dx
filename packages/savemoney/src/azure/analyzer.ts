@@ -67,6 +67,7 @@ export async function analyzeAzureResources(
         webSiteClient,
         config.preferredLocation,
         config.timespanDays,
+        config.debug || false,
       );
 
       if (suspectedUnused) {
@@ -103,6 +104,7 @@ export async function analyzeAzureResources(
  * @param webSiteClient - Azure Web Site client
  * @param preferredLocation - Preferred Azure location
  * @param timespanDays - Number of days to analyze metrics
+ * @param debug - Whether debug logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeResource(
@@ -113,6 +115,7 @@ export async function analyzeResource(
   webSiteClient: WebSiteManagementClient,
   preferredLocation: string,
   timespanDays: number,
+  debug = false,
 ): Promise<AnalysisResult> {
   const type = resource.type?.toLowerCase() || "";
   let result = {
@@ -130,7 +133,7 @@ export async function analyzeResource(
   // Route to type-specific analysis hooks
   switch (type) {
     case "microsoft.compute/disks": {
-      const diskResult = await analyzeDisk(resource, computeClient);
+      const diskResult = await analyzeDisk(resource, computeClient, debug);
       result = mergeResults(result, diskResult);
       break;
     }
@@ -140,17 +143,22 @@ export async function analyzeResource(
         monitorClient,
         computeClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, vmResult);
       break;
     }
     case "microsoft.network/networkinterfaces": {
-      const nicResult = await analyzeNic(resource, networkClient);
+      const nicResult = await analyzeNic(resource, networkClient, debug);
       result = mergeResults(result, nicResult);
       break;
     }
     case "microsoft.network/privateendpoints": {
-      const peResult = await analyzePrivateEndpoint(resource, networkClient);
+      const peResult = await analyzePrivateEndpoint(
+        resource,
+        networkClient,
+        debug,
+      );
       result = mergeResults(result, peResult);
       break;
     }
@@ -160,6 +168,7 @@ export async function analyzeResource(
         networkClient,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, pipResult);
       break;
@@ -169,6 +178,7 @@ export async function analyzeResource(
         resource,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, storageResult);
       break;
@@ -179,6 +189,7 @@ export async function analyzeResource(
         webSiteClient,
         monitorClient,
         timespanDays,
+        debug,
       );
       result = mergeResults(result, aspResult);
       break;

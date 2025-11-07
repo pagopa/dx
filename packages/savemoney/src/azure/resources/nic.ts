@@ -24,12 +24,14 @@ import {
 export async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Network Interface (microsoft.network/networkinterfaces)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -54,7 +56,7 @@ export async function analyzeNic(
       nicName,
     );
 
-    debugLog("NIC API details:", nicDetails);
+    debugLog(debug, "NIC API details:", nicDetails);
 
     // Check if NIC is not attached to any VM or private endpoint
     if (!nicDetails.virtualMachine && !nicDetails.privateEndpoint) {
@@ -81,6 +83,6 @@ export async function analyzeNic(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }

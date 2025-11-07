@@ -24,12 +24,14 @@ import {
 export async function analyzePrivateEndpoint(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
+  debug = false,
 ): Promise<AnalysisResult> {
   debugLogResourceStart(
+    debug,
     resource.name || "unknown",
     "Private Endpoint (microsoft.network/privateendpoints)",
   );
-  debugLog("Resource details:", resource);
+  debugLog(debug, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -54,7 +56,7 @@ export async function analyzePrivateEndpoint(
       privateEndpointName,
     );
 
-    debugLog("Private Endpoint API details:", privateEndpointDetails);
+    debugLog(debug, "Private Endpoint API details:", privateEndpointDetails);
 
     // Check if Private Endpoint has no private link service connection
     if (
@@ -99,6 +101,6 @@ export async function analyzePrivateEndpoint(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(result);
+  debugLogAnalysisResult(debug, result);
   return result;
 }
