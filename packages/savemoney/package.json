@@ -1,5 +1,6 @@
 {
   "name": "@pagopa/dx-savemoney",
+  "private": true,
   "version": "0.0.0",
   "type": "module",
   "description": "Azure resource analyzer for finding unused or cost-inefficient resources.",
@@ -17,8 +18,8 @@
     }
   },
   "files": [
-    "bin",
-    "src"
+    "src",
+    "dist"
   ],
   "scripts": {
     "build": "tsup",
@@ -27,14 +28,10 @@
     "lint:check": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "start": "node bin/index.js",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest run --watch",
     "typecheck": "tsc --noEmit"
-  },
-  "bin": {
-    "dx-savemoney": "./bin/cli.js"
   },
   "keywords": [
     "azure",
@@ -50,7 +47,6 @@
     "@azure/arm-network": "^34.1.0",
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "^4.13.0",
-    "commander": "^14.0.0",
     "js-yaml": "^4.1.0",
     "table": "^6.9.0"
   },

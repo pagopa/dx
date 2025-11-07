@@ -5,7 +5,7 @@ This command-line interface (CLI) tool analyzes Azure resources in read-only mod
 ## Main Features
 
 - **Multi-Subscription Analysis**: Scans multiple Azure subscriptions in a single command.
-- **Intelligent Detection**: Uses Azure Monitor metrics (e.g., CPU, network traffic, transactions) to scientifically identify inactive resources.
+- **Intelligent Detection**: Uses Azure Monitor metrics (e.g. CPU, network traffic, transactions) to scientifically identify inactive resources.
 - **Orphaned Resource Identification**: Detects commonly "forgotten" resources like unattached disks, unassociated public IPs, and unused network interfaces.
 - **Flexible Reporting**: Offers multiple output formats:
   - `table`: A human-readable summary for the terminal.
