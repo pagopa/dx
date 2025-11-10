@@ -22,6 +22,6 @@ jobs:
     secrets: inherit
     with:
       environment: dev
-      base_path: "infra/resources/"
+      base_path: "infra/resources"
       override_github_environment: infra-dev
       use_private_agent: true

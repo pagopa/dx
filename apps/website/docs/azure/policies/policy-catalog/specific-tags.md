@@ -13,11 +13,11 @@ of tagging rules.
 This policy enforces the following conditions:
 
 - The `CostCenter` tag must match the allowed user-defined value.
-- The `CreatedBy` tag must be one of: `Terraform`, `ARM`, or `AzurePortal`.
+- The `CreatedBy` tag must be either one of: `Terraform` or `ARM`.
 - The `Environment` tag must be one between: `Prod`, `Dev`, or `Uat`.
 - The `BusinessUnit` tag must be in the user-defined list of allowed values.
-- If `CreatedBy` is `Terraform`, the `Source` tag must match a specific URL with
-  a given GitHub organization.
+- If `CreatedBy` is `Terraform`, the `Source` tag must match a specific URL to
+  the Terraform workspace in the codebase
 - The `ManagementTeam` tag must be in the user-defined list of allowed values.
 
 If any of these conditions are not met, resource creation is denied. The full
