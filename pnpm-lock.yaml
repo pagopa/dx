@@ -300,6 +300,9 @@ importers:
       '@microsoft/docusaurus-plugin-application-insights':
         specifier: ^4.0.1
         version: 4.0.1(@docusaurus/core@3.8.1(@mdx-js/react@3.1.0(@types/react@18.3.23)(react@18.3.1))(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@docusaurus/types@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@docusaurus/utils-validation@3.8.1(acorn@8.15.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@pagopa/dx-mcpprompts':
+        specifier: workspace:^
+        version: link:../../packages/mcp-prompts
       prism-react-renderer:
         specifier: ^2.3.0
         version: 2.4.1(react@18.3.1)
@@ -521,6 +524,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 9.32.0(jiti@2.6.0)
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.8.3)(yaml@2.8.1)
       tsx:
         specifier: ^4.20.6
         version: 4.20.6
