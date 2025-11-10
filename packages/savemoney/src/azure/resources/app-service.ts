@@ -10,10 +10,10 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
   getMetric,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -30,14 +30,14 @@ export async function analyzeAppServicePlan(
   webSiteClient: WebSiteManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "App Service Plan (microsoft.web/serverfarms)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -62,7 +62,7 @@ export async function analyzeAppServicePlan(
       planName,
     );
 
-    debugLog(debug, "App Service Plan API details:", planDetails);
+    verboseLog(verbose, "App Service Plan API details:", planDetails);
 
     // Check if the plan has no apps
     if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
@@ -111,6 +111,6 @@ export async function analyzeAppServicePlan(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

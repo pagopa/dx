@@ -9,9 +9,9 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -19,20 +19,20 @@ import {
  *
  * @param resource - The Azure resource object
  * @param computeClient - Azure Compute client for disk details
- * @param debug - Whether debug logging is enabled
+ * @param verbose - Whether verbose logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeDisk(
   resource: armResources.GenericResource,
   computeClient: ComputeManagementClient,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Managed Disk (microsoft.compute/disks)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
 
@@ -56,7 +56,7 @@ export async function analyzeDisk(
       diskName,
     );
 
-    debugLog(debug, "Disk API details:", diskDetails);
+    verboseLog(verbose, "Disk API details:", diskDetails);
 
     // Check if disk is unattached
     if (
@@ -68,7 +68,7 @@ export async function analyzeDisk(
         reason: "Disk is unattached. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(debug, result);
+      verboseLogAnalysisResult(verbose, result);
       return result;
     }
   } catch (error) {
@@ -81,6 +81,6 @@ export async function analyzeDisk(
   }
 
   const result = { costRisk, reason: "", suspectedUnused: false };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

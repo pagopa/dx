@@ -9,9 +9,9 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -24,14 +24,14 @@ import {
 export async function analyzeNic(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Network Interface (microsoft.network/networkinterfaces)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -56,7 +56,7 @@ export async function analyzeNic(
       nicName,
     );
 
-    debugLog(debug, "NIC API details:", nicDetails);
+    verboseLog(verbose, "NIC API details:", nicDetails);
 
     // Check if NIC is not attached to any VM or private endpoint
     if (!nicDetails.virtualMachine && !nicDetails.privateEndpoint) {
@@ -83,6 +83,6 @@ export async function analyzeNic(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

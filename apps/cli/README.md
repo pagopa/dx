@@ -81,13 +81,13 @@ dx savemoney azure [options]
 
 **Options:**
 
-| Option       | Alias | Description                                                               | Default      |
-| :----------- | :---- | :------------------------------------------------------------------------ | :----------- |
-| `--config`   | `-c`  | Path to a JSON configuration file.                                        | N/A          |
-| `--format`   | `-f`  | Report format (`table`, `json`, `yaml`, `detailed-json`).                 | `table`      |
-| `--days`     | `-d`  | Metric analysis period in days.                                           | `30`         |
-| `--location` | `-l`  | Preferred Azure location for resources.                                   | `italynorth` |
-| `--debug`    | N/A   | Enable debug mode with more detailed comments for each resource analyzed. | `false`      |
+| Option       | Alias | Description                                                                 | Default      |
+| :----------- | :---- | :-------------------------------------------------------------------------- | :----------- |
+| `--config`   | `-c`  | Path to a JSON configuration file.                                          | N/A          |
+| `--format`   | `-f`  | Report format (`table`, `json`, `yaml`, `detailed-json`).                   | `table`      |
+| `--days`     | `-d`  | Metric analysis period in days.                                             | `30`         |
+| `--location` | `-l`  | Preferred Azure location for resources.                                     | `italynorth` |
+| `--verbose`  | `-v`  | Enable verbose mode with more detailed comments for each resource analyzed. | `false`      |
 
 **Example usage:**
 
@@ -98,8 +98,8 @@ dx savemoney azure
 # Use a configuration file
 dx savemoney azure --config config.json
 
-# Output as JSON with debug logging
-dx savemoney azure --format json --debug
+# Output as JSON with verbose logging
+dx savemoney azure --format json --verbose
 
 # Analyze with specific timespan
 dx savemoney azure --days 60 --location italynorth

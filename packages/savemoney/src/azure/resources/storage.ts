@@ -9,10 +9,10 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
   getMetric,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -27,14 +27,14 @@ export async function analyzeStorageAccount(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Storage Account (microsoft.storage/storageaccounts)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   if (!resource.id) {
@@ -58,10 +58,10 @@ export async function analyzeStorageAccount(
       reason: `Very low transaction count (${transactions}). `,
       suspectedUnused: true,
     };
-    debugLogAnalysisResult(debug, result);
+    verboseLogAnalysisResult(verbose, result);
     return result;
   }
   const result = { costRisk, reason: "", suspectedUnused: false };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

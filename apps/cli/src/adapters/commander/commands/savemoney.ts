@@ -27,17 +27,17 @@ export const makeSavemoneyCommand = () =>
           "Number of days for metrics analysis",
           "30",
         )
-        .option("--debug", "Enable debug logging")
+        .option("-v, --verbose", "Enable verbose logging")
         .action(async function (options) {
           try {
             // Load configuration
             const config: AzureConfig = await loadConfig(options.config);
             const finalConfig: AzureConfig = {
               ...config,
-              debug: options.debug || false,
               preferredLocation: options.location || config.preferredLocation,
               timespanDays:
                 Number.parseInt(options.days, 10) || config.timespanDays,
+              verbose: options.verbose || false,
             };
             // Run analysis
             await azure.analyzeAzureResources(finalConfig, options.format);

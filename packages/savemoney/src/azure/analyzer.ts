@@ -67,7 +67,7 @@ export async function analyzeAzureResources(
         webSiteClient,
         config.preferredLocation,
         config.timespanDays,
-        config.debug || false,
+        config.verbose || false,
       );
 
       if (suspectedUnused) {
@@ -104,7 +104,7 @@ export async function analyzeAzureResources(
  * @param webSiteClient - Azure Web Site client
  * @param preferredLocation - Preferred Azure location
  * @param timespanDays - Number of days to analyze metrics
- * @param debug - Whether debug logging is enabled
+ * @param verbose - Whether verbose logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeResource(
@@ -115,7 +115,7 @@ export async function analyzeResource(
   webSiteClient: WebSiteManagementClient,
   preferredLocation: string,
   timespanDays: number,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
   const type = resource.type?.toLowerCase() || "";
   let result = {
@@ -133,7 +133,7 @@ export async function analyzeResource(
   // Route to type-specific analysis hooks
   switch (type) {
     case "microsoft.compute/disks": {
-      const diskResult = await analyzeDisk(resource, computeClient, debug);
+      const diskResult = await analyzeDisk(resource, computeClient, verbose);
       result = mergeResults(result, diskResult);
       break;
     }
@@ -143,13 +143,13 @@ export async function analyzeResource(
         monitorClient,
         computeClient,
         timespanDays,
-        debug,
+        verbose,
       );
       result = mergeResults(result, vmResult);
       break;
     }
     case "microsoft.network/networkinterfaces": {
-      const nicResult = await analyzeNic(resource, networkClient, debug);
+      const nicResult = await analyzeNic(resource, networkClient, verbose);
       result = mergeResults(result, nicResult);
       break;
     }
@@ -157,7 +157,7 @@ export async function analyzeResource(
       const peResult = await analyzePrivateEndpoint(
         resource,
         networkClient,
-        debug,
+        verbose,
       );
       result = mergeResults(result, peResult);
       break;
@@ -168,7 +168,7 @@ export async function analyzeResource(
         networkClient,
         monitorClient,
         timespanDays,
-        debug,
+        verbose,
       );
       result = mergeResults(result, pipResult);
       break;
@@ -178,7 +178,7 @@ export async function analyzeResource(
         resource,
         monitorClient,
         timespanDays,
-        debug,
+        verbose,
       );
       result = mergeResults(result, storageResult);
       break;
@@ -189,7 +189,7 @@ export async function analyzeResource(
         webSiteClient,
         monitorClient,
         timespanDays,
-        debug,
+        verbose,
       );
       result = mergeResults(result, aspResult);
       break;

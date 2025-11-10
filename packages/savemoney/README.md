@@ -82,7 +82,7 @@ The tool requires the following configuration:
 | `subscriptionIds`   | `string[]` |    ✅    | -            | Array of Azure subscription IDs to analyze                   |
 | `preferredLocation` | `string`   |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged) |
 | `timespanDays`      | `number`   |    ❌    | `30`         | Number of days to look back for metrics analysis             |
-| `debug`             | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
+| `verbose`           | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
 
 ### Output Formats
 
@@ -121,7 +121,7 @@ const config2 = await loadConfig();
   "subscriptionIds": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
   "preferredLocation": "italynorth",
   "timespanDays": 30,
-  "debug": false
+  "verbose": false
 }
 ```
 
@@ -148,7 +148,7 @@ const config: AzureConfig = {
   subscriptionIds: ["sub-id-1", "sub-id-2"],
   preferredLocation: "italynorth",
   timespanDays: 30,
-  debug: true,
+  verbose: true,
 };
 
 await azure.analyzeAzureResources(config, "json");

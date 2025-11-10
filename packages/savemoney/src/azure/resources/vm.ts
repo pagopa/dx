@@ -10,10 +10,10 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
   getMetric,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -23,7 +23,7 @@ import {
  * @param monitorClient - Azure Monitor client for fetching metrics
  * @param computeClient - Azure Compute client for VM details
  * @param timespanDays - Number of days to analyze metrics
- * @param debug - Whether debug logging is enabled
+ * @param verbose - Whether verbose logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeVM(
@@ -31,14 +31,14 @@ export async function analyzeVM(
   monitorClient: MonitorClient,
   computeClient: ComputeManagementClient,
   timespanDays: number,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Virtual Machine (microsoft.compute/virtualmachines)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "high";
   let reason = "";
@@ -63,7 +63,7 @@ export async function analyzeVM(
       vmName,
     );
 
-    debugLog(debug, "VM Instance View:", instanceView);
+    verboseLog(verbose, "VM Instance View:", instanceView);
 
     // Check power state from instance view
     const vmStatus = instanceView.statuses?.find((s: { code?: string }) =>
@@ -76,7 +76,7 @@ export async function analyzeVM(
         reason: "VM is deallocated. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(debug, result);
+      verboseLogAnalysisResult(verbose, result);
       return result;
     }
 
@@ -86,7 +86,7 @@ export async function analyzeVM(
         reason: "VM is stopped. ",
         suspectedUnused: true,
       };
-      debugLogAnalysisResult(debug, result);
+      verboseLogAnalysisResult(verbose, result);
       return result;
     }
   } catch (error) {
@@ -122,6 +122,6 @@ export async function analyzeVM(
   }
 
   const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

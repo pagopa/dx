@@ -7,61 +7,6 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import type { AnalysisResult } from "../types.js";
 
 /**
- * Logs a debug message, optionally with an object.
- *
- * @param debug - Whether debug logging is enabled
- * @param message - The message to log
- * @param object - Optional object to stringify and log
- */
-export function debugLog(debug: boolean, message: string, object?: unknown) {
-  if (debug) {
-    if (object !== undefined) {
-      console.log(message, JSON.stringify(object, null, 2));
-    } else {
-      console.log(message);
-    }
-  }
-}
-
-/**
- * Logs the analysis result for a resource.
- *
- * @param debug - Whether debug logging is enabled
- * @param result - The analysis result object
- */
-export function debugLogAnalysisResult(debug: boolean, result: AnalysisResult) {
-  if (debug) {
-    console.log("\n📊 ANALYSIS RESULT:");
-    console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
-    console.log(
-      `   Suspected Unused: ${result.suspectedUnused ? "YES" : "NO"}`,
-    );
-    console.log(`   Reason: ${result.reason || "No issues found"}`);
-    console.log("=".repeat(80) + "\n");
-  }
-}
-
-/**
- * Logs a resource analysis header with visual separator.
- *
- * @param debug - Whether debug logging is enabled
- * @param resourceName - Name of the resource being analyzed
- * @param resourceType - Type of the resource
- */
-export function debugLogResourceStart(
-  debug: boolean,
-  resourceName: string,
-  resourceType: string,
-) {
-  if (debug) {
-    console.log("\n" + "=".repeat(80));
-    console.log(`🔍 ANALYZING: ${resourceName}`);
-    console.log(`   Type: ${resourceType}`);
-    console.log("=".repeat(80));
-  }
-}
-
-/**
  * Fetches a specific metric for a resource from Azure Monitor.
  *
  * @param monitorClient - The Azure Monitor client instance
@@ -125,5 +70,67 @@ export async function getMetric(
       error instanceof Error ? error.message : error,
     );
     return null;
+  }
+}
+
+/**
+ * Logs a verbose message, optionally with an object.
+ *
+ * @param verbose - Whether verbose logging is enabled
+ * @param message - The message to log
+ * @param object - Optional object to stringify and log
+ */
+export function verboseLog(
+  verbose: boolean,
+  message: string,
+  object?: unknown,
+) {
+  if (verbose) {
+    if (object !== undefined) {
+      console.log(message, JSON.stringify(object, null, 2));
+    } else {
+      console.log(message);
+    }
+  }
+}
+
+/**
+ * Logs the analysis result for a resource.
+ *
+ * @param verbose - Whether verbose logging is enabled
+ * @param result - The analysis result object
+ */
+export function verboseLogAnalysisResult(
+  verbose: boolean,
+  result: AnalysisResult,
+) {
+  if (verbose) {
+    console.log("\n📊 ANALYSIS RESULT:");
+    console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
+    console.log(
+      `   Suspected Unused: ${result.suspectedUnused ? "YES" : "NO"}`,
+    );
+    console.log(`   Reason: ${result.reason || "No issues found"}`);
+    console.log("=".repeat(80) + "\n");
+  }
+}
+
+/**
+ * Logs a resource analysis header with visual separator.
+ *
+ * @param verbose - Whether verbose logging is enabled
+ * @param resourceName - Name of the resource being analyzed
+ * @param resourceType - Type of the resource
+ */
+export function verboseLogResourceStart(
+  verbose: boolean,
+  resourceName: string,
+  resourceType: string,
+) {
+  if (verbose) {
+    console.log("\n" + "=".repeat(80));
+    console.log(`🔍 ANALYZING: ${resourceName}`);
+    console.log(`   Type: ${resourceType}`);
+    console.log("=".repeat(80));
   }
 }

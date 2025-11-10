@@ -10,10 +10,10 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
   getMetric,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -30,14 +30,14 @@ export async function analyzePublicIp(
   networkClient: NetworkManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Public IP (microsoft.network/publicipaddresses)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -62,7 +62,7 @@ export async function analyzePublicIp(
       publicIpName,
     );
 
-    debugLog(debug, "Public IP API details:", publicIpDetails);
+    verboseLog(verbose, "Public IP API details:", publicIpDetails);
 
     // Check if Public IP is not associated with any resource
     if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
@@ -99,6 +99,6 @@ export async function analyzePublicIp(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }

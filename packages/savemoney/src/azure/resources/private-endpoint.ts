@@ -9,9 +9,9 @@ import * as armResources from "@azure/arm-resources";
 import type { AnalysisResult } from "../../types.js";
 
 import {
-  debugLog,
-  debugLogAnalysisResult,
-  debugLogResourceStart,
+  verboseLog,
+  verboseLogAnalysisResult,
+  verboseLogResourceStart,
 } from "../utils.js";
 
 /**
@@ -24,14 +24,14 @@ import {
 export async function analyzePrivateEndpoint(
   resource: armResources.GenericResource,
   networkClient: NetworkManagementClient,
-  debug = false,
+  verbose = false,
 ): Promise<AnalysisResult> {
-  debugLogResourceStart(
-    debug,
+  verboseLogResourceStart(
+    verbose,
     resource.name || "unknown",
     "Private Endpoint (microsoft.network/privateendpoints)",
   );
-  debugLog(debug, "Resource details:", resource);
+  verboseLog(verbose, "Resource details:", resource);
 
   const costRisk: "high" | "low" | "medium" = "medium";
   let reason = "";
@@ -56,7 +56,11 @@ export async function analyzePrivateEndpoint(
       privateEndpointName,
     );
 
-    debugLog(debug, "Private Endpoint API details:", privateEndpointDetails);
+    verboseLog(
+      verbose,
+      "Private Endpoint API details:",
+      privateEndpointDetails,
+    );
 
     // Check if Private Endpoint has no private link service connection
     if (
@@ -101,6 +105,6 @@ export async function analyzePrivateEndpoint(
 
   const suspectedUnused = reason.length > 0;
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
-  debugLogAnalysisResult(debug, result);
+  verboseLogAnalysisResult(verbose, result);
   return result;
 }
