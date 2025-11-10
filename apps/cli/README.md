@@ -73,7 +73,11 @@ Checking monorepo scripts...
 
 #### `savemoney`
 
-Analyze CSP resources for cost optimization opportunities. Currently this command helps identify unused or underutilized Azure resources that could be costing you money.
+Analyze CSP resources for cost optimization opportunities. Currently supports Azure, with AWS support planned for future releases.
+
+##### Azure
+
+Analyze Azure subscriptions to identify unused or underutilized resources that could be costing you money.
 
 ```bash
 dx savemoney azure [options]
@@ -81,13 +85,13 @@ dx savemoney azure [options]
 
 **Options:**
 
-| Option       | Alias | Description                                                                 | Default      |
-| :----------- | :---- | :-------------------------------------------------------------------------- | :----------- |
-| `--config`   | `-c`  | Path to a JSON configuration file.                                          | N/A          |
-| `--format`   | `-f`  | Report format (`table`, `json`, `detailed-json`).                           | `table`      |
-| `--days`     | `-d`  | Metric analysis period in days.                                             | `30`         |
-| `--location` | `-l`  | Preferred Azure location for resources.                                     | `italynorth` |
-| `--verbose`  | `-v`  | Enable verbose mode with more detailed comments for each resource analyzed. | `false`      |
+| Option       | Alias | Description                                                           | Default      |
+| :----------- | :---- | :-------------------------------------------------------------------- | :----------- |
+| `--config`   | `-c`  | Path to a JSON configuration file.                                    | N/A          |
+| `--format`   | `-f`  | Report format (`table`, `json`, `detailed-json`).                     | `table`      |
+| `--days`     | `-d`  | Metric analysis period in days.                                       | `30`         |
+| `--location` | `-l`  | Preferred Azure location for resources.                               | `italynorth` |
+| `--verbose`  | `-v`  | Enable verbose mode with detailed logging for each resource analyzed. | `false`      |
 
 **Example usage:**
 
@@ -116,7 +120,7 @@ dx savemoney azure --days 60 --location italynorth
 }
 ```
 
-This command analyzes:
+**Analyzed Azure resources:**
 
 - **Virtual Machines**: Deallocated or stopped VMs, low CPU usage
 - **Managed Disks**: Unattached disks
@@ -125,6 +129,14 @@ This command analyzes:
 - **Storage Accounts**: Low transaction counts
 - **App Service Plans**: Empty plans or oversized tiers
 - **Private Endpoints**: Unused or misconfigured endpoints
+
+##### AWS (Coming Soon)
+
+AWS support is planned for future releases with similar capabilities for analyzing AWS accounts and resources.
+
+```bash
+dx savemoney aws [options]
+```
 
 ### Global Options
 

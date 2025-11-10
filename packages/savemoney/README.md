@@ -1,6 +1,26 @@
 # DX Save Money
 
-A TypeScript library for analyzing CSP resources to identify potential cost inefficiencies and underutilized resources. It operates in read-only mode and does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
+A TypeScript library for analyzing CSP (Cloud Service Provider) resources to identify potential cost inefficiencies and underutilized resources. It operates in read-only mode and does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
+
+## Supported Cloud Providers
+
+### ✅ Azure
+
+Full support for Azure resource analysis with intelligent detection and flexible reporting.
+
+### 🚧 AWS (Coming Soon)
+
+AWS support is planned for future releases. The architecture is designed to support multiple CSPs with provider-specific analyzers.
+
+## Installation
+
+```bash
+npm install @pagopa/dx-savemoney
+# or
+pnpm add @pagopa/dx-savemoney
+# or
+yarn add @pagopa/dx-savemoney
+```
 
 ## Azure
 
@@ -36,7 +56,7 @@ All resources are also checked for:
 - **Missing tags**: Resources without tags are flagged as potentially unmanaged
 - **Location mismatch**: Resources not in the preferred location are reported
 
-## Prerequisites
+### Prerequisites
 
 1. **Node.js**: Version 22 or higher.
 2. **Azure Credentials**: The library uses `DefaultAzureCredential` from `@azure/identity`, which supports various authentication methods:
@@ -46,21 +66,9 @@ All resources are also checked for:
    - Visual Studio Code
    - And more...
 
-## Installation
+### Usage
 
-```bash
-npm install @pagopa/dx-savemoney
-# or
-pnpm add @pagopa/dx-savemoney
-# or
-yarn add @pagopa/dx-savemoney
-```
-
-## Usage
-
-This package provides a TypeScript/JavaScript API for analyzing Azure resources programmatically.
-
-### Quick Start
+#### Quick Start
 
 ```typescript
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
@@ -72,7 +80,7 @@ const config = await loadConfig("./config.json");
 await azure.analyzeAzureResources(config, "table");
 ```
 
-### Configuration Inputs
+#### Configuration Inputs
 
 The tool requires the following configuration:
 
@@ -84,7 +92,7 @@ The tool requires the following configuration:
 | `timespanDays`      | `number`   |    ❌    | `30`         | Number of days to look back for metrics analysis             |
 | `verbose`           | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
 
-### Output Formats
+#### Output Formats
 
 The tool supports multiple output formats for different use cases:
 
@@ -94,7 +102,7 @@ The tool supports multiple output formats for different use cases:
 | `json`          | Structured JSON with resource summaries         | Integration with other tools   |
 | `detailed-json` | Complete JSON with full Azure resource metadata | AI analysis or deep inspection |
 
-### How to Load Configuration
+#### How to Load Configuration
 
 The `loadConfig()` function loads configuration in the following priority order:
 
@@ -112,7 +120,7 @@ const config1 = await loadConfig("./config.json");
 const config2 = await loadConfig();
 ```
 
-### Configuration File Example (`config.json`)
+#### Configuration File Example
 
 ```json
 {
@@ -124,9 +132,9 @@ const config2 = await loadConfig();
 }
 ```
 
-### Usage Examples
+#### Usage Examples
 
-#### Basic Usage
+##### Basic Usage
 
 ```typescript
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
@@ -136,7 +144,7 @@ const config = await loadConfig("./config.json");
 await azure.analyzeAzureResources(config, "table");
 ```
 
-#### Custom Configuration
+##### Custom Configuration
 
 ```typescript
 import { azure } from "@pagopa/dx-savemoney";
@@ -153,7 +161,7 @@ const config: AzureConfig = {
 await azure.analyzeAzureResources(config, "json");
 ```
 
-#### Generate Detailed Report
+##### Generate Detailed Report
 
 ```typescript
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
@@ -163,7 +171,7 @@ const config = await loadConfig();
 await azure.analyzeAzureResources(config, "detailed-json");
 ```
 
-#### Using Environment Variables
+##### Using Environment Variables
 
 ```typescript
 import { loadConfig, azure } from "@pagopa/dx-savemoney";
@@ -174,6 +182,24 @@ import { loadConfig, azure } from "@pagopa/dx-savemoney";
 
 const config = await loadConfig(); // Will read from env vars
 await azure.analyzeAzureResources(config, "json");
+```
+
+## AWS (Coming Soon)
+
+AWS support is planned for future releases with similar capabilities:
+
+- Multi-account analysis
+- Resource-specific detection algorithms
+- Flexible reporting formats
+- AWS-specific configuration options
+
+The API will follow a similar pattern:
+
+```typescript
+import { aws, loadAwsConfig } from "@pagopa/dx-savemoney";
+
+const config = await loadAwsConfig("./aws-config.json");
+await aws.analyzeAwsResources(config, "table");
 ```
 
 ## Development
