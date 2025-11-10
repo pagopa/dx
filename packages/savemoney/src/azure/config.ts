@@ -42,7 +42,7 @@ export async function loadAzureConfig(
     }
   }
 
-  const logger = getLogger(["dx-savemoney", "azure", "config"]);
+  const logger = getLogger(["savemoney", "azure", "config"]);
   logger.info(
     "Configuration file not found. Checking environment variables...",
   );

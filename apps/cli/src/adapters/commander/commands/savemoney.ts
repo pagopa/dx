@@ -29,7 +29,7 @@ const makeAzureCommand = () =>
           await configure({
             loggers: [
               {
-                category: ["dx-savemoney"],
+                category: ["savemoney"],
                 lowestLevel: "debug",
                 sinks: ["console"],
               },

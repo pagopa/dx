@@ -67,7 +67,7 @@ export async function getMetric(
 
     return null;
   } catch (error) {
-    const logger = getLogger(["dx-savemoney", "azure", "metrics"]);
+    const logger = getLogger(["savemoney", "azure", "metrics"]);
     logger.error(
       `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -88,7 +88,7 @@ export function verboseLog(
   object?: unknown,
 ) {
   if (verbose) {
-    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
+    const logger = getLogger(["savemoney", "azure", "verbose"]);
     if (object !== undefined) {
       logger.debug(`${message} ${JSON.stringify(object, null, 2)}`);
     } else {
@@ -108,7 +108,7 @@ export function verboseLogAnalysisResult(
   result: AnalysisResult,
 ) {
   if (verbose) {
-    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
+    const logger = getLogger(["savemoney", "azure", "verbose"]);
     logger.debug("\n📊 ANALYSIS RESULT:");
     logger.debug(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
     logger.debug(
@@ -132,7 +132,7 @@ export function verboseLogResourceStart(
   resourceType: string,
 ) {
   if (verbose) {
-    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
+    const logger = getLogger(["savemoney", "azure", "verbose"]);
     logger.debug("\n" + "=".repeat(80));
     logger.debug(`🔍 ANALYZING: ${resourceName}`);
     logger.debug(`   Type: ${resourceType}`);

@@ -15,7 +15,7 @@ import { listCodemods } from "./use-cases/list-codemods.js";
 await configure({
   loggers: [
     { category: ["dx-cli"], lowestLevel: "info", sinks: ["console"] },
-    { category: ["dx-savemoney"], lowestLevel: "info", sinks: ["console"] },
+    { category: ["savemoney"], lowestLevel: "info", sinks: ["console"] },
     { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
     {
       category: ["logtape", "meta"],

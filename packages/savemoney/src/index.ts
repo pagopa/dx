@@ -35,7 +35,7 @@ import type { AzureConfig } from "./azure/types.js";
  * @returns Configuration object with subscription IDs and settings
  */
 export async function loadConfig(configPath?: string): Promise<AzureConfig> {
-  const logger = getLogger(["dx-savemoney", "config"]);
+  const logger = getLogger(["savemoney", "config"]);
 
   if (configPath && fs.existsSync(configPath)) {
     try {

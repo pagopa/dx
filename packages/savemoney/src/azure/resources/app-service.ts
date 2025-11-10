@@ -105,7 +105,7 @@ export async function analyzeAppServicePlan(
     }
   } catch (error) {
     const logger = getLogger([
-      "dx-savemoney",
+      "savemoney",
       "azure",
       "resources",
       "app-service",

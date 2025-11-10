@@ -91,7 +91,7 @@ export async function analyzeVM(
       return result;
     }
   } catch (error) {
-    const logger = getLogger(["dx-savemoney", "azure", "resources", "vm"]);
+    const logger = getLogger(["savemoney", "azure", "resources", "vm"]);
     logger.warn(
       `Failed to get VM instance view for ${vmName}: ${error instanceof Error ? error.message : error}`,
     );

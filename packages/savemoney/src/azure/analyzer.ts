@@ -34,7 +34,7 @@ export async function analyzeAzureResources(
   config: AzureConfig,
   format: "detailed-json" | "json" | "table",
 ) {
-  const logger = getLogger(["dx-savemoney", "azure"]);
+  const logger = getLogger(["savemoney", "azure"]);
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 

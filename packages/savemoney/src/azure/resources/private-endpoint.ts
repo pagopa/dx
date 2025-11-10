@@ -99,7 +99,7 @@ export async function analyzePrivateEndpoint(
     }
   } catch (error) {
     const logger = getLogger([
-      "dx-savemoney",
+      "savemoney",
       "azure",
       "resources",
       "private-endpoint",
