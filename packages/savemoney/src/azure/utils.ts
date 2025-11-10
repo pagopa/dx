@@ -90,9 +90,9 @@ export function verboseLog(
   if (verbose) {
     const logger = getLogger(["savemoney", "azure", "verbose"]);
     if (object !== undefined) {
-      logger.info(`${message} ${JSON.stringify(object, null, 2)}`);
+      logger.debug(`${message} ${JSON.stringify(object, null, 2)}`);
     } else {
-      logger.info(message);
+      logger.debug(message);
     }
   }
 }
