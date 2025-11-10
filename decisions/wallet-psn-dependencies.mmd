@@ -1,0 +1,44 @@
+---
+config:
+  theme: neutral
+  fontFamily: Gill Sans, sans-serif;
+  themeVariables:
+    fontFamily: Gill Sans, sans-serif;
+  layout: dagre
+---
+flowchart LR
+  subgraph PagoPA["PagoPA"]
+    IOWeb["IO Web"]
+    IOApp["App IO"]
+    IOBackend["IO Backend"]
+  end
+
+  subgraph PSN["PSN"]
+    IT_Wallet
+    subgraph IT_Wallet["IT Wallet"]
+    end
+  end
+
+  subgraph External["Third Parties"]
+    relyingParty["Relying Party"]
+    credIssuer["Credential Issuer"]
+  end
+
+  users(("fa:fa-users Users")) --> IOWeb & IOApp
+  IOWeb & IOApp & External --> IOBackend
+  IOBackend --> PSN
+
+  IT_Wallet --> IOBackend
+
+  IOWeb:::infraClass
+  IOApp:::infraClass
+  IOBackend:::infraClass
+  users:::usersClass
+  relyingParty:::relyingClass
+  credIssuer:::credClass
+
+  classDef usersClass fill:#ffffff,stroke:#111,stroke-width:1px
+  classDef credClass fill:#e3f2fd,stroke:#1976d2,stroke-width:1px
+  classDef relyingClass fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+  classDef infraClass fill:#f5f5f5,stroke:#757575,stroke-width:1px
+  style IT_Wallet fill:#fff9db,stroke:#d4aa00,stroke-width:2px

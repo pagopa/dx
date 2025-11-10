@@ -1,0 +1,176 @@
+---
+config:
+  theme: neutral
+  fontFamily: Gill Sans, sans-serif;
+  themeVariables:
+    fontFamily: Gill Sans, sans-serif;
+  layout: elk
+---
+flowchart LR
+  subgraph GitHub["GitHub"]
+    GHRepository
+  end
+
+  subgraph External["Third Parties"]
+    relyingParty["Relying Party"]
+    credIssuer["Credential Issuer"]
+  end
+
+  users(("fa:fa-users Users"))
+
+  subgraph PagoPA["PagoPA"]
+    IOWeb["fa:fa-globe IO Web"]
+    IOApp["fa:fa-mobile App IO"]
+    subgraph PagoPAAzure["Azure (PROD-IO)"]
+      direction TB
+      WAF["io-p-itn-agw-api-app-waf-01"]
+      WalletCDN["IT-Wallet CDN"]
+      WalletDNS["wallet.io.pagopa.it"]
+      appInsights["io-p-ai-common"]
+      subgraph VNetWEU["VNet (WestEurope)"]
+        IOAppBackend["io-p-app-appbackendlX"]
+        IORedis["io-p-redis-common"]
+      end
+      subgraph VNetITN["VNet (ItalyNorth)"]
+        AppGateway["io-p-itn-agw-01"]
+        APIM["io-p-itn-apim-01"]
+        subgraph IOAuth["IO Auth"]
+          IOProfile["io-p-itn-auth-profile-func-02"]
+        end
+      end
+    end
+  end
+
+  subgraph PSN["PSN"]
+    subgraph ITWallet["IT Wallet"]
+      subgraph Hub["Hub"]
+        WAFHub["WAF"]
+        AppGatewayHub["Application Gateway"]
+      end
+      subgraph Spoke["Spoke"]
+        subgraph WalletRg["Resource Group"]
+          subgraph WalletVNet["VNet"]
+            subgraph SupportFnSubnet["io-p-itn-wallet-supp-func-snet-01"]
+              WalletSupportFn["io-p-itn-wallet-supp-func-01"]
+            end
+            subgraph UserFnSubnet["io-p-itn-wallet-user-func-snet-02"]
+              WalletUserFn["io-p-itn-wallet-user-func-02"]
+            end
+            WalletKw["Key Vault"]
+            WalletCosmos["CosmosDB"]
+            subgraph WalletRunnerSubnet["io-p-itn-github-cae-snet-01"]
+              subgraph WalletRunnerCAE["io-p-itn-github-cae-01"]
+                WalletRunnerCAJ["io-p-itn-github-caj-01"]
+              end
+            end
+            subgraph WalletCDNStorage["iopitnwalletcdnst01"]
+              WalletCDNContainerExchange["exchange"]
+              WalletCDNContainerSpidLogin["hub-spid-login"]
+              WalletCDNContainerPDND["pdnd"]
+              WalletCDNContainerWellKnown["well-known"]
+            end
+            subgraph WalletStorage["iopitnwalletst01"]
+              WalletQueueEmail["creation-email-queue-01"]
+              WalletQueueRevocationEmail["revocation-email-queue-01"]
+            end
+          end
+        end
+      end
+    end
+  end
+
+  subgraph Legend[Legend]
+    direction LR
+    Legal(IO -> PSN) --> Null:::hidden
+    ExtraLegal(PSN -> IO) -.-> Null2:::hidden
+
+    classDef LegendEntry stroke-width:0px,fill:none,height:20px,text-align:center,line-height:18px
+    class Legal,ExtraLegal LegendEntry
+    classDef HiddenNode height:0px
+    class Null,Null2 HiddenNode
+  end
+
+  %% IO Frontend
+  users --> IOWeb & IOApp
+  IOApp --> WAF
+  IOWeb --> WAF
+
+  %% %% IO Backend
+  WAF --> AppGateway
+  AppGateway --> IOAppBackend
+  AppGateway -- only io web API --> APIM
+
+  %% IO -> PSN
+  IOAppBackend --> Hub
+  APIM --> Hub
+
+  %% PSN: Hub -> Spoke
+  WAFHub --> AppGatewayHub
+  AppGatewayHub --> UserFnSubnet
+  AppGatewayHub --> SupportFnSubnet
+
+  UserFnSubnet --> appInsights & WalletStorage
+  UserFnSubnet --> WalletCosmos
+  UserFnSubnet --> WalletKw
+  SupportFnSubnet --> appInsights & WalletCosmos
+
+  %% Spoke -> IO
+  UserFnSubnet -.-> WAFHub -.-> APIM -.-> IOProfile
+
+  %% CDN
+  WalletCDN -- exposes --> WalletCDNStorage
+  WalletCDN --> WalletDNS
+  IOApp --> WalletCDN
+  External --> WalletCDN
+
+  WalletRunnerCAJ --> GHRepository
+
+  WalletCDNStorage:::dataClass
+  WalletStorage:::dataClass
+  IOWeb:::infraClass
+  IOApp:::infraClass
+  users:::usersClass
+  relyingParty:::relyingClass
+  credIssuer:::credClass
+
+  %% Icons
+  WAF@{ icon: "azure:azure-firewall-manager", pos: "b" }
+  WAFHub@{ icon: "azure:azure-firewall-manager", pos: "b" }
+
+  AppGateway@{ icon: "azure:application-gateway-containers" }
+  AppGatewayHub@{ icon: "azure:application-gateway-containers" }
+
+  IORedis@{ icon: "azure:cache-redis" }
+  IOAppBackend@{ icon: "azure:app-services" }
+
+  APIM@{ icon: "azure:api-management-services" }
+  appInsights@{ icon: "azure:application-insights" }
+
+  WalletSupportFn@{ icon: "azure:function-apps" }
+  WalletUserFn@{ icon: "azure:function-apps" }
+  IOProfile@{ icon: "azure:function-apps" }
+
+  WalletKw@{ icon: "azure:key-vaults" }
+  WalletCosmos@{ icon: "azure:azure-cosmos-db" }
+
+  WalletDNS@{ icon: "azure:dns-zones" }
+  WalletCDN@{ icon: "azure:cdn-profiles", shape: braces }
+  WalletCDNContainerExchange@{ icon: "azure:storage-container" }
+  WalletCDNContainerSpidLogin@{ icon: "azure:storage-container" }
+  WalletCDNContainerPDND@{ icon: "azure:storage-container" }
+  WalletCDNContainerWellKnown@{ icon: "azure:storage-container" }
+
+  WalletQueueEmail@{ icon: "azure:storage-queue" }
+  WalletQueueRevocationEmail@{ icon: "azure:storage-queue" }
+
+  WalletRunnerCAJ@{ icon: "azure:worker-container-app" }
+  GHRepository@{ icon: "aws:res-git-repository", pos: "b" }
+
+  classDef usersClass fill:#ffffff,stroke:#111,stroke-width:1px
+  classDef credClass fill:#e3f2fd,stroke:#1976d2,stroke-width:1px
+  classDef relyingClass fill:#e8f5e9,stroke:#2e7d32,stroke-width:1px
+  classDef securityClass fill:#bbdefb,stroke:#1565c0,stroke-width:1px
+  classDef dataClass fill:#e0f7fa,stroke:#00838f,stroke-width:1px
+  classDef monitoringClass fill:#ede7f6,stroke:#5e35b1,stroke-width:1px
+  classDef infraClass fill:#f5f5f5,stroke:#757575,stroke-width:1px
+  style ITWallet fill:#fff9db,stroke:#d4aa00,stroke-width:2px
