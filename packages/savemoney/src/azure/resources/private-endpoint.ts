@@ -98,12 +98,7 @@ export async function analyzePrivateEndpoint(
       reason += "Private Endpoint is not associated with a subnet. ";
     }
   } catch (error) {
-    const logger = getLogger([
-      "savemoney",
-      "azure",
-      "resources",
-      "private-endpoint",
-    ]);
+    const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
       `Failed to get Private Endpoint details for ${privateEndpointName}: ${error instanceof Error ? error.message : error}`,
     );

@@ -92,7 +92,7 @@ export async function analyzePublicIp(
       reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB). `;
     }
   } catch (error) {
-    const logger = getLogger(["savemoney", "azure", "resources", "public-ip"]);
+    const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
       `Failed to get Public IP details for ${publicIpName}: ${error instanceof Error ? error.message : error}`,
     );

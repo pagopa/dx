@@ -104,12 +104,7 @@ export async function analyzeAppServicePlan(
       reason += "Premium tier with low resource utilization. ";
     }
   } catch (error) {
-    const logger = getLogger([
-      "savemoney",
-      "azure",
-      "resources",
-      "app-service",
-    ]);
+    const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
       `Failed to get App Service Plan details for ${planName}: ${error instanceof Error ? error.message : error}`,
     );

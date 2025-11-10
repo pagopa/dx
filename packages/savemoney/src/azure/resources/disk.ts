@@ -73,7 +73,7 @@ export async function analyzeDisk(
       return result;
     }
   } catch (error) {
-    const logger = getLogger(["savemoney", "azure", "resources", "disk"]);
+    const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
       `Failed to get disk details for ${diskName}: ${error instanceof Error ? error.message : error}`,
     );
