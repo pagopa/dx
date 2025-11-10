@@ -10,7 +10,7 @@ locals {
 
   tags = {
     CreatedBy      = "Terraform"
-    Environment    = "{{ environment }}"
+    Environment    = "{{ titleCase environment }}"
     Source         = "https://github.com/pagopa/{{ repoName }}/tree/main/infra/bootstrapper/{{ environment }}"
   }
 }
