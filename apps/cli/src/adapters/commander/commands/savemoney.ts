@@ -1,6 +1,6 @@
-import type { Config } from "@pagopa/dx-savemoney";
+import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-import { analyzeResources, loadConfig } from "@pagopa/dx-savemoney";
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
 export const makeSavemoneyCommand = () =>
@@ -31,15 +31,16 @@ export const makeSavemoneyCommand = () =>
         .action(async function (options) {
           try {
             // Load configuration
-            const config: Config = await loadConfig(options.config);
-            const finalConfig: Config = {
+            const config: AzureConfig = await loadConfig(options.config);
+            const finalConfig: AzureConfig = {
               ...config,
+              debug: options.debug || false,
               preferredLocation: options.location || config.preferredLocation,
               timespanDays:
                 Number.parseInt(options.days, 10) || config.timespanDays,
             };
             // Run analysis
-            await analyzeResources(finalConfig, options.format);
+            await azure.analyzeAzureResources(finalConfig, options.format);
           } catch (error) {
             this.error(
               `Analysis failed: ${error instanceof Error ? error.message : error}`,

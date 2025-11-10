@@ -81,11 +81,13 @@ dx savemoney azure [options]
 
 **Options:**
 
-- `-c, --config <path>`: Path to configuration file (JSON)
-- `-f, --format <format>`: Report format - `json`, `yaml`, `table`, or `detailed-json` (default: `table`)
-- `-l, --location <string>`: Preferred Azure location for resources (default: `italynorth`)
-- `-d, --days <number>`: Number of days for metrics analysis (default: `30`)
-- `--debug`: Enable debug logging
+| Option       | Alias | Description                                                               | Default      |
+| :----------- | :---- | :------------------------------------------------------------------------ | :----------- |
+| `--config`   | `-c`  | Path to a JSON configuration file.                                        | N/A          |
+| `--format`   | `-f`  | Report format (`table`, `json`, `yaml`, `detailed-json`).                 | `table`      |
+| `--days`     | `-d`  | Metric analysis period in days.                                           | `30`         |
+| `--location` | `-l`  | Preferred Azure location for resources.                                   | `italynorth` |
+| `--debug`    | N/A   | Enable debug mode with more detailed comments for each resource analyzed. | `false`      |
 
 **Example usage:**
 

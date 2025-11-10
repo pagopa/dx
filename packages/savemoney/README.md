@@ -1,8 +1,10 @@
 # DX Save Money
 
-This command-line interface (CLI) tool analyzes Azure resources in read-only mode to identify potential cost inefficiencies and underutilized resources. It does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
+A TypeScript library for analyzing CSP resources to identify potential cost inefficiencies and underutilized resources. It operates in read-only mode and does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
 
-## Main Features
+## Azure
+
+### Main Features
 
 - **Multi-Subscription Analysis**: Scans multiple Azure subscriptions in a single command.
 - **Intelligent Detection**: Uses Azure Monitor metrics (e.g. CPU, network traffic, transactions) to scientifically identify inactive resources.
@@ -13,7 +15,7 @@ This command-line interface (CLI) tool analyzes Azure resources in read-only mod
   - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
 - **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
 
-## Analyzed Resources
+### Analyzed Resources
 
 The tool analyzes the following Azure resource types with specific detection methods and risk levels:
 
@@ -27,7 +29,7 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces   |
 | **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<100 in timespan)                                           |
 
-### Generic Checks
+#### Generic Checks
 
 All resources are also checked for:
 
@@ -36,117 +38,144 @@ All resources are also checked for:
 
 ## Prerequisites
 
-1. **Node.js**: Version 22.
-2. **Azure Credentials**: The tool uses `DefaultAzureCredential`, which supports various authentication methods. The simplest way is to run `az login` from your terminal before launching the tool.
-3. **Installation**:
+1. **Node.js**: Version 22 or higher.
+2. **Azure Credentials**: The library uses `DefaultAzureCredential` from `@azure/identity`, which supports various authentication methods:
+   - Azure CLI (`az login`)
+   - Managed Identity
+   - Environment variables
+   - Visual Studio Code
+   - And more...
+
+## Installation
 
 ```bash
-pnpm install
+npm install @pagopa/dx-savemoney
+# or
+pnpm add @pagopa/dx-savemoney
+# or
+yarn add @pagopa/dx-savemoney
 ```
 
 ## Usage
 
-### Build the Project
+This package provides a TypeScript/JavaScript API for analyzing Azure resources programmatically.
 
-First, compile the TypeScript code:
+### Quick Start
 
-```bash
-pnpm build
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+// Load configuration (from file, env vars, or interactive prompt)
+const config = await loadConfig("./config.json");
+
+// Run analysis and generate report
+await azure.analyzeAzureResources(config, "table");
 ```
 
-### Run the Tool
+### Configuration Inputs
 
-After building, you can run the tool using:
+The tool requires the following configuration:
 
-#### Option 1: Run directly with Node.js
+| Input               | Type       | Required | Default      | Description                                                  |
+| :------------------ | :--------- | :------: | :----------- | :----------------------------------------------------------- |
+| `tenantId`          | `string`   |    ✅    | -            | Azure Active Directory Tenant ID                             |
+| `subscriptionIds`   | `string[]` |    ✅    | -            | Array of Azure subscription IDs to analyze                   |
+| `preferredLocation` | `string`   |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged) |
+| `timespanDays`      | `number`   |    ❌    | `30`         | Number of days to look back for metrics analysis             |
+| `debug`             | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
 
-```bash
-node bin/index.js [options]
+### Output Formats
+
+The tool supports multiple output formats for different use cases:
+
+| Format          | Description                                     | Use Case                       |
+| :-------------- | :---------------------------------------------- | :----------------------------- |
+| `table`         | Human-readable table in terminal                | Quick visual inspection        |
+| `json`          | Structured JSON with resource summaries         | Integration with other tools   |
+| `yaml`          | YAML format with resource summaries             | Configuration or CI/CD         |
+| `detailed-json` | Complete JSON with full Azure resource metadata | AI analysis or deep inspection |
+
+### How to Load Configuration
+
+The `loadConfig()` function loads configuration in the following priority order:
+
+1. **Configuration file** (pass file path as parameter)
+2. **Environment variables** (`ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`)
+3. **Interactive prompt** (if no other configuration is found)
+
+**Example:**
+
+```typescript
+// From file
+const config1 = await loadConfig("./config.json");
+
+// From environment variables or prompt
+const config2 = await loadConfig();
 ```
-
-Or if installed as a CLI via package.json "bin" entry:
-
-```bash
-pnpm dx-az-savemoney [options]
-```
-
-For development with auto-rebuild:
-
-```bash
-pnpm dev
-```
-
-### Options
-
-| Option       | Alias | Description                                                               | Default      |
-| :----------- | :---- | :------------------------------------------------------------------------ | :----------- |
-| `--config`   | `-c`  | Path to a JSON configuration file.                                        | N/A          |
-| `--format`   | `-f`  | Report format (`table`, `json`, `yaml`, `detailed-json`).                 | `table`      |
-| `--days`     | `-d`  | Metric analysis period in days.                                           | `30`         |
-| `--location` | `-l`  | Preferred Azure location for resources.                                   | `italynorth` |
-| `--debug`    | N/A   | Enable debug mode with more detailed comments for each resource analyzed. | `false`      |
-
-### Configuration Order
-
-The script loads the configuration in the following priority order:
-
-1. **Command-line options** (e.g., `--days 60`).
-2. **Configuration file** (specified with `--config`).
-3. **Environment variables** (`ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`).
-4. **Interactive prompt** (if no other configuration is found).
 
 ### Configuration File Example (`config.json`)
-
-This file allows you to pre-configure the most common parameters.
 
 ```json
 {
   "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "subscriptionIds": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
   "preferredLocation": "italynorth",
-  "timespanDays": 30
+  "timespanDays": 30,
+  "debug": false
 }
 ```
 
-### Practical Examples
+### Usage Examples
 
-1. **Quick analysis with table output (default):**
+#### Basic Usage
 
-   ```bash
-   pnpm bin/index.js
-   ```
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
-   _(You will be prompted for Tenant ID and Subscription ID if not otherwise configured)_
+// Load from config file
+const config = await loadConfig("./config.json");
+await azure.analyzeAzureResources(config, "table");
+```
 
-2. **Using a configuration file for a 60-day analysis:**
+#### Custom Configuration
 
-   ```bash
-   pnpm bin/index.js --config ./config.json
-   ```
+```typescript
+import { azure } from "@pagopa/dx-savemoney";
+import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-3. **Generating a detailed report for AI analysis:**
+const config: AzureConfig = {
+  tenantId: "your-tenant-id",
+  subscriptionIds: ["sub-id-1", "sub-id-2"],
+  preferredLocation: "italynorth",
+  timespanDays: 30,
+  debug: true,
+};
 
-   ```bash
-   pnpm bin/index.js --format detailed-json > report_for_ai.json
-   ```
+await azure.analyzeAzureResources(config, "json");
+```
 
-4. **Analysis of the last 7 days with YAML output:**
+#### Generate Detailed Report
 
-   ```bash
-   pnpm bin/index.js --days 7 --format yaml
-   ```
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
-5. **Analysis focused on a specific location (`westeurope`):**
+const config = await loadConfig();
+// Generate detailed JSON with full resource metadata
+await azure.analyzeAzureResources(config, "detailed-json");
+```
 
-   ```bash
-   pnpm bin/index.js --location westeurope
-   ```
+#### Using Environment Variables
 
-6. **Enable debug mode for detailed logging:**
+```typescript
+import { loadConfig, azure } from "@pagopa/dx-savemoney";
 
-   ```bash
-   pnpm bin/index.js --debug
-   ```
+// Set environment variables
+// ARM_TENANT_ID=xxx
+// ARM_SUBSCRIPTION_ID=sub1,sub2
+
+const config = await loadConfig(); // Will read from env vars
+await azure.analyzeAzureResources(config, "yaml");
+```
 
 ## Development
 
