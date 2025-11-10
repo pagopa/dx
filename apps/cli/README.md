@@ -73,14 +73,10 @@ Checking monorepo scripts...
 
 #### `savemoney`
 
-Analyze CSP resources for cost optimization opportunities. Currently supports Azure, with AWS support planned for future releases.
-
-##### Azure
-
 Analyze Azure subscriptions to identify unused or underutilized resources that could be costing you money.
 
 ```bash
-dx savemoney azure [options]
+dx savemoney [options]
 ```
 
 **Options:**
@@ -97,16 +93,16 @@ dx savemoney azure [options]
 
 ```bash
 # Analyze with default settings (interactive prompts)
-dx savemoney azure
+dx savemoney
 
 # Use a configuration file
-dx savemoney azure --config config.json
+dx savemoney --config config.json
 
 # Output as JSON with verbose logging
-dx savemoney azure --format json --verbose
+dx savemoney --format json --verbose
 
 # Analyze with specific timespan
-dx savemoney azure --days 60 --location italynorth
+dx savemoney --days 60 --location italynorth
 ```
 
 **Configuration file example (`config.json`):**
@@ -130,13 +126,8 @@ dx savemoney azure --days 60 --location italynorth
 - **App Service Plans**: Empty plans or oversized tiers
 - **Private Endpoints**: Unused or misconfigured endpoints
 
-##### AWS (Coming Soon)
-
-AWS support is planned for future releases with similar capabilities for analyzing AWS accounts and resources.
-
-```bash
-dx savemoney aws [options]
-```
+> [!NOTE]
+> Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.
 
 ### Global Options
 

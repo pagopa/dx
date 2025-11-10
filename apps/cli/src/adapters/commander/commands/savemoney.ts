@@ -3,8 +3,8 @@ import type { AzureConfig } from "@pagopa/dx-savemoney";
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
-const makeAzureCommand = () =>
-  new Command("azure")
+export const makeSavemoneyCommand = () =>
+  new Command("savemoney")
     .description(
       "Analyze Azure subscriptions and report unused or inefficient resources",
     )
@@ -40,39 +40,3 @@ const makeAzureCommand = () =>
         );
       }
     });
-
-const makeAwsCommand = () =>
-  new Command("aws")
-    .description(
-      "Analyze AWS accounts and report unused or inefficient resources (Coming soon)",
-    )
-    .action(function () {
-      this.error(
-        "AWS support is not yet implemented. Currently only Azure is supported.",
-      );
-    });
-
-export const makeSavemoneyCommand = () => {
-  const savemoneyCmd = new Command("savemoney").description(
-    "Analyze CSP resources for cost optimization opportunities",
-  );
-
-  // Add subcommands
-  savemoneyCmd.addCommand(makeAzureCommand());
-  savemoneyCmd.addCommand(makeAwsCommand());
-
-  // Custom help to show available CSPs
-  savemoneyCmd.addHelpText(
-    "after",
-    `
-Examples:
-  $ dx savemoney azure -c config.json
-  $ dx savemoney azure -c config.json --verbose
-  $ dx savemoney aws
-
-Note: Use 'dx savemoney <csp> --help' for CSP-specific options.
-`,
-  );
-
-  return savemoneyCmd;
-};
