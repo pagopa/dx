@@ -1,5 +1,6 @@
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
+import { configure, getConsoleSink } from "@logtape/logtape";
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
@@ -30,6 +31,28 @@ export const makeSavemoneyCommand = () =>
         .option("-v, --verbose", "Enable verbose logging")
         .action(async function (options) {
           try {
+            // Configure LogTape for verbose mode
+            if (options.verbose) {
+              await configure({
+                loggers: [
+                  {
+                    category: ["dx-savemoney"],
+                    lowestLevel: "debug",
+                    sinks: ["console"],
+                  },
+                  {
+                    category: ["logtape", "meta"],
+                    lowestLevel: "warning",
+                    sinks: ["console"],
+                  },
+                ],
+                reset: true,
+                sinks: {
+                  console: getConsoleSink(),
+                },
+              });
+            }
+
             // Load configuration
             const config: AzureConfig = await loadConfig(options.config);
             const finalConfig: AzureConfig = {

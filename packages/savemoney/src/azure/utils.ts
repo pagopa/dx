@@ -4,6 +4,8 @@
 
 import type { MonitorClient } from "@azure/arm-monitor";
 
+import { getLogger } from "@logtape/logtape";
+
 import type { AnalysisResult } from "../types.js";
 
 /**
@@ -65,9 +67,9 @@ export async function getMetric(
 
     return null;
   } catch (error) {
-    console.error(
-      `Failed to fetch metric ${metricName} for resource ${resourceId}:`,
-      error instanceof Error ? error.message : error,
+    const logger = getLogger(["dx-savemoney", "azure", "metrics"]);
+    logger.error(
+      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
     );
     return null;
   }
@@ -86,10 +88,11 @@ export function verboseLog(
   object?: unknown,
 ) {
   if (verbose) {
+    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
     if (object !== undefined) {
-      console.log(message, JSON.stringify(object, null, 2));
+      logger.debug(`${message} ${JSON.stringify(object, null, 2)}`);
     } else {
-      console.log(message);
+      logger.debug(message);
     }
   }
 }
@@ -105,13 +108,14 @@ export function verboseLogAnalysisResult(
   result: AnalysisResult,
 ) {
   if (verbose) {
-    console.log("\n📊 ANALYSIS RESULT:");
-    console.log(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
-    console.log(
+    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
+    logger.debug("\n📊 ANALYSIS RESULT:");
+    logger.debug(`   Cost Risk: ${result.costRisk.toUpperCase()}`);
+    logger.debug(
       `   Suspected Unused: ${result.suspectedUnused ? "YES" : "NO"}`,
     );
-    console.log(`   Reason: ${result.reason || "No issues found"}`);
-    console.log("=".repeat(80) + "\n");
+    logger.debug(`   Reason: ${result.reason || "No issues found"}`);
+    logger.debug("=".repeat(80) + "\n");
   }
 }
 
@@ -128,9 +132,10 @@ export function verboseLogResourceStart(
   resourceType: string,
 ) {
   if (verbose) {
-    console.log("\n" + "=".repeat(80));
-    console.log(`🔍 ANALYZING: ${resourceName}`);
-    console.log(`   Type: ${resourceType}`);
-    console.log("=".repeat(80));
+    const logger = getLogger(["dx-savemoney", "azure", "verbose"]);
+    logger.debug("\n" + "=".repeat(80));
+    logger.debug(`🔍 ANALYZING: ${resourceName}`);
+    logger.debug(`   Type: ${resourceType}`);
+    logger.debug("=".repeat(80));
   }
 }

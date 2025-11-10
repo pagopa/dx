@@ -5,6 +5,7 @@
 import type { NetworkManagementClient } from "@azure/arm-network";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -75,7 +76,8 @@ export async function analyzeNic(
     // and most Azure NICs don't expose standard traffic metrics through Azure Monitor
     // The primary checks (attachment to VM and public IP assignment) are sufficient
   } catch (error) {
-    console.warn(
+    const logger = getLogger(["dx-savemoney", "azure", "resources", "nic"]);
+    logger.warn(
       `Failed to get NIC details for ${nicName}: ${error instanceof Error ? error.message : error}`,
     );
     reason += "Could not retrieve detailed NIC information. ";

@@ -2,6 +2,7 @@
  * Azure configuration loading utilities
  */
 
+import { getLogger } from "@logtape/logtape";
 import * as fs from "fs";
 import * as readline from "readline";
 
@@ -41,7 +42,8 @@ export async function loadAzureConfig(
     }
   }
 
-  console.log(
+  const logger = getLogger(["dx-savemoney", "azure", "config"]);
+  logger.info(
     "Configuration file not found. Checking environment variables...",
   );
 

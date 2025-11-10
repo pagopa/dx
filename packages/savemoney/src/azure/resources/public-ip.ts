@@ -6,6 +6,7 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import type { NetworkManagementClient } from "@azure/arm-network";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -91,7 +92,13 @@ export async function analyzePublicIp(
       reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB). `;
     }
   } catch (error) {
-    console.warn(
+    const logger = getLogger([
+      "dx-savemoney",
+      "azure",
+      "resources",
+      "public-ip",
+    ]);
+    logger.warn(
       `Failed to get Public IP details for ${publicIpName}: ${error instanceof Error ? error.message : error}`,
     );
     reason += "Could not retrieve detailed Public IP information. ";

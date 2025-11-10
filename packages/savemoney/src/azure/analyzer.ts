@@ -8,6 +8,7 @@ import { MonitorClient } from "@azure/arm-monitor";
 import { NetworkManagementClient } from "@azure/arm-network";
 import * as armResources from "@azure/arm-resources";
 import { DefaultAzureCredential } from "@azure/identity";
+import { getLogger } from "@logtape/logtape";
 
 import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 
@@ -33,11 +34,12 @@ export async function analyzeAzureResources(
   config: AzureConfig,
   format: "detailed-json" | "json" | "table",
 ) {
+  const logger = getLogger(["dx-savemoney", "azure"]);
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 
   for (const subscriptionId of config.subscriptionIds) {
-    console.log(`\n🔹 Analyzing subscription: ${subscriptionId}`);
+    logger.info(`Analyzing subscription: ${subscriptionId}`);
 
     const resourceClient = new armResources.ResourceManagementClient(
       credential,

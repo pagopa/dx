@@ -5,6 +5,7 @@
 import type { ComputeManagementClient } from "@azure/arm-compute";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -72,7 +73,8 @@ export async function analyzeDisk(
       return result;
     }
   } catch (error) {
-    console.warn(
+    const logger = getLogger(["dx-savemoney", "azure", "resources", "disk"]);
+    logger.warn(
       `Failed to get disk details for ${diskName}: ${error instanceof Error ? error.message : error}`,
     );
     // Fallback to checking properties if API call fails

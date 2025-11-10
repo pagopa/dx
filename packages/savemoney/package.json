@@ -45,7 +45,8 @@
     "@azure/arm-monitor": "^7.0.0",
     "@azure/arm-network": "^34.1.0",
     "@azure/arm-resources": "^7.0.0",
-    "@azure/identity": "^4.13.0"
+    "@azure/identity": "^4.13.0",
+    "@logtape/logtape": "^1.1.2"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

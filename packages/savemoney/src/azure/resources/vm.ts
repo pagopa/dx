@@ -6,6 +6,7 @@ import type { ComputeManagementClient } from "@azure/arm-compute";
 import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -90,7 +91,8 @@ export async function analyzeVM(
       return result;
     }
   } catch (error) {
-    console.warn(
+    const logger = getLogger(["dx-savemoney", "azure", "resources", "vm"]);
+    logger.warn(
       `Failed to get VM instance view for ${vmName}: ${error instanceof Error ? error.message : error}`,
     );
     // Continue with metric analysis if instance view fails

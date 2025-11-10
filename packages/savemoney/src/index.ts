@@ -21,6 +21,7 @@ export * from "./types.js";
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
 
+import { getLogger } from "@logtape/logtape";
 // Utility imports for loadConfig and prompt functions
 import * as fs from "fs";
 import * as readline from "readline";
@@ -34,6 +35,8 @@ import type { AzureConfig } from "./azure/types.js";
  * @returns Configuration object with subscription IDs and settings
  */
 export async function loadConfig(configPath?: string): Promise<AzureConfig> {
+  const logger = getLogger(["dx-savemoney", "config"]);
+
   if (configPath && fs.existsSync(configPath)) {
     try {
       const configContent = fs.readFileSync(configPath, "utf-8");
@@ -58,7 +61,7 @@ export async function loadConfig(configPath?: string): Promise<AzureConfig> {
     }
   }
 
-  console.log(
+  logger.info(
     "Configuration file not found. Checking environment variables...",
   );
 

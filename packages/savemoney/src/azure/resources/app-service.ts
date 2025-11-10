@@ -6,6 +6,7 @@ import type { WebSiteManagementClient } from "@azure/arm-appservice";
 import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -103,7 +104,13 @@ export async function analyzeAppServicePlan(
       reason += "Premium tier with low resource utilization. ";
     }
   } catch (error) {
-    console.warn(
+    const logger = getLogger([
+      "dx-savemoney",
+      "azure",
+      "resources",
+      "app-service",
+    ]);
+    logger.warn(
       `Failed to get App Service Plan details for ${planName}: ${error instanceof Error ? error.message : error}`,
     );
     reason += "Could not retrieve detailed App Service Plan information. ";

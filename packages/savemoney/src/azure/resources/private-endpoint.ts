@@ -5,6 +5,7 @@
 import type { NetworkManagementClient } from "@azure/arm-network";
 
 import * as armResources from "@azure/arm-resources";
+import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../../types.js";
 
@@ -97,7 +98,13 @@ export async function analyzePrivateEndpoint(
       reason += "Private Endpoint is not associated with a subnet. ";
     }
   } catch (error) {
-    console.warn(
+    const logger = getLogger([
+      "dx-savemoney",
+      "azure",
+      "resources",
+      "private-endpoint",
+    ]);
+    logger.warn(
       `Failed to get Private Endpoint details for ${privateEndpointName}: ${error instanceof Error ? error.message : error}`,
     );
     reason += "Could not retrieve detailed Private Endpoint information. ";
