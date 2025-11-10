@@ -315,7 +315,7 @@ resource "azurerm_key_vault" "" {
   location            = "location"
   resource_group_name = "resource-group"
 
-  enable_rbac_authorization = true
+  rbac_authorization_enabled = true
 }
 ```
 
