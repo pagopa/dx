@@ -11,7 +11,7 @@ A TypeScript library for analyzing CSP resources to identify potential cost inef
 - **Orphaned Resource Identification**: Detects commonly "forgotten" resources like unattached disks, unassociated public IPs, and unused network interfaces.
 - **Flexible Reporting**: Offers multiple output formats:
   - `table`: A human-readable summary for the terminal.
-  - `json` / `yaml`: Standard formats for integration with other tools.
+  - `json`: Standard format for integration with other tools.
   - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
 - **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
 
@@ -92,7 +92,6 @@ The tool supports multiple output formats for different use cases:
 | :-------------- | :---------------------------------------------- | :----------------------------- |
 | `table`         | Human-readable table in terminal                | Quick visual inspection        |
 | `json`          | Structured JSON with resource summaries         | Integration with other tools   |
-| `yaml`          | YAML format with resource summaries             | Configuration or CI/CD         |
 | `detailed-json` | Complete JSON with full Azure resource metadata | AI analysis or deep inspection |
 
 ### How to Load Configuration
@@ -174,7 +173,7 @@ import { loadConfig, azure } from "@pagopa/dx-savemoney";
 // ARM_SUBSCRIPTION_ID=sub1,sub2
 
 const config = await loadConfig(); // Will read from env vars
-await azure.analyzeAzureResources(config, "yaml");
+await azure.analyzeAzureResources(config, "json");
 ```
 
 ## Development

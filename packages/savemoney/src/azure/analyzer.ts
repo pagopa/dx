@@ -27,11 +27,11 @@ import {
  * Analyzes resources in multiple Azure subscriptions and generates a report.
  *
  * @param config - Azure configuration with subscription IDs and settings
- * @param format - Output format (table, json, yaml, or detailed-json)
+ * @param format - Output format (table, json, or detailed-json)
  */
 export async function analyzeAzureResources(
   config: AzureConfig,
-  format: "detailed-json" | "json" | "table" | "yaml",
+  format: "detailed-json" | "json" | "table",
 ) {
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];

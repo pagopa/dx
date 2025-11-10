@@ -7,7 +7,7 @@
  * Features:
  * - Multi-cloud support (Azure, AWS planned)
  * - Metric-based analysis
- * - Multiple output formats (table, JSON, YAML, detailed-JSON)
+ * - Multiple output formats (table, JSON, detailed-JSON)
  * - Configurable via CLI options, environment variables, or config file
  *
  * This tool does NOT modify, tag, or delete any resources.

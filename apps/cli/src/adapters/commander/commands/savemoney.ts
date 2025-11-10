@@ -14,7 +14,7 @@ export const makeSavemoneyCommand = () =>
         .option("-c, --config <path>", "Path to configuration file (JSON)")
         .option(
           "-f, --format <format>",
-          "Report format: json, yaml, table, or detailed-json (default: table)",
+          "Report format: json, table, or detailed-json (default: table)",
           "table",
         )
         .option(

@@ -2,9 +2,6 @@
  * Azure report generation
  */
 
-import * as yaml from "js-yaml";
-import { table } from "table";
-
 import type {
   AzureDetailedResourceReport,
   AzureResourceReport,
@@ -14,11 +11,11 @@ import type {
  * Generates a report from Azure resource analysis in the specified format.
  *
  * @param report - Array of detailed resource reports
- * @param format - Output format (table, json, yaml, or detailed-json)
+ * @param format - Output format (table, json, or detailed-json)
  */
 export async function generateReport(
   report: AzureDetailedResourceReport[],
-  format: "detailed-json" | "json" | "table" | "yaml",
+  format: "detailed-json" | "json" | "table",
 ) {
   if (format === "detailed-json") {
     console.log(JSON.stringify(report, null, 2));
@@ -39,22 +36,17 @@ export async function generateReport(
 
   if (format === "json") {
     console.log(JSON.stringify(summaryReport, null, 2));
-  } else if (format === "yaml") {
-    console.log(yaml.dump(summaryReport));
   } else {
-    const tableData = [
+    console.table(
+      summaryReport.map((r) => ({
+        Name: r.name,
+        Reason: r.reason,
+        "Resource Group": r.resourceGroup || "N/A",
+        Risk: r.costRisk,
+        Type: r.type,
+        Unused: r.suspectedUnused ? "Yes" : "No",
+      })),
       ["Name", "Type", "Resource Group", "Risk", "Unused", "Reason"],
-      ...summaryReport.map((r) => [
-        r.name,
-        r.type,
-        r.resourceGroup || "N/A",
-        r.costRisk,
-        r.suspectedUnused ? "Yes" : "No",
-        r.reason,
-      ]),
-    ];
-
-    const output = table(tableData);
-    console.log(output);
+    );
   }
 }

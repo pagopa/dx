@@ -84,7 +84,7 @@ dx savemoney azure [options]
 | Option       | Alias | Description                                                                 | Default      |
 | :----------- | :---- | :-------------------------------------------------------------------------- | :----------- |
 | `--config`   | `-c`  | Path to a JSON configuration file.                                          | N/A          |
-| `--format`   | `-f`  | Report format (`table`, `json`, `yaml`, `detailed-json`).                   | `table`      |
+| `--format`   | `-f`  | Report format (`table`, `json`, `detailed-json`).                           | `table`      |
 | `--days`     | `-d`  | Metric analysis period in days.                                             | `30`         |
 | `--location` | `-l`  | Preferred Azure location for resources.                                     | `italynorth` |
 | `--verbose`  | `-v`  | Enable verbose mode with more detailed comments for each resource analyzed. | `false`      |

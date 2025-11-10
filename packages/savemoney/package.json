@@ -45,14 +45,11 @@
     "@azure/arm-monitor": "^7.0.0",
     "@azure/arm-network": "^34.1.0",
     "@azure/arm-resources": "^7.0.0",
-    "@azure/identity": "^4.13.0",
-    "js-yaml": "^4.1.0",
-    "table": "^6.9.0"
+    "@azure/identity": "^4.13.0"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
-    "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
