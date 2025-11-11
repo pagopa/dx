@@ -1,5 +1,15 @@
 # docs
 
+## 0.9.4
+
+### Patch Changes
+
+- 9df8a84: Remove invalid value from allowed Azure Tags
+- 70fd2a5: Replace azurerm keyvault's deprecated property
+  "enable_rbac_authorization" with "rbac_authorization_enabled"
+- Updated dependencies [9db820c]
+  - @pagopa/dx-mcpprompts@0.0.3
+
 ## 0.9.3
 
 ### Patch Changes
