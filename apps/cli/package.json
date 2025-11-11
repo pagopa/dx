@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@logtape/logtape": "^1.0.0",
+    "@pagopa/dx-savemoney": "workspace:^",
     "@pagopa/monorepo-generator": "workspace:^",
     "commander": "^14.0.0",
     "core-js": "^3.44.0",
