@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.2.4
+
+### Patch Changes
+
+- 70fd2a5: Replace azurerm keyvault's deprecated property "enable_rbac_authorization" with "rbac_authorization_enabled"
+
 ## 2.2.3
 
 ### Patch Changes
