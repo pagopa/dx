@@ -997,16 +997,16 @@ packages:
     resolution: {integrity: sha512-Y8R4YGX0rAczuEgmhS60u0miZdoA4WxLCMoYFgoOvNJCZh6CgTuB9zPcfzHv3HSII1JqaVSCEY9iocORlouDEw==}
     engines: {node: '>=20.0.0'}
 
-  '@azure/msal-browser@4.25.0':
-    resolution: {integrity: sha512-kbL+Ae7/UC62wSzxirZddYeVnHvvkvAnSZkBqL55X+jaSXTAXfngnNsDM5acEWU0Q/SAv3gEQfxO1igWOn87Pg==}
+  '@azure/msal-browser@4.26.1':
+    resolution: {integrity: sha512-GGCIsZXxyNm5QcQZ4maA9q+9UWmM+/87G+ybvPkrE32el1URSa9WYt0t67ks3/P0gspZX9RoEqyLqJ/X/JDnBQ==}
     engines: {node: '>=0.8.0'}
 
-  '@azure/msal-common@15.13.0':
-    resolution: {integrity: sha512-8oF6nj02qX7eE/6+wFT5NluXRHc05AgdCC3fJnkjiJooq8u7BcLmxaYYSwc2AfEkWRMRi6Eyvvbeqk4U4412Ag==}
+  '@azure/msal-common@15.13.1':
+    resolution: {integrity: sha512-vQYQcG4J43UWgo1lj7LcmdsGUKWYo28RfEvDQAEMmQIMjSFufvb+pS0FJ3KXmrPmnWlt1vHDl3oip6mIDUQ4uA==}
     engines: {node: '>=0.8.0'}
 
-  '@azure/msal-node@3.8.0':
-    resolution: {integrity: sha512-23BXm82Mp5XnRhrcd4mrHa0xuUNRp96ivu3nRatrfdAqjoeWAGyD0eEAafxAOHAEWWmdlyFK4ELFcdziXyw2sA==}
+  '@azure/msal-node@3.8.1':
+    resolution: {integrity: sha512-HszfqoC+i2C9+BRDQfuNUGp15Re7menIhCEbFCQ49D3KaqEDrgZIgQ8zSct4T59jWeUIL9N/Dwiv4o2VueTdqQ==}
     engines: {node: '>=16'}
 
   '@azure/opentelemetry-instrumentation-azure-sdk@1.0.0-beta.9':
@@ -2566,9 +2566,6 @@ packages:
 
   '@logtape/logtape@1.1.1':
     resolution: {integrity: sha512-/zpMuB2BZnL3LnBsy6PfFJp/4qP/60U9hE5j6eFwk25wBVtLpd7/bF3B1j7cnMD37R02fFyDyyHEmRSOz6+Qfg==}
-
-  '@logtape/logtape@1.1.2':
-    resolution: {integrity: sha512-4QXa/5cwt3+cx01C1xm8iqvEXxNZMDTTbT5AFGZnwPkn2WDAyA6UP2khWBZ7FctMnvQqW3fnJ96kgBJ4ahorHw==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -10641,8 +10638,8 @@ snapshots:
       '@azure/core-tracing': 1.3.0
       '@azure/core-util': 1.13.0
       '@azure/logger': 1.3.0
-      '@azure/msal-browser': 4.25.0
-      '@azure/msal-node': 3.8.0
+      '@azure/msal-browser': 4.26.1
+      '@azure/msal-node': 3.8.1
       open: 10.2.0
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -10723,15 +10720,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/msal-browser@4.25.0':
+  '@azure/msal-browser@4.26.1':
     dependencies:
-      '@azure/msal-common': 15.13.0
+      '@azure/msal-common': 15.13.1
 
-  '@azure/msal-common@15.13.0': {}
+  '@azure/msal-common@15.13.1': {}
 
-  '@azure/msal-node@3.8.0':
+  '@azure/msal-node@3.8.1':
     dependencies:
-      '@azure/msal-common': 15.13.0
+      '@azure/msal-common': 15.13.1
       jsonwebtoken: 9.0.2
       uuid: 8.3.2
 
@@ -13166,8 +13163,6 @@ snapshots:
   '@logtape/logtape@1.0.4': {}
 
   '@logtape/logtape@1.1.1': {}
-
-  '@logtape/logtape@1.1.2': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:
