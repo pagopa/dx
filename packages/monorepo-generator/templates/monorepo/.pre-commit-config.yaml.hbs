@@ -34,9 +34,9 @@ repos:
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
   - repo: local
     hooks:
-    - id: code_review
-      name: Run Code Review
-      description: "Run code-review script before pushing on remote"
-      entry: pnpm code-review
-      language: system
-      pass_filenames: false
+      - id: code_review
+        name: Run Code Review
+        description: "Run code-review script before pushing on remote"
+        entry: pnpm code-review
+        language: system
+        pass_filenames: false
