@@ -173,6 +173,24 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the instance number?",
     name: "instanceNumber",
   },
+  {
+    message: "What is the Cost Center for this project?",
+    name: "costCenter",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Cost Center must not be empty",
+  },
+  {
+    message: "What is the Management Team for this project?",
+    name: "managementTeam",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Management Team must not be empty",
+  },
+  {
+    message: "What is the Business Unit for this project?",
+    name: "businessUnit",
+    validate: (input: string) =>
+      input.trim().length > 0 ? true : "Business Unit must not be empty",
+  },
 ];
 
 const getDotFiles = (templatesPath: string): ActionType[] => [
