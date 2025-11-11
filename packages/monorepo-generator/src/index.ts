@@ -15,13 +15,6 @@ import {
   installRootDependencies,
 } from "./actions/pnpm.js";
 import {
-  addPagoPaPnpmPlugin,
-  configureChangesets,
-  configureDevContainer,
-  enablePnpm,
-  installRootDependencies,
-} from "./actions/pnpm.js";
-import {
   getAwsProviderLatestRelease,
   getAzureadProviderLatestRelease,
   getAzurermProviderLatestRelease,
@@ -259,14 +252,6 @@ const toEnvShort = (env: Environment) => {
   return envMap.get(env);
 };
 
-const toLocationShort = (location: AzureLocation) => {
-  const locationMap = new Map<AzureLocation, string>([
-    ["italynorth", "itn"],
-    ["northeurope", "neu"],
-    ["westeurope", "weu"],
-  ]);
-  return locationMap.get(location);
-};
 // Dynamically select the backend state partial AFTER prompts (needs answers.csp)
 const selectBackendPartial =
   ({
