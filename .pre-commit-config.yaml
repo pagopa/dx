@@ -16,6 +16,12 @@ repos:
         language: script
         pass_filenames: false
         verbose: true
+      - id: code_review
+        name: Run Code Review
+        description: "Run code-review script before pushing on remote"
+        entry: pnpm code-review
+        language: system
+        pass_filenames: false
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.102.0
     hooks:

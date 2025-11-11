@@ -32,4 +32,11 @@ repos:
         args:
           - --args=--skip-dirs="**/.terraform"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
-# TODO: add pnpm code-review when available https://pagopa.atlassian.net/browse/CES-1277
+  - repo: local
+    hooks:
+    - id: code_review
+      name: Run Code Review
+      description: "Run code-review script before pushing on remote"
+      entry: pnpm code-review
+      language: system
+      pass_filenames: false
