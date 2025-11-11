@@ -33,6 +33,9 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `instanceNumber`  | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.                           | 01         | no       |
 | `awsRegion`       | prompt | AWS region (e.g., `eu-south-1`). Only if `csp` is `aws`.                                    | eu-south-1 | yes\*    |
 | `awsAppName`      | prompt | AWS app name (e.g., `my-app`). Only if `csp` is `aws`.                                      |            | yes\*    |
+| `costCenter`      | prompt | Cost Center for the project (string). Used for billing and tracking.                        |            | yes      |
+| `managementTeam`  | prompt | Management Team for the project (string). Organizational team responsible for the project.  |            | yes      |
+| `businessUnit`    | prompt | Business Unit for the project (string).                                                     |            | yes      |
 
 \*Required only if the corresponding cloud provider is selected.
 
