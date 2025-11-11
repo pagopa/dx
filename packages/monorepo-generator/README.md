@@ -36,6 +36,9 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `tfStateResourceGroupName`  | prompt | Azure resource group for tfstate. Only if `csp` is `azure`.                                 | dx-d-itn-terraform-rg-01 | yes\*    |
 | `tfStateStorageAccountName` | prompt | Azure storage account for tfstate. Only if `csp` is `azure`.                                | dxditntfst01             | yes\*    |
 | `awsAccountId`              | prompt | AWS Account ID. Only if `csp` is `aws`.                                                     |                          | yes\*    |
+| `costCenter`                | prompt | Cost Center for the project (string). Used for billing and tracking.                        |                          | yes      |
+| `managementTeam`            | prompt | Management Team for the project (string). Organizational team responsible for the project.  |                          | yes      |
+| `businessUnit`              | prompt | Business Unit for the project (string).                                                     |                          | yes      |
 
 \*Required only if the corresponding cloud provider is selected.
 
