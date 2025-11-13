@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.1.1
+
+### Patch Changes
+
+- 841df11: Let the package be public
+
 ## 0.1.0
 
 ### Minor Changes
