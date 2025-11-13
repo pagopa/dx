@@ -19,7 +19,7 @@ repos:
       - id: code_review
         name: Run Code Review
         description: "Run code-review script before pushing on remote"
-        entry: pnpm code-review
+        entry: npm run code-review
         language: system
         pass_filenames: false
   - repo: https://github.com/antonbabenko/pre-commit-terraform

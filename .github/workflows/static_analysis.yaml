@@ -87,9 +87,6 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
       - name: Git config
         run: |
           set -eu
@@ -99,7 +96,7 @@ jobs:
 
       - name: Fix Alpine Container Image
         run: |
-          apk --no-cache add tar
+          apk --no-cache add tar nodejs npm
           python -m pip freeze --local
 
       - name: Run pre-commit on specific folders
