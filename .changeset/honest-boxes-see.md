@@ -2,4 +2,4 @@
 "@pagopa/dx-savemoney": patch
 ---
 
-Let the package to be public
+Let the package be public
