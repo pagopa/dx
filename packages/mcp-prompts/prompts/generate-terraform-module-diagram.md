@@ -180,16 +180,16 @@ flowchart LR
    rg@{ icon: "azure:resource-groups"}
    classDef azureResource fill:#0078D4,stroke:#fff,stroke-width:2px,color:#fff
    class rg azureResource  ← This will hide the icon!
-   ```
+```
 
-   **Good example** (border only, no fill):
+**Good example** (border only, no fill):
 
-   ```mermaid
-   rg["Resource Group"]
-   rg@{ icon: "azure:resource-groups"}
-   classDef important stroke:#E81123,stroke-width:3px
-   class rg important  ← Only border, icon remains visible
-   ```
+```mermaid
+rg["Resource Group"]
+rg@{ icon: "azure:resource-groups"}
+classDef important stroke:#E81123,stroke-width:3px
+class rg important  ← Only border, icon remains visible
+```
 
 ---
 
