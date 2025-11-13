@@ -106,7 +106,7 @@ flowchart TD
 
 - Lambda: `aws:arch-aws-lambda`
 - EC2: `aws:arch-amazon-ec2`
-- RDS: `aws:arch-amazon-rds"`
+- RDS: `aws:arch-amazon-rds`
 - CloudFront: `aws:arch-amazon-cloudfront`
 
 **Generic Icons (Font Awesome)**:
