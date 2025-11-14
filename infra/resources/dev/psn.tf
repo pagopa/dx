@@ -195,29 +195,14 @@ resource "azurerm_application_gateway" "psn" {
     backend_address_pool_name  = local.appgw.wallet_backend_pool
   }
 
-  redirect_configuration {
-    name                 = "google"
-    redirect_type        = "Permanent"
-    target_url           = "https://www.google.com"
-    include_path         = true
-    include_query_string = true
-  }
+  # redirect_configuration {
+  #   name                 = "google"
+  #   redirect_type        = "Permanent"
+  #   target_url           = "https://www.google.com"
+  #   include_path         = true
+  #   include_query_string = true
+  # }
 
-  request_routing_rule {
-    http_listener_name          = local.appgw.private_listener_name
-    name                        = "${local.appgw.private_listener_name}-rule"
-    rule_type                   = "Basic"
-    priority                    = 11
-    redirect_configuration_name = "bing"
-  }
-
-  redirect_configuration {
-    name                 = "bing"
-    redirect_type        = "Permanent"
-    target_url           = "https://www.bing.com"
-    include_path         = true
-    include_query_string = true
-  }
 
   probe {
     name                                      = "${local.appgw.wallet_backend_pool}-probe"
@@ -227,6 +212,10 @@ resource "azurerm_application_gateway" "psn" {
     interval                                  = 10
     unhealthy_threshold                       = 10
     pick_host_name_from_backend_http_settings = true
+
+    match {
+      status_code = ["200"]
+    }
   }
 
   private_link_configuration {
