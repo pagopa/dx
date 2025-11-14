@@ -19,9 +19,12 @@ No modules.
 | [azurerm_key_vault_secret.test1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.test2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_user_assigned_identity.cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
+| [azurerm_application_insights.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
 | [azurerm_container_app_environment.cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
 | [azurerm_key_vault.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
+| [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 
 ## Inputs
 
@@ -33,11 +36,15 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_appi"></a> [appi](#output\_appi) | n/a |
 | <a name="output_container_app_environment_id"></a> [container\_app\_environment\_id](#output\_container\_app\_environment\_id) | n/a |
 | <a name="output_environment"></a> [environment](#output\_environment) | n/a |
+| <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | n/a |
 | <a name="output_key_vault_secret1"></a> [key\_vault\_secret1](#output\_key\_vault\_secret1) | n/a |
 | <a name="output_key_vault_secret2"></a> [key\_vault\_secret2](#output\_key\_vault\_secret2) | n/a |
+| <a name="output_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#output\_private\_dns\_zone\_resource\_group\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_subnet_pep_id"></a> [subnet\_pep\_id](#output\_subnet\_pep\_id) | n/a |
 | <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 | <a name="output_user_assigned_identity_id"></a> [user\_assigned\_identity\_id](#output\_user\_assigned\_identity\_id) | n/a |
 <!-- END_TF_DOCS -->
