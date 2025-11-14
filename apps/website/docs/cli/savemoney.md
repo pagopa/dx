@@ -70,11 +70,6 @@ flowchart LR
         ARM[Azure Resource Manager]
         Monitor[Azure Monitor Metrics]
         Identity[Azure Identity]
-
-        %% Icons
-        Monitor@{ icon: "azure:metrics" }
-        %% Identity@{ icon: "azure:managed-identities" }
-        %% ARM@{ icon: "azure:resources-provider" }
     end
 
     subgraph rsc["Azure Resources"]
@@ -86,15 +81,6 @@ flowchart LR
         ASP[App Service Plans]
         PE[Private Endpoints]
         SA[Storage Accounts]
-
-        %% Icons
-        %% VM@{ icon: "azure:virtual-machine" }
-        %% Disk@{ icon: "azure:disks" }
-        %% NIC@{ icon: "azure:network-interfaces" }
-        %% IP@{ icon: "azure:public-ip-addresses" }
-        %% ASP@{ icon: "azure:app-service-plans" }
-        %% PE@{ icon: "azure:private-endpoints" }
-        %% SA@{ icon: "azure:storage-accounts" }
     end
 
     CLI --> Config
