@@ -31,10 +31,6 @@ or deletes resources.
 Full support for Azure resource analysis with intelligent detection algorithms
 based on Azure Monitor metrics and resource states.
 
-### 🚧 AWS (Planned)
-
-AWS support is planned for future releases with similar capabilities.
-
 ## Quick Start
 
 ```bash
@@ -46,59 +42,6 @@ npx @pagopa/dx-cli savemoney --config config.json
 
 # With verbose output and JSON format
 npx @pagopa/dx-cli savemoney --config config.json --format json --verbose
-```
-
-## Architecture
-
-The SaveMoney tool follows a modular architecture designed for multi-CSP
-support:
-
-```mermaid
-flowchart LR
-    subgraph cli["CLI Layer"]
-        CMDs[other cmds]
-        CLI[savemoney]
-    end
-
-    subgraph pkg["Package Layer - @pagopa/dx-savemoney"]
-        Config[Config Loader]
-        Azure[Azure Analyzer]
-        AWS[AWS Analyzer<br/>Coming Soon...]
-    end
-
-    subgraph svc["Azure Services"]
-        ARM[Azure Resource Manager]
-        Monitor[Azure Monitor Metrics]
-        Identity[Azure Identity]
-    end
-
-    subgraph rsc["Azure Resources"]
-        direction LR
-        VM[Virtual Machines]
-        Disk[Managed Disks]
-        NIC[Network Interfaces]
-        IP[Public IPs]
-        ASP[App Service Plans]
-        PE[Private Endpoints]
-        SA[Storage Accounts]
-    end
-
-    CLI --> Config
-    Config --> Azure
-    Config -.-> AWS
-
-    Azure --> ARM
-    Azure --> Monitor
-    Azure --> Identity
-
-    ARM --> rsc
-    Monitor --> rsc
-
-
-    style CLI fill:#0078d4,color:#fff
-    style Azure fill:#0078d4,color:#fff
-    style AWS fill:#ccc,color:#666
-    style Config fill:#107c10,color:#fff
 ```
 
 ## Analysis Flow
@@ -145,15 +88,21 @@ The tool supports multiple authentication methods:
 - **Azure CLI** - `az login` (recommended for local development)
 - **Managed Identity** - Automatic in Azure environments
 
-### Configuration Parameters
+### Configuration Options
 
-| Parameter           | Type       | Required | Default      | Description                                        |
-| :------------------ | :--------- | :------: | :----------- | :------------------------------------------------- |
-| `tenantId`          | `string`   |    ✅    | N/A          | Azure Active Directory Tenant ID                   |
-| `subscriptionIds`   | `string[]` |    ✅    | N/A          | Array of Azure subscription IDs to scan            |
-| `preferredLocation` | `string`   |    ❌    | `italynorth` | Preferred Azure region (flags misplaced resources) |
-| `timespanDays`      | `number`   |    ❌    | `30`         | Days to look back for metrics analysis             |
-| `verbose`           | `boolean`  |    ❌    | `false`      | Enable detailed logging per resource               |
+You can provide configuration through a JSON file (using `--config`),
+command-line options, or environment variables. All options can be mixed and
+matched.
+
+| Option / Parameter  | CLI Flag           | Alias | Type       | Required | Default      | Description                                        |
+| :------------------ | :----------------- | :---- | :--------- | :------: | :----------- | :------------------------------------------------- |
+| `tenantId`          | N/A                | N/A   | `string`   |    ✅    | N/A          | Azure Active Directory Tenant ID                   |
+| `subscriptionIds`   | N/A                | N/A   | `string[]` |    ✅    | N/A          | Array of Azure subscription IDs to scan            |
+| `preferredLocation` | `--location <loc>` | `-l`  | `string`   |    ❌    | `italynorth` | Preferred Azure region (flags misplaced resources) |
+| `timespanDays`      | `--days <number>`  | `-d`  | `number`   |    ❌    | `30`         | Days to look back for metrics analysis             |
+| N/A                 | `--config <path>`  | `-c`  | `string`   |    ❌    | N/A          | Path to JSON configuration file                    |
+| N/A                 | `--format <fmt>`   | `-f`  | `string`   |    ❌    | `table`      | Output format: `table`, `json`, `detailed-json`    |
+| N/A                 | `--verbose`        | `-v`  | `boolean`  |    ❌    | `false`      | Enable detailed logging per resource (CLI only)    |
 
 ### Configuration File Example
 
@@ -171,6 +120,12 @@ Create a `config.json` file:
 }
 ```
 
+Then use it with:
+
+```bash
+npx @pagopa/dx-cli savemoney --config config.json
+```
+
 ### Environment Variables
 
 Alternatively, use environment variables:
@@ -182,8 +137,8 @@ export ARM_SUBSCRIPTION_ID="sub-1,sub-2,sub-3"
 
 :::tip
 
-If **required** configuration parameters are not provided via file or CLI
-options, the tool will ask them interactively.
+If `tenantID` and `subscriptionID` are not provided via filem and `--config`
+option are not configured, the tool will ask them interactively.
 
 :::
 
@@ -204,8 +159,6 @@ optimization:
 
 **Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low
 
-### Cross-Resource Checks
-
 All resources are additionally evaluated for:
 
 - **Missing Tags** - Resources without tags may be unmanaged or orphaned
@@ -213,27 +166,6 @@ All resources are additionally evaluated for:
   or cost implications
 
 ## Output Formats
-
-### Table Format (Default)
-
-Human-readable console table output ideal for quick inspection:
-
-```bash
-npx @pagopa/dx-cli savemoney --config config.json --format table
-```
-
-**Example Output:**
-
-```text
-INF savemoney·azure Analyzing subscription: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-┌─────────┬──────────────────────────────┬─────────────────────────┬────────────────────┬──────────┬────────┬─────────────────────────────────────┐
-│ (index) │ Name                         │ Type                    │ Resource Group     │ Risk     │ Unused │ Reason                              │
-├─────────┼──────────────────────────────┼─────────────────────────┼────────────────────┼──────────┼────────┼─────────────────────────────────────┤
-│ 0       │ 'ex12345'                    │ 'Microsoft.Storage/...' │ 'dx-d-weu-tes...'  │ 'medium' │ 'Yes'  │ 'Resource not in preferred loca...' │
-│ 1       │ 'dx-d-itn-example-kv-pep-02' │ 'Microsoft.Network/...' │ 'dx-d-itn-exa...'  │ 'medium' │ 'Yes'  │ 'No tags found.'                    │
-│ 2       │ 'dxditnexampleteststfn05'    │ 'Microsoft.Storage/...' │ 'dx-d-itn-mod...'  │ 'medium' │ 'Yes'  │ 'Very low transaction count (0).'   │
-└─────────┴──────────────────────────────┴─────────────────────────┴────────────────────┴──────────┴────────┴─────────────────────────────────────┘
-```
 
 ### JSON Format
 
@@ -270,6 +202,14 @@ npx @pagopa/dx-cli savemoney --config config.json --format json
 ]
 ```
 
+### Table Format - **Default**
+
+Human-readable console table output ideal for quick inspection:
+
+```bash
+npx @pagopa/dx-cli savemoney --config config.json --format table
+```
+
 ### Detailed JSON Format
 
 Complete output including full Azure resource metadata for AI analysis:
@@ -277,16 +217,6 @@ Complete output including full Azure resource metadata for AI analysis:
 ```bash
 npx @pagopa/dx-cli savemoney --config config.json --format detailed-json
 ```
-
-## Command-Line Options
-
-| Option              | Alias | Type      | Description                                     |
-| :------------------ | :---- | :-------- | :---------------------------------------------- |
-| `--config <path>`   | `-c`  | `string`  | Path to JSON configuration file                 |
-| `--format <format>` | `-f`  | `string`  | Output format: `table`, `json`, `detailed-json` |
-| `--location <loc>`  | `-l`  | `string`  | Preferred Azure location                        |
-| `--days <number>`   | `-d`  | `number`  | Metric analysis timespan in days                |
-| `--verbose`         | `-v`  | `boolean` | Enable detailed logging per resource            |
 
 ## Usage Examples
 
@@ -298,6 +228,9 @@ npx @pagopa/dx-cli savemoney
 
 # Using config file
 npx @pagopa/dx-cli savemoney --config azure-config.json
+
+# Using CLI options only
+npx @pagopa/dx-cli savemoney --location westeurope --days 60 --verbose
 ```
 
 ### Custom Timespan
@@ -312,25 +245,6 @@ npx @pagopa/dx-cli savemoney --config config.json --days 60
 ```bash
 # See detailed analysis for each resource
 npx @pagopa/dx-cli savemoney --config config.json --verbose
-```
-
-**Verbose Output Example:**
-
-```txt
-INF savemoney·azure Analyzing subscription: prod-001
-DBG savemoney·azure·verbose
-================================================================================
-🔍 ANALYZING: vm-test-001
-   Type: Virtual Machine (Microsoft.Compute/virtualMachines)
-================================================================================
-DBG savemoney·azure·verbose Resource details:
-  ...
-}
-📊 ANALYSIS RESULT:
-   Cost Risk: HIGH
-   Suspected Unused: YES
-   Reason: VM is deallocated
-================================================================================
 ```
 
 ## ✅ Best Practices
