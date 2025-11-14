@@ -7,7 +7,6 @@ const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
-  clientModules: [require.resolve("./src/components/mermaid-icons.ts")],
   favicon: "img/favicon.ico",
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
