@@ -28,6 +28,34 @@ pnpm dx --help
 
 ## Usage
 
+### `init` – Initialize Resources
+
+Initialize new resources such as monorepo projects following PagoPA DevEx
+conventions.
+
+#### `init project` - Create a new monorepo project
+
+Create a new monorepo project with complete scaffolding, configuration files,
+and infrastructure templates.
+
+```bash
+npx @pagopa/dx-cli init project
+```
+
+This interactive command will prompt you for several inputs and then generate
+the project structure accordingly.
+
+Example output:
+
+```text
+? Where do you want to create the repository? /Users/dev/projects
+? What is the repository name? my-app
+? What is the repository description? My application
+? Cloud provider: Microsoft Azure
+...
+Monorepo initialized successfully ✅
+```
+
 ### `doctor` – Repository Validation
 
 Validate your repository against DevEx guidelines. Typical checks include:
