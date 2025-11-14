@@ -177,14 +177,14 @@ The tool supports multiple authentication methods:
 
 ##### Configuration Options
 
-| Parameter           | Type       | Required | Default      | CLI Flag          |
-| :------------------ | :--------- | :------: | :----------- | :---------------- |
-| `tenantId`          | `string`   |   Yes    | -            | -                 |
-| `subscriptionIds`   | `string[]` |   Yes    | -            | -                 |
-| `preferredLocation` | `string`   |    No    | `italynorth` | `--location`,`-l` |
-| `timespanDays`      | `number`   |    No    | `30`         | `--days`,`-d`     |
+| Parameter           | Type       | Req. | CLI Flag               | Description                                                |
+| :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
+| `tenantId`          | `string`   | Yes  | -                      | Azure Tenant ID                                            |
+| `subscriptionIds`   | `string[]` | Yes  | -                      | Azure subscription IDs to scan                             |
+| `preferredLocation` | `string`   |  No  | `--location`,<br/>`-l` | Preferred Azure region<br/>(default: `italynorth`)         |
+| `timespanDays`      | `number`   |  No  | `--days`,<br/>`-d`     | Days to look back for metrics analysis<br/>(default: `30`) |
 
-**Additional CLI-only options:**
+**CLI-only options:**
 
 - `--config`, `-c` - Path to config file
 - `--format`, `-f` - Output format, possible values: `table` (_default_),
