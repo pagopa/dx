@@ -1,0 +1,71 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*.ts"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**",
+        "{projectRoot}/bin/**"
+      ],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*.ts"
+      ],
+      "cache": true
+    },
+    "format:check": {
+      "cache": true
+    },
+    "lint": {
+      "options": {
+        "fix": true
+      },
+      "configurations": {
+        "check": {
+          "fix": false
+        }
+      }
+    },
+    "test": {
+      "options": {
+        "run": true
+      },
+      "configurations": {
+        "coverage": {
+          "coverage": true
+        }
+      }
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "testTargetName": "test"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}

@@ -86,8 +86,6 @@
   },
   "scripts": {
     "build": "tsup",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "typecheck": "tsc --noEmit"
   }
 }

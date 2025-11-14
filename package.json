@@ -4,14 +4,17 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
     "@devcontainers/cli": "^0.80.1",
+    "@nx/docker": "22.0.3",
+    "@nx/eslint": "22.0.3",
+    "@nx/vite": "22.0.3",
     "eslint": "catalog:",
+    "nx": "22.0.3",
     "prettier": "catalog:",
-    "turbo": "^2.6.1",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
-    "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check test:coverage",
     "version": "changeset version && pnpm i --lockfile-only",
     "release": "pnpm build && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
