@@ -1,3 +1,4 @@
+#region Resource Groups and Networking
 resource "azurerm_resource_group" "pagopa" {
   name     = "dx-d-itn-pagopa-rg-01"
   location = local.location
@@ -22,9 +23,9 @@ resource "azurerm_subnet" "pagopa_pep" {
 
   private_link_service_network_policies_enabled = false
 }
+#endregion
 
-# Application Gateway
-
+#region Application Gateway
 resource "azurerm_private_endpoint" "pagopa_psn_appgw" {
   name                = local.appgw.private_endpoint_name
   location            = local.location
@@ -43,9 +44,9 @@ resource "azurerm_private_endpoint" "pagopa_psn_appgw" {
 
   tags = local.tags
 }
+#endregion
 
-# Front Door
-
+#region Front Door
 resource "azurerm_cdn_frontdoor_profile" "pagopa" {
   name                = "dx-d-itn-pagopa-afd-02"
   resource_group_name = azurerm_resource_group.pagopa.name
@@ -125,3 +126,4 @@ resource "azurerm_cdn_frontdoor_route" "this" {
   #   query_string_caching_behavior = "IgnoreQueryString"
   # }
 }
+#endregion

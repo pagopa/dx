@@ -15,6 +15,7 @@ locals {
   }
 }
 
+#region Resource Groups
 resource "azurerm_resource_group" "psn_hub" {
   name     = "dx-d-itn-psn-hub-rg-01"
   location = local.location
@@ -28,7 +29,9 @@ resource "azurerm_resource_group" "psn_spoke" {
 
   tags = local.tags
 }
+#endregion
 
+#region Basic Networking
 resource "azurerm_virtual_network" "psn_hub" {
   name                = "dx-d-itn-psn-hub-vnet-01"
   resource_group_name = azurerm_resource_group.psn_hub.name
@@ -74,8 +77,9 @@ resource "azurerm_subnet" "psn_spoke_pep" {
 
   private_link_service_network_policies_enabled = false
 }
+#endregion
 
-# Application Gateway
+#region Application Gateway
 
 resource "azurerm_public_ip" "psn_appgw" {
   name                = "dx-d-itn-psn-appgw-pip-01"
@@ -287,8 +291,9 @@ resource "azurerm_subnet_network_security_group_association" "psn_appgw" {
   subnet_id                 = azurerm_subnet.psn_appgw.id
   network_security_group_id = azurerm_network_security_group.psn_appgw.id
 }
+#endregion
 
-# Front Door
+#region Front Door
 resource "azurerm_storage_account" "psn_cdn" {
   name                     = "dxditnpsncdnst01"
   resource_group_name      = azurerm_resource_group.psn_spoke.name
@@ -344,8 +349,9 @@ resource "azurerm_storage_blob" "asset" {
   type                   = "Block"
   source                 = "${path.module}/appgw.http"
 }
+#endregion
 
-# PaaS
+#region Wallet Function App
 resource "azurerm_service_plan" "psn_wallet" {
   name                   = "dxditn-psn-wallet-asp-01"
   location               = azurerm_resource_group.psn_spoke.location
@@ -638,3 +644,4 @@ resource "azurerm_role_assignment" "function_storage_queue_data_contributor" {
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_linux_function_app.psn_wallet.identity[0].principal_id
 }
+#endregion
