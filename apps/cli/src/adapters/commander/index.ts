@@ -9,7 +9,7 @@ import {
 import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
 import { makeInitCommand } from "./commands/init.js";
-import { makeVersionCommand } from "./commands/version.js";
+import { makeSavemoneyCommand } from "./commands/savemoney.js";
 
 export type CliDependencies = CodemodCommandDependencies;
 
@@ -27,12 +27,12 @@ export const makeCli = (
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
+  program.addCommand(makeSavemoneyCommand());
 
   if (process.env.ENABLE_INIT_COMMAND) {
     program.addCommand(makeInitCommand());
   }
 
-  program.addCommand(makeVersionCommand());
   program.addCommand(makeInfoCommand(deps, config));
 
   return program;

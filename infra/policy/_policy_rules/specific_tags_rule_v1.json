@@ -9,8 +9,7 @@
         "field": "tags.CreatedBy",
         "notIn": [
           "Terraform",
-          "ARM",
-          "AzurePortal"
+          "ARM"
         ]
       },
       {

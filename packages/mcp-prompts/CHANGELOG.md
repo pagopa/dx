@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.0.3
+
+### Patch Changes
+
+- 9db820c: First implementation of the MCP prompts catalog and dynamic loader
+
 ## 0.0.2
 
 ### Patch Changes

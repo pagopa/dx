@@ -3,8 +3,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts"],
-      "outputs": ["dist/**", "bin/**"]
+      "inputs": ["src/**/*.ts", "docs/**", "blog/**"],
+      "outputs": ["dist/**", "bin/**", "build/**", ".docusaurus/**"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -22,6 +22,9 @@
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts"],
       "outputs": ["coverage"]
+    },
+    "test-integration": {
+      "inputs": ["**/*.tf", "**/integration.tftest.hcl"]
     }
   }
 }

@@ -3,5 +3,8 @@
   "version": "0.3.1",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings"
+  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
+  "scripts": {
+    "test-integration": "terraform test -filter='tests/integration.tftest.hcl'"
+  }
 }

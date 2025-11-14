@@ -1,5 +1,16 @@
 # @pagopa/dx-cli
 
+## 0.9.0
+
+### Minor Changes
+
+- d8e47d0: Add `dx savemoney` command to the DX CLI for analyzing Azure provider resources for cost optimization opportunities
+
+### Patch Changes
+
+- Updated dependencies [d8e47d0]
+  - @pagopa/dx-savemoney@0.1.0
+
 ## 0.8.2
 
 ### Patch Changes
