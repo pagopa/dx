@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.10.0
+
+### Minor Changes
+
+- c23cddf: Remove version|v command. Use -V to get the cli version.
+
 ## 0.9.0
 
 ### Minor Changes
