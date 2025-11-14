@@ -140,8 +140,7 @@ flowchart TB
 
 ### Authentication
 
-The tool uses Azure's `DefaultAzureCredential`, supporting multiple
-authentication methods:
+The tool supports multiple authentication methods:
 
 - **Azure CLI** - `az login` (recommended for local development)
 - **Managed Identity** - Automatic in Azure environments
