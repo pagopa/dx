@@ -5,9 +5,7 @@ description: Analyze cloud resources to identify cost optimization opportunities
 ---
 
 The SaveMoney tool helps identify underutilized and unused cloud resources that
-may be costing your organization money. It performs read-only analysis across
-your cloud infrastructure, generating actionable reports to support FinOps
-decisions without modifying any resources.
+may be costing your organization money.
 
 ## Overview
 
