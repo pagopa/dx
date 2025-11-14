@@ -48,10 +48,12 @@ the project structure accordingly.
 Example output:
 
 ```text
-? Where do you want to create the repository? /Users/dev/projects
-? What is the repository name? my-app
-? What is the repository description? My application
-? Cloud provider: Microsoft Azure
+? Where do you want to create the repository? /Users/projects
+? What is the repository name? my-monorepo
+? What is the repository description? My new monorepo
+? What Cloud Provider would you like to use?
+❯ Amazon Web Services
+  Microsoft Azure
 ...
 Monorepo initialized successfully ✅
 ```
