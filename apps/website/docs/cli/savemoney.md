@@ -92,15 +92,15 @@ You can provide configuration through a JSON file (using `--config`),
 command-line options, or environment variables. All options can be mixed and
 matched.
 
-| Option / Parameter  | CLI Flag           | Alias | Type       | Required | Default      | Description                                        |
-| :------------------ | :----------------- | :---- | :--------- | :------: | :----------- | :------------------------------------------------- |
-| `tenantId`          | N/A                | N/A   | `string`   |    ✅    | N/A          | Azure Active Directory Tenant ID                   |
-| `subscriptionIds`   | N/A                | N/A   | `string[]` |    ✅    | N/A          | Array of Azure subscription IDs to scan            |
-| `preferredLocation` | `--location <loc>` | `-l`  | `string`   |    ❌    | `italynorth` | Preferred Azure region (flags misplaced resources) |
-| `timespanDays`      | `--days <number>`  | `-d`  | `number`   |    ❌    | `30`         | Days to look back for metrics analysis             |
-| N/A                 | `--config <path>`  | `-c`  | `string`   |    ❌    | N/A          | Path to JSON configuration file                    |
-| N/A                 | `--format <fmt>`   | `-f`  | `string`   |    ❌    | `table`      | Output format: `table`, `json`, `detailed-json`    |
-| N/A                 | `--verbose`        | `-v`  | `boolean`  |    ❌    | `false`      | Enable detailed logging per resource (CLI only)    |
+| Parameter           | CLI Flag           | Type       | Req. | Default      | Description                                        |
+| :------------------ | :----------------- | :--------- | :--- | :----------- | :------------------------------------------------- |
+| `tenantId`          | N/A                | `string`   | ✅   | N/A          | Azure Active Directory Tenant ID                   |
+| `subscriptionIds`   | N/A                | `string[]` | ✅   | N/A          | Array of Azure subscription IDs to scan            |
+| `preferredLocation` | `--location`, `-l` | `string`   | ❌   | `italynorth` | Preferred Azure region (flags misplaced resources) |
+| `timespanDays`      | `--days`, `-d`     | `number`   | ❌   | `30`         | Days to look back for metrics analysis             |
+| N/A                 | `--config`, `-c`   | `string`   | ❌   | N/A          | Path to JSON configuration file                    |
+| N/A                 | `--format`, `-f`   | `string`   | ❌   | `table`      | Output format: `table`, `json`, `detailed-json`    |
+| N/A                 | `--verbose`, `-v`  | `boolean`  | ❌   | `false`      | Enable detailed logging per resource               |
 
 ### Configuration File Example
 
