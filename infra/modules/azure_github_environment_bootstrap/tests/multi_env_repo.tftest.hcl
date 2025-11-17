@@ -51,7 +51,7 @@ run "validate_github_id_app" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
@@ -168,7 +168,7 @@ run "validate_github_id_infra" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
@@ -388,7 +388,7 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
@@ -457,7 +457,7 @@ run "validate_rbac_entraid" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
@@ -535,7 +535,7 @@ run "validate_github_id_opex" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
@@ -627,7 +627,7 @@ run "validate_rgs_iam" {
     }
 
     repository = {
-      name               = run.setup_tests.repository.name
+      name = run.setup_tests.repository.name
     }
 
     github_private_runner = {
