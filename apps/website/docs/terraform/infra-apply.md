@@ -24,7 +24,7 @@ the application of changes across different environments.
 
 ## Input
 
-| `env_vars`                    | List of environment variables to set up, given in `env=value` format                             | string  |     | N/A     |
+| Parameter                     | Description                                                                                      | Type    | Req | Default |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ | ------- | --- | ------- |
 | `environment`                 | Environment where the resources will be deployed                                                 | string  | ✓   |         |
 | `base_path`                   | Base path where to look for Terraform projects                                                   | string  | ✓   |         |

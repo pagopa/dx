@@ -1,0 +1,255 @@
+/* MCP Prompts styling inspired by homepage design */
+.promptsContainer {
+  width: 100%;
+}
+
+.promptsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.promptCard {
+  background: var(--ifm-background-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 161, 176, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  position: relative;
+}
+
+.promptCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 161, 176, 0.12);
+}
+
+[data-theme="dark"] .promptCard {
+  background: #242526;
+  border: 1px solid #444950;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.promptCardContent {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.promptHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.promptTitleSection {
+  flex: 1;
+}
+
+.promptTitle {
+  font-family: var(--ifm-font-family-base);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ifm-font-color-base);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.promptIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.promptIdContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border: none !important;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.promptIdContainer:hover {
+  background: var(--ifm-color-primary-lightest);
+}
+
+[data-theme="dark"] .promptIdContainer {
+  background: #444950;
+}
+
+[data-theme="dark"] .promptIdContainer:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+.promptId {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  display: inline-block;
+  border: none !important;
+  outline: none !important;
+}
+
+.copyIcon {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.promptIdContainer:hover .copyIcon {
+  opacity: 1;
+}
+
+.promptDescription {
+  font-family: var(--ifm-font-family-base);
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.7;
+  margin: 0 0 1.25rem 0;
+  flex-grow: 1;
+  font-size: 1rem;
+}
+
+.promptTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag {
+  background: var(--ifm-color-primary-lightest);
+  color: var(--ifm-font-color-base);
+  padding: 0.3rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .tag {
+  background: var(--ifm-color-primary-dark);
+  color: var(--ifm-font-color-base);
+}
+
+.detailsContent {
+  margin-top: 1rem;
+}
+
+.promptArguments {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme="dark"] .promptArguments {
+  border-top: 1px solid #444950;
+}
+
+.argumentsTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 0.6rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.argumentsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 0.75rem;
+}
+
+.argumentItem {
+  display: contents;
+}
+
+.argumentName {
+  font-family: var(--ifm-font-family-monospace);
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-emphasis-800);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  align-self: flex-start;
+  text-align: left;
+  justify-self: start;
+}
+
+.argumentRequired {
+  background: #ffeaa7;
+  color: #d63031;
+}
+
+.argumentOptional {
+  background: #ddd6fe;
+  color: #7c3aed;
+}
+
+[data-theme="dark"] .argumentRequired {
+  background: #d63031;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .argumentOptional {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.argumentDescription {
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.4;
+}
+
+.loadingState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 2rem;
+  font-size: 1.125rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .promptsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .promptCardContent {
+    padding: 1.5rem;
+  }
+
+  .promptHeader {
+    gap: 0.75rem;
+  }
+
+  .promptTitle {
+    font-size: 1.25rem;
+  }
+}

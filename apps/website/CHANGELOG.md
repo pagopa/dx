@@ -1,5 +1,31 @@
 # docs
 
+## 0.9.5
+
+### Patch Changes
+
+- e65b885: Fix the documentation about MCP server setup in VSCode with GitHub
+  Copilot
+
+## 0.9.4
+
+### Patch Changes
+
+- 9df8a84: Remove invalid value from allowed Azure Tags
+- 70fd2a5: Replace azurerm keyvault's deprecated property
+  "enable_rbac_authorization" with "rbac_authorization_enabled"
+- Updated dependencies [9db820c]
+  - @pagopa/dx-mcpprompts@0.0.3
+
+## 0.9.3
+
+### Patch Changes
+
+- 2c90daa: Fix broken links in Azure docs
+- 324e584: Avoid tracking each keystroke while searching the website
+- 6f8f23b: Add `onBrokenAnchors` so the website build fails whit any invalid
+  link
+
 ## 0.9.2
 
 ### Patch Changes

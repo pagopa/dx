@@ -13,13 +13,6 @@ locals {
     key                  = "dx.core.dev.tfstate"
   }
 
-  aws_naming_config = {
-    prefix          = "dx"
-    environment     = "p" # change to d
-    region          = "eu-south-1"
-    instance_number = 1
-  }
-
   test_modes = ["integration", "e2e"]
 
   private_dns_zones = [

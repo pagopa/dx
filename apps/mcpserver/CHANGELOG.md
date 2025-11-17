@@ -1,5 +1,19 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.6
+
+### Patch Changes
+
+- e65b885: Fix the documentation about MCP server setup in VSCode with GitHub Copilot
+
+## 0.0.5
+
+### Patch Changes
+
+- 9db820c: Make use of the new dynamic MCP prompts catalog
+- Updated dependencies [9db820c]
+  - @pagopa/dx-mcpprompts@0.0.3
+
 ## 0.0.4
 
 ### Patch Changes

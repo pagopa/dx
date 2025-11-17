@@ -18,6 +18,7 @@ const config: Config = {
   markdown: {
     mermaid: true,
   },
+  onBrokenAnchors: "throw",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
 
@@ -66,6 +67,7 @@ const config: Config = {
         enableClickAnalytics: false,
       },
     ],
+    require.resolve("./src/plugins/mcp-prompts-loader.ts"),
     [
       "docusaurus-plugin-llms",
       {

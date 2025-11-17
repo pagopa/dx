@@ -1,5 +1,11 @@
 # azure_app_service
 
+## 2.0.1
+
+### Patch Changes
+
+- f7fe153: Add nonsensitive function to show non sensitive appsettings as Plan outputs
+
 ## 2.0.0
 
 ### Major Changes
