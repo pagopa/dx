@@ -1,5 +1,12 @@
 # docs
 
+## 0.9.5
+
+### Patch Changes
+
+- e65b885: Fix the documentation about MCP server setup in VSCode with GitHub
+  Copilot
+
 ## 0.9.4
 
 ### Patch Changes
