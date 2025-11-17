@@ -1,0 +1,5 @@
+backend "s3" {
+  bucket         = "{{ awsAccountId }}-terraform-state"
+  key            = "{{ repoName }}.repository.tfstate"
+  region         = "{{ awsRegion }}"
+}
