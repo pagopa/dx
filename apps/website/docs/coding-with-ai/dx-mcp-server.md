@@ -50,14 +50,22 @@ for details.
 ```json
 {
   "servers": {
-    "pagopa-dx": {
+    "dx-docs": {
       "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
       "headers": {
-        "x-gh-pat": "${env:GH_PAT}"
+        "x-gh-pat": "${input:github_mcp_pat}"
       }
     }
-  }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github_mcp_pat",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
 }
 ```
 
