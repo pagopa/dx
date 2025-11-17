@@ -227,13 +227,9 @@ function checkRunningStatus(
 ): string {
   let newReason = reason;
 
-  verboseLog(verbose, "Checking running status...");
-
   const { provisioningState, runningStatus, template } =
     appDetails.properties || {};
 
-  verboseLog(verbose, `Provisioning State: ${provisioningState || "N/A"}`);
-  verboseLog(verbose, `Running Status: ${runningStatus || "N/A"}`);
   verboseLog(verbose, `Min Replicas: ${template?.scale?.minReplicas ?? "N/A"}`);
   verboseLog(verbose, `Max Replicas: ${template?.scale?.maxReplicas ?? "N/A"}`);
 

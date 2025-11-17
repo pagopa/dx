@@ -87,14 +87,14 @@ The tool analyzes the following Azure resource types with specific detection met
 
 | Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                      |
 | :---------------------- | :---------------------- | :-------: | :------------------------------------------------------------------------------------------------------------------ |
-| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<10MB)                                         |
+| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                 |
 | **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier                                |
 | **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB) |
 | **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                           |
-| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<1MB)                             |
+| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<~340KB per day)                  |
 | **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                       |
 | **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                               |
-| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<100 in timespan)                                                                       |
+| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                               |
 
 #### Generic Checks
 
