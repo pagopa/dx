@@ -83,13 +83,13 @@ export async function analyzePublicIp(
       monitorClient,
       resource.id,
       "BytesInDDoS",
-      "Total",
+      "Average",
       timespanDays,
     );
 
-    if (bytesInDDoS !== null && bytesInDDoS < 1000000) {
-      // Less than 1MB total in 30 days
-      reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB). `;
+    if (bytesInDDoS !== null && bytesInDDoS < 340000) {
+      // Less than ~340KB average per day
+      reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB/day avg). `;
     }
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);

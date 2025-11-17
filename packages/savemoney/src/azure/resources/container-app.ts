@@ -125,7 +125,7 @@ async function checkNetworkMetrics(
     monitorClient,
     resource.id,
     "RxBytes",
-    "Total",
+    "Average",
     timespanDays,
   );
 
@@ -133,25 +133,25 @@ async function checkNetworkMetrics(
     monitorClient,
     resource.id,
     "TxBytes",
-    "Total",
+    "Average",
     timespanDays,
   );
 
   verboseLog(
     verbose,
-    `Network In: ${networkIn !== null ? `${(networkIn / 1048576).toFixed(2)} MB` : "N/A"}`,
+    `Network In: ${networkIn !== null ? `${(networkIn / 1048576).toFixed(2)} MB/day avg` : "N/A"}`,
   );
   verboseLog(
     verbose,
-    `Network Out: ${networkOut !== null ? `${(networkOut / 1048576).toFixed(2)} MB` : "N/A"}`,
+    `Network Out: ${networkOut !== null ? `${(networkOut / 1048576).toFixed(2)} MB/day avg` : "N/A"}`,
   );
 
   if (
     networkIn !== null &&
     networkOut !== null &&
-    networkIn + networkOut < 1048576
+    networkIn + networkOut < 34000
   ) {
-    newReason += `Very low network traffic (${((networkIn + networkOut) / 1048576).toFixed(2)} MB). `;
+    newReason += `Very low network traffic (${((networkIn + networkOut) / 1048576).toFixed(2)} MB/day avg). `;
   }
 
   return newReason;

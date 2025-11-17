@@ -110,7 +110,7 @@ export async function analyzeVM(
     monitorClient,
     resource.id,
     "Network In Total",
-    "Total",
+    "Average",
     timespanDays,
   );
 
@@ -118,9 +118,9 @@ export async function analyzeVM(
     // Less than 1% average CPU
     reason += `Low CPU usage (avg ${cpuUsage.toFixed(2)}%). `;
   }
-  if (networkIn !== null && networkIn < 1024 * 1024 * 10) {
-    // Less than 10MB total network in
-    reason += `Low network traffic. `;
+  if (networkIn !== null && networkIn < 1024 * 1024 * 3) {
+    // Less than 3MB average per day
+    reason += `Low network traffic (${(networkIn / 1024 / 1024).toFixed(2)} MB/day avg). `;
   }
 
   const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
