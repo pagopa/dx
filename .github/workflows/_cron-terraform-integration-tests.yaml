@@ -19,7 +19,7 @@ env:
 jobs:
   terraform-integration-test:
     runs-on: ubuntu-latest
-    environment: infra-dev-cd
+    environment: integration-tests
     permissions:
       id-token: write
       contents: read
@@ -52,4 +52,6 @@ jobs:
 
       - name: Run Terraform Integration Tests
         timeout-minutes: 60
-        run: npx turbo test-integration
+        run: |
+          npx turbo test-integration \
+            --env-mode=loose
