@@ -37,7 +37,7 @@ const answersSchema = z.object({
   azureLocation: z.string().optional(),
   csp: z.enum(["aws", "azure"]),
   domain: z.string().nonempty(),
-  environments: z.array(z.enum(["dev", "prod"])).nonempty(),
+  environments: z.array(z.enum(["dev", "prod", "uat"])).nonempty(),
   instanceNumber: z.string().nonempty(),
   prefix: z.string().nonempty(),
   repoDescription: z.string().optional(),
@@ -109,7 +109,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     when: (answers) => answers.csp === "aws",
   },
   {
-    choices: ["dev", "prod"],
+    choices: ["dev", "prod", "uat"],
     message: "Which environments do you need?",
     name: "environments",
     type: "checkbox",
