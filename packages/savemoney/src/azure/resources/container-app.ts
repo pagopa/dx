@@ -89,20 +89,6 @@ export async function analyzeContainerApp(
       reason,
       verbose,
     );
-
-    if (appDetails.managedEnvironmentId?.includes("managedEnvironments")) {
-      const cpuUsage = await getMetric(
-        monitorClient,
-        resource.id,
-        "UsageNanoCores",
-        "Average",
-        timespanDays,
-      );
-      if (cpuUsage !== null && cpuUsage < 1000000) {
-        reason +=
-          "Consumption-based Container App with minimal resource usage. ";
-      }
-    }
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
