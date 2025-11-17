@@ -5,6 +5,6 @@
   "provider": "azurerm",
   "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
   "scripts": {
-    "test-integration": "terraform test -filter='tests/integration.tftest.hcl'"
+    "test-integration": "terraform init; terraform test -filter='tests/integration.tftest.hcl'"
   }
 }
