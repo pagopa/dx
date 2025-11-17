@@ -638,7 +638,7 @@ importers:
         version: 4.13.0
       '@logtape/logtape':
         specifier: ^1.1.2
-        version: 1.1.2
+        version: 1.2.0
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
@@ -2566,6 +2566,9 @@ packages:
 
   '@logtape/logtape@1.1.1':
     resolution: {integrity: sha512-/zpMuB2BZnL3LnBsy6PfFJp/4qP/60U9hE5j6eFwk25wBVtLpd7/bF3B1j7cnMD37R02fFyDyyHEmRSOz6+Qfg==}
+
+  '@logtape/logtape@1.2.0':
+    resolution: {integrity: sha512-L7aXBYrxpSUQcsZm/hCuh5REN+dckxmPmH7x7eCROiLAHUSPzc7AhbsxsZLDsXMM4ggtbmS3sUQVa+blfF4sZA==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -13163,6 +13166,8 @@ snapshots:
   '@logtape/logtape@1.0.4': {}
 
   '@logtape/logtape@1.1.1': {}
+
+  '@logtape/logtape@1.2.0': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:
