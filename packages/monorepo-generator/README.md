@@ -26,7 +26,7 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `repoName`                  | prompt | Repository name provided by the user (string).                                              |                          | yes      |
 | `repoDescription`           | prompt | Repository description provided by the user (string).                                       |                          | no       |
 | `csp`                       | prompt | Cloud provider selection. One of `aws` or `azure`.                                          | azure                    | yes      |
-| `environments`              | prompt | List of environments to create (e.g., `dev`, `prod`).                                       |                          | yes      |
+| `environments`              | prompt | List of environments to create (e.g., `dev`, `prod`, `uat`).                                |                          | yes      |
 | `prefix`                    | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming.                   |                          | yes      |
 | `azureLocation`             | prompt | Azure location (e.g., `italynorth`, `northeurope`, `westeurope`). Only if `csp` is `azure`. | italynorth               | yes\*    |
 | `domain`                    | prompt | Project domain (e.g., `payments`, `identity`).                                              |                          | yes      |
