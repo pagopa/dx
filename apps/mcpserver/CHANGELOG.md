@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.6
+
+### Patch Changes
+
+- e65b885: Fix the documentation about MCP server setup in VSCode with GitHub Copilot
+
 ## 0.0.5
 
 ### Patch Changes

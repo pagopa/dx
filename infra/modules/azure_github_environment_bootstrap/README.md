@@ -229,4 +229,5 @@ This module includes practical examples to help you get started quickly:
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |
 | <a name="output_resource_group"></a> [resource\_group](#output\_resource\_group) | Details of the main resource group, including ID, name, and location. |
+| <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | The Azure Subscription ID of the Terraform state file. |
 <!-- END_TF_DOCS -->

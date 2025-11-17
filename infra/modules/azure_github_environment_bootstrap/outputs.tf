@@ -24,6 +24,11 @@ output "github_private_runner" {
   }
 }
 
+output "subscription_id" {
+  description = "The Azure Subscription ID of the Terraform state file."
+  value       = local.parsed_subscription_id.subscription_id
+}
+
 output "identities" {
   description = "Details of the user-assigned identities for app, infra, and opex, including IDs and names."
   value = {
@@ -32,11 +37,13 @@ output "identities" {
         id           = azurerm_user_assigned_identity.app_ci.id
         name         = azurerm_user_assigned_identity.app_ci.name
         principal_id = azurerm_user_assigned_identity.app_ci.principal_id
+        client_id    = azurerm_user_assigned_identity.app_ci.client_id
       }
       cd = {
         id           = azurerm_user_assigned_identity.app_cd.id
         name         = azurerm_user_assigned_identity.app_cd.name
         principal_id = azurerm_user_assigned_identity.app_cd.principal_id
+        client_id    = azurerm_user_assigned_identity.app_cd.client_id
       }
     }
     infra = {
@@ -44,11 +51,13 @@ output "identities" {
         id           = azurerm_user_assigned_identity.infra_ci.id
         name         = azurerm_user_assigned_identity.infra_ci.name
         principal_id = azurerm_user_assigned_identity.infra_ci.principal_id
+        client_id    = azurerm_user_assigned_identity.infra_ci.client_id
       }
       cd = {
         id           = azurerm_user_assigned_identity.infra_cd.id
         name         = azurerm_user_assigned_identity.infra_cd.name
         principal_id = azurerm_user_assigned_identity.infra_cd.principal_id
+        client_id    = azurerm_user_assigned_identity.infra_cd.client_id
       }
     }
     opex = {
@@ -56,11 +65,13 @@ output "identities" {
         id           = azurerm_user_assigned_identity.opex_ci.id
         name         = azurerm_user_assigned_identity.opex_ci.name
         principal_id = azurerm_user_assigned_identity.opex_ci.principal_id
+        client_id    = azurerm_user_assigned_identity.opex_ci.client_id
       }
       cd = {
         id           = azurerm_user_assigned_identity.opex_cd.id
         name         = azurerm_user_assigned_identity.opex_cd.name
         principal_id = azurerm_user_assigned_identity.opex_cd.principal_id
+        client_id    = azurerm_user_assigned_identity.opex_cd.client_id
       }
     }
   }
