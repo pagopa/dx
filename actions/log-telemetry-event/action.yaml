@@ -1,5 +1,5 @@
 name: "Log Telemetry Event"
-description: "Append a telemetry event to the session file"
+description: "Append an event to the session file created and read by setup-telemetry action to send events to Application Insights"
 
 inputs:
   name:
@@ -16,7 +16,7 @@ inputs:
     required: false
     default: "false"
 
-  span_phase:
+  phase:
     description: "(Optional) 'start' to mark span start, 'end' to mark span end"
     required: false
     default: ""
@@ -24,40 +24,37 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Append event / span marker
+    - name: Append Event to OpenTelemtry Session
       shell: bash
       env:
         INPUT_NAME: ${{inputs.name }}
         INPUT_BODY: ${{inputs.body}}
         INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
-        INPUT_SPAN_PHASE: ${{inputs.span_phase}}
+        INPUT_SPAN_PHASE: ${{inputs.phase}}
       run: |
         if [ -z "$OTEL_EVENT_FILE" ]; then
           echo "OTEL_EVENT_FILE not set" >&2; exit 1;
         fi
 
-        echo "is exception: $INPUT_IS_EXCEPTION"
+        exc=false; [ "$INPUT_IS_EXCEPTION" = "true" ] && exc=true
 
-        if [ "$INPUT_IS_EXCEPTION" = "true" ]; then
-          EXC=true
-        else
-          EXC=false
-        fi
+        now=$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ')
 
-        NOW_ISO=$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ')
+        # write the event to OTEL session file according to input parameters
+        case "$INPUT_SPAN_PHASE" in
+          start)
+            line="{\"span\":\"$INPUT_NAME\",\"startSpan\":\"$now\"}"
+            ;;
+          end)
+            line="{\"span\":\"$INPUT_NAME\",\"endSpan\":\"$now\"}"
+            ;;
+          "")
+            line="{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$exc}"
+            ;;
+          *)
+            echo "Unknown phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
+            line="{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$exc}"
+            ;;
+        esac
 
-        if [ -n "$INPUT_NAME" ] && [ -n "$INPUT_SPAN_PHASE" ]; then
-          # Validate phase
-          if [ "$INPUT_SPAN_PHASE" = "start" ]; then
-            echo "{\"span\":\"$INPUT_NAME\",\"startSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
-          elif [ "$INPUT_SPAN_PHASE" = "end" ]; then
-            echo "{\"span\":\"$INPUT_NAME\",\"endSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
-          else
-            echo "Unknown span_phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
-            echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
-          fi
-        else
-          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
-        fi
-
-        cat "$OTEL_EVENT_FILE"
+        printf '%s\n' "$line" >> "$OTEL_EVENT_FILE"

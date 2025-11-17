@@ -40,31 +40,31 @@ Must be invoked after [`setup-telemetry`](../setup-telemetry/README.md) has expo
 - name: Start build span
   uses: pagopa/dx/actions/log-telemetry-event@<ref>
   with:
-    span_name: build
-    span_phase: start
+    name: build
+    phase: start
 
 # ... build steps ...
 
 - name: End build span
   uses: pagopa/dx/actions/log-telemetry-event@<ref>
   with:
-    span_name: build
-    span_phase: end
+    name: build
+    phase: end
 ```
 
 It is also possible to interleaving multiple spans:
 
 ```yaml
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: compile, span_phase: start }
+  with: { name: compile, phase: start }
 
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: test, span_phase: start }
+  with: { name: test, phase: start }
 # ...
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: compile, span_phase: end }
+  with: { name: compile, phase: end }
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: test, span_phase: end }
+  with: { name: test, phase: end }
 ```
 
 ## Inputs
@@ -74,11 +74,11 @@ It is also possible to interleaving multiple spans:
 | `name`         | yes      | Logical event name (for custom events or exception label)               |
 | `body`         | no       | Textual message/value (shown as body)                                   |
 | `is_exception` | no       | `true` marks this event as an exception (span status will be set ERROR) |
-| `span_phase`   | no       | `start` or `end` to delimit a child span                                |
+| `phase`        | no       | `start` or `end` to delimit a child span                                |
 
 Rules:
 
-- If `span_name` and `span_phase` are both set, a span marker line is written instead of an event line.
+- If `name` and `phase` are both set, a span marker line is written instead of an event line.
 - If they are absent, a standard event or exception line is written.
 - `is_exception` is ignored on span marker lines.
 
