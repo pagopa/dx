@@ -235,6 +235,7 @@ optimization:
 | Network Interfaces  |  🟡  | NICs not attached to VMs or Private Endpoints      |
 | Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints          |
 | Storage Accounts    |  🟡  | Storage accounts with minimal activity             |
+| Container Apps      |  🟡  | Not running, zero replicas, low resource usage     |
 
 **Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low
 

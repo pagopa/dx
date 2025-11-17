@@ -2,6 +2,7 @@
  * Azure resource analyzer - Main orchestration logic
  */
 
+import { ContainerAppsAPIClient } from "@azure/arm-appcontainers";
 import { WebSiteManagementClient } from "@azure/arm-appservice";
 import { ComputeManagementClient } from "@azure/arm-compute";
 import { MonitorClient } from "@azure/arm-monitor";
@@ -16,6 +17,7 @@ import { type AnalysisResult, mergeResults } from "../types.js";
 import { generateReport } from "./report.js";
 import {
   analyzeAppServicePlan,
+  analyzeContainerApp,
   analyzeDisk,
   analyzeNic,
   analyzePrivateEndpoint,
@@ -58,6 +60,10 @@ export async function analyzeAzureResources(
       credential,
       subscriptionId.trim(),
     );
+    const containerAppsClient = new ContainerAppsAPIClient(
+      credential,
+      subscriptionId.trim(),
+    );
 
     // Use the async iterator to avoid memory explosion for large environments
     for await (const resource of resourceClient.resources.list()) {
@@ -67,6 +73,7 @@ export async function analyzeAzureResources(
         computeClient,
         networkClient,
         webSiteClient,
+        containerAppsClient,
         config.preferredLocation,
         config.timespanDays,
         config.verbose || false,
@@ -104,6 +111,7 @@ export async function analyzeAzureResources(
  * @param computeClient - Azure Compute client
  * @param networkClient - Azure Network client
  * @param webSiteClient - Azure Web Site client
+ * @param containerAppsClient - Azure Container Apps client
  * @param preferredLocation - Preferred Azure location
  * @param timespanDays - Number of days to analyze metrics
  * @param verbose - Whether verbose logging is enabled
@@ -115,6 +123,7 @@ export async function analyzeResource(
   computeClient: ComputeManagementClient,
   networkClient: NetworkManagementClient,
   webSiteClient: WebSiteManagementClient,
+  containerAppsClient: ContainerAppsAPIClient,
   preferredLocation: string,
   timespanDays: number,
   verbose = false,
@@ -134,6 +143,17 @@ export async function analyzeResource(
 
   // Route to type-specific analysis hooks
   switch (type) {
+    case "microsoft.app/containerapps": {
+      const containerAppResult = await analyzeContainerApp(
+        resource,
+        containerAppsClient,
+        monitorClient,
+        timespanDays,
+        verbose,
+      );
+      result = mergeResults(result, containerAppResult);
+      break;
+    }
     case "microsoft.compute/disks": {
       const diskResult = await analyzeDisk(resource, computeClient, verbose);
       result = mergeResults(result, diskResult);
