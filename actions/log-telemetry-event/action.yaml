@@ -24,7 +24,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Append Event to OpenTelemtry Session
+    - name: Append Event to OpenTelemetry Session
       shell: bash
       env:
         INPUT_NAME: ${{inputs.name }}

@@ -13,8 +13,8 @@ Initializes [OpenTelemetry](https://opentelemetry.io/) for the current workflow 
 - name: Start build span
   uses: pagopa/dx/actions/log-telemetry-event@VERSION
   with:
-    span_name: build
-    span_phase: start
+    name: build
+    phase: start
 
 - name: Build
   run: pnpm build
@@ -22,8 +22,8 @@ Initializes [OpenTelemetry](https://opentelemetry.io/) for the current workflow 
 - name: End build span
   uses: pagopa/dx/actions/log-telemetry-event@VERSION
   with:
-    span_name: build
-    span_phase: end
+    name: build
+    phase: end
 
 - name: Log result value
   uses: pagopa/dx/actions/log-telemetry-event@VERSION
@@ -81,7 +81,7 @@ Source actions currently exporting these:
 | `cicd.pipeline.run.url.full` | Derived from server/repo/run id            |
 | `cicd.pipeline.author`       | `GITHUB_ACTOR`                             |
 | `cicd.pipeline.result`       | `PIPELINE_RESULT` or adjusted on exception |
-| `cdcd.pipeline.path`         | `GITHUB_ACTION_PATH`                       |
+| `cicd.pipeline.path`         | `GITHUB_ACTION_PATH`                       |
 | `node.package_manager`       | `NODE_PACKAGE_MANAGER`                     |
 | `terraform.version`          | `TERRAFORM_VERSION`                        |
 | `cloud_provider.enabled`     | `CSP_LIST`                                 |

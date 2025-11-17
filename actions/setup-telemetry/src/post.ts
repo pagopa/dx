@@ -205,7 +205,8 @@ async function post(): Promise<void> {
   span.end();
 
   // brief delay to allow async exporter flush
-  await new Promise((r) => setTimeout(r, 1200));
+  const EXPORTER_FLUSH_DELAY_MS = 1500;
+  await new Promise((r) => setTimeout(r, EXPORTER_FLUSH_DELAY_MS));
   console.log("Telemetry flushed");
 }
 
