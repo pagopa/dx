@@ -43,17 +43,17 @@ runs:
         # write the event to OTEL session file according to input parameters
         case "$INPUT_SPAN_PHASE" in
           start)
-            line="{\"span\":\"$INPUT_NAME\",\"startSpan\":\"$now\"}"
+            line="$(jq -n --arg span "$INPUT_NAME" --arg startSpan "$now" '{span: $span, startSpan: $startSpan}')"
             ;;
           end)
-            line="{\"span\":\"$INPUT_NAME\",\"endSpan\":\"$now\"}"
+            line="$(jq -n --arg span "$INPUT_NAME" --arg endSpan "$now" '{span: $span, endSpan: $endSpan}')"
             ;;
           "")
-            line="{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$exc}"
+            line="$(jq -n --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exception "$exc" '{name: $name, body: $body, exception: $exception}')"
             ;;
           *)
             echo "Unknown phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
-            line="{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$exc}"
+            line="$(jq -n --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exception "$exc" '{name: $name, body: $body, exception: $exception}')"
             ;;
         esac
 
