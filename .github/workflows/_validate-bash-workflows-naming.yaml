@@ -3,7 +3,7 @@ name: Validate Workflow Naming
 on:
   pull_request:
     paths:
-      - '.github/workflows/**'
+      - ".github/workflows/**"
 
 jobs:
   validate-naming:
@@ -43,6 +43,13 @@ jobs:
             exit 0
           fi
 
+          # Skip validation if the workflow is named _validate.yaml
+          # TODO(CES-1442): Update the naming convention to allow multi-language workflows
+          if echo "$NEW_FILES" | grep -q '^.github/workflows/_validate\.yaml$'; then
+            echo "Skipping validation for _validate.yaml"
+            exit 0
+          fi
+
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
           NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|go|azure|aws)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'
@@ -50,7 +57,7 @@ jobs:
           # Check each new file
           for FILE in $NEW_FILES; do
             FILE_NAME=$(basename "$FILE")
-            
+
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
               # If is a reusable workflow (don't start starts with '_'), ensure '-vN' is present
               if ! [[ "$FILE_NAME" =~ -v[0-9]+\.yaml$ ]]; then
