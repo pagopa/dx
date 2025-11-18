@@ -3,25 +3,14 @@
   "parallel": 10,
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "{projectRoot}/src/**/*.ts"
-      ],
-      "outputs": [
-        "{projectRoot}/dist/**",
-        "{projectRoot}/bin/**"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
       "cache": true
     },
     "typecheck": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "{projectRoot}/src/**/*.ts"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
       "cache": true
     },
     "format:check": {
@@ -73,6 +62,20 @@
       "plugin": "@nx/eslint/plugin",
       "options": {
         "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
       }
     }
   ]

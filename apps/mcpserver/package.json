@@ -39,10 +39,8 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "build": "tsc",
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "format:check": "prettier --check ."
   }
 }

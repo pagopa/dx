@@ -66,3 +66,5 @@ providers/azure/terraform-provider-azure
 .github/instructions/nx.instructions.md
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+tsconfig.tsbuildinfo
