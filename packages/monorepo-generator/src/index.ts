@@ -247,6 +247,7 @@ const toEnvShort = (env: Environment) => {
   const envMap = new Map<Environment, string>([
     ["dev", "d"],
     ["prod", "p"],
+    ["uat", "u"],
   ]);
 
   return envMap.get(env);
