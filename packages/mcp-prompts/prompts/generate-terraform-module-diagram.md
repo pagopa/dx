@@ -15,14 +15,14 @@ arguments:
     description: "Path to the Terraform module directory (e.g., infra/modules/azure_function_app)"
     required: true
 mode: "agent"
-tools: ["read_file", "list_dir", "replace_string_in_file"]
+tools: ["read_file", "list_dir", "replace_string_in_file", "searchModules"]
 ---
 
 You are an AI assistant that generates Mermaid flowchart diagrams for Terraform modules and adds them to the module's README.md file.
 
 Your goal is to:
 
-1. **Analyze the Terraform module** at {{module_path}}
+1. **Analyze the Terraform module** at {{module_path}}, you can use `searchModules` tool
 2. **Create a Mermaid flowchart** showing resources and their relationships
 3. **Use appropriate provider icons** based on the cloud provider
 4. **Add the diagram** to the module's README.md
@@ -149,6 +149,16 @@ flowchart LR
    - Use `direction TB` or `direction LR` inside subgraphs to control internal layout
    - Name subgraphs clearly to convey their purpose (e.g., "Network Layer", "Compute Resources")
 
+**Layering Logic (Subgraphs):**
+
+Group resources into semantic subgraphs based on their type:
+
+- **Network**: VNETs, Subnets, NSGs, DNS, Endpoints
+- **Compute**: VMs, Function Apps, AKS, App Services, EC2, Lambda
+- **Storage/Data**: Storage Accounts, SQL Databases, Key Vaults, S3, RDS
+- **Identity/Security**: User Managed Identities, Roles, IAM
+- **Monitoring**: App Insights, Log Analytics, CloudWatch
+
 ### Design Principles
 
 **Keep diagrams simple and clear:**
@@ -159,6 +169,7 @@ flowchart LR
 - **Limit arrows**: Aim for 1-2 per resource. Keep total count reasonable (simple module: 5-8 arrows, complex module: 10-15 arrows max)
 - Resources in the same subgraph are implicitly related - no arrows needed between them
 - **NEVER use fill colors on cloud provider icons** (Azure/AWS) - they have built-in colors
+- **Complexity Control**: If module has >15 resources, simplify by grouping minor resources (e.g., don't show individual NICs/Disks, represent them implicitly inside the VM node) or focus only on main infrastructure components
 
 **Dependencies:**
 
@@ -346,6 +357,7 @@ flowchart LR
 
 - Always verify icon names in the official documentation before generating the final diagram
 - **Do NOT apply fill colors (classDef with fill) to cloud provider icon nodes** - this will hide the icons
+- **Do Not use non existing icons** - always check the documentation for valid icon names, if an icon does not exist, don't use it
 - **Do NOT add "Module Inputs" or "Module Outputs" nodes** - focus on actual infrastructure resources
 - For complex modules with many resources, prefer showing high-level relationships between layers/subgraphs
 
