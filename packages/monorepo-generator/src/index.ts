@@ -34,9 +34,12 @@ import {
 const trimmedString = z.string().trim();
 
 const answersSchema = z.object({
-  awsAccountId: trimmedString.regex(/^\d{12}$/, {
-    error: "AWS Account ID must be a 12-digit number",
-  }),
+  awsAccountId: z
+    .string()
+    .regex(/^\d{12}$/, {
+      error: "AWS Account ID must be a 12-digit number",
+    })
+    .optional(),
   awsAppName: z.string().optional(),
   awsRegion: z.string().optional(),
   azureLocation: z.string().optional(),
@@ -49,9 +52,16 @@ const answersSchema = z.object({
   environments: z.array(z.enum(["dev", "prod", "uat"])).min(1, {
     error: "Select at least one environment",
   }),
-  instanceNumber: trimmedString.regex(/^\d{2}$/, {
-    error: "Instance Number must be numeric (e.g. 01, 02, 03, ...)",
-  }),
+  instanceNumber: z
+    .string()
+    .regex(/^[1-9][0-9]?$/, {
+      error: "Instance number must be a number between 1 and 99",
+    })
+    .transform((val) =>
+      // Return zero-padded string (e.g. "01")
+      val.padStart(2, "0"),
+    ),
+
   managementTeam: trimmedString.min(1, {
     error: "Management Team must not be empty",
   }),
@@ -81,7 +91,7 @@ const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
   const error = schema.safeParse(input).error;
   return error
     ? // Return the error message defined in the Zod schema
-      z.treeifyError(error).errors.map((errorMsg) => errorMsg)[0]
+      z.prettifyError(error)
     : true;
 };
 
@@ -182,7 +192,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     validate: validatePrompt(answersSchema.shape.domain),
   },
   {
-    default: "01",
+    default: "1",
     message: "What is the instance number?",
     name: "instanceNumber",
     validate: validatePrompt(answersSchema.shape.instanceNumber),
