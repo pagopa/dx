@@ -60,7 +60,7 @@ These variables are loaded automatically by custom actions and do not require us
 | `dxAwsBootstrapperVersion`            | custom action (GitHub fetch) | AWS bootstrapper module version, e.g. `1.2`.                                                  |
 | `dxAwsCoreValuesExporterVersion`      | custom action (GitHub fetch) | AWS core values exporter module version, e.g. `1.2`.                                          |
 | `dxAzureBootstrapperVersion`          | custom action (GitHub fetch) | Azure bootstrapper module version, e.g. `1.2`.                                                |
-| `dxAzureCoreValuesExporterVersion`    | custom action (GitHub fetch) | Azure core values exporter module version, e.g. `1.2`.                                        |
+| `dxAzurermCoreValuesExporterVersion`  | custom action (GitHub fetch) | Azure core values exporter module version, e.g. `1.2`.                                        |
 | `preCommitTerraformVersion`           | custom action (GitHub fetch) | Version used for the `pre-commit-terraform` hooks in the generated `.pre-commit-config.yaml`. |
 
 ## Recommended usage
