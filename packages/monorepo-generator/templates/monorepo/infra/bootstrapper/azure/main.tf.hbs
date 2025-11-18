@@ -38,7 +38,7 @@ module "azure_github_bootstrap" {
     container_app_environment_id       = module.core_values.github_runner.environment_id
     container_app_environment_location = local.environment.location
     labels = [
-      local.env_long
+      "{{ environment }}"
     ]
     key_vault = {
       name                = module.core_values.common_key_vault.name
