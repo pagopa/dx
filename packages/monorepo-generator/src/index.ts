@@ -36,43 +36,32 @@ const trimmedString = z.string().trim();
 const answersSchema = z.object({
   awsAccountId: z
     .string()
-    .regex(/^\d{12}$/, {
-      error: "AWS Account ID must be a 12-digit number",
-    })
+    .regex(/^\d{12}$/, "AWS Account ID must be a 12-digit number")
     .optional(),
   awsAppName: z.string().optional(),
   awsRegion: z.string().optional(),
   azureLocation: z.string().optional(),
-  businessUnit: trimmedString.min(1, {
-    error: "Business Unit must not be empty",
-  }),
-  costCenter: trimmedString.min(1, { error: "Cost Center must not be empty" }),
+  businessUnit: trimmedString.min(1, "Business Unit must not be empty"),
+  costCenter: trimmedString.min(1, "Cost Center must not be empty"),
   csp: z.enum(["aws", "azure"]),
-  domain: trimmedString.min(1, { error: "Domain cannot be empty" }),
-  environments: z.array(z.enum(["dev", "prod", "uat"])).min(1, {
-    error: "Select at least one environment",
-  }),
+  domain: trimmedString.min(1, "Domain cannot be empty"),
+  environments: z
+    .array(z.enum(["dev", "prod", "uat"]))
+    .min(1, "Select at least one environment"),
   instanceNumber: z
     .string()
-    .regex(/^[1-9][0-9]?$/, {
-      error: "Instance number must be a number between 1 and 99",
-    })
+    .regex(/^[1-9][0-9]?$/, "Instance number must be a number between 1 and 99")
     .transform((val) =>
       // Return zero-padded string (e.g. "01")
       val.padStart(2, "0"),
     ),
-
-  managementTeam: trimmedString.min(1, {
-    error: "Management Team must not be empty",
-  }),
+  managementTeam: trimmedString.min(1, "Management Team must not be empty"),
   prefix: trimmedString
-    .min(2, { error: "Prefix must be at least 2 characters" })
-    .max(4, { error: "Prefix must be at most 4 characters" }),
+    .min(2, "Prefix must be at least 2 characters")
+    .max(4, "Prefix must be at most 4 characters"),
   repoDescription: z.string().optional(),
-  repoName: trimmedString.min(1, { error: "Repository name cannot be empty" }),
-  repoSrc: trimmedString.min(1, {
-    error: "Repository source path cannot be empty",
-  }),
+  repoName: trimmedString.min(1, "Repository name cannot be empty"),
+  repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
   tfStateResourceGroupName: z.string().optional(),
   tfStateStorageAccountName: z.string().optional(),
 });
@@ -82,7 +71,7 @@ interface ActionsDependencies {
   plopApi: NodePlopAPI;
   templatesPath: string;
 }
-type CSP = z.infer<typeof answersSchema.shape.csp>;
+type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 import { getLatestNodeVersion } from "./actions/node.js";
@@ -302,13 +291,17 @@ const selectBackendPartial =
 
 const getTerraformEnvironmentFiles =
   (templatesPath: string) =>
-  (env: Environment, csp: CSP): ActionType[] => [
+  (
+    env: Environment,
+    { csp, instanceNumber }: Pick<Answers, "csp" | "instanceNumber">,
+  ): ActionType[] => [
     {
       abortOnFail: true,
       base: `${templatesPath}/infra/bootstrapper/${csp}`,
       data: {
         environment: env,
         envShort: toEnvShort(env),
+        instanceNumber,
       },
       destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
@@ -348,7 +341,7 @@ const getActions =
       ...getMonorepoFiles(templatesPath),
       ...getTerraformRepositoryFiles(templatesPath),
       ...data.environments.flatMap((env) =>
-        getTerraformEnvironmentFiles(templatesPath)(env, data.csp),
+        getTerraformEnvironmentFiles(templatesPath)(env, data),
       ),
       enablePnpm,
       addPagoPaPnpmPlugin,
