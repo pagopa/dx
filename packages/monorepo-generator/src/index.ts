@@ -31,18 +31,40 @@ import {
   getTlsProviderLatestRelease,
 } from "./actions/terraform.js";
 
+const trimmedString = z.string().trim();
+
 const answersSchema = z.object({
+  awsAccountId: trimmedString.regex(/^\d{12}$/, {
+    error: "AWS Account ID must be a 12-digit number",
+  }),
   awsAppName: z.string().optional(),
   awsRegion: z.string().optional(),
   azureLocation: z.string().optional(),
+  businessUnit: trimmedString.min(1, {
+    error: "Business Unit must not be empty",
+  }),
+  costCenter: trimmedString.min(1, { error: "Cost Center must not be empty" }),
   csp: z.enum(["aws", "azure"]),
-  domain: z.string().nonempty(),
-  environments: z.array(z.enum(["dev", "prod", "uat"])).nonempty(),
-  instanceNumber: z.string().nonempty(),
-  prefix: z.string().nonempty(),
+  domain: trimmedString.min(1, { error: "Domain cannot be empty" }),
+  environments: z.array(z.enum(["dev", "prod", "uat"])).min(1, {
+    error: "Select at least one environment",
+  }),
+  instanceNumber: trimmedString.regex(/^\d{2}$/, {
+    error: "Instance Number must be numeric (e.g. 01, 02, 03, ...)",
+  }),
+  managementTeam: trimmedString.min(1, {
+    error: "Management Team must not be empty",
+  }),
+  prefix: trimmedString
+    .min(2, { error: "Prefix must be at least 2 characters" })
+    .max(4, { error: "Prefix must be at most 4 characters" }),
   repoDescription: z.string().optional(),
-  repoName: z.string().nonempty(),
-  repoSrc: z.string().nonempty(),
+  repoName: trimmedString.min(1, { error: "Repository name cannot be empty" }),
+  repoSrc: trimmedString.min(1, {
+    error: "Repository source path cannot be empty",
+  }),
+  tfStateResourceGroupName: z.string().optional(),
+  tfStateStorageAccountName: z.string().optional(),
 });
 
 interface ActionsDependencies {
@@ -55,6 +77,14 @@ type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 import { getLatestNodeVersion } from "./actions/node.js";
 
+const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
+  const error = schema.safeParse(input).error;
+  return error
+    ? // Return the error message defined in the Zod schema
+      z.treeifyError(error).errors.map((errorMsg) => errorMsg)[0]
+    : true;
+};
+
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
@@ -64,8 +94,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the repository name?",
     name: "repoName",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Repository name cannot be empty",
+    validate: validatePrompt(answersSchema.shape.repoName),
   },
   {
     message: "What is the repository description?",
@@ -113,22 +142,17 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "Which environments do you need?",
     name: "environments",
     type: "checkbox",
-    validate: (input) =>
-      input.length > 0 ? true : "Select at least one environment",
+    validate: validatePrompt(answersSchema.shape.environments),
   },
   {
     message: "What is the project prefix?",
     name: "prefix",
-    validate: (input: string) =>
-      input.trim().length >= 2 && input.trim().length <= 4
-        ? true
-        : "Prefix length must be between 2 and 4 characters",
+    validate: validatePrompt(answersSchema.shape.prefix),
   },
   {
     message: "What is the AWS app name?",
     name: "awsAppName",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "AWS app name cannot be empty",
+    validate: validatePrompt(answersSchema.shape.awsAppName),
     when: (answers) => answers.csp === "aws",
   },
   {
@@ -149,40 +173,34 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "AWS Account ID:",
     name: "awsAccountId",
     type: "input",
-    validate: (input: string) =>
-      /^\d{12}$/.test(input.trim())
-        ? true
-        : "AWS Account ID must be a 12-digit number",
+    validate: validatePrompt(answersSchema.shape.awsAccountId),
     when: (answers) => answers.csp === "aws",
   },
   {
     message: "What is the project domain?",
     name: "domain",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Domain cannot be empty",
+    validate: validatePrompt(answersSchema.shape.domain),
   },
   {
     default: "01",
     message: "What is the instance number?",
     name: "instanceNumber",
+    validate: validatePrompt(answersSchema.shape.instanceNumber),
   },
   {
     message: "What is the Cost Center for this project?",
     name: "costCenter",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Cost Center must not be empty",
+    validate: validatePrompt(answersSchema.shape.costCenter),
   },
   {
     message: "What is the Management Team for this project?",
     name: "managementTeam",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Management Team must not be empty",
+    validate: validatePrompt(answersSchema.shape.managementTeam),
   },
   {
     message: "What is the Business Unit for this project?",
     name: "businessUnit",
-    validate: (input: string) =>
-      input.trim().length > 0 ? true : "Business Unit must not be empty",
+    validate: validatePrompt(answersSchema.shape.businessUnit),
   },
 ];
 
