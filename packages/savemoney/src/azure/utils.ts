@@ -8,6 +8,100 @@ import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../types.js";
 
+type MetricDataPoint = {
+  average?: number;
+  count?: number;
+  maximum?: number;
+  minimum?: number;
+  total?: number;
+};
+
+/**
+ * Aggregates metric data points based on aggregation type.
+ *
+ * @param dataPoints - Array of metric data points
+ * @param aggregation - The aggregation type (e.g., "Average", "Total")
+ * @returns The aggregated value or null if unavailable
+ */
+export function aggregateDataPoints(
+  dataPoints: MetricDataPoint[],
+  aggregation: string,
+): null | number {
+  const aggregationLower = aggregation.toLowerCase();
+
+  // Get all non-null values from the data points
+  const values = dataPoints
+    .map((dataPoint) => extractAggregatedValue(dataPoint, aggregation))
+    .filter((v): v is number => v !== null);
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  if (aggregationLower === "total" || aggregationLower === "count") {
+    // Sum all values for Total/Count
+    return values.reduce((sum, v) => sum + v, 0);
+  }
+
+  if (aggregationLower === "average") {
+    // Calculate the average of all values
+    return values.reduce((sum, v) => sum + v, 0) / values.length;
+  }
+
+  if (aggregationLower === "maximum") {
+    // Find the maximum value
+    return Math.max(...values);
+  }
+
+  if (aggregationLower === "minimum") {
+    // Find the minimum value
+    return Math.min(...values);
+  }
+
+  return null;
+}
+
+/**
+ * Extracts the aggregated value from metric data.
+ *
+ * @param metricData - The metric data point
+ * @param aggregation - The aggregation type (e.g., "Average", "Total")
+ * @returns The aggregated value or null if unavailable
+ */
+export function extractAggregatedValue(
+  metricData: MetricDataPoint,
+  aggregation: string,
+): null | number {
+  const aggregationLower = aggregation.toLowerCase();
+
+  if (
+    aggregationLower === "average" &&
+    typeof metricData.average === "number"
+  ) {
+    return metricData.average;
+  }
+  if (aggregationLower === "total" && typeof metricData.total === "number") {
+    return metricData.total;
+  }
+  if (
+    aggregationLower === "minimum" &&
+    typeof metricData.minimum === "number"
+  ) {
+    return metricData.minimum;
+  }
+  if (
+    aggregationLower === "maximum" &&
+    typeof metricData.maximum === "number"
+  ) {
+    return metricData.maximum;
+  }
+  if (aggregationLower === "count" && typeof metricData.count === "number") {
+    return metricData.count;
+  }
+
+  return null;
+}
+
 /**
  * Fetches a specific metric for a resource from Azure Monitor.
  *
@@ -33,39 +127,28 @@ export async function getMetric(
       timespan,
     });
 
-    const metricData = result.value[0]?.timeseries?.[0]?.data?.[0];
-    if (!metricData) {
+    if (result.value.length === 0) {
       return null;
     }
 
-    const aggregationLower = aggregation.toLowerCase();
+    const metric = result.value[0];
 
-    if (
-      aggregationLower === "average" &&
-      typeof metricData.average === "number"
-    ) {
-      return metricData.average;
-    }
-    if (aggregationLower === "total" && typeof metricData.total === "number") {
-      return metricData.total;
-    }
-    if (
-      aggregationLower === "minimum" &&
-      typeof metricData.minimum === "number"
-    ) {
-      return metricData.minimum;
-    }
-    if (
-      aggregationLower === "maximum" &&
-      typeof metricData.maximum === "number"
-    ) {
-      return metricData.maximum;
-    }
-    if (aggregationLower === "count" && typeof metricData.count === "number") {
-      return metricData.count;
+    if (!metric.timeseries || metric.timeseries.length === 0) {
+      return null;
     }
 
-    return null;
+    const timeserie = metric.timeseries[0];
+
+    if (!timeserie.data || timeserie.data.length === 0) {
+      return null;
+    }
+
+    const aggregatedValue = aggregateDataPoints(
+      timeserie.data as MetricDataPoint[],
+      aggregation,
+    );
+
+    return aggregatedValue;
   } catch (error) {
     const logger = getLogger(["savemoney", "azure", "metrics"]);
     logger.error(

@@ -125,6 +125,7 @@ dx savemoney --days 60 --location italynorth
 - **Storage Accounts**: Low transaction counts
 - **App Service Plans**: Empty plans or oversized tiers
 - **Private Endpoints**: Unused or misconfigured endpoints
+- **Container Apps**: Not running, zero replicas, low resource usage
 
 > [!NOTE]
 > Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.

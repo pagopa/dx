@@ -48,14 +48,14 @@ export async function analyzeStorageAccount(
     monitorClient,
     resource.id,
     "Transactions",
-    "Total",
+    "Average",
     timespanDays,
   );
-  if (transactions !== null && transactions < 100) {
-    // Very low transactions
+  if (transactions !== null && transactions < 10) {
+    // Less than 10 transactions per day on average
     const result = {
       costRisk,
-      reason: `Very low transaction count (${transactions}). `,
+      reason: `Very low transaction count (${transactions.toFixed(2)} avg/day). `,
       suspectedUnused: true,
     };
     verboseLogAnalysisResult(verbose, result);

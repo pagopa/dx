@@ -12,6 +12,52 @@ Full support for Azure resource analysis with intelligent detection and flexible
 
 AWS support is planned for future releases. The architecture is designed to support multiple CSPs with provider-specific analyzers.
 
+## Architecture
+
+The SaveMoney tool follows a modular architecture designed for multi-CSP
+support:
+
+```mermaid
+flowchart LR
+    subgraph cli["CLI Layer"]
+        CMDs[other cmds]
+        CLI[savemoney]
+    end
+    subgraph pkg["Package Layer - @pagopa/dx-savemoney"]
+        Config[Config Loader]
+        Azure[Azure Analyzer]
+        AWS[AWS Analyzer<br/>Coming Soon...]
+    end
+    subgraph svc["Azure Services"]
+        ARM[Azure Resource Manager]
+        Monitor[Azure Monitor Metrics]
+        Identity[Azure Identity]
+    end
+    subgraph rsc["Azure Resources"]
+        direction LR
+        VM[Virtual Machines]
+        Disk[Managed Disks]
+        NIC[Network Interfaces]
+        IP[Public IPs]
+        ASP[App Service Plans]
+        PE[Private Endpoints]
+        SA[Storage Accounts]
+        CA[Container Apps]
+    end
+    CLI --> Config
+    Config --> Azure
+    Config -.-> AWS
+    Azure --> ARM
+    Azure --> Monitor
+    Azure --> Identity
+    ARM --> rsc
+    Monitor --> rsc
+    style CLI fill:#0078d4,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style AWS fill:#ccc,color:#666
+    style Config fill:#107c10,color:#fff
+```
+
 ## Installation
 
 ```bash
@@ -39,15 +85,16 @@ yarn add @pagopa/dx-savemoney
 
 The tool analyzes the following Azure resource types with specific detection methods and risk levels:
 
-| Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                          |
-| :---------------------- | :---------------------- | :-------: | :-------------------------------------------------------------------------------------- |
-| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<10MB)             |
-| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier    |
-| **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                               |
-| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<1MB) |
-| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                           |
-| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces   |
-| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<100 in timespan)                                           |
+| Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                      |
+| :---------------------- | :---------------------- | :-------: | :------------------------------------------------------------------------------------------------------------------ |
+| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                 |
+| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier                                |
+| **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB) |
+| **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                           |
+| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<~340KB per day)                  |
+| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                       |
+| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                               |
+| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                               |
 
 #### Generic Checks
 
