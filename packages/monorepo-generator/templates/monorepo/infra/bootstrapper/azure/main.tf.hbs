@@ -50,5 +50,5 @@ module "azure_github_bootstrap" {
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
 
-  tags = var.tags
+  tags = local.tags
 }
