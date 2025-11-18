@@ -24,7 +24,7 @@
     "neverthrow": "catalog:",
     "octokit": "^5.0.3",
     "semver": "catalog:",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
