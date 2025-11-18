@@ -44,7 +44,7 @@ locals {
 
   private_endpoint_name = provider::pagopa-dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
 
-  # "Cosmos DB Built-in Data Reader/Cotributor" IDs
+  # "Cosmos DB Built-in Data Reader/Contributor" IDs
   cosmos_db_data_reader_role_id      = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000001"
   cosmos_db_data_contributor_role_id = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
 
