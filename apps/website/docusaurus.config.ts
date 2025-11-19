@@ -67,6 +67,7 @@ const config: Config = {
         enableClickAnalytics: false,
       },
     ],
+    require.resolve("./src/plugins/mcp-prompts-loader.ts"),
     [
       "docusaurus-plugin-llms",
       {

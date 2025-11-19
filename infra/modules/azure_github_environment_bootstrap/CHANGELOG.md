@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.1.0
+
+### Minor Changes
+
+- f89997a: Add client id of managed identities and subscription id to module's exported values
+
 ## 3.0.2
 
 ### Patch Changes

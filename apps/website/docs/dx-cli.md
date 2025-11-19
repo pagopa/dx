@@ -28,6 +28,36 @@ pnpm dx --help
 
 ## Usage
 
+### `init` – Initialize Resources
+
+Initialize new resources such as monorepo projects following PagoPA DevEx
+conventions.
+
+#### `init project` - Create a new monorepo project
+
+Create a new monorepo project with complete scaffolding, configuration files,
+and infrastructure templates.
+
+```bash
+npx @pagopa/dx-cli init project
+```
+
+This interactive command will prompt you for several inputs and then generate
+the project structure accordingly.
+
+Example output:
+
+```text
+? Where do you want to create the repository? /Users/projects
+? What is the repository name? my-monorepo
+? What is the repository description? My new monorepo
+? What Cloud Provider would you like to use?
+❯ Amazon Web Services
+  Microsoft Azure
+...
+Monorepo initialized successfully ✅
+```
+
 ### `doctor` – Repository Validation
 
 Validate your repository against DevEx guidelines. Typical checks include:
@@ -94,6 +124,244 @@ Arguments:
   afterward.
 
 :::
+
+### `savemoney` – Cost Optimization
+
+The SaveMoney tool helps identify underutilized and unused cloud resources that
+may be costing your organization money.
+
+Scans your cloud subscriptions using provider APIs and metrics to scientifically
+detect:
+
+- **Inactive Resources** - VMs, storage, and services with minimal usage
+- **Orphaned Resources** - Unattached disks, unused IPs, and dangling network
+  interfaces
+- **Oversized Resources** - Services running on unnecessarily expensive tiers
+- **Misconfigured Resources** - Resources in wrong regions or missing management
+  tags
+
+All analysis is performed in **read-only mode** - the tool never modifies, tags,
+or deletes resources.
+
+#### Supported Cloud Providers
+
+- ✅ Azure: Full support for Azure resource analysis with intelligent detection
+  algorithms based on Azure Monitor metrics and resource states.
+
+#### Quick Start
+
+```bash
+# Interactive mode (prompts for configuration)
+npx @pagopa/dx-cli savemoney
+
+# Using configuration file
+npx @pagopa/dx-cli savemoney --config config.json
+
+# With verbose output and JSON format
+npx @pagopa/dx-cli savemoney --config config.json --format json --verbose
+```
+
+#### Analysis Flow
+
+The tool follows a systematic approach to analyze resources:
+
+<details>
+<summary>See the Diagram</summary>
+
+```mermaid
+flowchart TB
+    Start([Start]) --> LoadConfig[Load Configuration<br/>&<br/>Authenticate with CSP]
+    LoadConfig --> ForEachSub{For Each<br/>Subscription}
+
+    ForEachSub --> ListRes[List All Resources]
+    ListRes --> Analyze[Analyze Resource]
+    Analyze --> CheckState[Check State, Metrics, Tags, Location]
+    CheckState --> Risk[Calculate Cost Risk]
+
+    Risk --> MoreRes{More<br/>Resources?}
+    MoreRes -->|Yes| Analyze
+
+    MoreRes -->|No| MoreSubs{More<br/>Subscriptions?}
+    MoreSubs -->|Yes| ForEachSub
+
+    MoreSubs -->|No| Report[Generate Report]
+    Report --> End([End])
+
+    style Start fill:#107c10,color:#fff
+    style End fill:#107c10,color:#fff
+    style Analyze fill:#ffa500,color:#fff
+    style Risk fill:#d13438,color:#fff
+    style Report fill:#5c2d91,color:#fff
+```
+
+</details>
+
+#### Configuration
+
+##### Authentication
+
+The tool supports multiple authentication methods:
+
+- **Azure CLI** - `az login` (recommended for local development)
+- **Managed Identity** - Automatic in Azure environments
+
+##### Configuration Options
+
+| Parameter           | Type       | Req. | CLI Flag               | Description                                                |
+| :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
+| `tenantId`          | `string`   | Yes  | -                      | Azure Tenant ID                                            |
+| `subscriptionIds`   | `string[]` | Yes  | -                      | Azure subscription IDs to scan                             |
+| `preferredLocation` | `string`   |  No  | `--location`,<br/>`-l` | Preferred Azure region<br/>(default: `italynorth`)         |
+| `timespanDays`      | `number`   |  No  | `--days`,<br/>`-d`     | Days to look back for metrics analysis<br/>(default: `30`) |
+
+**CLI-only options:**
+
+- `--config`, `-c` - Path to config file
+- `--format`, `-f` - Output format, possible values: `table` (_default_),
+  `json`, `detailed-json`
+- `--verbose`, `-v` - Enable detailed logging
+
+##### Configuration Example
+
+Create a `config.json` file:
+
+```json
+{
+  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "subscriptionIds": [
+    "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+  ],
+  "preferredLocation": "italynorth",
+  "timespanDays": 30
+}
+```
+
+Alternatively, use environment variables:
+
+```bash
+export ARM_TENANT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+export ARM_SUBSCRIPTION_ID="sub-1,sub-2,sub-3"
+```
+
+:::tip
+
+If required parameters are not provided via config file, environments or CLI,
+the tool will prompt for them interactively.
+
+:::
+
+#### Analyzed Azure Resources
+
+The tool analyzes the following Azure resource types for potential cost
+optimization:
+
+| Resource Type       | Risk | What It Detects                                    |
+| :------------------ | :--: | :------------------------------------------------- |
+| Virtual Machines    |  🔴  | VMs that are deallocated or severely underutilized |
+| App Service Plans   |  🔴  | Empty or underutilized plans (especially Premium)  |
+| Managed Disks       |  🟡  | Unattached disks incurring storage costs           |
+| Public IP Addresses |  🟡  | Unused static IPs that continue billing            |
+| Network Interfaces  |  🟡  | NICs not attached to VMs or Private Endpoints      |
+| Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints          |
+| Storage Accounts    |  🟡  | Storage accounts with minimal activity             |
+| Container Apps      |  🟡  | Not running, zero replicas, low resource usage     |
+
+**Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low
+
+All resources are additionally evaluated for:
+
+- **Missing Tags** - Resources without tags may be unmanaged or orphaned
+- **Location Mismatch** - Resources outside preferred region may have compliance
+  or cost implications
+
+#### Output Formats
+
+Available formats:
+
+- **`table`** (default) - Human-readable console table for quick inspection
+- **`json`** - Structured JSON array for integration with other tools
+- **`detailed-json`** - Complete output with full Azure resource metadata for AI
+  analysis
+
+<details>
+<summary>Example JSON Output</summary>
+
+```json
+[
+  {
+    "costRisk": "medium",
+    "location": "westeurope",
+    "name": "ex12345",
+    "reason": "Very low transaction count (0). Resource not in preferred location (italynorth).",
+    "resourceGroup": "dx-d-weu-test-rg-01",
+    "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "suspectedUnused": true,
+    "type": "Microsoft.Storage/storageAccounts"
+  }
+]
+```
+
+</details>
+
+#### Usage Examples
+
+```bash
+# Interactive mode
+npx @pagopa/dx-cli savemoney
+
+# With config file
+npx @pagopa/dx-cli savemoney --config config.json
+
+# Custom timespan and format
+npx @pagopa/dx-cli savemoney --config config.json --days 60 --format json
+
+# Verbose output for debugging
+npx @pagopa/dx-cli savemoney --config config.json --verbose
+```
+
+#### ✅ Best Practices
+
+- **Run Regularly** - Schedule weekly or monthly analysis to catch cost drift
+  early
+- **Start with Table Format** - Use for quick visual inspection before deeper
+  analysis
+- **Review Before Action** - Always validate findings before deleting resources
+- **Use Verbose Mode** - When investigating unexpected results or debugging
+- **Check Metrics Timespan** - Longer timespans (60-90 days) provide more
+  accurate usage patterns
+- **Combine with Tags** - Tag resources properly to avoid false positives
+- **Document Decisions** - Keep records of why resources are kept or removed
+
+#### ⚠️ Limitations
+
+- **Read-Only Analysis** - Does not modify, tag, or delete resources
+- **Metrics Availability** - Some resources may have limited historical metrics
+- **Cost Estimates** - Does not calculate actual cost savings (focuses on risk
+  level)
+- **Context Required** - Some flagged resources may be intentionally idle (e.g.,
+  test environments)
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+- **Authentication Errors**
+
+  ```bash
+  az login                        # Ensure Azure CLI is logged in
+  az account list --output table  # Verify subscription access
+  ```
+
+- **No Resources Found**
+  - Verify subscription IDs in configuration
+  - Check Azure RBAC permissions (Reader role minimum required)
+  - Ensure resources exist in the subscriptions
+- **Metrics Not Available** Some resources may not have historical metrics if
+  recently created, metrics collection is disabled, or insufficient permissions.
+- **False Positives** Resources flagged as unused may be intentionally idle (DR,
+  staging) or scheduled workloads. Use tags to mark resources as "keep".
+
+</details>
 
 ---
 

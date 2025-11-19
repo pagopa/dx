@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpprompts",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "description": "Centralized catalog of MCP prompts for PagoPA DX tools",
   "repository": {
@@ -37,12 +37,13 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "tsup": "catalog:",
     "tsx": "^4.20.6",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "typecheck": "tsc --noEmit",

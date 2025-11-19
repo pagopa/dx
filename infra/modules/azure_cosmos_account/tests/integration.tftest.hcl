@@ -2,7 +2,7 @@ provider "azurerm" {
   features {}
 }
 
-provider "dx" {}
+provider "pagopa-dx" {}
 
 variables {
   test_kind = "integration"

@@ -71,6 +71,65 @@ Checking monorepo scripts...
 ✅ Monorepo scripts are correctly set up
 ```
 
+#### `savemoney`
+
+Analyze Azure subscriptions to identify unused or underutilized resources that could be costing you money.
+
+```bash
+dx savemoney [options]
+```
+
+**Options:**
+
+| Option       | Alias | Description                                                           | Default      |
+| :----------- | :---- | :-------------------------------------------------------------------- | :----------- |
+| `--config`   | `-c`  | Path to a JSON configuration file.                                    | N/A          |
+| `--format`   | `-f`  | Report format (`table`, `json`, `detailed-json`).                     | `table`      |
+| `--days`     | `-d`  | Metric analysis period in days.                                       | `30`         |
+| `--location` | `-l`  | Preferred Azure location for resources.                               | `italynorth` |
+| `--verbose`  | `-v`  | Enable verbose mode with detailed logging for each resource analyzed. | `false`      |
+
+**Example usage:**
+
+```bash
+# Analyze with default settings (interactive prompts)
+dx savemoney
+
+# Use a configuration file
+dx savemoney --config config.json
+
+# Output as JSON with verbose logging
+dx savemoney --format json --verbose
+
+# Analyze with specific timespan
+dx savemoney --days 60 --location italynorth
+```
+
+**Configuration file example (`config.json`):**
+
+```json
+{
+  "tenantId": "your-tenant-id",
+  "subscriptionIds": ["subscription-1", "subscription-2"],
+  "preferredLocation": "italynorth",
+  "timespanDays": 30
+}
+```
+
+**Analyzed Azure resources:**
+
+- **Virtual Machines**: Deallocated or stopped VMs, low CPU usage
+- **Managed Disks**: Unattached disks
+- **Network Interfaces**: Unattached NICs
+- **Public IP Addresses**: Unassociated static IPs
+- **Storage Accounts**: Low transaction counts
+- **App Service Plans**: Empty plans or oversized tiers
+- **Private Endpoints**: Unused or misconfigured endpoints
+- **Container Apps**: Not running, zero replicas, low resource usage
+
+> [!NOTE]
+> Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.
+
 ### Global Options
 
 - `--version, -V`: Display version number

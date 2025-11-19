@@ -1,6 +1,14 @@
 locals {
   project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
 
+  naming_config = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    domain          = var.environment.domain,
+    location        = var.environment.location,
+    instance_number = tonumber(var.environment.instance_number),
+  }
+
   location_short = {
     italynorth = "itn"
     westeurope = "weu"

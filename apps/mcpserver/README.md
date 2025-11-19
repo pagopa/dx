@@ -43,16 +43,16 @@ The GH PAT authentication is done via a prompt, so you will be asked to enter it
       "headers": {
         "x-gh-pat": "${input:github_mcp_pat}"
       }
-    },
-    "inputs": [
-      {
-        "type": "promptString",
-        "id": "github_mcp_pat",
-        "description": "GitHub Personal Access Token",
-        "password": true
-      }
-    ]
-  }
+    }
+  },
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github_mcp_pat",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
 }
 ```
 

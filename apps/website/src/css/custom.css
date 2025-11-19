@@ -193,27 +193,6 @@ strong {
   font-weight: 400;
 }
 
-/* Support link with distinctive border styling */
-.navbar-support-link {
-  border: 2px solid var(--ifm-color-primary) !important;
-  border-radius: 6px !important;
-  padding: 4px 12px !important;
-  margin: 0 8px !important;
-  font-weight: 600 !important;
-  transition: all 0.2s ease !important;
-}
-
-.navbar-support-link:hover {
-  background-color: var(--ifm-color-primary) !important;
-  color: white !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(0, 161, 176, 0.3) !important;
-}
-
-[data-theme="dark"] .navbar-support-link:hover {
-  box-shadow: 0 4px 12px rgba(38, 179, 194, 0.4) !important;
-}
-
 /* Legacy/deprecated items styling in sidebar */
 .menu__link[href*="/legacy/"],
 .menu__list-item[class*="legacy"] .menu__link {

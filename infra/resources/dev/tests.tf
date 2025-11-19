@@ -1,10 +1,6 @@
 module "testing" {
   source = "../_modules/testing"
 
-  providers = {
-    dx = azuredx
-  }
-
   environment = local.environment
   test_modes  = local.test_modes
 

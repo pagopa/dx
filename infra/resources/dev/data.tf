@@ -45,8 +45,6 @@ data "azurerm_private_dns_zone" "tests_peps" {
   resource_group_name = data.azurerm_virtual_network.common.resource_group_name
 }
 
-data "aws_caller_identity" "current" {}
-
 data "azurerm_subscription" "current" {}
 
 data "azurerm_resource_group" "dx" {
