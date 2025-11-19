@@ -43,6 +43,7 @@ flowchart LR
         PE[Private Endpoints]
         SA[Storage Accounts]
         CA[Container Apps]
+        SS[Static Web Apps]
     end
     CLI --> Config
     Config --> Azure
@@ -95,6 +96,7 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                       |
 | **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                               |
 | **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                               |
+| **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)  |
 
 #### Generic Checks
 

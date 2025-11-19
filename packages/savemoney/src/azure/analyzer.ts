@@ -22,6 +22,7 @@ import {
   analyzeNic,
   analyzePrivateEndpoint,
   analyzePublicIp,
+  analyzeStaticSite,
   analyzeStorageAccount,
   analyzeVM,
 } from "./resources/index.js";
@@ -214,6 +215,16 @@ export async function analyzeResource(
         verbose,
       );
       result = mergeResults(result, aspResult);
+      break;
+    }
+    case "microsoft.web/staticsites": {
+      const staticSiteResult = await analyzeStaticSite(
+        resource,
+        monitorClient,
+        timespanDays,
+        verbose,
+      );
+      result = mergeResults(result, staticSiteResult);
       break;
     }
     default:
