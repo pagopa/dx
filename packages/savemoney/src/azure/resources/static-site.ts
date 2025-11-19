@@ -85,12 +85,12 @@ export async function analyzeStaticSite(
       reason += `No traffic data available in ${timespanDays} days. `;
     } else {
       if (siteHits !== null && siteHits < 100) {
-        // Less than 100 requests total in 30 days (< 3.3 requests/day)
+        // Less than 100 requests total in the timespan (< ~3.3 requests/day)
         reason += `Very low site traffic (${siteHits.toFixed(0)} requests in ${timespanDays} days). `;
       }
 
       if (bytesSent !== null && bytesSent < 1048576) {
-        // Less than 1MB total in 30 days (< 34KB/day)
+        // Less than 1MB total in the timespan (< ~34KB/day)
         reason += `Very low data transfer (${(bytesSent / 1024 / 1024).toFixed(2)} MB in ${timespanDays} days). `;
       }
     }
