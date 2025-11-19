@@ -18,6 +18,7 @@ env:
 
 jobs:
   terraform-integration-test:
+    name: Run Terraform Integration Tests
     runs-on: ubuntu-latest
     environment: integration-tests
     permissions:
