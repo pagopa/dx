@@ -1,3 +1,5 @@
+# Validate the application Docker image for the E2E Cosmos Account - 'Network Access app' scenario.
+
 name: Validate App for E2E Cosmos Account - Network Access
 
 on:
@@ -26,7 +28,7 @@ jobs:
 
       - name: Docker Build
         id: docker_build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

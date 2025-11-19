@@ -1,5 +1,6 @@
-name: Publish E2E Cosmos Account - Network Access
+# Build and publish the application Docker image for the E2E Cosmos Account - 'Network Access app' scenario.
 
+name: Publish E2E Cosmos Account - Network Access
 on:
   workflow_dispatch:
   push:
@@ -27,7 +28,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/.github/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

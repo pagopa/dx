@@ -16,17 +16,17 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 
 ## Use cases and Configurations
 
-| Use case      | Description                                                                                        | Serverless Mode |
-|---------------|----------------------------------------------------------------------------------------------------|-----------------|
+| Use case      | Description                                                                                                                  | Serverless Mode |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. Do not use in production. | Enabled         |
-| `default`     | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled        |
+| `default`     | Suitable for production environments requiring predictable performance and provisioned throughput.                           | Disabled        |
 
 ## Usage Example
 
 For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples), which includes:
 
 - A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/complete) demonstrating all features.
-- A [minimum example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/minimum) for basic configurations.
+- A [network access example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/minimum) demonstrating how to configuring a public or private access.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
