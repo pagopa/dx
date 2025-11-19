@@ -77,11 +77,11 @@ variable "autoscale" {
 
   validation {
     condition = var.autoscale.enabled == false || local.use_case_features.zones == null || (
-      var.autoscale.minimum_instances % length(local.use_case_features.zones) == 0 &&
-      var.autoscale.maximum_instances % length(local.use_case_features.zones) == 0 &&
-      var.autoscale.default_instances % length(local.use_case_features.zones) == 0 &&
-      tonumber(var.autoscale.scale_out_value) % length(local.use_case_features.zones) == 0 &&
-      tonumber(var.autoscale.scale_in_value) % length(local.use_case_features.zones) == 0
+      var.autoscale.minimum_instances % length(try(local.use_case_features.zones, 1)) == 0 &&
+      var.autoscale.maximum_instances % length(try(local.use_case_features.zones, 1)) == 0 &&
+      var.autoscale.default_instances % length(try(local.use_case_features.zones, 1)) == 0 &&
+      tonumber(var.autoscale.scale_out_value) % length(try(local.use_case_features.zones, 1)) == 0 &&
+      tonumber(var.autoscale.scale_in_value) % length(try(local.use_case_features.zones, 1)) == 0
     )
     error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. Current values: minimum_instances=${var.autoscale.minimum_instances}, maximum_instances=${var.autoscale.maximum_instances}, default_instances=${var.autoscale.default_instances}, scale_out_value=${var.autoscale.scale_out_value}, scale_in_value=${var.autoscale.scale_in_value}. This ensures proper distribution across availability zones."
   }
