@@ -27,12 +27,8 @@ export const makeCli = (
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
+  program.addCommand(makeInitCommand());
   program.addCommand(makeSavemoneyCommand());
-
-  if (process.env.ENABLE_INIT_COMMAND) {
-    program.addCommand(makeInitCommand());
-  }
-
   program.addCommand(makeInfoCommand(deps, config));
 
   return program;
