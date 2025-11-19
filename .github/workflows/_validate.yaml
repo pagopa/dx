@@ -22,8 +22,17 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: "go.work"
+          cache-dependency-path: "providers/**/*.sum"
+
+      - name: Setup Terraform
+        uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Install dependencies
         run: pnpm install
