@@ -38,9 +38,27 @@ runs:
       shell: bash
       run: npm ci
 
-    - name: Build
+    - name: Detect build tool
+      id: detect-build-tool
+      shell: bash
+      run: |
+        if [ -f "nx.json" ]; then
+          echo "build-tool=nx" >> $GITHUB_OUTPUT
+        else
+          echo "build-tool=turbo" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build (turbo)
+      if: ${{ steps.detect-build-tool.outputs.build-tool == 'turbo' }}
       shell: bash
       run: npx turbo build --filter $WORKSPACE_NAME
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Build (nx)
+      if: ${{ steps.detect-build-tool.outputs.build-tool == 'nx' }}
+      shell: bash
+      run: npx nx run $WORKSPACE_NAME:build
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
@@ -48,7 +66,12 @@ runs:
       id: get-workspace-path
       shell: bash
       run: |
-        WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+        if [ "$BUILD_TOOL" == "turbo" ]; then
+          WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+        else
+          WORKSPACE_PATH=$(npx nx show project "$WORKSPACE_NAME" --json | jq -r .root)
+        fi
         echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}
+        BUILD_TOOL: ${{ steps.detect-build-tool.outputs.build-tool }}
