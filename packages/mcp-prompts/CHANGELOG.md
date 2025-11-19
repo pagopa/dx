@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.1.0
+
+### Minor Changes
+
+- e684e1a: Add prompt for terraform module diagram generation
+
 ## 0.0.3
 
 ### Patch Changes

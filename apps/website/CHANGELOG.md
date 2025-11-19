@@ -1,5 +1,17 @@
 # docs
 
+## 0.10.0
+
+### Minor Changes
+
+- 8d0d661: Documents the init command of the CLI
+
+### Patch Changes
+
+- ccc9ff1: Update savemoney doc
+- Updated dependencies [e684e1a]
+  - @pagopa/dx-mcpprompts@0.1.0
+
 ## 0.9.5
 
 ### Patch Changes

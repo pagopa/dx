@@ -1,5 +1,25 @@
 # @pagopa/dx-cli
 
+## 0.10.1
+
+### Patch Changes
+
+- ccc9ff1: Update README for savemoney Container App
+- 8d0d661: Remove `init` command feature flag
+
+  Now, if you want to use the `init` command, you don't need to set any feature flag. Just run:
+
+  ```bash
+  npx @pagopa/dx-cli init project
+  ```
+
+  and follow the interactive prompts to create a new monorepo project.
+
+- Updated dependencies [140a047]
+- Updated dependencies [ccc9ff1]
+  - @pagopa/monorepo-generator@0.10.1
+  - @pagopa/dx-savemoney@0.1.2
+
 ## 0.10.0
 
 ### Minor Changes

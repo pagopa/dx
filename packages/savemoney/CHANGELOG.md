@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.1.2
+
+### Patch Changes
+
+- ccc9ff1: Add Container App control in azure resources, fixed metric retrieve method, update README
+
 ## 0.1.1
 
 ### Patch Changes

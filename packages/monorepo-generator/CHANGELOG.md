@@ -1,5 +1,13 @@
 # @pagopa/monorepo-generator
 
+## 0.10.1
+
+### Patch Changes
+
+- 140a047: Add Terraform backend when creating repository resources.
+  Set the Terraform backend configuration according to the selected CSP at repository creation
+  the backend configuration is also set (always based on the CSP selected).
+
 ## 0.8.3
 
 ### Patch Changes
