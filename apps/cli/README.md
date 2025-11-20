@@ -126,6 +126,7 @@ dx savemoney --days 60 --location italynorth
 - **App Service Plans**: Empty plans or oversized tiers
 - **Private Endpoints**: Unused or misconfigured endpoints
 - **Container Apps**: Not running, zero replicas, low resource usage
+- **Static Web Apps**: No traffic or very low usage patterns
 
 > [!NOTE]
 > Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.

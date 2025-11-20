@@ -266,6 +266,7 @@ optimization:
 | Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints          |
 | Storage Accounts    |  🟡  | Storage accounts with minimal activity             |
 | Container Apps      |  🟡  | Not running, zero replicas, low resource usage     |
+| Static Web Apps     |  🟢  | No traffic or very low usage patterns              |
 
 **Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low
 
