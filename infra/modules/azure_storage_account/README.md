@@ -4,67 +4,6 @@
 
 This Terraform module provisions an Azure Storage Account with optional configurations for advanced features, networking, and monitoring.
 
-## Features
-
-- **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
-- **Advanced Threat Protection**: Enables advanced threat protection for enhanced security only for public configurations.
-- **Advanced Security**: Enforces the use of User Delegation SAS for secure shared access if `delegated_access`.
-- **Data Lifecycle Management**: Includes automated policies for tiering data from Hot to Cool/Archive and setting retention periods to optimize costs.
-- **Private Networking**: Configures private endpoints and DNS zones for secure access.
-- **Blob Features**: Supports versioning, change feed, immutability policies, and more.
-- **Static Website Hosting**: Configures static website hosting with custom domains.
-- **Monitoring and Alerts**: Includes metric alerts and diagnostic settings for operational visibility.
-- **Customer-Managed Keys (CMK)**: Supports encryption with customer-managed keys, mandatory only for `audit` for enhanced encryption control (BYOK).
-
-## Use cases Comparison
-
-| Use case           | Description                                                                                                                 | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
-| `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
-| `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
-| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 yaers of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
-| `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
-| `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
-
-## Important Considerations for CDN Origin
-
-This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
-
-## Note about Replication
-
-For use cases with `secondary replica`, the module creates a secondary storage account in the specified `secondary_location` to enable geo-redundant storage. This setup ensures data durability and availability across different geographic regions.
-
-### Archive policy
-
-The archive lifecycle management policy use the value `tier_to_archive_after_days_since_creation_greater_than` to move blobs to the Archive tier, but this feature is available only in some regions and only when Replication Type is `LRS`.
-Refer to the [Azure tabele](https://azure.microsoft.com/it-it/explore/global-infrastructure/products-by-region/table) for more details, check `Archive Storage`.
-
-## Security Considerations
-
-### Customer-Managed Key (BYOK) Encryption
-
-For enhanced control over data encryption, this module supports **Bring Your Own Key (BYOK)**. Instead of using Microsoft-managed keys, you can provide a key from your own Azure Key Vault.
-
-- The `audit` use case requires BYOK to be enabled for maximum security.
-- For all other use cases, this feature is optional.
-- To enable it, simply provide the necessary details in the `customer_managed_key` variable. The module will handle the rest, including the creation of access policies or role assignments on the Key Vault.
-
-### User Delegation SAS for Secure Access
-
-For the `delegated_access` use case, this module enhances security by disabling the main storage account access keys. This action has a critical consequence:
-
-- It becomes impossible to create a standard Service SAS token.
-- The only way to generate a **Shared Access Signature (SAS)** is by using User Delegation SAS.
-
-This model forces applications to first authenticate with Azure Active Directory (Azure AD) to obtain a temporary key. This is a significant security improvement because access is tied to an identity and can be centrally managed and revoked via Azure RBAC. To implement this, you must grant the Storage Blob Delegator role to the identities that need to create SAS tokens.
-
-**NOTE**:
-Terraform uses Shared Key Authorisation to provision Storage Containers, Blobs and other items - when Shared Key Access is disabled, you will need to enable the `storage_use_azuread` flag in the Provider block to use Azure AD for authentication, however not all Azure Storage services support Active Directory authentication.
-
-## Usage Example
-
-A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
-
 ## Diagram
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
@@ -125,6 +64,67 @@ flowchart LR
     alert -.-> sa
     defender -.-> sa
 ```
+
+## Features
+
+- **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
+- **Advanced Threat Protection**: Enables advanced threat protection for enhanced security only for public configurations.
+- **Advanced Security**: Enforces the use of User Delegation SAS for secure shared access if `delegated_access`.
+- **Data Lifecycle Management**: Includes automated policies for tiering data from Hot to Cool/Archive and setting retention periods to optimize costs.
+- **Private Networking**: Configures private endpoints and DNS zones for secure access.
+- **Blob Features**: Supports versioning, change feed, immutability policies, and more.
+- **Static Website Hosting**: Configures static website hosting with custom domains.
+- **Monitoring and Alerts**: Includes metric alerts and diagnostic settings for operational visibility.
+- **Customer-Managed Keys (CMK)**: Supports encryption with customer-managed keys, mandatory only for `audit` for enhanced encryption control (BYOK).
+
+## Use cases Comparison
+
+| Use case           | Description                                                                                                                 | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
+| `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
+| `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
+| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 yaers of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
+| `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
+| `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
+
+## Important Considerations for CDN Origin
+
+This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
+
+## Note about Replication
+
+For use cases with `secondary replica`, the module creates a secondary storage account in the specified `secondary_location` to enable geo-redundant storage. This setup ensures data durability and availability across different geographic regions.
+
+### Archive policy
+
+The archive lifecycle management policy use the value `tier_to_archive_after_days_since_creation_greater_than` to move blobs to the Archive tier, but this feature is available only in some regions and only when Replication Type is `LRS`.
+Refer to the [Azure tabele](https://azure.microsoft.com/it-it/explore/global-infrastructure/products-by-region/table) for more details, check `Archive Storage`.
+
+## Security Considerations
+
+### Customer-Managed Key (BYOK) Encryption
+
+For enhanced control over data encryption, this module supports **Bring Your Own Key (BYOK)**. Instead of using Microsoft-managed keys, you can provide a key from your own Azure Key Vault.
+
+- The `audit` use case requires BYOK to be enabled for maximum security.
+- For all other use cases, this feature is optional.
+- To enable it, simply provide the necessary details in the `customer_managed_key` variable. The module will handle the rest, including the creation of access policies or role assignments on the Key Vault.
+
+### User Delegation SAS for Secure Access
+
+For the `delegated_access` use case, this module enhances security by disabling the main storage account access keys. This action has a critical consequence:
+
+- It becomes impossible to create a standard Service SAS token.
+- The only way to generate a **Shared Access Signature (SAS)** is by using User Delegation SAS.
+
+This model forces applications to first authenticate with Azure Active Directory (Azure AD) to obtain a temporary key. This is a significant security improvement because access is tied to an identity and can be centrally managed and revoked via Azure RBAC. To implement this, you must grant the Storage Blob Delegator role to the identities that need to create SAS tokens.
+
+**NOTE**:
+Terraform uses Shared Key Authorisation to provision Storage Containers, Blobs and other items - when Shared Key Access is disabled, you will need to enable the `storage_use_azuread` flag in the Provider block to use Azure AD for authentication, however not all Azure Storage services support Active Directory authentication.
+
+## Usage Example
+
+A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
