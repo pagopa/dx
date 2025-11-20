@@ -45,16 +45,16 @@ const answersSchema = z.object({
   costCenter: trimmedString.min(1, "Cost Center must not be empty"),
   csp: z.enum(["aws", "azure"]),
   domain: trimmedString.min(1, "Domain cannot be empty"),
-  environments: z
-    .array(z.enum(["dev", "prod", "uat"]))
-    .min(1, "Select at least one environment"),
-  instanceNumber: z
+  envInstanceNumber: z
     .string()
     .regex(/^[1-9][0-9]?$/, "Instance number must be a number between 1 and 99")
     .transform((val) =>
       // Return zero-padded string (e.g. "01")
       val.padStart(2, "0"),
     ),
+  environments: z
+    .array(z.enum(["dev", "prod", "uat"]))
+    .min(1, "Select at least one environment"),
   managementTeam: trimmedString.min(1, "Management Team must not be empty"),
   prefix: trimmedString
     .min(2, "Prefix must be at least 2 characters")
@@ -183,8 +183,8 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: "1",
     message: "What is the instance number?",
-    name: "instanceNumber",
-    validate: validatePrompt(answersSchema.shape.instanceNumber),
+    name: "envInstanceNumber",
+    validate: validatePrompt(answersSchema.shape.envInstanceNumber),
   },
   {
     message: "What is the Cost Center for this project?",
@@ -293,7 +293,7 @@ const getTerraformEnvironmentFiles =
   (templatesPath: string) =>
   (
     env: Environment,
-    { csp, instanceNumber }: Pick<Answers, "csp" | "instanceNumber">,
+    { csp, envInstanceNumber }: Pick<Answers, "csp" | "envInstanceNumber">,
   ): ActionType[] => [
     {
       abortOnFail: true,
@@ -301,7 +301,7 @@ const getTerraformEnvironmentFiles =
       data: {
         environment: env,
         envShort: toEnvShort(env),
-        instanceNumber,
+        instanceNumber: envInstanceNumber,
       },
       destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
