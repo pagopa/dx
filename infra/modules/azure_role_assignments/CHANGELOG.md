@@ -1,5 +1,11 @@
 # azure_role_assignments
 
+## 1.3.0
+
+### Minor Changes
+
+- 2ebbaf1: Add support for Azure AppConfiguration
+
 ## 1.2.1
 
 ### Patch Changes
