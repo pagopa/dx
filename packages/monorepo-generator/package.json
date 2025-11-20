@@ -39,9 +39,6 @@
     "vitest": "catalog:",
     "vitest-mock-extended": "^3.1.0"
   },
-  "peerDependencies": {
-    "plop": "catalog:"
-  },
   "scripts": {
     "build": "tsup",
     "lint": "eslint --fix src",
