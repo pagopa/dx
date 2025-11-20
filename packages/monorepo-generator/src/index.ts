@@ -39,11 +39,16 @@ const answersSchema = z.object({
     .regex(/^\d{12}$/, "AWS Account ID must be a 12-digit number")
     .optional(),
   awsAppName: z.string().optional(),
-  awsRegion: z.string().optional(),
-  azureLocation: z.string().optional(),
+  awsRegion: z
+    .literal(["eu-south-1", "eu-central-1", "eu-west-1", "eu-west-3"])
+    .default("eu-south-1"),
+  azureLocation: z
+    .literal(["italynorth", "northeurope", "westeurope"])
+    .optional()
+    .default("italynorth"),
   businessUnit: trimmedString.min(1, "Business Unit must not be empty"),
   costCenter: trimmedString.min(1, "Cost Center must not be empty"),
-  csp: z.enum(["aws", "azure"]),
+  csp: z.literal(["aws", "azure"]).default("azure"),
   domain: trimmedString.min(1, "Domain cannot be empty"),
   envInstanceNumber: z
     .string()
@@ -53,7 +58,7 @@ const answersSchema = z.object({
       val.padStart(2, "0"),
     ),
   environments: z
-    .array(z.enum(["dev", "prod", "uat"]))
+    .array(z.literal(["dev", "prod", "uat"]))
     .min(1, "Select at least one environment"),
   managementTeam: trimmedString.min(1, "Management Team must not be empty"),
   prefix: trimmedString
@@ -62,8 +67,11 @@ const answersSchema = z.object({
   repoDescription: z.string().optional(),
   repoName: trimmedString.min(1, "Repository name cannot be empty"),
   repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
-  tfStateResourceGroupName: z.string().optional(),
-  tfStateStorageAccountName: z.string().optional(),
+  tfStateResourceGroupName: z
+    .string()
+    .optional()
+    .default("dx-d-itn-terraform-rg-01"),
+  tfStateStorageAccountName: z.string().optional().default("dxditntfst01"),
 });
 
 interface ActionsDependencies {
@@ -104,7 +112,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
       { name: "Amazon Web Services", value: "aws" },
       { name: "Microsoft Azure", value: "azure" },
     ],
-    default: "azure",
+    default: answersSchema.shape.csp.def.defaultValue,
     message: "What Cloud Provider would you like to use?",
     name: "csp",
     type: "list",
@@ -115,7 +123,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
       { name: "North Europe", value: "northeurope" },
       { name: "West Europe", value: "westeurope" },
     ],
-    default: "italynorth",
+    default: answersSchema.shape.azureLocation.def.defaultValue,
     loop: false,
     message: "What is the Azure location?",
     name: "azureLocation",
@@ -129,7 +137,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
       { name: "Europe (Ireland)", value: "eu-west-1" },
       { name: "Europe (Paris)", value: "eu-west-3" },
     ],
-    default: "eu-south-1",
+    default: answersSchema.shape.awsRegion.def.defaultValue,
     loop: false,
     message: "What is the AWS region?",
     name: "awsRegion",
@@ -155,14 +163,14 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     when: (answers) => answers.csp === "aws",
   },
   {
-    default: "dx-d-itn-terraform-rg-01",
+    default: answersSchema.shape.tfStateResourceGroupName.def.defaultValue,
     message: "Azure resource group for tfstate:",
     name: "tfStateResourceGroupName",
     type: "input",
     when: (answers) => answers.csp === "azure",
   },
   {
-    default: "dxditntfst01",
+    default: answersSchema.shape.tfStateStorageAccountName.def.defaultValue,
     message: "Azure storage account for tfstate:",
     name: "tfStateStorageAccountName",
     type: "input",
