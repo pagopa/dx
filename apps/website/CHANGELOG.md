@@ -1,5 +1,11 @@
 # docs
 
+## 0.10.1
+
+### Patch Changes
+
+- cfb975f: Update CLI doc with Static Web App check in SaveMoney tool
+
 ## 0.10.0
 
 ### Minor Changes

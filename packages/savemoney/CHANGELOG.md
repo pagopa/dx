@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.1.3
+
+### Patch Changes
+
+- cfb975f: Update SaveMoney Tool with Static Web App resource control
+
 ## 0.1.2
 
 ### Patch Changes
