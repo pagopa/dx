@@ -44,7 +44,6 @@ const answersSchema = z.object({
     .default("eu-south-1"),
   azureLocation: z
     .literal(["italynorth", "northeurope", "westeurope"])
-    .optional()
     .default("italynorth"),
   businessUnit: trimmedString.min(1, "Business Unit must not be empty"),
   costCenter: trimmedString.min(1, "Cost Center must not be empty"),
@@ -69,9 +68,8 @@ const answersSchema = z.object({
   repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
   tfStateResourceGroupName: z
     .string()
-    .optional()
     .default("dx-d-itn-terraform-rg-01"),
-  tfStateStorageAccountName: z.string().optional().default("dxditntfst01"),
+  tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
 
 interface ActionsDependencies {
