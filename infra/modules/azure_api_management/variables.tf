@@ -77,6 +77,7 @@ variable "autoscale" {
 
   validation {
     condition = var.autoscale.enabled == false || local.use_case_features.zones == null || (
+      # coalesce is used to handle the use cases where zones is set to null
       var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
       var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
       var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
