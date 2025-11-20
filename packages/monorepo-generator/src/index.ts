@@ -66,9 +66,7 @@ const answersSchema = z.object({
   repoDescription: z.string().optional(),
   repoName: trimmedString.min(1, "Repository name cannot be empty"),
   repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
-  tfStateResourceGroupName: z
-    .string()
-    .default("dx-d-itn-terraform-rg-01"),
+  tfStateResourceGroupName: z.string().default("dx-d-itn-terraform-rg-01"),
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
 
