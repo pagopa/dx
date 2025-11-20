@@ -40,9 +40,6 @@
     "vitest-mock-extended": "catalog:",
     "zod": "^4.1.12"
   },
-  "peerDependencies": {
-    "plop": "catalog:"
-  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit"
