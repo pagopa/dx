@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.0.4
+
+### Patch Changes
+
+- 59212ec: Fix autoscaler validation condition failing when a use_case with no zones set was used
+
 ## 2.0.3
 
 ### Patch Changes
