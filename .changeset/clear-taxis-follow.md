@@ -2,4 +2,4 @@
 "@pagopa/dx-cli": patch
 ---
 
-Update CLI README with Static Site check in SaveMoney tool
+Update CLI README with Static Web App check in SaveMoney tool
