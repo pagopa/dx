@@ -4,7 +4,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.110, < 5.0"
     }
-    dx = {
+    pagopa-dx = {
       source  = "pagopa-dx/azure"
       version = ">= 0.0.6, < 1.0.0"
     }
