@@ -152,3 +152,15 @@ variable "service_bus" {
 
   default = []
 }
+
+variable "app_config" {
+  description = "A list of role assignments for Azure App Configuration stores, specifying the configuration store name, resource group, and role."
+  type = list(object({
+    name                = string
+    resource_group_name = string
+    role                = string
+    description         = string
+  }))
+
+  default = []
+}
