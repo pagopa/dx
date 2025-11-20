@@ -18,13 +18,13 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 ## Use cases Comparison
 
-| Use case           | Description                                                        | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
-|--------------------|--------------------------------------------------------------------|--------|----------------------------|-------------------------|--------------|
-| `development`      | Ideal for lightweight workloads, testing, and development.         | No     | No                         | LRS                     | Standard     |
-| `default`          | Suitable for production with moderate to high performance needs.   | Yes    | No                         | ZRS                     | Standard     |
+| Use case           | Description                                                                                                                 | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
+| `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
+| `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
 | `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 yaers of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
-| `delegated_access` | For sharing files externally, forcing secure access patterns.      | Yes    | Yes                        | ZRS                     | Standard     |
-| `archive`          | For long-term, low-cost backup and data archiving.                 | No     | No                         | LRS + secondary replica | Standard     |
+| `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
+| `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
 
 ## Important Considerations for CDN Origin
 
@@ -58,12 +58,73 @@ For the `delegated_access` use case, this module enhances security by disabling 
 
 This model forces applications to first authenticate with Azure Active Directory (Azure AD) to obtain a temporary key. This is a significant security improvement because access is tied to an identity and can be centrally managed and revoked via Azure RBAC. To implement this, you must grant the Storage Blob Delegator role to the identities that need to create SAS tokens.
 
-  **NOTE**:
-  Terraform uses Shared Key Authorisation to provision Storage Containers, Blobs and other items - when Shared Key Access is disabled, you will need to enable the `storage_use_azuread` flag in the Provider block to use Azure AD for authentication, however not all Azure Storage services support Active Directory authentication.
+**NOTE**:
+Terraform uses Shared Key Authorisation to provision Storage Containers, Blobs and other items - when Shared Key Access is disabled, you will need to enable the `storage_use_azuread` flag in the Provider block to use Azure AD for authentication, however not all Azure Storage services support Active Directory authentication.
 
 ## Usage Example
 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
+
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+```mermaid
+flowchart LR
+    subgraph Security["Security Layer"]
+        kv["Key Vault"]
+        kv@{ icon: "azure:key-vaults"}
+
+        cmk["Customer Managed Key"]
+        cmk@{ icon: "azure:keys"}
+    end
+
+    subgraph Storage["Primary Storage"]
+        sa["Storage Account"]
+        sa@{ icon: "azure:storage-accounts"}
+
+        containers["Containers"]
+        tables["Tables"]
+        queues["Queues"]
+
+        containers@{ icon: "azure:storage-container" }
+        queues@{ icon: "azure:storage-queue" }
+        tables@{ icon: "azure:table" }
+
+    end
+
+    subgraph Network["Network Layer"]
+        netrules["Network Rules"]
+
+        pep["Private Endpoints"]
+        pep@{ icon: "azure:private-endpoints"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        alert["Metric Alerts"]
+        alert@{ icon: "azure:monitor"}
+
+        defender["Storage Defender"]
+        defender@{ icon: "azure:microsoft-defender-for-cloud" }
+    end
+
+    subgraph Replication["Geo-Replication (Optional)"]
+        secondary["Secondary Storage Account"]
+        secondary@{ icon: "azure:storage-accounts"}
+    end
+
+    %% Dependencies
+    kv -.-> cmk
+    cmk -.-> sa
+    netrules --> sa
+    pep --> sa
+    sa --> containers
+    sa --> tables
+    sa --> queues
+    sa -.-> secondary
+    alert -.-> sa
+    defender -.-> sa
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
