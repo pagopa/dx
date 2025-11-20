@@ -27,7 +27,7 @@
   },
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@logtape/logtape": "^1.0.4",
+    "@logtape/logtape": "catalog:",
     "gray-matter": "^4.0.3",
     "zod": "^3.24.1"
   },

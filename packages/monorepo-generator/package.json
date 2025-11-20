@@ -22,7 +22,7 @@
   "dependencies": {
     "execa": "catalog:",
     "neverthrow": "catalog:",
-    "octokit": "^5.0.3",
+    "octokit": "^5.0.5",
     "semver": "catalog:",
     "zod": "^4.1.12"
   },
