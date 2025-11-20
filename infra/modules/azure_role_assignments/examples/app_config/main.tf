@@ -6,7 +6,9 @@ resource "azurerm_resource_group" "roles" {
 }
 
 module "test_app" {
-  source = "../../../azure_app_service_exposed"
+  source  = "pagopa-dx/azure-function-app-exposed/azurerm"
+  version = "~> 2.0"
+
   environment = merge(local.naming_config, {
     app_name = "roles"
   })

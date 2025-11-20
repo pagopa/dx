@@ -11,7 +11,7 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_roles"></a> [roles](#module\_roles) | ../../ | n/a |
-| <a name="module_test_app"></a> [test\_app](#module\_test\_app) | ../../../azure_app_service_exposed | n/a |
+| <a name="module_test_app"></a> [test\_app](#module\_test\_app) | pagopa-dx/azure-function-app-exposed/azurerm | ~> 2.0 |
 
 ## Resources
 
