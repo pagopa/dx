@@ -7,13 +7,12 @@
     "@nx/docker": "22.1.0",
     "@nx/eslint": "22.1.0",
     "@nx/js": "22.1.0",
-    "@nx/vite": "22.1.0",
+    "@nx/vitest": "22.1.0",
     "@tsconfig/node22": "catalog:",
     "eslint": "catalog:",
     "nx": "22.1.0",
     "prettier": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
     "vitest": "catalog:"
   },
   "scripts": {

@@ -42,9 +42,6 @@ catalogs:
     typescript:
       specifier: ~5.8.3
       version: 5.8.3
-    vite:
-      specifier: ^7.0.0
-      version: 7.0.2
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
@@ -73,7 +70,7 @@ importers:
       '@nx/js':
         specifier: 22.1.0
         version: 22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
-      '@nx/vite':
+      '@nx/vitest':
         specifier: 22.1.0
         version: 22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))(typescript@5.8.3)(vite@7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
       '@tsconfig/node22':
@@ -91,9 +88,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.8.3
-      vite:
-        specifier: 'catalog:'
-        version: 7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
       vitest:
         specifier: 'catalog:'
         version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(@vitest/ui@3.2.4)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
@@ -2847,12 +2841,6 @@ packages:
     resolution: {integrity: sha512-ZQ5m+ho/uq7IUBXOvLvgpLeEwIyvVivl4bO/MKGVoQvxL96oZ4VK4dC3vSs8sGuV5j0bAEEH/zBvToWijEcv+A==}
     cpu: [x64]
     os: [win32]
-
-  '@nx/vite@22.1.0':
-    resolution: {integrity: sha512-U+9NUJQRbY+XtvITQzpbADdMXOpKaEsXghIGPSGWCNs2ttOg1fAo41G46oGBhfytAcem5r0e3W+ZcT64CDC//Q==}
-    peerDependencies:
-      vite: ^5.0.0 || ^6.0.0 || ^7.0.0
-      vitest: ^1.3.1 || ^2.0.0 || ^3.0.0 || ^4.0.0
 
   '@nx/vitest@22.1.0':
     resolution: {integrity: sha512-Rwl3N+to07894cAZmXg4vd0KxX4nWtYAHYTGbPMn+xdz5BvjIUT3ZAh9Vk8LY1K1V6QJEZsR5c73oSPiGMk9zQ==}
@@ -13560,30 +13548,6 @@ snapshots:
 
   '@nx/nx-win32-x64-msvc@22.1.0':
     optional: true
-
-  '@nx/vite@22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))(typescript@5.8.3)(vite@7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)':
-    dependencies:
-      '@nx/devkit': 22.1.0(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
-      '@nx/js': 22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
-      '@nx/vitest': 22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))(typescript@5.8.3)(vite@7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)
-      '@phenomnomnominal/tsquery': 5.0.1(typescript@5.8.3)
-      ajv: 8.17.1
-      enquirer: 2.3.6
-      picomatch: 4.0.2
-      semver: 7.7.3
-      tsconfig-paths: 4.2.0
-      tslib: 2.8.1
-      vite: 7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(@vitest/ui@3.2.4)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1)
-    transitivePeerDependencies:
-      - '@babel/traverse'
-      - '@swc-node/register'
-      - '@swc/core'
-      - debug
-      - nx
-      - supports-color
-      - typescript
-      - verdaccio
 
   '@nx/vitest@22.1.0(@babel/traverse@7.28.5)(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17))(nx@22.1.0(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))(typescript@5.8.3)(vite@7.0.2(@types/node@22.19.1)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.20.6)(yaml@2.8.1))(vitest@3.2.4)':
     dependencies:

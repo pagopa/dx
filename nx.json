@@ -53,10 +53,11 @@
       }
     },
     {
-      "plugin": "@nx/vite/plugin",
+      "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
-      }
+      },
+      "include": ["apps/**", "packages/**"]
     },
     {
       "plugin": "@nx/eslint/plugin",

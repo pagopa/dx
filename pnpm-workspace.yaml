@@ -19,7 +19,6 @@ catalog:
   semver: ^7.7.2
   tsup: ^8.5.0
   typescript: ~5.8.3
-  vite: ^7.0.0
   vitest: ^3.2.4
   vitest-mock-extended: ^3.1.0
 
