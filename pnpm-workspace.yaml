@@ -15,7 +15,7 @@ catalog:
   eslint: ^9.39.1
   execa: ^9.6.0
   neverthrow: ^8.2.0
-  plop: ^4.0.2
+  plop: ^4.0.4
   prettier: 3.6.2
   semver: ^7.7.2
   tsup: ^8.5.0
