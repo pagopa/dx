@@ -26,7 +26,7 @@ jobs:
 
   feed_docs_knowledge_base:
     # Only if a changeset PR is merged
-    if: github.event_name == 'push' && github.actor == 'dx-pagopa-bot'
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.title == 'Version Packages'
     name: Update MCP Server Knowledge Base
     environment: app-prod-cd
     needs: deploy_to_static_web_app
