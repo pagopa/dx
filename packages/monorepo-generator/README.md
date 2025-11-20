@@ -30,7 +30,7 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | `prefix`                    | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming.                   |                          | yes      |
 | `azureLocation`             | prompt | Azure location (e.g., `italynorth`, `northeurope`, `westeurope`). Only if `csp` is `azure`. | italynorth               | yes\*    |
 | `domain`                    | prompt | Project domain (e.g., `payments`, `identity`).                                              |                          | yes      |
-| `instanceNumber`            | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.                           | 01                       | no       |
+| `envInstanceNumber`         | prompt | Instance number (e.g., `01`, `02`). Used for resource uniqueness.                           | 01                       | no       |
 | `awsRegion`                 | prompt | AWS region (e.g., `eu-south-1`). Only if `csp` is `aws`.                                    | eu-south-1               | yes\*    |
 | `awsAppName`                | prompt | AWS app name (e.g., `my-app`). Only if `csp` is `aws`.                                      |                          | yes\*    |
 | `tfStateResourceGroupName`  | prompt | Azure resource group for tfstate. Only if `csp` is `azure`.                                 | dx-d-itn-terraform-rg-01 | yes\*    |
