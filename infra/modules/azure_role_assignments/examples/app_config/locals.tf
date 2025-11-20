@@ -21,7 +21,7 @@ locals {
     Environment    = "Dev"
     ManagementTeam = "Developer Experience"
     BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx"
+    Source         = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/app_config"
     CostCenter     = "TS000 - Tecnologia e Servizi"
   }
   resource_prefix = "${local.environment.prefix}-${local.environment.env_short}-${local.environment.location}"
