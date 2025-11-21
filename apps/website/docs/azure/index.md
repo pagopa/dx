@@ -18,5 +18,6 @@ problem resolutions, patterns, and more.
 - [Connecting Azure Resources Securely](./networking/)
 - [Deploying Applications to Azure](./application-deployment/)
 - [Hosting Static Websites on Azure](./static-websites/)
+- [Managing AppSettings and Secrets With Azure](./app-configuration/)
 - [Integrating Azure services](./integrating-services/)
 - [Archiving Data for Decommissioned Projects](./archive-data.md)
