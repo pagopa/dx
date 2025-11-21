@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.10.2
+
+### Patch Changes
+
+- cfb975f: Update CLI README with Static Web App check in SaveMoney tool
+- Updated dependencies [cfb975f]
+  - @pagopa/dx-savemoney@0.1.3
+
 ## 0.10.1
 
 ### Patch Changes

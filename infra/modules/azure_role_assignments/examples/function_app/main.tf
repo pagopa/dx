@@ -22,8 +22,6 @@ module "function" {
   app_settings      = {}
   slot_app_settings = {}
 
-  tier = "test"
-
   tags = local.tags
 }
 

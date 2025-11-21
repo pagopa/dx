@@ -222,3 +222,53 @@ run "service_bus_role_assignments" {
     error_message = "The role assigned must be Azure Service Bus Data Owner"
   }
 }
+
+run "app_config_role_assignments" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    app_config = [
+      {
+        name                = "dx-d-itn-test-appconfig-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "reader"
+        description         = "This is a reader"
+      },
+      {
+        name                = "dx-d-itn-test-appconfig-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "writer"
+        description         = "This is a writer"
+      },
+      {
+        name                = "dx-d-itn-test-appconfig-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+        description         = "This is an owner"
+      }
+    ]
+  }
+
+  assert {
+    condition     = module.app_config.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-test-appconfig-01|reader|App Configuration Data Reader"].role_definition_name == "App Configuration Data Reader"
+    error_message = "The role assigned must be App Configuration Data Reader"
+  }
+
+  assert {
+    condition     = module.app_config.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-test-appconfig-01|writer|App Configuration Data Owner"].role_definition_name == "App Configuration Data Owner"
+    error_message = "The role assigned must be App Configuration Data Owner"
+  }
+
+  assert {
+    condition     = module.app_config.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-test-appconfig-01|owner|App Configuration Contributor"].role_definition_name == "App Configuration Contributor"
+    error_message = "The role assigned must be App Configuration Contributor"
+  }
+
+  assert {
+    condition     = module.app_config.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-test-appconfig-01|owner|App Configuration Data Owner"].role_definition_name == "App Configuration Data Owner"
+    error_message = "The role assigned must be App Configuration Data Owner"
+  }
+}
