@@ -58,7 +58,7 @@ const answersSchema = z.object({
     ),
   environments: z
     .array(z.literal(["dev", "prod", "uat"]))
-    .min(1, "Select at least one environment"),
+    .nonempty("Select at least one environment"),
   managementTeam: trimmedString.min(1, "Management Team must not be empty"),
   prefix: trimmedString
     .min(2, "Prefix must be at least 2 characters")
