@@ -26,8 +26,8 @@ The snippet below shows:
 - Resolving a Key Vault secret reference
 
 ```typescript
-const { load } = require("@azure/app-configuration-provider");
-const { DefaultAzureCredential } = require("@azure/identity");
+import { load } from "@azure/app-configuration-provider);
+import { DefaultAzureCredential } from "@azure/identity";
 const endpoint = process.env.AZURE_APPCONFIG_ENDPOINT;
 const credential = new DefaultAzureCredential();
 
