@@ -111,6 +111,9 @@ const appConfig = await load(endpoint, credential, {
 });
 ```
 
+More info about the Sentinel pattern are on the
+[official documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-best-practices?tabs=javascript#monitoring-a-sentinel-key).
+
 :::info
 
 The blocks `feature_management` and `feature_flags` are mandatory to define
