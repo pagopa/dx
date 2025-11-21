@@ -1,5 +1,5 @@
 name: "Convert Mermaid into SVG"
-description: "Passed a .md file containing Mermaid diagrams, this action converts them into SVG format."
+description: "Given a .md file containing Mermaid diagrams, this action converts them into SVG format."
 
 inputs:
   file_path:
@@ -54,5 +54,5 @@ runs:
         # This command will convert the Mermaid diagrams in the .md file to SVG format
         # creating a new .svg file and overwriting the original .md file adding the image url.
 
-        mmdc -i $MD_FILE -o $MD_FILE -t dark -b transparent -p "$puppeteer_config"
+        mmdc -i "$MD_FILE" -o "$MD_FILE" -t dark -b transparent -p "$puppeteer_config"
         echo "✅ Successfully converted into svg"

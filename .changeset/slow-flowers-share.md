@@ -2,4 +2,4 @@
 "@pagopa/convert-mermaid-svg": patch
 ---
 
-Action that convert mermaid part inside an .md file into a linked .svg image
+Action that converts mermaid part inside an .md file into a linked .svg image
