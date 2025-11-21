@@ -21,6 +21,7 @@
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
     "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js",
+    "build": "nx run-many --target=build",
     "validate": "nx affected --targets=build,test,lint,shellcheck,format:check --configuration=ci"
   }
 }
