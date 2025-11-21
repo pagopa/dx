@@ -245,46 +245,65 @@ need to add a filter in your code where you specify if a user or group is part
 of the ones targeted by the feature flag.
 
 ```typescript
-const express = require("express");
-const server = express();
-const port = 8080;
+import {
+  app,
+  HttpRequest,
+  HttpResponseInit,
+  InvocationContext,
+} from "@azure/functions";
+import {
+  FeatureManager,
+  ConfigurationMapFeatureFlagProvider,
+} from "@azure/app-configuration-provider";
 
-const { AsyncLocalStorage } = require("async_hooks");
-const requestAccessor = new AsyncLocalStorage();
-// Use a middleware to store request context.
-server.use((req, res, next) => {
-  // Store the request in AsyncLocalStorage for this request chain.
-  requestAccessor.run(req, () => {
-    next();
-  });
-});
-
-// Create a targeting context accessor that retrieves user data from the current request.
 const targetingContextAccessor = {
-  getTargetingContext: () => {
-    // Get the current request from AsyncLocalStorage.
-    const request = requestAccessor.getStore();
-    if (!request) {
-      return undefined;
-    }
-    const { userId, groups } = request.query;
+  getTargetingContext: (request: HttpRequest) => {
+    // Example: extract user information from headers
+
+    const userId = request.headers.get("x-user-id");
+    const groups = request.headers.get("x-user-groups")?.split(",") || [];
+
     return {
-      userId: userId,
-      groups: groups ? groups.split(",") : [],
+      userId: userId || "anonymous",
+      groups: groups,
     };
   },
 };
-```
 
-And update the `contextAccessor` accordingly:
+app.http("myFunction", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  handler: async (
+    request: HttpRequest,
+    context: InvocationContext,
+  ): Promise<HttpResponseInit> => {
+    // Get targeting context from current request
+    const targetingContext =
+      targetingContextAccessor.getTargetingContext(request);
 
-```typescript
-featureManager = new FeatureManager(
-  new ConfigurationMapFeatureFlagProvider(appConfig),
-  {
-    targetingContextAccessor: targetingContextAccessor,
+    // Create feature manager instance with targeting support
+    const featureManager = new FeatureManager(
+      new ConfigurationMapFeatureFlagProvider(appConfig),
+      {
+        targetingContextAccessor: {
+          getTargetingContext: () => targetingContext,
+        },
+      },
+    );
+
+    // Check if feature is enabled for this user/group
+    const isBetaEnabled = await featureManager.isEnabled("feature1");
+
+    if (isBetaEnabled) {
+      context.log("Beta feature enabled for user:", targetingContext.userId);
+    }
+
+    return {
+      status: 200,
+      body: JSON.stringify({ betaEnabled: isBetaEnabled }),
+    };
   },
-);
+});
 ```
 
 Then, the feature flag can be defined as follows:
