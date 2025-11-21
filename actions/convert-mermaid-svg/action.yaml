@@ -1,0 +1,58 @@
+name: "Convert Mermaid into SVG"
+description: "Passed a .md file containing Mermaid diagrams, this action converts them into SVG format."
+
+inputs:
+  file_path:
+    description: "Path to the .md file containing Mermaid diagrams."
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Check for Mermaid diagrams
+      id: check-mermaid
+      shell: bash
+      env:
+        MD_FILE: ${{ inputs.file_path }}
+      run: |
+        if [ ! -f "$MD_FILE" ]; then
+          echo "File $MD_FILE not found"
+          echo "has_mermaid=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        if grep -q '```mermaid' "$MD_FILE"; then
+          echo "Mermaid diagrams found in $MD_FILE"
+          echo "has_mermaid=true" >> $GITHUB_OUTPUT
+        else
+          echo "No Mermaid diagrams found in $MD_FILE. Skipping conversion."
+          echo "has_mermaid=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Node Setup
+      if: steps.check-mermaid.outputs.has_mermaid == 'true'
+      id: node-setup
+      uses: pagopa/dx/.github/actions/node-setup@main
+
+    - name: Install mermaid-cli
+      if: steps.check-mermaid.outputs.has_mermaid == 'true'
+      shell: bash
+      run: npm install -g @mermaid-js/mermaid-cli
+
+    - name: Convert Mermaid to SVG
+      if: steps.check-mermaid.outputs.has_mermaid == 'true'
+      shell: bash
+      env:
+        MD_FILE: ${{ inputs.file_path }}
+      run: |
+        # Convert .md to .svg
+        echo "Converting $MD_FILE to SVG..."
+        puppeteer_config="$(mktemp)"
+        echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
+
+        # This command will convert the Mermaid diagrams in the .md file to SVG format
+        # creating a new .svg file and overwriting the original .md file adding the image url.
+
+        mmdc -i $MD_FILE -o $MD_FILE -t dark -b transparent -p "$puppeteer_config"
+        echo "✅ Successfully converted into svg"
