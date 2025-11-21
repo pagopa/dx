@@ -53,5 +53,4 @@ jobs:
       - name: Run Terraform Integration Tests
         timeout-minutes: 60
         run: |
-          npx turbo test:integration \
-            --env-mode=loose
+          npx nx run-many --target test:integration

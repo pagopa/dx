@@ -17,5 +17,6 @@ export default defineConfig({
     exclude: ["node_modules/", "dist/"],
     globals: true,
     include: ["src/**/*.test.ts"],
+    watch: false,
   },
 });

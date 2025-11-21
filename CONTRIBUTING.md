@@ -55,7 +55,7 @@ This project uses specific versions of `node`, `pnpm` and `terraform`. To make s
 
 4. Build all the workspaces contained by this repo
    ```bash
-   pnpm run build
+   nx run-many -t build
    ```
 
 ## Release management
@@ -72,31 +72,28 @@ pnpm changeset
 
 ## Useful commands
 
-This project uses `pnpm` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
+This project uses `pnpm` and `nx` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
 
 ### Work with workspaces
 
-```bash
-# build all the workspaces using turbo
-pnpm build
-# or
-pnpm turbo build
+````bash
+# build all the workspaces using Nx
+nx run-many -t build
 # to execute COMMAND on WORKSPACE_NAME
-pnpm --filter WORKSPACE_NAME run command
-# run unit tests on citizen-func
-pnpm --filter citizen-func run test
-# or (with turbo)
-pnpm turbo test -- citizen-func
-```
+nx run WORKSPACE_NAME:COMMAND
+# run unit tests on @pagopa/dx-cli
+nx run @pagopa/dx-cli:test
+# or (shorthand)
+nx test @pagopa/dx-cli
 
 ### Add dependencies
 
 ```bash
-# add a dependency to the workspace root
-pnpm add turbo
-# add a dependency to a specific workspace
-pnpm --filter WORKSPACE_NAME add dependency-name
-```
+# add a dependency (nx) to the workspace root
+pnpm add -w nx
+# add zod to the @pagopa/dx-cli workspace
+pnpm --filter @pagopa/dx-cli add zod
+````
 
 # SBOM Management
 

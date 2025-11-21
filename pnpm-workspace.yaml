@@ -4,7 +4,6 @@ packages:
   - infra/modules/*
   - infra/scripts
   - providers/*
-  - containers/*
   - actions/*
 
 catalog:
@@ -21,8 +20,10 @@ catalog:
   tsup: ^8.5.0
   typescript: ~5.8.3
   vitest: ^3.2.4
+  vitest-mock-extended: ^3.1.0
 
 onlyBuiltDependencies:
   - esbuild
+  - nx
 
 pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs

@@ -1,0 +1,83 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 10,
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "cache": true
+    },
+    "format:check": {
+      "cache": true
+    },
+    "lint": {
+      "options": {
+        "fix": true
+      },
+      "configurations": {
+        "ci": {
+          "fix": false
+        }
+      }
+    },
+    "test": {
+      "configurations": {
+        "ci": {
+          "coverage": true
+        }
+      }
+    },
+    "tf-init": {
+      "inputs": ["{projectRoot}/**/*.tf"]
+    },
+    "test:integration": {
+      "dependsOn": ["tf-init"],
+      "inputs": [
+        "{projectRoot}/**/*.tf",
+        "{projectRoot}/**/integration.tftest.hcl"
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
+      },
+      "include": ["apps/**", "packages/**"]
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    }
+  ]
+}

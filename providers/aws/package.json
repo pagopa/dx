@@ -3,7 +3,25 @@
   "version": "0.1.3",
   "private": true,
   "description": "Terraform provider for DX on AWS, to enhance developer experience",
-  "scripts": {
-    "format": "go fmt"
+  "nx": {
+    "projectType": "library",
+    "targets": {
+      "format": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "go fmt ./...",
+          "forwardAllArgs": true
+        }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "go test ./...",
+          "forwardAllArgs": false
+        }
+      }
+    }
   }
 }

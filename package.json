@@ -4,18 +4,23 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
     "@devcontainers/cli": "^0.80.1",
+    "@nx/docker": "22.1.0",
+    "@nx/eslint": "22.1.0",
+    "@nx/js": "22.1.0",
+    "@nx/vitest": "22.1.0",
+    "@tsconfig/node22": "catalog:",
     "eslint": "catalog:",
+    "nx": "22.1.0",
     "prettier": "catalog:",
-    "turbo": "^2.6.1",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
-    "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check test:coverage",
     "version": "changeset version && pnpm i --lockfile-only",
     "release": "pnpm build && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
-    "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js"
+    "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js",
+    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check --configuration=ci"
   }
 }

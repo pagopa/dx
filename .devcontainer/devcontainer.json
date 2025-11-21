@@ -23,13 +23,15 @@
     "ghcr.io/devcontainers/features/go:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers-extra/features/act:1": {},
-    "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {}
+    "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
+    "ghcr.io/devcontainers-extra/features/nx-npm:1": {}
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
   },
   "containerEnv": {
-    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
+    "NX_DAEMON": "true"
   },
   "customizations": {
     "vscode": {
@@ -50,7 +52,8 @@
         "redhat.vscode-yaml",
         "dbaeumer.vscode-eslint",
         "github.copilot",
-        "github.copilot-chat"
+        "github.copilot-chat",
+        "nrwl.angular-console"
       ]
     }
   }
