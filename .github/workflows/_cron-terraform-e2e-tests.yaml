@@ -55,5 +55,4 @@ jobs:
       - name: Run Terraform E2E Tests
         timeout-minutes: 70
         run: |
-          npx turbo test:e2e \
-            --env-mode=loose
+          npx nx run-many --target test:e2e
