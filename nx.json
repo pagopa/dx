@@ -36,11 +36,31 @@
     "tf-init": {
       "inputs": ["{projectRoot}/**/*.tf"]
     },
+    "test:unit": {
+      "dependsOn": ["tf-init"],
+      "inputs": ["{projectRoot}/**/*.tf", "{projectRoot}/**/unit.tftest.hcl"]
+    },
+    "test:contract": {
+      "dependsOn": ["tf-init"],
+      "inputs": [
+        "{projectRoot}/**/*.tf",
+        "{projectRoot}/**/contract.tftest.hcl"
+      ]
+    },
     "test:integration": {
       "dependsOn": ["tf-init"],
       "inputs": [
         "{projectRoot}/**/*.tf",
         "{projectRoot}/**/integration.tftest.hcl"
+      ]
+    },
+    "test:e2e": {
+      "dependsOn": ["tf-init"],
+      "inputs": [
+        "{projectRoot}/**/*.tf",
+        "{projectRoot}/**/*.go",
+        "{projectRoot}/**/*.mod",
+        "{projectRoot}/**/Dockerfile"
       ]
     }
   },

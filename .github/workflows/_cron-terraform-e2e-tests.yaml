@@ -1,8 +1,8 @@
-name: Terraform modules integration tests (weekly)
+name: Terraform modules end-to-end tests (weekly)
 
 on:
   schedule:
-    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+    - cron: "0 2 * * 0" # Every Sunday at 02:00 UTC
   workflow_dispatch:
 
 concurrency:
@@ -17,9 +17,9 @@ env:
   TF_IN_AUTOMATION: true
 
 jobs:
-  terraform-integration-test:
-    name: Run Terraform Integration Tests
-    runs-on: ubuntu-latest
+  terraform-e2e-tests:
+    name: Run Terraform E2E Tests
+    runs-on: self-hosted
     environment: integration-tests
     permissions:
       id-token: write
@@ -27,12 +27,13 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
-      - name: Cloud Provider Login
+      - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Node Setup
@@ -51,7 +52,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run Terraform Integration Tests
-        timeout-minutes: 60
+      - name: Run Terraform E2E Tests
+        timeout-minutes: 70
         run: |
-          npx nx run-many --target test:integration
+          npx nx run-many --target test:e2e

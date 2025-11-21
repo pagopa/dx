@@ -1,0 +1,41 @@
+# Build and publish the application Docker image for the E2E Cosmos Account - 'Network Access app' scenario.
+
+name: Publish E2E Cosmos Account - Network Access
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/modules/azure_cosmos_account/tests/apps/network_access/**"
+
+jobs:
+  publish:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+    env:
+      IMAGE_NAME: "pagopa/e2e-cosmos-network-access"
+      IMAGE_TAG: "latest"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: pagopa/dx/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: infra/modules/azure_cosmos_account/tests/apps/network_access/Dockerfile
+          dockerfile_context: infra/modules/azure_cosmos_account/tests/apps/network_access/src
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_description: "Web app which exposes a single endpoint to probe Azure Cosmos DB. Used for E2E tests of the Azure Cosmos DB Terraform module."
+          docker_image_authors: "PagoPA"
+          build_platforms: "linux/amd64,linux/arm64"
+          push_to_registry: true
