@@ -1,4 +1,3 @@
-import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import {
   context as otelContext,
   Span,
@@ -8,6 +7,7 @@ import {
 } from "@opentelemetry/api";
 import { Logger, logs } from "@opentelemetry/api-logs";
 import { resourceFromAttributes } from "@opentelemetry/resources";
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 import { promises as fs } from "fs";
 
 // Telemetry line models
@@ -173,7 +173,7 @@ async function post(): Promise<void> {
     "service.namespace": "dx",
   });
 
-  useAzureMonitor({
+  initAzureMonitor([], {
     azureMonitorExporterOptions: {
       connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
