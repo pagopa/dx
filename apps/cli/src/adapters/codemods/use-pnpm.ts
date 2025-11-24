@@ -133,7 +133,7 @@ async function updateDXWorkflows(): Promise<void> {
     files: [".github/workflows/*.yaml"],
     processor: updateJSCodeReviewJob(sha),
   });
-  const ignore = results.filter((r) => !r.hasChanged).map((r) => r.file);
+  const ignore = results.filter((r) => r.hasChanged).map((r) => r.file);
   // Update the legacy deployment workflow to release-azure-appsvc-v1.yaml
   await replaceInFile({
     allowEmptyPaths: true,
