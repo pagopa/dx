@@ -182,10 +182,10 @@ async function post(): Promise<void> {
   const tracer = trace.getTracer("workflow-tracer");
   const span = tracer.startSpan(workflowName, {
     attributes: {
-      "cicd.pipeline.path": actionPath,
       "cicd.pipeline.action.name": workflowName,
       "cicd.pipeline.attempt": attempt,
       "cicd.pipeline.author": actor,
+      "cicd.pipeline.path": actionPath,
       "cicd.pipeline.repository": repo,
       "cicd.pipeline.result": pipelineResult,
       "cicd.pipeline.run.id": runId,
