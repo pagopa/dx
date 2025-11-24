@@ -12,10 +12,12 @@ locals {
 
   use_cases = {
     default = {
-      sku = "standard"
+      sku                      = "standard"
+      purge_protection_enabled = true
     }
     development = {
-      sku = "developer"
+      sku                      = "developer"
+      purge_protection_enabled = false
     }
   }
 
