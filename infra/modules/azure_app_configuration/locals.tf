@@ -15,7 +15,7 @@ locals {
       sku = "standard"
     }
     development = {
-      sku = "development"
+      sku = "developer"
     }
   }
 
