@@ -14,22 +14,6 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
-import {
-  getAwsProviderLatestRelease,
-  getAzureadProviderLatestRelease,
-  getAzurermProviderLatestRelease,
-  getDxAwsBootstrapperLatestTag,
-  getDxAwsCoreValuesExporterLatestTag,
-  getDxAzureBootstrapperLatestTag,
-  getDxAzureCoreValuesExporterLatestTag,
-  getDxGitHubBootstrapLatestTag,
-  getGitHubTerraformProviderLatestRelease,
-  getPagoPaDxAwsTerraformProviderLatestRelease,
-  getPagoPaDxAzureTerraformProviderLatestRelease,
-  getPreCommitTerraformLatestRelease,
-  getTerraformLatestRelease,
-  getTlsProviderLatestRelease,
-} from "./actions/terraform.js";
 
 const trimmedString = z.string().trim();
 
@@ -79,6 +63,7 @@ type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 import { getLatestNodeVersion } from "./actions/node.js";
+import { terraformVersionActions } from "./actions/terraform.js";
 
 const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
   const error = schema.safeParse(input).error;
@@ -326,20 +311,7 @@ const getActions =
 
     return [
       selectBackendPartial({ plopApi, templatesPath }),
-      getGitHubTerraformProviderLatestRelease({ octokitClient }),
-      getAwsProviderLatestRelease({ octokitClient }),
-      getTlsProviderLatestRelease({ octokitClient }),
-      getAzurermProviderLatestRelease({ octokitClient }),
-      getAzureadProviderLatestRelease({ octokitClient }),
-      getDxGitHubBootstrapLatestTag({ octokitClient }),
-      getDxAzureBootstrapperLatestTag({ octokitClient }),
-      getTerraformLatestRelease({ octokitClient }),
-      getPreCommitTerraformLatestRelease({ octokitClient }),
-      getDxAwsBootstrapperLatestTag({ octokitClient }),
-      getDxAwsCoreValuesExporterLatestTag({ octokitClient }),
-      getDxAzureCoreValuesExporterLatestTag({ octokitClient }),
-      getPagoPaDxAzureTerraformProviderLatestRelease({ octokitClient }),
-      getPagoPaDxAwsTerraformProviderLatestRelease({ octokitClient }),
+      ...terraformVersionActions({ octokitClient }),
       getLatestNodeVersion(),
       ...getDotFiles(templatesPath),
       ...getMonorepoFiles(templatesPath),
