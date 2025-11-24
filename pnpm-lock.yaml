@@ -391,6 +391,8 @@ importers:
 
   infra/modules/azure_api_management: {}
 
+  infra/modules/azure_app_configuration: {}
+
   infra/modules/azure_app_service: {}
 
   infra/modules/azure_app_service_exposed: {}
