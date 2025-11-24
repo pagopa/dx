@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.8.0
+
+### Minor Changes
+
+- bb20571: Add support for Azure App Configuration abbreviations
+
 ## 0.7.1
 
 ### Patch Changes
