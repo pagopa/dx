@@ -50,7 +50,7 @@ function buildChildSpans(
       if (!m.start || !m.end) continue;
       if (m.end < m.start) {
         console.warn(
-          `[setup-telemetry] Skipping span "${name}" due to end time (${m.end.toISOString()}) before start time (${m.start.toISOString()})`
+          `[setup-telemetry] Skipping span "${name}" due to end time (${m.end.toISOString()}) before start time (${m.start.toISOString()})`,
         );
         continue;
       }
