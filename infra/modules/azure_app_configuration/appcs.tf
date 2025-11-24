@@ -12,7 +12,7 @@ resource "azurerm_app_configuration" "this" {
   local_auth_enabled                   = false
 
   public_network_access    = "Disabled"
-  purge_protection_enabled = true
+  purge_protection_enabled = local.use_case_features.purge_protection_enabled
 
   tags = local.tags
 }
