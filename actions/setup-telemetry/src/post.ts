@@ -48,7 +48,12 @@ function buildChildSpans(
   for (const [name, occurrences] of Object.entries(markers)) {
     for (const m of occurrences) {
       if (!m.start || !m.end) continue;
-      if (m.end < m.start) continue;
+      if (m.end < m.start) {
+        console.warn(
+          `[setup-telemetry] Skipping span "${name}" due to end time (${m.end.toISOString()}) before start time (${m.start.toISOString()})`
+        );
+        continue;
+      }
       const child = tracer.startSpan(
         name,
         { kind: SpanKind.INTERNAL, startTime: m.start },

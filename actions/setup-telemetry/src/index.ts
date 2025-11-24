@@ -16,7 +16,7 @@ function exportEnv(
   appendFileSync(githubEnv, `OTEL_EVENT_FILE=${eventsFile}\n`);
   appendFileSync(githubEnv, `OTEL_SESSION_START=${start}\n`);
   appendFileSync(githubEnv, `OTEL_CORRELATION_ID=${correlationId}\n`);
-  const connectionString = process.env["INPUT_CONNECTION_STRING"];
+  const connectionString = process.env.INPUT_CONNECTION_STRING;
   appendFileSync(
     githubEnv,
     `APPLICATIONINSIGHTS_CONNECTION_STRING=${connectionString}\n`,
