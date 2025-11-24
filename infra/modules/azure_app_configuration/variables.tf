@@ -27,7 +27,7 @@ variable "use_case" {
   default     = "default"
 
   validation {
-    condition     = contains(["default"], var.use_case)
+    condition     = contains(["default", "development"], var.use_case)
     error_message = "Allowed values for \"use_case\" are \"default\", \"development\"."
   }
 }
@@ -40,7 +40,7 @@ variable "size" {
   EOT
 
   validation {
-    condition     = var.size == null || contains(["standard", "premium"], var.size)
+    condition     = var.size == null || (contains(["standard", "premium"], var.size) && var.use_case == "default")
     error_message = "Allowed values: 'standard', 'premium'. For development purpose, set \"use_case\" to \"development\" and unset this."
   }
 }
