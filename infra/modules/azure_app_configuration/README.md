@@ -11,10 +11,10 @@ This module deploys an Azure App Configuration, opinionated setup in terms of ne
 
 ## Use cases Comparison
 
-| Use case  | Description                      | SLA    | Guaranteed Throughput           | Request Quota   | Soft Delete | Geo Replication |
-| --------- | -------------------------------- | ------ | ------------------------------- | --------------- | ----------- | --------------- |
-| default   | Tier for production workfloads   | 99.95% | 300 RPS (read) - 60 RPS (write) | 30.000 per hour | Yes         | Yes             |
-| developer | High-performance production tier | -      | -                               | 6.000 per hour  | No          | No              |
+| Use case  | Description                                       | SLA    | Guaranteed Throughput           | Request Quota   | Soft Delete | Geo Replication |
+| --------- | ------------------------------------------------- | ------ | ------------------------------- | --------------- | ----------- | --------------- |
+| default   | Tier for production workfloads                    | 99.95% | 300 RPS (read) - 60 RPS (write) | 30.000 per hour | Yes         | Yes             |
+| developer | Tier for experimentation or development scenarios | -      | -                               | 6.000 per hour  | No          | No              |
 
 ### Allowed Sizes
 
