@@ -71,6 +71,7 @@ function emitEvent(
   repo: string,
   runId: string,
   logger: Logger,
+  errorTypes: Set<string>,
 ) {
   const attrs = {
     "ci.pipeline.repo": repo,
@@ -80,9 +81,11 @@ function emitEvent(
   };
 
   if (ev.exception) {
+    const exceptionName = ev.name || "Exception";
+    errorTypes.add(exceptionName);
     span.recordException({
       message: ev.body || ev.name,
-      name: ev.name || "Exception",
+      name: exceptionName,
     });
     span.setStatus({ code: SpanStatusCode.ERROR, message: ev.body || ev.name });
     span.setAttribute("cicd.pipeline.result", "error");
@@ -203,9 +206,24 @@ async function post(): Promise<void> {
   });
 
   const lines = await readEventsFile(eventsFile);
+  const errorTypes = new Set<string>();
   if (lines.length)
-    processTelemetryLines(lines, span, tracer, actor, repo, runId, logger);
+    processTelemetryLines(
+      lines,
+      span,
+      tracer,
+      actor,
+      repo,
+      runId,
+      logger,
+      errorTypes,
+    );
   else console.log("No events file found or empty");
+
+  // Update error.type with collected exception names if any occurred
+  if (errorTypes.size > 0) {
+    span.setAttribute("error.type", Array.from(errorTypes).join(", "));
+  }
 
   span.end();
 
@@ -223,6 +241,7 @@ function processTelemetryLines(
   repo: string,
   runId: string,
   logger: Logger,
+  errorTypes: Set<string>,
 ) {
   const markers: Record<string, SpanMarker[]> = {};
   otelContext.with(trace.setSpan(otelContext.active(), span), () => {
@@ -234,7 +253,15 @@ function processTelemetryLines(
         handleSpanMarker(parsed, markers);
         continue;
       }
-      emitEvent(parsed as EventLine, span, actor, repo, runId, logger);
+      emitEvent(
+        parsed as EventLine,
+        span,
+        actor,
+        repo,
+        runId,
+        logger,
+        errorTypes,
+      );
     }
     buildChildSpans(markers, tracer, span);
   });
