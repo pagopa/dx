@@ -10,6 +10,8 @@ import { resourceFromAttributes } from "@opentelemetry/resources";
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 import { promises as fs } from "fs";
 
+// Debug logging helper
+const DEBUG = process.env.ACTIONS_RUNNER_DEBUG === "true";
 // Telemetry line models
 interface EventLine {
   attributes?: Record<string, string>;
@@ -64,6 +66,12 @@ function buildChildSpans(
   }
 }
 
+function debug(message: string, ...args: unknown[]): void {
+  if (DEBUG) {
+    console.log(`[DEBUG] ${message}`, ...args);
+  }
+}
+
 function emitEvent(
   ev: EventLine,
   span: Span,
@@ -80,7 +88,8 @@ function emitEvent(
     ...ev.attributes,
   };
 
-  if (ev.exception) {
+  if (ev.exception === true) {
+    debug(`Processing exception event: ${ev.name}`);
     const exceptionName = ev.name || "Exception";
     errorTypes.add(exceptionName);
     span.recordException({
@@ -90,6 +99,7 @@ function emitEvent(
     span.setStatus({ code: SpanStatusCode.ERROR, message: ev.body || ev.name });
     span.setAttribute("cicd.pipeline.result", "error");
   } else {
+    debug(`Processing custom event: ${ev.name}, body: ${ev.body}`);
     logger.emit({
       attributes: {
         "microsoft.custom_event.name": ev.name || "CustomEvent",
@@ -138,11 +148,18 @@ function isSpanMarkerLine(l: TelemetryLine): l is SpanEndLine | SpanStartLine {
 function parseTelemetryLine(raw: string): null | TelemetryLine {
   try {
     const obj = JSON.parse(raw);
-    return (
+    const result = (
       typeof obj === "object" && obj !== null ? obj : null
     ) as null | TelemetryLine;
-  } catch {
+    if (result) {
+      debug(`Parsed telemetry line:`, result);
+    } else {
+      debug(`Skipped non-object line: ${raw}`);
+    }
+    return result;
+  } catch (err) {
     console.warn("Skipping malformed telemetry line: " + raw);
+    debug(`Parse error:`, err);
     return null;
   }
 }
@@ -206,8 +223,10 @@ async function post(): Promise<void> {
   });
 
   const lines = await readEventsFile(eventsFile);
+  debug(`Read ${lines.length} lines from events file`);
   const errorTypes = new Set<string>();
-  if (lines.length)
+  if (lines.length) {
+    debug(`Processing ${lines.length} telemetry lines`);
     processTelemetryLines(
       lines,
       span,
@@ -218,7 +237,9 @@ async function post(): Promise<void> {
       logger,
       errorTypes,
     );
-  else console.log("No events file found or empty");
+  } else {
+    console.log("No events file found or empty");
+  }
 
   // Update error.type with collected exception names if any occurred
   if (errorTypes.size > 0) {
@@ -244,15 +265,27 @@ function processTelemetryLines(
   errorTypes: Set<string>,
 ) {
   const markers: Record<string, SpanMarker[]> = {};
+  let spanMarkerCount = 0;
+  let eventCount = 0;
+  let skippedCount = 0;
+
   otelContext.with(trace.setSpan(otelContext.active(), span), () => {
     for (const raw of lines) {
       const parsed = parseTelemetryLine(raw);
-      if (!parsed) continue;
+      if (!parsed) {
+        skippedCount++;
+        debug(`Skipped unparseable line (total skipped: ${skippedCount})`);
+        continue;
+      }
 
       if (isSpanMarkerLine(parsed)) {
+        spanMarkerCount++;
+        debug(`Processing span marker #${spanMarkerCount}: ${parsed.span}`);
         handleSpanMarker(parsed, markers);
         continue;
       }
+      eventCount++;
+      debug(`Processing event #${eventCount}: ${(parsed as EventLine).name}`);
       emitEvent(
         parsed as EventLine,
         span,
@@ -263,19 +296,32 @@ function processTelemetryLines(
         errorTypes,
       );
     }
+    debug(
+      `Processing complete: ${eventCount} events, ${spanMarkerCount} span markers, ${skippedCount} skipped`,
+    );
     buildChildSpans(markers, tracer, span);
   });
 }
 
 async function readEventsFile(path?: string): Promise<string[]> {
-  if (!path) return [];
+  if (!path) {
+    debug("No events file path provided");
+    return [];
+  }
   try {
+    debug(`Reading events file: ${path}`);
     const content = await fs.readFile(path, "utf-8");
-    return content
+    if (DEBUG) {
+      debug(`File content (${content.length} bytes):\n${content}`);
+    }
+    const lines = content
       .split(/\n/)
       .map((l) => l.trim())
       .filter(Boolean);
-  } catch {
+    debug(`Extracted ${lines.length} non-empty lines`);
+    return lines;
+  } catch (err) {
+    debug(`Failed to read events file: ${path}`, err);
     return [];
   }
 }
