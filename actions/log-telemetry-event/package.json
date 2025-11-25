@@ -11,7 +11,5 @@
     "otel",
     "opentelemetry",
     "open-telemetry"
-  ],
-  "scripts": {},
-  "devDependencies": {}
+  ]
 }
