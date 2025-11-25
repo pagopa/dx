@@ -1,0 +1,44 @@
+# Build and publish the application Docker image for the E2E App Configuration - including all scenarios.
+
+name: Publish E2E App Configuration - All Scenarios
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/modules/azure_app_configuration/tests/apps/all_scenarios/**"
+
+env:
+  MODULE_NAME: "azure_app_configuration"
+
+jobs:
+  publish:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+    env:
+      IMAGE_NAME: "pagopa/e2e-appconfiguration-network-access"
+      IMAGE_TAG: "latest"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: pagopa/dx/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: infra/modules/${{ env.MODULE_NAME }}/tests/apps/all_scenarios/Dockerfile
+          dockerfile_context: infra/modules/${{ env.MODULE_NAME }}/tests/apps/all_scenarios/src
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_description: "Web app which exposes endpoints to access App Configuration. Used for E2E tests of the Azure App Configuration Terraform module."
+          docker_image_authors: "PagoPA"
+          build_platforms: "linux/amd64,linux/arm64"
+          push_to_registry: true
