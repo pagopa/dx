@@ -85,17 +85,17 @@ run "apply_default" {
   }
 
   assert {
-    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql[0].private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "Private Endpoint subresource must be 'Sql'"
   }
 
   assert {
-    condition     = can(regex("/privateDnsZones/privatelink\\.documents\\.azure\\.com$", azurerm_private_endpoint.sql.private_dns_zone_group[0].private_dns_zone_ids[0]))
+    condition     = can(regex("/privateDnsZones/privatelink\\.documents\\.azure\\.com$", azurerm_private_endpoint.sql[0].private_dns_zone_group[0].private_dns_zone_ids[0]))
     error_message = "Private DNS Zone Group must reference privatelink.documents.azure.com"
   }
 
   assert {
-    condition     = azurerm_private_endpoint.sql.subnet_id == run.setup.pep_id
+    condition     = azurerm_private_endpoint.sql[0].subnet_id == run.setup.pep_id
     error_message = "Private Endpoint must use the setup subnet"
   }
 
@@ -141,12 +141,12 @@ run "apply_serverless" {
   }
 
   assert {
-    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql[0].private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "Private Endpoint subresource must be 'Sql'"
   }
 
   assert {
-    condition     = can(regex("/privateDnsZones/privatelink\\.documents\\.azure\\.com$", azurerm_private_endpoint.sql.private_dns_zone_group[0].private_dns_zone_ids[0]))
+    condition     = can(regex("/privateDnsZones/privatelink\\.documents\\.azure\\.com$", azurerm_private_endpoint.sql[0].private_dns_zone_group[0].private_dns_zone_ids[0]))
     error_message = "Private DNS Zone Group must reference privatelink.documents.azure.com"
   }
 }
