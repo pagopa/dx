@@ -462,6 +462,11 @@ run "audit_storage_account_fail_plan" {
     use_case            = "audit"
     secondary_location  = "westeurope"
     subnet_pep_id       = run.setup_tests.pep_id
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
   }
 
   # Checks some assertions
