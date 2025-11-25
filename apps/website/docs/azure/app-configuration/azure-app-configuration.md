@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # Setting up Azure App Configuration and KeyVault
@@ -12,10 +12,12 @@ exploiting the hot reload capabilities.
 
 ## Configuring the resource via Terraform
 
-As the resource is quite simple to configure, you can use `azurerm` resource to
-deploy an instance of the service. Below is an example showing how to configure
-an instance with private connectivity and allowing authentication only via Entra
-ID.
+You can use the following Terraform code to create an Azure App Configuration
+instance. Make sure to adapt the naming conventions and resource group according
+to your environment. The example below creates a standard
+[SKU App Configuration](https://azure.microsoft.com/en-us/pricing/details/app-configuration/)
+instance with system-assigned identity, private endpoint connectivity, and
+[purge protection enabled](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-recover-deleted-stores-in-azure-app-configuration).
 
 ```hcl
 

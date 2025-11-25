@@ -2,17 +2,18 @@
 sidebar_position: 4
 ---
 
-# Updating GitHub Actions to deploy settings and secrets within the application
+# Deploying secrets and application settings using GitHub Actions
 
 Deploying application settings and secrets to Azure App Configuration can be
 automated using GitHub Actions. This ensures that any changes made to the
 configuration files in the repository are automatically reflected in the
-AppConfiguration instance. This guide provides the necessary commands to
-provision settings and secrets to Azure, but you can decide what best fits your
-needs within your GitHub Actions workflows. You can either decide to have a
-dedicated workflow for this task, or integrate an existing application
-deployment workflow to include settings deployment alongside application code
-deployment.
+AppConfiguration instance.
+
+This guide provides the necessary commands to provision settings and secrets to
+Azure, but you can decide what best fits your needs within your GitHub Actions
+workflows. You can either decide to have a dedicated workflow for this task, or
+integrate an existing application deployment workflow to include settings
+deployment alongside application code deployment.
 
 What is important to note is:
 

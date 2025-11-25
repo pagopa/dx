@@ -35,12 +35,12 @@ A collection of code samples is available
 
 ## Key Topics
 
-- **[Getting started with your application to use Azure App Configuration](./app-configuration-usage.md)**:
-  Instructions on how to integrate Azure App Configuration SDK into your
-  application for retrieving settings, secrets, and feature flags.
 - **[Setting up Azure App Configuration and KeyVault](./azure-app-configuration.md)**:
   Detailed instructions on how to set up and use Azure App Configuration service
   for managing application settings and secrets.
+- **[Getting started with your application to use Azure App Configuration](./app-configuration-usage.md)**:
+  Instructions on how to integrate Azure App Configuration SDK into your
+  application for retrieving settings, secrets, and feature flags.
 - **[Defining Application Settings, Secrets and Feature Flags](./appsettings-definition.md)**:
   Guide on how to define and organize application settings, secrets, and feature
   flags within Azure App Configuration and KeyVault.

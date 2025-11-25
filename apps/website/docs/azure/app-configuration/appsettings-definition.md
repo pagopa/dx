@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 2
 ---
 
-# Defining Application Settings, Secrets and Feature Flags
+# Defining Secrets, Application Settings and Feature Flags
 
-Application settings, secrets and feature flags can be defined in a JSON file,
+Secrets, application settings and feature flags can be defined in a JSON file,
 which can be stored alongside the application code in the repository. This file
 will be used to import the configuration data into the Azure App Configuration
 instance. In particular, two JSON files should be created:
@@ -111,8 +111,8 @@ const appConfig = await load(endpoint, credential, {
 });
 ```
 
-More info about the Sentinel pattern are on the
-[official documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-best-practices?tabs=javascript#monitoring-a-sentinel-key).
+More info about the Sentinel pattern are on the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-best-practices?tabs=javascript#monitoring-a-sentinel-key).
 
 :::info
 
@@ -130,8 +130,8 @@ scheduling and target users, or custom filters.
 :::info
 
 This page collects some of the most common customisations for feature flags. For
-a complete reference, please refer to the
-[official documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/manage-feature-flags?tabs=switch).
+a complete reference, please refer to the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/manage-feature-flags?tabs=switch).
 Alternatively, you can create the flag using Azure Portal, and export the JSON
 configuration by clicking on `Advanced Edit`.
 
@@ -408,8 +408,9 @@ different variants with configurations.
 The following example shows two variants using JSON objects for the
 configuration value.
 
-Since the topic may be complex and frequently updated, please refer
-[to the documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-variant-feature-flags).
+Since the topic may be complex and frequently updated, please refer to the
+official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-variant-feature-flags).
 
 ### Enabling Telemetry for Feature Flags
 
