@@ -11,6 +11,21 @@ resource "azurerm_storage_account" "this" {
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
+  # Security and compliance settings
+  min_tls_version                   = local.storage_min_tls_version
+  https_traffic_only_enabled        = local.storage_https_traffic_only
+  infrastructure_encryption_enabled = local.storage_infrastructure_encryption
+  cross_tenant_replication_enabled  = local.storage_cross_tenant_replication
+  default_to_oauth_authentication   = local.storage_default_oauth_authentication
+
+  dynamic "sas_policy" {
+    for_each = var.sas_policy != null ? [var.sas_policy] : []
+    content {
+      expiration_period = sas_policy.value.expiration_period
+      expiration_action = sas_policy.value.expiration_action
+    }
+  }
+
   blob_properties {
     versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
     change_feed_enabled           = local.immutability_policy_enabled ? true : var.blob_features.change_feed.enabled
@@ -99,8 +114,8 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
-        # Delete after 1095 days (3 years) of inactivity (no modification)
-        delete_after_days_since_modification_greater_than = 1095
+        # Delete after configured retention period (default 1095 days / 3 years, PagoPA standard is 365 days / 12 months)
+        delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 
       snapshot {

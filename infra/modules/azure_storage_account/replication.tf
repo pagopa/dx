@@ -16,6 +16,21 @@ resource "azurerm_storage_account" "secondary_replica" {
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
+  # Security and compliance settings (same as primary)
+  min_tls_version                   = local.storage_min_tls_version
+  https_traffic_only_enabled        = local.storage_https_traffic_only
+  infrastructure_encryption_enabled = local.storage_infrastructure_encryption
+  cross_tenant_replication_enabled  = local.storage_cross_tenant_replication
+  default_to_oauth_authentication   = local.storage_default_oauth_authentication
+
+  dynamic "sas_policy" {
+    for_each = var.sas_policy != null ? [var.sas_policy] : []
+    content {
+      expiration_period = sas_policy.value.expiration_period
+      expiration_action = sas_policy.value.expiration_action
+    }
+  }
+
   blob_properties {
     versioning_enabled = true
 
@@ -97,6 +112,8 @@ resource "azurerm_storage_management_policy" "secondary_lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
+        # Delete after configured retention period (same as primary)
+        delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 
       snapshot {

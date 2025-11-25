@@ -311,6 +311,13 @@ run "audit_storage_account_is_correct_plan" {
       type         = "kv"
       key_vault_id = run.setup_tests.kv_id
     }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    audit_retention_days = 365 # PagoPA standard: 12 months
   }
 
   # Checks some assertions
@@ -347,6 +354,47 @@ run "audit_storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_account.secondary_replica[0] != null
     error_message = "The Storage Account must have a secondary replica"
+  }
+
+  # NEW: Security compliance assertions
+  assert {
+    condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
+    error_message = "Audit storage must enforce TLS 1.2 minimum for encryption in transit"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.https_traffic_only_enabled == true
+    error_message = "Audit storage must enforce HTTPS-only traffic"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.infrastructure_encryption_enabled == true
+    error_message = "Audit storage must enable infrastructure encryption (double encryption)"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.cross_tenant_replication_enabled == false
+    error_message = "Audit storage must disable cross-tenant replication to prevent data exfiltration"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.default_to_oauth_authentication == true
+    error_message = "Audit storage must default to OAuth authentication"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.storage_account[0] != null
+    error_message = "Audit storage must have diagnostic settings enabled for control plane logging"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.blob_service[0] != null
+    error_message = "Audit storage must have blob service diagnostic settings enabled for data plane logging"
+  }
+
+  assert {
+    condition     = azurerm_storage_management_policy.lifecycle_audit[0].rule[0].actions[0].base_blob[0].delete_after_days_since_modification_greater_than == 365
+    error_message = "Audit storage must use configured retention period (365 days for PagoPA)"
   }
 }
 

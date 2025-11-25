@@ -12,49 +12,74 @@ locals {
 
   use_cases = {
     development = {
-      alerts                     = false
-      advanced_threat_protection = false
-      immutability_policy        = false
-      shared_access_key_enabled  = true
-      account_tier               = "Standard"
-      replication_type           = "LRS"
-      secondary_replication      = false
+      alerts                            = false
+      advanced_threat_protection        = false
+      immutability_policy               = false
+      shared_access_key_enabled         = true
+      account_tier                      = "Standard"
+      replication_type                  = "LRS"
+      secondary_replication             = false
+      min_tls_version                   = "TLS1_2"
+      https_traffic_only_enabled        = true
+      infrastructure_encryption_enabled = false
+      cross_tenant_replication_enabled  = true
+      default_to_oauth_authentication   = false
     }
     default = {
-      alerts                     = true
-      advanced_threat_protection = false
-      immutability_policy        = false
-      shared_access_key_enabled  = true
-      account_tier               = "Standard"
-      replication_type           = "ZRS"
-      secondary_replication      = false
+      alerts                            = true
+      advanced_threat_protection        = false
+      immutability_policy               = false
+      shared_access_key_enabled         = true
+      account_tier                      = "Standard"
+      replication_type                  = "ZRS"
+      secondary_replication             = false
+      min_tls_version                   = "TLS1_2"
+      https_traffic_only_enabled        = true
+      infrastructure_encryption_enabled = false
+      cross_tenant_replication_enabled  = true
+      default_to_oauth_authentication   = false
     }
     audit = {
-      alerts                     = true
-      advanced_threat_protection = false
-      immutability_policy        = true
-      shared_access_key_enabled  = true
-      account_tier               = "Standard"
-      replication_type           = "ZRS"
-      secondary_replication      = true
+      alerts                            = true
+      advanced_threat_protection        = false
+      immutability_policy               = true
+      shared_access_key_enabled         = true
+      account_tier                      = "Standard"
+      replication_type                  = "ZRS"
+      secondary_replication             = true
+      min_tls_version                   = "TLS1_2"
+      https_traffic_only_enabled        = true
+      infrastructure_encryption_enabled = true
+      cross_tenant_replication_enabled  = false
+      default_to_oauth_authentication   = true
     }
     delegated_access = {
-      alerts                     = true
-      advanced_threat_protection = true
-      immutability_policy        = false
-      shared_access_key_enabled  = false
-      account_tier               = "Standard"
-      replication_type           = "ZRS"
-      secondary_replication      = false
+      alerts                            = true
+      advanced_threat_protection        = true
+      immutability_policy               = false
+      shared_access_key_enabled         = false
+      account_tier                      = "Standard"
+      replication_type                  = "ZRS"
+      secondary_replication             = false
+      min_tls_version                   = "TLS1_2"
+      https_traffic_only_enabled        = true
+      infrastructure_encryption_enabled = false
+      cross_tenant_replication_enabled  = true
+      default_to_oauth_authentication   = true
     }
     archive = {
-      alerts                     = false
-      advanced_threat_protection = false
-      immutability_policy        = true
-      shared_access_key_enabled  = true
-      account_tier               = "Standard"
-      replication_type           = "LRS"
-      secondary_replication      = true
+      alerts                            = false
+      advanced_threat_protection        = false
+      immutability_policy               = true
+      shared_access_key_enabled         = true
+      account_tier                      = "Standard"
+      replication_type                  = "LRS"
+      secondary_replication             = true
+      min_tls_version                   = "TLS1_2"
+      https_traffic_only_enabled        = true
+      infrastructure_encryption_enabled = false
+      cross_tenant_replication_enabled  = true
+      default_to_oauth_authentication   = false
     }
   }
 
@@ -62,6 +87,14 @@ locals {
 
   force_public_network_access_enabled = var.force_public_network_access_enabled || var.use_case == "delegated_access"
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
+
+  # Security settings with coalesce pattern for backward compatibility
+  # User-provided values override use case defaults
+  storage_min_tls_version              = coalesce(var.min_tls_version, local.tier_features.min_tls_version)
+  storage_https_traffic_only           = coalesce(var.https_traffic_only_enabled, local.tier_features.https_traffic_only_enabled)
+  storage_infrastructure_encryption    = coalesce(var.infrastructure_encryption_enabled, local.tier_features.infrastructure_encryption_enabled)
+  storage_cross_tenant_replication     = coalesce(var.cross_tenant_replication_enabled, local.tier_features.cross_tenant_replication_enabled)
+  storage_default_oauth_authentication = coalesce(var.default_to_oauth_authentication, local.tier_features.default_to_oauth_authentication)
 
   peps = {
     create_subservices = local.force_public_network_access_enabled ? {
