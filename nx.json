@@ -64,6 +64,13 @@
       ]
     }
   },
+  "release": {
+    "versionPlans": true,
+    "projectsRelationship": "independent",
+    "changelog": {
+      "projectChangelogs": true
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/docker",
