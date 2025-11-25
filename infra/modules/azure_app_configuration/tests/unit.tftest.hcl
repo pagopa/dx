@@ -126,7 +126,7 @@ run "private_endpoint_configuration_stores" {
 run "private_endpoint_subresource" {
   command = plan
   assert {
-    condition     = azurerm_private_endpoint.app_config[0].private_service_connection[0].subresource_names[0] == "configurationStores"
+    condition     = azurerm_private_endpoint.app_config.private_service_connection[0].subresource_names[0] == "configurationStores"
     error_message = "Private endpoint subresource must be configurationStores"
   }
 }
