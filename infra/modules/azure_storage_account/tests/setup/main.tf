@@ -80,7 +80,7 @@ data "azurerm_log_analytics_workspace" "law" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = null,
     name          = "common",
-    resource_type = "log_analytics_workspace"
+    resource_type = "log_analytics"
   }))
   resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = null,
