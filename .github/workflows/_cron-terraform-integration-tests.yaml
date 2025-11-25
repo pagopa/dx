@@ -52,6 +52,6 @@ jobs:
         run: pnpm install
 
       - name: Run Terraform Integration Tests
-        timeout-minutes: 60
+        timeout-minutes: 120
         run: |
           npx nx run-many --target test:integration
