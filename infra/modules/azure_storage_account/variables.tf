@@ -232,55 +232,11 @@ variable "queues" {
   default     = []
 }
 
-# ------------ SECURITY & COMPLIANCE ------------ #
-variable "min_tls_version" {
-  type        = string
-  description = "Minimum TLS version for the storage account. Allowed values: 'TLS1_0', 'TLS1_1', 'TLS1_2'. Defaults to 'TLS1_2' for audit use case."
-  default     = null
-
-  validation {
-    condition     = var.min_tls_version == null || contains(["TLS1_0", "TLS1_1", "TLS1_2"], var.min_tls_version)
-    error_message = "min_tls_version must be 'TLS1_0', 'TLS1_1', or 'TLS1_2'."
-  }
-}
-
-variable "https_traffic_only_enabled" {
-  type        = bool
-  description = "Force HTTPS traffic only. Defaults to true for audit use case."
-  default     = null
-}
-
-variable "infrastructure_encryption_enabled" {
-  type        = bool
-  description = "Enable infrastructure encryption (double encryption) for enhanced security. Defaults to true for audit use case. Note: Can only be set at storage account creation."
-  default     = null
-}
-
-variable "cross_tenant_replication_enabled" {
-  type        = bool
-  description = "Allow cross-tenant replication. Defaults to false for audit use case to prevent data exfiltration."
-  default     = null
-}
-
-variable "default_to_oauth_authentication" {
-  type        = bool
-  description = "Default to OAuth authentication over shared key. Defaults to true for audit use case."
-  default     = null
-}
-
-variable "sas_policy" {
-  type = object({
-    expiration_period = string
-    expiration_action = string
-  })
-  description = "Shared Access Signature (SAS) policy. Example: expiration_period = '90.00:00:00' (90 days), expiration_action = 'Log'."
-  default     = null
-}
-
+# ------------ MONITORING & COMPLIANCE ------------ #
 variable "diagnostic_settings" {
   type = object({
     enabled                    = bool
-    log_analytics_workspace_id = string
+    log_analytics_workspace_id = optional(string, null)
     storage_account_id         = optional(string, null)
   })
   description = "Diagnostic settings for access logging (control and data plane). Mandatory for audit use case to track all access operations."
@@ -290,14 +246,14 @@ variable "diagnostic_settings" {
   }
 
   validation {
-    condition     = var.use_case != "audit" || var.diagnostic_settings.enabled
-    error_message = "Diagnostic settings must be enabled for audit use case to ensure compliance with access logging requirements."
+    condition     = var.use_case != "audit" || (var.diagnostic_settings.enabled && var.diagnostic_settings.log_analytics_workspace_id != null)
+    error_message = "Diagnostic settings with log_analytics_workspace_id must be enabled for audit use case to ensure compliance with access logging requirements."
   }
 }
 
 variable "audit_retention_days" {
   type        = number
-  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days."
+  description = "Number of days to retain audit/archive logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to 'audit' and 'archive' use cases."
   default     = 1095 # Keep current default (3 years) for backward compatibility
 
   validation {
