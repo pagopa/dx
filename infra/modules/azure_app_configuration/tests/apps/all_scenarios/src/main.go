@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"time"
 
@@ -24,26 +23,12 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/setting", settingHandler)
 	mux.HandleFunc("/secret", secretHandler)
-	mux.HandleFunc("/reachability", reachabilityHandler)
 
 	addr := ":8080"
 	log.Printf("listening on %s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Printf("listen error: %s", err)
 	}
-}
-
-func reachabilityHandler(w http.ResponseWriter, r *http.Request) {
-	hostname := getHostnameFromQueryString(r)
-
-	_, err := net.LookupIP(hostname)
-	if err != nil {
-		log.Printf("Failed to resolve endpoint \"%s\"", hostname)
-		w.WriteHeader(http.StatusBadGateway)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func settingHandler(w http.ResponseWriter, r *http.Request) {
