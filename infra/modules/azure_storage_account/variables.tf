@@ -253,7 +253,7 @@ variable "diagnostic_settings" {
 
 variable "audit_retention_days" {
   type        = number
-  description = "Number of days to retain audit/archive logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to 'audit' and 'archive' use cases."
+  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case."
   default     = 1095 # Keep current default (3 years) for backward compatibility
 
   validation {
