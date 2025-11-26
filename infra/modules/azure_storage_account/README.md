@@ -22,7 +22,7 @@ This Terraform module provisions an Azure Storage Account with optional configur
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
 | `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
 | `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
-| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 yaers of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
+| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 years of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
 | `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
 
@@ -181,7 +181,8 @@ module "audit_storage" {
       immutability_policy = {
         period_in_days     = 365
         locked             = false  # Keep unlocked to allow legal hold modifications
-        legal_hold_tags    = ["case2024", "investigation"]  # 1-10 alphanumeric tags
+        # legal_hold_tags must be set via Azure CLI after deployment; this field is only for validation
+        legal_hold_tags    = []     # Legal holds are NOT applied by Terraform
       }
     },
     {
@@ -335,7 +336,7 @@ az storage account show \
 
 ### Managing Legal Holds
 
-Legal holds can be added or removed dynamically using Azure CLI or updating the Terraform configuration:
+Legal holds must be managed using Azure CLI (not Terraform):
 
 ```bash
 # Set legal hold on a container (Azure CLI - immediate action)

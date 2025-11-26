@@ -16,6 +16,7 @@ module "audit_storage" {
 
   # NEW: Required for compliance
   diagnostic_settings = {
+    enabled                    = true
     log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   }
 
