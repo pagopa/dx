@@ -72,7 +72,7 @@ The `audit` use case is specifically designed for storing audit logs with **full
 | **Encryption at Rest**        | Customer-Managed Keys (AES-256) with Azure Key Vault            | ✅ Mandatory    |
 | **Encryption in Transit**     | TLS 1.2 minimum, HTTPS-only traffic                             | ✅ Mandatory    |
 | **Infrastructure Encryption** | Double encryption (platform + infrastructure)                   | ✅ Mandatory    |
-| **Immutability (WORM)**       | Time-based retention policy with Locked state (SEC 17a-4(f))    | ✅ Mandatory    |
+| **Immutability (WORM)**       | Time-based retention policy (Unlocked initially, lock post-deployment) | ✅ Mandatory    |
 | **Legal Hold Support**        | Container-level policies with tag-based identification          | ✅ Available    |
 | **Access Logging**            | Diagnostic settings for control & data plane                    | ✅ Mandatory    |
 | **Time Synchronization**      | Azure PaaS automatic synchronization                            | ✅ Built-in     |
@@ -136,7 +136,7 @@ The following security configurations are **automatically applied** when `use_ca
 - ✅ **Infrastructure Encryption**: Enables double encryption for defense-in-depth
 - ✅ **Cross-Tenant Replication Disabled**: Prevents data exfiltration to other Azure AD tenants
 - ✅ **OAuth Authentication Default**: Encourages Azure AD-based authentication over shared keys
-- ✅ **Immutability Policy (Locked)**: Write-Once-Read-Many (WORM) with SEC 17a-4(f) compliance
+- ✅ **Immutability Policy**: Write-Once-Read-Many (WORM) enabled (created as Unlocked, must be locked post-deployment for SEC 17a-4(f) compliance)
 - ✅ **Blob Versioning & Change Feed**: Required for immutability, automatically enabled
 - ✅ **Geo-Redundant Storage**: Secondary replica in different region with object replication
 - ✅ **Lifecycle Tiering**: Hot (0-30d) → Cool (30-90d) → Cold (90d+) → Delete (configurable)
@@ -153,13 +153,14 @@ The following security configurations are **automatically applied** when `use_ca
 - ⚠️ **Not SEC 17a-4(f) compliant** for regulatory requirements
 - ⚠️ Does not prevent account deletion
 
-**Locked State** (Default for audit use case):
+**Locked State** (Must be applied post-deployment):
 
 - ✅ **SEC 17a-4(f) compliant** for financial and healthcare regulations
 - ✅ Policy **cannot be deleted** (irreversible)
 - ✅ Retention period can be extended (max 5 times) but never shortened
 - ✅ Prevents storage account deletion while locked policies exist
 - ⚠️ **Locking is permanent** - cannot be undone
+- ⚠️ **Azure Limitation**: Initial policy state can only be "Unlocked" or "Disabled" - must lock after deployment using Azure CLI or Portal
 
 #### Container-Level Legal Hold
 
@@ -306,6 +307,30 @@ az storage container legal-hold show \
   --account-name <storage-account-name> \
   --container-name <container-name>
 ```
+
+### Locking Immutability Policies After Deployment
+
+⚠️ **Important**: Due to Azure limitations, immutability policies are created in "Unlocked" state. To achieve SEC 17a-4(f) compliance, you must lock the policy after deployment:
+
+```bash
+# Lock the account-level immutability policy (IRREVERSIBLE!)
+az storage account immutability-policy update \
+  --account-name <storage-account-name> \
+  --resource-group <resource-group-name> \
+  --state Locked
+
+# Verify the policy is locked
+az storage account show \
+  --name <storage-account-name> \
+  --query "immutableStorageWithVersioning.immutabilityPolicy.state"
+# Expected output: "Locked"
+```
+
+**Before locking, ensure:**
+- ✅ Retention period is correct (cannot be shortened after locking)
+- ✅ Policy has been tested with your data
+- ✅ You understand that locking is **permanent and irreversible**
+- ✅ Account deletion will be blocked until all data expires
 
 ### Managing Legal Holds
 

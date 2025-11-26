@@ -48,7 +48,7 @@ module "audit_storage" {
 
 **What gets automatically configured:**
 
-- ✅ Immutability policy state: **Locked** (SEC 17a-4(f) compliant)
+- ✅ Immutability policy enabled (created as **Unlocked** - must lock post-deployment for SEC 17a-4(f))
 - ✅ TLS 1.2 minimum + HTTPS-only
 - ✅ Infrastructure encryption (double encryption)
 - ✅ OAuth authentication default
@@ -56,6 +56,24 @@ module "audit_storage" {
 - ✅ Blob versioning and change feed enabled
 - ✅ Secondary geo-redundant replica
 - ✅ Lifecycle management (Hot→Cool→Cold→Delete)
+
+**Post-Deployment Steps for Full Compliance:**
+
+After Terraform deployment, lock the immutability policy using Azure CLI:
+
+```bash
+# Lock the policy (IRREVERSIBLE - do this only after validation!)
+az storage account immutability-policy update \
+  --account-name <storage-account-name> \
+  --resource-group <resource-group-name> \
+  --state Locked
+
+# Verify
+az storage account show \
+  --name <storage-account-name> \
+  --query "immutableStorageWithVersioning.immutabilityPolicy.state"
+# Should return: "Locked"
+```
 
 ## Advanced: Container-Level Legal Hold
 
@@ -184,36 +202,31 @@ az storage account show \
 # Expected: Different location, LRS replication
 ```
 
-## Migration from Unlocked to Locked
+## Locking Immutability Policies
 
 ⚠️ **WARNING**: Locking an immutability policy is **IRREVERSIBLE**.
 
-If you have an existing storage account with unlocked policy and want to lock it:
+⚠️ **Azure Limitation**: Terraform cannot create storage accounts with "Locked" immutability policies. Policies are always created as "Unlocked" and must be locked post-deployment via Azure CLI or Portal.
+
+To lock an immutability policy for SEC 17a-4(f) compliance:
 
 1. **Test thoroughly in non-production** first
 2. **Verify retention period** is correct (cannot be shortened after locking)
-3. **Ensure no legal holds** are active (must be cleared before locking)
-4. **Update Terraform configuration**:
-
-```hcl
-module "audit_storage" {
-  # ... existing config ...
-
-  blob_features = {
-    immutability_policy = {
-      enabled = true
-      state   = "Locked"  # Change from "Unlocked" to "Locked"
-      # ... other settings ...
-    }
-  }
-}
-```
-
-5. **Apply changes**:
+3. **Ensure no legal holds** are active on containers (must be cleared before locking account-level policy)
+4. **Deploy with Terraform** (policy will be Unlocked)
+5. **Lock via Azure CLI**:
 
 ```bash
-terraform plan   # Review changes carefully
-terraform apply  # Locks the policy permanently
+# Lock the account-level immutability policy
+az storage account immutability-policy update \
+  --account-name <storage-account-name> \
+  --resource-group <resource-group-name> \
+  --state Locked
+
+# For container-level policies, lock each container
+az storage container immutability-policy lock \
+  --account-name <storage-account-name> \
+  --container-name <container-name>
 ```
 
 6. **Verify locking**:

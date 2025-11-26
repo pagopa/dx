@@ -342,8 +342,8 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Locked"
-    error_message = "Audit storage must have LOCKED immutability policy for SEC 17a-4(f) compliance"
+    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
+    error_message = "Audit storage must have immutability policy in Unlocked state (Azure limitation: initial state cannot be Locked)"
   }
 
   assert {
@@ -608,8 +608,8 @@ run "audit_with_container_immutability_plan" {
 
   # Audit tier with container-level immutability
   assert {
-    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Locked"
-    error_message = "Audit tier must have account-level immutability policy locked"
+    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
+    error_message = "Audit tier must have account-level immutability policy (Unlocked initially due to Azure limitation)"
   }
 
   assert {
@@ -623,8 +623,8 @@ run "audit_with_container_immutability_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_account.secondary_replica[0].immutability_policy[0].state == "Locked"
-    error_message = "Secondary replica must have same immutability policy state as primary"
+    condition     = azurerm_storage_account.secondary_replica[0].immutability_policy[0].state == "Unlocked"
+    error_message = "Secondary replica must have same immutability policy state as primary (Unlocked initially)"
   }
 }
 

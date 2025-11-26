@@ -45,7 +45,7 @@ locals {
       alerts                            = true
       advanced_threat_protection        = false
       immutability_policy               = true
-      immutability_policy_state         = "Locked"
+      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
