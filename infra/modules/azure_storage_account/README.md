@@ -335,7 +335,7 @@ az storage account show \
 
 ### Managing Legal Holds
 
-Legal holds can be added or removed dynamically using Azure CLI or updating the Terraform configuration:
+Legal holds must be managed using Azure CLI (not Terraform):
 
 ```bash
 # Set legal hold on a container (Azure CLI - immediate action)
