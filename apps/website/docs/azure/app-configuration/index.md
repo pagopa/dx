@@ -13,11 +13,14 @@ applications.
 
 Azure AppConfiguration can manage appsettings, secrets and feature flags. These
 can be imported via a JSON file, that can be defined next to the application
-code, and deployed to the AppConfiguration instance via the same GitHub Actions
+code, and deployed to the AppConfiguration instance via the same GitHub Action
 used by the application.
 
-The application needs to install the
-[official Azure App Configuration SDK](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-javascript-provider?tabs=entra-id)
+The application needs to install and use the methods provided by the official
+Azure App Configuration SDK (es. for
+[Node.js](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-javascript-provider?tabs=entra-id)
+or
+[`Java`](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-java-spring-app))
 to fetch settings, secrets and feature flags at runtime. The SDK supports
 hot-reload of settings, so that changes in the AppConfiguration instance are
 reflected in the application without requiring a restart/deploy. Application can
@@ -38,9 +41,6 @@ A collection of code samples is available
 - **[Setting up Azure App Configuration and KeyVault](./azure-app-configuration.md)**:
   Detailed instructions on how to set up and use Azure App Configuration service
   for managing application settings and secrets.
-- **[Getting started with your application to use Azure App Configuration](./app-configuration-usage.md)**:
-  Instructions on how to integrate Azure App Configuration SDK into your
-  application for retrieving settings, secrets, and feature flags.
 - **[Defining Application Settings, Secrets and Feature Flags](./appsettings-definition.md)**:
   Guide on how to define and organize application settings, secrets, and feature
   flags within Azure App Configuration and KeyVault.
