@@ -1,6 +1,7 @@
 go 1.25.4
 
 use (
+	./infra/modules/azure_app_configuration/tests
 	./infra/modules/azure_app_configuration/tests/apps/all_scenarios/src
 	./infra/modules/azure_cosmos_account/tests
 	./providers/aws
