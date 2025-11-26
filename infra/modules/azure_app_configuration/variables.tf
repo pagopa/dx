@@ -64,14 +64,38 @@ variable "subnet_pep_id" {
   description = "ID of the subnet hosting private endpoints."
 }
 
-variable "key_vault" {
-  type = object({
+variable "subscription_id" {
+  type        = string
+  description = "Subscription Id of the involved resources"
+}
+
+variable "key_vaults" {
+  type = list(object({
     name                = string
     resource_group_name = string
     has_rbac_support    = bool
-    subscription_id     = string
-  })
+    app_principal_ids   = list(string)
+  }))
   default = null
 
-  description = "Optionally, integrate App Configuration with an existing Key Vault for storing secrets."
+  description = <<EOT
+   Optionally, integrate App Configuration with a one or more existing Key Vault for secrets retrieval.
+   Set `has_rbac_support` to true if the referenced Key Vault uses RBAC model for access control.
+   Use `app_principal_ids` to set application principal IDs to be granted access to the Key Vault.
+  EOT
+}
+
+variable "authorized_teams" {
+  type = object({
+    writers = optional(list(string), []),
+    readers = optional(list(string), [])
+  })
+  default = {
+    writers = []
+    readers = []
+  }
+
+  description = <<EOT
+  Object containing lists of principal IDs (Azure AD object IDs) of product teams to be granted read or write permissions on the App Configuration. These represent the teams within the organization that need access to this resource."
+  EOT
 }

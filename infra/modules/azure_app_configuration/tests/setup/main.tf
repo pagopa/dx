@@ -20,6 +20,11 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
+data "azurerm_user_assigned_identity" "test" {
+  name                = provider::dx::resource_name(merge(local.existing_resources, { domain = "devex", resource_type = "managed_identity" }))
+  resource_group_name = provider::dx::resource_name(merge(local.existing_resources, { name = "devex", resource_type = "resource_group" }))
+}
+
 data "azurerm_private_dns_zone" "kv" {
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = data.azurerm_resource_group.network.name
@@ -124,12 +129,19 @@ output "virtual_network" {
   }
 }
 
-output "key_vault" {
-  value = {
+output "key_vaults" {
+  value = [{
     name                = azurerm_key_vault.kv.name
     resource_group_name = azurerm_key_vault.kv.resource_group_name
     has_rbac_support    = true
-    subscription_id     = data.azurerm_client_config.current.subscription_id
-  }
+    app_principal_ids   = [] # Empty in setup, will be filled by test scenario with actual principal IDs
+  }]
 }
 
+output "subscription_id" {
+  value = data.azurerm_client_config.current.subscription_id
+}
+
+output "managed_identity_principal_id" {
+  value = data.azurerm_user_assigned_identity.test.principal_id
+}

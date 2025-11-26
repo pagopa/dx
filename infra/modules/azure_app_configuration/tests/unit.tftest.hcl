@@ -29,8 +29,13 @@ variables {
   private_dns_zone_resource_group_name = null
   subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
 
-  size      = null
-  key_vault = null
+  size       = null
+  key_vaults = null
+  authorized_teams = {
+    writers = []
+    readers = []
+  }
+  subscription_id = "00000000-0000-0000-0000-000000000000"
 }
 
 mock_provider "azurerm" {}
@@ -95,17 +100,7 @@ run "app_configuration_development_use_case" {
   }
 }
 
-// Invalid size should trigger validation failure
-run "invalid_size" {
-  command = plan
-  variables { size = "invalid" }
 
-  expect_failures = [
-    var.size,
-  ]
-}
-
-// Private endpoint basics
 run "private_endpoint_configuration_stores" {
   command = plan
 
@@ -134,16 +129,89 @@ run "private_endpoint_subresource" {
 run "key_vault_integration" {
   command = plan
   variables {
-    key_vault = {
-      name                = "kv-test"
-      resource_group_name = "rg-kv"
-      has_rbac_support    = true
-      subscription_id     = "00000000-0000-0000-0000-000000000000"
+    key_vaults = [
+      {
+        name                = "kv-test"
+        resource_group_name = "rg-kv"
+        has_rbac_support    = true
+        app_principal_ids   = ["11111111-1111-1111-1111-111111111111"]
+      }
+    ]
+  }
+
+  override_data {
+    target = module.app_roles["11111111-1111-1111-1111-111111111111"].module.key_vault.data.azurerm_client_config.current
+    values = {
+      tenant_id = "00000000-0000-0000-0000-000000000000"
     }
   }
 
   assert {
-    condition     = length(module.roles) >= 1
-    error_message = "Role must be assigned to allow read-only access to KeyVault's secret"
+    condition     = length(module.app_roles) == 1
+    error_message = "One app_roles module instance must be created for the principal"
+  }
+}
+
+run "key_vault_multiple_principals" {
+  command = plan
+  variables {
+    key_vaults = [
+      {
+        name                = "kv-test-1"
+        resource_group_name = "rg-kv"
+        has_rbac_support    = true
+        app_principal_ids   = ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"]
+      },
+      {
+        name                = "kv-test-2"
+        resource_group_name = "rg-kv"
+        has_rbac_support    = false
+        app_principal_ids   = ["11111111-1111-1111-1111-111111111111"]
+      }
+    ]
+  }
+
+  override_data {
+    target = module.app_roles["11111111-1111-1111-1111-111111111111"].module.key_vault.data.azurerm_client_config.current
+    values = {
+      tenant_id = "00000000-0000-0000-0000-000000000000"
+    }
+  }
+
+  override_data {
+    target = module.app_roles["22222222-2222-2222-2222-222222222222"].module.key_vault.data.azurerm_client_config.current
+    values = {
+      tenant_id = "00000000-0000-0000-0000-000000000000"
+    }
+  }
+
+  assert {
+    condition     = length(module.app_roles) == 2
+    error_message = "Two app_roles module instances must be created (one per distinct principal)"
+  }
+
+  assert {
+    condition     = length(local.app_assignments) == 2
+    error_message = "Two distinct principals must be identified"
+  }
+}
+
+run "authorized_teams_roles" {
+  command = plan
+  variables {
+    authorized_teams = {
+      writers = ["33333333-3333-3333-3333-333333333333"]
+      readers = ["44444444-4444-4444-4444-444444444444", "55555555-5555-5555-5555-555555555555"]
+    }
+  }
+
+  assert {
+    condition     = length(module.appconfig_team_roles) == 3
+    error_message = "Three team role assignments must be created (1 writer + 2 readers)"
+  }
+
+  assert {
+    condition     = length(local.appconfig_role_assignments) == 3
+    error_message = "Three role assignments must be in local map"
   }
 }

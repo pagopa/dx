@@ -52,6 +52,12 @@ run "apply_default" {
     private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
     subnet_pep_id                        = run.setup.subnet_pep_id
     size                                 = null
+    key_vaults                           = null
+    subscription_id                      = run.setup.subscription_id
+    authorized_teams = {
+      writers = []
+      readers = []
+    }
   }
 
   assert {
@@ -88,6 +94,12 @@ run "apply_premium" {
     private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
     subnet_pep_id                        = run.setup.subnet_pep_id
     size                                 = "premium"
+    key_vaults                           = null
+    subscription_id                      = run.setup.subscription_id
+    authorized_teams = {
+      writers = []
+      readers = []
+    }
   }
 
   assert {
@@ -111,6 +123,12 @@ run "apply_developer" {
     virtual_network                      = run.setup.virtual_network
     private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
     subnet_pep_id                        = run.setup.subnet_pep_id
+    key_vaults                           = null
+    subscription_id                      = run.setup.subscription_id
+    authorized_teams = {
+      writers = []
+      readers = []
+    }
   }
 
   assert {
@@ -123,7 +141,7 @@ run "apply_developer" {
   }
 }
 
-# Scenario 3: Key Vault integration pathway
+# Scenario 4: Key Vault integration with application principal
 run "apply_key_vault_integration" {
   command = apply
   variables {
@@ -135,7 +153,19 @@ run "apply_key_vault_integration" {
     private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
     subnet_pep_id                        = run.setup.subnet_pep_id
     size                                 = null
-    key_vault                            = run.setup.key_vault
+    subscription_id                      = run.setup.subscription_id
+    key_vaults = [
+      {
+        name                = run.setup.key_vaults[0].name
+        resource_group_name = run.setup.key_vaults[0].resource_group_name
+        has_rbac_support    = run.setup.key_vaults[0].has_rbac_support
+        app_principal_ids   = [run.setup.managed_identity_principal_id]
+      }
+    ]
+    authorized_teams = {
+      writers = []
+      readers = []
+    }
   }
 
   assert {
@@ -143,7 +173,11 @@ run "apply_key_vault_integration" {
     error_message = "Managed identity principal id must be present for KV integration"
   }
   assert {
-    condition     = length(module.roles) >= 1
-    error_message = "Missing RBAC roles on KeyVault to allow AppConfig to read secrets"
+    condition     = length(module.app_roles) == 1
+    error_message = "One app_roles module must be created for the App Configuration identity"
+  }
+  assert {
+    condition     = length(local.app_assignments) == 1
+    error_message = "App Configuration identity must be assigned to Key Vault"
   }
 }

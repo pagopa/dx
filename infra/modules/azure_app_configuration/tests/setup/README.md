@@ -27,6 +27,7 @@ No modules.
 | [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_resource_group.test](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+| [azurerm_user_assigned_identity.test](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
@@ -41,10 +42,12 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_key_vault"></a> [key\_vault](#output\_key\_vault) | n/a |
+| <a name="output_key_vaults"></a> [key\_vaults](#output\_key\_vaults) | n/a |
+| <a name="output_managed_identity_principal_id"></a> [managed\_identity\_principal\_id](#output\_managed\_identity\_principal\_id) | n/a |
 | <a name="output_private_dns_zone_appcs"></a> [private\_dns\_zone\_appcs](#output\_private\_dns\_zone\_appcs) | n/a |
 | <a name="output_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#output\_private\_dns\_zone\_resource\_group\_name) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_subnet_pep_id"></a> [subnet\_pep\_id](#output\_subnet\_pep\_id) | n/a |
+| <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | n/a |
 | <a name="output_virtual_network"></a> [virtual\_network](#output\_virtual\_network) | n/a |
 <!-- END_TF_DOCS -->
