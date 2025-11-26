@@ -99,7 +99,7 @@ module "audit_storage_with_legal_hold" {
       immutability_policy = {
         period_in_days  = 730  # 2 years base retention
         locked          = false # Keep unlocked to allow legal hold tag changes
-        legal_hold_tags = ["case2024", "litigation", "investigation"]
+        legal_hold_tags = [] # Legal hold tags must be applied post-deployment via Azure CLI (see below)
       }
     },
     {
