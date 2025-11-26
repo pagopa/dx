@@ -393,7 +393,7 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_storage_management_policy.lifecycle_audit[0].rule.actions.base_blob.delete_after_days_since_modification_greater_than == 365
+    condition     = azurerm_storage_management_policy.lifecycle_audit[0].rule[0].actions[0].base_blob[0].delete_after_days_since_modification_greater_than == 365
     error_message = "Audit storage must use configured retention period (365 days for PagoPA)"
   }
 }
