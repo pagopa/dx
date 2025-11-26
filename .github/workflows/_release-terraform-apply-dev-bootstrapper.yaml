@@ -1,0 +1,19 @@
+name: Terraform apply on dev bootstrapper
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/bootstrapper/dev/**"
+      - "infra/bootstrapper/_modules/**"
+      - ".github/workflows/_release-terraform-apply-dev-bootstrapper.yaml"
+
+jobs:
+  deploy:
+    uses: pagopa/dx/.github/workflows/bootstrapper_infra_apply.yaml@main
+    name: Dev - Bootstrapper Deploy
+    secrets: inherit
+    with:
+      environment: dev
