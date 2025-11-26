@@ -20,6 +20,11 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
+data "azurerm_user_assigned_identity" "integration_github" {
+  name                = "dx-d-itn-devex-integration-id-01"
+  resource_group_name = "dx-d-itn-devex-rg-01"
+}
+
 data "azurerm_resource_group" "test" {
   name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
 }
@@ -81,6 +86,13 @@ resource "azurerm_role_assignment" "kv_cosmos_uai" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto Officer"
   description          = "Allow Cosmos user-assigned identity to manage keys"
+}
+
+resource "azurerm_role_assignment" "integration_keyvault_key_officer" {
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Crypto Officer"
+  description          = "Allow GitHub workflow to access the key"
 }
 
 resource "azurerm_key_vault_key" "cmk" {

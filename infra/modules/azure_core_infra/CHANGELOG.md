@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.3.0
+
+### Minor Changes
+
+- 442cb22: Add private endpoint for AppConfiguration service
+
 ## 2.2.4
 
 ### Patch Changes
