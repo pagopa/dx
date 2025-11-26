@@ -43,7 +43,7 @@ resource "azurerm_storage_account" "secondary_replica" {
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
-      state                         = "Unlocked"
+      state                         = coalesce(var.blob_features.immutability_policy.state, local.tier_features.immutability_policy_state, "Unlocked")
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
@@ -58,6 +58,24 @@ resource "azurerm_storage_container" "replica" {
   name                  = each.value.name
   storage_account_id    = azurerm_storage_account.secondary_replica[0].id
   container_access_type = each.value.access_type
+}
+
+# Container-level immutability policies for secondary replica
+resource "azurerm_storage_container_immutability_policy" "replica" {
+  for_each = local.tier_features.secondary_replication ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
+
+  storage_container_resource_manager_id = azurerm_storage_container.replica[each.key].resource_manager_id
+  immutability_period_in_days           = each.value.immutability_policy.period_in_days
+  locked                                = each.value.immutability_policy.locked
+
+  protected_append_writes_all_enabled = local.tier_features.immutability_policy && var.blob_features.immutability_policy.allow_protected_append_writes
+
+  lifecycle {
+    precondition {
+      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
+      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
+    }
+  }
 }
 
 resource "azurerm_storage_object_replication" "geo_replication_policy" {

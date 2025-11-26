@@ -67,7 +67,7 @@ resource "azurerm_storage_account" "this" {
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
-      state                         = "Unlocked"
+      state                         = coalesce(var.blob_features.immutability_policy.state, local.tier_features.immutability_policy_state, "Unlocked")
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
@@ -130,6 +130,26 @@ resource "azurerm_storage_container" "this" {
   container_access_type = each.value.access_type
 
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
+}
+
+# Container-level immutability policies (for legal holds and granular retention)
+resource "azurerm_storage_container_immutability_policy" "this" {
+  for_each = { for c in var.containers : c.name => c if c.immutability_policy != null }
+
+  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
+  immutability_period_in_days           = each.value.immutability_policy.period_in_days
+  locked                                = each.value.immutability_policy.locked
+
+  # Legal hold support (1-10 alphanumeric tags, 3-23 characters each)
+  protected_append_writes_all_enabled = local.immutability_policy_enabled && var.blob_features.immutability_policy.allow_protected_append_writes
+
+  lifecycle {
+    # Prevent accidental unlocking (Azure doesn't support unlocking locked policies)
+    precondition {
+      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
+      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
+    }
+  }
 }
 
 # Tables

@@ -99,6 +99,7 @@ variable "blob_features" {
       enabled                       = optional(bool, false)
       allow_protected_append_writes = optional(bool, false)
       period_since_creation_in_days = optional(number, 730)
+      state                         = optional(string, "Unlocked")
     }), { enabled = false })
   })
   description = "Advanced blob features like versioning, change feed, immutability, and retention policies."
@@ -114,6 +115,11 @@ variable "blob_features" {
   validation {
     condition     = (var.blob_features.immutability_policy.enabled == true && var.blob_features.restore_policy_days == 0) || var.blob_features.immutability_policy.enabled == false
     error_message = "Immutability policy doesn't support Point-in-Time restore."
+  }
+
+  validation {
+    condition     = var.blob_features.immutability_policy.state == null || contains(["Locked", "Unlocked"], var.blob_features.immutability_policy.state)
+    error_message = "Immutability policy state must be either 'Locked' or 'Unlocked'. Note: Locking is irreversible and prevents account deletion."
   }
 
   validation {
@@ -210,6 +216,11 @@ variable "containers" {
   type = list(object({
     name        = string
     access_type = optional(string, "private")
+    immutability_policy = optional(object({
+      period_in_days  = number
+      locked          = optional(bool, false)
+      legal_hold_tags = optional(list(string), [])
+    }), null)
   }))
 
   default = []
@@ -217,6 +228,37 @@ variable "containers" {
   validation {
     condition     = alltrue([for c in var.containers : contains(["private", "blob", "container"], c.access_type)])
     error_message = "Container access_type must be one of 'private', 'blob', or 'container'."
+  }
+
+  validation {
+    condition = alltrue([
+      for c in var.containers :
+      c.immutability_policy == null || (
+        c.immutability_policy.period_in_days >= 1 &&
+        c.immutability_policy.period_in_days <= 146000
+      )
+    ])
+    error_message = "Container immutability policy period must be between 1 and 146000 days (400 years)."
+  }
+
+  validation {
+    condition = alltrue([
+      for c in var.containers :
+      c.immutability_policy == null ||
+      length(c.immutability_policy.legal_hold_tags) <= 10
+    ])
+    error_message = "Container legal hold tags must contain at most 10 tags."
+  }
+
+  validation {
+    condition = alltrue([
+      for c in var.containers :
+      c.immutability_policy == null || alltrue([
+        for tag in c.immutability_policy.legal_hold_tags :
+        can(regex("^[a-zA-Z0-9]{3,23}$", tag))
+      ])
+    ])
+    error_message = "Container legal hold tags must be alphanumeric and between 3-23 characters each."
   }
 }
 

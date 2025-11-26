@@ -15,6 +15,7 @@ locals {
       alerts                            = false
       advanced_threat_protection        = false
       immutability_policy               = false
+      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "LRS"
@@ -29,6 +30,7 @@ locals {
       alerts                            = true
       advanced_threat_protection        = false
       immutability_policy               = false
+      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
@@ -43,6 +45,7 @@ locals {
       alerts                            = true
       advanced_threat_protection        = false
       immutability_policy               = true
+      immutability_policy_state         = "Locked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
@@ -57,6 +60,7 @@ locals {
       alerts                            = true
       advanced_threat_protection        = true
       immutability_policy               = false
+      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = false
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
@@ -71,6 +75,7 @@ locals {
       alerts                            = false
       advanced_threat_protection        = false
       immutability_policy               = true
+      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "LRS"
