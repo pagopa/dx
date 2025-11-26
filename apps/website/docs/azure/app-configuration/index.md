@@ -16,22 +16,23 @@ can be imported via a JSON file, that can be defined next to the application
 code, and deployed to the AppConfiguration instance via the same GitHub Action
 used by the application.
 
-The application needs to install and use the methods provided by the official
-Azure App Configuration SDK (es. for
+The application needs to use the methods provided by the official Azure App
+Configuration SDK (es. for
 [Node.js](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-javascript-provider?tabs=entra-id)
 or
 [`Java`](https://learn.microsoft.com/en-us/azure/azure-app-configuration/quickstart-java-spring-app))
-to fetch settings, secrets and feature flags at runtime. The SDK supports
-hot-reload of settings, so that changes in the AppConfiguration instance are
-reflected in the application without requiring a restart/deploy. Application can
-also access secrets stored in KeyVault through AppConfiguration, simplifying the
-management of sensitive data. Feature flags offer flexibility in dynamically
-enabling or disabling features without redeploying the application, using
-built-in or custom rules.
+to fetch settings, secrets and feature flags at runtime. SDKs support
+**hot-reload of settings**, so that changes in the AppConfiguration instance are
+reflected in the application without requiring a restart/deploy. Feature flags
+offer flexibility in dynamically enabling or disabling features without
+redeploying the application, using built-in or custom rules.
+
+Application can also access secrets stored in **KeyVault** through
+AppConfiguration, simplifying the management of sensitive data.
 
 Moreover, it removes the need to set environment variables via Terraform, which
-slow down development and deploying, other than storing sensitive configuration
-data directly in the Terraform state file.
+slows down development and deployment, other than storing sensitive
+configuration data directly in the Terraform state file.
 
 A collection of code samples is available
 [on GitHub](https://github.com/Azure/azure-sdk-for-js/tree/main/sdk/appconfiguration/app-configuration/samples/v1/typescript/src).
