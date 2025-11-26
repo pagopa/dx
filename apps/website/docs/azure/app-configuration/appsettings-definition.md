@@ -107,7 +107,7 @@ it is not used in the application code.
 You can update its value (e.g., incrementing a number) whenever you update other
 settings or feature flags, to trigger a refresh in the application.
 
-However, you have to instruct the SDK do monitor the `Sentinel` key for changes,
+However, you have to instruct the SDK to monitor the `Sentinel` key for changes,
 and optionally configure the refresh interval, as shown below:
 
 ```typescript
@@ -122,17 +122,17 @@ const appConfig = await load(endpoint, credential, {
 });
 ```
 
-More info about the Sentinel pattern are on the official
+More info about the Sentinel pattern is on the official
 [App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-best-practices?tabs=javascript#monitoring-a-sentinel-key).
 
-### Customising Feature Flags
+### Customizing Feature Flags
 
-Feature flags can be customised further by adding additional properties, such as
+Feature flags can be customized further by adding additional properties, such as
 scheduling and target users, or custom filters.
 
 :::info
 
-This page collects some of the most common customisations for feature flags. For
+This page collects some of the most common customizations for feature flags. For
 a complete reference, please refer to the official
 [App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/manage-feature-flags?tabs=switch).
 Alternatively, you can create the flag using Azure Portal, and export the JSON
@@ -142,13 +142,13 @@ configuration by clicking on `Advanced Edit`.
 
 #### Weighted Random Feature Flags
 
-It is possible to randomly enable a feature flag within a weight, use `seed`.
-This is useful for gradually rolling out a feature to a percentage of users.
+It is possible to randomly enable a feature flag based on a weight, using
+`seed`. This is useful for gradually rolling out a feature to a percentage of
+users.
 
 The percentile allocation section defines the distribution of variants. In this
 example, the feature flag is enabled for 30% of users, and disabled for the
-remaining 70% over a single variant "Default" and a single segment from 0
-to 100.
+remaining 70% for a single variant "Default" and a single segment from 0 to 100.
 
 For more info, please refer to the official
 [App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/feature-management-javascript-reference?tabs=map-configuration%2Cbrowser#allocating-variants).
@@ -156,7 +156,7 @@ For more info, please refer to the official
 #### Scheduling Feature Flags
 
 The following snippet shows how to define feature flags with scheduling options,
-and eventually recurrence:
+and recurrence:
 
 ```json
 {
@@ -336,7 +336,7 @@ Then, the feature flag can be defined as follows:
 
 #### Custom logic for Feature Flags
 
-Also custom filters can be created to implement specific logic for enabling or
+Custom filters can be created to implement specific logic for enabling or
 disabling feature flags. Below is an example of a custom filter that enables a
 feature flag based on the user's country:
 
@@ -432,7 +432,7 @@ Now you can add telemetry per feature flag:
 
 ## Managing multiple environments
 
-If you application is deployed in multiple environments (e.g., development,
+If your application is deployed in multiple environments (e.g., development,
 staging, production), it is suggested to create separate JSON files for each
 non-production environment, e.g., `appsettings.dev.json` and `appsettings.json`,
 or `secrets.dev.json` and `secrets.json`. This allows you to manage

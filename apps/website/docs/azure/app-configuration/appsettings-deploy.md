@@ -26,7 +26,7 @@ What is important to note is:
 - prefixes and labels can be combined to organize configuration data (see
   [Using Prefixes and Labels](#using-prefixes-and-labels) section below);
 
-## Pre-requisites
+## Prerequisites
 
 Before starting, make sure your workflow logs into Azure, and has the following
 permissions:
@@ -55,7 +55,7 @@ jobs:
 
 ## Deploying Application Settings and Feature Flags
 
-Application settings and feature flags can be deployed using az cli command:
+Application settings and feature flags can be deployed using Azure CLI command:
 
 ```yaml
 - uses: azure/cli@v2
@@ -178,8 +178,8 @@ const settings = await load(endpoint, credential, {
 
 #### 2. Configuration Versioning
 
-If preferred, labels can be used to version application settings. SemVer, git
-commit sha or any other versioning scheme can be used:
+If preferred, labels can be used to version application settings. SemVer, Git
+commit SHA or any other versioning scheme can be used:
 
 ```bash
 # Deploy version 1.2.0
