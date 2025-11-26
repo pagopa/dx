@@ -99,7 +99,7 @@ variable "blob_features" {
       enabled                       = optional(bool, false)
       allow_protected_append_writes = optional(bool, false)
       period_since_creation_in_days = optional(number, 730)
-      state                         = optional(string, "Unlocked")
+      state                         = optional(string, null)
     }), { enabled = false })
   })
   description = "Advanced blob features like versioning, change feed, immutability, and retention policies."

@@ -67,7 +67,7 @@ resource "azurerm_storage_account" "this" {
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
-      state                         = coalesce(var.blob_features.immutability_policy.state, local.tier_features.immutability_policy_state, "Unlocked")
+      state                         = local.immutability_policy_state
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
