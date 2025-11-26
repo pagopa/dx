@@ -1,0 +1,34 @@
+# git
+.git
+.gitignore
+
+# node
+node_modules
+.env
+dist
+.pnpm-store
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# Go
+terraform-provider-azure
+providers/azure/terraform-provider-azure
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+**/modules/**/.terraform.lock.hcl
+**/_modules/**/.terraform.lock.hcl
+
+# MacOS
+*.DS_Store
+
+# NX
+.nx/cache
+.nx/workspace-data
+.github/instructions/nx.instructions.md
