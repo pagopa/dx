@@ -19,6 +19,8 @@ type Secret struct {
 	SecretKey string `json:"secret-key"`
 }
 
+const timeout = 5
+
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/setting", settingHandler)
@@ -34,7 +36,7 @@ func main() {
 func settingHandler(w http.ResponseWriter, r *http.Request) {
 	hostname := getHostnameFromQueryString(r)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), timeout*time.Second)
 	defer cancel()
 
 	provider, err := loadAzureAppConfiguration(ctx, hostname, false)
@@ -56,7 +58,7 @@ func settingHandler(w http.ResponseWriter, r *http.Request) {
 func secretHandler(w http.ResponseWriter, r *http.Request) {
 	hostname := getHostnameFromQueryString(r)
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), timeout*time.Second)
 	defer cancel()
 
 	provider, err := loadAzureAppConfiguration(ctx, hostname, true)
