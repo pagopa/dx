@@ -42,6 +42,25 @@ func TestAppConfigurationNetworkSettings(t *testing.T) {
 	// })
 }
 
+func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
+	fixtureFolder := "../examples/key_vault_integration/"
+
+	test_structure.RunTestStage(t, "setup", func() {
+		terraformOptions := &terraform.Options{
+			TerraformDir: fixtureFolder,
+		}
+
+		test_structure.SaveTerraformOptions(t, fixtureFolder, terraformOptions)
+
+		terraform.InitAndApply(t, terraformOptions)
+	})
+
+	test_structure.RunTestStage(t, "validate_keyvault_integration", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+
+	})
+}
+
 func probeSetting(t *testing.T, appIPAddress string, appConfigName string, expectedStatus int) {
 	url := fmt.Sprintf("http://%s:8080/setting?instanceName=%s", appIPAddress, appConfigName)
 

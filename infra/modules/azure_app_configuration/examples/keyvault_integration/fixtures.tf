@@ -46,3 +46,66 @@ resource "azurerm_private_endpoint" "kv" {
 
   tags = local.tags
 }
+
+resource "dx_available_subnet_cidr" "private_app" {
+  virtual_network_id = data.azurerm_virtual_network.e2e.id
+  prefix_length      = 26
+}
+
+resource "azurerm_subnet" "private_app" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "appcs-private",
+    resource_type = "container_instance_subnet"
+  }))
+  resource_group_name  = local.e2e_virtual_network.resource_group_name
+  virtual_network_name = local.e2e_virtual_network.name
+  address_prefixes     = [dx_available_subnet_cidr.private_app.cidr_block]
+
+  delegation {
+    name = "Microsoft.ContainerInstance/containerGroups"
+
+    service_delegation {
+      name = "Microsoft.ContainerInstance/containerGroups"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action",
+      ]
+    }
+  }
+}
+
+resource "azurerm_container_group" "private_app" {
+  name = provider::dx::resource_name(
+    merge(local.naming_config, { name = "appcs-private", resource_type = "container_instance" })
+  )
+  location            = local.environment.location
+  resource_group_name = azurerm_resource_group.e2e_appcs.name
+
+  identity { type = "SystemAssigned" }
+
+  os_type = "Linux"
+
+  container {
+    name   = "network-access"
+    image  = local.docker_image
+    cpu    = "0.5"
+    memory = "1.5"
+    ports {
+      port = 8080
+    }
+  }
+
+  ip_address_type = "Private"
+
+  subnet_ids = [
+    azurerm_subnet.private_app.id
+  ]
+
+  diagnostics {
+    log_analytics {
+      workspace_id  = data.azurerm_log_analytics_workspace.e2e.workspace_id
+      workspace_key = data.azurerm_log_analytics_workspace.e2e.primary_shared_key
+    }
+  }
+
+  tags = local.tags
+}

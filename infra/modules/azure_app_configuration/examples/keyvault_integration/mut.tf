@@ -10,8 +10,9 @@ module "appcs_with_kv" {
   environment         = (merge(local.environment, { instance_number = random_integer.appcs_instance.result }))
   resource_group_name = azurerm_resource_group.e2e_appcs.name
 
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  subscription_id = data.azurerm_subscription.current.subscription_id
 
+  subnet_pep_id = data.azurerm_subnet.pep.id
   virtual_network = {
     name                = local.e2e_virtual_network.name
     resource_group_name = local.e2e_virtual_network.resource_group_name
