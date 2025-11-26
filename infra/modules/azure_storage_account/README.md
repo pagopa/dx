@@ -181,7 +181,8 @@ module "audit_storage" {
       immutability_policy = {
         period_in_days     = 365
         locked             = false  # Keep unlocked to allow legal hold modifications
-        legal_hold_tags    = ["case2024", "investigation"]  # 1-10 alphanumeric tags
+        # legal_hold_tags must be set via Azure CLI after deployment; this field is only for validation
+        legal_hold_tags    = []     # Legal holds are NOT applied by Terraform
       }
     },
     {
