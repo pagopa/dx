@@ -1,0 +1,19 @@
+name: Terraform apply on prod bootstrapper
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/bootstrapper/prod/**"
+      - "infra/bootstrapper/_modules/**"
+      - ".github/workflows/_release-terraform-apply-prod-bootstrapper.yaml"
+
+jobs:
+  deploy:
+    uses: pagopa/dx/.github/workflows/bootstrapper_infra_apply.yaml@main
+    name: prod - Bootstrapper Deploy
+    secrets: inherit
+    with:
+      environment: prod
