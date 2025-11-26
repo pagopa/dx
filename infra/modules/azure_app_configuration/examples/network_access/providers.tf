@@ -6,7 +6,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-    pagopa-dx = {
+    dx = {
       source  = "pagopa-dx/azure"
       version = "~> 0.8"
     }
@@ -27,6 +27,9 @@ provider "azurerm" {
       recover_soft_deleted         = true
     }
   }
+}
+
+provider "dx" {
 }
 
 provider "random" {

@@ -10,8 +10,9 @@ module "private_appcs" {
   environment         = (merge(local.environment, { instance_number = random_integer.appcs_instance.result }))
   resource_group_name = azurerm_resource_group.e2e_appcs.name
 
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  subscription_id = data.azurerm_subscription.current.subscription_id
 
+  subnet_pep_id = data.azurerm_subnet.pep.id
   virtual_network = {
     name                = local.e2e_virtual_network.name
     resource_group_name = local.e2e_virtual_network.resource_group_name
@@ -19,4 +20,27 @@ module "private_appcs" {
 
   private_dns_zone_resource_group_name = data.azurerm_resource_group.network.name
   tags                                 = local.tags
+}
+
+resource "azurerm_app_configuration_key" "test_setting" {
+  configuration_store_id = module.private_appcs.id
+  key                    = "Setting:test-key"
+  value                  = "test value"
+  content_type           = "application/json"
+
+  depends_on = [
+    module.integration_github_roles
+  ]
+}
+
+resource "azurerm_app_configuration_key" "test_secret" {
+  configuration_store_id = module.private_appcs.id
+  key                    = "Secret:secret-key"
+  type                   = "vault"
+  vault_key_reference    = azurerm_key_vault_secret.test_secret.versionless_id
+
+  depends_on = [
+    module.integration_github_roles,
+    azurerm_key_vault_secret.test_secret
+  ]
 }
