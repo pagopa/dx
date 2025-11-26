@@ -12,7 +12,7 @@ on:
 
 jobs:
   deploy:
-    uses: pagopa/dx/.github/workflows/release-bootstrapper-infra-v1.yaml
+    uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml
     name: Prod - Bootstrapper Deploy
     secrets: inherit
     with:
