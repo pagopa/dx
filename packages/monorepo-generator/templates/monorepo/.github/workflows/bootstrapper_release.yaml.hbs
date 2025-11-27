@@ -1,9 +1,19 @@
-name: Release Bootstrapper Infrastructure permissions: contents: read on:
-workflow_dispatch: push: branches: - main paths: - "infra/bootstrapper/**" jobs:
+name: Release Bootstrapper Infrastructure
+permissions:
+  contents: read
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/bootstrapper/**"
+jobs:
 {{#each environments}}
-  release_{{this}}: uses:
-  pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main name:
-  Release Bootstrapper ({{this}}) secrets: inherit with: environment:
-  {{this}}
-
+  release_{{this}}:
+    uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
+    name: Release Bootstrapper ({{this}})
+    secrets: inherit
+    with:
+      environment: {{this}}
 {{/each}}
