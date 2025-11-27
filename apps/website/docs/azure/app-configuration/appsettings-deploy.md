@@ -2,17 +2,18 @@
 sidebar_position: 4
 ---
 
-# Updating GitHub Actions to deploy settings and secrets within the application
+# Deploying secrets and application settings using GitHub Actions
 
 Deploying application settings and secrets to Azure App Configuration can be
 automated using GitHub Actions. This ensures that any changes made to the
 configuration files in the repository are automatically reflected in the
-AppConfiguration instance. This guide provides the necessary commands to
-provision settings and secrets to Azure, but you can decide what best fits your
-needs within your GitHub Actions workflows. You can either decide to have a
-dedicated workflow for this task, or integrate an existing application
-deployment workflow to include settings deployment alongside application code
-deployment.
+AppConfiguration instance.
+
+This guide provides the necessary commands to provision settings and secrets to
+Azure, but you can decide what best fits your needs within your GitHub Actions
+workflows. You can either decide to have a dedicated workflow for this task, or
+integrate an existing application deployment workflow to include settings
+deployment alongside application code deployment.
 
 What is important to note is:
 
@@ -25,7 +26,7 @@ What is important to note is:
 - prefixes and labels can be combined to organize configuration data (see
   [Using Prefixes and Labels](#using-prefixes-and-labels) section below);
 
-## Pre-requisites
+## Prerequisites
 
 Before starting, make sure your workflow logs into Azure, and has the following
 permissions:
@@ -54,7 +55,7 @@ jobs:
 
 ## Deploying Application Settings and Feature Flags
 
-Application settings and feature flags can be deployed using az cli command:
+Application settings and feature flags can be deployed using Azure CLI command:
 
 ```yaml
 - uses: azure/cli@v2
@@ -177,8 +178,8 @@ const settings = await load(endpoint, credential, {
 
 #### 2. Configuration Versioning
 
-If preferred, labels can be used to version application settings. SemVer, git
-commit sha or any other versioning scheme can be used:
+If preferred, labels can be used to version application settings. SemVer, Git
+commit SHA or any other versioning scheme can be used:
 
 ```bash
 # Deploy version 1.2.0
