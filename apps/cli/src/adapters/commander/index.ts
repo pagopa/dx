@@ -16,6 +16,7 @@ export type CliDependencies = CodemodCommandDependencies;
 export const makeCli = (
   deps: Dependencies,
   config: Config,
+  repositoryRoot: string,
   cliDeps: CliDependencies,
 ) => {
   const program = new Command();
@@ -25,11 +26,11 @@ export const makeCli = (
     .description("The CLI for DX-Platform")
     .version(__CLI_VERSION__);
 
-  program.addCommand(makeDoctorCommand(deps, config));
+  program.addCommand(makeDoctorCommand(deps, config, repositoryRoot));
   program.addCommand(makeCodemodCommand(cliDeps));
   program.addCommand(makeInitCommand());
   program.addCommand(makeSavemoneyCommand());
-  program.addCommand(makeInfoCommand(deps, config));
+  program.addCommand(makeInfoCommand(deps, config, repositoryRoot));
 
   return program;
 };

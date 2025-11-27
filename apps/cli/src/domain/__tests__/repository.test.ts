@@ -2,15 +2,19 @@ import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
-import { makeMockConfig, makeMockDependencies } from "./data.js";
+import {
+  makeMockConfig,
+  makeMockDependencies,
+  makeMockRepositoryRoot,
+} from "./data.js";
 
 describe("checkPreCommitConfig", () => {
   it("should return ok result with successful validation when .pre-commit-config.yaml exists", async () => {
     const deps = makeMockDependencies();
-    const config = makeMockConfig();
+    const repositoryRoot = makeMockRepositoryRoot();
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
 
-    const result = await checkPreCommitConfig(deps, config);
+    const result = await checkPreCommitConfig(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
@@ -27,7 +31,7 @@ describe("checkPreCommitConfig", () => {
 
   it("should return ok result with failed validation when .pre-commit-config.yaml does not exist", async () => {
     const deps = makeMockDependencies();
-    const config = makeMockConfig();
+    const repositoryRoot = makeMockRepositoryRoot();
 
     const errorMessage =
       ".pre-commit-config.yaml not found in repository root. Make sure to have pre-commit configured for the repository.";
@@ -35,7 +39,7 @@ describe("checkPreCommitConfig", () => {
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkPreCommitConfig(deps, config);
+    const result = await checkPreCommitConfig(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
@@ -49,6 +53,7 @@ describe("checkPreCommitConfig", () => {
 
 describe("checkTurboConfig", () => {
   const config = makeMockConfig();
+  const repositoryRoot = makeMockRepositoryRoot();
 
   it("should return ok result with successful validation when turbo.json exists and turbo dependency is present", async () => {
     const deps = makeMockDependencies();
@@ -58,7 +63,7 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("turbo", "^2.5.2")),
     );
 
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
@@ -81,7 +86,7 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
 
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
@@ -102,7 +107,7 @@ describe("checkTurboConfig", () => {
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
@@ -119,7 +124,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
     expect(result).toStrictEqual(
       ok({
         checkName: "Turbo Configuration",
@@ -136,7 +141,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("turbo", "1.0.0")),
     );
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
@@ -153,7 +158,7 @@ describe("checkTurboConfig", () => {
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("turbo", config.minVersions.turbo)),
     );
-    const result = await checkTurboConfig(deps, config);
+    const result = await checkTurboConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({

@@ -13,22 +13,26 @@ type DoctorResult = {
   hasErrors: boolean;
 };
 
-export const runDoctor = (dependencies: Dependencies, config: Config) => {
+export const runDoctor = (
+  dependencies: Dependencies,
+  config: Config,
+  repositoryRoot: string,
+) => {
   const doctorChecks = [
     ResultAsync.fromPromise(
-      checkPreCommitConfig(dependencies, config),
+      checkPreCommitConfig(dependencies, repositoryRoot),
       () => new Error("Error checking pre-commit configuration"),
     ),
     ResultAsync.fromPromise(
-      checkTurboConfig(dependencies, config),
+      checkTurboConfig(dependencies, repositoryRoot, config),
       () => new Error("Error checking Turbo configuration"),
     ),
     ResultAsync.fromPromise(
-      checkMonorepoScripts(dependencies, config),
+      checkMonorepoScripts(dependencies, repositoryRoot),
       () => new Error("Error checking monorepo scripts"),
     ),
     ResultAsync.fromPromise(
-      checkWorkspaces(dependencies, config.repository.root),
+      checkWorkspaces(dependencies, repositoryRoot),
       () => new Error("Error checking monorepo scripts"),
     ),
   ];

@@ -8,6 +8,7 @@ import { printDoctorResult, runDoctor } from "../../../domain/doctor.js";
 export const makeDoctorCommand = (
   dependencies: Dependencies,
   config: Config,
+  repositoryRoot: string,
 ): Command =>
   new Command()
     .name("doctor")
@@ -15,7 +16,7 @@ export const makeDoctorCommand = (
       "Verify the repository setup according to the DevEx guidelines",
     )
     .action(async () => {
-      const result = await runDoctor(dependencies, config);
+      const result = await runDoctor(dependencies, config, repositoryRoot);
       printDoctorResult(dependencies, result);
 
       const exitCode = result.hasErrors ? 1 : 0;

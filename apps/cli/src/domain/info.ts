@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
-import { PackageJson, PackageManager } from "./package-json.js";
+import { PackageManager } from "./package-json.js";
 
 export type InfoResult = {
   node?: string;
@@ -14,20 +14,19 @@ export type InfoResult = {
 
 const detectFromLockFile = async (
   dependencies: Dependencies,
-  config: Config,
+  repositoryRoot: string,
 ): Promise<PackageManager | undefined> => {
   const { repositoryReader } = dependencies;
-  const repoRoot = config.repository.root;
   const pnpmResult = await repositoryReader.fileExists(
-    join(repoRoot, "pnpm-lock.yaml"),
+    join(repositoryRoot, "pnpm-lock.yaml"),
   );
   if (pnpmResult.isOk() && pnpmResult.value) return "pnpm";
   const yarnResult = await repositoryReader.fileExists(
-    join(repoRoot, "yarn.lock"),
+    join(repositoryRoot, "yarn.lock"),
   );
   if (yarnResult.isOk() && yarnResult.value) return "yarn";
   const npmResult = await repositoryReader.fileExists(
-    join(repoRoot, "package-lock.json"),
+    join(repositoryRoot, "package-lock.json"),
   );
   if (npmResult.isOk() && npmResult.value) return "npm";
   return undefined;
@@ -35,11 +34,15 @@ const detectFromLockFile = async (
 
 const detectPackageManager = async (
   dependencies: Dependencies,
-  config: Config,
+  repositoryRoot: string,
 ): Promise<PackageManager> => {
+  // Try to read package.json to get packageManager field
+  const packageJsonResult =
+    await dependencies.packageJsonReader.readPackageJson(repositoryRoot);
+
   const packageManager =
-    dependencies.packageJson.packageManager ??
-    (await detectFromLockFile(dependencies, config));
+    packageJsonResult.map((pkg) => pkg.packageManager).unwrapOr(undefined) ??
+    (await detectFromLockFile(dependencies, repositoryRoot));
 
   return packageManager ?? "npm";
 };
@@ -62,24 +65,37 @@ const detectTerraformVersion = async (
     .map((tfVersion) => tfVersion.trim())
     .unwrapOr(undefined);
 
-const detectTurboVersion = ({ devDependencies }: PackageJson) =>
-  devDependencies.get("turbo")?.trim();
+const detectTurboVersion = async (
+  dependencies: Dependencies,
+  repositoryRoot: string,
+): Promise<string | undefined> => {
+  const packageJsonResult =
+    await dependencies.packageJsonReader.readPackageJson(repositoryRoot);
+
+  return packageJsonResult
+    .map((pkg) => pkg.devDependencies.get("turbo")?.trim())
+    .unwrapOr(undefined);
+};
 
 export type GetInfo = () => Promise<InfoResult>;
 
 export const getInfo =
-  (dependencies: Dependencies, config: Config): GetInfo =>
+  (
+    dependencies: Dependencies,
+    config: Config,
+    repositoryRoot: string,
+  ): GetInfo =>
   async (): Promise<InfoResult> => ({
     node: await detectNodeVersion(
       { repositoryReader: dependencies.repositoryReader },
-      `${config.repository.root}/.node-version`,
+      `${repositoryRoot}/.node-version`,
     ),
-    packageManager: await detectPackageManager(dependencies, config),
+    packageManager: await detectPackageManager(dependencies, repositoryRoot),
     terraform: await detectTerraformVersion(
       { repositoryReader: dependencies.repositoryReader },
-      `${config.repository.root}/.terraform-version`,
+      `${repositoryRoot}/.terraform-version`,
     ),
-    turbo: detectTurboVersion(dependencies.packageJson),
+    turbo: await detectTurboVersion(dependencies, repositoryRoot),
   });
 
 export const printInfo = (result: InfoResult): void => {
