@@ -1,7 +1,6 @@
 import { err, ok, ResultAsync } from "neverthrow";
 import { z } from "zod/v4";
 
-import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { ValidationCheckResult } from "./validation.js";
 

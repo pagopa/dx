@@ -13,11 +13,27 @@ type DoctorResult = {
   hasErrors: boolean;
 };
 
-export const runDoctor = (
-  dependencies: Dependencies,
-  config: Config,
-  repositoryRoot: string,
-) => {
+export const runDoctor = async (dependencies: Dependencies, config: Config) => {
+  // Get repository root - doctor command requires being in a repository
+  const repoRootResult =
+    await dependencies.repositoryReader.findRepositoryRoot();
+
+  if (repoRootResult.isErr()) {
+    return {
+      checks: [
+        {
+          checkName: "Repository Detection",
+          errorMessage:
+            "Could not find repository root. Make sure to run this command inside a Git repository.",
+          isValid: false,
+        },
+      ],
+      hasErrors: true,
+    } satisfies DoctorResult;
+  }
+
+  const repositoryRoot = repoRootResult.value;
+
   const doctorChecks = [
     ResultAsync.fromPromise(
       checkPreCommitConfig(dependencies, repositoryRoot),

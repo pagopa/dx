@@ -42,10 +42,6 @@ const deps: Dependencies = {
   validationReporter,
 };
 
-// Try to find the repository root (optional for some commands)
-const repoRoot = await repositoryReader.findRepositoryRoot(process.cwd());
-const repositoryRoot = repoRoot.unwrapOr(process.cwd());
-
 const config = getConfig();
 
 const useCases = {
@@ -53,6 +49,6 @@ const useCases = {
   listCodemods: listCodemods(codemodRegistry),
 };
 
-const program = makeCli(deps, config, repositoryRoot, useCases);
+const program = makeCli(deps, config, useCases);
 
 program.parse();
