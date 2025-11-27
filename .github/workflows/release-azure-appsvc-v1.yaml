@@ -106,10 +106,11 @@ jobs:
         run: |
           if grep -rq --include='next.config.*' 'output: "standalone"' .; then
             echo "::debug::The workspace contains a Next.js standalone app"
-            mv .next/static .next/standalone/$WORKSPACE_PATH/.next
-            mv public .next/standalone/$WORKSPACE_PATH
-            cd .next/standalone && zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
+            mv .next/static .next/standalone/"$WORKSPACE_PATH"/.next
+            mv public .next/standalone/"$WORKSPACE_PATH"
+            cd .next/standalone/"$WORKSPACE_PATH"
+            zip -r "$BUNDLE_NAME".zip .
+            echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
