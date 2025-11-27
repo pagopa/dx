@@ -1,4 +1,4 @@
-name: Terraform apply on Prod bootstrapper
+name: Terraform apply on prod bootstrapper
 
 permissions:
   contents: read
