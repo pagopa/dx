@@ -16,6 +16,9 @@ describe("getInfo", () => {
       });
       const mockDependencies = makeMockDependencies();
       const repositoryRoot = makeMockRepositoryRoot();
+      mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+        okAsync(repositoryRoot),
+      );
       mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
         okAsync(mockPackageJson),
       );
@@ -26,7 +29,7 @@ describe("getInfo", () => {
         okAsync("22.0.0"),
       );
 
-      const result = await getInfo(mockDependencies, repositoryRoot)();
+      const result = await getInfo(mockDependencies)();
       expect(result.packageManager).toStrictEqual("npm");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -61,7 +64,10 @@ describe("getInfo", () => {
       );
 
       const repositoryRoot = makeMockRepositoryRoot();
-      const result = await getInfo(mockDependencies, repositoryRoot)();
+      mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+        okAsync(repositoryRoot),
+      );
+      const result = await getInfo(mockDependencies)();
       expect(result.packageManager).toStrictEqual("yarn");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -85,6 +91,9 @@ describe("getInfo", () => {
     const repositoryRoot = makeMockRepositoryRoot();
     const mockDependencies = makeMockDependencies();
 
+    mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+      okAsync(repositoryRoot),
+    );
     mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
       okAsync(mockPackageJson),
     );
@@ -92,7 +101,7 @@ describe("getInfo", () => {
       .mockReturnValueOnce(okAsync("\n22.0.0\n"))
       .mockReturnValueOnce(okAsync("1.0.0\n"));
 
-    const result = await getInfo(mockDependencies, repositoryRoot)();
+    const result = await getInfo(mockDependencies)();
     expect(result).toStrictEqual({
       node: "22.0.0",
       packageManager: "pnpm",
@@ -111,6 +120,9 @@ describe("getInfo", () => {
     const repositoryRoot = makeMockRepositoryRoot();
     const mockDependencies = makeMockDependencies();
 
+    mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+      okAsync(repositoryRoot),
+    );
     mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
       okAsync(makeMockPackageJson()),
     );
@@ -118,7 +130,7 @@ describe("getInfo", () => {
       errAsync(new Error("File not found")),
     );
 
-    const result = await getInfo(mockDependencies, repositoryRoot)();
+    const result = await getInfo(mockDependencies)();
     expect(result).toStrictEqual({
       node: undefined,
       packageManager: "pnpm",

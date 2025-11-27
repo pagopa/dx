@@ -49,10 +49,7 @@ const repositoryRoot = repoRoot.unwrapOr(process.cwd());
 const config = getConfig();
 
 const useCases = {
-  applyCodemodById: applyCodemodById(
-    codemodRegistry,
-    getInfo(deps, repositoryRoot),
-  ),
+  applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
   listCodemods: listCodemods(codemodRegistry),
 };
 

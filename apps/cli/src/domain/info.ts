@@ -79,19 +79,26 @@ const detectTurboVersion = async (
 export type GetInfo = () => Promise<InfoResult>;
 
 export const getInfo =
-  (dependencies: Dependencies, repositoryRoot: string): GetInfo =>
-  async (): Promise<InfoResult> => ({
-    node: await detectNodeVersion(
-      { repositoryReader: dependencies.repositoryReader },
-      `${repositoryRoot}/.node-version`,
-    ),
-    packageManager: await detectPackageManager(dependencies, repositoryRoot),
-    terraform: await detectTerraformVersion(
-      { repositoryReader: dependencies.repositoryReader },
-      `${repositoryRoot}/.terraform-version`,
-    ),
-    turbo: await detectTurboVersion(dependencies, repositoryRoot),
-  });
+  (dependencies: Dependencies): GetInfo =>
+  async (): Promise<InfoResult> => {
+    // Get repository root, fallback to current working directory if not in a repository
+    const repositoryRoot = await dependencies.repositoryReader
+      .findRepositoryRoot()
+      .unwrapOr(process.cwd());
+
+    return {
+      node: await detectNodeVersion(
+        { repositoryReader: dependencies.repositoryReader },
+        `${repositoryRoot}/.node-version`,
+      ),
+      packageManager: await detectPackageManager(dependencies, repositoryRoot),
+      terraform: await detectTerraformVersion(
+        { repositoryReader: dependencies.repositoryReader },
+        `${repositoryRoot}/.terraform-version`,
+      ),
+      turbo: await detectTurboVersion(dependencies, repositoryRoot),
+    };
+  };
 
 export const printInfo = (result: InfoResult): void => {
   const logger = getLogger("json");
