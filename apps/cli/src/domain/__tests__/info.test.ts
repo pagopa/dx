@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 
 import { getInfo } from "../info.js";
 import {
-  makeMockConfig,
   makeMockDependencies,
   makeMockPackageJson,
   makeMockRepositoryRoot,
@@ -16,7 +15,6 @@ describe("getInfo", () => {
         packageManager: undefined,
       });
       const mockDependencies = makeMockDependencies();
-      const config = makeMockConfig();
       const repositoryRoot = makeMockRepositoryRoot();
       mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
         okAsync(mockPackageJson),
@@ -28,7 +26,7 @@ describe("getInfo", () => {
         okAsync("22.0.0"),
       );
 
-      const result = await getInfo(mockDependencies, config, repositoryRoot)();
+      const result = await getInfo(mockDependencies, repositoryRoot)();
       expect(result.packageManager).toStrictEqual("npm");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -62,9 +60,8 @@ describe("getInfo", () => {
         okAsync("22.0.0"),
       );
 
-      const config = makeMockConfig();
       const repositoryRoot = makeMockRepositoryRoot();
-      const result = await getInfo(mockDependencies, config, repositoryRoot)();
+      const result = await getInfo(mockDependencies, repositoryRoot)();
       expect(result.packageManager).toStrictEqual("yarn");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -85,7 +82,6 @@ describe("getInfo", () => {
     const mockPackageJson = makeMockPackageJson({
       devDependencies: new Map([["turbo", "^2.5.0"]]),
     });
-    const config = makeMockConfig();
     const repositoryRoot = makeMockRepositoryRoot();
     const mockDependencies = makeMockDependencies();
 
@@ -96,7 +92,7 @@ describe("getInfo", () => {
       .mockReturnValueOnce(okAsync("\n22.0.0\n"))
       .mockReturnValueOnce(okAsync("1.0.0\n"));
 
-    const result = await getInfo(mockDependencies, config, repositoryRoot)();
+    const result = await getInfo(mockDependencies, repositoryRoot)();
     expect(result).toStrictEqual({
       node: "22.0.0",
       packageManager: "pnpm",
@@ -112,7 +108,6 @@ describe("getInfo", () => {
   });
 
   it("should only required information", async () => {
-    const config = makeMockConfig();
     const repositoryRoot = makeMockRepositoryRoot();
     const mockDependencies = makeMockDependencies();
 
@@ -123,7 +118,7 @@ describe("getInfo", () => {
       errAsync(new Error("File not found")),
     );
 
-    const result = await getInfo(mockDependencies, config, repositoryRoot)();
+    const result = await getInfo(mockDependencies, repositoryRoot)();
     expect(result).toStrictEqual({
       node: undefined,
       packageManager: "pnpm",

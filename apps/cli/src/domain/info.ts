@@ -1,7 +1,6 @@
 import { getLogger } from "@logtape/logtape";
 import { join } from "node:path";
 
-import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { PackageManager } from "./package-json.js";
 
@@ -80,11 +79,7 @@ const detectTurboVersion = async (
 export type GetInfo = () => Promise<InfoResult>;
 
 export const getInfo =
-  (
-    dependencies: Dependencies,
-    config: Config,
-    repositoryRoot: string,
-  ): GetInfo =>
+  (dependencies: Dependencies, repositoryRoot: string): GetInfo =>
   async (): Promise<InfoResult> => ({
     node: await detectNodeVersion(
       { repositoryReader: dependencies.repositoryReader },

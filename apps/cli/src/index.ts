@@ -51,7 +51,7 @@ const config = getConfig();
 const useCases = {
   applyCodemodById: applyCodemodById(
     codemodRegistry,
-    getInfo(deps, config, repositoryRoot),
+    getInfo(deps, repositoryRoot),
   ),
   listCodemods: listCodemods(codemodRegistry),
 };
