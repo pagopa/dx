@@ -1,5 +1,8 @@
 name: Terraform apply on Prod bootstrapper
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   push:

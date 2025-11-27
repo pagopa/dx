@@ -1,5 +1,8 @@
 name: Terraform apply on dev bootstrapper
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
   push:
