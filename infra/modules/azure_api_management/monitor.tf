@@ -51,10 +51,13 @@ resource "azurerm_monitor_diagnostic_setting" "apim" {
     }
   }
 
-  # Add metrics if enabled
-  metric {
-    category = "AllMetrics"
-    enabled  = var.monitoring.metrics.enabled
+  # Add metrics if enabled (using enabled_metric to replace deprecated metric block)
+  dynamic "enabled_metric" {
+    for_each = var.monitoring.metrics.enabled ? ["AllMetrics"] : []
+
+    content {
+      category = enabled_metric.value
+    }
   }
 }
 

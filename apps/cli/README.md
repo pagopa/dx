@@ -18,14 +18,27 @@ The DX CLI is a command-line tool designed to help developers manage and validat
 
 ## ✨ Features
 
-- **Repository Validation**: Verify repository setup against DevEx guidelines
-- **Monorepo Script Checking**: Validate that required scripts are present in package.json
+- **Repository Validation**: Verify repository setup against DevEx guidelines with the `doctor` command
+- **Code Migrations**: Apply automated migration scripts (codemods) to update code and configurations
+- **Project Initialization**: Bootstrap new monorepo projects with standardized structure
+- **Cost Optimization**: Analyze Azure subscriptions to identify unused or underutilized resources
+- **Project Information**: Display comprehensive information about your project setup and tools
 - **Developer Experience Optimization**: Ensure consistent development practices across projects
 
 ## 🚀 Installation
 
-> [!NOTE]
-> The CLI is currently only available locally and is not yet distributed through package managers.
+Install the CLI globally using your preferred package manager:
+
+```bash
+# Using npm
+npm install -g @pagopa/dx-cli
+
+# Using yarn
+yarn global add @pagopa/dx-cli
+
+# Using pnpm
+pnpm add -g @pagopa/dx-cli
+```
 
 ### From Source (Development)
 
@@ -34,11 +47,19 @@ The DX CLI is a command-line tool designed to help developers manage and validat
 git clone https://github.com/pagopa/dx.git
 cd dx
 
-# Install dependencies
+# Install dependencies (using npm)
+npm install
+
+# Or using yarn
 yarn install
 
+# Or using pnpm
+pnpm install
+
 # Build the CLI
-yarn build
+npm run build
+# Or: yarn build
+# Or: pnpm build
 
 # Run the CLI
 node ./apps/cli/bin/index.js --help
@@ -70,6 +91,55 @@ $ dx doctor
 Checking monorepo scripts...
 ✅ Monorepo scripts are correctly set up
 ```
+
+#### `codemod`
+
+Manage and apply migration scripts (codemods) to the repository.
+
+```bash
+# List available codemods
+dx codemod list
+
+# Apply a specific codemod by ID
+dx codemod apply <id>
+```
+
+This command helps you:
+
+- View all available migration scripts for your repository
+- Apply automated code transformations to keep your codebase up to date
+- Migrate configurations and code patterns to newer standards
+
+#### `init`
+
+Initialize resources such as new projects with standardized structure.
+
+```bash
+# Initialize a new monorepo project
+dx init project
+```
+
+This command will:
+
+- Guide you through creating a new monorepo project
+- Set up the project structure according to PagoPA's DevEx guidelines
+- Configure necessary tools and dependencies
+- Bootstrap the project with best practices
+
+#### `info`
+
+Display comprehensive information about your project setup and tools.
+
+```bash
+dx info
+```
+
+This command provides:
+
+- Current project configuration details
+- Installed tool versions
+- Repository metadata
+- Development environment information
 
 #### `savemoney`
 
