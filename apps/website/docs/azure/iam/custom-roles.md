@@ -109,9 +109,9 @@ programmatically.
 ```hcl
 # Manual assignment for a custom application
 resource "azurerm_role_assignment" "app_apim_operator" {
-  scope                = [APIM Resource ID]
+  scope                = <APIM Resource ID>
   role_definition_name = "PagoPA API Management Operator App"
-  principal_id         = [Computing resouce principal ID]
+  principal_id         = <Computing resource principal ID>
 }
 ```
 
