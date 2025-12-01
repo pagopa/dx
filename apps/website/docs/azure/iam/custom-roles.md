@@ -364,7 +364,7 @@ and custom roles:
 
 - **Least Privilege**: Always assign the minimum permissions needed for the task
 - **Scope Appropriately**: Assign roles at the narrowest scope possible
-  (resource > resource group > subscription)
+  (resource < resource group < subscription — from narrowest to broadest scope)
 - **Regular Review**: Periodically audit role assignments to ensure they're
   still necessary
 - **Documentation**: Always include a description when assigning roles
