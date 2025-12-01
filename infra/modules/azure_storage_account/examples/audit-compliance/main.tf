@@ -60,24 +60,6 @@ module "azure_storage_account" {
     file = true
   }
 
-  network_rules = {
-    default_action             = "Deny"
-    bypass                     = ["AzureServices"]
-    ip_rules                   = ["203.0.113.0/24"]
-    virtual_network_subnet_ids = [azurerm_subnet.example.id]
-  }
-
-  static_website = {
-    enabled            = true
-    index_document     = "index.html"
-    error_404_document = "404.html"
-  }
-
-  custom_domain = {
-    name          = "example.com"
-    use_subdomain = true
-  }
-
   containers = [
     {
       name        = "example1"
