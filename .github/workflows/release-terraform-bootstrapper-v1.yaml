@@ -39,8 +39,6 @@ jobs:
       - name: Get terraform version from .terraform-version file
         id: get-version
         uses: pagopa/dx/.github/actions/get-terraform-version@main
-        with:
-          default_version: "1.13.5"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
