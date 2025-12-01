@@ -9,15 +9,12 @@ on:
     paths:
       - "infra/bootstrapper/**"
 jobs:
-  release_dev:
+  release:
+    strategy:
+      matrix:
+        environment: ["dev", "prod"]
     uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
-    name: Release Bootstrapper (dev)
+    name: Release Bootstrapper (${{ matrix.environment }})
     secrets: inherit
     with:
-      environment: dev
-  release_prod:
-    uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
-    name: Release Bootstrapper (prod)
-    secrets: inherit
-    with:
-      environment: prod
+      environment: "${{ matrix.environment }}"
