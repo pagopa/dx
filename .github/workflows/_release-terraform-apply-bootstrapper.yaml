@@ -1,6 +1,4 @@
 name: Release Bootstrapper Infrastructure
-permissions:
-  contents: read
 on:
   workflow_dispatch:
   push:
@@ -8,6 +6,8 @@ on:
       - main
     paths:
       - "infra/bootstrapper/**"
+permissions:
+  contents: read
 jobs:
   release:
     strategy:
