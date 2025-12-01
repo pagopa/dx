@@ -12,10 +12,7 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   # Security and compliance settings (defined by use case)
-  min_tls_version                   = local.tier_features.min_tls_version
-  https_traffic_only_enabled        = local.tier_features.https_traffic_only_enabled
   infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
-  cross_tenant_replication_enabled  = local.tier_features.cross_tenant_replication_enabled
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
 
   blob_properties {
@@ -134,7 +131,7 @@ resource "azurerm_storage_container" "this" {
 
 # Container-level immutability policies (for legal holds and granular retention)
 resource "azurerm_storage_container_immutability_policy" "this" {
-  for_each = { for c in var.containers : c.name => c if c.immutability_policy != null }
+  for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
   storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days

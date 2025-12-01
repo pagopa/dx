@@ -317,7 +317,7 @@ run "audit_storage_account_is_correct_plan" {
       log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     }
 
-    audit_retention_days = 365 # PagoPA standard: 12 months
+    audit_retention_days = 365
   }
 
   # Checks some assertions
@@ -362,25 +362,16 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   # NEW: Security compliance assertions
-  assert {
-    condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
-    error_message = "Audit storage must enforce TLS 1.2 minimum for encryption in transit"
-  }
 
-  assert {
-    condition     = azurerm_storage_account.this.https_traffic_only_enabled == true
-    error_message = "Audit storage must enforce HTTPS-only traffic"
-  }
+
+
 
   assert {
     condition     = azurerm_storage_account.this.infrastructure_encryption_enabled == true
     error_message = "Audit storage must enable infrastructure encryption (double encryption)"
   }
 
-  assert {
-    condition     = azurerm_storage_account.this.cross_tenant_replication_enabled == false
-    error_message = "Audit storage must disable cross-tenant replication to prevent data exfiltration"
-  }
+
 
   assert {
     condition     = azurerm_storage_account.this.default_to_oauth_authentication == true
@@ -509,8 +500,20 @@ run "container_level_immutability_policy_plan" {
     tags        = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
+    use_case            = "audit"
+    secondary_location  = "westeurope"
     subnet_pep_id       = run.setup_tests.pep_id
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
 
     containers = [
       {

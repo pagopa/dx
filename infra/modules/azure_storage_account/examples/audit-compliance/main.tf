@@ -8,6 +8,19 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
+data "azurerm_log_analytics_workspace" "law" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "resource_group"
+  }))
+}
+
 resource "azurerm_resource_group" "example" {
   name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
   location = local.environment.location
@@ -20,17 +33,12 @@ resource "azurerm_subnet" "example" {
   address_prefixes     = ["10.50.246.0/24"]
 }
 
-resource "azurerm_user_assigned_identity" "example" {
-  name                = "example"
-  resource_group_name = azurerm_resource_group.example.name
-  location            = local.environment.location
-}
-
 module "azure_storage_account" {
   source = "../../"
 
   environment         = local.environment
-  use_case            = "default"
+  use_case            = "audit"
+  secondary_location  = "westeurope"
   resource_group_name = azurerm_resource_group.example.name
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
@@ -42,31 +50,14 @@ module "azure_storage_account" {
     # key_vault_id = "your-kv-id"
   }
 
-  blob_features = {
-    immutability_policy = {
-      enabled                       = true
-      allow_protected_append_writes = true
-      period_since_creation_in_days = 730
-    }
-    # restore_policy_days   = 30 # Cannot enable both immutability_policy and restore_policy
-    delete_retention_days = 14
-    versioning            = true
-    last_access_time      = true
-    change_feed = {
-      enabled           = true
-      retention_in_days = 30
-    }
+  diagnostic_settings = {
+    enabled                    = true
+    log_analytics_workspace_id = data.azurerm_log_analytics_workspace.law.id
   }
 
-  force_public_network_access_enabled = false
-
-  access_tier = "Hot"
-
   subservices_enabled = {
-    blob  = true
-    file  = true
-    queue = true
-    table = true
+    blob = true
+    file = true
   }
 
   network_rules = {
@@ -89,23 +80,19 @@ module "azure_storage_account" {
 
   containers = [
     {
-      name        = "container1"
+      name        = "example1"
       access_type = "private"
     },
     {
-      name        = "container2"
+      name        = "example2"
       access_type = "private"
+      # Example: Container-level immutability with legal hold capability
+      immutability_policy = {
+        period_in_days  = 365
+        locked          = false # Keep unlocked to allow legal hold modifications
+        legal_hold_tags = []    # Add tags like ["case2024", "investigation"] for legal holds
+      }
     }
-  ]
-
-  tables = [
-    "table1",
-    "table2"
-  ]
-
-  queues = [
-    "queue1",
-    "queue2"
   ]
 
   tags = local.tags
