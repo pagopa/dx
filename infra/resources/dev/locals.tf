@@ -29,14 +29,15 @@ locals {
     "scm.azure-api.net",
     "privatelink.servicebus.windows.net",
     "privatelink.table.core.windows.net",
+    "privatelink.azconfig.io",
   ]
 
   tags = {
+    BusinessUnit   = "DevEx"
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Owner          = "DevEx"
-    Environment    = "Prod"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/resources/dev"
+    Environment    = "Dev"
     ManagementTeam = "Developer Experience"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/resources/dev"
   }
 }

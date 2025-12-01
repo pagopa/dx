@@ -1,0 +1,9 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2022"
+  },
+  "references": [],
+}

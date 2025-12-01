@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.10.3
+
+### Patch Changes
+
+- e8e1bd1: Fixed the `use-pnpm` logic bug that prevented the update of the legacy deployment workflows
+
 ## 0.10.2
 
 ### Patch Changes

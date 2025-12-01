@@ -7,20 +7,18 @@ RUN corepack enable
 WORKDIR /app
 
 # 3. Copy monorepo configuration files
-COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./turbo.json ./
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.json ./
 
 # 4. Copy source code for apps and packages
 COPY ./apps ./apps
 COPY ./packages ./packages
 
-
 # 5. Install ALL dependencies for mcpserver and its workspace dependencies
 RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
-RUN pnpx turbo build --filter @pagopa/dx-mcpserver
+RUN pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
-
 
 # --- Final Image ---
 FROM public.ecr.aws/docker/library/node:slim@sha256:c0eadb278e6b0b608681b359291592692979133567710eaa703d6f989f33c6c1

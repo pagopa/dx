@@ -1,0 +1,448 @@
+---
+sidebar_position: 2
+---
+
+# Defining Secrets, Application Settings and Feature Flags
+
+Secrets, application settings and feature flags can be defined in a JSON file,
+which can be stored alongside the application code in the repository. This file
+will be used to import the configuration data into the Azure App Configuration
+instance. In particular, two JSON files should be created:
+
+- `secrets.json`: This file contains sensitive data that should be stored in
+  Azure KeyVault.
+- `appsettings.json`: This file contains application settings and feature flags.
+
+```bash
+src/
+├── appsettings.json # Production (or shared baseline)
+├── secrets.json     # Prod secrets (KV references)
+```
+
+## Defining Secrets
+
+Secrets must be configured with a reference to the KeyVault as follows:
+
+```json
+// secrets.json
+
+{
+  "my-api-key": {
+    "uri": "https://<kv-name>.vault.azure.net/secrets/<my-secret-api-key>"
+  }
+}
+```
+
+:::warning
+
+The key name stored in AppConfiguration and the secret name in KeyVault don't
+necessarily match. The application has to access the secret via the key name
+defined in AppConfiguration, `my-api-key` in the example above. However, it is
+suggested to keep them aligned to avoid confusion.
+
+:::
+
+:::info
+
+The key `uri` is mandatory, and cannot be changed.
+
+:::
+
+## Defining Application Settings and Feature Flags
+
+The syntax for defining application settings and feature flags is as follows:
+
+```json
+// appconfig.json
+{
+  "Sentinel": 0, // Mandatory to manage hot reload
+
+  // Application settings
+  "Setting1": "Value1",
+  "Setting2": "Value2",
+
+  // Feature Flags
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "feature1",
+        "enabled": true,
+        "description": "Simple enabled feature flag"
+      }
+    ]
+  }
+}
+```
+
+:::info
+
+If you would like to add a prefix to all application settings keys, it is not
+advised to wrap all keys in here with a parent object. Instead, you can manage
+key prefixes directly in the
+[GitHub Actions workflow](./appsettings-deploy.md#using-prefixes-and-labels)
+that deploys the settings to AppConfiguration.
+
+:::
+
+:::info
+
+The blocks `feature_management` and `feature_flags` are mandatory to define
+feature flags. If you want to change their names, you need to update the
+application code accordingly to let the SDK know about new names.
+
+:::
+
+### Sentinel Key
+
+When configuring the SDK, it is possible to enable hot-reload of settings. By
+default, the SDK polls the AppConfiguration instance every 30 seconds to check
+for changes, by downloading the entire configuration. This consumes
+[the quota limit](https://azure.microsoft.com/en-us/pricing/details/app-configuration/)
+pretty quickly. To avoid this, a `Sentinel` key is used to signal changes in the
+configuration. The application only checks for changes in the `Sentinel` key,
+and if its value has changed, it downloads the entire configuration again.
+Therefore, it is advised to include the `Sentinel` key in the JSON file, even if
+it is not used in the application code.
+
+You can update its value (e.g., incrementing a number) whenever you update other
+settings or feature flags, to trigger a refresh in the application.
+
+However, you have to instruct the SDK to monitor the `Sentinel` key for changes,
+and optionally configure the refresh interval, as shown below:
+
+```typescript
+const appConfig = await load(endpoint, credential, {
+  ...
+  refreshOptions: {
+    // Trigger full configuration refresh only if the `SentinelKey` changes
+    enabled: true,
+    watchedSettings: [{ key: "Sentinel" }],
+    refreshIntervalInMs: 300000, // 5 minutes
+  },
+});
+```
+
+More info about the Sentinel pattern is on the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-best-practices?tabs=javascript#monitoring-a-sentinel-key).
+
+### Customizing Feature Flags
+
+Feature flags can be customized further by adding additional properties, such as
+scheduling and target users, or custom filters.
+
+:::info
+
+This page collects some of the most common customizations for feature flags. For
+a complete reference, please refer to the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/manage-feature-flags?tabs=switch).
+Alternatively, you can create the flag using Azure Portal, and export the JSON
+configuration by clicking on `Advanced Edit`.
+
+:::
+
+#### Weighted Random Feature Flags
+
+It is possible to randomly enable a feature flag based on a weight, using
+`seed`. This is useful for gradually rolling out a feature to a percentage of
+users.
+
+The percentile allocation section defines the distribution of variants. In this
+example, the feature flag is enabled for 30% of users, and disabled for the
+remaining 70% for a single variant "Default" and a single segment from 0 to 100.
+
+For more info, please refer to the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/feature-management-javascript-reference?tabs=map-configuration%2Cbrowser#allocating-variants).
+
+#### Scheduling Feature Flags
+
+The following snippet shows how to define feature flags with scheduling options,
+and recurrence:
+
+```json
+{
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "feature-with-schedule",
+        "enabled": false,
+        "description": "Feature flag with schedule",
+        "allocation": {
+          "percentile": [
+            {
+              "variant": "Default",
+              "from": 0,
+              "to": 100
+            }
+          ],
+          "conditions": {
+            "client_filters": [
+              {
+                "name": "Microsoft.TimeWindow",
+                "parameters": {
+                  "Start": "Tue, 11 Nov 2025 23:00:00 GMT",
+                  "End": "Wed, 26 Nov 2025 23:00:00 GMT"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "feature-with-recurrence",
+        "enabled": false,
+        "description": "Feature flag with recurrence",
+        "allocation": {
+          "percentile": [
+            {
+              "variant": "Default",
+              "from": 0,
+              "to": 100
+            }
+          ]
+        },
+        "conditions": {
+          "client_filters": [
+            {
+              "name": "Microsoft.TimeWindow",
+              "parameters": {
+                "Start": "Fri, 21 Nov 2025 23:00:00 GMT",
+                "End": "Wed, 03 Dec 2025 23:00:00 GMT",
+                "Recurrence": {
+                  "Pattern": {
+                    "Type": "Daily",
+                    "Interval": 2
+                  },
+                  "Range": {
+                    "Type": "NoEnd"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+For more info, please refer to the official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-timewindow-filter).
+
+#### Targeting Users with Feature Flags
+
+Feature Flags can be enabled or disabled for specific users or groups by using
+the `Microsoft.Targeting` filter. To add a user or group to a feature flag, you
+need to add a filter in your code where you specify if a user or group is part
+of the ones targeted by the feature flag.
+
+```typescript
+import {
+  app,
+  HttpRequest,
+  HttpResponseInit,
+  InvocationContext,
+} from "@azure/functions";
+import {
+  FeatureManager,
+  ConfigurationMapFeatureFlagProvider,
+} from "@azure/app-configuration-provider";
+
+const targetingContextAccessor = {
+  getTargetingContext: (request: HttpRequest) => {
+    // Example: extract user information from headers
+
+    const userId = request.headers.get("x-user-id");
+    const groups = request.headers.get("x-user-groups")?.split(",") || [];
+
+    return {
+      userId: userId || "anonymous",
+      groups: groups,
+    };
+  },
+};
+
+app.http("myFunction", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  handler: async (
+    request: HttpRequest,
+    context: InvocationContext,
+  ): Promise<HttpResponseInit> => {
+    // Get targeting context from current request
+    const targetingContext =
+      targetingContextAccessor.getTargetingContext(request);
+
+    // Create feature manager instance with targeting support
+    const featureManager = new FeatureManager(
+      new ConfigurationMapFeatureFlagProvider(appConfig),
+      {
+        targetingContextAccessor: {
+          getTargetingContext: () => targetingContext,
+        },
+      },
+    );
+
+    // Check if feature is enabled for this user/group
+    const isBetaEnabled = await featureManager.isEnabled("feature1");
+
+    if (isBetaEnabled) {
+      context.log("Beta feature enabled for user:", targetingContext.userId);
+    }
+
+    return {
+      status: 200,
+      body: JSON.stringify({ betaEnabled: isBetaEnabled }),
+    };
+  },
+});
+```
+
+Then, the feature flag can be defined as follows:
+
+```json
+{
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "feature1",
+        "enabled": true,
+        "description": "Enable flag for beta-tests group only",
+        "conditions": {
+          "requirement_type": "All", // boolean logic for multiple filters
+          "client_filters": [
+            {
+              "name": "Microsoft.Targeting",
+              "parameters": {
+                "Audience": {
+                  "Users": [],
+                  "Groups": [
+                    {
+                      "Name": "beta-testers",
+                      "RolloutPercentage": 100
+                    }
+                  ],
+                  "DefaultRolloutPercentage": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+#### Custom logic for Feature Flags
+
+Custom filters can be created to implement specific logic for enabling or
+disabling feature flags. Below is an example of a custom filter that enables a
+feature flag based on the user's country:
+
+```typescript
+class RandomPercentageFilter {
+  name = "Random";
+
+  async evaluate(context, featureFlagValue) {
+    const randomNumber = Math.random() * 100;
+    const percentage = featureFlagValue?.parameters?.Percentage ?? 0;
+    return randomNumber < percentage;
+  }
+}
+
+const appConfig = await load(endpoint, credential, {
+  featureFlagOptions: {
+    enabled: true,
+    selectors: [
+      {
+        keyFilter: "*",
+      },
+    ],
+    customFilters: [new RandomPercentageFilter()],
+  },
+});
+```
+
+```json
+{
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "feature-custom",
+        "enabled": true,
+        "description": "Enable flag with a custom filter",
+        "conditions": {
+          "client_filters": [
+            {
+              "name": "Random",
+              "parameters": {
+                "Percentage": 70
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+### Variant Feature Flags
+
+A variant feature flag is a feature flag that supports multiple states or
+variations. While it can still be toggled on or off, it also allows for
+different variants with configurations.
+
+The following example shows two variants using JSON objects for the
+configuration value.
+
+Since the topic may be complex and frequently updated, please refer to the
+official
+[App Configuration documentation](https://learn.microsoft.com/en-us/azure/azure-app-configuration/howto-variant-feature-flags).
+
+### Enabling Telemetry for Feature Flags
+
+By connecting AppConfiguration instance to Application Insights, telemetry for
+feature flags can be enabled. This allows you to monitor the usage and
+performance of feature flags in your application.
+
+To enable telemetry, navigate to Azure Portal and select your AppConfiguration
+instance. Under `Telemetry`, select `Application Insights` and choose the
+desired Application Insights resource. Save the changes by clicking `Connect`.
+
+Now you can add telemetry per feature flag:
+
+```json
+{
+  "feature_management": {
+    "feature_flags": [
+      {
+        "id": "ff-with-telemetry",
+        "enabled": false,
+        "description": "Feature flag with telemetry enabled",
+        "telemetry": {
+          "enabled": true
+        }
+      }
+    ]
+  }
+}
+```
+
+## Managing multiple environments
+
+If your application is deployed in multiple environments (e.g., development,
+staging, production), it is suggested to create separate JSON files for each
+non-production environment, e.g., `appsettings.dev.json` and `appsettings.json`,
+or `secrets.dev.json` and `secrets.json`. This allows you to manage
+environment-specific settings and feature flags easily.
+
+```bash
+src/
+├── appsettings.json                 # Production (or shared baseline)
+├── appsettings.dev.json     # Dev overrides
+├── appsettings.uat.json         # Staging overrides
+├── secrets.json                     # Prod secrets (or shared baseline)
+└── secrets.dev.json         # Dev secrets
+```

@@ -140,7 +140,7 @@ Generates a resource name based on the standardized prefix and additional parame
 
 | Name        |  Type   | Required | Description                                                                       |
 | :---------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
-| prefix      | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                       |
+| prefix      | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                        |
 | environment | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
 | location    | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
 | domain      | String  |    No    | Optional value that specify the domain.                                           |
@@ -181,6 +181,8 @@ The following table lists the resource types and their abbreviations used in the
 | apim_network_security_group               |     apim-nsg     |
 | apim_subnet                               |    apim-snet     |
 | apim_private_endpoint                     |     apim-pep     |
+| app_configuration                         |      appcs       |
+| app_configuration_private_endpoint        |    appcs-pep     |
 | app_gateway                               |       agw        |
 | app_private_endpoint                      |     app-pep      |
 | app_service                               |       app        |

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {
@@ -39,24 +39,20 @@
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "memfs": "^4.23.0",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vitest-mock-extended": "^3.1.0"
+    "@vitest/coverage-v8": "catalog:",
+    "vitest-mock-extended": "catalog:"
   },
   "scripts": {
     "build": "tsup",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=22.0.0"

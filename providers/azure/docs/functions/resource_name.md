@@ -64,6 +64,8 @@ The following table lists the resource types and their abbreviations used in the
 | apim_network_security_group               |     apim-nsg     |
 | apim_subnet                               |    apim-snet     |
 | apim_private_endpoint                     |     apim-pep     |
+| app_configuration                         |      appcs       |
+| app_configuration_private_endpoint        |    appcs-pep     |
 | app_gateway                               |       agw        |
 | app_private_endpoint                      |     app-pep      |
 | app_service                               |       app        |
