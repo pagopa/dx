@@ -79,7 +79,7 @@ The `audit` use case is specifically designed for storing audit logs with **full
 | **Geo-Redundancy**            | Custom secondary replica with object replication                       | ✅ Enabled      |
 | **Lifecycle Management**      | Automated Hot→Cool→Cold→Delete policy                                  | ✅ Configurable |
 | **Access Control**            | OAuth authentication default, cross-tenant replication disabled        | ✅ Enforced     |
-| **Data Retention**            | Configurable (default: 365 days, as PagoPA standard)           | ✅ Configurable |
+| **Data Retention**            | Configurable (default: 365 days / 12 months, aligns with PagoPA standard)           | ✅ Configurable |
 
 ### Audit Use Case Configuration Example
 
