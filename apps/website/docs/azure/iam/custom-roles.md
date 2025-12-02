@@ -32,10 +32,13 @@ practices and automation capabilities.
 **Purpose**: Provides read-only access to API Management secrets without broader
 management permissions.
 
-**Permissions**:
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.ApiManagement/service/*/listSecrets/action` - List secrets for any
   APIM resource
+
+</details>
 
 **Use Cases**:
 
@@ -63,7 +66,8 @@ module to:
 **Purpose**: Comprehensive role for managing API Management users, groups,
 subscriptions, and secrets programmatically.
 
-**Permissions**:
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.ApiManagement/service/*/read` - Read all APIM resources
 - `Microsoft.ApiManagement/service/read` - Read APIM service configuration
@@ -89,6 +93,8 @@ subscriptions, and secrets programmatically.
 - `Microsoft.ApiManagement/service/managedeployments/action` - Manage
   deployments
 - `Microsoft.Resources/deployments/*` - Manage resource deployments
+
+</details>
 
 **Use Cases**:
 
@@ -123,10 +129,13 @@ resource "azurerm_role_assignment" "app_apim_operator" {
 **Purpose**: Provides read-only access to Static Web App deployment tokens and
 application settings.
 
-**Permissions**:
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.Web/staticSites/listSecrets/action` - List deployment tokens
 - `Microsoft.Web/staticSites/listAppSettings/action` - List application settings
+
+</details>
 
 **Use Cases**:
 
@@ -157,11 +166,14 @@ module to:
 **Purpose**: Allows creation, modification, and deletion of Azure Portal
 dashboards for operational monitoring.
 
-**Permissions**:
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.Portal/dashboards/write` - Create or update dashboards
 - `Microsoft.Portal/dashboards/read` - Read dashboard configuration
 - `Microsoft.Portal/dashboards/delete` - Delete dashboards
+
+</details>
 
 **Use Cases**:
 
@@ -191,12 +203,15 @@ module to:
 **Purpose**: Enables management of blob tags in storage accounts without
 granting access to blob data itself.
 
-**Permissions** (Data Actions):
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/read` -
   Read blob tags
 - `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/tags/write` -
   Write blob tags
+
+</details>
 
 **Use Cases**:
 
@@ -242,7 +257,8 @@ module "function_roles" {
 timeouts and processing messages in storage queues, essential for
 queue-triggered Azure Functions.
 
-**Permissions** (Data Actions):
+<details>
+<summary><strong>Permissions</strong></summary>
 
 - `Microsoft.Storage/storageAccounts/queueServices/queues/messages/write` - Set
   visibility timeout of messages
@@ -250,6 +266,8 @@ queue-triggered Azure Functions.
   Delete messages after processing
 - `Microsoft.Storage/storageAccounts/queueServices/queues/messages/process/action` -
   Process queue messages
+
+</details>
 
 **Use Cases**:
 
