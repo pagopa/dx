@@ -31,7 +31,7 @@ describe("executeCommand", () => {
     const mockError = new Error("Command failed");
     vi.mocked(execa).mockRejectedValueOnce(mockError);
 
-    const result = await executeCommand("anIvalidCommand");
+    const result = await executeCommand("anInvalidCommand");
     expect(result).toStrictEqual("failure");
   });
 

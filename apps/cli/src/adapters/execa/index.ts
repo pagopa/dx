@@ -6,7 +6,7 @@ import { execa, type Options } from "execa";
 export type CommandResult = "failure" | "success";
 
 /**
- * Executes a bash command and returns whether it succeeded or failed.
+ * Executes a shell command and returns whether it succeeded or failed.
  *
  * @param command - The command to execute
  * @param args - Array of arguments for the command (optional)
