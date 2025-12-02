@@ -29,7 +29,7 @@ export const makeCli = (
   program.addCommand(makeCodemodCommand(cliDeps));
   program.addCommand(makeInitCommand());
   program.addCommand(makeSavemoneyCommand());
-  program.addCommand(makeInfoCommand(deps, config));
+  program.addCommand(makeInfoCommand(deps));
 
   return program;
 };

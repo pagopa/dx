@@ -2,10 +2,10 @@ import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
 import { checkMonorepoScripts } from "../package-json.js";
-import { makeMockConfig, makeMockDependencies } from "./data.js";
+import { makeMockDependencies, makeMockRepositoryRoot } from "./data.js";
 
 describe("checkMonorepoScripts", () => {
-  const config = makeMockConfig();
+  const repositoryRoot = makeMockRepositoryRoot();
 
   it("should return error result when getScripts fails", async () => {
     const deps = makeMockDependencies();
@@ -15,7 +15,7 @@ describe("checkMonorepoScripts", () => {
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkMonorepoScripts(deps, config);
+    const result = await checkMonorepoScripts(deps, repositoryRoot);
 
     expect(result.isErr()).toBe(true);
   });
@@ -31,7 +31,7 @@ describe("checkMonorepoScripts", () => {
       new Map().set("code-review", "eslint ."),
     );
 
-    const result = await checkMonorepoScripts(deps, config);
+    const result = await checkMonorepoScripts(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
@@ -50,7 +50,7 @@ describe("checkMonorepoScripts", () => {
       new Map().set("code-review", "eslint ."),
     );
 
-    const result = await checkMonorepoScripts(deps, config);
+    const result = await checkMonorepoScripts(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
