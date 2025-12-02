@@ -26,7 +26,7 @@ describe("executeCommand", () => {
     });
   });
 
-  it("should throw error when command fails", async () => {
+  it("should return failure when command fails with exception", async () => {
     const { execa } = await import("execa");
     const mockError = new Error("Command failed");
     vi.mocked(execa).mockRejectedValueOnce(mockError);
@@ -35,7 +35,20 @@ describe("executeCommand", () => {
     expect(result).toStrictEqual("failure");
   });
 
-  it("should return failure when command has non-zero exit code", async () => {
+  it("should return failure when command returns non-zero exit code", async () => {
+    const { execa } = await import("execa");
+    vi.mocked(execa).mockResolvedValueOnce({
+      exitCode: 1,
+      stderr: "",
+      stdout: "",
+    } as Awaited<ResultPromise>);
+
+    const result = await executeCommand("aCommandWithExitCode1");
+
+    expect(result).toStrictEqual("failure");
+  });
+
+  it("should return failure when command has non-zero exit code with stderr", async () => {
     const { execa } = await import("execa");
     vi.mocked(execa).mockResolvedValueOnce({
       exitCode: 1,
