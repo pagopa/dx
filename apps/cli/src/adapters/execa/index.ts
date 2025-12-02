@@ -1,5 +1,4 @@
 import { execa, type Options } from "execa";
-import { ResultAsync } from "neverthrow";
 
 /**
  * Result of a command execution
@@ -12,18 +11,15 @@ export type CommandResult = "failure" | "success";
  * @param command - The command to execute
  * @param args - Array of arguments for the command (optional)
  * @param options - Execa options (optional)
- * @returns ResultAsync with 'success' or 'failure'
+ * @returns Promise that always resolves to 'success' (exit code 0) or 'failure' (non-zero exit code or execution error)
  *
  * @example
  * ```ts
  * const result = await executeCommand("ls", ["-la"], { cwd: "/my/dir" });
- * if (result.isOk()) {
- *   if (result.value === "success") {
+ * if (result === "success") {
  *   console.log("Command executed successfully");
- *   } else {
- *     console.log("Command executed but failed");
  * } else {
- *   console.error(`Command execution failed: ${result.error.message}`);
+ *   console.log("Command failed");
  * }
  * ```
  */
@@ -31,10 +27,9 @@ export const executeCommand = (
   command: string,
   args: string[] = [],
   options: Options = {},
-): ResultAsync<CommandResult, Error> =>
-  ResultAsync.fromPromise(
-    execa(command, args, options).then((result) =>
-      result.exitCode === 0 ? ("success" as const) : ("failure" as const),
-    ),
-    () => new Error(`Command execution failed: "${command}"`),
-  );
+): Promise<CommandResult> =>
+  execa(command, args, options)
+    .then(({ exitCode }) =>
+      exitCode === 0 ? ("success" as const) : ("failure" as const),
+    )
+    .catch(() => "failure" as const);
