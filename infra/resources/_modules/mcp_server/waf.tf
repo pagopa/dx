@@ -1,7 +1,6 @@
 # WAF Web ACL for API Gateway protection
 # Note: API Gateway HTTP v2 doesn't support direct WAF association.
 # WAF must be attached to CloudFront or API Gateway REST API.
-# This configuration creates a WAF for use with CloudFront (if added) or for regional protection.
 
 resource "aws_wafv2_web_acl" "cloudfront" {
   provider = aws.us_east_1
@@ -141,7 +140,3 @@ resource "aws_wafv2_web_acl" "cloudfront" {
 
   tags = var.tags
 }
-
-# Note: WAF metrics and sampled requests are still available in CloudWatch Metrics.
-# Bot Control rule was removed as MCP clients are legitimate automated tools.
-# Core Rules may occasionally block legitimate MCP traffic - monitor metrics and adjust if needed.
