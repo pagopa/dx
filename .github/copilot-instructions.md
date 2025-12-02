@@ -83,9 +83,11 @@ pnpm --filter @pagopa/dx-cli run test
 │   ├── bootstrapper/                  # Initial infrastructure setup
 │   └── scripts/                       # Infrastructure automation scripts
 ├── actions/                           # GitHub Actions
-│   ├── pr-comment/                    # PR comment automation
 │   ├── detect-node-package-manager/  # Package manager detection
-│   └── swap-appsvc-slot/              # Azure App Service slot swapping
+│   ├── log-telemetry-event/          # Emit custom telemetry events
+│   ├── pr-comment/                   # PR comment automation
+│   ├── setup-telemetry/              # Initialize OpenTelemetry session
+│   └── swap-appsvc-slot/             # Azure App Service slot swapping
 ├── providers/                         # Terraform providers
 │   ├── azure/                         # Azure-specific Terraform utilities
 │   └── aws/                           # AWS-specific Terraform utilities

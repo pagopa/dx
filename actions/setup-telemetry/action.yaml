@@ -1,0 +1,12 @@
+name: "Setup Telemetry"
+description: "Initialize telemetry session and flush queued events in post"
+
+inputs:
+  connection_string:
+    description: "Azure Application Insights connection string"
+    required: true
+
+runs:
+  using: "node20"
+  main: "dist/index.cjs"
+  post: "dist/post.cjs"
