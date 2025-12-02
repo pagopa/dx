@@ -19,7 +19,7 @@ import { terraformVersionActions } from "./actions/terraform.js";
 
 const trimmedString = z.string().trim();
 
-const answersSchema = z.object({
+export const answersSchema = z.object({
   awsAccountId: z
     .string()
     .regex(/^\d{12}$/, "AWS Account ID must be a 12-digit number")
@@ -57,12 +57,12 @@ const answersSchema = z.object({
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
 
+export type Answers = z.infer<typeof answersSchema>;
 interface ActionsDependencies {
   octokitClient: Octokit;
   plopApi: NodePlopAPI;
   templatesPath: string;
 }
-type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
