@@ -1,7 +1,11 @@
-import scaffoldMonorepo from "@pagopa/monorepo-generator";
+import type { Answers } from "@pagopa/monorepo-generator";
+
+import scaffoldMonorepo, { answersSchema } from "@pagopa/monorepo-generator";
 import { Command } from "commander";
 import { Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
+
+import { decode } from "../../zod/index.js";
 
 const initPlop = () =>
   ResultAsync.fromPromise(
