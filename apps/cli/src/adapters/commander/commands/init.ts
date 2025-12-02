@@ -31,9 +31,11 @@ const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
   ResultAsync.fromSafePromise(Promise.resolve(answers));
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
-  ResultAsync.fromPromise(generator.runActions(answers), (error) => {
-    return new Error("Failed to run the generator actions", { cause: error });
-  }).map(() => answers);
+  ResultAsync.fromPromise(
+    generator.runActions(answers),
+    (error) =>
+      new Error("Failed to run the generator actions", { cause: error }),
+  ).map(() => answers);
 
 const displaySummary = (answers: Answers) => {
   console.log("\n🎉 Workspace created successfully!\n");
@@ -61,7 +63,7 @@ export const makeInitCommand = (): Command =>
             .andThen((generator) =>
               getPrompts(generator)
                 .andThen(decode(answersSchema))
-                .andThen(validateAnswers)
+                .andTee(validateAnswers)
                 .andThen(runGeneratorActions(generator))
                 .andTee(displaySummary),
             )
