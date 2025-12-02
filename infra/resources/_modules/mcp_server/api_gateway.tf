@@ -42,7 +42,6 @@ resource "aws_apigatewayv2_stage" "default" {
 
   # Configure throttling limits for all routes
   # Default limits are 100 req/s (rate_limit) and 200 burst
-  # Increasing to support high-volume MCP traffic
   default_route_settings {
     throttling_rate_limit  = 1000 # requests per second
     throttling_burst_limit = 2000 # burst capacity
