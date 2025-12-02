@@ -1,5 +1,21 @@
 # @pagopa/dx-cli
 
+## 0.11.0
+
+### Patch Changes
+
+- bf456ea: Refactored CLI to work outside repository context for commands that don't require it.
+  - The CLI no longer fails to start when run outside a Git repository
+  - The `doctor` command now explicitly checks for repository context and returns a clear error message if not in a repository
+
+- 9d4109c: Upgrade dependencies
+- eb84990: Update README
+- Updated dependencies [9d4109c]
+- Updated dependencies [9d4109c]
+- Updated dependencies [9d4109c]
+  - @pagopa/monorepo-generator@0.11.0
+  - @pagopa/dx-savemoney@0.1.4
+
 ## 0.10.3
 
 ### Patch Changes
