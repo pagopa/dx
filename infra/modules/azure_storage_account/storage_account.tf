@@ -14,6 +14,8 @@ resource "azurerm_storage_account" "this" {
   # Security and compliance settings (defined by use case)
   infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
 
   blob_properties {
     versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false

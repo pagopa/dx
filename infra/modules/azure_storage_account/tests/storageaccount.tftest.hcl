@@ -361,17 +361,20 @@ run "audit_storage_account_is_correct_plan" {
     error_message = "The Storage Account must have a secondary replica"
   }
 
-  # NEW: Security compliance assertions
+  assert {
+    condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
+    error_message = "Audit storage must enforce TLS 1.2 minimum for encryption in transit"
+  }
 
-
-
+  assert {
+    condition     = azurerm_storage_account.this.https_traffic_only_enabled == true
+    error_message = "Audit storage must enforce HTTPS-only traffic"
+  }
 
   assert {
     condition     = azurerm_storage_account.this.infrastructure_encryption_enabled == true
     error_message = "Audit storage must enable infrastructure encryption (double encryption)"
   }
-
-
 
   assert {
     condition     = azurerm_storage_account.this.default_to_oauth_authentication == true

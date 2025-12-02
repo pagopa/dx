@@ -19,6 +19,8 @@ resource "azurerm_storage_account" "secondary_replica" {
   # Security and compliance settings (same as primary, defined by use case)
   infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
 
   blob_properties {
     versioning_enabled = true
