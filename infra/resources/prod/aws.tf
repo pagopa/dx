@@ -8,7 +8,6 @@ module "aws_core_values" {
 module "mcp_server" {
   source = "../_modules/mcp_server"
   providers = {
-    aws           = aws.eu-central-1
     aws.us_east_1 = aws.us-east-1
   }
 
