@@ -23,7 +23,7 @@ variable "dns" {
     resource_group_name = string
     custom_domain_name  = string
   })
-  description = "DNS configuration for the MCP server, including zone name, resource group name, and custom domain name."
+  description = "DNS configuration for the MCP server, including zone name, resource group name, and custom domain name for CloudFront distribution."
 }
 
 variable "application_insights_connection_string" {

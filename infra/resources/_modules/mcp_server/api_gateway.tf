@@ -116,14 +116,13 @@ resource "aws_api_gateway_deployment" "mcp_server" {
   ]
 }
 
-# Stage with logging configuration
-# trivy:ignore:AVD-AWS-0003 - X-Ray tracing not required for this MCP server use case
-resource "aws_api_gateway_stage" "prod" {
-  deployment_id = aws_api_gateway_deployment.mcp_server.id
-  rest_api_id   = aws_api_gateway_rest_api.mcp_server.id
-  stage_name    = "prod"
+# Defines the default stage for the API Gateway.
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.mcp_server.id
+  name        = "$default"
+  auto_deploy = true
+  tags        = var.tags
 
-  # Access logging
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
     format = jsonencode({
@@ -138,7 +137,6 @@ resource "aws_api_gateway_stage" "prod" {
     })
   }
   depends_on = [aws_api_gateway_account.main]
-  tags       = var.tags
 }
 
 # Method settings for detailed metrics and throttling
