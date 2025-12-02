@@ -261,8 +261,12 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		return
 	}
 
-	// Check if domain is provided and not null
+	// Check if domain is provided and not null, and if is different from name
 	domain, domainExists := configuration["domain"]
+	if domain.ValueString() == name {
+		resp.Error = function.ConcatFuncErrors(function.NewFuncError("Resource domain cannot be the same as the resource name"))
+		return
+	}
 	if domainExists && !domain.IsNull() && domain.ValueString() != "" {
 		result = fmt.Sprintf("%s-%s-%s-%s",
 			prefix,
@@ -277,11 +281,23 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 
 	// Generate resource name
-	result = strings.ToLower(fmt.Sprintf("%s-%s-%s-%02d",
-		result,
-		name,
-		abbreviation,
-		instance))
+
+	// Normalize name to lowercase
+	normalizedName := strings.ToLower(name)
+	// Check if the abbreviation starts with the name (ex. f abbreviation is "name" or "name-something")
+	if normalizedName == abbreviation || strings.HasPrefix(abbreviation, normalizedName+"-") {
+		// Skip the name part to avoid redundancy
+		result = strings.ToLower(fmt.Sprintf("%s-%s-%02d",
+			result,
+			abbreviation,
+			instance))
+	} else {
+		result = strings.ToLower(fmt.Sprintf("%s-%s-%s-%02d",
+			result,
+			name,
+			abbreviation,
+			instance))
+	}
 
 	if strings.Contains(resourceType, "storage_account") {
 		result = strings.ReplaceAll(result, "-", "")
