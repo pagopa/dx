@@ -1,0 +1,33 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> {{ awsTfProviderVersion }}"
+    }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> {{ tlsTfProviderVersion }}"
+    }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> {{ githubTfProviderVersion }}"
+    }
+
+    dx = {
+      source  = "pagopa-dx/aws"
+      version = "~> {{ pagopaDxAwsTfProviderVersion }}"
+    }
+  }
+}
+
+provider "aws" {
+  region = local.environment.region
+}
+
+provider "github" {
+  owner = "pagopa"
+}
+
+provider "dx" {}

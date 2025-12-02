@@ -1,6 +1,7 @@
 import type { ActionType } from "plop";
 
 import { Octokit } from "octokit";
+import { SemVer } from "semver";
 
 import {
   fetchLatestRelease,
@@ -8,61 +9,145 @@ import {
 } from "../adapters/octokit/index.js";
 import { fetchLatestSemver } from "./semver.js";
 
+interface SemverFetchOptions {
+  formatVersion?: (version: SemVer) => string;
+  repository: { name: string; owner: string };
+  resultKey: string;
+  source?: "release" | "tag";
+}
+
 interface TerraformActionsDependencies {
   octokitClient: Octokit;
 }
 
-export const getGitHubTerraformProviderLatestRelease =
+const makeSemverFetchAction =
+  ({
+    formatVersion,
+    repository,
+    resultKey,
+    source = "release",
+  }: SemverFetchOptions) =>
   ({ octokitClient }: TerraformActionsDependencies): ActionType =>
-  async (answers) => {
-    const owner = "integrations";
-    const repo = "terraform-provider-github";
-
-    return fetchLatestSemver(
-      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
+  (answers) =>
+    fetchLatestSemver(
+      () =>
+        (source === "tag" ? fetchLatestTag : fetchLatestRelease)({
+          client: octokitClient,
+          owner: repository.owner,
+          repo: repository.name,
+        }),
       answers,
-      "githubTfProviderVersion",
-      ({ major, minor }) => `${major}.${minor}`,
+      resultKey,
+      formatVersion,
     );
-  };
 
-export const getDxGitHubBootstrapLatestTag =
-  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
-  async (answers) => {
-    const owner = "pagopa-dx";
-    const repo = "terraform-github-github-environment-bootstrap";
+const getGitHubTerraformProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-github", owner: "integrations" },
+  resultKey: "githubTfProviderVersion",
+});
 
-    return fetchLatestSemver(
-      () => fetchLatestTag({ client: octokitClient, owner, repo }),
-      answers,
-      "dxGithubEnvironmentBootstrapVersion",
-      ({ major, minor }) => `${major}.${minor}`,
-    );
-  };
+const getPagoPaDxAzureTerraformProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-azure", owner: "pagopa-dx" },
+  resultKey: "pagopaDxAzureTfProviderVersion",
+});
 
-export const getTerraformLatestRelease =
-  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
-  async (answers) => {
-    const owner = "hashicorp";
-    const repo = "terraform";
+const getPagoPaDxAwsTerraformProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-aws", owner: "pagopa-dx" },
+  resultKey: "pagopaDxAwsTfProviderVersion",
+});
 
-    return fetchLatestSemver(
-      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
-      answers,
-      "terraformVersion",
-    );
-  };
+const getDxGitHubBootstrapLatestVersion = makeSemverFetchAction({
+  repository: {
+    name: "terraform-github-github-environment-bootstrap",
+    owner: "pagopa-dx",
+  },
+  resultKey: "dxGithubEnvironmentBootstrapVersion",
+  source: "tag",
+});
 
-export const getPreCommitTerraformLatestRelease =
-  ({ octokitClient }: TerraformActionsDependencies): ActionType =>
-  async (answers) => {
-    const owner = "antonbabenko";
-    const repo = "pre-commit-terraform";
+const getTerraformLatestVersion = makeSemverFetchAction({
+  formatVersion: (v) => v.toString(),
+  repository: { name: "terraform", owner: "hashicorp" },
+  resultKey: "terraformVersion",
+});
 
-    return fetchLatestSemver(
-      () => fetchLatestRelease({ client: octokitClient, owner, repo }),
-      answers,
-      "preCommitTerraformVersion",
-      (version) => `v${version.toString()}`,
-    );
-  };
+const getAwsProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-aws", owner: "hashicorp" },
+  resultKey: "awsTfProviderVersion",
+});
+
+const getTlsProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-tls", owner: "hashicorp" },
+  resultKey: "tlsTfProviderVersion",
+});
+
+const getAzurermProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-azurerm", owner: "hashicorp" },
+  resultKey: "azurermTfProviderVersion",
+});
+
+const getAzureadProviderLatestVersion = makeSemverFetchAction({
+  repository: { name: "terraform-provider-azuread", owner: "hashicorp" },
+  resultKey: "azureadTfProviderVersion",
+});
+
+const getPreCommitTerraformLatestVersion = makeSemverFetchAction({
+  formatVersion: (version) => `v${version.toString()}`,
+  repository: { name: "pre-commit-terraform", owner: "antonbabenko" },
+  resultKey: "preCommitTerraformVersion",
+});
+
+const getDxAwsBootstrapperLatestVersion = makeSemverFetchAction({
+  repository: {
+    name: "terraform-aws-aws-github-environment-bootstrap",
+    owner: "pagopa-dx",
+  },
+  resultKey: "dxAwsBootstrapperVersion",
+  source: "tag",
+});
+
+const getDxAwsCoreValuesExporterLatestVersion = makeSemverFetchAction({
+  repository: {
+    name: "terraform-aws-aws-core-values-exporter",
+    owner: "pagopa-dx",
+  },
+  resultKey: "dxAwsCoreValuesExporterVersion",
+  source: "tag",
+});
+
+const getDxAzureBootstrapperLatestVersion = makeSemverFetchAction({
+  repository: {
+    name: "terraform-azurerm-azure-github-environment-bootstrap",
+    owner: "pagopa-dx",
+  },
+  resultKey: "dxAzureBootstrapperVersion",
+  source: "tag",
+});
+
+const getDxAzureCoreValuesExporterLatestVersion = makeSemverFetchAction({
+  repository: {
+    name: "terraform-azurerm-azure-core-values-exporter",
+    owner: "pagopa-dx",
+  },
+  resultKey: "dxAzurermCoreValuesExporterVersion",
+  source: "tag",
+});
+
+export const terraformVersionActions = (
+  deps: TerraformActionsDependencies,
+): ActionType[] => [
+  getGitHubTerraformProviderLatestVersion(deps),
+  getAwsProviderLatestVersion(deps),
+  getTlsProviderLatestVersion(deps),
+  getAzurermProviderLatestVersion(deps),
+  getAzureadProviderLatestVersion(deps),
+  getDxGitHubBootstrapLatestVersion(deps),
+  getDxAzureBootstrapperLatestVersion(deps),
+  getTerraformLatestVersion(deps),
+  getPreCommitTerraformLatestVersion(deps),
+  getDxAwsBootstrapperLatestVersion(deps),
+  getDxAwsCoreValuesExporterLatestVersion(deps),
+  getDxAzureCoreValuesExporterLatestVersion(deps),
+  getPagoPaDxAzureTerraformProviderLatestVersion(deps),
+  getPagoPaDxAwsTerraformProviderLatestVersion(deps),
+];

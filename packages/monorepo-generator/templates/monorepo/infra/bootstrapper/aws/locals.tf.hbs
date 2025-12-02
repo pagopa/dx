@@ -1,0 +1,19 @@
+locals {
+  environment = {
+    prefix          = "{{ prefix }}"
+    env_short       = "{{ envShort }}"
+    region          = "{{ awsRegion }}"
+    domain          = "{{ domain }}"
+    app_name        = "{{ awsAppName }}"
+    instance_number = "{{ instanceNumber }}"
+  }
+
+  tags = {
+    CreatedBy      = "Terraform"
+    Environment    = "{{ titleCase environment }}"
+    Source         = "https://github.com/pagopa/{{ repoName }}/tree/main/infra/bootstrapper/{{ environment }}"
+    BusinessUnit   = "{{ businessUnit }}"
+    CostCenter     = "{{ costCenter }}"
+    ManagementTeam = "{{ managementTeam }}"
+  }
+}
