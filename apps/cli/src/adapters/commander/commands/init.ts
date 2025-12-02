@@ -4,6 +4,7 @@ import scaffoldMonorepo, { answersSchema } from "@pagopa/monorepo-generator";
 import { Command } from "commander";
 import { Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
+import { oraPromise } from "ora";
 
 import { decode } from "../../zod/index.js";
 
@@ -26,9 +27,31 @@ const getPrompts = (generator: PlopGenerator) =>
       new Error("Failed to run the generator prompts", { cause: error }),
   );
 
+const withSpinner = <T, E = Error>(
+  text: string,
+  successText: string,
+  failText: string,
+  task: () => Promise<T>,
+): ResultAsync<T, E> =>
+  ResultAsync.fromSafePromise(
+    oraPromise(task(), {
+      failText,
+      successText,
+      text,
+    }),
+  );
+
 const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
-  // TODO: Implement any additional validation if needed
-  ResultAsync.fromSafePromise(Promise.resolve(answers));
+  withSpinner(
+    "Checking permissions...",
+    "You have the necessary permissions!",
+    "You do not have the necessary permissions.",
+    async () => {
+      // Simulate some async validation logic
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return answers;
+    },
+  );
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   ResultAsync.fromPromise(

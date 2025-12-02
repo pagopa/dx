@@ -29,6 +29,7 @@
     "neverthrow": "catalog:",
     "node-plop": "^0.32.3",
     "octokit": "^5.0.5",
+    "ora": "^9.0.0",
     "replace-in-file": "^8.3.0",
     "semver": "catalog:",
     "yaml": "^2.8.2",
