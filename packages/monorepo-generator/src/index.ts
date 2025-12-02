@@ -16,7 +16,6 @@ import {
   installRootDependencies,
 } from "./actions/pnpm.js";
 import { terraformVersionActions } from "./actions/terraform.js";
-import { existsUserOrOrg } from "./adapters/octokit/index.js";
 
 const trimmedString = z.string().trim();
 
@@ -74,12 +73,7 @@ const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
     : true;
 };
 
-const getPrompts = ({
-  octokitClient,
-}: Pick<
-  ActionsDependencies,
-  "octokitClient"
->): PlopGeneratorConfig["prompts"] => [
+const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     default: process.cwd(),
     message: "Where do you want to create the repository?",
@@ -94,32 +88,7 @@ const getPrompts = ({
     default: answersSchema.shape.repoOwner.def.defaultValue,
     message: "What is the GitHub repository owner? (User or Organization)",
     name: "repoOwner",
-    validate: (input) => {
-      const promptValidationResult = validatePrompt(
-        answersSchema.shape.repoOwner,
-      )(input);
-      if (promptValidationResult === true) {
-        // Check the provided value exists on GitHub
-        const userPromise = existsUserOrOrg(octokitClient, {
-          name: input,
-          type: "user",
-        });
-        const orgPromise = existsUserOrOrg(octokitClient, {
-          name: input,
-          type: "org",
-        });
-        return (
-          Promise.any([userPromise, orgPromise])
-            // If any promise fulfills, the user/org exists, otherwise return the error message
-            .then((result) => (result.isOk() ? true : result.error.message))
-            // If all promises reject, the user/org does not exist
-            .catch(
-              () => `GitHub user or organization "${input}" does not exist`,
-            )
-        );
-      }
-      return promptValidationResult;
-    },
+    validate: validatePrompt(answersSchema.shape.repoOwner),
   },
   {
     message: "What is the repository description?",
@@ -372,7 +341,7 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   plopApi.setGenerator("monorepo", {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
-    prompts: getPrompts({ octokitClient }),
+    prompts: getPrompts(),
   });
 };
 

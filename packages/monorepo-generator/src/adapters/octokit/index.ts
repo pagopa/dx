@@ -41,25 +41,3 @@ export const fetchLatestRelease = ({
     }),
     () => new Error(`Failed to fetch latest release for ${owner}/${repo}`),
   ).map(({ data }) => semverParse(data.tag_name));
-
-export const existsUserOrOrg = async (
-  client: Octokit,
-  { name, type }: { name: string; type: "org" | "user" },
-) => {
-  const error = new Error(`GitHub ${type} ${name} does not exist`);
-  const gitHubApiCall =
-    type === "user"
-      ? ResultAsync.fromPromise(
-          client.request("GET /users/{username}", {
-            username: name,
-          }),
-          () => error,
-        )
-      : ResultAsync.fromPromise(
-          client.request("GET /orgs/{org}", {
-            org: name,
-          }),
-          () => error,
-        );
-  return gitHubApiCall.map((res) => res.status === 200);
-};
