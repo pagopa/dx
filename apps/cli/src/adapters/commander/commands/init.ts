@@ -19,16 +19,31 @@ const getGenerator = (plopAPI: NodePlopAPI) =>
     () => new Error("Generator not found"),
   );
 
-const runGenerator = (generator: PlopGenerator) =>
+const getPrompts = (generator: PlopGenerator) =>
   ResultAsync.fromPromise(
     generator.runPrompts(),
-    () => new Error("Failed to run the generator prompts"),
-  ).andThen((answers) =>
-    ResultAsync.fromPromise(
-      generator.runActions(answers),
-      () => new Error("Failed to run the generator actions"),
-    ),
+    (error) =>
+      new Error("Failed to run the generator prompts", { cause: error }),
   );
+
+const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
+  // TODO: Implement any additional validation if needed
+  ResultAsync.fromSafePromise(Promise.resolve(answers));
+
+const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
+  ResultAsync.fromPromise(generator.runActions(answers), (error) => {
+    return new Error("Failed to run the generator actions", { cause: error });
+  }).map(() => answers);
+
+const displaySummary = (answers: Answers) => {
+  console.log("\n🎉 Workspace created successfully!\n");
+  console.log(`- Name: ${answers.repoName}`);
+  console.log(`- Description: ${answers.repoDescription}`);
+  console.log(`- Cloud Service Provider: ${answers.csp}`);
+  console.log(
+    `- GitHub Repository: https://github.com/pagopa/${answers.repoName}`,
+  );
+};
 
 export const makeInitCommand = (): Command =>
   new Command()
@@ -43,10 +58,13 @@ export const makeInitCommand = (): Command =>
           await initPlop()
             .andTee(scaffoldMonorepo)
             .andThen((plop) => getGenerator(plop)("monorepo"))
-            .andThen(runGenerator)
-            .andTee(() => {
-              console.log("Monorepo initialized successfully ✅");
-            })
+            .andThen((generator) =>
+              getPrompts(generator)
+                .andThen(decode(answersSchema))
+                .andThen(validateAnswers)
+                .andThen(runGeneratorActions(generator))
+                .andTee(displaySummary),
+            )
             .orTee((err) => {
               this.error(err.message);
             });
