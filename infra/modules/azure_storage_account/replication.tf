@@ -21,6 +21,7 @@ resource "azurerm_storage_account" "secondary_replica" {
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
   min_tls_version                   = "TLS1_2"
   https_traffic_only_enabled        = true
+  cross_tenant_replication_enabled  = false
 
   blob_properties {
     versioning_enabled = true

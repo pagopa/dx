@@ -377,6 +377,11 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   assert {
+    condition     = azurerm_storage_account.this.cross_tenant_replication_enabled == false
+    error_message = "Audit storage must disable cross-tenant replication to prevent data exfiltration"
+  }
+
+  assert {
     condition     = azurerm_storage_account.this.default_to_oauth_authentication == true
     error_message = "Audit storage must default to OAuth authentication"
   }
