@@ -49,6 +49,7 @@ const answersSchema = z.object({
     .max(4, "Prefix must be at most 4 characters"),
   repoDescription: z.string().optional(),
   repoName: trimmedString.min(1, "Repository name cannot be empty"),
+  repoOwner: trimmedString.default("pagopa"),
   repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
   tfStateResourceGroupName: z.string().default("dx-d-itn-terraform-rg-01"),
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
@@ -83,6 +84,12 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
     message: "What is the repository name?",
     name: "repoName",
     validate: validatePrompt(answersSchema.shape.repoName),
+  },
+  {
+    default: answersSchema.shape.repoOwner.def.defaultValue,
+    message: "What is the GitHub repository owner? (User or Organization)",
+    name: "repoOwner",
+    validate: validatePrompt(answersSchema.shape.repoOwner),
   },
   {
     message: "What is the repository description?",
