@@ -26,4 +26,8 @@ provider "aws" {
   region = local.environment.region
 }
 
+provider "github" {
+  owner = "pagopa"
+}
+
 provider "dx" {}
