@@ -132,7 +132,7 @@ resource "azurerm_storage_container" "this" {
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
 
-# Container-level immutability policies (for legal holds and granular retention)
+# Container-level immutability policies (for granular retention control)
 resource "azurerm_storage_container_immutability_policy" "this" {
   for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
