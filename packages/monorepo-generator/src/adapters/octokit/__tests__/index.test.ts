@@ -4,7 +4,11 @@ import { SemVer } from "semver";
 import { beforeEach, describe, expect, it } from "vitest";
 import { mockDeep, mockReset } from "vitest-mock-extended";
 
-import { fetchLatestRelease, fetchLatestTag } from "../index.js";
+import {
+  existsUserOrOrg,
+  fetchLatestRelease,
+  fetchLatestTag,
+} from "../index.js";
 
 describe("octokit adapter", () => {
   const owner = "test-owner";
@@ -75,6 +79,94 @@ describe("octokit adapter", () => {
       expect(client.request).toHaveBeenCalledWith(
         "GET /repos/{owner}/{repo}/releases/latest",
         { owner, repo },
+      );
+    });
+  });
+
+  describe("existsUserOrOrg", () => {
+    it("should return true when the org exists", async () => {
+      client.request.mockResolvedValueOnce({
+        data: {},
+        headers: {},
+        status: 200,
+        url: "",
+      });
+
+      const result = await existsUserOrOrg(client, {
+        name: "existing-org",
+        type: "org",
+      });
+      expect(result).toStrictEqual(ok(true));
+
+      expect(client.request).toHaveBeenCalledWith("GET /orgs/{org}", {
+        org: "existing-org",
+      });
+      expect(client.request).not.toHaveBeenCalledWith(
+        "GET /users/{username}",
+        expect.anything(),
+      );
+    });
+    it("should return true when the user exists", async () => {
+      client.request.mockResolvedValueOnce({
+        data: {},
+        headers: {},
+        status: 200,
+        url: "",
+      });
+
+      const result = await existsUserOrOrg(client, {
+        name: "existing-user",
+        type: "user",
+      });
+      expect(result).toStrictEqual(ok(true));
+
+      expect(client.request).not.toHaveBeenCalledWith(
+        "GET /orgs/{org}",
+        expect.anything(),
+      );
+      expect(client.request).toHaveBeenCalledWith("GET /users/{username}", {
+        username: "existing-user",
+      });
+    });
+    it("should return false when the org does not exist", async () => {
+      client.request.mockResolvedValueOnce({
+        data: {},
+        headers: {},
+        status: 404,
+        url: "",
+      });
+
+      const result = await existsUserOrOrg(client, {
+        name: "non-existing-org",
+        type: "org",
+      });
+      expect(result).toStrictEqual(ok(false));
+
+      expect(client.request).toHaveBeenCalledWith("GET /orgs/{org}", {
+        org: "non-existing-org",
+      });
+      expect(client.request).not.toHaveBeenCalledWith(
+        "GET /users/{username}",
+        expect.anything(),
+      );
+    });
+    it("should return error when the promise rejects", async () => {
+      client.request.mockRejectedValue(new Error("an error"));
+
+      const result = await existsUserOrOrg(client, {
+        name: "existing-org",
+        type: "org",
+      });
+      expect(result).toStrictEqual(
+        err(new Error("GitHub org existing-org does not exist")),
+      );
+
+      expect(client.request).toHaveBeenCalledWith("GET /orgs/{org}", {
+        org: "existing-org",
+      });
+      expect(client.request).not.toHaveBeenCalledWith(
+        "GET /users/{username}",
+        expect.anything(),
       );
     });
   });
