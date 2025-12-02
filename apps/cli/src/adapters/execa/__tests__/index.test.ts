@@ -26,38 +26,14 @@ describe("executeCommand", () => {
     });
   });
 
-  it("should return failure when command fails with exception", async () => {
+  // Note: execa throws an error for non-zero exit codes
+  // https://github.com/sindresorhus/execa/blob/964f650be8ea7655494204afae659ceef43b86ac/docs/errors.md?plain=1#L39
+  it("should return failure when command fails with exception (this includes non-zero exit codes)", async () => {
     const { execa } = await import("execa");
     const mockError = new Error("Command failed");
     vi.mocked(execa).mockRejectedValueOnce(mockError);
 
     const result = await executeCommand("anInvalidCommand");
-    expect(result).toStrictEqual("failure");
-  });
-
-  it("should return failure when command returns non-zero exit code", async () => {
-    const { execa } = await import("execa");
-    vi.mocked(execa).mockResolvedValueOnce({
-      exitCode: 1,
-      stderr: "",
-      stdout: "",
-    } as Awaited<ResultPromise>);
-
-    const result = await executeCommand("aCommandWithExitCode1");
-
-    expect(result).toStrictEqual("failure");
-  });
-
-  it("should return failure when command has non-zero exit code with stderr", async () => {
-    const { execa } = await import("execa");
-    vi.mocked(execa).mockResolvedValueOnce({
-      exitCode: 1,
-      stderr: "warning message",
-      stdout: "",
-    } as Awaited<ResultPromise>);
-
-    const result = await executeCommand("aCommandWithNonZeroExitCode");
-
     expect(result).toStrictEqual("failure");
   });
 });

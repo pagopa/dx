@@ -29,7 +29,5 @@ export const executeCommand = (
   options: Options = {},
 ): Promise<CommandResult> =>
   execa(command, args, options)
-    .then(({ exitCode }) =>
-      exitCode === 0 ? ("success" as const) : ("failure" as const),
-    )
+    .then(() => "success" as const)
     .catch(() => "failure" as const);
