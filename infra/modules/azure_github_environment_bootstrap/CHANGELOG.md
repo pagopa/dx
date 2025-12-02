@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.1.1
+
+### Patch Changes
+
+- 01e27bb: Add examples and thorough explanation of input variables
+
 ## 3.1.0
 
 ### Minor Changes
