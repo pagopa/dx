@@ -41,6 +41,7 @@ const withSpinner = <T, E = Error>(
     }),
   );
 
+// TODO: implement real validation logic
 const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
   withSpinner(
     "Checking permissions...",
@@ -87,9 +88,9 @@ export const makeInitCommand = (): Command =>
               getPrompts(generator)
                 .andThen(decode(answersSchema))
                 .andTee(validateAnswers)
-                .andThen(runGeneratorActions(generator))
-                .andTee(displaySummary),
+                .andThen(runGeneratorActions(generator)),
             )
+            .andTee(displaySummary)
             .orTee((err) => {
               this.error(err.message);
             });
