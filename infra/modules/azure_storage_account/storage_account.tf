@@ -137,16 +137,7 @@ resource "azurerm_storage_container_immutability_policy" "this" {
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 
-  # Legal hold support (1-10 alphanumeric tags, 3-23 characters each)
   protected_append_writes_all_enabled = local.immutability_policy_enabled && var.blob_features.immutability_policy.allow_protected_append_writes
-
-  lifecycle {
-    # Prevent accidental unlocking (Azure doesn't support unlocking locked policies)
-    precondition {
-      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
-      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
-    }
-  }
 }
 
 # Tables

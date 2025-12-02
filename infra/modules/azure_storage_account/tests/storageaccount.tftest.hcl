@@ -520,18 +520,16 @@ run "container_level_immutability_policy_plan" {
         name        = "audit-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["case2024", "investigation"]
+          period_in_days = 365
+          locked         = false
         }
       },
       {
         name        = "archived-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 2555 # 7 years
-          locked          = true
-          legal_hold_tags = [] # Must be empty when locked
+          period_in_days = 2555 # 7 years
+          locked         = true
         }
       },
       {
@@ -601,9 +599,8 @@ run "audit_with_container_immutability_plan" {
         name        = "compliance-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 730
-          locked          = true
-          legal_hold_tags = []
+          period_in_days = 730
+          locked         = true
         }
       }
     ]
@@ -656,91 +653,4 @@ run "immutability_policy_state_override_plan" {
     condition     = azurerm_storage_account.this.immutability_policy[0].state == "Locked"
     error_message = "Immutability policy state should respect explicit variable override"
   }
-}
-
-run "legal_hold_tag_validation_fail_too_many_tags" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days = 365
-          locked         = false
-          legal_hold_tags = [
-            "tag1", "tag2", "tag3", "tag4", "tag5",
-            "tag6", "tag7", "tag8", "tag9", "tag10", "tag11" # 11 tags - exceeds limit
-          ]
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
-}
-
-run "legal_hold_tag_validation_fail_invalid_chars" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["case-2024"] # Invalid: contains hyphen
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
-}
-
-run "legal_hold_tag_validation_fail_too_short" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["ab"] # Invalid: only 2 characters
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
 }

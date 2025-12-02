@@ -217,9 +217,8 @@ variable "containers" {
     name        = string
     access_type = optional(string, "private")
     immutability_policy = optional(object({
-      period_in_days  = number
-      locked          = optional(bool, false)
-      legal_hold_tags = optional(list(string), [])
+      period_in_days = number
+      locked         = optional(bool, false)
     }), null)
   }))
 
@@ -239,26 +238,6 @@ variable "containers" {
       )
     ])
     error_message = "Container immutability policy period must be between 1 and 146000 days (400 years)."
-  }
-
-  validation {
-    condition = alltrue([
-      for c in var.containers :
-      c.immutability_policy == null ||
-      length(c.immutability_policy.legal_hold_tags) <= 10
-    ])
-    error_message = "Container legal hold tags must contain at most 10 tags."
-  }
-
-  validation {
-    condition = alltrue([
-      for c in var.containers :
-      c.immutability_policy == null || alltrue([
-        for tag in c.immutability_policy.legal_hold_tags :
-        can(regex("^[a-zA-Z0-9]{3,23}$", tag))
-      ])
-    ])
-    error_message = "Container legal hold tags must be alphanumeric and between 3-23 characters each."
   }
 }
 

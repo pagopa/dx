@@ -66,13 +66,6 @@ resource "azurerm_storage_container_immutability_policy" "replica" {
   locked                                = each.value.immutability_policy.locked
 
   protected_append_writes_all_enabled = local.tier_features.immutability_policy && var.blob_features.immutability_policy.allow_protected_append_writes
-
-  lifecycle {
-    precondition {
-      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
-      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
-    }
-  }
 }
 
 resource "azurerm_storage_object_replication" "geo_replication_policy" {

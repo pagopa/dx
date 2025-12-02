@@ -99,7 +99,6 @@ module "audit_storage_with_legal_hold" {
       immutability_policy = {
         period_in_days  = 730  # 2 years base retention
         locked          = false # Keep unlocked to allow legal hold tag changes
-        legal_hold_tags = [] # Legal hold tags must be applied post-deployment via Azure CLI (see below)
       }
     },
     {
@@ -109,7 +108,6 @@ module "audit_storage_with_legal_hold" {
       immutability_policy = {
         period_in_days  = 2555  # 7 years
         locked          = true   # Locked = cannot be deleted, SEC 17a-4(f) compliant
-        legal_hold_tags = []     # Must be empty when locking
       }
     }
   ]
@@ -237,6 +235,8 @@ az storage account show \
   --query "immutableStorageWithVersioning.immutabilityPolicy.state"
 # Should return: "Locked"
 ```
+
+7. **Allign terraform configuration** to reflect locked state (update `var.blob_features.immutability_policy.state` to `"Locked"` in container definitions)
 
 ## Best Practices
 

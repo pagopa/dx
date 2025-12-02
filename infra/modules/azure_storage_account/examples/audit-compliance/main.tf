@@ -39,8 +39,6 @@ module "azure_storage_account" {
 
   customer_managed_key = {
     enabled = true
-    # type         = "kv"
-    # key_vault_id = "your-kv-id"
   }
 
   diagnostic_settings = {
@@ -57,15 +55,19 @@ module "azure_storage_account" {
     {
       name        = "example1"
       access_type = "private"
+      # Example: Immutable container with a 3-year retention policy
+      immutability_policy = {
+        period_in_days = 1095
+        locked         = true # Locked to prevent modifications
+      }
     },
     {
       name        = "example2"
       access_type = "private"
-      # Example: Container-level immutability with legal hold capability
+      # Example: Container-level immutability with unlocked policy
       immutability_policy = {
-        period_in_days  = 365
-        locked          = false # Keep unlocked to allow legal hold modifications
-        legal_hold_tags = []    # Add tags like ["case2024", "investigation"] for legal holds
+        period_in_days = 365
+        locked         = false # Keep unlocked to allow policy modifications
       }
     }
   ]
