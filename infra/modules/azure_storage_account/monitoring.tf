@@ -9,13 +9,6 @@ resource "azurerm_monitor_diagnostic_setting" "storage_account" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  dynamic "enabled_log" {
-    for_each = toset(local.monitoring_logs)
-    content {
-      category = enabled_log.value
-    }
-  }
-
   enabled_metric {
     category = "AllMetrics"
   }

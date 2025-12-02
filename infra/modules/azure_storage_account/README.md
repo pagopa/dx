@@ -79,7 +79,7 @@ The `audit` use case is specifically designed for storing audit logs with **full
 | **Geo-Redundancy**            | Custom secondary replica with object replication                       | ✅ Enabled      |
 | **Lifecycle Management**      | Automated Hot→Cool→Cold→Delete policy                                  | ✅ Configurable |
 | **Access Control**            | OAuth authentication default, cross-tenant replication disabled        | ✅ Enforced     |
-| **Data Retention**            | Configurable (default: 1095 days, PagoPA standard: 365 days)           | ✅ Configurable |
+| **Data Retention**            | Configurable (default: 365 days, as PagoPA standard)           | ✅ Configurable |
 
 ### Audit Use Case Configuration Example
 
@@ -250,8 +250,8 @@ module "audit_storage" {
 module "audit_storage" {
   # ... existing configuration ...
 
-  # Change from default 1095 days (3 years) to PagoPA standard 365 days (12 months)
-  audit_retention_days = 365
+  # Change from default PagoPA standard 365 days (12 months) to desired value
+  audit_retention_days = 1095
 }
 ```
 
@@ -420,7 +420,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'. | `string` | `"Hot"` | no |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | ID of the Action Group for alerts. Required for tier 'l'. | `string` | `null` | no |
-| <a name="input_audit_retention_days"></a> [audit\_retention\_days](#input\_audit\_retention\_days) | Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 1095 days (3 years). | `number` | `1095` | no |
+| <a name="input_audit_retention_days"></a> [audit\_retention\_days](#input\_audit\_retention\_days) | Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year). | `number` | `365` | no |
 | <a name="input_blob_features"></a> [blob\_features](#input\_blob\_features) | Advanced blob features like versioning, change feed, immutability, and retention policies. | <pre>object({<br/>    restore_policy_days   = optional(number, 0)<br/>    delete_retention_days = optional(number, 0)<br/>    last_access_time      = optional(bool, false)<br/>    versioning            = optional(bool, false)<br/>    change_feed = optional(object({<br/>      enabled           = optional(bool, false)<br/>      retention_in_days = optional(number, 0)<br/>    }), { enabled = false })<br/>    immutability_policy = optional(object({<br/>      enabled                       = optional(bool, false)<br/>      allow_protected_append_writes = optional(bool, false)<br/>      period_since_creation_in_days = optional(number, 730)<br/>      state                         = optional(string, null)<br/>    }), { enabled = false })<br/>  })</pre> | <pre>{<br/>  "change_feed": {<br/>    "enabled": false,<br/>    "retention_in_days": 0<br/>  },<br/>  "delete_retention_days": 0,<br/>  "immutability_policy": {<br/>    "enabled": false<br/>  },<br/>  "last_access_time": false,<br/>  "restore_policy_days": 0,<br/>  "versioning": false<br/>}</pre> | no |
 | <a name="input_containers"></a> [containers](#input\_containers) | Containers to be created. | <pre>list(object({<br/>    name        = string<br/>    access_type = optional(string, "private")<br/>    immutability_policy = optional(object({<br/>      period_in_days  = number<br/>      locked          = optional(bool, false)<br/>      legal_hold_tags = optional(list(string), [])<br/>    }), null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration for the storage account. | <pre>object({<br/>    name          = optional(string, null)<br/>    use_subdomain = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "name": null,<br/>  "use_subdomain": false<br/>}</pre> | no |

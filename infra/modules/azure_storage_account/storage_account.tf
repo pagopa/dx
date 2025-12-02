@@ -103,7 +103,7 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
-        # Delete after configured retention period (default 1095 days / 3 years, PagoPA standard is 365 days / 12 months)
+        # Delete after configured retention period, standard is 365 days / 12 months)
         delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 

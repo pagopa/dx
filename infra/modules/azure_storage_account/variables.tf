@@ -295,8 +295,8 @@ variable "diagnostic_settings" {
 
 variable "audit_retention_days" {
   type        = number
-  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 1095 days (3 years)."
-  default     = 1095
+  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year)."
+  default     = 365
 
   validation {
     condition     = var.audit_retention_days >= 90 && var.audit_retention_days <= 3650
