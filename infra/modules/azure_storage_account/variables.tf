@@ -217,9 +217,8 @@ variable "containers" {
     name        = string
     access_type = optional(string, "private")
     immutability_policy = optional(object({
-      period_in_days  = number
-      locked          = optional(bool, false)
-      legal_hold_tags = optional(list(string), [])
+      period_in_days = number
+      locked         = optional(bool, false)
     }), null)
   }))
 
@@ -239,26 +238,6 @@ variable "containers" {
       )
     ])
     error_message = "Container immutability policy period must be between 1 and 146000 days (400 years)."
-  }
-
-  validation {
-    condition = alltrue([
-      for c in var.containers :
-      c.immutability_policy == null ||
-      length(c.immutability_policy.legal_hold_tags) <= 10
-    ])
-    error_message = "Container legal hold tags must contain at most 10 tags."
-  }
-
-  validation {
-    condition = alltrue([
-      for c in var.containers :
-      c.immutability_policy == null || alltrue([
-        for tag in c.immutability_policy.legal_hold_tags :
-        can(regex("^[a-zA-Z0-9]{3,23}$", tag))
-      ])
-    ])
-    error_message = "Container legal hold tags must be alphanumeric and between 3-23 characters each."
   }
 }
 
@@ -295,8 +274,8 @@ variable "diagnostic_settings" {
 
 variable "audit_retention_days" {
   type        = number
-  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case."
-  default     = 1095 # Keep current default (3 years) for backward compatibility
+  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year)."
+  default     = 365
 
   validation {
     condition     = var.audit_retention_days >= 90 && var.audit_retention_days <= 3650

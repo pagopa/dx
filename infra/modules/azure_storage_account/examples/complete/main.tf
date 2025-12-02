@@ -95,12 +95,6 @@ module "azure_storage_account" {
     {
       name        = "container2"
       access_type = "private"
-      # Example: Container-level immutability with legal hold capability
-      immutability_policy = {
-        period_in_days  = 365
-        locked          = false # Keep unlocked to allow legal hold modifications
-        legal_hold_tags = []    # Add tags like ["case2024", "investigation"] for legal holds
-      }
     }
   ]
 

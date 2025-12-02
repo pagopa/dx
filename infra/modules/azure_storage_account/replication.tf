@@ -17,11 +17,11 @@ resource "azurerm_storage_account" "secondary_replica" {
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   # Security and compliance settings (same as primary, defined by use case)
-  min_tls_version                   = local.tier_features.min_tls_version
-  https_traffic_only_enabled        = local.tier_features.https_traffic_only_enabled
   infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
-  cross_tenant_replication_enabled  = local.tier_features.cross_tenant_replication_enabled
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
+  cross_tenant_replication_enabled  = false
 
   blob_properties {
     versioning_enabled = true
@@ -62,20 +62,13 @@ resource "azurerm_storage_container" "replica" {
 
 # Container-level immutability policies for secondary replica
 resource "azurerm_storage_container_immutability_policy" "replica" {
-  for_each = local.tier_features.secondary_replication ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
+  for_each = local.tier_features.secondary_replication && local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
   storage_container_resource_manager_id = azurerm_storage_container.replica[each.key].resource_manager_id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 
   protected_append_writes_all_enabled = local.tier_features.immutability_policy && var.blob_features.immutability_policy.allow_protected_append_writes
-
-  lifecycle {
-    precondition {
-      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
-      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
-    }
-  }
 }
 
 resource "azurerm_storage_object_replication" "geo_replication_policy" {

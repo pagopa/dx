@@ -317,7 +317,7 @@ run "audit_storage_account_is_correct_plan" {
       log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
     }
 
-    audit_retention_days = 365 # PagoPA standard: 12 months
+    audit_retention_days = 365
   }
 
   # Checks some assertions
@@ -361,7 +361,6 @@ run "audit_storage_account_is_correct_plan" {
     error_message = "The Storage Account must have a secondary replica"
   }
 
-  # NEW: Security compliance assertions
   assert {
     condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
     error_message = "Audit storage must enforce TLS 1.2 minimum for encryption in transit"
@@ -509,26 +508,36 @@ run "container_level_immutability_policy_plan" {
     tags        = run.setup_tests.tags
 
     resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
+    use_case            = "audit"
+    secondary_location  = "westeurope"
     subnet_pep_id       = run.setup_tests.pep_id
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
 
     containers = [
       {
         name        = "audit-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["case2024", "investigation"]
+          period_in_days = 365
+          locked         = false
         }
       },
       {
         name        = "archived-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 2555 # 7 years
-          locked          = true
-          legal_hold_tags = [] # Must be empty when locked
+          period_in_days = 2555 # 7 years
+          locked         = true
         }
       },
       {
@@ -598,9 +607,8 @@ run "audit_with_container_immutability_plan" {
         name        = "compliance-logs"
         access_type = "private"
         immutability_policy = {
-          period_in_days  = 730
-          locked          = true
-          legal_hold_tags = []
+          period_in_days = 730
+          locked         = true
         }
       }
     ]
@@ -653,91 +661,4 @@ run "immutability_policy_state_override_plan" {
     condition     = azurerm_storage_account.this.immutability_policy[0].state == "Locked"
     error_message = "Immutability policy state should respect explicit variable override"
   }
-}
-
-run "legal_hold_tag_validation_fail_too_many_tags" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days = 365
-          locked         = false
-          legal_hold_tags = [
-            "tag1", "tag2", "tag3", "tag4", "tag5",
-            "tag6", "tag7", "tag8", "tag9", "tag10", "tag11" # 11 tags - exceeds limit
-          ]
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
-}
-
-run "legal_hold_tag_validation_fail_invalid_chars" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["case-2024"] # Invalid: contains hyphen
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
-}
-
-run "legal_hold_tag_validation_fail_too_short" {
-  command = plan
-
-  variables {
-    environment         = run.setup_tests.environment
-    tags                = run.setup_tests.tags
-    resource_group_name = run.setup_tests.resource_group_name
-    use_case            = "default"
-    subnet_pep_id       = run.setup_tests.pep_id
-
-    containers = [
-      {
-        name        = "test-container"
-        access_type = "private"
-        immutability_policy = {
-          period_in_days  = 365
-          locked          = false
-          legal_hold_tags = ["ab"] # Invalid: only 2 characters
-        }
-      }
-    ]
-  }
-
-  expect_failures = [
-    var.containers,
-  ]
 }

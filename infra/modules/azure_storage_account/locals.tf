@@ -15,75 +15,55 @@ locals {
       alerts                            = false
       advanced_threat_protection        = false
       immutability_policy               = false
-      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "LRS"
       secondary_replication             = false
-      min_tls_version                   = "TLS1_2"
-      https_traffic_only_enabled        = true
       infrastructure_encryption_enabled = false
-      cross_tenant_replication_enabled  = true
       default_to_oauth_authentication   = false
     }
     default = {
       alerts                            = true
       advanced_threat_protection        = false
       immutability_policy               = false
-      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
       secondary_replication             = false
-      min_tls_version                   = "TLS1_2"
-      https_traffic_only_enabled        = true
       infrastructure_encryption_enabled = false
-      cross_tenant_replication_enabled  = true
       default_to_oauth_authentication   = false
     }
     audit = {
       alerts                            = true
       advanced_threat_protection        = false
       immutability_policy               = true
-      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
       secondary_replication             = true
-      min_tls_version                   = "TLS1_2"
-      https_traffic_only_enabled        = true
       infrastructure_encryption_enabled = true
-      cross_tenant_replication_enabled  = false
       default_to_oauth_authentication   = true
     }
     delegated_access = {
       alerts                            = true
       advanced_threat_protection        = true
       immutability_policy               = false
-      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = false
       account_tier                      = "Standard"
       replication_type                  = "ZRS"
       secondary_replication             = false
-      min_tls_version                   = "TLS1_2"
-      https_traffic_only_enabled        = true
       infrastructure_encryption_enabled = false
-      cross_tenant_replication_enabled  = true
       default_to_oauth_authentication   = true
     }
     archive = {
       alerts                            = false
       advanced_threat_protection        = false
       immutability_policy               = true
-      immutability_policy_state         = "Unlocked"
       shared_access_key_enabled         = true
       account_tier                      = "Standard"
       replication_type                  = "LRS"
       secondary_replication             = true
-      min_tls_version                   = "TLS1_2"
-      https_traffic_only_enabled        = true
       infrastructure_encryption_enabled = false
-      cross_tenant_replication_enabled  = true
       default_to_oauth_authentication   = false
     }
   }
@@ -92,7 +72,7 @@ locals {
 
   force_public_network_access_enabled = var.force_public_network_access_enabled || var.use_case == "delegated_access"
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
-  immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : local.tier_features.immutability_policy_state
+  immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : "Unlocked"
 
   peps = {
     create_subservices = local.force_public_network_access_enabled ? {
@@ -136,4 +116,10 @@ locals {
       principal_id        = try(coalesce(var.customer_managed_key.user_assigned_identity_id, azurerm_storage_account.this.identity[0].principal_id), "")
     } : {}
   }
+
+  monitoring_logs = [
+    "StorageRead",
+    "StorageWrite",
+    "StorageDelete"
+  ]
 }

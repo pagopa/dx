@@ -12,11 +12,11 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
   # Security and compliance settings (defined by use case)
-  min_tls_version                   = local.tier_features.min_tls_version
-  https_traffic_only_enabled        = local.tier_features.https_traffic_only_enabled
   infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
-  cross_tenant_replication_enabled  = local.tier_features.cross_tenant_replication_enabled
   default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
+  cross_tenant_replication_enabled  = false
 
   blob_properties {
     versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
@@ -106,7 +106,7 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
-        # Delete after configured retention period (default 1095 days / 3 years, PagoPA standard is 365 days / 12 months)
+        # Delete after configured retention period (standard is 365 days / 12 months)
         delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 
@@ -132,24 +132,15 @@ resource "azurerm_storage_container" "this" {
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
 
-# Container-level immutability policies (for legal holds and granular retention)
+# Container-level immutability policies (for granular retention control)
 resource "azurerm_storage_container_immutability_policy" "this" {
-  for_each = { for c in var.containers : c.name => c if c.immutability_policy != null }
+  for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
   storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 
-  # Legal hold support (1-10 alphanumeric tags, 3-23 characters each)
   protected_append_writes_all_enabled = local.immutability_policy_enabled && var.blob_features.immutability_policy.allow_protected_append_writes
-
-  lifecycle {
-    # Prevent accidental unlocking (Azure doesn't support unlocking locked policies)
-    precondition {
-      condition     = !each.value.immutability_policy.locked || length(each.value.immutability_policy.legal_hold_tags) == 0
-      error_message = "Cannot lock a container immutability policy when legal hold tags are present. Remove tags first, then lock the policy."
-    }
-  }
 }
 
 # Tables

@@ -9,18 +9,6 @@ resource "azurerm_monitor_diagnostic_setting" "storage_account" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  enabled_log {
-    category = "StorageRead"
-  }
-
-  enabled_log {
-    category = "StorageWrite"
-  }
-
-  enabled_log {
-    category = "StorageDelete"
-  }
-
   enabled_metric {
     category = "AllMetrics"
   }
@@ -37,16 +25,11 @@ resource "azurerm_monitor_diagnostic_setting" "blob_service" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  enabled_log {
-    category = "StorageRead"
-  }
-
-  enabled_log {
-    category = "StorageWrite"
-  }
-
-  enabled_log {
-    category = "StorageDelete"
+  dynamic "enabled_log" {
+    for_each = toset(local.monitoring_logs)
+    content {
+      category = enabled_log.value
+    }
   }
 
   enabled_metric {
@@ -65,16 +48,11 @@ resource "azurerm_monitor_diagnostic_setting" "file_service" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  enabled_log {
-    category = "StorageRead"
-  }
-
-  enabled_log {
-    category = "StorageWrite"
-  }
-
-  enabled_log {
-    category = "StorageDelete"
+  dynamic "enabled_log" {
+    for_each = toset(local.monitoring_logs)
+    content {
+      category = enabled_log.value
+    }
   }
 
   enabled_metric {
@@ -93,16 +71,11 @@ resource "azurerm_monitor_diagnostic_setting" "queue_service" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  enabled_log {
-    category = "StorageRead"
-  }
-
-  enabled_log {
-    category = "StorageWrite"
-  }
-
-  enabled_log {
-    category = "StorageDelete"
+  dynamic "enabled_log" {
+    for_each = toset(local.monitoring_logs)
+    content {
+      category = enabled_log.value
+    }
   }
 
   enabled_metric {
@@ -121,16 +94,11 @@ resource "azurerm_monitor_diagnostic_setting" "table_service" {
   log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
   storage_account_id         = var.diagnostic_settings.storage_account_id
 
-  enabled_log {
-    category = "StorageRead"
-  }
-
-  enabled_log {
-    category = "StorageWrite"
-  }
-
-  enabled_log {
-    category = "StorageDelete"
+  dynamic "enabled_log" {
+    for_each = toset(local.monitoring_logs)
+    content {
+      category = enabled_log.value
+    }
   }
 
   enabled_metric {
