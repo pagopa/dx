@@ -8,7 +8,8 @@ module "aws_core_values" {
 module "mcp_server" {
   source = "../_modules/mcp_server"
   providers = {
-    aws = aws.eu-central-1
+    aws           = aws.eu-central-1
+    aws.us_east_1 = aws.us-east-1
   }
 
   naming_config                          = merge(local.aws_naming_config, { region = "eu-central-1" })
@@ -21,5 +22,9 @@ module "mcp_server" {
     zone_name           = "dx.pagopa.it"
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
+
+  # WAF rate limiting - increased for MCP usage patterns
+  waf_rate_limit_per_ip = 5000 # 5000 requests per IP per 5 minutes
+
   tags = local.tags
 }

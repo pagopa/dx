@@ -1,29 +1,3 @@
-## Custom domain for API Gateway HTTP v2
-
-# Creates an ACM certificate for the custom domain.
-resource "aws_acm_certificate" "api_custom" {
-  domain_name       = var.dns.custom_domain_name
-  validation_method = "DNS"
-  tags              = var.tags
-}
-
-# Configures the custom domain name for the API Gateway.
-resource "aws_apigatewayv2_domain_name" "api_custom" {
-  domain_name = var.dns.custom_domain_name
-  domain_name_configuration {
-    certificate_arn = aws_acm_certificate.api_custom.arn
-    endpoint_type   = "REGIONAL"
-    security_policy = "TLS_1_2"
-  }
-  tags = var.tags
-}
-
-# Maps the custom domain to the API Gateway stage.
-resource "aws_apigatewayv2_api_mapping" "api_custom" {
-  api_id      = aws_apigatewayv2_api.mcp_server.id
-  domain_name = aws_apigatewayv2_domain_name.api_custom.domain_name
-  stage       = aws_apigatewayv2_stage.default.id
-}
 ## HTTP API Gateway v2 exposing the Lambda as a proxy
 
 # Defines the HTTP API Gateway v2.
@@ -66,6 +40,14 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
   tags        = var.tags
 
+  # Configure throttling limits for all routes
+  # Default limits are 100 req/s (rate_limit) and 200 burst
+  # Increasing to support high-volume MCP traffic
+  default_route_settings {
+    throttling_rate_limit  = 1000 # requests per second
+    throttling_burst_limit = 2000 # burst capacity
+  }
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
     format = jsonencode({
@@ -78,12 +60,6 @@ resource "aws_apigatewayv2_stage" "default" {
       "protocol" : "$context.protocol",
       "responseLength" : "$context.responseLength"
     })
-  }
-
-  # Throttling settings: max 100 requests per second, burst up to 200
-  default_route_settings {
-    throttling_burst_limit = 200
-    throttling_rate_limit  = 100
   }
 }
 
