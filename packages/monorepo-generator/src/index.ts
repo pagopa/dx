@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { Octokit } from "octokit";
 import { z } from "zod/v4";
 
+import { getLatestNodeVersion } from "./actions/node.js";
 import {
   addPagoPaPnpmPlugin,
   configureChangesets,
@@ -14,6 +15,7 @@ import {
   enablePnpm,
   installRootDependencies,
 } from "./actions/pnpm.js";
+import { terraformVersionActions } from "./actions/terraform.js";
 
 const trimmedString = z.string().trim();
 
@@ -62,9 +64,6 @@ interface ActionsDependencies {
 }
 type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
-
-import { getLatestNodeVersion } from "./actions/node.js";
-import { terraformVersionActions } from "./actions/terraform.js";
 
 const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
   const error = schema.safeParse(input).error;
