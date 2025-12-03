@@ -1,16 +1,12 @@
-# WAF Web ACL for API Gateway protection
-# Note: API Gateway HTTP v2 doesn't support direct WAF association.
-# WAF must be attached to CloudFront or API Gateway REST API.
+# WAF Web ACL for REST API Gateway protection
 
-resource "aws_wafv2_web_acl" "cloudfront" {
-  provider = aws.us_east_1
-
+resource "aws_wafv2_web_acl" "api_gateway" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
-    name          = "mcp-cloudfront"
+    name          = "mcp-api"
     resource_type = "wafv2_web_acl"
   }))
-  description = "Web ACL for MCP CloudFront distribution in ${var.naming_config.environment}"
-  scope       = "CLOUDFRONT"
+  description = "Web ACL for MCP API Gateway in ${var.naming_config.environment}"
+  scope       = "REGIONAL"
 
   default_action {
     allow {}
@@ -18,18 +14,18 @@ resource "aws_wafv2_web_acl" "cloudfront" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-cloudfront-waf"
+    metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-api-waf"
     sampled_requests_enabled   = true
   }
 
-  # Rate limiting rule for /mcp path requests
-  # This is the primary protection - blocks excessive requests from single IPs
+  # Rate limiting rule - configurable via variable
+  # Defaults to 2000 requests per IP per 5 minutes, overridden to 5000 in prod
   rule {
-    name     = "rate-limit-mcp-endpoint"
+    name     = "rate-limit-per-ip"
     priority = 0
 
     action {
-      block {} # Active blocking - protects against DoS
+      block {}
     }
 
     statement {
@@ -37,29 +33,13 @@ resource "aws_wafv2_web_acl" "cloudfront" {
         aggregate_key_type    = "IP"
         limit                 = var.waf_rate_limit_per_ip
         evaluation_window_sec = 300 # 5 minutes
-
-        scope_down_statement {
-          byte_match_statement {
-            field_to_match {
-              uri_path {}
-            }
-
-            positional_constraint = "STARTS_WITH"
-            search_string         = "/mcp"
-
-            text_transformation {
-              priority = 0
-              type     = "NONE"
-            }
-          }
-        }
       }
     }
 
     visibility_config {
       sampled_requests_enabled   = true
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-cloudfront-rate-limit"
+      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-api-rate-limit"
     }
   }
 
@@ -110,7 +90,7 @@ resource "aws_wafv2_web_acl" "cloudfront" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-cloudfront-core-rules"
+      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-api-core-rules"
       sampled_requests_enabled   = true
     }
   }
@@ -133,10 +113,16 @@ resource "aws_wafv2_web_acl" "cloudfront" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-cloudfront-bad-inputs"
+      metric_name                = "${var.naming_config.prefix}-${var.naming_config.environment}-mcp-api-bad-inputs"
       sampled_requests_enabled   = true
     }
   }
 
   tags = var.tags
+}
+
+# Associate WAF with API Gateway stage
+resource "aws_wafv2_web_acl_association" "api_gateway" {
+  resource_arn = aws_api_gateway_stage.prod.arn
+  web_acl_arn  = aws_wafv2_web_acl.api_gateway.arn
 }

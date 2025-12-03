@@ -1,24 +1,24 @@
-# Outputs for CloudFront deployment with WAF
+# Outputs for REST API Gateway deployment with WAF
 
-# CloudFront distribution
-output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID"
-  value       = aws_cloudfront_distribution.mcp_server.id
+# REST API Gateway
+output "rest_api_id" {
+  description = "REST API Gateway ID"
+  value       = aws_api_gateway_rest_api.mcp_server.id
 }
 
-output "cloudfront_distribution_domain" {
-  description = "CloudFront distribution domain name"
-  value       = aws_cloudfront_distribution.mcp_server.domain_name
+output "rest_api_execution_arn" {
+  description = "REST API Gateway execution ARN"
+  value       = aws_api_gateway_rest_api.mcp_server.execution_arn
 }
 
-output "cloudfront_distribution_arn" {
-  description = "CloudFront distribution ARN"
-  value       = aws_cloudfront_distribution.mcp_server.arn
+output "api_gateway_stage_arn" {
+  description = "API Gateway stage ARN"
+  value       = aws_api_gateway_stage.prod.arn
 }
 
 # Custom domain
 output "custom_domain_name" {
-  description = "Custom domain name pointing to CloudFront"
+  description = "Custom domain name for the API Gateway"
   value       = var.dns.custom_domain_name
 }
 
@@ -27,26 +27,20 @@ output "custom_domain_url" {
   value       = "https://${var.dns.custom_domain_name}"
 }
 
-# HTTP API Gateway v2 (origin)
-output "http_api_endpoint" {
-  description = "HTTP API Gateway v2 endpoint URL (CloudFront origin)"
-  value       = aws_apigatewayv2_api.mcp_server.api_endpoint
-}
-
-output "http_api_id" {
-  description = "HTTP API Gateway v2 ID"
-  value       = aws_apigatewayv2_api.mcp_server.id
+output "api_gateway_regional_domain" {
+  description = "Regional domain name for the API Gateway custom domain"
+  value       = aws_api_gateway_domain_name.mcp_server.regional_domain_name
 }
 
 # WAF
 output "waf_web_acl_id" {
-  description = "WAF Web ACL ID protecting CloudFront"
-  value       = aws_wafv2_web_acl.cloudfront.id
+  description = "WAF Web ACL ID protecting API Gateway"
+  value       = aws_wafv2_web_acl.api_gateway.id
 }
 
 output "waf_web_acl_arn" {
-  description = "WAF Web ACL ARN protecting CloudFront"
-  value       = aws_wafv2_web_acl.cloudfront.arn
+  description = "WAF Web ACL ARN protecting API Gateway"
+  value       = aws_wafv2_web_acl.api_gateway.arn
 }
 
 # Lambda
@@ -55,8 +49,3 @@ output "lambda_function_name" {
   value       = aws_lambda_function.server.function_name
 }
 
-output "cloudfront_origin_verify_header" {
-  description = "Generated secret header for CloudFront origin verification"
-  value       = random_password.cloudfront_origin_verify.result
-  sensitive   = true
-}

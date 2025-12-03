@@ -8,7 +8,7 @@ module "aws_core_values" {
 module "mcp_server" {
   source = "../_modules/mcp_server"
   providers = {
-    aws.us_east_1 = aws.us-east-1
+    aws = aws.eu-central-1
   }
 
   naming_config                          = merge(local.aws_naming_config, { region = "eu-central-1" })
@@ -23,7 +23,7 @@ module "mcp_server" {
   }
 
   # WAF rate limiting - increased for MCP usage patterns
-  waf_rate_limit_per_ip = 5000 # 5000 requests per IP per 5 minutes
+  waf_rate_limit_per_ip = 1000 # 1000 requests per IP per 5 minutes
 
   tags = local.tags
 }
