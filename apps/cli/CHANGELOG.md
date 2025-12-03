@@ -1,5 +1,14 @@
 # @pagopa/dx-cli
 
+## 0.11.1
+
+### Patch Changes
+
+- fb9caa2: Update dependencies
+- Updated dependencies [c7421af]
+- Updated dependencies [fb9caa2]
+  - @pagopa/monorepo-generator@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes
