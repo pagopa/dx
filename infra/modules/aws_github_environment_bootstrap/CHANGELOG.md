@@ -1,5 +1,11 @@
 # aws_github_environment_bootstrap
 
+## 0.0.6
+
+### Patch Changes
+
+- 01e27bb: Add examples and thorough explanation of input variables
+
 ## 0.0.5
 
 ### Patch Changes

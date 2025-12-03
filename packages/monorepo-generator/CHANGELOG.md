@@ -1,5 +1,26 @@
 # @pagopa/monorepo-generator
 
+## 0.11.1
+
+### Patch Changes
+
+- c7421af: Add Bootstrapper infra apply workflow in the monorepo template
+- fb9caa2: Update dependencies
+
+## 0.11.0
+
+### Minor Changes
+
+- 9d4109c: Generate Terraform file to manage the GitHub repository during scaffolding
+- 9d4109c: Scaffold the bootstrapper per CSP per environment.
+
+  Given the CSP selection and the environments, generate the Terraform code
+  to bootstrap the GitHub environment and the cloud resources.
+
+### Patch Changes
+
+- 9d4109c: Upgrade dependencies
+
 ## 0.10.1
 
 ### Patch Changes

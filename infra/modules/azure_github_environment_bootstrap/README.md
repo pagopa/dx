@@ -15,6 +15,335 @@ The module performs the following actions:
 - Creates an Azure **resource group** tied with the Cloud Resources defined
   within the repository.
 
+## Quick Start
+
+Here's a minimal example to get started:
+
+```hcl
+module "bootstrap" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~> 3.0"
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    domain          = "myapp"
+    instance_number = "01"
+  }
+
+  subscription_id = data.azurerm_subscription.current.id
+  tenant_id       = data.azurerm_client_config.current.tenant_id
+
+  entraid_groups = {
+    admins_object_id = data.azuread_group.admins.object_id
+    devs_object_id   = data.azuread_group.developers.object_id
+  }
+
+  terraform_storage_account = {
+    name                = "mytfstateaccount"
+    resource_group_name = "terraform-state-rg"
+  }
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-repository"
+  }
+
+  github_private_runner = {
+    container_app_environment_id       = data.azurerm_container_app_environment.runner.id
+    container_app_environment_location = "italynorth"
+    key_vault = {
+      name                = "my-keyvault"
+      resource_group_name = "common-rg"
+    }
+  }
+
+  pep_vnet_id                        = data.azurerm_virtual_network.common.id
+  private_dns_zone_resource_group_id = data.azurerm_resource_group.network.id
+  opex_resource_group_id             = data.azurerm_resource_group.dashboards.id
+
+  tags = {
+    Environment = "Dev"
+    CreatedBy   = "Terraform"
+  }
+}
+```
+
+## Using with Core Values Exporter
+
+Many input values for this module can be automatically retrieved using the companion module [`pagopa-dx/azure-core-values-exporter/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/latest). This module reads core infrastructure values from a shared Terraform state, eliminating the need to hardcode or manually look up resource IDs.
+
+### Core Values Exporter Integration
+
+```hcl
+# First, retrieve core infrastructure values from the shared state
+module "core_values" {
+  source  = "pagopa-dx/azure-core-values-exporter/azurerm"
+  version = "~> 0.0"
+
+  core_state = {
+    resource_group_name  = "dx-d-itn-tfstate-rg-01"
+    storage_account_name = "dxditntfstatest01"
+    container_name       = "terraform-state"
+    key                  = "dx.core.dev.tfstate"
+  }
+}
+
+# Then use the exported values in the bootstrap module
+module "bootstrap" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~> 3.0"
+
+  # ... other required variables ...
+
+  github_private_runner = {
+    container_app_environment_id       = module.core_values.github_runner.environment_id
+    container_app_environment_location = var.environment.location
+    labels                             = ["dev"]
+    key_vault = {
+      name                = module.core_values.common_key_vault.name
+      resource_group_name = module.core_values.common_key_vault.resource_group_name
+    }
+  }
+
+  pep_vnet_id                        = module.core_values.common_vnet.id
+  private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
+  opex_resource_group_id             = module.core_values.opex_resource_group_id
+
+  additional_resource_group_ids = [
+    module.core_values.common_resource_group_id,
+  ]
+
+  tags = local.tags
+}
+```
+
+### Core Values Mapping
+
+The following table shows which bootstrap module inputs can be populated from Core Values Exporter outputs:
+
+| Bootstrap Module Input                                | Core Values Exporter Output                                                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `github_private_runner.container_app_environment_id`  | `module.core_values.github_runner.environment_id`                                          |
+| `github_private_runner.key_vault.name`                | `module.core_values.common_key_vault.name`                                                 |
+| `github_private_runner.key_vault.resource_group_name` | `module.core_values.common_key_vault.resource_group_name`                                  |
+| `pep_vnet_id`                                         | `module.core_values.common_vnet.id`                                                        |
+| `private_dns_zone_resource_group_id`                  | `module.core_values.network_resource_group_id`                                             |
+| `opex_resource_group_id`                              | `module.core_values.opex_resource_group_id`                                                |
+| `additional_resource_group_ids`                       | `module.core_values.common_resource_group_id`, `module.core_values.test_resource_group_id` |
+
+For a complete production example using Core Values Exporter, see the [DX bootstrapper implementation](https://github.com/pagopa/dx/tree/main/infra/bootstrapper/_modules/azure).
+
+## Variables Reference
+
+### Summary Table
+
+| Variable                             | Type         | Required | Description                                            |
+| ------------------------------------ | ------------ | :------: | ------------------------------------------------------ |
+| `environment`                        | object       |    ✅    | Naming conventions and resource location configuration |
+| `entraid_groups`                     | object       |    ✅    | Azure Entra ID security groups for RBAC                |
+| `terraform_storage_account`          | object       |    ✅    | Storage account for Terraform state files              |
+| `repository`                         | object       |    ✅    | GitHub repository details                              |
+| `github_private_runner`              | object       |    ✅    | Self-hosted runner configuration                       |
+| `pep_vnet_id`                        | string       |    ✅    | VNet ID for private endpoints                          |
+| `private_dns_zone_resource_group_id` | string       |    ✅    | Resource group with private DNS zones                  |
+| `opex_resource_group_id`             | string       |    ✅    | Resource group for Opex dashboards                     |
+| `subscription_id`                    | string       |    ✅    | Azure subscription ID                                  |
+| `tenant_id`                          | string       |    ✅    | Azure tenant ID                                        |
+| `tags`                               | map(string)  |    ✅    | Tags for all resources                                 |
+| `additional_resource_group_ids`      | set(string)  |    ❌    | Extra resource groups for role assignments             |
+| `apim_id`                            | string       |    ❌    | API Management instance ID                             |
+| `sbns_id`                            | string       |    ❌    | Service Bus Namespace ID                               |
+| `log_analytics_workspace_id`         | string       |    ❌    | Log Analytics Workspace ID                             |
+| `nat_gateway_resource_group_id`      | string       |    ❌    | NAT Gateway resource group ID                          |
+| `keyvault_common_ids`                | list(string) |    ❌    | Common Key Vault IDs                                   |
+
+### Required Variables
+
+#### `environment`
+
+Defines naming conventions and resource location. All generated resources will follow the pattern: `{prefix}-{env_short}-{location_short}-{domain}-{resource_type}-{instance_number}`.
+
+```hcl
+environment = {
+  prefix          = "dx"           # Project prefix (2-4 chars)
+  env_short       = "d"            # Environment: d=dev, u=uat, p=prod
+  location        = "italynorth"   # Azure region
+  domain          = "myapp"        # Domain/application name
+  instance_number = "01"           # Instance identifier
+}
+```
+
+#### `entraid_groups`
+
+Azure Entra ID (formerly Azure AD) security groups for RBAC assignments. These groups will receive appropriate roles on the created resources.
+
+```hcl
+entraid_groups = {
+  admins_object_id    = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Full admin access
+  devs_object_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Developer access
+  externals_object_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Optional: external collaborators
+}
+```
+
+#### `terraform_storage_account`
+
+The Azure Storage Account where Terraform state files are stored. The module will assign appropriate roles for the managed identities to access this account.
+
+```hcl
+terraform_storage_account = {
+  name                = "mytfstateaccount"
+  resource_group_name = "terraform-state-rg"
+}
+```
+
+#### `repository`
+
+GitHub repository details for configuring federated credentials and GitHub Actions secrets.
+
+```hcl
+repository = {
+  owner = "pagopa"           # GitHub organization or user
+  name  = "my-repository"    # Repository name
+}
+```
+
+#### `github_private_runner`
+
+Configuration for the GitHub Actions self-hosted runner deployed on Azure Container Apps.
+
+```hcl
+github_private_runner = {
+  # Required: Container App Environment where the runner will be deployed
+  container_app_environment_id       = data.azurerm_container_app_environment.runner.id
+  container_app_environment_location = "italynorth"
+
+  # Required: Key Vault containing the GitHub PAT for runner registration
+  key_vault = {
+    name                = "my-keyvault"
+    resource_group_name = "common-rg"
+    secret_name         = "github-runner-pat"  # Optional, defaults to "github-runner-pat"
+    use_rbac            = false                 # Optional, set true if KV uses RBAC
+  }
+
+  # Optional: Scaling configuration
+  min_instances                = 0       # Minimum runners (default: 0)
+  max_instances                = 30      # Maximum runners (default: 30)
+  polling_interval_in_seconds  = 30      # Job polling interval (default: 30)
+  replica_timeout_in_seconds   = 1800    # Max job duration in seconds (default: 1800)
+
+  # Optional: Runner labels for job targeting
+  labels = ["dev", "my-app"]
+
+  # Optional: Resource allocation
+  cpu    = 1.5      # CPU cores (default: 1.5)
+  memory = "3Gi"    # Memory (default: "3Gi")
+}
+```
+
+#### `pep_vnet_id`
+
+The ID of the Virtual Network containing private endpoints. Required for network contributor role assignment.
+
+```hcl
+pep_vnet_id = data.azurerm_virtual_network.common.id
+```
+
+#### `private_dns_zone_resource_group_id`
+
+Resource group containing private DNS zones. The module assigns DNS zone contributor role for private endpoint DNS registration.
+
+```hcl
+private_dns_zone_resource_group_id = data.azurerm_resource_group.network.id
+```
+
+#### `opex_resource_group_id`
+
+Resource group for operational dashboards. The Opex managed identity receives contributor access here.
+
+```hcl
+opex_resource_group_id = data.azurerm_resource_group.dashboards.id
+```
+
+#### `subscription_id` and `tenant_id`
+
+Azure subscription and tenant identifiers.
+
+```hcl
+subscription_id = data.azurerm_subscription.current.id
+tenant_id       = data.azurerm_client_config.current.tenant_id
+```
+
+#### `tags`
+
+Tags applied to all created resources.
+
+```hcl
+tags = {
+  CostCenter     = "TS000 - Technology"
+  CreatedBy      = "Terraform"
+  Environment    = "Dev"
+  ManagementTeam = "My Team"
+  Source         = "https://github.com/pagopa/my-repo"
+}
+```
+
+### Optional Variables
+
+#### `additional_resource_group_ids`
+
+Additional resource groups where the managed identities should have access. Useful when your application spans multiple resource groups.
+
+```hcl
+additional_resource_group_ids = [
+  azurerm_resource_group.custom_rg_01.id,
+  azurerm_resource_group.custom_rg_02.id,
+]
+```
+
+#### `apim_id`
+
+Azure API Management instance ID. When provided, the infra CD identity receives API Management Service Contributor role.
+
+```hcl
+apim_id = data.azurerm_api_management.main.id
+```
+
+#### `sbns_id`
+
+Azure Service Bus Namespace ID. When provided, the infra CD identity receives Service Bus contributor role.
+
+```hcl
+sbns_id = data.azurerm_servicebus_namespace.main.id
+```
+
+#### `log_analytics_workspace_id`
+
+Log Analytics Workspace ID. When provided, the infra CD identity receives Log Analytics Contributor role.
+
+```hcl
+log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
+```
+
+#### `nat_gateway_resource_group_id`
+
+Resource group containing NAT Gateways. When provided, the infra CD identity receives Network Contributor role.
+
+```hcl
+nat_gateway_resource_group_id = data.azurerm_resource_group.nat.id
+```
+
+#### `keyvault_common_ids`
+
+List of common Key Vault IDs. When provided, access policies are created for the managed identities.
+
+```hcl
+keyvault_common_ids = [
+  data.azurerm_key_vault.common.id,
+]
+```
+
 ## Gotchas
 
 ### Ensure Necessary Azure Permissions
@@ -54,7 +383,7 @@ The module provides the basic configuration adhering to DX and Technology standa
 
 ### Managing multiple resource groups
 
-This module includes a pre-configured resource group for deploying Azure resources. If you need additional resource groups, you can easily create them; the module will automatically assign all necessary roles.```
+This module includes a pre-configured resource group for deploying Azure resources. If you need additional resource groups, you can easily create them; the module will automatically assign all necessary roles.
 
 ```hcl
 resource "azurerm_resource_group" "new_rg01" {
@@ -91,7 +420,7 @@ The module facilitates the role assignment to resources that are generally, by t
 - Log Analytics Workspace
 - NAT Gateway
 
-For each of these resources, the module provides an optional variable to which their IDs can be passed. Utilizing these IDs ensures that the requisite roles for operating on the resources are assigned to the Managed Identities associated with the repository's workflows.```
+For each of these resources, the module provides an optional variable to which their IDs can be passed. Utilizing these IDs ensures that the requisite roles for operating on the resources are assigned to the Managed Identities associated with the repository's workflows.
 
 ## Examples
 

@@ -1,7 +1,6 @@
 import { err, ok, ResultAsync } from "neverthrow";
 import { z } from "zod/v4";
 
-import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { ValidationCheckResult } from "./validation.js";
 
@@ -93,14 +92,12 @@ const findMissingScripts = (
 
 export const checkMonorepoScripts = async (
   dependencies: Pick<Dependencies, "packageJsonReader">,
-  config: Config,
+  repositoryRoot: string,
 ): Promise<ValidationCheckResult> => {
   const { packageJsonReader } = dependencies;
   const checkName = "Monorepo Scripts";
 
-  const scriptsResult = await packageJsonReader.getScripts(
-    config.repository.root,
-  );
+  const scriptsResult = await packageJsonReader.getScripts(repositoryRoot);
 
   if (scriptsResult.isErr()) {
     return err(scriptsResult.error);

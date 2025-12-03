@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import { getInfo } from "../info.js";
 import {
-  makeMockConfig,
   makeMockDependencies,
   makeMockPackageJson,
+  makeMockRepositoryRoot,
 } from "./data.js";
 
 describe("getInfo", () => {
@@ -14,11 +14,14 @@ describe("getInfo", () => {
       const mockPackageJson = makeMockPackageJson({
         packageManager: undefined,
       });
-      const mockDependencies = {
-        ...makeMockDependencies(),
-        packageJson: mockPackageJson,
-      };
-      const config = makeMockConfig();
+      const mockDependencies = makeMockDependencies();
+      const repositoryRoot = makeMockRepositoryRoot();
+      mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+        okAsync(repositoryRoot),
+      );
+      mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
+        okAsync(mockPackageJson),
+      );
       mockDependencies.repositoryReader.fileExists.mockReturnValue(
         okAsync(false),
       );
@@ -26,7 +29,7 @@ describe("getInfo", () => {
         okAsync("22.0.0"),
       );
 
-      const result = await getInfo(mockDependencies, config)();
+      const result = await getInfo(mockDependencies)();
       expect(result.packageManager).toStrictEqual("npm");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -47,10 +50,10 @@ describe("getInfo", () => {
       const mockPackageJson = makeMockPackageJson({
         packageManager: undefined,
       });
-      const mockDependencies = {
-        ...makeMockDependencies(),
-        packageJson: mockPackageJson,
-      };
+      const mockDependencies = makeMockDependencies();
+      mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
+        okAsync(mockPackageJson),
+      );
       mockDependencies.repositoryReader.fileExists
         .mockReturnValueOnce(
           okAsync(false), // pnpm lock file does not exist
@@ -60,8 +63,11 @@ describe("getInfo", () => {
         okAsync("22.0.0"),
       );
 
-      const config = makeMockConfig();
-      const result = await getInfo(mockDependencies, config)();
+      const repositoryRoot = makeMockRepositoryRoot();
+      mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+        okAsync(repositoryRoot),
+      );
+      const result = await getInfo(mockDependencies)();
       expect(result.packageManager).toStrictEqual("yarn");
 
       expect(mockDependencies.repositoryReader.fileExists).nthCalledWith(
@@ -82,17 +88,20 @@ describe("getInfo", () => {
     const mockPackageJson = makeMockPackageJson({
       devDependencies: new Map([["turbo", "^2.5.0"]]),
     });
-    const config = makeMockConfig();
-    const mockDependencies = {
-      ...makeMockDependencies(),
-      packageJson: mockPackageJson,
-    };
+    const repositoryRoot = makeMockRepositoryRoot();
+    const mockDependencies = makeMockDependencies();
 
+    mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+      okAsync(repositoryRoot),
+    );
+    mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
+      okAsync(mockPackageJson),
+    );
     mockDependencies.repositoryReader.readFile
       .mockReturnValueOnce(okAsync("\n22.0.0\n"))
       .mockReturnValueOnce(okAsync("1.0.0\n"));
 
-    const result = await getInfo(mockDependencies, config)();
+    const result = await getInfo(mockDependencies)();
     expect(result).toStrictEqual({
       node: "22.0.0",
       packageManager: "pnpm",
@@ -108,14 +117,20 @@ describe("getInfo", () => {
   });
 
   it("should only required information", async () => {
-    const config = makeMockConfig();
+    const repositoryRoot = makeMockRepositoryRoot();
     const mockDependencies = makeMockDependencies();
 
+    mockDependencies.repositoryReader.findRepositoryRoot.mockReturnValue(
+      okAsync(repositoryRoot),
+    );
+    mockDependencies.packageJsonReader.readPackageJson.mockReturnValue(
+      okAsync(makeMockPackageJson()),
+    );
     mockDependencies.repositoryReader.readFile.mockReturnValue(
       errAsync(new Error("File not found")),
     );
 
-    const result = await getInfo(mockDependencies, config)();
+    const result = await getInfo(mockDependencies)();
     expect(result).toStrictEqual({
       node: undefined,
       packageManager: "pnpm",

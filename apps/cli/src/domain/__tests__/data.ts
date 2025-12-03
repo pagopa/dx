@@ -27,7 +27,6 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = () => ({
-  packageJson: makeMockPackageJson(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
   validationReporter: mock<ValidationReporter>(),
@@ -37,7 +36,6 @@ export const makeMockConfig = (): Config => ({
   minVersions: {
     turbo: "2.5.0",
   },
-  repository: {
-    root: "a/repo/root",
-  },
 });
+
+export const makeMockRepositoryRoot = (): string => "a/repo/root";

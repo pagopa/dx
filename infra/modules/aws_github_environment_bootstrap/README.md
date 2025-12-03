@@ -12,6 +12,157 @@ The module performs the following actions:
 - Sets up **OpenID Connect (OIDC)** integration between GitHub Actions and AWS.
 - Creates **GitHub repository secrets** with the IAM role ARNs for workflows to use.
 - Uses the **pagopa-dx AWS provider** for consistent resource naming conventions.
+- Deploys a **GitHub self-hosted runner** on AWS CodeBuild for private CI/CD workflows.
+
+## Quick Start
+
+Use this module in your bootstrapper configuration to create all necessary GitHub-AWS integration resources:
+
+```hcl
+module "github_bootstrap" {
+  source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
+  version = "~> 1.0"
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    region          = "eu-south-1"
+    domain          = "common"
+    app_name        = "github"
+    instance_number = "01"
+  }
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-repository"
+  }
+
+  vpc = {
+    id              = "vpc-0123456789abcdef0"
+    private_subnets = ["subnet-0123456789abcdef0", "subnet-0123456789abcdef1"]
+  }
+
+  github_private_runner = {
+    personal_access_token = {
+      ssm_parameter_name = "/github/pat"
+    }
+    secrets = {}
+  }
+
+  oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+
+  tags = {
+    CostCenter  = "TS000"
+    Environment = "Dev"
+    Owner       = "DevEx"
+    Source      = "Terraform"
+  }
+}
+```
+
+## Variables Reference
+
+| Variable                | Description                                      | Required |
+| ----------------------- | ------------------------------------------------ | :------: |
+| `environment`           | Resource naming and location configuration       |    ✅    |
+| `repository`            | GitHub repository details (owner, name)          |    ✅    |
+| `vpc`                   | VPC configuration for self-hosted runner         |    ✅    |
+| `github_private_runner` | Self-hosted runner configuration                 |    ✅    |
+| `oidc_provider_arn`     | ARN of the GitHub OIDC provider                  |    ✅    |
+| `tags`                  | Resource tags for cost allocation and management |    ✅    |
+
+### Detailed Variable Explanations
+
+#### `environment`
+
+Defines resource naming conventions. All fields are mandatory except `domain`:
+
+```hcl
+environment = {
+  prefix          = "dx"         # Organization/project prefix
+  env_short       = "d"          # Environment: d=dev, u=uat, p=prod
+  region          = "eu-south-1" # AWS region
+  domain          = "common"     # Optional: domain for multi-domain setups
+  app_name        = "github"     # Application identifier
+  instance_number = "01"         # Instance number for uniqueness
+}
+```
+
+#### `repository`
+
+GitHub repository information for OIDC trust and secret creation:
+
+```hcl
+repository = {
+  owner = "pagopa"           # GitHub organization (default: "pagopa")
+  name  = "my-repository"    # Repository name
+}
+```
+
+#### `vpc`
+
+VPC configuration for the GitHub self-hosted runner on CodeBuild:
+
+```hcl
+vpc = {
+  id              = "vpc-0123456789abcdef0"                    # VPC ID
+  private_subnets = ["subnet-abc123", "subnet-def456"]         # Private subnet IDs for runner
+}
+```
+
+#### `github_private_runner`
+
+Configuration for the GitHub Actions self-hosted runner. You must provide **either** `codeconnection_arn` **or** `personal_access_token`, but not both:
+
+```hcl
+github_private_runner = {
+  tier = "m"                    # Optional: Runner size (default: "m")
+
+  # Option 1: Use AWS CodeConnection
+  codeconnection_arn = "arn:aws:codestar-connections:..."
+
+  # Option 2: Use Personal Access Token
+  personal_access_token = {
+    ssm_parameter_name = "/github/pat"  # SSM parameter containing the PAT
+    # OR
+    value = "ghp_..."                   # Direct PAT value (not recommended)
+  }
+
+  env_variables = {                     # Optional: Environment variables for runner
+    NODE_VERSION = "20"
+  }
+
+  secrets = {                           # Secrets to inject into runner environment
+    "NPM_TOKEN" = {
+      ssm_parameter_name = "/npm/token"
+    }
+    "DATABASE_PASSWORD" = {
+      secrets_manager_name = "prod/db/password"
+    }
+  }
+}
+```
+
+#### `oidc_provider_arn`
+
+The ARN of the GitHub OIDC provider in your AWS account. This is typically created once per AWS account and shared across repositories:
+
+```hcl
+oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+```
+
+#### `tags`
+
+Standard AWS tags for resource management and cost allocation:
+
+```hcl
+tags = {
+  CostCenter  = "TS000"
+  Environment = "Dev"
+  Owner       = "DevEx"
+  Source      = "Terraform"
+}
+```
 
 ## Gotchas
 
@@ -58,39 +209,7 @@ jobs:
           ...
 ```
 
-## Usage Examples
-
-### Basic Usage
-
-```hcl
-module "aws_github_bootstrap" {
-  source = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 1.0"
-
-  environment = {
-    prefix          = "myapp"
-    env_short       = "d"
-    region          = "eu-south-1"
-    domain          = "core"
-    instance_number = "01"
-  }
-
-  repository = {
-    owner = "pagopa"
-    name  = "my-aws-project"
-  }
-
-  oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
-
-  tags = {
-    CreatedBy   = "Terraform"
-    Environment = "dev"
-    Owner       = "Platform Team"
-  }
-}
-```
-
-### Accessing the Created IAM Role ARNs
+## Accessing the Created IAM Role ARNs
 
 The module outputs the IAM role ARNs that can be used in your workflows:
 
@@ -124,6 +243,83 @@ This module uses the pagopa-dx AWS provider for consistent resource naming. Reso
 ```
 
 For example: `myapp-d-use1-core-infra-github-ci-iam-role-01`
+
+## Integration with AWS Core Values Exporter
+
+When using this module within the DX bootstrapper pattern, you can leverage the `aws_core_values_exporter` module to automatically retrieve infrastructure values from the core Terraform state. This simplifies configuration by eliminating hardcoded values.
+
+### AWS Core Values Exporter Output Mapping
+
+The following table shows how to map AWS Core Values Exporter outputs to this module's inputs:
+
+| Bootstrap Module Input                                           | Core Values Exporter Output                       | Description                           |
+| ---------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------- |
+| `vpc.id`                                                         | `vpc_id`                                          | VPC ID for the self-hosted runner     |
+| `vpc.private_subnets`                                            | `private_subnet_ids`                              | Private subnets for runner deployment |
+| `oidc_provider_arn`                                              | `oidc_provider_arn`                               | GitHub OIDC provider ARN              |
+| `github_private_runner.personal_access_token.ssm_parameter_name` | `github_personal_access_token_ssm_parameter_name` | SSM parameter with GitHub PAT         |
+
+### Complete Integration Example
+
+```hcl
+module "core_values" {
+  source  = "pagopa-dx/aws-core-values-exporter/aws"
+  version = "~> 0.0"
+
+  core_state = {
+    bucket         = "my-terraform-state-bucket"
+    key            = "core/terraform.tfstate"
+    region         = "eu-south-1"
+    dynamodb_table = "terraform-locks"
+  }
+}
+
+module "bootstrap" {
+  source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
+  version = "~> 1.0"
+
+  environment = var.environment
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-repository"
+  }
+
+  vpc = {
+    id              = module.core_values.vpc_id
+    private_subnets = module.core_values.private_subnet_ids
+  }
+
+  github_private_runner = {
+    personal_access_token = {
+      ssm_parameter_name = module.core_values.github_personal_access_token_ssm_parameter_name
+    }
+    secrets = {}
+  }
+
+  oidc_provider_arn = module.core_values.oidc_provider_arn
+
+  tags = var.tags
+}
+```
+
+### Using Azure Storage Backend for Core State
+
+If your core infrastructure state is stored in Azure Storage (hybrid cloud scenario):
+
+```hcl
+module "core_values" {
+  source  = "pagopa-dx/aws-core-values-exporter/aws"
+  version = "~> 0.0"
+
+  core_state = {
+    key                  = "core/terraform.tfstate"
+    storage_account_name = "mystorageaccount"
+    container_name       = "tfstate"
+    resource_group_name  = "my-terraform-rg"
+  }
+}
+```
 
 ## Extending the module for custom needs
 
