@@ -1,5 +1,16 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.9
+
+### Patch Changes
+
+- fe77b0d: Add `.gitignore` file
+
+  `prettier` now will ignore files in the ignored paths.
+
+- Updated dependencies [824fa3f]
+  - @pagopa/azure-tracing@0.4.10
+
 ## 0.0.8
 
 ### Patch Changes

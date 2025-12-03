@@ -1,5 +1,11 @@
 # @pagopa/monorepo-generator
 
+## 0.11.2
+
+### Patch Changes
+
+- a088076: Ask GitHub owner as a prompt
+
 ## 0.11.1
 
 ### Patch Changes
