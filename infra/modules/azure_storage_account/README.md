@@ -73,7 +73,6 @@ The `audit` use case is specifically designed for storing audit logs with **full
 | **Encryption in Transit**     | TLS 1.2 minimum, HTTPS-only traffic                                    | ✅ Mandatory    |
 | **Infrastructure Encryption** | Double encryption (platform + infrastructure)                          | ✅ Mandatory    |
 | **Immutability (WORM)**       | Time-based retention policy (Unlocked initially, lock post-deployment) | ✅ Mandatory    |
-| **Legal Hold Support**        | Container-level policies with tag-based identification                 | ✅ Available    |
 | **Access Logging**            | Diagnostic settings for control & data plane                           | ✅ Mandatory    |
 | **Time Synchronization**      | Azure PaaS automatic synchronization                                   | ✅ Built-in     |
 | **Geo-Redundancy**            | Custom secondary replica with object replication                       | ✅ Enabled      |
@@ -157,14 +156,13 @@ The following security configurations are **automatically applied** when `use_ca
 
 - ✅ **SEC 17a-4(f) compliant** for financial and healthcare regulations
 - ✅ Policy **cannot be deleted** (irreversible)
-- ✅ Retention period can be extended (max 5 times) but never shortened
+- ✅ Retention period can be extended but never shortened
 - ✅ Prevents storage account deletion while locked policies exist
 - ⚠️ **Locking is permanent** - cannot be undone
-- ⚠️ **Azure Limitation**: Initial policy state can only be "Unlocked" or "Disabled" - must lock after deployment using Azure CLI or Portal
 
-#### Container-Level Legal Hold
+#### Container-Level Immutability Policies
 
-For litigation or investigation scenarios, you can place **legal holds** on individual containers:
+For granular control over retention policies, you can configure immutability at the container level:
 
 ```hcl
 module "audit_storage" {
@@ -177,12 +175,10 @@ module "audit_storage" {
     {
       name        = "audit-logs"
       access_type = "private"
-      # Time-based retention with legal hold capability
+      # Time-based retention (unlocked for flexibility)
       immutability_policy = {
-        period_in_days     = 365
-        locked             = false  # Keep unlocked to allow legal hold modifications
-        # legal_hold_tags must be set via Azure CLI after deployment; this field is only for validation
-        legal_hold_tags    = []     # Legal holds are NOT applied by Terraform
+        period_in_days = 365
+        locked         = false
       }
     },
     {
@@ -190,22 +186,13 @@ module "audit_storage" {
       access_type = "private"
       # Locked policy for permanent compliance
       immutability_policy = {
-        period_in_days     = 2555  # 7 years
-        locked             = true   # SEC 17a-4(f) compliant
-        legal_hold_tags    = []     # Must be empty when locking
+        period_in_days = 2555  # 7 years
+        locked         = true  # SEC 17a-4(f) compliant (irreversible)
       }
     }
   ]
 }
 ```
-
-**Legal Hold Tag Requirements**:
-
-- ✅ 1-10 tags maximum per container
-- ✅ Each tag: 3-23 alphanumeric characters (a-z, A-Z, 0-9)
-- ✅ Common patterns: case IDs, event names, project codes
-- ⚠️ Cannot lock a policy while legal hold tags are present
-- ⚠️ Legal hold prevents blob deletion regardless of retention period
 
 **When to Use Container-Level vs Account-Level Immutability**:
 
@@ -213,7 +200,6 @@ module "audit_storage" {
 | ----------------------------------- | --------------- | ------------------------------------------ |
 | All blobs need same retention       | Account-level   | Simpler configuration, applies uniformly   |
 | Different retention per container   | Container-level | Granular control over data classes         |
-| Need legal hold capability          | Container-level | Account-level doesn't support legal holds  |
 | Mixed workloads (audit + non-audit) | Container-level | Flexibility for different compliance needs |
 | Regulatory compliance only          | Account-level   | Sufficient for SEC 17a-4(f) requirements   |
 
@@ -302,16 +288,11 @@ az storage account show \
 az storage container immutability-policy show \
   --account-name <storage-account-name> \
   --container-name <container-name>
-
-# Check legal hold status on a container
-az storage container legal-hold show \
-  --account-name <storage-account-name> \
-  --container-name <container-name>
 ```
 
-### Locking Immutability Policies After Deployment
+### Locking Immutability Policies
 
-⚠️ **Important**: Due to Azure limitations, immutability policies are created in "Unlocked" state. To achieve SEC 17a-4(f) compliance, you must lock the policy after deployment:
+⚠️ **Important**: Immutability policies can be created in "Locked" or "Unlocked" state. To achieve SEC 17a-4(f) compliance, the policy must be locked. If you create it as unlocked, you can lock it later, but this action is irreversible:
 
 ```bash
 # Lock the account-level immutability policy (IRREVERSIBLE!)
@@ -334,35 +315,25 @@ az storage account show \
 - ✅ You understand that locking is **permanent and irreversible**
 - ✅ Account deletion will be blocked until all data expires
 
-### Managing Legal Holds
+### Legal Holds
 
 Legal holds must be managed using Azure CLI (not Terraform):
 
 ```bash
-# Set legal hold on a container (Azure CLI - immediate action)
+# Set legal hold on a container
 az storage container legal-hold set \
   --account-name <storage-account-name> \
   --container-name <container-name> \
-  --tags "case2024" "investigation" "subpoena123"
+  --tags "case2024" "investigation"
 
 # Clear legal hold from a container
 az storage container legal-hold clear \
   --account-name <storage-account-name> \
   --container-name <container-name> \
-  --tags "case2024" "investigation" "subpoena123"
-
-# List current legal hold tags
-az storage container legal-hold show \
-  --account-name <storage-account-name> \
-  --container-name <container-name>
+  --tags "case2024" "investigation"
 ```
 
-**Important Notes**:
-
-- Legal holds are **independent of retention policies**
-- Blobs remain protected even after retention period expires if legal hold is active
-- Legal hold tags must be explicitly cleared to allow deletion
-- Audit logs track all legal hold operations for compliance
+Legal holds are independent of immutability policies and prevent blob deletion even after retention periods expire.
 
 ## Usage Example
 
