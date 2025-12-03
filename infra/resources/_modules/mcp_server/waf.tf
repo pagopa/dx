@@ -20,10 +20,14 @@ resource "aws_wafv2_web_acl" "api_gateway" {
 
   # Rate limiting rule - configurable via variable
 <<<<<<< HEAD
+<<<<<<< HEAD
   # Defaults to 500 requests per IP per 5 minutes
 =======
   # Defaults to 2000 requests per IP per 5 minutes, overridden to 5000 in prod
 >>>>>>> 8a1b7bd0 (Fix trivy findings)
+=======
+  # Defaults to 500 requests per IP per 5 minutes
+>>>>>>> e87b616d (Reduced rate limit to 500/5minutes)
   rule {
     name     = "rate-limit-per-ip"
     priority = 0
