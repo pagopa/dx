@@ -64,10 +64,9 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
 const displaySummary = (answers: Answers) => {
   console.log("\n🎉 Workspace created successfully!\n");
   console.log(`- Name: ${answers.repoName}`);
-  console.log(`- Description: ${answers.repoDescription}`);
   console.log(`- Cloud Service Provider: ${answers.csp}`);
   console.log(
-    `- GitHub Repository: https://github.com/pagopa/${answers.repoName}`,
+    `- GitHub Repository: https://github.com/${answers.repoOwner}/${answers.repoName}`,
   );
 };
 
