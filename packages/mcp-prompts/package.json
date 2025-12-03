@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpprompts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Centralized catalog of MCP prompts for PagoPA DX tools",
   "repository": {

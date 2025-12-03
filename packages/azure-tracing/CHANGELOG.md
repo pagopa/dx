@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.9
+
+### Patch Changes
+
+- fb9caa2: Update dependencies
+
 ## 0.4.8
 
 ### Patch Changes
