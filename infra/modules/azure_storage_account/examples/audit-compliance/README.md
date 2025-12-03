@@ -236,7 +236,7 @@ az storage account show \
 # Should return: "Locked"
 ```
 
-7. **Allign terraform configuration** to reflect locked state (update `var.blob_features.immutability_policy.state` to `"Locked"` in container definitions)
+7. **Align terraform configuration** to reflect locked state (update individual container `immutability_policy.locked` value)
 
 ## Best Practices
 
