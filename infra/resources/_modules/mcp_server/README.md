@@ -50,12 +50,17 @@ No modules.
 | [aws_s3_bucket.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket)                                                                           | resource |
 | [aws_s3_bucket_public_access_block.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block)                                   | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+<<<<<<< HEAD
 | [aws_s3vectors_index.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3vectors_index)                                                                             | resource |
 | [aws_s3vectors_vector_bucket.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3vectors_vector_bucket)                                                             | resource |
 | [aws_wafv2_web_acl.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl)                                                                          | resource |
 | [aws_wafv2_web_acl_association.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association)                                                  | resource |
 | [awscc_bedrock_data_source.docs](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrock_data_source)                                                                 | resource |
 | [awscc_bedrock_knowledge_base.this](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrock_knowledge_base)                                                           | resource |
+=======
+| [aws_wafv2_web_acl.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl)                                                                          | resource |
+| [aws_wafv2_web_acl_association.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association)                                                  | resource |
+>>>>>>> e9024f3e (Fix trivy findings)
 | [azurerm_dns_cname_record.acm_validation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                         | resource |
 | [azurerm_dns_cname_record.api_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                            | resource |
 
@@ -73,18 +78,16 @@ No modules.
 
 ## Outputs
 
-| Name                                                                                                                             | Description                                                |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| <a name="output_cloudfront_distribution_arn"></a> [cloudfront_distribution_arn](#output_cloudfront_distribution_arn)             | CloudFront distribution ARN                                |
-| <a name="output_cloudfront_distribution_domain"></a> [cloudfront_distribution_domain](#output_cloudfront_distribution_domain)    | CloudFront distribution domain name                        |
-| <a name="output_cloudfront_distribution_id"></a> [cloudfront_distribution_id](#output_cloudfront_distribution_id)                | CloudFront distribution ID                                 |
-| <a name="output_cloudfront_origin_verify_header"></a> [cloudfront_origin_verify_header](#output_cloudfront_origin_verify_header) | Generated secret header for CloudFront origin verification |
-| <a name="output_custom_domain_name"></a> [custom_domain_name](#output_custom_domain_name)                                        | Custom domain name pointing to CloudFront                  |
-| <a name="output_custom_domain_url"></a> [custom_domain_url](#output_custom_domain_url)                                           | Full HTTPS URL for the custom domain                       |
-| <a name="output_http_api_endpoint"></a> [http_api_endpoint](#output_http_api_endpoint)                                           | HTTP API Gateway v2 endpoint URL (CloudFront origin)       |
-| <a name="output_http_api_id"></a> [http_api_id](#output_http_api_id)                                                             | HTTP API Gateway v2 ID                                     |
-| <a name="output_lambda_function_name"></a> [lambda_function_name](#output_lambda_function_name)                                  | Lambda function name serving the MCP server                |
-| <a name="output_waf_web_acl_arn"></a> [waf_web_acl_arn](#output_waf_web_acl_arn)                                                 | WAF Web ACL ARN protecting CloudFront                      |
-| <a name="output_waf_web_acl_id"></a> [waf_web_acl_id](#output_waf_web_acl_id)                                                    | WAF Web ACL ID protecting CloudFront                       |
+| Name                                                                                                                 | Description                                            |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| <a name="output_api_gateway_regional_domain"></a> [api_gateway_regional_domain](#output_api_gateway_regional_domain) | Regional domain name for the API Gateway custom domain |
+| <a name="output_api_gateway_stage_arn"></a> [api_gateway_stage_arn](#output_api_gateway_stage_arn)                   | API Gateway stage ARN                                  |
+| <a name="output_custom_domain_name"></a> [custom_domain_name](#output_custom_domain_name)                            | Custom domain name for the API Gateway                 |
+| <a name="output_custom_domain_url"></a> [custom_domain_url](#output_custom_domain_url)                               | Full HTTPS URL for the custom domain                   |
+| <a name="output_lambda_function_name"></a> [lambda_function_name](#output_lambda_function_name)                      | Lambda function name serving the MCP server            |
+| <a name="output_rest_api_execution_arn"></a> [rest_api_execution_arn](#output_rest_api_execution_arn)                | REST API Gateway execution ARN                         |
+| <a name="output_rest_api_id"></a> [rest_api_id](#output_rest_api_id)                                                 | REST API Gateway ID                                    |
+| <a name="output_waf_web_acl_arn"></a> [waf_web_acl_arn](#output_waf_web_acl_arn)                                     | WAF Web ACL ARN protecting API Gateway                 |
+| <a name="output_waf_web_acl_id"></a> [waf_web_acl_id](#output_waf_web_acl_id)                                        | WAF Web ACL ID protecting API Gateway                  |
 
 <!-- END_TF_DOCS -->

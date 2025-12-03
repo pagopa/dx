@@ -1,5 +1,5 @@
-# Creates CNAME records in Azure DNS for ACM certificate validation in US East 1.
-resource "azurerm_dns_cname_record" "acm_cdn_validation" {
+# Creates CNAME records in Azure DNS for ACM certificate validation.
+resource "azurerm_dns_cname_record" "acm_validation" {
   for_each = {
     for dvo in aws_acm_certificate.api_custom_domain.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
