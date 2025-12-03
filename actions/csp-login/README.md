@@ -7,7 +7,7 @@ This GitHub Action automatically detects and logs into the appropriate cloud pro
 ```yaml
 steps:
   - name: Cloud Login
-    uses: pagopa/dx/.github/actions/csp-login@main
+    uses: pagopa/dx/actions/csp-login@main
 ```
 
 ## How it works
