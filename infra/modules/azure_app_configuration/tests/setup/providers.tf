@@ -6,7 +6,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.7"
+      version = "~> 0.8"
     }
     random = {
       source  = "hashicorp/random"
