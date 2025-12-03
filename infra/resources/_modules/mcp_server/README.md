@@ -16,14 +16,20 @@ No modules.
 
 | Name                                                                                                                                                                                                | Type     |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| [aws_acm_certificate.api_custom_cdn](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate)                                                                   | resource |
-| [aws_apigatewayv2_api.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api)                                                                     | resource |
-| [aws_apigatewayv2_integration.lambda_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_integration)                                                   | resource |
-| [aws_apigatewayv2_route.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route)                                                                    | resource |
-| [aws_apigatewayv2_route.mcp](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_route)                                                                        | resource |
-| [aws_apigatewayv2_stage.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_stage)                                                                    | resource |
-| [aws_cloudfront_distribution.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution)                                                       | resource |
-| [aws_cloudfront_origin_access_control.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_access_control)                                    | resource |
+| [aws_acm_certificate.api_custom_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate)                                                                | resource |
+| [aws_acm_certificate_validation.api_custom_domain](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation)                                          | resource |
+| [aws_api_gateway_account.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_account)                                                                     | resource |
+| [aws_api_gateway_base_path_mapping.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_base_path_mapping)                                           | resource |
+| [aws_api_gateway_deployment.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_deployment)                                                         | resource |
+| [aws_api_gateway_domain_name.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_domain_name)                                                       | resource |
+| [aws_api_gateway_integration.lambda_proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)                                                     | resource |
+| [aws_api_gateway_integration.lambda_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration)                                                      | resource |
+| [aws_api_gateway_method.proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method)                                                                      | resource |
+| [aws_api_gateway_method.proxy_root](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method)                                                                 | resource |
+| [aws_api_gateway_method_settings.all](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_method_settings)                                                      | resource |
+| [aws_api_gateway_resource.proxy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource)                                                                  | resource |
+| [aws_api_gateway_rest_api.mcp_server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api)                                                             | resource |
+| [aws_api_gateway_stage.prod](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage)                                                                         | resource |
 | [aws_cloudwatch_log_group.api_gateway_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group)                                                       | resource |
 | [aws_ecr_repository.server](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecr_repository)                                                                             | resource |
 | [aws_iam_policy.lambda_bedrock_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy)                                                                      | resource |
@@ -37,10 +43,10 @@ No modules.
 | [aws_s3_bucket.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket)                                                                           | resource |
 | [aws_s3_bucket_public_access_block.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block)                                   | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.mcp_knowledge_base](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
-| [aws_wafv2_web_acl.cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl)                                                                           | resource |
-| [azurerm_dns_cname_record.acm_cdn_validation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                     | resource |
-| [azurerm_dns_cname_record.cloudfront](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                             | resource |
-| [random_password.cloudfront_origin_verify](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password)                                                                 | resource |
+| [aws_wafv2_web_acl.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl)                                                                          | resource |
+| [aws_wafv2_web_acl_association.api_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/wafv2_web_acl_association)                                                  | resource |
+| [azurerm_dns_cname_record.acm_validation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                         | resource |
+| [azurerm_dns_cname_record.api_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record)                                                            | resource |
 
 ## Inputs
 
@@ -56,18 +62,16 @@ No modules.
 
 ## Outputs
 
-| Name                                                                                                                             | Description                                                |
-| -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| <a name="output_cloudfront_distribution_arn"></a> [cloudfront_distribution_arn](#output_cloudfront_distribution_arn)             | CloudFront distribution ARN                                |
-| <a name="output_cloudfront_distribution_domain"></a> [cloudfront_distribution_domain](#output_cloudfront_distribution_domain)    | CloudFront distribution domain name                        |
-| <a name="output_cloudfront_distribution_id"></a> [cloudfront_distribution_id](#output_cloudfront_distribution_id)                | CloudFront distribution ID                                 |
-| <a name="output_cloudfront_origin_verify_header"></a> [cloudfront_origin_verify_header](#output_cloudfront_origin_verify_header) | Generated secret header for CloudFront origin verification |
-| <a name="output_custom_domain_name"></a> [custom_domain_name](#output_custom_domain_name)                                        | Custom domain name pointing to CloudFront                  |
-| <a name="output_custom_domain_url"></a> [custom_domain_url](#output_custom_domain_url)                                           | Full HTTPS URL for the custom domain                       |
-| <a name="output_http_api_endpoint"></a> [http_api_endpoint](#output_http_api_endpoint)                                           | HTTP API Gateway v2 endpoint URL (CloudFront origin)       |
-| <a name="output_http_api_id"></a> [http_api_id](#output_http_api_id)                                                             | HTTP API Gateway v2 ID                                     |
-| <a name="output_lambda_function_name"></a> [lambda_function_name](#output_lambda_function_name)                                  | Lambda function name serving the MCP server                |
-| <a name="output_waf_web_acl_arn"></a> [waf_web_acl_arn](#output_waf_web_acl_arn)                                                 | WAF Web ACL ARN protecting CloudFront                      |
-| <a name="output_waf_web_acl_id"></a> [waf_web_acl_id](#output_waf_web_acl_id)                                                    | WAF Web ACL ID protecting CloudFront                       |
+| Name                                                                                                                 | Description                                            |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| <a name="output_api_gateway_regional_domain"></a> [api_gateway_regional_domain](#output_api_gateway_regional_domain) | Regional domain name for the API Gateway custom domain |
+| <a name="output_api_gateway_stage_arn"></a> [api_gateway_stage_arn](#output_api_gateway_stage_arn)                   | API Gateway stage ARN                                  |
+| <a name="output_custom_domain_name"></a> [custom_domain_name](#output_custom_domain_name)                            | Custom domain name for the API Gateway                 |
+| <a name="output_custom_domain_url"></a> [custom_domain_url](#output_custom_domain_url)                               | Full HTTPS URL for the custom domain                   |
+| <a name="output_lambda_function_name"></a> [lambda_function_name](#output_lambda_function_name)                      | Lambda function name serving the MCP server            |
+| <a name="output_rest_api_execution_arn"></a> [rest_api_execution_arn](#output_rest_api_execution_arn)                | REST API Gateway execution ARN                         |
+| <a name="output_rest_api_id"></a> [rest_api_id](#output_rest_api_id)                                                 | REST API Gateway ID                                    |
+| <a name="output_waf_web_acl_arn"></a> [waf_web_acl_arn](#output_waf_web_acl_arn)                                     | WAF Web ACL ARN protecting API Gateway                 |
+| <a name="output_waf_web_acl_id"></a> [waf_web_acl_id](#output_waf_web_acl_id)                                        | WAF Web ACL ID protecting API Gateway                  |
 
 <!-- END_TF_DOCS -->
