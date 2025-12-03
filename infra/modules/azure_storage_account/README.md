@@ -22,7 +22,7 @@ This Terraform module provisions an Azure Storage Account with optional configur
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
 | `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
 | `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
-| `audit`            | For storing audit logs with high security and long-term retention. (Blob items will be deleted after 3 years of inactivity) | Yes    | No                         | ZRS + secondary replica | Standard     |
+| `audit`            | For storing audit logs with high security and long-term retention (default: 1 year)                                         | Yes    | No                         | ZRS + secondary replica | Standard     |
 | `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
 
@@ -126,21 +126,7 @@ module "audit_storage" {
 }
 ```
 
-### Security Features Enforced for Audit Use Case
-
-The following security configurations are **automatically applied** when `use_case = "audit"`:
-
-- ✅ **TLS 1.2 Minimum Version**: Ensures encryption in transit meets current standards
-- ✅ **HTTPS-Only Traffic**: Rejects unencrypted HTTP connections
-- ✅ **Infrastructure Encryption**: Enables double encryption for defense-in-depth
-- ✅ **Cross-Tenant Replication Disabled**: Prevents data exfiltration to other Azure AD tenants
-- ✅ **OAuth Authentication Default**: Encourages Azure AD-based authentication over shared keys
-- ✅ **Immutability Policy**: Write-Once-Read-Many (WORM) enabled (created as Unlocked, must be locked post-deployment for SEC 17a-4(f) compliance)
-- ✅ **Blob Versioning & Change Feed**: Required for immutability, automatically enabled
-- ✅ **Geo-Redundant Storage**: Secondary replica in different region with object replication
-- ✅ **Lifecycle Tiering**: Hot (0-30d) → Cool (30-90d) → Cold (90d+) → Delete (configurable)
-
-### Immutability Policy States and Legal Hold
+### Immutability Policies
 
 #### Policy State: Locked vs Unlocked
 
@@ -194,150 +180,22 @@ module "audit_storage" {
 }
 ```
 
-**When to Use Container-Level vs Account-Level Immutability**:
+Use container-level policies when different containers need different retention periods, otherwise use account-level for simplicity (sufficient for **SEC 17a-4(f)** compliance).
 
-| Scenario                            | Recommendation  | Reason                                     |
-| ----------------------------------- | --------------- | ------------------------------------------ |
-| All blobs need same retention       | Account-level   | Simpler configuration, applies uniformly   |
-| Different retention per container   | Container-level | Granular control over data classes         |
-| Mixed workloads (audit + non-audit) | Container-level | Flexibility for different compliance needs |
-| Regulatory compliance only          | Account-level   | Sufficient for SEC 17a-4(f) requirements   |
+#### Locking Policies
 
-### Migration Guide for Existing Audit Storage Accounts
-
-If you have an existing audit storage account created with a previous version of this module, follow these steps to adopt the new security features:
-
-#### 1. Update Module Version
-
-```hcl
-module "audit_storage" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"  # Update to latest version
-  # ... existing configuration ...
-}
-```
-
-#### 2. Add Required Diagnostic Settings
-
-```hcl
-module "audit_storage" {
-  # ... existing configuration ...
-
-  diagnostic_settings = {
-    enabled                    = true
-    log_analytics_workspace_id = azurerm_log_analytics_workspace.audit.id
-  }
-}
-```
-
-#### 3. (Optional) Adjust Retention Period
-
-```hcl
-module "audit_storage" {
-  # ... existing configuration ...
-
-  # Change from default PagoPA standard 365 days (12 months) to desired value
-  audit_retention_days = 1095
-}
-```
-
-#### 4. Apply Changes
+⚠️ **Important**: Locking is **irreversible**. Once locked, the policy cannot be deleted, retention periods cannot be shortened, and the storage account cannot be deleted until all data expires.
 
 ```bash
-terraform plan   # Review security enhancements
-terraform apply  # Apply changes (non-destructive)
-```
-
-**Note**: The new security features are **backward compatible**:
-
-- Existing storage accounts will **not** be recreated
-- TLS, HTTPS, and OAuth settings are non-breaking changes
-- Infrastructure encryption can **only** be enabled on new storage accounts
-- If infrastructure encryption is critical, you must create a new storage account
-
-### Compliance Validation
-
-To verify compliance after deployment, check:
-
-```bash
-# Verify TLS version
-az storage account show --name <storage-account-name> --query "minimumTlsVersion"
-
-# Verify HTTPS enforcement
-az storage account show --name <storage-account-name> --query "enableHttpsTrafficOnly"
-
-# Verify diagnostic settings
-az monitor diagnostic-settings list --resource <storage-account-id>
-
-# Verify blob versioning is enabled (required for immutability)
-az storage account blob-service-properties show \
-  --account-name <storage-account-name> \
-  --query "isVersioningEnabled"
-
-# Verify change feed is enabled (required for immutability)
-az storage account blob-service-properties show \
-  --account-name <storage-account-name> \
-  --query "isChangeFeedEnabled"
-
-# Verify account-level immutability policy state
-az storage account show \
-  --name <storage-account-name> \
-  --query "immutableStorageWithVersioning.immutabilityPolicy.state"
-
-# Verify container-level immutability policy
-az storage container immutability-policy show \
-  --account-name <storage-account-name> \
-  --container-name <container-name>
-```
-
-### Locking Immutability Policies
-
-⚠️ **Important**: Immutability policies can be created in "Locked" or "Unlocked" state. To achieve SEC 17a-4(f) compliance, the policy must be locked. If you create it as unlocked, you can lock it later, but this action is irreversible:
-
-```bash
-# Lock the account-level immutability policy (IRREVERSIBLE!)
 az storage account immutability-policy update \
   --account-name <storage-account-name> \
   --resource-group <resource-group-name> \
   --state Locked
-
-# Verify the policy is locked
-az storage account show \
-  --name <storage-account-name> \
-  --query "immutableStorageWithVersioning.immutabilityPolicy.state"
-# Expected output: "Locked"
 ```
-
-**Before locking, ensure:**
-
-- ✅ Retention period is correct (cannot be shortened after locking)
-- ✅ Policy has been tested with your data
-- ✅ You understand that locking is **permanent and irreversible**
-- ✅ Account deletion will be blocked until all data expires
-
-### Legal Holds
-
-Legal holds must be managed using Azure CLI (not Terraform):
-
-```bash
-# Set legal hold on a container
-az storage container legal-hold set \
-  --account-name <storage-account-name> \
-  --container-name <container-name> \
-  --tags "case2024" "investigation"
-
-# Clear legal hold from a container
-az storage container legal-hold clear \
-  --account-name <storage-account-name> \
-  --container-name <container-name> \
-  --tags "case2024" "investigation"
-```
-
-Legal holds are independent of immutability policies and prevent blob deletion even after retention periods expire.
 
 ## Usage Example
 
-A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
+A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory, and an audit specific example can be found in the [example/audit-compliance](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/audit-compliance) directory.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
