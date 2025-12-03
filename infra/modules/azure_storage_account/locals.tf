@@ -53,7 +53,7 @@ locals {
       replication_type                  = "ZRS"
       secondary_replication             = false
       infrastructure_encryption_enabled = false
-      default_to_oauth_authentication   = true
+      default_to_oauth_authentication   = false
     }
     archive = {
       alerts                            = false

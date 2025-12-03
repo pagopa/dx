@@ -83,6 +83,11 @@ variable "subservices_enabled" {
   })
   description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force_public_network_access_enabled is false."
   default     = {}
+
+  validation {
+    condition     = var.use_case != "audit" || var.subservices_enabled.blob || var.subservices_enabled.file
+    error_message = "When use_case is 'audit', infrastructure encryption is enabled and requires at least one of 'blob' or 'file' subservices to be enabled."
+  }
 }
 
 variable "blob_features" {

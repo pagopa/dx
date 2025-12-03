@@ -377,6 +377,11 @@ run "audit_storage_account_is_correct_plan" {
   }
 
   assert {
+    condition     = local.peps.create_subservices.blob == true || local.peps.create_subservices.file == true
+    error_message = "Audit storage with infrastructure encryption requires at least blob or file subservice enabled"
+  }
+
+  assert {
     condition     = azurerm_storage_account.this.cross_tenant_replication_enabled == false
     error_message = "Audit storage must disable cross-tenant replication to prevent data exfiltration"
   }
@@ -476,6 +481,84 @@ run "audit_storage_account_fail_plan" {
   # Checks some assertions
   expect_failures = [
     var.customer_managed_key,
+  ]
+}
+
+run "audit_without_blob_or_file_fail_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    # Infrastructure encryption requires blob or file, but neither is enabled
+    subservices_enabled = {
+      blob  = false
+      file  = false
+      queue = true
+      table = true
+    }
+  }
+
+  # Should fail because audit tier requires blob or file for infrastructure encryption
+  expect_failures = [
+    var.subservices_enabled,
+  ]
+}
+
+run "audit_with_only_table_fail_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    # Only table enabled - should fail
+    subservices_enabled = {
+      blob  = false
+      file  = false
+      queue = false
+      table = true
+    }
+  }
+
+  # Should fail because audit tier with infrastructure encryption requires blob or file
+  expect_failures = [
+    var.subservices_enabled,
   ]
 }
 
