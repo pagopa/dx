@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.1.2
+
+### Patch Changes
+
+- fb9caa2: Update dependencies
+
 ## 0.1.1
 
 ### Patch Changes

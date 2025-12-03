@@ -1,0 +1,60 @@
+name: Bootstrapper Apply
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment where the resources will be deployed.
+        type: string
+        required: true
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  TF_IN_AUTOMATION: true
+
+jobs:
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: bootstrapper-${{ inputs.environment }}-cd
+    concurrency:
+      group: ${{ github.workflow }}-${{ inputs.environment }}-bootstrapper
+      cancel-in-progress: false
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        name: Checkout
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: infra/bootstrapper/${{ inputs.environment }}
+        run: |
+          terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: infra/bootstrapper/${{ inputs.environment }}
+        run: |
+          set -o pipefail
+          terraform apply -auto-approve -input=false

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpprompts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Centralized catalog of MCP prompts for PagoPA DX tools",
   "repository": {
@@ -29,7 +29,7 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "gray-matter": "^4.0.3",
-    "zod": "^3.24.1"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

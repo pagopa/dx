@@ -1,5 +1,12 @@
 # @pagopa/monorepo-generator
 
+## 0.11.1
+
+### Patch Changes
+
+- c7421af: Add Bootstrapper infra apply workflow in the monorepo template
+- fb9caa2: Update dependencies
+
 ## 0.11.0
 
 ### Minor Changes
