@@ -2,9 +2,9 @@
 "@pagopa/azure-tracing": patch
 ---
 
-Set the version of `@azure/monitor-opentelemetry` to a fixed version (`1.3.1`) to avoid issues with changes introduced in version `1.4`.
+Set the version of `@azure/monitor-opentelemetry` to a fixed version (`1.13.1`) to avoid issues with changes introduced in version `1.14.x`.
 
-When `@azure/monitor-opentelemetry` was updated to version `1.4`, it introduced breaking changes that affected our tracing implementation.  
+When `@azure/monitor-opentelemetry` was updated to version `1.14.x`, it introduced breaking changes that affected our tracing implementation.  
 During runtime, we encountered errors related to the `AzureMonitorMetricExporter`, which led to failures in exporting telemetry data to Azure Monitor.
 
 The error message observed was:
