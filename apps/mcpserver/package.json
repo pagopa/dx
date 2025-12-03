@@ -20,12 +20,13 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
+    "@aws-sdk/client-ssm": "^3.583.0",
     "@logtape/logtape": "catalog:",
     "@octokit/rest": "^22.0.0",
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.12.2",
-    "fastmcp": "^3.19.1",
+    "fastmcp": "^3.24.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
