@@ -74,7 +74,7 @@
     "@opentelemetry/instrumentation-undici": "^0.16.2",
     "@t3-oss/env-core": "^0.13.8",
     "import-in-the-middle": "^1.15.0",
-    "zod": "^3.25.73"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
