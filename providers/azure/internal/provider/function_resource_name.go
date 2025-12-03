@@ -284,7 +284,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 
 	// Normalize name to lowercase
 	normalizedName := strings.ToLower(name)
-	// Check if the abbreviation starts with the name (ex. f abbreviation is "name" or "name-something")
+	// Check if the abbreviation starts with the name (ex. if abbreviation is "name" or "name-something")
 	if normalizedName == abbreviation || strings.HasPrefix(abbreviation, normalizedName+"-") {
 		// Skip the name part to avoid redundancy
 		result = strings.ToLower(fmt.Sprintf("%s-%s-%02d",
