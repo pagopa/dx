@@ -22,8 +22,5 @@ module "mcp_server" {
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
 
-  # WAF rate limiting - increased for MCP usage patterns
-  waf_rate_limit_per_ip = 1000 # 1000 requests per IP per 5 minutes
-
   tags = local.tags
 }
