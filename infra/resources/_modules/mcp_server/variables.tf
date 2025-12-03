@@ -40,5 +40,5 @@ variable "tags" {
 variable "waf_rate_limit_per_ip" {
   type        = number
   description = "Maximum number of requests per IP address within the evaluation window (5 minutes). Requests exceeding this limit will be blocked."
-  default     = 2000
+  default     = 500
 }
