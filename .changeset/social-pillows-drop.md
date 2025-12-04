@@ -20,7 +20,7 @@ module "audit_storage" {
     log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   }
 
-  # OPTIONAL: Override default retention (1095 days -> 365 days)
+  # OPTIONAL: Override default retention (default changed from 1095 to 365 days)
   audit_retention_days = 365
 }
 ```
