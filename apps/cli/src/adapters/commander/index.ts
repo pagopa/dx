@@ -33,3 +33,7 @@ export const makeCli = (
 
   return program;
 };
+
+export const exitWithError = (command: Command) => (error: Error) => {
+  command.error(error.message);
+};
