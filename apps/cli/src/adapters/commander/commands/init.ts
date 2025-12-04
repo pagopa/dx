@@ -46,6 +46,7 @@ const withSpinner = <T, E = Error>(
   );
 
 // TODO: implement real validation logic
+// Check repository already exists: if exists, return an error
 const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
   withSpinner(
     "Checking permissions...",
@@ -70,6 +71,9 @@ const displaySummary = (answers: Answers) => {
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
   console.log(`- Name: ${chalk.cyan(repoName)}`);
   console.log(`- Cloud Service Provider: ${chalk.cyan(csp)}`);
+  const cspLocation =
+    csp === "azure" ? answers.azureLocation : answers.awsRegion;
+  console.log(`- CSP location: ${chalk.cyan(cspLocation)}`);
   console.log(
     `- GitHub Repository: ${chalk.cyan(`https://github.com/${repoOwner}/${repoName}`)}\n`,
   );
@@ -94,15 +98,22 @@ export const makeInitCommand = (): Command =>
       new Command("project")
         .description("Initialize a new monorepo project")
         .action(async function () {
-          await initPlop()
-            .andTee(scaffoldMonorepo)
-            .andThen((plop) => getGenerator(plop)("monorepo"))
+          await checkPreconditions()
+            .andThen(initPlop)
+            .andTee(loadMonorepoScaffolder)
+            .andThen((plop) => getGenerator(plop)(PLOP_MONOREPO_GENERATOR_NAME))
+            // Before running prompts, check the preconditions are met (like gh CLI installed, user logged in, etc.)
             .andThen((generator) =>
+              // Ask the user the questions defined in the plop generator
               getPrompts(generator)
+                // Decode the answers to match the Answers schema
                 .andThen(decode<Answers>(answersSchema))
-                .andTee(validateAnswers)
+                // Validate the answers (like checking permissions, checking GitHub user or org existence, etc.)
+                .andThen(validateAnswers)
+                // Run the generator with the provided answers (this will create the files locally)
                 .andThen(runGeneratorActions(generator)),
             )
+            .andThen(handleNewGitHubRepository)
             .match(displaySummary, exitWithError(this));
         }),
     );
