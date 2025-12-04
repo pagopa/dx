@@ -1,6 +1,8 @@
-import type { Answers } from "@pagopa/monorepo-generator";
-
-import scaffoldMonorepo, { answersSchema } from "@pagopa/monorepo-generator";
+import { Answers } from "@pagopa/monorepo-generator";
+import loadMonorepoScaffolder, {
+  answersSchema,
+  PLOP_MONOREPO_GENERATOR_NAME,
+} from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
 import { Result, ResultAsync } from "neverthrow";
