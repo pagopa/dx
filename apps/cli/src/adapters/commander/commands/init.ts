@@ -5,6 +5,7 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
+import { $ } from "execa";
 import { Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
 import { oraPromise } from "ora";
@@ -31,39 +32,51 @@ const getPrompts = (generator: PlopGenerator) =>
       new Error("Failed to run the generator prompts", { cause: error }),
   );
 
-const withSpinner = <T, E = Error>(
+const withSpinner = <T>(
   text: string,
   successText: string,
   failText: string,
-  task: () => Promise<T>,
-): ResultAsync<T, E> =>
-  ResultAsync.fromSafePromise(
-    oraPromise(task(), {
+  promise: Promise<T>,
+): ResultAsync<T, Error> =>
+  ResultAsync.fromPromise(
+    oraPromise(promise, {
       failText,
       successText,
       text,
     }),
+    () => new Error(failText),
   );
 
 // TODO: implement real validation logic
 // Check repository already exists: if exists, return an error
 const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
-  withSpinner(
-    "Checking permissions...",
-    "You have the necessary permissions!",
-    "You do not have the necessary permissions.",
-    async () => {
-      // Simulate some async validation logic
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return answers;
-    },
-  );
+  checkTerraformPermissions(
+    "Checking Terraform permissions...",
+    "Terraform permissions are valid!",
+    "Invalid Terraform permissions.",
+  )
+    .andThen(() =>
+      checkCspCliIsInstalled(
+        "Checking Cloud Service Provider CLI...",
+        "Cloud Service Provider CLI is installed!",
+        "Cloud Service Provider CLI is not installed.",
+      ),
+    )
+    .andThen(() =>
+      checkCloudEnvironmentExists(
+        "Checking Cloud Environment existence...",
+        "Cloud Environment exists!",
+        "Cloud Environment does not exist.",
+      ),
+    )
+    .map(() => answers);
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
-  ResultAsync.fromPromise(
+  withSpinner(
+    "Creating workspace files...",
+    "Workspace files created successfully!",
+    "Failed to create workspace files.",
     generator.runActions(answers),
-    (error) =>
-      new Error("Failed to run the generator actions", { cause: error }),
   ).map(() => answers);
 
 const displaySummary = (answers: Answers) => {
@@ -88,6 +101,78 @@ const displaySummary = (answers: Answers) => {
   );
 };
 
+const simulatePromise = (timeout: number): Promise<void> =>
+  new Promise<void>((_, reject) => setTimeout(reject, timeout));
+
+const checkGhCliIsInstalled = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, $`gh --version`);
+
+const checkGhCliIsLoggedIn = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, $`gh auth status`);
+
+// TODO: Check user has permissions to handle Terraform state
+const checkTerraformPermissions = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, simulatePromise(1500));
+
+// TODO: Check user has CSP CLI installed and configured (az, aws, ...)
+const checkCspCliIsInstalled = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, simulatePromise(3500));
+
+// TODO: Check the Cloud Environment exists but it is not configured; if not exists, return an error message
+const checkCloudEnvironmentExists = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, simulatePromise(3500));
+
+const checkPreconditions = (): ResultAsync<void, Error> =>
+  checkGhCliIsInstalled(
+    "Checking GitHub CLI is installed...",
+    "GitHub CLI is installed!",
+    "GitHub CLI is not installed.",
+  )
+    .andThen(() =>
+      checkGhCliIsLoggedIn(
+        "Checking GitHub CLI login...",
+        "GitHub CLI is logged in!",
+        "GitHub CLI is not logged in.",
+      ),
+    )
+    .map(() => undefined);
+
+// TODO: Create GitHub repository pushing the generated code
+// TODO: Open PR on created repository with the generated code
+const handleNewGitHubRepository = (
+  answers: Answers,
+): ResultAsync<Answers, Error> =>
+  // Placeholder for handling new GitHub repository logic
+  withSpinner(
+    "Creating GitHub repository...",
+    "GitHub repository created successfully!",
+    "Failed to create GitHub repository.",
+    simulatePromise(1000),
+  )
+    .andThen(() =>
+      withSpinner(
+        "Creating GitHub Pull Request...",
+        "GitHub Pull Request created successfully!",
+        "Failed to open Pull Request.",
+        simulatePromise(2000),
+      ),
+    )
+    .map(() => answers);
 export const makeInitCommand = (): Command =>
   new Command()
     .name("init")
@@ -107,7 +192,7 @@ export const makeInitCommand = (): Command =>
               // Ask the user the questions defined in the plop generator
               getPrompts(generator)
                 // Decode the answers to match the Answers schema
-                .andThen(decode<Answers>(answersSchema))
+                .andThen(decode(answersSchema))
                 // Validate the answers (like checking permissions, checking GitHub user or org existence, etc.)
                 .andThen(validateAnswers)
                 // Run the generator with the provided answers (this will create the files locally)
