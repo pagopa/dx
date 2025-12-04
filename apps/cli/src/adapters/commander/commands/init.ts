@@ -1,12 +1,14 @@
 import type { Answers } from "@pagopa/monorepo-generator";
 
 import scaffoldMonorepo, { answersSchema } from "@pagopa/monorepo-generator";
+import chalk from "chalk";
 import { Command } from "commander";
 import { Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
 import { oraPromise } from "ora";
 
 import { decode } from "../../zod/index.js";
+import { exitWithError } from "../index.js";
 
 const initPlop = () =>
   ResultAsync.fromPromise(
@@ -62,11 +64,21 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   ).map(() => answers);
 
 const displaySummary = (answers: Answers) => {
-  console.log("\n🎉 Workspace created successfully!\n");
-  console.log(`- Name: ${answers.repoName}`);
-  console.log(`- Cloud Service Provider: ${answers.csp}`);
+  const { csp, repoName, repoOwner } = answers;
+  console.log(chalk.green.bold("\nWorkspace created successfully!"));
+  console.log(`- Name: ${chalk.cyan(repoName)}`);
+  console.log(`- Cloud Service Provider: ${chalk.cyan(csp)}`);
   console.log(
-    `- GitHub Repository: https://github.com/${answers.repoOwner}/${answers.repoName}`,
+    `- GitHub Repository: ${chalk.cyan(`https://github.com/${repoOwner}/${repoName}`)}\n`,
+  );
+
+  console.log(chalk.green.bold("\nNext Steps:"));
+  console.log(`1. Review the Pull Request in the GitHub repository.`);
+  console.log(
+    `2. Wait for the approve on eng-azure-authorization and then merge both PRs.`,
+  );
+  console.log(
+    `3. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
   );
 };
 
@@ -85,13 +97,10 @@ export const makeInitCommand = (): Command =>
             .andThen((plop) => getGenerator(plop)("monorepo"))
             .andThen((generator) =>
               getPrompts(generator)
-                .andThen(decode(answersSchema))
+                .andThen(decode<Answers>(answersSchema))
                 .andTee(validateAnswers)
                 .andThen(runGeneratorActions(generator)),
             )
-            .andTee(displaySummary)
-            .orTee((err) => {
-              this.error(err.message);
-            });
+            .match(displaySummary, exitWithError(this));
         }),
     );
