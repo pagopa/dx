@@ -39,10 +39,9 @@ export const answersSchema = z.object({
   domain: trimmedString.min(1, "Domain cannot be empty"),
   envInstanceNumber: z
     .string()
-    .regex(/^[1-9][0-9]?$/, "Instance number must be a number between 1 and 99")
-    .transform((val) =>
-      // Return zero-padded string (e.g. "01")
-      val.padStart(2, "0"),
+    .regex(
+      /^[1-9][0-9]?$/,
+      "Instance number must be a number between 1 and 99",
     ),
   environments: z
     .array(z.literal(["dev", "prod", "uat"]))
@@ -343,7 +342,7 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  plopApi.setGenerator("monorepo", {
+  plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
     prompts: getPrompts(),
