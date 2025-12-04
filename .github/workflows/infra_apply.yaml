@@ -35,7 +35,7 @@ on:
         default: ""
 
 env:
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_PSN_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
@@ -88,7 +88,7 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_PSN_CLIENT_ID }}
       TFPLAN_FILE: tfplan-${{ github.sha }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
@@ -176,7 +176,7 @@ jobs:
       id-token: write
       contents: read
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_PSN_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tfplan-${{ github.sha }}
 
