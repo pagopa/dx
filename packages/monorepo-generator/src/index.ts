@@ -19,6 +19,8 @@ import { terraformVersionActions } from "./actions/terraform.js";
 
 const trimmedString = z.string().trim();
 
+export const PLOP_MONOREPO_GENERATOR_NAME = "monorepo";
+
 export const answersSchema = z.object({
   awsAccountId: z
     .string()
@@ -335,7 +337,10 @@ const getActions =
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const templatesPath = path.join(entryPointDirectory, "monorepo");
+  const templatesPath = path.join(
+    entryPointDirectory,
+    PLOP_MONOREPO_GENERATOR_NAME,
+  );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   plopApi.setGenerator("monorepo", {
