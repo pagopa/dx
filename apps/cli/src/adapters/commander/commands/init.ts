@@ -6,7 +6,7 @@ import loadMonorepoScaffolder, {
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
-import { Result, ResultAsync } from "neverthrow";
+import { okAsync, Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
 import { oraPromise } from "ora";
 
@@ -47,29 +47,12 @@ const withSpinner = <T>(
     () => new Error(failText),
   );
 
-// TODO: implement real validation logic
-// Check repository already exists: if exists, return an error
+// TODO: Check repository already exists: if exists, return an error
+// TODO: Check Cloud Environment exists
+// TODO: Check CSP CLI is installed
+// TODO: Check user has permissions to handle Terraform state
 const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
-  checkTerraformPermissions(
-    "Checking Terraform permissions...",
-    "Terraform permissions are valid!",
-    "Invalid Terraform permissions.",
-  )
-    .andThen(() =>
-      checkCspCliIsInstalled(
-        "Checking Cloud Service Provider CLI...",
-        "Cloud Service Provider CLI is installed!",
-        "Cloud Service Provider CLI is not installed.",
-      ),
-    )
-    .andThen(() =>
-      checkCloudEnvironmentExists(
-        "Checking Cloud Environment existence...",
-        "Cloud Environment exists!",
-        "Cloud Environment does not exist.",
-      ),
-    )
-    .map(() => answers);
+  okAsync(answers);
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   withSpinner(
@@ -101,9 +84,6 @@ const displaySummary = (answers: Answers) => {
   );
 };
 
-const simulatePromise = (timeout: number): Promise<void> =>
-  new Promise<void>((_, reject) => setTimeout(reject, timeout));
-
 const checkGhCliIsInstalled = (
   text: string,
   successText: string,
@@ -115,27 +95,6 @@ const checkGhCliIsLoggedIn = (
   successText: string,
   failText: string,
 ) => withSpinner(text, successText, failText, $`gh auth status`);
-
-// TODO: Check user has permissions to handle Terraform state
-const checkTerraformPermissions = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, simulatePromise(1500));
-
-// TODO: Check user has CSP CLI installed and configured (az, aws, ...)
-const checkCspCliIsInstalled = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, simulatePromise(3500));
-
-// TODO: Check the Cloud Environment exists but it is not configured; if not exists, return an error message
-const checkCloudEnvironmentExists = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, simulatePromise(3500));
 
 const checkPreconditions = (): ResultAsync<void, Error> =>
   checkGhCliIsInstalled(
@@ -156,23 +115,8 @@ const checkPreconditions = (): ResultAsync<void, Error> =>
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Answers, Error> =>
-  // Placeholder for handling new GitHub repository logic
-  withSpinner(
-    "Creating GitHub repository...",
-    "GitHub repository created successfully!",
-    "Failed to create GitHub repository.",
-    simulatePromise(1000),
-  )
-    .andThen(() =>
-      withSpinner(
-        "Creating GitHub Pull Request...",
-        "GitHub Pull Request created successfully!",
-        "Failed to open Pull Request.",
-        simulatePromise(2000),
-      ),
-    )
-    .map(() => answers);
+): ResultAsync<Answers, Error> => okAsync(answers);
+
 export const makeInitCommand = (): Command =>
   new Command()
     .name("init")
