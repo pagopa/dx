@@ -19,7 +19,9 @@ import { terraformVersionActions } from "./actions/terraform.js";
 
 const trimmedString = z.string().trim();
 
-const answersSchema = z.object({
+export const PLOP_MONOREPO_GENERATOR_NAME = "monorepo";
+
+export const answersSchema = z.object({
   awsAccountId: z
     .string()
     .regex(/^\d{12}$/, "AWS Account ID must be a 12-digit number")
@@ -37,10 +39,9 @@ const answersSchema = z.object({
   domain: trimmedString.min(1, "Domain cannot be empty"),
   envInstanceNumber: z
     .string()
-    .regex(/^[1-9][0-9]?$/, "Instance number must be a number between 1 and 99")
-    .transform((val) =>
-      // Return zero-padded string (e.g. "01")
-      val.padStart(2, "0"),
+    .regex(
+      /^[1-9][0-9]?$/,
+      "Instance number must be a number between 1 and 99",
     ),
   environments: z
     .array(z.literal(["dev", "prod", "uat"]))
@@ -57,12 +58,12 @@ const answersSchema = z.object({
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
 
+export type Answers = z.infer<typeof answersSchema>;
 interface ActionsDependencies {
   octokitClient: Octokit;
   plopApi: NodePlopAPI;
   templatesPath: string;
 }
-type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
@@ -335,10 +336,13 @@ const getActions =
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const templatesPath = path.join(entryPointDirectory, "monorepo");
+  const templatesPath = path.join(
+    entryPointDirectory,
+    PLOP_MONOREPO_GENERATOR_NAME,
+  );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  plopApi.setGenerator("monorepo", {
+  plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
     prompts: getPrompts(),
