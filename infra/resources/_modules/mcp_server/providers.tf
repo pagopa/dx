@@ -6,5 +6,8 @@ terraform {
     awsdx = {
       source = "pagopa-dx/aws"
     }
+    azurerm = {
+      source = "hashicorp/azurerm"
+    }
   }
 }

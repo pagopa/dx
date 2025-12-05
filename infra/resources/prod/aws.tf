@@ -21,5 +21,6 @@ module "mcp_server" {
     zone_name           = "dx.pagopa.it"
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
+
   tags = local.tags
 }
