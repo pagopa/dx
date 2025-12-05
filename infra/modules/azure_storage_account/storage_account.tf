@@ -11,6 +11,13 @@ resource "azurerm_storage_account" "this" {
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
+  # Security and compliance settings (defined by use case)
+  infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
+  default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
+  cross_tenant_replication_enabled  = false
+
   blob_properties {
     versioning_enabled            = local.immutability_policy_enabled ? true : var.blob_features.versioning # `immutability_policy` can't be set when `versioning_enabled` is false
     change_feed_enabled           = local.immutability_policy_enabled ? true : var.blob_features.change_feed.enabled
@@ -60,7 +67,7 @@ resource "azurerm_storage_account" "this" {
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
-      state                         = "Unlocked"
+      state                         = local.immutability_policy_state
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
@@ -99,8 +106,8 @@ resource "azurerm_storage_management_policy" "lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
-        # Delete after 1095 days (3 years) of inactivity (no modification)
-        delete_after_days_since_modification_greater_than = 1095
+        # Delete after configured retention period (standard is 365 days / 12 months)
+        delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 
       snapshot {
@@ -123,6 +130,17 @@ resource "azurerm_storage_container" "this" {
   container_access_type = each.value.access_type
 
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
+}
+
+# Container-level immutability policies (for granular retention control)
+resource "azurerm_storage_container_immutability_policy" "this" {
+  for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
+
+  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
+  immutability_period_in_days           = each.value.immutability_policy.period_in_days
+  locked                                = each.value.immutability_policy.locked
+
+  protected_append_writes_all_enabled = local.immutability_policy_enabled && var.blob_features.immutability_policy.allow_protected_append_writes
 }
 
 # Tables

@@ -16,6 +16,13 @@ resource "azurerm_storage_account" "secondary_replica" {
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
+  # Security and compliance settings (same as primary, defined by use case)
+  infrastructure_encryption_enabled = local.tier_features.infrastructure_encryption_enabled
+  default_to_oauth_authentication   = local.tier_features.default_to_oauth_authentication
+  min_tls_version                   = "TLS1_2"
+  https_traffic_only_enabled        = true
+  cross_tenant_replication_enabled  = false
+
   blob_properties {
     versioning_enabled = true
 
@@ -36,7 +43,7 @@ resource "azurerm_storage_account" "secondary_replica" {
 
     content {
       allow_protected_append_writes = var.blob_features.immutability_policy.allow_protected_append_writes
-      state                         = "Unlocked"
+      state                         = local.immutability_policy_state
       period_since_creation_in_days = var.blob_features.immutability_policy.period_since_creation_in_days
     }
   }
@@ -51,6 +58,17 @@ resource "azurerm_storage_container" "replica" {
   name                  = each.value.name
   storage_account_id    = azurerm_storage_account.secondary_replica[0].id
   container_access_type = each.value.access_type
+}
+
+# Container-level immutability policies for secondary replica
+resource "azurerm_storage_container_immutability_policy" "replica" {
+  for_each = local.tier_features.secondary_replication && local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
+
+  storage_container_resource_manager_id = azurerm_storage_container.replica[each.key].resource_manager_id
+  immutability_period_in_days           = each.value.immutability_policy.period_in_days
+  locked                                = each.value.immutability_policy.locked
+
+  protected_append_writes_all_enabled = local.tier_features.immutability_policy && var.blob_features.immutability_policy.allow_protected_append_writes
 }
 
 resource "azurerm_storage_object_replication" "geo_replication_policy" {
@@ -97,6 +115,8 @@ resource "azurerm_storage_management_policy" "secondary_lifecycle_audit" {
         tier_to_cool_after_days_since_modification_greater_than = 30
         # Tier to Cold after 90 days of inactivity (no modification)
         tier_to_cold_after_days_since_modification_greater_than = 90
+        # Delete after configured retention period (same as primary)
+        delete_after_days_since_modification_greater_than = var.audit_retention_days
       }
 
       snapshot {

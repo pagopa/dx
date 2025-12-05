@@ -17,6 +17,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_key_vault.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_log_analytics_workspace.law](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subnet.snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
@@ -34,6 +35,7 @@ No modules.
 |------|-------------|
 | <a name="output_environment"></a> [environment](#output\_environment) | n/a |
 | <a name="output_kv_id"></a> [kv\_id](#output\_kv\_id) | n/a |
+| <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id) | n/a |
 | <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | n/a |

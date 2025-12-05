@@ -311,6 +311,13 @@ run "audit_storage_account_is_correct_plan" {
       type         = "kv"
       key_vault_id = run.setup_tests.kv_id
     }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    audit_retention_days = 365
   }
 
   # Checks some assertions
@@ -336,7 +343,12 @@ run "audit_storage_account_is_correct_plan" {
 
   assert {
     condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
-    error_message = "The Storage Account must have immutability policy"
+    error_message = "Audit storage must have immutability policy in Unlocked state (Azure limitation: initial state cannot be Locked)"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.immutability_policy[0].period_since_creation_in_days == 730
+    error_message = "Audit storage must have correct immutability retention period"
   }
 
   assert {
@@ -347,6 +359,51 @@ run "audit_storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_account.secondary_replica[0] != null
     error_message = "The Storage Account must have a secondary replica"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
+    error_message = "Audit storage must enforce TLS 1.2 minimum for encryption in transit"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.https_traffic_only_enabled == true
+    error_message = "Audit storage must enforce HTTPS-only traffic"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.infrastructure_encryption_enabled == true
+    error_message = "Audit storage must enable infrastructure encryption (double encryption)"
+  }
+
+  assert {
+    condition     = local.peps.create_subservices.blob == true || local.peps.create_subservices.file == true
+    error_message = "Audit storage with infrastructure encryption requires at least blob or file subservice enabled"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.cross_tenant_replication_enabled == false
+    error_message = "Audit storage must disable cross-tenant replication to prevent data exfiltration"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.default_to_oauth_authentication == true
+    error_message = "Audit storage must default to OAuth authentication"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.storage_account[0] != null
+    error_message = "Audit storage must have diagnostic settings enabled for control plane logging"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.blob_service[0] != null
+    error_message = "Audit storage must have blob service diagnostic settings enabled for data plane logging"
+  }
+
+  assert {
+    condition     = azurerm_storage_management_policy.lifecycle_audit[0].rule[0].actions[0].base_blob[0].delete_after_days_since_modification_greater_than == 365
+    error_message = "Audit storage must use configured retention period (365 days for PagoPA)"
   }
 }
 
@@ -414,11 +471,94 @@ run "audit_storage_account_fail_plan" {
     use_case            = "audit"
     secondary_location  = "westeurope"
     subnet_pep_id       = run.setup_tests.pep_id
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
   }
 
   # Checks some assertions
   expect_failures = [
     var.customer_managed_key,
+  ]
+}
+
+run "audit_without_blob_or_file_fail_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    # Infrastructure encryption requires blob or file, but neither is enabled
+    subservices_enabled = {
+      blob  = false
+      file  = false
+      queue = true
+      table = true
+    }
+  }
+
+  # Should fail because audit tier requires blob or file for infrastructure encryption
+  expect_failures = [
+    var.subservices_enabled,
+  ]
+}
+
+run "audit_with_only_table_fail_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    # Only table enabled - should fail
+    subservices_enabled = {
+      blob  = false
+      file  = false
+      queue = false
+      table = true
+    }
+  }
+
+  # Should fail because audit tier with infrastructure encryption requires blob or file
+  expect_failures = [
+    var.subservices_enabled,
   ]
 }
 
@@ -440,5 +580,168 @@ run "delegated_access_private_storage_account_is_correct_plan" {
   assert {
     condition     = azurerm_storage_account.this.public_network_access_enabled == true
     error_message = "The Storage Account must have public network access enabled"
+  }
+}
+
+run "container_level_immutability_policy_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+    tags        = run.setup_tests.tags
+
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    containers = [
+      {
+        name        = "audit-logs"
+        access_type = "private"
+        immutability_policy = {
+          period_in_days = 365
+          locked         = false
+        }
+      },
+      {
+        name        = "archived-logs"
+        access_type = "private"
+        immutability_policy = {
+          period_in_days = 2555 # 7 years
+          locked         = true
+        }
+      },
+      {
+        name                = "regular-data"
+        access_type         = "private"
+        immutability_policy = null # No immutability
+      }
+    ]
+  }
+
+  # Container-level immutability assertions
+  assert {
+    condition     = length(azurerm_storage_container_immutability_policy.this) == 2
+    error_message = "Should create immutability policies for 2 containers (audit-logs and archived-logs)"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["audit-logs"].locked == false
+    error_message = "audit-logs container policy should be unlocked to allow legal hold modifications"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["archived-logs"].locked == true
+    error_message = "archived-logs container policy should be locked for compliance"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["audit-logs"].immutability_period_in_days == 365
+    error_message = "audit-logs container should have 365-day retention period"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["archived-logs"].immutability_period_in_days == 2555
+    error_message = "archived-logs container should have 7-year retention period"
+  }
+
+  assert {
+    condition     = length(azurerm_storage_container.this) == 3
+    error_message = "Should create all 3 containers regardless of immutability policy"
+  }
+}
+
+run "audit_with_container_immutability_plan" {
+  command = plan
+
+  variables {
+    environment         = run.setup_tests.environment
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    containers = [
+      {
+        name        = "compliance-logs"
+        access_type = "private"
+        immutability_policy = {
+          period_in_days = 730
+          locked         = true
+        }
+      }
+    ]
+  }
+
+  # Audit tier with container-level immutability
+  assert {
+    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
+    error_message = "Audit tier must have account-level immutability policy (Unlocked initially due to Azure limitation)"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["compliance-logs"].locked == true
+    error_message = "Container immutability policy should be locked for compliance"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.replica["compliance-logs"].locked == true
+    error_message = "Secondary replica container immutability policy should also be locked"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.secondary_replica[0].immutability_policy[0].state == "Unlocked"
+    error_message = "Secondary replica must have same immutability policy state as primary (Unlocked initially)"
+  }
+}
+
+run "immutability_policy_state_override_plan" {
+  command = plan
+
+  variables {
+    environment         = run.setup_tests.environment
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "default"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    blob_features = {
+      immutability_policy = {
+        enabled                       = true
+        allow_protected_append_writes = true
+        period_since_creation_in_days = 730
+        state                         = "Locked" # Override default "Unlocked" for non-audit tier
+      }
+    }
+  }
+
+  # Test explicit state override
+  assert {
+    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Locked"
+    error_message = "Immutability policy state should respect explicit variable override"
   }
 }
