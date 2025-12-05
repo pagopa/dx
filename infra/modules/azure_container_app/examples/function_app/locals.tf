@@ -12,16 +12,19 @@ locals {
     prefix          = local.environment.prefix,
     environment     = local.environment.env_short,
     location        = local.environment.location
+    domain          = local.environment.domain,
     name            = local.environment.app_name,
     instance_number = tonumber(local.environment.instance_number),
   }
 
   virtual_network = {
     name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = "",
       name          = "common",
       resource_type = "virtual_network"
     }))
     resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+      domain        = "",
       name          = "network",
       resource_type = "resource_group"
     }))
@@ -32,7 +35,7 @@ locals {
     CreatedBy      = "Terraform"
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/examples/complete"
+    Source         = "https://github.com/pagopa/dx/modules/azure_container_app/examples/function_app"
     ManagementTeam = "Developer Experience"
   }
 }

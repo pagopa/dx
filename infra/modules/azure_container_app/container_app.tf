@@ -1,4 +1,6 @@
 resource "azurerm_container_app" "this" {
+  count = local.is_function_app ? 0 : 1
+
   name                         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app" }))
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
@@ -192,4 +194,255 @@ resource "azurerm_container_app" "this" {
   }
 
   tags = local.tags
+}
+
+resource "azapi_resource" "this" {
+  count = local.is_function_app ? 1 : 0
+
+  type      = "Microsoft.App/containerApps@2025-02-02-preview"
+  name      = local.function_app.name
+  parent_id = local.resource_group_id
+  location  = var.environment.location
+
+  identity {
+    type = "SystemAssigned, UserAssigned"
+    identity_ids = [
+      var.user_assigned_identity_id
+    ]
+  }
+
+  body = {
+    # kind = "functionapp"
+    properties = {
+      environmentId = var.container_app_environment_id
+      configuration = {
+        activeRevisionsMode = var.revision_mode
+
+        ingress = {
+          allowInsecure = false
+          external      = true
+          targetPort    = var.target_port
+          traffic = [
+            {
+              weight         = 100
+              latestRevision = true
+            }
+          ]
+        }
+
+        secrets = [
+          for secret in var.secrets : {
+            name        = replace(lower(secret.name), "_", "-")
+            keyVaultUrl = secret.key_vault_secret_id
+            identity    = var.user_assigned_identity_id
+          }
+        ]
+      }
+
+      template = {
+        terminationGracePeriodSeconds = 30
+        scale = {
+          pollingInterval = 30
+          cooldownPeriod  = 300
+          minReplicas     = local.replica_minimum
+          maxReplicas     = local.replica_maximum
+
+          rules = var.autoscaler != null ? [
+            for rule in concat(
+              [
+                for http_scaler in var.autoscaler.http_scalers : {
+                  name = http_scaler.name
+                  http = {
+                    metadata = {
+                      concurrentRequests = tostring(http_scaler.concurrent_requests)
+                    }
+                  }
+                }
+              ],
+              [
+                for queue_scaler in var.autoscaler.azure_queue_scalers : {
+                  name = queue_scaler.queue_name
+                  azureQueue = {
+                    queueName   = queue_scaler.queue_name
+                    queueLength = queue_scaler.queue_length
+
+                    identity    = var.user_assigned_identity_id
+                    accountName = queue_scaler.storage_account_name
+                  }
+                }
+              ],
+              [
+                for custom_scaler in var.autoscaler.custom_scalers : {
+                  name = custom_scaler.name
+                  custom = {
+                    type     = custom_scaler.custom_rule_type
+                    metadata = custom_scaler.metadata
+                    auth = custom_scaler.authentication != null ? [
+                      {
+                        secretRef        = replace(lower(custom_scaler.authentication.secret_name), "_", "-")
+                        triggerParameter = custom_scaler.authentication.trigger_parameter
+                      }
+                    ] : null
+                  }
+                }
+              ]
+            ) : rule if rule != null
+          ] : null
+        }
+
+        containers = [
+          for container in var.container_app_templates : {
+            # get the name from the image if not set according to formats: registry.name/org/name:sha-value - nginix:latest
+            name  = container.name == "" ? split(":", split("/", container.image)[length(split("/", container.image)) - 1])[0] : container.name
+            image = container.image
+            resources = {
+              cpu    = local.cpu_size
+              memory = local.memory_size
+            }
+
+            env = concat(
+              [
+                for name, value in merge(
+                  {
+                    # https://learn.microsoft.com/en-us/azure/azure-functions/functions-app-settings#functions_worker_process_count
+                    FUNCTIONS_WORKER_PROCESS_COUNT = local.use_case_features.worker_process_count
+
+                    AzureWebJobsStorage__accountName = azurerm_storage_account.this[0].name,
+                    AzureWebJobsStorage__credential  = "managedidentity",
+
+                    # https://techcommunity.microsoft.com/blog/appsonazureblog/how-to-store-function-apps-function-keys-in-a-key-vault/2639181
+                    AzureWebJobsSecretStorageType        = "keyvault",
+                    AzureWebJobsSecretStorageKeyVaultUri = "https://${var.function_settings.key_vault_name}.vault.azure.net",
+                  },
+                  # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
+                  length(local.function_app.name) > 32 && !(contains(keys(container.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},
+                  container.app_settings,
+                  local.application_insights.enable ? {
+                    APPLICATIONINSIGHTS_CONNECTION_STRING = var.function_settings.application_insights_connection_string,
+
+                    # AI SDK Sampling, to be used programmatically
+                    # https://docs.microsoft.com/en-us/azure/azure-monitor/app/sampling
+                    APPINSIGHTS_SAMPLING_PERCENTAGE = var.function_settings.application_insights_sampling_percentage,
+
+                    # Azure Function Host (runtime) AI Sampling
+                    # https://learn.microsoft.com/en-us/azure/azure-functions/configure-monitoring?tabs=v2#overriding-monitoring-configuration-at-runtime
+                    AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__minSamplingPercentage     = var.function_settings.application_insights_sampling_percentage,
+                    AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__maxSamplingPercentage     = var.function_settings.application_insights_sampling_percentage,
+                    AzureFunctionsJobHost__logging__applicationInsights__samplingSettings__initialSamplingPercentage = var.function_settings.application_insights_sampling_percentage
+                  } : {},
+                  ) : {
+                  name  = name
+                  value = value
+                }
+              ],
+              [
+                for secret in var.secrets : {
+                  name      = secret.name
+                  secretRef = replace(lower(secret.name), "_", "-")
+                }
+              ]
+            )
+
+            probes = [
+              for probe in concat(
+                [
+                  container.readiness_probe != null ? {
+                    type                = "Readiness"
+                    initialDelaySeconds = container.readiness_probe.initial_delay
+                    timeoutSeconds      = container.readiness_probe.timeout
+                    successThreshold    = container.readiness_probe.success_count_threshold
+                    failureThreshold    = container.readiness_probe.failure_count_threshold
+
+                    httpGet = container.readiness_probe.transport != "TCP" ? {
+                      path   = container.readiness_probe.path
+                      port   = var.target_port
+                      scheme = container.readiness_probe.transport
+                      httpHeaders = container.readiness_probe.header != null ? [
+                        {
+                          name  = container.readiness_probe.header.name
+                          value = container.readiness_probe.header.value
+                        }
+                      ] : []
+                    } : null
+
+                    tcpSocket = container.readiness_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
+                  } : null
+                ],
+                [
+                  {
+                    type                = "Liveness"
+                    initialDelaySeconds = container.liveness_probe.initial_delay
+                    timeoutSeconds      = container.liveness_probe.timeout
+                    failureThreshold    = container.liveness_probe.failure_count_threshold
+
+                    httpGet = container.liveness_probe.transport != "TCP" ? {
+                      path   = container.liveness_probe.path
+                      port   = var.target_port
+                      scheme = container.liveness_probe.transport
+                      httpHeaders = container.liveness_probe.header != null ? [
+                        {
+                          name  = container.liveness_probe.header.name
+                          value = container.liveness_probe.header.value
+                        }
+                      ] : []
+                    } : null
+
+                    tcpSocket = container.liveness_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
+                  }
+                ],
+                [
+                  container.startup_probe != null ? {
+                    type             = "Startup"
+                    timeoutSeconds   = container.startup_probe.timeout
+                    failureThreshold = container.startup_probe.failure_count_threshold
+
+                    httpGet = container.startup_probe.transport != "TCP" ? {
+                      path   = container.startup_probe.path
+                      port   = var.target_port
+                      scheme = container.startup_probe.transport
+                      httpHeaders = container.startup_probe.header != null ? [
+                        {
+                          name  = container.startup_probe.header.name
+                          value = container.startup_probe.header.value
+                        }
+                      ] : []
+                    } : null
+
+                    tcpSocket = container.startup_probe.transport == "TCP" ? {
+                      port = var.target_port
+                    } : null
+
+                  } : null
+                ]
+              ) : probe if probe != null
+            ]
+          }
+        ]
+      }
+    }
+  }
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      # The image is not managed by Terraform, but instead updated by CD pipelines
+      body.properties.template.containers[0].image
+    ]
+  }
+
+  schema_validation_enabled = true
+  response_export_values = [
+    "properties.configuration.ingress.fqdn",
+  ]
+
+  depends_on = [
+    azurerm_private_endpoint.st_blob,
+    azurerm_private_endpoint.st_file,
+    azurerm_private_endpoint.st_queue,
+  ]
 }

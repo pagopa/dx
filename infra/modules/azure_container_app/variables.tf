@@ -36,8 +36,8 @@ variable "use_case" {
   default     = "default"
 
   validation {
-    condition     = contains(["default"], var.use_case)
-    error_message = "Allowed values for \"use_case\" are \"default\"."
+    condition     = contains(["default", "function_app"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\" and \"function_app\"."
   }
 }
 
@@ -50,7 +50,8 @@ variable "size" {
   description = "Container app memory and cpu sizes. For allowed values consult table at https://learn.microsoft.com/en-us/azure/container-apps/containers#allocations. If not set, it will be determined by the use_case."
 
   validation {
-    condition = var.size == null || (
+    condition = (var.size == null ?
+      true :
       var.size.cpu >= 0.25 &&
       var.size.cpu <= 4 &&
       floor(var.size.cpu / 0.25) == var.size.cpu / 0.25 && # multiple of 0.25
@@ -100,7 +101,7 @@ variable "container_app_templates" {
       }))
       initial_delay    = optional(number, 30)
       interval_seconds = optional(number, 10)
-      path             = string
+      path             = optional(string, "")
       timeout          = optional(number, 5)
       transport        = optional(string, "HTTP")
     })
@@ -113,7 +114,7 @@ variable "container_app_templates" {
       }))
       interval_seconds        = optional(number, 10)
       initial_delay           = optional(number, 30)
-      path                    = string
+      path                    = optional(string, "")
       success_count_threshold = optional(number, 3)
       timeout                 = optional(number, 5)
       transport               = optional(string, "HTTP")
@@ -176,19 +177,23 @@ variable "autoscaler" {
     }), null)
 
     azure_queue_scalers = optional(list(object({
-      queue_name   = string
-      queue_length = number
+      storage_account_name = string
+      queue_name           = string
+      queue_length         = number
 
-      authentication = object({
+      authentication = optional(object({
         secret_name       = string
         trigger_parameter = string
-      })
+      }))
     })), [])
 
     http_scalers = optional(list(object({
       name                = string
       concurrent_requests = number,
-    })), [])
+      })), [{
+      name                = "http-scaler"
+      concurrent_requests = 1000
+    }])
 
     custom_scalers = optional(list(object({
       name             = string
@@ -210,4 +215,29 @@ variable "autoscaler" {
     error_message = "Replicas minimum must be >= 0 and maximum must be >= minimum, but never 0."
   }
 
+  validation {
+    condition = (var.autoscaler == null ?
+      true :
+      (length(var.autoscaler.azure_queue_scalers) > 0 ?
+        (var.use_case == "function_app" ?
+          var.autoscaler.azure_queue_scalers[0].authentication == null :
+        var.autoscaler.azure_queue_scalers[0].authentication != null)
+      : true)
+    )
+
+    error_message = "If \"use_case\" is not set to \"function_app\", the authentication uses the connection string and therefore the \"authentication\" block is mandatory. Otherwise, it must not be provided as auth is based on the user-assigned managed identity"
+  }
+}
+
+variable "function_settings" {
+  type = object({
+    key_vault_name                           = string
+    application_insights_connection_string   = string
+    application_insights_sampling_percentage = optional(number, 5)
+    has_durable_functions                    = optional(bool, false)
+    subnet_pep_id                            = string
+    private_dns_zone_resource_group_id       = string
+    action_group_ids                         = optional(set(string), [])
+  })
+  default = null
 }
