@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "localhost/mcpserver",
+  "description": "An MCP server that support developers using DX tools.",
+  "repository": {
+    "url": "https://github.com/pagopa/dx",
+    "source": "github",
+    "subfolder": "apps/mcpserver"
+  },
+  "version": "${VERSION}",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@pagopa/dx-mcpserver",
+      "version": "${VERSION}",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your API key for the service",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "YOUR_API_KEY"
+        }
+      ]
+    }
+  ]
+}
