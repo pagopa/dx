@@ -47,4 +47,14 @@ export const makeInitCommand = (): Command =>
               this.error(err.message);
             });
         }),
+    )
+    .addCommand(
+      new Command("subscription")
+        .description("Initialize a new subscription on a given Cloud Provider")
+        .action(async function () {
+          console.log("Subscription initialization not implemented yet");
+        }),
+      {
+        hidden: true,
+      },
     );
