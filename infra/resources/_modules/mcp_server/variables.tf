@@ -32,6 +32,17 @@ variable "application_insights_connection_string" {
   sensitive   = true
 }
 
+variable "mcp_auth_type" {
+  type        = string
+  description = "The authentication type for the MCP server (allowed values: 'pat', 'oauth')."
+  default     = "pat"
+
+  validation {
+    condition     = contains(["pat", "oauth"], var.mcp_auth_type)
+    error_message = "Invalid mcp_auth_type. Allowed values are 'pat' and 'oauth'."
+  }
+}
+
 variable "tags" {
   type        = map(string)
   description = "A map of tags to assign to the resources."

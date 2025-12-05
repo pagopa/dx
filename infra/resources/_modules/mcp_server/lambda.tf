@@ -20,6 +20,10 @@ resource "aws_lambda_function" "server" {
       BEDROCK_KNOWLEDGE_BASE_ID             = awscc_bedrock_knowledge_base.this.knowledge_base_id
       APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
       APPINSIGHTS_SAMPLING_PERCENTAGE       = 100
+      MCP_AUTH_TYPE                         = var.mcp_auth_type
+      GITHUB_CLIENT_SECRET_SSM_PARAM        = aws_ssm_parameter.github_client_secret.name
+      GITHUB_CLIENT_ID_SSM_PARAM            = aws_ssm_parameter.github_client_id.name
+      MCP_SERVER_URL                        = "https://${var.dns.custom_domain_name}"
     }
   }
 
@@ -30,6 +34,32 @@ resource "aws_lambda_function" "server" {
   }
 
   tags = var.tags
+}
+
+# Secure SSM paramter to store GITHUB_CLIENT_SECRET
+resource "aws_ssm_parameter" "github_client_secret" {
+  name        = "/mcpserver/mcp-github-client-secret"
+  description = "GitHub OAuth Client Secret for MCP Server"
+  type        = "SecureString"
+  value       = "REPLACE_WITH_GITHUB_CLIENT_SECRET"
+  tags        = var.tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# Secure SSM paramter to store GITHUB_CLIENT_ID
+resource "aws_ssm_parameter" "github_client_id" {
+  name        = "/mcpserver/mcp-github-client-id"
+  description = "GitHub OAuth Client ID for MCP Server"
+  type        = "SecureString"
+  value       = "REPLACE_WITH_GITHUB_CLIENT_ID"
+  tags        = var.tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 # Creates an ECR repository for the Lambda function's container image.
@@ -74,8 +104,6 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# iam policy that allows to query bedrock knowledge base and models
-
 # Defines an IAM policy to allow the Lambda function to access Bedrock.
 resource "aws_iam_policy" "lambda_bedrock_access" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
@@ -107,4 +135,36 @@ resource "aws_iam_policy" "lambda_bedrock_access" {
 resource "aws_iam_role_policy_attachment" "lambda_bedrock_access" {
   role       = aws_iam_role.server.name
   policy_arn = aws_iam_policy.lambda_bedrock_access.arn
+}
+
+# Defines an IAM policy to allow the Lambda function to read all ssm parameters that start with /mcpserver/
+resource "aws_iam_policy" "lambda_ssm_read_access" {
+  name = provider::awsdx::resource_name(merge(var.naming_config, {
+    name          = "lambda-ssm-read-access"
+    resource_type = "iam_policy"
+  }))
+
+  description = "IAM policy for Lambda to read all ssm parameters that start with /mcpserver/"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.naming_config.region}:${var.account_id}:parameter/mcpserver/*"
+      }
+    ]
+  })
+  tags = var.tags
+}
+
+# Attaches the bedrock access policy to the Lambda's IAM role.
+resource "aws_iam_role_policy_attachment" "lambda_ssm_read_access" {
+  role       = aws_iam_role.server.name
+  policy_arn = aws_iam_policy.lambda_ssm_read_access.arn
 }

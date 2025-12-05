@@ -1,30 +1,30 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "description": "An MCP server that supports developers using DX tools.",
-  "name": "it.pagopa/dx",
+  "name": "localhost/mcpserver",
+  "description": "An MCP server that support developers using DX tools.",
+  "repository": {
+    "url": "https://github.com/pagopa/dx",
+    "source": "github",
+    "subfolder": "apps/mcpserver"
+  },
+  "version": "${VERSION}",
   "packages": [
     {
-      "httpHeaders": [
-        {
-          "description": "GitHub Personal Access Token for authentication",
-          "isRequired": true,
-          "isSecret": true,
-          "name": "x-gh-pat"
-        }
-      ],
-      "identifier": "https://api.dx.pagopa.it/mcp",
-      "registryType": "http",
+      "registryType": "npm",
+      "identifier": "@pagopa/dx-mcpserver",
+      "version": "${VERSION}",
       "transport": {
-        "type": "streamable-http",
-        "url": "https://api.dx.pagopa.it/mcp"
+        "type": "stdio"
       },
-      "version": "0.0.11"
+      "environmentVariables": [
+        {
+          "description": "Your API key for the service",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "YOUR_API_KEY"
+        }
+      ]
     }
-  ],
-  "repository": {
-    "source": "github",
-    "subfolder": "apps/mcpserver",
-    "url": "https://github.com/pagopa/dx"
-  },
-  "version": "0.0.11"
+  ]
 }
