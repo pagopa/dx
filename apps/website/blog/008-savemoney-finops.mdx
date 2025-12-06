@@ -13,17 +13,11 @@ toc_max_heading_level: 2
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-**In a recent scan across just 3 Azure subscriptions, we identified over 100
-potentially unused resources—48 of them classified as high-cost risks.** Premium
-App Service Plans running empty, deallocated VMs still accruing charges,
-orphaned disks accumulating month after month. The numbers don't lie: cloud
-waste is real, pervasive, and expensive.
-
 Cloud costs can quickly spiral out of control. Forgotten **virtual machines**,
 **unattached disks**, idle **App Service Plans**—these _"ghost resources"_
-accumulate over time, silently draining budgets. At PagoPA, as the DX team,
-we've built **SaveMoney**, a scientific tool integrated into our DX CLI that
-helps teams identify and optimize cloud spending without breaking a sweat.
+accumulate over time, silently draining budgets. To address this challenge, the
+DX team has built **SaveMoney**, a scientific tool integrated into the DX CLI
+that helps teams identify and optimize cloud spending without breaking a sweat.
 
 SaveMoney is **read-only, metric-driven, and intelligent**. It doesn't delete or
 modify anything—instead, it generates detailed reports to support informed
@@ -310,12 +304,11 @@ npx @pagopa/dx-cli savemoney --format detailed-json
 
 ## Real-World Impact
 
-At PagoPA, SaveMoney could become an essential part of our FinOps practice.
-Engineering teams can quickly identify orphaned resources across multiple
-subscriptions, and the metric-based analysis gives them the confidence to act
-without fear of false positives.
+SaveMoney empowers teams to quickly identify orphaned resources across multiple
+subscriptions. The metric-based analysis provides confidence to act without fear
+of false positives.
 
-But we're just getting started.
+But this is just the beginning.
 
 ## The Road Ahead
 
