@@ -39,7 +39,6 @@ resource "aws_api_gateway_rest_api" "mcp_server" {
     resource_type = "api_gateway"
   }))
   description = "REST API Gateway for MCP Server with WAF support"
-<<<<<<< HEAD
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -48,16 +47,6 @@ resource "aws_api_gateway_rest_api" "mcp_server" {
   tags = var.tags
 }
 
-=======
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-
-  tags = var.tags
-}
-
->>>>>>> 8a1b7bd0 (Fix trivy findings)
 # Proxy resource to catch all paths
 resource "aws_api_gateway_resource" "proxy" {
   rest_api_id = aws_api_gateway_rest_api.mcp_server.id
@@ -127,15 +116,6 @@ resource "aws_api_gateway_deployment" "mcp_server" {
   ]
 }
 
-<<<<<<< HEAD
-# Defines the default stage for the API Gateway.
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.mcp_server.id
-  name        = "$default"
-  auto_deploy = true
-  tags        = var.tags
-
-=======
 # Stage with logging configuration
 # trivy:ignore:AVD-AWS-0003 - X-Ray tracing not required for this MCP server use case
 resource "aws_api_gateway_stage" "prod" {
@@ -144,7 +124,6 @@ resource "aws_api_gateway_stage" "prod" {
   stage_name    = "prod"
 
   # Access logging
->>>>>>> 8a1b7bd0 (Fix trivy findings)
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_logs.arn
     format = jsonencode({
@@ -159,10 +138,7 @@ resource "aws_api_gateway_stage" "prod" {
     })
   }
   depends_on = [aws_api_gateway_account.main]
-<<<<<<< HEAD
-=======
   tags       = var.tags
->>>>>>> 8a1b7bd0 (Fix trivy findings)
 }
 
 # Method settings for detailed metrics and throttling
