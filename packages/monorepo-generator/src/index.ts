@@ -97,7 +97,7 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   },
   {
     default: true,
-    message: "Do you want the CLI to create the repository?",
+    message: "Do you want to create the repository?",
     name: "createRepo",
     type: "confirm",
   },
