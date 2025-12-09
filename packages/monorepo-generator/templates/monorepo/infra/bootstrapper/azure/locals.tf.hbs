@@ -4,7 +4,7 @@ locals {
     env_short       = "{{ envShort }}"
     location        = "{{ azureLocation }}"
     domain          = "{{ domain }}"
-    instance_number = "{{ instanceNumber }}"
+    instance_number = "{{ fillWithZero instanceNumber }}"
   }
 
   adgroups = {

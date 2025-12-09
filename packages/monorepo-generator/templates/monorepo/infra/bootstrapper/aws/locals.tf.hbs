@@ -5,7 +5,7 @@ locals {
     region          = "{{ awsRegion }}"
     domain          = "{{ domain }}"
     app_name        = "{{ awsAppName }}"
-    instance_number = "{{ instanceNumber }}"
+    instance_number = "{{ fillWithZero instanceNumber }}"
   }
 
   tags = {

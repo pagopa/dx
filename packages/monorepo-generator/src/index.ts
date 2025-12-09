@@ -342,6 +342,8 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
+  plopApi.setHelper("fillWithZero", (text: string) => text.padStart(2, "0"));
+
   plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
