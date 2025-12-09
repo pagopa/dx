@@ -24,7 +24,9 @@ The generator exposes the following variables to Handlebars templates. Use the H
 | --------------------------- | ------ | ------------------------------------------------------------------------------------------- | ------------------------ | -------- |
 | `repoSrc`                   | prompt | Directory where the repository will be created.                                             | cwd                      | yes      |
 | `repoName`                  | prompt | Repository name provided by the user (string).                                              |                          | yes      |
+| `repoOwner`                 | prompt | GitHub repository owner (organization or user).                                             | pagopa                   | yes      |
 | `repoDescription`           | prompt | Repository description provided by the user (string).                                       |                          | no       |
+| `createRepo`                | prompt | Whether to create the repository via CLI (boolean).                                         | true                     | no       |
 | `csp`                       | prompt | Cloud provider selection. One of `aws` or `azure`.                                          | azure                    | yes      |
 | `environments`              | prompt | List of environments to create (e.g., `dev`, `prod`, `uat`).                                |                          | yes      |
 | `prefix`                    | prompt | Project prefix (short code, e.g., `pay`, `id`). Used for resource naming.                   |                          | yes      |
