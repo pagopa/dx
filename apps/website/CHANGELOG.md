@@ -1,5 +1,11 @@
 # docs
 
+## 0.10.3
+
+### Patch Changes
+
+- 6901bcd: Update Azure Custom Roles page
+
 ## 0.10.2
 
 ### Patch Changes

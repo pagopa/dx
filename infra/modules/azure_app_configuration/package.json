@@ -1,0 +1,14 @@
+{
+  "name": "azure_app_configuration",
+  "version": "0.0.1",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Privisions App Configuration instance with private connection and IAM access mode",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'",
+    "test:integration": "terraform test -filter='tests/integration.tftest.hcl'",
+    "test:e2e": "go test -v -timeout 1h ./tests"
+  }
+}
