@@ -83,6 +83,11 @@ variable "subservices_enabled" {
   })
   description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force_public_network_access_enabled is false."
   default     = {}
+
+  validation {
+    condition     = var.use_case != "audit" || var.subservices_enabled.blob || var.subservices_enabled.file
+    error_message = "When use_case is 'audit', infrastructure encryption is enabled and requires at least one of 'blob' or 'file' subservices to be enabled."
+  }
 }
 
 variable "blob_features" {
@@ -99,6 +104,7 @@ variable "blob_features" {
       enabled                       = optional(bool, false)
       allow_protected_append_writes = optional(bool, false)
       period_since_creation_in_days = optional(number, 730)
+      state                         = optional(string, null)
     }), { enabled = false })
   })
   description = "Advanced blob features like versioning, change feed, immutability, and retention policies."
@@ -114,6 +120,11 @@ variable "blob_features" {
   validation {
     condition     = (var.blob_features.immutability_policy.enabled == true && var.blob_features.restore_policy_days == 0) || var.blob_features.immutability_policy.enabled == false
     error_message = "Immutability policy doesn't support Point-in-Time restore."
+  }
+
+  validation {
+    condition     = var.blob_features.immutability_policy.state == null || contains(["Locked", "Unlocked"], var.blob_features.immutability_policy.state)
+    error_message = "Immutability policy state must be either 'Locked' or 'Unlocked'. Note: Locking is irreversible and prevents account deletion."
   }
 
   validation {
@@ -210,6 +221,10 @@ variable "containers" {
   type = list(object({
     name        = string
     access_type = optional(string, "private")
+    immutability_policy = optional(object({
+      period_in_days = number
+      locked         = optional(bool, false)
+    }), null)
   }))
 
   default = []
@@ -217,6 +232,17 @@ variable "containers" {
   validation {
     condition     = alltrue([for c in var.containers : contains(["private", "blob", "container"], c.access_type)])
     error_message = "Container access_type must be one of 'private', 'blob', or 'container'."
+  }
+
+  validation {
+    condition = alltrue([
+      for c in var.containers :
+      c.immutability_policy == null || (
+        c.immutability_policy.period_in_days >= 1 &&
+        c.immutability_policy.period_in_days <= 146000
+      )
+    ])
+    error_message = "Container immutability policy period must be between 1 and 146000 days (400 years)."
   }
 }
 
@@ -230,4 +256,34 @@ variable "queues" {
   description = "Queues to be created."
   type        = list(string)
   default     = []
+}
+
+# ------------ MONITORING & COMPLIANCE ------------ #
+variable "diagnostic_settings" {
+  type = object({
+    enabled                    = bool
+    log_analytics_workspace_id = optional(string, null)
+    storage_account_id         = optional(string, null)
+  })
+  description = "Diagnostic settings for access logging (control and data plane). Mandatory for audit use case to track all access operations."
+  default = {
+    enabled                    = false
+    log_analytics_workspace_id = null
+  }
+
+  validation {
+    condition     = var.use_case != "audit" || (var.diagnostic_settings.enabled && var.diagnostic_settings.log_analytics_workspace_id != null)
+    error_message = "Diagnostic settings with log_analytics_workspace_id must be enabled for audit use case to ensure compliance with access logging requirements."
+  }
+}
+
+variable "audit_retention_days" {
+  type        = number
+  description = "Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year)."
+  default     = 365
+
+  validation {
+    condition     = var.audit_retention_days >= 90 && var.audit_retention_days <= 3650
+    error_message = "Retention period must be between 90 days and 10 years (3650 days)."
+  }
 }
