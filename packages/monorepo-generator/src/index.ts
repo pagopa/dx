@@ -16,6 +16,7 @@ import {
   installRootDependencies,
 } from "./actions/pnpm.js";
 import { terraformVersionActions } from "./actions/terraform.js";
+import { fillWithZero } from "./adapters/node/string.js";
 
 const trimmedString = z.string().trim();
 
@@ -342,7 +343,7 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  plopApi.setHelper("fillWithZero", (text: string) => text.padStart(2, "0"));
+  plopApi.setHelper("fillWithZero", fillWithZero);
 
   plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
