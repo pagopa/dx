@@ -28,8 +28,7 @@ const getGenerator = (plopAPI: NodePlopAPI) =>
 const getPrompts = (generator: PlopGenerator) =>
   ResultAsync.fromPromise(
     generator.runPrompts(),
-    (error) =>
-      new Error("Failed to run the generator prompts", { cause: error }),
+    (cause) => new Error("Failed to run the generator prompts", { cause }),
   );
 
 const withSpinner = <T>(
@@ -44,7 +43,7 @@ const withSpinner = <T>(
       successText,
       text,
     }),
-    () => new Error(failText),
+    (cause) => new Error(failText, { cause }),
   );
 
 // TODO: Check repository already exists: if exists, return an error
