@@ -33,6 +33,7 @@ const answersSchema = z.object({
     .default("italynorth"),
   businessUnit: trimmedString.min(1, "Business Unit must not be empty"),
   costCenter: trimmedString.min(1, "Cost Center must not be empty"),
+  createRepo: z.boolean().default(true),
   csp: z.literal(["aws", "azure"]).default("azure"),
   domain: trimmedString.min(1, "Domain cannot be empty"),
   envInstanceNumber: z
@@ -93,6 +94,12 @@ const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
     message: "What is the repository description?",
     name: "repoDescription",
+  },
+  {
+    default: true,
+    message: "Do you want the CLI to create the repository?",
+    name: "createRepo",
+    type: "confirm",
   },
   {
     choices: [
