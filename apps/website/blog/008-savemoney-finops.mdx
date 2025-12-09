@@ -1,7 +1,7 @@
 ---
-title: "Introducing SaveMoney: Smart FinOps for Cloud Resources"
+title: "Introducing SaveMoney: Smart FinOps for Azure Resources"
 description:
-  A scientific approach to identifying unused and cost-inefficient cloud
+  A data-driven approach to identifying unused and cost-inefficient cloud
   resources with the DX CLI
 slug: savemoney-finops-tool
 hide_table_of_contents: false
@@ -16,8 +16,8 @@ import TabItem from "@theme/TabItem";
 Cloud costs can quickly spiral out of control. Forgotten **virtual machines**,
 **unattached disks**, idle **App Service Plans**—these _"ghost resources"_
 accumulate over time, silently draining budgets. To address this challenge, the
-DX team has built **SaveMoney**, a scientific tool integrated into the DX CLI
-that helps teams identify and optimize cloud spending without breaking a sweat.
+DX team has built **SaveMoney**, a tool integrated into the DX CLI that helps
+teams identify and optimize cloud spending without breaking a sweat.
 
 SaveMoney is **read-only, metric-driven, and intelligent**. It doesn't delete or
 modify anything—instead, it generates detailed reports to support informed
@@ -40,7 +40,7 @@ heuristics or require manual tagging—neither of which provides the full pictur
 
 ## The Solution: Metric-Based Analysis
 
-SaveMoney takes a **scientific approach** to cost optimization by analyzing
+SaveMoney takes a **data-driven approach** to cost optimization by analyzing
 actual Azure Monitor metrics over configurable time periods. Instead of guessing
 whether a resource is unused, it examines:
 
@@ -238,31 +238,8 @@ npx @pagopa/dx-cli savemoney
 
 SaveMoney offers three output formats to suit different use cases:
 
-#### 1. Table Format
-
-A human-readable summary perfect for terminal viewing:
-
-```bash
-npx @pagopa/dx-cli savemoney --format table
-```
-
-<details>
-<summary>Example output</summary>
-
-```
-┌────────────────────────┬─────────────────────────────────────┬────────────────┬────────┬──────────────────────────────────────────┐
-│ Name                   │ Type                                │ Resource Group │ Risk   │ Reason                                   │
-├────────────────────────┼─────────────────────────────────────┼────────────────┼────────┼──────────────────────────────────────────┤
-│ vm-test-01             │ Microsoft.Compute/virtualMachines   │ rg-test        │ high   │ VM is deallocated.                       │
-│ asp-unused-premium     │ Microsoft.Web/serverfarms           │ rg-prod        │ high   │ No apps deployed. Premium tier.          │
-│ disk-unattached        │ Microsoft.Compute/disks             │ rg-dev         │ medium │ Disk is not attached to any VM.          │
-│ pip-idle-static        │ Microsoft.Network/publicIPAddresses │ rg-network     │ medium │ Not associated. Static IP not in use.    │
-└────────────────────────┴─────────────────────────────────────┴────────────────┴────────┴──────────────────────────────────────────┘
-```
-
-</details>
-
-#### 2. JSON Format
+<Tabs>
+<TabItem value="json" label="JSON Format">
 
 Standard JSON output for integration with other tools or CI/CD pipelines:
 
@@ -270,8 +247,7 @@ Standard JSON output for integration with other tools or CI/CD pipelines:
 npx @pagopa/dx-cli savemoney --format json
 ```
 
-<details>
-<summary>Example output</summary>
+**Example output:**
 
 ```json
 [
@@ -288,9 +264,30 @@ npx @pagopa/dx-cli savemoney --format json
 ]
 ```
 
-</details>
+</TabItem>
+<TabItem value="table" label="Table Format" default>
 
-#### 3. Detailed JSON Format
+A human-readable summary perfect for terminal viewing:
+
+```bash
+npx @pagopa/dx-cli savemoney --format table
+```
+
+**Example output:**
+
+```
+┌────────────────────────┬─────────────────────────────────────┬────────────────┬────────┬──────────────────────────────────────────┐
+│ Name                   │ Type                                │ Resource Group │ Risk   │ Reason                                   │
+├────────────────────────┼─────────────────────────────────────┼────────────────┼────────┼──────────────────────────────────────────┤
+│ vm-test-01             │ Microsoft.Compute/virtualMachines   │ rg-test        │ high   │ VM is deallocated.                       │
+│ asp-unused-premium     │ Microsoft.Web/serverfarms           │ rg-prod        │ high   │ No apps deployed. Premium tier.          │
+│ disk-unattached        │ Microsoft.Compute/disks             │ rg-dev         │ medium │ Disk is not attached to any VM.          │
+│ pip-idle-static        │ Microsoft.Network/publicIPAddresses │ rg-network     │ medium │ Not associated. Static IP not in use.    │
+└────────────────────────┴─────────────────────────────────────┴────────────────┴────────┴──────────────────────────────────────────┘
+```
+
+</TabItem>
+<TabItem value="detailed-json" label="Detailed JSON">
 
 Comprehensive output with **all resource metadata**, ideal for:
 
@@ -302,52 +299,36 @@ Comprehensive output with **all resource metadata**, ideal for:
 npx @pagopa/dx-cli savemoney --format detailed-json
 ```
 
-## Real-World Impact
+This format includes complete Azure resource properties, tags, locations, SKUs,
+and more.
 
-SaveMoney empowers teams to quickly identify orphaned resources across multiple
-subscriptions. The metric-based analysis provides confidence to act without fear
-of false positives.
-
-But this is just the beginning.
+</TabItem>
+</Tabs>
 
 ## The Road Ahead
 
-Our vision for SaveMoney goes beyond a CLI command. We're working to transform
-it into a continuous FinOps platform that supports multiple cloud providers and
-integrates seamlessly into development workflows.
+We're continuously evolving SaveMoney with exciting features on the horizon:
 
-### Multi-Cloud Expansion
+- **Multi-Cloud Expansion** – AWS support is on the roadmap, extending the same
+  metric-driven approach to Amazon Web Services and beyond. Our modular
+  architecture makes it straightforward to add analyzers for additional cloud
+  providers.
 
-While Azure is our primary focus, **AWS support is on the roadmap**. The modular
-architecture we've built makes it straightforward to add analyzers for
-additional cloud providers, bringing the same metric-driven approach to Amazon
-Web Services and beyond.
+- **Automated Governance** – Automated reports showing unused resources detected
+  in your subscriptions, and CI/CD pipeline integration to flag potential waste
+  before it accumulates.
 
-### Automated Governance
+- **Smarter Analysis** – Enhanced detection logic for additional Azure resource
+  types, more sophisticated metric analysis with configurable thresholds, trend
+  analysis to identify usage patterns, and integration with cloud pricing APIs
+  for precise cost impact estimates.
 
-Imagine receiving automated reports directly in Slack showing unused resources
-detected in your subscriptions. Or having SaveMoney run in CI/CD pipelines,
-flagging potential waste before it accumulates. These workflow integrations will
-make cost optimization continuous and effortless.
+- **Additional Output Formats** – Reports based on community feedback for
+  different use cases and workflow integrations.
 
-### Smarter Analysis
-
-We're continuously improving detection accuracy and expanding coverage:
-
-- Enhanced detection logic for additional Azure resource types
-- More sophisticated metric analysis and configurable thresholds
-- Trend analysis to identify usage patterns and seasonal variations
-- Integration with cloud pricing APIs for precise cost impact estimates
-- Additional output formats
-
-### Workflow Integration
-
-The goal is to make cost optimization a **first-class citizen** in the
-development lifecycle:
-
-- Automated PR comments with cost impact analysis
-- Policy-based governance
-- Custom dashboards showing cost trends
+- **Workflow Integration** – Automated PR comments with cost impact analysis,
+  policy-based governance for automatic resource tagging, and custom dashboards
+  showing cost trends and optimization opportunities.
 
 ## Get Started Today
 
