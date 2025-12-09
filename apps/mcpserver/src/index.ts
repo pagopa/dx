@@ -2,6 +2,7 @@ import { getLogger } from "@logtape/logtape";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { FastMCP } from "fastmcp";
 
+import packageJson from "../package.json" with { type: "json" };
 import { verifyGithubUser } from "./auth/github.js";
 import { initializeOAuthProvider } from "./auth/oauth.js";
 import { authConfig } from "./config/auth.js";
@@ -19,13 +20,24 @@ await configureAzureMonitoring();
 
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
+logger.info(`Authentication type: ${authConfig.MCP_AUTH_TYPE}`);
+logger.info(`Server URL: ${authConfig.MCP_SERVER_URL}`);
 
 // Initialize OAuth provider if using OAuth authentication
 let authProxy;
 if (authConfig.MCP_AUTH_TYPE === "oauth") {
-  logger.debug("Initializing OAuth provider...");
-  authProxy = await initializeOAuthProvider();
-  logger.debug("OAuth provider initialized");
+  try {
+    logger.info("Initializing OAuth provider...");
+    authProxy = await initializeOAuthProvider();
+    logger.info("OAuth provider initialized successfully");
+  } catch (error) {
+    logger.error("Failed to initialize OAuth provider", { error });
+    throw error;
+  }
+} else {
+  logger.info(
+    `OAuth not enabled. Using auth type: ${authConfig.MCP_AUTH_TYPE}`,
+  );
 }
 
 const server = new FastMCP({
@@ -55,15 +67,17 @@ const server = new FastMCP({
         }
       : undefined,
   instructions: serverInstructions,
+  logger: logger,
   name: "PagoPA DX Knowledge Retrieval MCP Server",
   oauth:
-    authConfig.MCP_AUTH_TYPE === "oauth" && authProxy
+    authConfig.MCP_AUTH_TYPE === "oauth"
       ? {
-          authorizationServer: authProxy.getAuthorizationServerMetadata(),
+          authorizationServer: authProxy?.getAuthorizationServerMetadata(),
           enabled: true,
+          proxy: authProxy,
         }
       : undefined,
-  version: "0.0.0",
+  version: packageJson.version as `${number}.${number}.${number}`,
 });
 
 logger.debug(`Server instructions: \n\n${serverInstructions}`);
@@ -96,3 +110,14 @@ server.start({
   },
   transportType: "httpStream",
 });
+
+logger.info("Server started successfully on http://localhost:8080");
+logger.info("MCP endpoint: http://localhost:8080/mcp");
+logger.info(
+  `OAuth enabled: ${authConfig.MCP_AUTH_TYPE === "oauth" && authProxy ? "YES" : "NO"}`,
+);
+if (authConfig.MCP_AUTH_TYPE === "oauth") {
+  logger.info(
+    "OAuth discovery: http://localhost:8080/.well-known/oauth-authorization-server",
+  );
+}

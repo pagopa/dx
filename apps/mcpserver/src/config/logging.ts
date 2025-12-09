@@ -34,7 +34,7 @@ export async function configureLogging() {
   if (logLevel !== process.env.LOG_LEVEL) {
     // Use console.warn for this early logging before LogTape is configured
     console.warn(
-      `Invalid log level: ${process.env.LOG_LEVEL}. Using ${DEFAULT_LOG_LEVEL}`,
+      `Invalid log level: ${process.env.LOG_LEVEL} cause different from ${logLevel}. Using ${DEFAULT_LOG_LEVEL}`,
     );
   }
 
