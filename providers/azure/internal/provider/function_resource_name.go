@@ -36,12 +36,9 @@ func (f *resourceNameFunction) Definition(ctx context.Context, req function.Defi
 	}
 }
 
-func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
-	var configuration map[string]types.String
-
-	var result string
-
-	var resourceAbbreviations = map[string]string{
+// getResourceAbbreviations returns the mapping of resource types to their abbreviations
+func getResourceAbbreviations() map[string]string {
+	return map[string]string{
 		// Compute
 		"virtual_machine":           "vm",
 		"container_app_job":         "caj",
@@ -155,72 +152,48 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"load_testing":      "lt",
 		"app_configuration": "appcs",
 	}
+}
 
-	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))
+// extractConfigurationValues extracts and normalizes values from the configuration map
+func extractConfigurationValues(configuration map[string]types.String) (prefix, environment, location, resourceType, instanceNumberStr, name, domain string) {
+	prefix = configuration["prefix"].ValueString()
+	environment = configuration["environment"].ValueString()
+	location = configuration["location"].ValueString()
+	resourceType = configuration["resource_type"].ValueString()
+	instanceNumberStr = configuration["instance_number"].ValueString()
 
-	if resp.Error != nil {
-		return
+	// Extract optional name
+	if nameVal, exists := configuration["name"]; exists && !nameVal.IsNull() {
+		name = nameVal.ValueString()
 	}
 
-	requiredKeys := []string{
-		"prefix",
-		"environment",
-		"location",
-		"name",
-		"resource_type",
-		"instance_number",
-	}
-	optionalKeys := []string{
-		"domain",
-	}
-	allowedKeys := append(requiredKeys, optionalKeys...)
-
-	// Check required keys
-	for _, key := range requiredKeys {
-		if _, exists := configuration[key]; !exists {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map", key))
-			return
-		}
+	// Extract optional domain
+	if domainVal, exists := configuration["domain"]; exists && !domainVal.IsNull() && domainVal.ValueString() != "" {
+		domain = strings.ToLower(domainVal.ValueString())
 	}
 
-	// Validate keys
-	for key := range configuration {
-		if !contains(allowedKeys, key) {
-			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed", key))
-			return
-		}
-	}
+	return
+}
 
-	prefix := configuration["prefix"].ValueString()
-	environment := configuration["environment"].ValueString()
-	location := configuration["location"].ValueString()
-	name := configuration["name"].ValueString()
-	resourceType := configuration["resource_type"].ValueString()
-	instanceNumberStr := configuration["instance_number"].ValueString()
-
-	// Validate instance number
-	instance, err := strconv.Atoi(instanceNumberStr)
-	if err != nil {
-		resp.Error = function.NewFuncError("The instance_number must be a valid integer")
-		return
-	}
-
-	// Validate provider Prefix configuration
+// validatePrefix checks if the prefix length is valid
+func validatePrefix(prefix string) *function.FuncError {
 	if len(prefix) < 2 || len(prefix) > 4 {
-		resp.Error = function.NewFuncError("Prefix must be between 2 and 4 characters long")
-		return
+		return function.NewFuncError("Prefix must be between 2 and 4 characters long")
 	}
+	return nil
+}
 
-	// Validate provider Environment configuration
-	if strings.ToLower(environment) != "d" && strings.ToLower(environment) != "u" && strings.ToLower(environment) != "p" {
-		resp.Error = function.NewFuncError("Environment must be 'd', 'u' or 'p'")
-		return
+// validateEnvironment checks if the environment is valid
+func validateEnvironment(environment string) *function.FuncError {
+	env := strings.ToLower(environment)
+	if env != "d" && env != "u" && env != "p" {
+		return function.NewFuncError("Environment must be 'd', 'u' or 'p'")
 	}
+	return nil
+}
 
-	// Convert location to lowercase once
-	location = strings.ToLower(location)
-
-	// Define valid locations and their normalized values
+// validateAndNormalizeLocation checks and normalizes the location
+func validateAndNormalizeLocation(location string) (string, *function.FuncError) {
 	locationMappings := map[string]string{
 		"weu":        "weu",
 		"westeurope": "weu",
@@ -228,77 +201,161 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"italynorth": "itn",
 	}
 
-	// Check if the location is valid and normalize it
-	if normalizedLocation, valid := locationMappings[location]; valid {
-		location = normalizedLocation
-	} else {
-		// Create a more dynamic error message listing allowed values
-		allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
-		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidLocation: Location must be one of: %s", strings.Join(allowedLocations, ", ")))
-		return
+	normalizedLocation := strings.ToLower(location)
+	if normalized, valid := locationMappings[normalizedLocation]; valid {
+		return normalized, nil
 	}
 
-	// Validate instance number
+	allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
+	return "", function.NewFuncError(fmt.Sprintf("InvalidLocation: Location must be one of: %s", strings.Join(allowedLocations, ", ")))
+}
+
+// validateInstance checks if the instance number is within valid range
+func validateInstance(instanceNumberStr string) (int, *function.FuncError) {
+	instance, err := strconv.Atoi(instanceNumberStr)
+	if err != nil {
+		return 0, function.NewFuncError("The instance_number must be a valid integer")
+	}
+
 	if instance < 1 || instance > 99 {
-		resp.Error = function.NewFuncError("InvalidInstance: Instance must be between 1 and 99")
-		return
+		return 0, function.NewFuncError("InvalidInstance: Instance must be between 1 and 99")
 	}
 
-	// Validate resource type
-	abbreviation, exists := resourceAbbreviations[resourceType]
+	return instance, nil
+}
+
+// validateResourceType checks if the resource type is valid and returns its abbreviation
+func validateResourceType(resourceType string, abbreviations map[string]string) (string, *function.FuncError) {
+	abbreviation, exists := abbreviations[resourceType]
 	if !exists {
-		validKeys := make([]string, 0, len(resourceAbbreviations))
-		for key := range resourceAbbreviations {
-			validKeys = append(validKeys, key)
-		}
-		resp.Error = function.NewFuncError(fmt.Sprintf("InvalidResourceType: resource '%s' not found", resourceType))
-		return
+		return "", function.NewFuncError(fmt.Sprintf("InvalidResourceType: resource '%s' not found", resourceType))
 	}
+	return abbreviation, nil
+}
 
-	// Validate resource name
-	if name == "" {
-		resp.Error = function.ConcatFuncErrors(function.NewFuncError("Resource name cannot be empty"))
-		return
-	}
-
-	// Check if domain is provided and not null, and if is different from name
-	domain, domainExists := configuration["domain"]
-	if domain.ValueString() == name {
-		resp.Error = function.ConcatFuncErrors(function.NewFuncError("Resource domain cannot be the same as the resource name"))
-		return
-	}
-	if domainExists && !domain.IsNull() && domain.ValueString() != "" {
-		result = fmt.Sprintf("%s-%s-%s-%s",
-			prefix,
-			environment,
-			location,
-			domain.ValueString())
-	} else {
-		result = fmt.Sprintf("%s-%s-%s",
-			prefix,
-			environment,
-			location)
-	}
-
-	// Generate resource name
-
-	// Normalize name to lowercase
+// validateRedundancy checks for redundant values between domain, name, and abbreviation
+func validateRedundancy(domain, name, abbreviation string) *function.FuncError {
 	normalizedName := strings.ToLower(name)
-	// Check if the abbreviation starts with the name (ex. if abbreviation is "name" or "name-something")
-	if normalizedName == abbreviation || strings.HasPrefix(abbreviation, normalizedName+"-") {
-		// Skip the name part to avoid redundancy
-		result = strings.ToLower(fmt.Sprintf("%s-%s-%02d",
-			result,
-			abbreviation,
-			instance))
-	} else {
-		result = strings.ToLower(fmt.Sprintf("%s-%s-%s-%02d",
-			result,
-			name,
-			abbreviation,
-			instance))
+	normalizedAbbreviation := strings.ToLower(abbreviation)
+
+	// Domain can only be used when name is provided
+	if domain != "" && normalizedName == "" {
+		return function.NewFuncError("Resource domain can only be used when name is also provided")
 	}
 
+	// Domain and name cannot be the same
+	if domain != "" && normalizedName != "" && domain == normalizedName {
+		return function.NewFuncError("Resource domain cannot be the same as the resource name")
+	}
+
+	// Check if abbreviation starts with domain
+	if domain != "" && (normalizedAbbreviation == domain || strings.HasPrefix(normalizedAbbreviation, domain+"-")) {
+		return function.NewFuncError("Resource domain cannot be part of the resource abbreviation. The abbreviation already contains the domain prefix")
+	}
+
+	// Check if abbreviation starts with name
+	if normalizedName != "" && (normalizedAbbreviation == normalizedName || strings.HasPrefix(normalizedAbbreviation, normalizedName+"-")) {
+		return function.NewFuncError("Resource name cannot be part of the resource abbreviation. The abbreviation already contains the name prefix")
+	}
+
+	return nil
+}
+
+// buildResourceName constructs the final resource name
+func buildResourceName(prefix, environment, location, domain, name, abbreviation string, instance int) string {
+	// Start with base: prefix-environment-location
+	parts := []string{prefix, environment, location}
+
+	// Add domain if provided
+	if domain != "" {
+		parts = append(parts, domain)
+	}
+
+	// Add name if provided
+	if name != "" {
+		parts = append(parts, strings.ToLower(name))
+	}
+
+	// Add abbreviation and instance
+	parts = append(parts, strings.ToLower(abbreviation))
+
+	result := strings.Join(parts, "-")
+	return strings.ToLower(fmt.Sprintf("%s-%02d", result, instance))
+}
+
+func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
+	var configuration map[string]types.String
+
+	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))
+	if resp.Error != nil {
+		return
+	}
+
+	// Define and validate configuration keys
+	requiredKeys := []string{"prefix", "environment", "location", "resource_type", "instance_number"}
+	optionalKeys := []string{"domain", "name"}
+	allowedKeys := append(requiredKeys, optionalKeys...)
+
+	// Validate required keys are present
+	for _, key := range requiredKeys {
+		if _, exists := configuration[key]; !exists {
+			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map", key))
+			return
+		}
+	}
+
+	// Validate no unexpected keys are provided
+	for key := range configuration {
+		if !contains(allowedKeys, key) {
+			resp.Error = function.NewFuncError(fmt.Sprintf("Invalid key in input. The key '%s' is not allowed", key))
+			return
+		}
+	}
+
+	// Extract configuration values
+	prefix, environment, location, resourceType, instanceNumberStr, name, domain := extractConfigurationValues(configuration)
+
+	// Validate all inputs
+	if err := validatePrefix(prefix); err != nil {
+		resp.Error = err
+		return
+	}
+
+	if err := validateEnvironment(environment); err != nil {
+		resp.Error = err
+		return
+	}
+
+	normalizedLocation, err := validateAndNormalizeLocation(location)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+	location = normalizedLocation
+
+	instance, err := validateInstance(instanceNumberStr)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	abbreviations := getResourceAbbreviations()
+	abbreviation, err := validateResourceType(resourceType, abbreviations)
+	if err != nil {
+		resp.Error = err
+		return
+	}
+
+	// Validate no redundancy between domain, name, and abbreviation
+	if err := validateRedundancy(domain, name, abbreviation); err != nil {
+		resp.Error = err
+		return
+	}
+
+	// Build the final resource name
+	result := buildResourceName(prefix, environment, location, domain, name, abbreviation, instance)
+
+	// Special handling for storage accounts (remove hyphens)
 	if strings.Contains(resourceType, "storage_account") {
 		result = strings.ReplaceAll(result, "-", "")
 	}
