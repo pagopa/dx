@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 4.1.0
+
+### Minor Changes
+
+- ce7ad91: Add variables to support private DNS zones in different subscriptions
+
 ## 4.0.0
 
 ### Major Changes

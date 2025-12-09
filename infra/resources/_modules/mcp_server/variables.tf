@@ -36,3 +36,9 @@ variable "tags" {
   type        = map(string)
   description = "A map of tags to assign to the resources."
 }
+
+variable "waf_rate_limit_per_ip" {
+  type        = number
+  description = "Maximum number of requests per IP address within the evaluation window (5 minutes). Requests exceeding this limit will be blocked."
+  default     = 500
+}
