@@ -16,11 +16,13 @@ const config: Config = {
     locales: ["en"],
   },
   markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
     mermaid: true,
   },
   onBrokenAnchors: "throw",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
