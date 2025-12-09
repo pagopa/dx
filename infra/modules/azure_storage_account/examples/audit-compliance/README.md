@@ -162,7 +162,7 @@ az storage container legal-hold show \
 | **Delete policy**            | ✅ Yes                  | ❌ Never (irreversible)            |
 | **SEC 17a-4(f) compliance**  | ❌ No                   | ✅ Yes                             |
 | **Prevent account deletion** | ❌ No                   | ✅ Yes                             |
-| **Legal hold modifications** | ✅ Yes                  | ❌ Must unlock first (impossible)  |
+| **Legal hold modifications** | ✅ Yes                  | ❌ No                              |
 | **Use case**                 | Testing, validation     | Production compliance              |
 
 ## Compliance Validation Checklist
