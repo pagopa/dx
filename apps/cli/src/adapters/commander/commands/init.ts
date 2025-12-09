@@ -77,7 +77,7 @@ const displaySummary = (answers: Answers) => {
   console.log(chalk.green.bold("\nNext Steps:"));
   console.log(`1. Review the Pull Request in the GitHub repository.`);
   console.log(
-    `2. Wait for the approve on eng-azure-authorization and then merge both PRs.`,
+    `2. Wait for the approval on eng-azure-authorization and then merge both PRs.`,
   );
   console.log(
     `3. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
