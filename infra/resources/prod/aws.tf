@@ -17,6 +17,7 @@ module "mcp_server" {
   account_id                             = data.aws_caller_identity.current.account_id
   bedrock_knowledge_base_id              = "PR6CJIVR5X"
   application_insights_connection_string = data.azurerm_application_insights.this.connection_string
+  mcp_auth_type                          = "oauth"
 
   dns = {
     custom_domain_name  = "api.dx.pagopa.it"

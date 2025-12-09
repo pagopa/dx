@@ -1,6 +1,9 @@
+import { getLogger } from "@logtape/logtape";
 import { GitHubProvider } from "fastmcp/auth";
 
 import { authConfig } from "../config/auth.js";
+
+const logger = getLogger(["mcpserver", "oauth"]);
 
 let authProxy: GitHubProvider;
 
@@ -22,14 +25,24 @@ export function getOAuthProvider(): GitHubProvider {
  * Must be called before accessing the authProxy.
  */
 export async function initializeOAuthProvider(): Promise<GitHubProvider> {
-  const clientSecret = await authConfig.getGitHubClientSecret();
+  logger.debug("Fetching GitHub client ID from SSM...");
+  const clientId = await authConfig.getGitHubClientId();
+  logger.debug(`GitHub client ID retrieved: ${clientId ? "✓" : "✗ (empty)"}`);
 
+  logger.debug("Fetching GitHub client secret from SSM...");
+  const clientSecret = await authConfig.getGitHubClientSecret();
+  logger.debug(
+    `GitHub client secret retrieved: ${clientSecret ? "✓" : "✗ (empty)"}`,
+  );
+
+  logger.debug("Creating GitHubProvider instance...");
   authProxy = new GitHubProvider({
     baseUrl: authConfig.MCP_SERVER_URL,
-    clientId: authConfig.GITHUB_CLIENT_ID,
+    clientId,
     clientSecret,
     scopes: [],
   });
+  logger.debug("GitHubProvider instance created");
 
   return authProxy;
 }
