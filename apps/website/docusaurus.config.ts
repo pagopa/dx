@@ -93,13 +93,9 @@ const config: Config = {
       "classic",
       {
         blog: {
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/pagopa/dx/tree/main/website/",
           showReadingTime: true,
         },
         docs: {
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/pagopa/dx/tree/main/website/",
           sidebarCollapsed: true,
           sidebarCollapsible: true,
           sidebarPath: "./sidebars.ts",
