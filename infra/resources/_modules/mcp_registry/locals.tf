@@ -1,5 +1,10 @@
 locals {
-  api_center_name = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-common-apic-mcp-registry-${format("%02d", var.naming_config.instance_number)}"
+  api_center_name = provider::azuredx::resource_name(merge(var.naming_config,
+    {
+      name          = "mcp-registry"
+      resource_type = "api_center"
+    }
+  ))
 
   # Flatten versions: { "dx-0.0.9" => { server_key = "dx", version = "0.0.9", ... }, ... }
   mcp_versions = merge([
