@@ -23,13 +23,45 @@ variable "mcp_servers" {
     name        = string
     description = string
     versions    = list(string)
+    type        = optional(string, "remote")
+    visibility  = optional(bool, true)
     external_documentation = optional(list(object({
       title = string
       url   = string
     })), [])
-    uri = string
+    # Remote servers
+    uri = optional(string)
+    protocols = optional(object({
+      sse        = optional(bool, false)
+      streamable = optional(bool, true)
+    }))
   }))
   description = "Map of MCP servers to register in the API Center"
+
+  validation {
+    condition = alltrue([
+      for k, v in var.mcp_servers :
+      contains(["local", "remote"], v.type)
+    ])
+    error_message = "Server type must be either 'local' or 'remote'."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.mcp_servers :
+      v.type == "local" || (v.uri != null && v.protocols != null && (v.protocols.sse == true || v.protocols.streamable == true))
+    ])
+    error_message = "Remote servers must have uri and at least one protocol (sse or streamable) enabled."
+  }
+}
+
+variable "cdn" {
+  type = object({
+    resource_group_name         = string
+    network_resource_group_name = string
+    custom_domain_host_name     = optional(string, "mcp.dx.pagopa.it")
+  })
+  description = "CDN related configuration"
 }
 
 variable "tags" {

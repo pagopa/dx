@@ -24,6 +24,9 @@ output "mcp_api_ids" {
 }
 
 output "mcp_deployment_ids" {
-  description = "Map of MCP server names to their deployment IDs"
-  value       = { for k, v in azapi_resource.mcp_deployment : k => v.id }
+  description = "Map of MCP deployments (SSE and Streamable) to their IDs"
+  value = merge(
+    { for k, v in azapi_resource.mcp_sse_deployment : "${k}-sse" => v.id },
+    { for k, v in azapi_resource.mcp_streamable_deployment : "${k}-streamable" => v.id }
+  )
 }

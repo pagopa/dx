@@ -1,7 +1,7 @@
 # API Center Service
 resource "azapi_resource" "apic_service" {
   type      = "Microsoft.ApiCenter/services@2024-06-01-preview"
-  name      = "${var.naming_config.prefix}-${var.naming_config.environment}-${var.naming_config.location}-common-apic-mcp-registry-${format("%02d", var.naming_config.instance_number)}"
+  name      = local.api_center_name
   parent_id = var.resource_group_id
   location  = var.location
   tags      = var.tags
@@ -42,6 +42,64 @@ resource "azapi_resource" "prod_environment" {
   schema_validation_enabled = true
 }
 
+# Metadata Schema: type (string with predefined choices)
+resource "azapi_resource" "metadata_type" {
+  type      = "Microsoft.ApiCenter/services/metadataSchemas@2024-03-01"
+  name      = "type"
+  parent_id = azapi_resource.apic_service.id
+
+  body = {
+    properties = {
+      schema = jsonencode({
+        type  = "string"
+        title = "Type"
+        oneOf = [
+          {
+            const       = "local"
+            description = "Local MCP server (runs via command)"
+          },
+          {
+            const       = "remote"
+            description = "Remote MCP server (accessible via URI)"
+          }
+        ]
+      })
+      assignedTo = [
+        {
+          entity   = "api"
+          required = false
+        }
+      ]
+    }
+  }
+
+  schema_validation_enabled = false
+}
+
+# Metadata Schema: visibility (boolean)
+resource "azapi_resource" "metadata_visibility" {
+  type      = "Microsoft.ApiCenter/services/metadataSchemas@2024-03-01"
+  name      = "visibility"
+  parent_id = azapi_resource.apic_service.id
+
+  body = {
+    properties = {
+      schema = jsonencode({
+        type  = "boolean"
+        title = "Visibility"
+      })
+      assignedTo = [
+        {
+          entity   = "api"
+          required = false
+        }
+      ]
+    }
+  }
+
+  schema_validation_enabled = false
+}
+
 # MCP Server APIs
 resource "azapi_resource" "mcp_api" {
   for_each = var.mcp_servers
@@ -58,11 +116,19 @@ resource "azapi_resource" "mcp_api" {
       kind                  = "mcp"
       externalDocumentation = each.value.external_documentation
       contacts              = []
-      customProperties      = {}
+      customProperties = {
+        type       = each.value.type
+        visibility = each.value.visibility
+      }
     }
   }
 
   schema_validation_enabled = true
+
+  depends_on = [
+    azapi_resource.metadata_type,
+    azapi_resource.metadata_visibility
+  ]
 }
 
 # MCP Server API Versions
@@ -83,9 +149,12 @@ resource "azapi_resource" "mcp_version" {
   schema_validation_enabled = true
 }
 
-# SSE Definitions
+# SSE Definitions (for servers with sse protocol enabled)
 resource "azapi_resource" "mcp_sse_definition" {
-  for_each = local.mcp_versions
+  for_each = {
+    for k, v in local.mcp_versions : k => v
+    if v.protocols != null && v.protocols.sse
+  }
 
   type      = "Microsoft.ApiCenter/services/workspaces/apis/versions/definitions@2024-06-01-preview"
   name      = "default-sse"
@@ -101,9 +170,12 @@ resource "azapi_resource" "mcp_sse_definition" {
   schema_validation_enabled = true
 }
 
-# Streamable Definitions
+# Streamable Definitions (for servers with streamable protocol enabled)
 resource "azapi_resource" "mcp_streamable_definition" {
-  for_each = local.mcp_versions
+  for_each = {
+    for k, v in local.mcp_versions : k => v
+    if v.protocols != null && v.protocols.streamable
+  }
 
   type      = "Microsoft.ApiCenter/services/workspaces/apis/versions/definitions@2024-06-01-preview"
   name      = "default-streamable"
@@ -119,17 +191,20 @@ resource "azapi_resource" "mcp_streamable_definition" {
   schema_validation_enabled = true
 }
 
-# Deployments
-resource "azapi_resource" "mcp_deployment" {
-  for_each = local.mcp_versions
+# SSE Deployments (for servers with sse protocol enabled)
+resource "azapi_resource" "mcp_sse_deployment" {
+  for_each = {
+    for k, v in local.mcp_versions : k => v
+    if v.protocols != null && v.protocols.sse
+  }
 
   type      = "Microsoft.ApiCenter/services/workspaces/apis/deployments@2024-06-01-preview"
-  name      = "default-deployment"
+  name      = "sse-deployment"
   parent_id = azapi_resource.mcp_api[each.value.server_key].id
 
   body = {
     properties = {
-      title         = "Deployment to prod"
+      title         = "SSE Deployment to prod"
       environmentId = "/workspaces/default/environments/prod"
       definitionId  = "/workspaces/default/apis/${each.value.server_name}/versions/${azapi_resource.mcp_version[each.key].name}/definitions/default-sse"
       server = {
@@ -141,11 +216,44 @@ resource "azapi_resource" "mcp_deployment" {
     }
   }
 
-  schema_validation_enabled = true
+  schema_validation_enabled = false
 
   depends_on = [
     azapi_resource.prod_environment,
     azapi_resource.mcp_sse_definition
+  ]
+}
+
+# Streamable Deployments (for servers with streamable protocol enabled)
+resource "azapi_resource" "mcp_streamable_deployment" {
+  for_each = {
+    for k, v in local.mcp_versions : k => v
+    if v.protocols != null && v.protocols.streamable
+  }
+
+  type      = "Microsoft.ApiCenter/services/workspaces/apis/deployments@2024-06-01-preview"
+  name      = "streamable-deployment"
+  parent_id = azapi_resource.mcp_api[each.value.server_key].id
+
+  body = {
+    properties = {
+      title         = "Streamable Deployment to prod"
+      environmentId = "/workspaces/default/environments/prod"
+      definitionId  = "/workspaces/default/apis/${each.value.server_name}/versions/${azapi_resource.mcp_version[each.key].name}/definitions/default-streamable"
+      server = {
+        runtimeUri = [
+          each.value.uri
+        ]
+      }
+      customProperties = {}
+    }
+  }
+
+  schema_validation_enabled = false
+
+  depends_on = [
+    azapi_resource.prod_environment,
+    azapi_resource.mcp_streamable_definition
   ]
 }
 
