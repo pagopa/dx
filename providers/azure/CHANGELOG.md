@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.8.1
+
+### Patch Changes
+
+- e449c1c: Add abbreviation for API Center (apic) in resource_name function
+
 ## 0.8.0
 
 ### Minor Changes
