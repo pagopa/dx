@@ -185,6 +185,20 @@ variable "private_dns_zone_resource_group_name" {
   description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
 }
 
+variable "private_dns_zone_ids" {
+  type = object({
+    blob          = optional(string)
+    file          = optional(string)
+    queue         = optional(string)
+    table         = optional(string)
+    azurewebsites = optional(string)
+  })
+  default     = null
+  description = <<EOT
+  "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\" (if provided) or Virtual Network resource group. Use this to reference DNS zones in different subscriptions."
+  EOT
+}
+
 variable "subnet_service_endpoints" {
   type = object({
     cosmos  = optional(bool, false)

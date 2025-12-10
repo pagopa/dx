@@ -15,7 +15,7 @@ resource "azurerm_private_endpoint" "st_blob" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_blob.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.blob]
   }
 
   tags = local.tags
@@ -36,7 +36,7 @@ resource "azurerm_private_endpoint" "st_file" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.file]
   }
 
   tags = local.tags
@@ -57,7 +57,7 @@ resource "azurerm_private_endpoint" "st_queue" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_queue.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.queue]
   }
 
   tags = local.tags
@@ -82,7 +82,7 @@ resource "azurerm_private_endpoint" "std_blob" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_blob.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.blob]
   }
 
   tags = local.tags
@@ -105,7 +105,7 @@ resource "azurerm_private_endpoint" "std_file" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_file.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.file]
   }
 
   tags = local.tags
@@ -128,7 +128,7 @@ resource "azurerm_private_endpoint" "std_queue" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_queue.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.queue]
   }
 
   tags = local.tags
@@ -151,7 +151,7 @@ resource "azurerm_private_endpoint" "std_table" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_table[0].id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.table]
   }
 
   tags = local.tags
@@ -173,7 +173,7 @@ resource "azurerm_private_endpoint" "function_sites" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.azurewebsites]
   }
 
   tags = local.tags
@@ -196,7 +196,7 @@ resource "azurerm_private_endpoint" "staging_function_sites" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.function_app.id]
+    private_dns_zone_ids = [local.private_dns_zone_ids.azurewebsites]
   }
 
   tags = local.tags

@@ -78,4 +78,12 @@ locals {
   private_dns_zone = {
     resource_group_name = var.private_dns_zone_resource_group_name == null ? var.virtual_network.resource_group_name : var.private_dns_zone_resource_group_name
   }
+
+  private_dns_zone_ids = {
+    blob          = var.private_dns_zone_ids != null && var.private_dns_zone_ids.blob != null ? var.private_dns_zone_ids.blob : data.azurerm_private_dns_zone.storage_account_blob[0].id
+    file          = var.private_dns_zone_ids != null && var.private_dns_zone_ids.file != null ? var.private_dns_zone_ids.file : data.azurerm_private_dns_zone.storage_account_file[0].id
+    queue         = var.private_dns_zone_ids != null && var.private_dns_zone_ids.queue != null ? var.private_dns_zone_ids.queue : data.azurerm_private_dns_zone.storage_account_queue[0].id
+    table         = var.private_dns_zone_ids != null && var.private_dns_zone_ids.table != null ? var.private_dns_zone_ids.table : (local.function_app.has_durable == 1 ? data.azurerm_private_dns_zone.storage_account_table[0].id : null)
+    azurewebsites = var.private_dns_zone_ids != null && var.private_dns_zone_ids.azurewebsites != null ? var.private_dns_zone_ids.azurewebsites : data.azurerm_private_dns_zone.function_app[0].id
+  }
 }

@@ -137,6 +137,7 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"app_service":          "app",
 		"app_service_plan":     "asp",
 		"static_web_app":       "stapp",
+		"api_center":           "apic",
 
 		// Security
 		"key_vault":        "kv",
