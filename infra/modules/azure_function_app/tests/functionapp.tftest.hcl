@@ -329,3 +329,159 @@ run "function_app_override_size_fail" {
     var.size,
   ]
 }
+
+run "function_app_without_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 1
+    error_message = "storage_account_blob data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 1
+    error_message = "storage_account_file data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 1
+    error_message = "storage_account_queue data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_table) == 0
+    error_message = "storage_account_table data source should not be created when durable functions are disabled"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 1
+    error_message = "function_app data source should be created when no override is provided"
+  }
+
+  # Verify that private endpoints use the data source IDs
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_blob[0].id
+    error_message = "st_blob private endpoint should use the data source DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_file.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_file[0].id
+    error_message = "st_file private endpoint should use the data source DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.function_sites.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.function_app[0].id
+    error_message = "function_sites private endpoint should use the data source DNS zone ID"
+  }
+}
+
+run "function_app_with_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    # Override all DNS zone IDs
+    private_dns_zone_ids = {
+      blob          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      file          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+      queue         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net"
+      table         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net"
+      azurewebsites = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    }
+  }
+
+  # Verify that data sources are NOT created (count = 0)
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 0
+    error_message = "storage_account_blob data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 0
+    error_message = "storage_account_file data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 0
+    error_message = "storage_account_queue data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_table) == 0
+    error_message = "storage_account_table data source should not be created when override is provided (even without durable)"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 0
+    error_message = "function_app data source should not be created when override is provided"
+  }
+
+  # Verify that private endpoints use the override IDs
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    error_message = "st_blob private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_file.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+    error_message = "st_file private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.function_sites.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    error_message = "function_sites private endpoint should use the override DNS zone ID"
+  }
+}
+
+run "function_app_with_partial_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    # Override only some DNS zone IDs
+    private_dns_zone_ids = {
+      blob = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      file = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+      # queue, table, azurewebsites are not overridden (null)
+    }
+  }
+
+  # Verify partial override: blob and file should not create data sources
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 0
+    error_message = "storage_account_blob data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 0
+    error_message = "storage_account_file data source should not be created when override is provided"
+  }
+
+  # queue and function_app should create data sources
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 1
+    error_message = "storage_account_queue data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 1
+    error_message = "function_app data source should be created when no override is provided"
+  }
+
+  # Verify mixed usage
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    error_message = "st_blob private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_queue.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_queue[0].id
+    error_message = "st_queue private endpoint should use the data source DNS zone ID"
+  }
+}
