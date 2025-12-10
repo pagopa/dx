@@ -92,6 +92,22 @@ locals {
     }
   }
 
+  # Private DNS Zone overrides - filters only enabled subservices with provided IDs
+  private_dns_zone_overrides = var.private_dns_zone_ids != null ? {
+    for subservice in ["blob", "file", "queue", "table"] :
+    subservice => var.private_dns_zone_ids[subservice]
+    if var.private_dns_zone_ids[subservice] != null
+  } : {}
+
+  # Final Private DNS Zone IDs - merges overrides with data source lookups
+  private_dns_zone_ids = {
+    for subservice, status in local.peps.create_subservices : subservice => (
+      contains(keys(local.private_dns_zone_overrides), subservice)
+      ? local.private_dns_zone_overrides[subservice]
+      : data.azurerm_private_dns_zone.storage_account[subservice].id
+    ) if status == true
+  }
+
   cmk_flags = {
     kv = (var.customer_managed_key.enabled && var.customer_managed_key.type == "kv")
   }

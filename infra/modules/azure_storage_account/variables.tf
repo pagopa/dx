@@ -162,6 +162,17 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
 }
 
+variable "private_dns_zone_ids" {
+  type = object({
+    blob  = optional(string)
+    file  = optional(string)
+    queue = optional(string)
+    table = optional(string)
+  })
+  default     = null
+  description = "Override IDs for private DNS zones. If not provided, zones will be looked up in private_dns_zone_resource_group_name. Use this to reference DNS zones in different subscriptions."
+}
+
 variable "action_group_id" {
   type        = string
   description = "ID of the Action Group for alerts. Required for tier 'l'."
