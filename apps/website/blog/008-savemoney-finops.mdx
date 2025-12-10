@@ -113,12 +113,12 @@ thresholds based on real-world feedback.
 SaveMoney currently analyzes **9 common Azure resource types**, focusing on the
 ones that typically drive the most cloud waste:
 
-- **🔴 High Cost Risk**: Virtual Machines (deallocated or idle), App Service
-  Plans (empty or oversized)
-- **🟡 Medium Cost Risk**: Orphaned Disks, unused Public IPs, idle Network
+- **High Cost Risk**: Virtual Machines (deallocated or idle), App Service Plans
+  (empty or oversized)
+- **Medium Cost Risk**: Orphaned Disks, unused Public IPs, idle Network
   Interfaces, disconnected Private Endpoints, low-traffic Storage Accounts and
   Container Apps
-- **🟢 Low Cost Risk**: Static Web Apps with minimal traffic
+- **Low Cost Risk**: Static Web Apps with minimal traffic
 
 Each resource is evaluated using a combination of **state checks** (is it
 attached? running?) and **Azure Monitor metrics** (CPU usage, network traffic,
