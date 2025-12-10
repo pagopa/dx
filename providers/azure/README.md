@@ -250,6 +250,7 @@ The following table lists the resource types and their abbreviations used in the
 | servicebus_namespace                      |       sbns       |
 | servicebus_private_endpoint               |     sbns-pep     |
 | static_web_app                            |      stapp       |
+| api_center                                |       apic       |
 | storage_account                           |        st        |
 | subnet                                    |       snet       |
 | table_private_endpoint                    |    table-pep     |
