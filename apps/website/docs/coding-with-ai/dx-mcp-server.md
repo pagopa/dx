@@ -43,20 +43,18 @@ You'll need:
 
 ### VS Code / GitHub Copilot
 
-Add the following to your MCP configuration file. See
-[VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
-for details.
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_DX_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22dx%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fapi.dx.pagopa.it%2Fmcp%22%2C%22headers%22%3A%7B%22x-gh-pat%22%3A%22%24%7Binput%3Agithub_mcp_pat%7D%22%7D%7D)
+
+After installing the MCP server in VS Code, you need to configure the GitHub
+Personal Access Token (PAT) for authentication.
+
+Update your MCP configuration file adding the `inputs` key to your MCP
+configuration as follows:
 
 ```json
 {
   "servers": {
-    "dx-docs": {
-      "url": "https://api.dx.pagopa.it/mcp",
-      "type": "http",
-      "headers": {
-        "x-gh-pat": "${input:github_mcp_pat}"
-      }
-    }
+    ...
   },
   "inputs": [
     {
@@ -68,6 +66,12 @@ for details.
   ]
 }
 ```
+
+You will be prompted to enter your GitHub PAT when you first use the server.
+
+See
+[VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
+for more info.
 
 ### GitHub Copilot Coding Agent
 
