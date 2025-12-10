@@ -41,6 +41,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "version": "changeset version && node ./scripts/sync-version.js && pnpm i --lockfile-only"
   }
 }
