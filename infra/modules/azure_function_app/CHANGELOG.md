@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 4.1.1
+
+### Patch Changes
+
+- bdf1e20: Fix private_dns_zone_ids validation for older Terraform versions
+
 ## 4.1.0
 
 ### Minor Changes

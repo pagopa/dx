@@ -1,5 +1,15 @@
 # docs
 
+## 0.11.0
+
+### Minor Changes
+
+- 9e0333e: Add Blog page about new DX tool: SaveMoney
+
+### Patch Changes
+
+- fcaf084: Remove the "Edit this page" link from website's pages
+
 ## 0.10.3
 
 ### Patch Changes
