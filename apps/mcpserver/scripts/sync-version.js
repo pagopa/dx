@@ -13,8 +13,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const packageJsonPath = join(__dirname, "package.json");
-const serverJsonPath = join(__dirname, "server.json");
+const packageJsonPath = join(__dirname, "..", "package.json");
+const serverJsonPath = join(__dirname, "..", "server.json");
 
 try {
   // Read package.json
