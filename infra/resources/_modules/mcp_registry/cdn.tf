@@ -23,7 +23,7 @@ module "portal" {
     {
       host_name = var.cdn.custom_domain_host_name
       dns = {
-        zone_name                = join(".", slice(split(".", var.cdn.custom_domain_host_name), 1, length(split(".", var.cdn.custom_domain_host_name))))
+        zone_name                = "dx.pagopa.it"
         zone_resource_group_name = var.cdn.network_resource_group_name
       }
     }
