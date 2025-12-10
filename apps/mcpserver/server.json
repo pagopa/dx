@@ -7,12 +7,12 @@
     "source": "github",
     "subfolder": "apps/mcpserver"
   },
-  "version": "0.0.8",
+  "version": "0.0.9",
   "packages": [
     {
       "registryType": "http",
       "identifier": "https://api.dx.pagopa.it/mcp",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "transport": {
         "type": "streamable-http",
         "url": "https://api.dx.pagopa.it/mcp"
