@@ -42,6 +42,6 @@
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "version": "node ./scripts/sync-version.js"
+    "version": "node ./scripts/generate-server-manifest.js"
   }
 }
