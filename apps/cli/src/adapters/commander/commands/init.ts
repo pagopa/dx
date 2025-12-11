@@ -8,7 +8,7 @@ import { Command } from "commander";
 import { $ } from "execa";
 import { okAsync, Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
-import { resolve } from "node:path";
+import * as path from "node:path";
 import { oraPromise } from "ora";
 
 import { decode } from "../../zod/index.js";
@@ -117,7 +117,7 @@ const initializeTerraformBackend = (answers: Answers) =>
     "Terraform backend initialized successfully!",
     "Failed to initialize Terraform backend.",
     $({
-      cwd: resolve(answers.repoName, "infra", "repository"),
+      cwd: path.resolve(answers.repoName, "infra", "repository"),
       environment: {
         NO_COLOR: 1,
         TF_IN_AUTOMATION: 1,
@@ -133,7 +133,7 @@ const createGitHubRepositoryWithTerraform = (answers: Answers) =>
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
     $({
-      cwd: resolve(answers.repoName, "infra", "repository"),
+      cwd: path.resolve(answers.repoName, "infra", "repository"),
       environment: {
         NO_COLOR: 1,
         TF_CLI_ARGS_apply: "-auto-approve",
