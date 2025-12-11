@@ -68,6 +68,14 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
+# @deprecated This variable will be removed in the next major version.
+# Infrastructure encryption should be managed through proper use case configuration instead of overrides.
+variable "override_infrastructure_encryption" {
+  type        = bool
+  description = "When set to true, disables infrastructure encryption even if the use case configuration would enable it. Useful for audit use case to prevent storage account recreation when infrastructure encryption was enabled by default."
+  default     = false
+}
+
 variable "access_tier" {
   type        = string
   description = "Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'."
@@ -85,8 +93,8 @@ variable "subservices_enabled" {
   default     = {}
 
   validation {
-    condition     = var.use_case != "audit" || var.subservices_enabled.blob || var.subservices_enabled.file
-    error_message = "When use_case is 'audit', infrastructure encryption is enabled and requires at least one of 'blob' or 'file' subservices to be enabled."
+    condition     = var.use_case != "audit" || var.override_infrastructure_encryption || var.subservices_enabled.blob || var.subservices_enabled.file
+    error_message = "When use_case is 'audit' with infrastructure encryption enabled (default), at least one of 'blob' or 'file' subservices must be enabled. Set override_infrastructure_encryption to true to bypass this requirement."
   }
 }
 
