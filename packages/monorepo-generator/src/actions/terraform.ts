@@ -42,21 +42,25 @@ const makeSemverFetchAction =
     );
 
 const getGitHubTerraformProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-github", owner: "integrations" },
   resultKey: "githubTfProviderVersion",
 });
 
 const getPagoPaDxAzureTerraformProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-azure", owner: "pagopa-dx" },
   resultKey: "pagopaDxAzureTfProviderVersion",
 });
 
 const getPagoPaDxAwsTerraformProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-aws", owner: "pagopa-dx" },
   resultKey: "pagopaDxAwsTfProviderVersion",
 });
 
 const getDxGitHubBootstrapLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: {
     name: "terraform-github-github-environment-bootstrap",
     owner: "pagopa-dx",
@@ -66,27 +70,30 @@ const getDxGitHubBootstrapLatestVersion = makeSemverFetchAction({
 });
 
 const getTerraformLatestVersion = makeSemverFetchAction({
-  formatVersion: (v) => v.toString(),
   repository: { name: "terraform", owner: "hashicorp" },
   resultKey: "terraformVersion",
 });
 
 const getAwsProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-aws", owner: "hashicorp" },
   resultKey: "awsTfProviderVersion",
 });
 
 const getTlsProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-tls", owner: "hashicorp" },
   resultKey: "tlsTfProviderVersion",
 });
 
 const getAzurermProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-azurerm", owner: "hashicorp" },
   resultKey: "azurermTfProviderVersion",
 });
 
 const getAzureadProviderLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: { name: "terraform-provider-azuread", owner: "hashicorp" },
   resultKey: "azureadTfProviderVersion",
 });
@@ -98,6 +105,7 @@ const getPreCommitTerraformLatestVersion = makeSemverFetchAction({
 });
 
 const getDxAwsBootstrapperLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: {
     name: "terraform-aws-aws-github-environment-bootstrap",
     owner: "pagopa-dx",
@@ -107,6 +115,7 @@ const getDxAwsBootstrapperLatestVersion = makeSemverFetchAction({
 });
 
 const getDxAwsCoreValuesExporterLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: {
     name: "terraform-aws-aws-core-values-exporter",
     owner: "pagopa-dx",
@@ -116,6 +125,7 @@ const getDxAwsCoreValuesExporterLatestVersion = makeSemverFetchAction({
 });
 
 const getDxAzureBootstrapperLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: {
     name: "terraform-azurerm-azure-github-environment-bootstrap",
     owner: "pagopa-dx",
@@ -125,6 +135,7 @@ const getDxAzureBootstrapperLatestVersion = makeSemverFetchAction({
 });
 
 const getDxAzureCoreValuesExporterLatestVersion = makeSemverFetchAction({
+  formatVersion: ({ major, minor }) => `${major}.${minor}`,
   repository: {
     name: "terraform-azurerm-azure-core-values-exporter",
     owner: "pagopa-dx",
