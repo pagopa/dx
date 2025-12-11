@@ -14,6 +14,20 @@ import { oraPromise } from "ora";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
 
+type InitResult = {
+  csp: {
+    location: string;
+    name: string;
+  };
+  repository: Repository;
+};
+
+type Repository = {
+  name: string;
+  owner: string;
+  url?: string;
+};
+
 const initPlop = () =>
   ResultAsync.fromPromise(
     nodePlop(),
@@ -62,26 +76,22 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
     generator.runActions(answers),
   ).map(() => answers);
 
-const displaySummary = (answers: Answers) => {
-  const { csp, repoName, repoOwner } = answers;
+const displaySummary = (initResult: InitResult) => {
+  const { csp, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
-  console.log(`- Name: ${chalk.cyan(repoName)}`);
-  console.log(`- Cloud Service Provider: ${chalk.cyan(csp)}`);
-  const cspLocation =
-    csp === "azure" ? answers.azureLocation : answers.awsRegion;
-  console.log(`- CSP location: ${chalk.cyan(cspLocation)}`);
-  console.log(
-    `- GitHub Repository: ${chalk.cyan(`https://github.com/${repoOwner}/${repoName}`)}\n`,
-  );
+  console.log(`- Name: ${chalk.cyan(repository.name)}`);
+  console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
+  console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
 
-  console.log(chalk.green.bold("\nNext Steps:"));
-  console.log(`1. Review the Pull Request in the GitHub repository.`);
-  console.log(
-    `2. Wait for the approval on eng-azure-authorization and then merge both PRs.`,
-  );
-  console.log(
-    `3. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
-  );
+  if (repository.url) {
+    console.log(`- GitHub Repository: ${chalk.cyan(repository.url)}\n`);
+  } else {
+    console.log(
+      chalk.yellow(
+        `\n⚠️  GitHub repository may not have been created automatically.`,
+      ),
+    );
+  }
 };
 
 const checkGhCliIsInstalled = (
@@ -96,28 +106,26 @@ const checkGhCliIsLoggedIn = (
   failText: string,
 ) => withSpinner(text, successText, failText, $`gh auth status`);
 
-const checkPreconditions = (): ResultAsync<void, Error> =>
+const checkPreconditions = () =>
   checkGhCliIsInstalled(
     "Checking GitHub CLI is installed...",
     "GitHub CLI is installed!",
     "GitHub CLI is not installed.",
-  )
-    .andThen(() =>
-      checkGhCliIsLoggedIn(
-        "Checking GitHub CLI login...",
-        "GitHub CLI is logged in!",
-        "GitHub CLI is not logged in.",
-      ),
-    )
-    .map(() => undefined);
+  ).andThen(() =>
+    checkGhCliIsLoggedIn(
+      "Checking GitHub CLI login...",
+      "GitHub CLI is logged in!",
+      "GitHub CLI is not logged in.",
+    ),
+  );
 
-const initializeTerraformBackend = (answers: Answers) =>
+const initializeTerraformBackend = (tfFolder: string) =>
   withSpinner(
     "Initializing Terraform backend...",
     "Terraform backend initialized successfully!",
     "Failed to initialize Terraform backend.",
     $({
-      cwd: path.resolve(answers.repoName, "infra", "repository"),
+      cwd: tfFolder,
       environment: {
         NO_COLOR: 1,
         TF_IN_AUTOMATION: 1,
@@ -125,38 +133,62 @@ const initializeTerraformBackend = (answers: Answers) =>
       },
       shell: true,
     })`terraform init`,
-  ).map(() => answers);
+  );
 
-const createGitHubRepositoryWithTerraform = (answers: Answers) =>
+const createGitHubRepositoryWithTerraform = (tfFolder: string) =>
   withSpinner(
-    "Creating GitHub repository with Terraform...",
-    "GitHub repository created successfully!",
-    "Failed to create GitHub repository.",
+    "Creating repository on GitHub...",
+    "Repository created on GitHub successfully!",
+    "Failed to create repository on GitHub.",
     $({
-      cwd: path.resolve(answers.repoName, "infra", "repository"),
+      cwd: tfFolder,
       environment: {
         NO_COLOR: 1,
-        TF_CLI_ARGS_apply: "-auto-approve",
-        TF_IN_AUTOMATION: 1,
         TF_INPUT: 0,
       },
       shell: true,
-    })`terraform apply`,
-  ).map(() => answers);
-
-const createRemoteRepository = (
-  answers: Answers,
-): ResultAsync<Answers, Error> =>
-  initializeTerraformBackend(answers).andThen(
-    createGitHubRepositoryWithTerraform,
+    })`terraform apply -auto-approve`,
   );
+
+const createRemoteRepository = ({
+  repoName,
+  repoOwner,
+}: Answers): ResultAsync<Repository, Error> => {
+  const tfRepositoryFolder = path.resolve(repoName, "infra", "repository");
+  return initializeTerraformBackend(tfRepositoryFolder)
+    .andThen(() => createGitHubRepositoryWithTerraform(tfRepositoryFolder))
+    .map(() => ({
+      name: repoName,
+      owner: repoOwner,
+      url: `https://github.com/${repoOwner}/${repoName}`,
+    }));
+};
 
 // TODO: Create GitHub repository pushing the generated code
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Answers, Error> =>
-  createRemoteRepository(answers).orElse(() => okAsync(answers));
+): ResultAsync<InitResult, Error> => {
+  const csp = {
+    location: answers.csp === "aws" ? answers.awsRegion : answers.azureLocation,
+    name: answers.csp,
+  };
+  return createRemoteRepository(answers)
+    .map((repository) => ({
+      csp,
+      repository,
+    }))
+    .orElse(() =>
+      // Terraform apply failed.
+      okAsync({
+        csp,
+        repository: {
+          name: answers.repoName,
+          owner: answers.repoOwner,
+        },
+      }),
+    );
+};
 
 export const makeInitCommand = (): Command =>
   new Command()
