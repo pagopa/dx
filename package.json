@@ -20,7 +20,7 @@
     "release": "nx run-many --target=build --projects=tag:npm:public && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
-    "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js",
+    "dx": "node ./apps/cli/bin/index.js",
     "validate": "nx affected --targets=build,test,lint,shellcheck,format:check --configuration=ci"
   }
 }
