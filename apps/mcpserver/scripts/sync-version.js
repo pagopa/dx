@@ -2,41 +2,70 @@
 /* eslint-disable no-undef */
 
 /**
- * Synchronize version from package.json to server.json
+ * Synchronize version and metadata from package.json to server.json
  * This script is run automatically by changesets during version updates
  */
 
-import { readFileSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import packageJson from "../package.json" with { type: "json" };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const packageJsonPath = join(__dirname, "..", "package.json");
 const serverJsonPath = join(__dirname, "..", "server.json");
 
-try {
-  // Read package.json
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
-  const version = packageJson.version;
+async function syncVersion() {
+  try {
+    const { description, repository, version } = packageJson;
 
-  // Read server.json
-  const serverJson = JSON.parse(readFileSync(serverJsonPath, "utf8"));
+    // Generate server.json from package.json metadata
+    const serverJson = {
+      $schema:
+        "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+      description,
+      name: "io.github.pagopa/mcpserver",
+      packages: [
+        {
+          httpHeaders: [
+            {
+              description: "GitHub Personal Access Token for authentication",
+              isRequired: true,
+              isSecret: true,
+              name: "x-gh-pat",
+            },
+          ],
+          identifier: "https://api.dx.pagopa.it/mcp",
+          registryType: "http",
+          transport: {
+            type: "streamable-http",
+            url: "https://api.dx.pagopa.it/mcp",
+          },
+          version,
+        },
+      ],
+      repository: {
+        source: "github",
+        subfolder: repository.directory,
+        url: repository.url.replace(/^git\+/, "").replace(/\.git$/, ""),
+      },
+      version,
+    };
 
-  // Update version in server.json
-  serverJson.version = version;
-  if (serverJson.packages && serverJson.packages.length > 0) {
-    serverJson.packages.forEach((pkg) => {
-      pkg.version = version;
-    });
+    // Write updated server.json
+    await writeFile(
+      serverJsonPath,
+      JSON.stringify(serverJson, null, 2) + "\n",
+      "utf8",
+    );
+
+    console.log(`✓ Synced version ${version} to server.json`);
+  } catch (error) {
+    console.error("Error syncing version:", error.message);
+    process.exit(1);
   }
-
-  // Write updated server.json
-  writeFileSync(serverJsonPath, JSON.stringify(serverJson, null, 2) + "\n");
-
-  console.log(`✓ Synced version ${version} to server.json`);
-} catch (error) {
-  console.error("Error syncing version:", error.message);
-  process.exit(1);
 }
+
+await syncVersion();
