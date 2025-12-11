@@ -41,7 +41,13 @@ Update your MCP configuration file adding the `inputs` key to your MCP configura
 ```json
 {
   "servers": {
-    ...
+    "dx": {
+      "url": "https://api.dx.pagopa.it/mcp",
+      "type": "http",
+      "headers": {
+        "x-gh-pat": "${input:github_mcp_pat}"
+      }
+    }
   },
   "inputs": [
     {

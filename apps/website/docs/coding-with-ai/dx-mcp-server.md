@@ -54,7 +54,13 @@ configuration as follows:
 ```json
 {
   "servers": {
-    ...
+    "dx": {
+      "url": "https://api.dx.pagopa.it/mcp",
+      "type": "http",
+      "headers": {
+        "x-gh-pat": "${input:github_mcp_pat}"
+      }
+    }
   },
   "inputs": [
     {
