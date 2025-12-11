@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [200a33b]
+- Updated dependencies [49a0087]
+  - @pagopa/monorepo-generator@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
