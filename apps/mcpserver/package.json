@@ -2,7 +2,7 @@
   "name": "@pagopa/dx-mcpserver",
   "version": "0.0.9",
   "type": "module",
-  "description": "An MCP server that support developers using DX tools.",
+  "description": "An MCP server that supports developers using DX tools.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -42,6 +42,6 @@
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "version": "changeset version && node ./scripts/sync-version.js && pnpm i --lockfile-only"
+    "version": "node ./scripts/sync-version.js"
   }
 }
