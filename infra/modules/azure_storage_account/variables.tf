@@ -72,7 +72,7 @@ variable "force_public_network_access_enabled" {
 # Infrastructure encryption should be managed through proper use case configuration instead of overrides.
 variable "override_infrastructure_encryption" {
   type        = bool
-  description = "Override to disable infrastructure encryption. Useful for audit use case when infrastructure encryption needs to be disabled despite the default configuration."
+  description = "When set to true, disables infrastructure encryption even if the use case configuration would enable it. Useful for audit use case to prevent storage account recreation when infrastructure encryption was enabled by default."
   default     = false
 }
 
