@@ -136,6 +136,7 @@ const createGitHubRepositoryWithTerraform = (answers: Answers) =>
       cwd: resolve(answers.repoName, "infra", "repository"),
       environment: {
         NO_COLOR: 1,
+        TF_CLI_ARGS_apply: "-auto-approve",
         TF_IN_AUTOMATION: 1,
         TF_INPUT: 0,
       },
