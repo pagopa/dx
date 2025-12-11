@@ -117,7 +117,7 @@ const initializeTerraformBackend = (answers: Answers) =>
     "Terraform backend initialized successfully!",
     "Failed to initialize Terraform backend.",
     $({
-      cwd: resolve(answers.repoSrc, answers.repoName, "infra", "repository"),
+      cwd: resolve(answers.repoName, "infra", "repository"),
       environment: {
         NO_COLOR: 1,
         TF_IN_AUTOMATION: 1,
@@ -133,7 +133,7 @@ const createGitHubRepositoryWithTerraform = (answers: Answers) =>
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
     $({
-      cwd: resolve(answers.repoSrc, answers.repoName, "infra", "repository"),
+      cwd: resolve(answers.repoName, "infra", "repository"),
       environment: {
         NO_COLOR: 1,
         TF_IN_AUTOMATION: 1,
