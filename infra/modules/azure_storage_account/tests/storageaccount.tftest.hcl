@@ -745,3 +745,72 @@ run "immutability_policy_state_override_plan" {
     error_message = "Immutability policy state should respect explicit variable override"
   }
 }
+
+# @deprecated: This test validates the override_infrastructure_encryption variable which will be removed in next major version
+run "audit_with_infrastructure_encryption_override_plan" {
+  command = plan
+
+  variables {
+    environment         = run.setup_tests.environment
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "audit"
+    secondary_location  = "westeurope"
+    subnet_pep_id       = run.setup_tests.pep_id
+
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = run.setup_tests.kv_id
+    }
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_workspace_id
+    }
+
+    audit_retention_days = 365
+
+    # Override infrastructure encryption for audit use case
+    override_infrastructure_encryption = true
+
+    subservices_enabled = {
+      blob  = true
+      file  = false
+      queue = false
+      table = false
+    }
+  }
+
+  # Test that infrastructure encryption is disabled when override is set
+  assert {
+    condition     = azurerm_storage_account.this.infrastructure_encryption_enabled == false
+    error_message = "Infrastructure encryption should be disabled when override_infrastructure_encryption is true"
+  }
+
+  # Verify other audit settings remain unchanged
+  assert {
+    condition     = azurerm_storage_account.this.default_to_oauth_authentication == true
+    error_message = "Audit storage must still default to OAuth authentication even with encryption override"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.min_tls_version == "TLS1_2"
+    error_message = "Audit storage must still enforce TLS 1.2 even with encryption override"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.https_traffic_only_enabled == true
+    error_message = "Audit storage must still enforce HTTPS-only traffic even with encryption override"
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.immutability_policy[0].state == "Unlocked"
+    error_message = "Audit storage must still have immutability policy even with encryption override"
+  }
+
+  assert {
+    condition     = azurerm_storage_management_policy.lifecycle_audit[0] != null
+    error_message = "Audit storage must still have lifecycle management policy even with encryption override"
+  }
+}
