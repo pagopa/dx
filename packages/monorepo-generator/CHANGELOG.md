@@ -1,5 +1,13 @@
 # @pagopa/monorepo-generator
 
+## 0.12.0
+
+### Patch Changes
+
+- 9998df5: Add the helper that converts a string containing a number into a two digits string.
+- 5399a25: Add the `use_azuread_auth` property to the Azure backend configuration.
+- 9998df5: Export the `Answers` type and its Zod schema
+
 ## 0.11.2
 
 ### Patch Changes
