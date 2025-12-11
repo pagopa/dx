@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.10
+
+### Patch Changes
+
+- 62b11e5: Add button to install the DX MCP server in VS Code
+
 ## 0.0.9
 
 ### Patch Changes
