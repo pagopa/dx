@@ -58,7 +58,7 @@ describe("readFileAndDecode", () => {
     const result = await readFileAndDecode("invalid.json", testSchema);
 
     expect(result).toStrictEqual(
-      err(new Error("File content is not valid for the given schema")),
+      err(new Error("Input is not valid for the given schema")),
     );
     expect(spy).toHaveBeenCalledWith("invalid.json", "utf-8");
   });
