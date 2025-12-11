@@ -18,13 +18,13 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 ## Use cases Comparison
 
-| Use case           | Description                                                                                                                 | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
-| `development`      | Ideal for lightweight workloads, testing, and development.                                                                  | No     | No                         | LRS                     | Standard     |
-| `default`          | Suitable for production with moderate to high performance needs.                                                            | Yes    | No                         | ZRS                     | Standard     |
-| `audit`            | For storing audit logs with high security and long-term retention (default: 1 year)                                         | Yes    | No                         | ZRS + secondary replica | Standard     |
-| `delegated_access` | For sharing files externally, forcing secure access patterns.                                                               | Yes    | Yes                        | ZRS                     | Standard     |
-| `archive`          | For long-term, low-cost backup and data archiving.                                                                          | No     | No                         | LRS + secondary replica | Standard     |
+| Use case           | Description                                                                         | Alerts | Advanced Threat Protection | Replication Type        | Account Tier |
+| ------------------ | ----------------------------------------------------------------------------------- | ------ | -------------------------- | ----------------------- | ------------ |
+| `development`      | Ideal for lightweight workloads, testing, and development.                          | No     | No                         | LRS                     | Standard     |
+| `default`          | Suitable for production with moderate to high performance needs.                    | Yes    | No                         | ZRS                     | Standard     |
+| `audit`            | For storing audit logs with high security and long-term retention (default: 1 year) | Yes    | No                         | ZRS + secondary replica | Standard     |
+| `delegated_access` | For sharing files externally, forcing secure access patterns.                       | Yes    | Yes                        | ZRS                     | Standard     |
+| `archive`          | For long-term, low-cost backup and data archiving.                                  | No     | No                         | LRS + secondary replica | Standard     |
 
 ## Important Considerations for CDN Origin
 
@@ -67,18 +67,18 @@ The `audit` use case is specifically designed for storing audit logs with **full
 
 ### Compliance Features Matrix
 
-| Requirement                   | Implementation                                                         | Status          |
-| ----------------------------- | ---------------------------------------------------------------------- | --------------- |
-| **Encryption at Rest**        | Customer-Managed Keys (AES-256) with Azure Key Vault                   | ✅ Mandatory    |
-| **Encryption in Transit**     | TLS 1.2 minimum, HTTPS-only traffic                                    | ✅ Mandatory    |
-| **Infrastructure Encryption** | Double encryption (platform + infrastructure)                          | ✅ Mandatory    |
-| **Immutability (WORM)**       | Time-based retention policy (Unlocked initially, lock post-deployment) | ✅ Mandatory    |
-| **Access Logging**            | Diagnostic settings for control & data plane                           | ✅ Mandatory    |
-| **Time Synchronization**      | Azure PaaS automatic synchronization                                   | ✅ Built-in     |
-| **Geo-Redundancy**            | Custom secondary replica with object replication                       | ✅ Enabled      |
-| **Lifecycle Management**      | Automated Hot→Cool→Cold→Delete policy                                  | ✅ Configurable |
-| **Access Control**            | OAuth authentication default, cross-tenant replication disabled        | ✅ Enforced     |
-| **Data Retention**            | Configurable (default: 365 days / 12 months, aligns with PagoPA standard)           | ✅ Configurable |
+| Requirement                   | Implementation                                                            | Status          |
+| ----------------------------- | ------------------------------------------------------------------------- | --------------- |
+| **Encryption at Rest**        | Customer-Managed Keys (AES-256) with Azure Key Vault                      | ✅ Mandatory    |
+| **Encryption in Transit**     | TLS 1.2 minimum, HTTPS-only traffic                                       | ✅ Mandatory    |
+| **Infrastructure Encryption** | Double encryption (platform + infrastructure)                             | ✅ Mandatory    |
+| **Immutability (WORM)**       | Time-based retention policy (Unlocked initially, lock post-deployment)    | ✅ Mandatory    |
+| **Access Logging**            | Diagnostic settings for control & data plane                              | ✅ Mandatory    |
+| **Time Synchronization**      | Azure PaaS automatic synchronization                                      | ✅ Built-in     |
+| **Geo-Redundancy**            | Custom secondary replica with object replication                          | ✅ Enabled      |
+| **Lifecycle Management**      | Automated Hot→Cool→Cold→Delete policy                                     | ✅ Configurable |
+| **Access Control**            | OAuth authentication default, cross-tenant replication disabled           | ✅ Enforced     |
+| **Data Retention**            | Configurable (default: 365 days / 12 months, aligns with PagoPA standard) | ✅ Configurable |
 
 ### Audit Use Case Configuration Example
 
@@ -197,6 +197,12 @@ az storage account immutability-policy update \
 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory, and an audit specific example can be found in the [example/audit-compliance](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/audit-compliance) directory.
 
+## Deprecation Notice
+
+⚠️ **`override_infrastructure_encryption` variable is deprecated and will be removed in v3.0.0.**
+
+This variable was introduced as a temporary workaround to prevent storage account recreation when upgrading from versions before 2.1.0, where infrastructure encryption was not enabled by default for the `audit` use case. New deployments should not use this variable.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -258,6 +264,7 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_force_public_network_access_enabled"></a> [force\_public\_network\_access\_enabled](#input\_force\_public\_network\_access\_enabled) | Allows public network access. Defaults to 'false'. | `bool` | `false` | no |
 | <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Defines network rules for the storage account:<br/>- `default_action`: Default action when no rules match ('Deny' or 'Allow').<br/>- `bypass`: Services bypassing restrictions (valid values: 'Logging', 'Metrics', 'AzureServices').<br/>- `ip_rules`: List of IPv4 addresses or CIDR ranges.<br/>- `virtual_network_subnet_ids`: List of subnet resource IDs.<br/>Defaults to denying all traffic unless explicitly allowed. | <pre>object({<br/>    default_action             = string<br/>    bypass                     = list(string)<br/>    ip_rules                   = list(string)<br/>    virtual_network_subnet_ids = list(string)<br/>  })</pre> | <pre>{<br/>  "bypass": [],<br/>  "default_action": "Deny",<br/>  "ip_rules": [],<br/>  "virtual_network_subnet_ids": []<br/>}</pre> | no |
+| <a name="input_override_infrastructure_encryption"></a> [override\_infrastructure\_encryption](#input\_override\_infrastructure\_encryption) | When set to true, disables infrastructure encryption even if the use case configuration would enable it. Useful for audit use case to prevent storage account recreation when infrastructure encryption was enabled by default. | `bool` | `false` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Resource group for the private DNS zone. Defaults to the virtual network's resource group. | `string` | `null` | no |
 | <a name="input_queues"></a> [queues](#input\_queues) | Queues to be created. | `list(string)` | `[]` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the storage account and related resources will be deployed. | `string` | n/a | yes |

@@ -68,7 +68,11 @@ locals {
     }
   }
 
-  tier_features = local.use_cases[var.use_case]
+  # @deprecated: Remove override_infrastructure_encryption logic in next major version
+  tier_features = merge(
+    local.use_cases[var.use_case],
+    var.override_infrastructure_encryption ? { infrastructure_encryption_enabled = false } : {}
+  )
 
   force_public_network_access_enabled = var.force_public_network_access_enabled || var.use_case == "delegated_access"
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
