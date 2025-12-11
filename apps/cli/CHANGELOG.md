@@ -1,5 +1,18 @@
 # @pagopa/dx-cli
 
+## 0.12.0
+
+### Minor Changes
+
+- 9998df5: Refactor the `init` command to show a summary of the execution
+
+### Patch Changes
+
+- Updated dependencies [9998df5]
+- Updated dependencies [5399a25]
+- Updated dependencies [9998df5]
+  - @pagopa/monorepo-generator@0.12.0
+
 ## 0.11.2
 
 ### Patch Changes
