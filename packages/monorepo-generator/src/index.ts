@@ -54,7 +54,6 @@ export const answersSchema = z.object({
   repoDescription: z.string().optional(),
   repoName: trimmedString.min(1, "Repository name cannot be empty"),
   repoOwner: trimmedString.default("pagopa"),
-  repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
   tfStateResourceGroupName: z.string().default("dx-d-itn-terraform-rg-01"),
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
@@ -76,11 +75,6 @@ const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
 };
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
-  {
-    default: process.cwd(),
-    message: "Where do you want to create the repository?",
-    name: "repoSrc",
-  },
   {
     message: "What is the repository name?",
     name: "repoName",
@@ -204,7 +198,7 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: templatesPath,
-    destination: "{{repoSrc}}/{{repoName}}",
+    destination: "{{repoName}}",
     globOptions: { dot: true, onlyFiles: true },
     templateFiles: path.join(templatesPath, ".*"),
     type: "addMany",
@@ -212,13 +206,13 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/.github/workflows`,
-    destination: "{{repoSrc}}/{{repoName}}/.github/workflows",
+    destination: "{{repoName}}/.github/workflows",
     globOptions: { dot: true, onlyFiles: true },
     templateFiles: path.join(templatesPath, ".github", "workflows", "*.hbs"),
     type: "addMany",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/.gitignore",
+    path: "{{repoName}}/.gitignore",
     transform: (content) =>
       content
         .trimEnd()
@@ -231,17 +225,17 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
 
 const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   {
-    path: "{{repoSrc}}/{{repoName}}/turbo.json",
+    path: "{{repoName}}/turbo.json",
     templateFile: path.join(templatesPath, "turbo.json"),
     type: "add",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/package.json",
+    path: "{{repoName}}/package.json",
     templateFile: path.join(templatesPath, "package.json.hbs"),
     type: "add",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/README.md",
+    path: "{{repoName}}/README.md",
     templateFile: path.join(templatesPath, "README.md.hbs"),
     type: "add",
   },
@@ -251,7 +245,7 @@ const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
-    destination: "{{repoSrc}}/{{repoName}}/infra/repository",
+    destination: "{{repoName}}/infra/repository",
     templateFiles: path.join(templatesPath, "infra", "repository", "*.tf.hbs"),
     type: "addMany",
   },
@@ -300,7 +294,7 @@ const getTerraformEnvironmentFiles =
         envShort: toEnvShort(env),
         instanceNumber: envInstanceNumber,
       },
-      destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
+      destination: `{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
         templatesPath,
         "infra",
