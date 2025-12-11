@@ -1,5 +1,15 @@
 # @pagopa/monorepo-generator
 
+## 0.13.0
+
+### Minor Changes
+
+- 49a0087: Remove repoSrc
+
+### Patch Changes
+
+- 200a33b: Fix format of module's version
+
 ## 0.12.0
 
 ### Patch Changes

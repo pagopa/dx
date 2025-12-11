@@ -1,5 +1,11 @@
 # docs
 
+## 0.11.1
+
+### Patch Changes
+
+- 62b11e5: Add button to install the DX MCP server in VS Code
+
 ## 0.11.0
 
 ### Minor Changes
