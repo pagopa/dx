@@ -8,6 +8,7 @@ import { Command } from "commander";
 import { $ } from "execa";
 import { okAsync, Result, ResultAsync } from "neverthrow";
 import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
+import { resolve } from "node:path";
 import { oraPromise } from "ora";
 
 import { decode } from "../../zod/index.js";
@@ -110,11 +111,51 @@ const checkPreconditions = (): ResultAsync<void, Error> =>
     )
     .map(() => undefined);
 
+const initializeTerraformBackend = (answers: Answers) =>
+  withSpinner(
+    "Initializing Terraform backend...",
+    "Terraform backend initialized successfully!",
+    "Failed to initialize Terraform backend.",
+    $({
+      cwd: resolve(answers.repoSrc, answers.repoName, "infra", "repository"),
+      environment: {
+        NO_COLOR: 1,
+        TF_IN_AUTOMATION: 1,
+        TF_INPUT: 0,
+      },
+      shell: true,
+    })`terraform init`,
+  ).map(() => answers);
+
+const createGitHubRepositoryWithTerraform = (answers: Answers) =>
+  withSpinner(
+    "Creating GitHub repository with Terraform...",
+    "GitHub repository created successfully!",
+    "Failed to create GitHub repository.",
+    $({
+      cwd: resolve(answers.repoSrc, answers.repoName, "infra", "repository"),
+      environment: {
+        NO_COLOR: 1,
+        TF_IN_AUTOMATION: 1,
+        TF_INPUT: 0,
+      },
+      shell: true,
+    })`terraform apply`,
+  ).map(() => answers);
+
+const createRemoteRepository = (
+  answers: Answers,
+): ResultAsync<Answers, Error> =>
+  initializeTerraformBackend(answers).andThen(
+    createGitHubRepositoryWithTerraform,
+  );
+
 // TODO: Create GitHub repository pushing the generated code
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Answers, Error> => okAsync(answers);
+): ResultAsync<Answers, Error> =>
+  createRemoteRepository(answers).orElse(() => okAsync(answers));
 
 export const makeInitCommand = (): Command =>
   new Command()
