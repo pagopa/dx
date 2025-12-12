@@ -19,6 +19,7 @@ import { getSecureParameter } from "../utils/ssm.js";
 
 const MCP_AUTH_TYPE = process.env.MCP_AUTH_TYPE?.toLowerCase() || "oauth";
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:8080";
+const TOKENS_DYNAMODB_TABLE_NAME = process.env.TOKENS_DYNAMODB_TABLE_NAME;
 
 /**
  * Retrieves the GitHub client ID from either:
@@ -73,4 +74,5 @@ export const authConfig = {
   getGitHubClientSecret,
   MCP_AUTH_TYPE,
   MCP_SERVER_URL,
+  TOKENS_DYNAMODB_TABLE_NAME,
 };

@@ -3,8 +3,8 @@ import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { FastMCP } from "fastmcp";
 
 import packageJson from "../package.json" with { type: "json" };
-import { verifyGithubUser } from "./auth/github.js";
-import { initializeOAuthProvider } from "./auth/oauth.js";
+import { startPATVerificationFlow } from "./auth/github.js";
+import { initializeOAuthProvider, startOAuthFlow } from "./auth/oauth.js";
 import { authConfig } from "./config/auth.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
@@ -27,45 +27,32 @@ logger.info(`Server URL: ${authConfig.MCP_SERVER_URL}`);
 let authProxy;
 if (authConfig.MCP_AUTH_TYPE === "oauth") {
   try {
-    logger.info("Initializing OAuth provider...");
+    logger.debug("Initializing OAuth provider...");
     authProxy = await initializeOAuthProvider();
-    logger.info("OAuth provider initialized successfully");
+    logger.debug("OAuth provider initialized successfully");
   } catch (error) {
     logger.error("Failed to initialize OAuth provider", { error });
     throw error;
   }
 } else {
-  logger.info(
+  logger.debug(
     `OAuth not enabled. Using auth type: ${authConfig.MCP_AUTH_TYPE}`,
   );
 }
 
 const server = new FastMCP({
-  authenticate:
-    authConfig.MCP_AUTH_TYPE === "pat"
-      ? async (request) => {
-          const authHeader = request.headers["x-gh-pat"];
-          const apiKey =
-            typeof authHeader === "string"
-              ? authHeader
-              : Array.isArray(authHeader)
-                ? authHeader[0]
-                : undefined;
-
-          if (!apiKey || !(await verifyGithubUser(apiKey))) {
-            throw new Response(null, {
-              status: 401,
-              statusText: "Unauthorized",
-            });
-          }
-
-          // The returned object is accessible in the `context.session`.
-          return {
-            id: 1,
-            token: apiKey,
-          };
-        }
-      : undefined,
+  authenticate: async (request) => {
+    if (authConfig.MCP_AUTH_TYPE === "pat") {
+      return await startPATVerificationFlow(request);
+    } else if (authConfig.MCP_AUTH_TYPE === "oauth") {
+      return await startOAuthFlow(request);
+    } else {
+      logger.warn(
+        `Unknown authentication type: ${authConfig.MCP_AUTH_TYPE}. Proceeding without authentication.`,
+      );
+      return undefined;
+    }
+  },
   instructions: serverInstructions,
   logger: logger,
   name: "PagoPA DX Knowledge Retrieval MCP Server",
@@ -74,6 +61,29 @@ const server = new FastMCP({
       ? {
           authorizationServer: authProxy?.getAuthorizationServerMetadata(),
           enabled: true,
+          protectedResource: {
+            authorizationServers: [
+              `${authProxy?.getAuthorizationServerMetadata().issuer}`,
+              `${authConfig.MCP_SERVER_URL}/.well-known/oauth-authorization-server`,
+            ],
+            bearerMethodsSupported: ["header"],
+            resource: `${authConfig.MCP_SERVER_URL}/mcp`,
+            resourceName: "PagoPA DX MCP Server",
+            scopesSupported: [
+              "gist",
+              "notifications",
+              "public_repo",
+              "repo",
+              "repo:status",
+              "repo_deployment",
+              "user",
+              "user:email",
+              "user:follow",
+              "read:gpg_key",
+              "read:org",
+              "project",
+            ],
+          },
           proxy: authProxy,
         }
       : undefined,
@@ -111,13 +121,13 @@ server.start({
   transportType: "httpStream",
 });
 
-logger.info("Server started successfully on http://localhost:8080");
-logger.info("MCP endpoint: http://localhost:8080/mcp");
-logger.info(
+logger.debug(`Server started successfully on ${authConfig.MCP_SERVER_URL}`);
+logger.debug(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
+logger.debug(
   `OAuth enabled: ${authConfig.MCP_AUTH_TYPE === "oauth" && authProxy ? "YES" : "NO"}`,
 );
 if (authConfig.MCP_AUTH_TYPE === "oauth") {
-  logger.info(
-    "OAuth discovery: http://localhost:8080/.well-known/oauth-authorization-server",
+  logger.debug(
+    `OAuth discovery: ${authConfig.MCP_SERVER_URL}/.well-known/oauth-authorization-server`,
   );
 }
