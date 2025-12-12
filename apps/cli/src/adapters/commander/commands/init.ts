@@ -6,11 +6,12 @@ import loadMonorepoScaffolder, {
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
-import { okAsync, Result, ResultAsync } from "neverthrow";
-import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
+import { okAsync, ResultAsync } from "neverthrow";
+import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
+import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
 
@@ -27,24 +28,6 @@ type Repository = {
   owner: string;
   url?: string;
 };
-
-const initPlop = () =>
-  ResultAsync.fromPromise(
-    nodePlop(),
-    () => new Error("Failed to initialize plop"),
-  );
-
-const getGenerator = (plopAPI: NodePlopAPI) =>
-  Result.fromThrowable(
-    plopAPI.getGenerator,
-    () => new Error("Generator not found"),
-  );
-
-const getPrompts = (generator: PlopGenerator) =>
-  ResultAsync.fromPromise(
-    generator.runPrompts(),
-    (cause) => new Error("Failed to run the generator prompts", { cause }),
-  );
 
 const withSpinner = <T>(
   text: string,
