@@ -141,26 +141,21 @@ const createRemoteRepository = ({
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<InitResult, Error> => {
+): ResultAsync<Repository, Error> => createRemoteRepository(answers);
+
+const makeInitResult = (
+  answers: Answers,
+  repository: Repository,
+): InitResult => {
   const csp = {
-    location: answers.csp === "aws" ? answers.awsRegion : answers.azureLocation,
+    location:
+      answers.csp === "azure" ? answers.azureLocation : answers.awsRegion,
     name: answers.csp,
   };
-  return createRemoteRepository(answers)
-    .map((repository) => ({
-      csp,
-      repository,
-    }))
-    .orElse(() =>
-      // Terraform apply failed.
-      okAsync({
-        csp,
-        repository: {
-          name: answers.repoName,
-          owner: answers.repoOwner,
-        },
-      }),
-    );
+  return {
+    csp,
+    repository,
+  };
 };
 
 export const makeInitCommand = (): Command =>
@@ -187,7 +182,11 @@ export const makeInitCommand = (): Command =>
                 // Run the generator with the provided answers (this will create the files locally)
                 .andThen(runGeneratorActions(generator)),
             )
-            .andThen(handleNewGitHubRepository)
+            .andThen((answers) =>
+              handleNewGitHubRepository(answers).map((repository) =>
+                makeInitResult(answers, repository),
+              ),
+            )
             .match(displaySummary, exitWithError(this));
         }),
     );
