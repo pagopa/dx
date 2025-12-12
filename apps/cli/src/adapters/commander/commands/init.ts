@@ -158,10 +158,79 @@ const createRemoteRepository = ({
       name: repoName,
       owner: repoOwner,
       url: `https://github.com/${repoOwner}/${repoName}`,
-    }));
+    }))
+    .orElse(() =>
+      okAsync({
+        name: repoName,
+        owner: repoOwner,
+      }),
+    );
 };
 
-// TODO: Create GitHub repository pushing the generated code
+const initializeGitRepository = (repoFolder: string) =>
+  withSpinner(
+    "Initializing git repository...",
+    "Git repository initialized successfully!",
+    "Failed to initialize git repository.",
+    $({ cwd: repoFolder, shell: true })`git init`,
+  );
+
+const addAllChanges = (repoFolder: string) =>
+  withSpinner(
+    "Adding changes to git...",
+    "Changes added successfully!",
+    "Failed to add changes to git.",
+    $({ cwd: repoFolder, shell: true })`git add .`,
+  );
+
+const commitChanges = (repoFolder: string) =>
+  withSpinner(
+    "Committing changes...",
+    "Changes committed successfully!",
+    "Failed to commit changes.",
+    $({
+      cwd: repoFolder,
+      shell: true,
+    })`git commit --no-gpg-sign -m "Scaffold workspace"`,
+  );
+
+const setRemoteOrigin = (repoFolder: string, { name, owner }: Repository) =>
+  withSpinner(
+    "Setting remote origin...",
+    "Remote origin set successfully!",
+    "Failed to set remote origin.",
+    $({
+      cwd: repoFolder,
+      shell: true,
+    })`git remote add origin git@github.com:${owner}/${name}.git`,
+  );
+
+const createAndPushBranch = (repoFolder: string, branchName: string) =>
+  withSpinner(
+    `Pushing changes to branch '${branchName}'...`,
+    `Changes pushed to branch '${branchName}' successfully!`,
+    `Failed to push changes to branch '${branchName}'.`,
+    $({
+      cwd: repoFolder,
+      shell: true,
+    })`git branch -M ${branchName} && git push -u origin ${branchName}`,
+  );
+
+const pushLocalChangesToRemoteRepository = (
+  repository: Repository,
+): ResultAsync<Repository, Error> => {
+  const { name } = repository;
+  const repoFolder = path.resolve(name);
+  const branchName = "features/scaffold-workspace";
+
+  return initializeGitRepository(repoFolder)
+    .andThen(() => addAllChanges(repoFolder))
+    .andThen(() => commitChanges(repoFolder))
+    .andThen(() => setRemoteOrigin(repoFolder, repository))
+    .andThen(() => createAndPushBranch(repoFolder, branchName))
+    .map(() => repository);
+};
+
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
@@ -171,6 +240,7 @@ const handleNewGitHubRepository = (
     name: answers.csp,
   };
   return createRemoteRepository(answers)
+    .andThen(pushLocalChangesToRemoteRepository)
     .map((repository) => ({
       csp,
       repository,
