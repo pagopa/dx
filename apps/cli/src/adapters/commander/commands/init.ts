@@ -6,30 +6,29 @@ import loadMonorepoScaffolder, {
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
-import { okAsync, Result, ResultAsync } from "neverthrow";
-import nodePlop, { NodePlopAPI, PlopGenerator } from "node-plop";
+import { okAsync, ResultAsync } from "neverthrow";
+import { PlopGenerator } from "node-plop";
+import * as path from "node:path";
 import { oraPromise } from "ora";
 
+import { tf$ } from "../../execa/terraform.js";
+import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
 
-const initPlop = () =>
-  ResultAsync.fromPromise(
-    nodePlop(),
-    () => new Error("Failed to initialize plop"),
-  );
+type InitResult = {
+  csp: {
+    location: string;
+    name: string;
+  };
+  repository: Repository;
+};
 
-const getGenerator = (plopAPI: NodePlopAPI) =>
-  Result.fromThrowable(
-    plopAPI.getGenerator,
-    () => new Error("Generator not found"),
-  );
-
-const getPrompts = (generator: PlopGenerator) =>
-  ResultAsync.fromPromise(
-    generator.runPrompts(),
-    (cause) => new Error("Failed to run the generator prompts", { cause }),
-  );
+type Repository = {
+  name: string;
+  owner: string;
+  url?: string;
+};
 
 const withSpinner = <T>(
   text: string,
@@ -61,26 +60,22 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
     generator.runActions(answers),
   ).map(() => answers);
 
-const displaySummary = (answers: Answers) => {
-  const { csp, repoName, repoOwner } = answers;
+const displaySummary = (initResult: InitResult) => {
+  const { csp, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
-  console.log(`- Name: ${chalk.cyan(repoName)}`);
-  console.log(`- Cloud Service Provider: ${chalk.cyan(csp)}`);
-  const cspLocation =
-    csp === "azure" ? answers.azureLocation : answers.awsRegion;
-  console.log(`- CSP location: ${chalk.cyan(cspLocation)}`);
-  console.log(
-    `- GitHub Repository: ${chalk.cyan(`https://github.com/${repoOwner}/${repoName}`)}\n`,
-  );
+  console.log(`- Name: ${chalk.cyan(repository.name)}`);
+  console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
+  console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
 
-  console.log(chalk.green.bold("\nNext Steps:"));
-  console.log(`1. Review the Pull Request in the GitHub repository.`);
-  console.log(
-    `2. Wait for the approval on eng-azure-authorization and then merge both PRs.`,
-  );
-  console.log(
-    `3. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
-  );
+  if (repository.url) {
+    console.log(`- GitHub Repository: ${chalk.cyan(repository.url)}\n`);
+  } else {
+    console.log(
+      chalk.yellow(
+        `\n⚠️  GitHub repository may not have been created automatically.`,
+      ),
+    );
+  }
 };
 
 const checkGhCliIsInstalled = (
@@ -95,7 +90,13 @@ const checkGhCliIsLoggedIn = (
   failText: string,
 ) => withSpinner(text, successText, failText, $`gh auth status`);
 
-const checkPreconditions = (): ResultAsync<void, Error> =>
+const checkTerraformCliIsInstalled = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, $`terraform -version`);
+
+const checkPreconditions = () =>
   checkGhCliIsInstalled(
     "Checking GitHub CLI is installed...",
     "GitHub CLI is installed!",
@@ -108,13 +109,54 @@ const checkPreconditions = (): ResultAsync<void, Error> =>
         "GitHub CLI is not logged in.",
       ),
     )
-    .map(() => undefined);
+    .andThen(() =>
+      checkTerraformCliIsInstalled(
+        "Checking Terraform CLI is installed...",
+        "Terraform CLI is installed!",
+        "Terraform CLI is not installed.",
+      ),
+    );
+
+const createRemoteRepository = ({
+  repoName,
+  repoOwner,
+}: Answers): ResultAsync<Repository, Error> => {
+  const cwd = path.resolve(repoName, "infra", "repository");
+  const terraformInitPromise = tf$({
+    cwd,
+  })`terraform init`.then(() => tf$({ cwd })`terraform apply -auto-approve`);
+  return withSpinner(
+    "Creating GitHub repository...",
+    "GitHub repository created successfully!",
+    "Failed to create GitHub repository.",
+    terraformInitPromise,
+  ).map(() => ({
+    name: repoName,
+    owner: repoOwner,
+    url: `https://github.com/${repoOwner}/${repoName}`,
+  }));
+};
 
 // TODO: Create GitHub repository pushing the generated code
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Answers, Error> => okAsync(answers);
+): ResultAsync<Repository, Error> => createRemoteRepository(answers);
+
+const makeInitResult = (
+  answers: Answers,
+  repository: Repository,
+): InitResult => {
+  const csp = {
+    location:
+      answers.csp === "azure" ? answers.azureLocation : answers.awsRegion,
+    name: answers.csp,
+  };
+  return {
+    csp,
+    repository,
+  };
+};
 
 export const makeInitCommand = (): Command =>
   new Command()
@@ -130,7 +172,6 @@ export const makeInitCommand = (): Command =>
             .andThen(initPlop)
             .andTee(loadMonorepoScaffolder)
             .andThen((plop) => getGenerator(plop)(PLOP_MONOREPO_GENERATOR_NAME))
-            // Before running prompts, check the preconditions are met (like gh CLI installed, user logged in, etc.)
             .andThen((generator) =>
               // Ask the user the questions defined in the plop generator
               getPrompts(generator)
@@ -141,7 +182,11 @@ export const makeInitCommand = (): Command =>
                 // Run the generator with the provided answers (this will create the files locally)
                 .andThen(runGeneratorActions(generator)),
             )
-            .andThen(handleNewGitHubRepository)
+            .andThen((answers) =>
+              handleNewGitHubRepository(answers).map((repository) =>
+                makeInitResult(answers, repository),
+              ),
+            )
             .match(displaySummary, exitWithError(this));
         }),
     );
