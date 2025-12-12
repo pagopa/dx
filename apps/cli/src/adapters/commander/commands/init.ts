@@ -11,7 +11,7 @@ import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
-import { tf$ } from "../../execa/index.js";
+import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
