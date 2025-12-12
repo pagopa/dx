@@ -27,6 +27,7 @@ resource "aws_lambda_function" "server" {
       JWT_SECRET_SSM_PARAM                  = aws_ssm_parameter.jwt_secret.name
       MCP_SERVER_URL                        = "https://${var.dns.custom_domain_name}"
       TOKENS_DYNAMODB_TABLE_NAME            = aws_dynamodb_table.oauth_tokens.name
+      LOG_LEVEL                             = "info"
     }
   }
 

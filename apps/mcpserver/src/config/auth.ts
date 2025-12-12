@@ -21,6 +21,13 @@ const MCP_AUTH_TYPE = process.env.MCP_AUTH_TYPE?.toLowerCase() || "oauth";
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || "http://localhost:8080";
 const TOKENS_DYNAMODB_TABLE_NAME = process.env.TOKENS_DYNAMODB_TABLE_NAME;
 
+async function getEncryptionSecret(): Promise<string> {
+  return getSecureValue(
+    process.env.ENCRYPTION_SECRET_SSM_PARAM,
+    "ENCRYPTION_SECRET",
+  );
+}
+
 /**
  * Retrieves the GitHub client ID from either:
  * 1. SSM Parameter Store (if GITHUB_CLIENT_ID_SSM_PARAM is set)
@@ -49,6 +56,10 @@ async function getGitHubClientSecret(): Promise<string> {
   );
 }
 
+async function getJWTSecret(): Promise<string> {
+  return getSecureValue(process.env.JWT_SECRET_SSM_PARAM, "JWT_SECRET");
+}
+
 /**
  * Retrieves a secure parameter value from either:
  * 1. SSM Parameter Store (if the SSM parameter name is provided)
@@ -70,8 +81,10 @@ async function getSecureValue(
 }
 
 export const authConfig = {
+  getEncryptionSecret,
   getGitHubClientId,
   getGitHubClientSecret,
+  getJWTSecret,
   MCP_AUTH_TYPE,
   MCP_SERVER_URL,
   TOKENS_DYNAMODB_TABLE_NAME,
