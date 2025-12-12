@@ -28,7 +28,7 @@
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.12.2",
-    "fastmcp": "link:../../../forks/fastmcp",
+    "fastmcp": "^3.24.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
