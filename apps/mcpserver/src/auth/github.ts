@@ -1,16 +1,48 @@
 import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
+import { IncomingMessage } from "http";
 import { z } from "zod/v4";
 
 const organizationsSchema = z
-  .array(z.string().nonempty())
-  .nonempty()
-  .transform((orgs) => orgs.map((org) => org.trim()))
+  .string()
+  .transform((s) => s.split(",").map((v) => v.trim()))
+  .pipe(z.array(z.string().nonempty()).nonempty())
   .catch(["pagopa"]);
 
 const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
   process.env.REQUIRED_ORGANIZATIONS,
 );
+
+export async function startPATVerificationFlow(
+  request: IncomingMessage,
+): Promise<
+  | undefined
+  | {
+      id: number;
+      token: string;
+    }
+> {
+  const authHeader = request.headers["x-gh-pat"];
+  const apiKey =
+    typeof authHeader === "string"
+      ? authHeader
+      : Array.isArray(authHeader)
+        ? authHeader[0]
+        : undefined;
+
+  if (!apiKey || !(await verifyGithubUser(apiKey))) {
+    throw new Response(null, {
+      status: 401,
+      statusText: "Unauthorized",
+    });
+  }
+
+  // The returned object is accessible in the `context.session`.
+  return {
+    id: 1,
+    token: apiKey,
+  };
+}
 
 /**
  * Verifies that a user, identified by a GitHub personal access token, is a member
