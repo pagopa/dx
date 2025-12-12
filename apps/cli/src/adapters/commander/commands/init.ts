@@ -11,6 +11,7 @@ import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
+import { tf$ } from "../../execa/index.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
@@ -116,49 +117,24 @@ const checkPreconditions = () =>
       ),
     );
 
-const initializeTerraformBackend = (tfFolder: string) =>
-  withSpinner(
-    "Initializing Terraform backend...",
-    "Terraform backend initialized successfully!",
-    "Failed to initialize Terraform backend.",
-    $({
-      cwd: tfFolder,
-      environment: {
-        NO_COLOR: 1,
-        TF_IN_AUTOMATION: 1,
-        TF_INPUT: 0,
-      },
-      shell: true,
-    })`terraform init`,
-  );
-
-const createGitHubRepositoryWithTerraform = (tfFolder: string) =>
-  withSpinner(
-    "Creating repository on GitHub...",
-    "Repository created on GitHub successfully!",
-    "Failed to create repository on GitHub.",
-    $({
-      cwd: tfFolder,
-      environment: {
-        NO_COLOR: 1,
-        TF_INPUT: 0,
-      },
-      shell: true,
-    })`terraform apply -auto-approve`,
-  );
-
 const createRemoteRepository = ({
   repoName,
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
-  const tfRepositoryFolder = path.resolve(repoName, "infra", "repository");
-  return initializeTerraformBackend(tfRepositoryFolder)
-    .andThen(() => createGitHubRepositoryWithTerraform(tfRepositoryFolder))
-    .map(() => ({
-      name: repoName,
-      owner: repoOwner,
-      url: `https://github.com/${repoOwner}/${repoName}`,
-    }));
+  const cwd = path.resolve(repoName, "infra", "repository");
+  const terraformInitPromise = tf$({
+    cwd,
+  })`terraform init`.then(() => tf$({ cwd })`terraform apply -auto-approve`);
+  return withSpinner(
+    "Creating GitHub repository...",
+    "GitHub repository created successfully!",
+    "Failed to create GitHub repository.",
+    terraformInitPromise,
+  ).map(() => ({
+    name: repoName,
+    owner: repoOwner,
+    url: `https://github.com/${repoOwner}/${repoName}`,
+  }));
 };
 
 // TODO: Create GitHub repository pushing the generated code
