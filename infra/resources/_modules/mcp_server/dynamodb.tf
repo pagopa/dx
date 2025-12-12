@@ -18,11 +18,6 @@ resource "aws_dynamodb_table" "oauth_tokens" {
     type = "S"
   }
 
-  attribute {
-    name = "expiresAt"
-    type = "N"
-  }
-
   # Time to Live (TTL) for automatic expiration
   ttl {
     attribute_name = "expiresAt"

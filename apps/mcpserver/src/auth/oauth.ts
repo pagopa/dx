@@ -44,7 +44,9 @@ export async function initializeOAuthProvider(): Promise<OAuthProxy> {
 
   authProxy = new OAuthProxy({
     baseUrl: authConfig.MCP_SERVER_URL,
-    jwtSigningKey: process.env.JWT_SECRET || "change-me-in-production",
+    encryptionKey: await authConfig.getEncryptionSecret(),
+    jwtSigningKey:
+      (await authConfig.getJWTSecret()) || "change-me-in-production",
     scopes: ["user"],
     tokenStorage: new DynamoDBStore({
       region: region,
@@ -76,7 +78,7 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
   const jwtIssuer = new JWTIssuer({
     audience: authConfig.MCP_SERVER_URL, // https://api.dx.pagopa.it
     issuer: authConfig.MCP_SERVER_URL,
-    signingKey: process.env.JWT_SECRET || "change-me-in-production",
+    signingKey: (await authConfig.getJWTSecret()) || "change-me-in-production",
   });
   const authHeader = request.headers["authorization"];
 
