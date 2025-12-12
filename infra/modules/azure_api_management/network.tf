@@ -1,6 +1,8 @@
 # Define the A Records for APIM
 
 resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
+  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.azure_api_net != null ? 0 : 1
+
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
@@ -11,6 +13,8 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
 }
 
 resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
+  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.management_azure_api_net != null ? 0 : 1
+
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.management_azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
@@ -21,6 +25,8 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
 }
 
 resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
+  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.scm_azure_api_net != null ? 0 : 1
+
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.scm_azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
