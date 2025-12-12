@@ -137,7 +137,6 @@ const createRemoteRepository = ({
   }));
 };
 
-// TODO: Create GitHub repository pushing the generated code
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
