@@ -12,6 +12,7 @@ import * as path from "node:path";
 import { oraPromise } from "ora";
 
 import { tf$ } from "../../execa/terraform.js";
+import { checkout, commit, push } from "../../git/index.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
@@ -137,10 +138,64 @@ const createRemoteRepository = ({
   }));
 };
 
+const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
+  const branchName = "features/scaffold-workspace";
+  const promise = $({
+    cwd,
+  })`git init`
+    .then(
+      () =>
+        $({
+          cwd,
+          shell: true,
+        })`echo "" > .gitkeep`,
+    )
+    .then(
+      () =>
+        $({
+          cwd,
+        })`git add .gitkeep`,
+    )
+    .then(() => commit(cwd, "First commit"))
+    .then(() => checkout(cwd, "main"))
+    .then(
+      () =>
+        $({
+          cwd,
+          shell: true,
+        })`git remote add origin git@github.com:${owner}/${name}.git`,
+    )
+    .then(() => push(cwd, "main"))
+    .then(() => checkout(cwd, branchName))
+    .then(
+      () =>
+        $({
+          cwd,
+        })`git add .`,
+    )
+    .then(() => commit(cwd, "Scaffold workspace"))
+    .then(() => push(cwd, branchName));
+
+  return withSpinner(
+    "Pushing code to GitHub...",
+    "Code pushed to GitHub successfully!",
+    "Failed to push code to GitHub.",
+    promise,
+  ).map(() => branchName);
+};
+
+const pushLocalChangesToRemoteRepository = (
+  repository: Repository,
+): ResultAsync<Repository, Error> => {
+  const repoFolder = path.resolve(repository.name);
+  return initializeGitRepository(repoFolder, repository).map(() => repository);
+};
+
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Repository, Error> => createRemoteRepository(answers);
+): ResultAsync<Repository, Error> =>
+  createRemoteRepository(answers).andThen(pushLocalChangesToRemoteRepository);
 
 const makeInitResult = (
   answers: Answers,
