@@ -165,9 +165,9 @@ jobs:
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_PSN_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_PSN_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_PSN_SUBSCRIPTION_ID }}
 
       - name: Check for existing staging slot
         id: query-staging-slot
@@ -231,9 +231,9 @@ jobs:
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_PSN_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_PSN_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_PSN_SUBSCRIPTION_ID }}
 
       - name: Deploy
         env:
@@ -321,9 +321,9 @@ jobs:
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
         env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_PSN_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_PSN_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_PSN_SUBSCRIPTION_ID }}
 
       - name: Swap Staging and Production Slots
         uses: pagopa/dx/actions/incremental-rollout@main
