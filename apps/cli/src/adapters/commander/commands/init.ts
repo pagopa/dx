@@ -116,55 +116,48 @@ const checkPreconditions = () =>
       ),
     );
 
-const initializeTerraformBackend = (tfFolder: string) =>
-  withSpinner(
-    "Initializing Terraform backend...",
-    "Terraform backend initialized successfully!",
-    "Failed to initialize Terraform backend.",
-    $({
-      cwd: tfFolder,
-      environment: {
-        NO_COLOR: 1,
-        TF_IN_AUTOMATION: 1,
-        TF_INPUT: 0,
-      },
-      shell: true,
-    })`terraform init`,
-  );
-
-const createGitHubRepositoryWithTerraform = (tfFolder: string) =>
-  withSpinner(
-    "Creating repository on GitHub...",
-    "Repository created on GitHub successfully!",
-    "Failed to create repository on GitHub.",
-    $({
-      cwd: tfFolder,
-      environment: {
-        NO_COLOR: 1,
-        TF_INPUT: 0,
-      },
-      shell: true,
-    })`terraform apply -auto-approve`,
-  );
-
 const createRemoteRepository = ({
   repoName,
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
   const tfRepositoryFolder = path.resolve(repoName, "infra", "repository");
-  return initializeTerraformBackend(tfRepositoryFolder)
-    .andThen(() => createGitHubRepositoryWithTerraform(tfRepositoryFolder))
-    .map(() => ({
-      name: repoName,
-      owner: repoOwner,
-      url: `https://github.com/${repoOwner}/${repoName}`,
-    }))
-    .orElse(() =>
-      okAsync({
-        name: repoName,
-        owner: repoOwner,
-      }),
-    );
+  const terraformApplyPromise = $({
+    cwd: tfRepositoryFolder,
+    environment: {
+      NO_COLOR: "1",
+      TF_IN_AUTOMATION: "1",
+      TF_INPUT: "0",
+    },
+    shell: true,
+  })`terraform init`.then(
+    () =>
+      $({
+        cwd: tfRepositoryFolder,
+        environment: {
+          NO_COLOR: "1",
+          TF_INPUT: "0",
+        },
+        shell: true,
+      })`terraform apply -auto-approve`,
+  );
+  const repository = {
+    name: repoName,
+    owner: repoOwner,
+  };
+  return (
+    withSpinner(
+      "Creating GitHub repository...",
+      "GitHub repository created successfully!",
+      "Failed to create GitHub repository.",
+      terraformApplyPromise,
+    )
+      .map(() => ({
+        ...repository,
+        url: `https://github.com/${repoOwner}/${repoName}`,
+      }))
+      // In case of a failure, returns the repository info without URL
+      .orElse(() => okAsync(repository))
+  );
 };
 
 const initializeGitRepository = (repoFolder: string) =>
