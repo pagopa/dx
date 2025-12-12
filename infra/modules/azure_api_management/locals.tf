@@ -56,4 +56,12 @@ locals {
   virtual_network_configuration_enabled = local.virtual_network_type == "Internal" || var.use_case == "cost_optimized" ? true : false
   public_network                        = var.enable_public_network_access != null ? var.enable_public_network_access : local.use_case_features.public_network
   private_dns_zone_resource_group_name  = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
+
+  # Private DNS Zone IDs - merges overrides with data source lookups
+  private_dns_zone_ids = {
+    azure_api_net             = var.private_dns_zone_ids != null && var.private_dns_zone_ids.azure_api_net != null ? var.private_dns_zone_ids.azure_api_net : data.azurerm_private_dns_zone.azure_api_net[0].id
+    management_azure_api_net  = var.private_dns_zone_ids != null && var.private_dns_zone_ids.management_azure_api_net != null ? var.private_dns_zone_ids.management_azure_api_net : data.azurerm_private_dns_zone.management_azure_api_net[0].id
+    scm_azure_api_net         = var.private_dns_zone_ids != null && var.private_dns_zone_ids.scm_azure_api_net != null ? var.private_dns_zone_ids.scm_azure_api_net : data.azurerm_private_dns_zone.scm_azure_api_net[0].id
+    privatelink_azure_api_net = var.private_dns_zone_ids != null && var.private_dns_zone_ids.privatelink_azure_api_net != null ? var.private_dns_zone_ids.privatelink_azure_api_net : (local.use_case_features.private_endpoint ? data.azurerm_private_dns_zone.apim[0].id : null)
+  }
 }

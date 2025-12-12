@@ -161,6 +161,17 @@ variable "private_dns_zone_resource_group_name" {
   default     = null
 }
 
+variable "private_dns_zone_ids" {
+  type = object({
+    azure_api_net             = optional(string)
+    management_azure_api_net  = optional(string)
+    scm_azure_api_net         = optional(string)
+    privatelink_azure_api_net = optional(string)
+  })
+  default     = null
+  description = "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\". Use this to reference DNS zones in different subscriptions."
+}
+
 #---------------------------#
 # Policies & Configurations #
 #---------------------------#
