@@ -23,7 +23,10 @@ resource "aws_lambda_function" "server" {
       MCP_AUTH_TYPE                         = var.mcp_auth_type
       GITHUB_CLIENT_SECRET_SSM_PARAM        = aws_ssm_parameter.github_client_secret.name
       GITHUB_CLIENT_ID_SSM_PARAM            = aws_ssm_parameter.github_client_id.name
+      ENCRYPTION_SECRET_SSM_PARAM           = aws_ssm_parameter.encryption_secret.name
+      JWT_SECRET_SSM_PARAM                  = aws_ssm_parameter.jwt_secret.name
       MCP_SERVER_URL                        = "https://${var.dns.custom_domain_name}"
+      TOKENS_DYNAMODB_TABLE_NAME            = aws_dynamodb_table.oauth_tokens.name
     }
   }
 
@@ -56,6 +59,46 @@ resource "aws_ssm_parameter" "github_client_id" {
   type        = "SecureString"
   value       = "REPLACE_WITH_GITHUB_CLIENT_ID"
   tags        = var.tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# Generate a random encryption secret (32 bytes)
+ephemeral "random_password" "encryption_secret" {
+  length  = 32
+  special = true
+}
+
+# Secure SSM paramter to store ENCRYPTION_SECRET
+resource "aws_ssm_parameter" "encryption_secret" {
+  name             = "/mcpserver/mcp-encryption-secret"
+  description      = "Encryption secret for MCP Server tokens"
+  type             = "SecureString"
+  value_wo         = ephemeral.random_password.encryption_secret.result
+  value_wo_version = 1
+  tags             = var.tags
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+# Generate a random JWT secret (32 bytes)
+ephemeral "random_password" "jwt_secret" {
+  length  = 32
+  special = true
+}
+
+# Secure SSM paramter to store JWT_SECRET
+resource "aws_ssm_parameter" "jwt_secret" {
+  name             = "/mcpserver/mcp-jwt-secret"
+  description      = "JWT secret for MCP Server tokens"
+  type             = "SecureString"
+  value_wo         = ephemeral.random_password.jwt_secret.result
+  value_wo_version = 1
+  tags             = var.tags
 
   lifecycle {
     ignore_changes = [value]
