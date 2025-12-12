@@ -89,18 +89,32 @@ const checkGhCliIsLoggedIn = (
   failText: string,
 ) => withSpinner(text, successText, failText, $`gh auth status`);
 
+const checkTerraformCliIsInstalled = (
+  text: string,
+  successText: string,
+  failText: string,
+) => withSpinner(text, successText, failText, $`terraform -version`);
+
 const checkPreconditions = () =>
   checkGhCliIsInstalled(
     "Checking GitHub CLI is installed...",
     "GitHub CLI is installed!",
     "GitHub CLI is not installed.",
-  ).andThen(() =>
-    checkGhCliIsLoggedIn(
-      "Checking GitHub CLI login...",
-      "GitHub CLI is logged in!",
-      "GitHub CLI is not logged in.",
-    ),
-  );
+  )
+    .andThen(() =>
+      checkGhCliIsLoggedIn(
+        "Checking GitHub CLI login...",
+        "GitHub CLI is logged in!",
+        "GitHub CLI is not logged in.",
+      ),
+    )
+    .andThen(() =>
+      checkTerraformCliIsInstalled(
+        "Checking Terraform CLI is installed...",
+        "Terraform CLI is installed!",
+        "Terraform CLI is not installed.",
+      ),
+    );
 
 const initializeTerraformBackend = (tfFolder: string) =>
   withSpinner(
@@ -187,7 +201,6 @@ export const makeInitCommand = (): Command =>
             .andThen(initPlop)
             .andTee(loadMonorepoScaffolder)
             .andThen((plop) => getGenerator(plop)(PLOP_MONOREPO_GENERATOR_NAME))
-            // Before running prompts, check the preconditions are met (like gh CLI installed, user logged in, etc.)
             .andThen((generator) =>
               // Ask the user the questions defined in the plop generator
               getPrompts(generator)
