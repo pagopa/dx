@@ -10,5 +10,11 @@
     "version": "0.2.4",
     "name": "azure_core_values_exporter",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.2.4"
+  },
+  "mcp_registry.portal": {
+    "hash": "427ed0f251d29f1599fabadb981c168c0ec3fe9e4fcdd909c1ef78c3eeb803d9",
+    "version": "0.3.2",
+    "name": "azure_cdn",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/0.3.2"
   }
 }
