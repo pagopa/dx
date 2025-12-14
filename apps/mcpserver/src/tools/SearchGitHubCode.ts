@@ -10,6 +10,7 @@ const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
  */
 export const SearchGitHubCodeTool = {
   annotations: {
+    readOnlyHint: true,
     title: "Search GitHub organization code",
   },
   description: `Search for code in a GitHub organization (defaults to pagopa).
