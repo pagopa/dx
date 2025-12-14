@@ -85,9 +85,7 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
   // If the token is missing, return undefined to indicate unauthenticated request
   // This will start the OAuth flow when accessing protected resources
   if (!authHeader?.startsWith("Bearer ")) {
-    console.log(
-      "[Authenticate] No token, returning undefined for 401 response",
-    );
+    logger.debug("No token, returning undefined for 401 response");
     return undefined;
   }
 
@@ -100,7 +98,7 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
   // If the token is a GitHub token, skip JWT validation
   if (token.startsWith("gh")) {
     upstreamToken = token;
-    console.log(
+    logger.debug(
       "[Authenticate] Token is a GitHub token, skipping JWT validation.",
     );
   } else {
@@ -109,9 +107,8 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
 
     // If invalid, return undefined to indicate unauthenticated request
     if (!validationResult.valid) {
-      console.log(
-        "[Authenticate] Token validation failed:",
-        validationResult.error,
+      logger.debug(
+        `[Authenticate] Token validation failed: ${validationResult.error}`,
       );
       return undefined;
     }
