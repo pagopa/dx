@@ -12,6 +12,7 @@ import {
   GetCommand,
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { getLogger } from "@logtape/logtape";
 
 export type DynamoDBStoreOptions = {
   /**
@@ -44,6 +45,7 @@ type StorageEntry = {
 export class DynamoDBStore implements TokenStorage {
   private client: DynamoDBDocumentClient;
   private dynamodbClient: DynamoDBClient;
+  private logger = getLogger(["mcpserver", "dynamo-db-token-store"]);
   private region: string;
   private tableName: string;
 
@@ -69,7 +71,7 @@ export class DynamoDBStore implements TokenStorage {
    */
   async cleanup(): Promise<void> {
     // DynamoDB TTL handles automatic expiration
-    console.debug(
+    this.logger.debug(
       "[DynamoDBStore] DynamoDB TTL automatically manages token expiration",
     );
   }
@@ -88,7 +90,9 @@ export class DynamoDBStore implements TokenStorage {
 
       await this.client.send(command);
     } catch (error) {
-      console.error(`[DynamoDBStore] Failed to delete key ${key}:`, error);
+      this.logger.error(
+        `[DynamoDBStore] Failed to delete key ${key}: ${error}`,
+      );
       throw error;
     }
   }
@@ -131,7 +135,7 @@ export class DynamoDBStore implements TokenStorage {
 
       return entry.value;
     } catch (error) {
-      console.error(`[DynamoDBStore] Failed to read key ${key}:`, error);
+      this.logger.error(`[DynamoDBStore] Failed to read key ${key}: ${error}`);
       return null;
     }
   }
@@ -157,7 +161,7 @@ export class DynamoDBStore implements TokenStorage {
 
       await this.client.send(command);
     } catch (error) {
-      console.error(`[DynamoDBStore] Failed to save key ${key}:`, error);
+      this.logger.error(`[DynamoDBStore] Failed to save key ${key}: ${error}`);
       throw error;
     }
   }
@@ -177,7 +181,7 @@ export class DynamoDBStore implements TokenStorage {
 
       return response.Table?.ItemCount || 0;
     } catch (error) {
-      console.error("[DynamoDBStore] Failed to get size:", error);
+      this.logger.error(`[DynamoDBStore] Failed to get size: ${error}`);
       return 0;
     }
   }
