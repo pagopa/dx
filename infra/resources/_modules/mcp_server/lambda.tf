@@ -212,3 +212,30 @@ resource "aws_iam_role_policy_attachment" "lambda_ssm_read_access" {
   role       = aws_iam_role.server.name
   policy_arn = aws_iam_policy.lambda_ssm_read_access.arn
 }
+
+resource "aws_iam_policy" "oauth_tokens_lambda_access" {
+  name = provider::awsdx::resource_name(merge(var.naming_config, {
+    name          = "oauth-tokens-lambda-access"
+    resource_type = "iam_policy"
+  }))
+  description = "Allow Lambda to PutItem, GetItem, DeleteItem, and DescribeTable on oauth_tokens table"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:DescribeTable"
+        ]
+        Resource = aws_dynamodb_table.oauth_tokens.arn
+      }
+    ]
+  })
+}
+resource "aws_iam_role_policy_attachment" "lambda_oauth_tokens_access" {
+  role       = aws_iam_role.server.name
+  policy_arn = aws_iam_policy.oauth_tokens_lambda_access.arn
+}
