@@ -109,13 +109,13 @@ const checkGhCliIsInstalled = (
   text: string,
   successText: string,
   failText: string,
-) => withSpinner(text, successText, failText, $`gh --version`);
+) => withSpinner(text, successText, failText, gh$`gh --version`);
 
 const checkGhCliIsLoggedIn = (
   text: string,
   successText: string,
   failText: string,
-) => withSpinner(text, successText, failText, $`gh auth status`);
+) => withSpinner(text, successText, failText, gh$`gh auth status`);
 
 const checkTerraformCliIsInstalled = (
   text: string,
