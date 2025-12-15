@@ -57,10 +57,7 @@ const withSpinner = <T>(
       successText,
       text,
     }),
-    (cause) => {
-      console.debug(JSON.stringify(cause, null, 2));
-      return new Error(failText, { cause });
-    },
+    (cause) => new Error(failText, { cause }),
   );
 
 // TODO: Check repository already exists: if exists, return an error
@@ -139,7 +136,8 @@ const createRemoteRepository = ({
   }));
 };
 
-const initializeGitRepository = (cwd: string, repository: Repository) => {
+const initializeGitRepository = (repository: Repository) => {
+  const cwd = path.resolve(repository.name);
   const branchName = "features/scaffold-workspace";
   const git = git$({ cwd });
   const repoInitPromise = git`git init`
@@ -166,22 +164,15 @@ const initializeGitRepository = (cwd: string, repository: Repository) => {
   ).map(() => ({ branchName, repository }));
 };
 
-const pushLocalChangesToRemoteRepository = (
-  repository: Repository,
-): ResultAsync<LocalWorkspace, Error> => {
-  const repoFolder = path.resolve(repository.name);
-  return initializeGitRepository(repoFolder, repository);
-};
-
 const handleNewGitHubRepository = (
   answers: Answers,
 ): ResultAsync<RepositoryPullRequest, Error> =>
   createRemoteRepository(answers)
-    .andThen(pushLocalChangesToRemoteRepository)
-    .andThen((result) =>
-      createPullRequest(result).map((pr) => ({
+    .andThen(initializeGitRepository)
+    .andThen((localWorkspace) =>
+      createPullRequest(localWorkspace).map((pr) => ({
         pr,
-        repository: result.repository,
+        repository: localWorkspace.repository,
       })),
     );
 
