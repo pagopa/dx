@@ -8,6 +8,7 @@ import { Command } from "commander";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
+import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
 import { git$ } from "../../execa/git.js";
@@ -57,7 +58,10 @@ const withSpinner = <T>(
       successText,
       text,
     }),
-    (cause) => new Error(failText, { cause }),
+    (cause) => {
+      console.debug(`Error during: ${text}`, JSON.stringify(cause, null, 2));
+      return new Error(failText, { cause });
+    },
   );
 
 // TODO: Check repository already exists: if exists, return an error
@@ -171,17 +175,17 @@ const initializeGitRepository = (repository: Repository) => {
   ).map(() => ({ branchName, repository }));
 };
 
-const handleNewGitHubRepository = (
-  answers: Answers,
-): ResultAsync<RepositoryPullRequest, Error> =>
-  createRemoteRepository(answers)
-    .andThen(initializeGitRepository)
-    .andThen((localWorkspace) =>
-      createPullRequest(localWorkspace).map((pr) => ({
-        pr,
-        repository: localWorkspace.repository,
-      })),
-    );
+const handleNewGitHubRepository =
+  (octokit: Octokit) =>
+  (answers: Answers): ResultAsync<RepositoryPullRequest, Error> =>
+    createRemoteRepository(answers)
+      .andThen(initializeGitRepository)
+      .andThen((localWorkspace) =>
+        createPullRequest(octokit)(localWorkspace).map((pr) => ({
+          pr,
+          repository: localWorkspace.repository,
+        })),
+      );
 
 const makeInitResult = (
   answers: Answers,
@@ -199,31 +203,36 @@ const makeInitResult = (
   };
 };
 
-const createPullRequest = ({
-  branchName,
-  repository,
-}: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> => {
-  const cwd = path.resolve(repository.name);
-  const prTitle = "Scaffold repository";
-  const prBody = "This PR contains the scaffolded monorepo structure.";
-  const createPrPromise = gh$({
-    cwd,
-  })`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "${prBody}"`;
-
-  return (
+const createPullRequest =
+  (octokit: Octokit) =>
+  ({
+    branchName,
+    repository,
+  }: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> =>
     withSpinner(
       "Creating Pull Request...",
       "Pull Request created successfully!",
       "Failed to create Pull Request.",
-      createPrPromise,
+      octokit.rest.pulls.create({
+        base: "main",
+        body: "This PR contains the scaffolded monorepo structure.",
+        head: branchName,
+        owner: repository.owner,
+        repo: repository.name,
+        title: "Scaffold repository",
+      }),
     )
-      .map(({ stdout }) => ({ url: stdout.trim() }))
+      .map(({ data }) => ({ url: data.html_url }))
       // If PR creation fails, don't block the workflow
-      .orElse(() => okAsync(undefined))
-  );
+      .orElse(() => okAsync(undefined));
+
+type InitCommandDependencies = {
+  octokit: Octokit;
 };
 
-export const makeInitCommand = (): Command =>
+export const makeInitCommand = ({
+  octokit,
+}: InitCommandDependencies): Command =>
   new Command()
     .name("init")
     .description(
@@ -248,7 +257,7 @@ export const makeInitCommand = (): Command =>
                 .andThen(runGeneratorActions(generator)),
             )
             .andThen((answers) =>
-              handleNewGitHubRepository(answers).map((repoPr) =>
+              handleNewGitHubRepository(octokit)(answers).map((repoPr) =>
                 makeInitResult(answers, repoPr),
               ),
             )
