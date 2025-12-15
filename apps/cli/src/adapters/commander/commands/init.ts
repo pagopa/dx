@@ -11,8 +11,8 @@ import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
+import { checkout, commit, git$, push } from "../../execa/git.js";
 import { tf$ } from "../../execa/terraform.js";
-import { checkout, commit, push } from "../../git/index.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
@@ -140,36 +140,28 @@ const createRemoteRepository = ({
 
 const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
   const branchName = "features/scaffold-workspace";
-  const promise = $({
+  const promise = git$({
     cwd,
   })`git init`
     .then(
       () =>
-        $({
+        git$({
           cwd,
-          shell: true,
-        })`echo "" > .gitkeep`,
+        })`git add README.md`,
     )
-    .then(
-      () =>
-        $({
-          cwd,
-        })`git add .gitkeep`,
-    )
-    .then(() => commit(cwd, "First commit"))
+    .then(() => commit(cwd, "Create README"))
     .then(() => checkout(cwd, "main"))
     .then(
       () =>
-        $({
+        git$({
           cwd,
-          shell: true,
         })`git remote add origin git@github.com:${owner}/${name}.git`,
     )
     .then(() => push(cwd, "main"))
     .then(() => checkout(cwd, branchName))
     .then(
       () =>
-        $({
+        git$({
           cwd,
         })`git add .`,
     )
