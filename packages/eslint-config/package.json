@@ -10,9 +10,7 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "version": "yarn changeset version && yarn --mode update-lockfile",
-    "release": "yarn build && changeset publish"
+    "format:check": "prettier --check ."
   },
   "files": [
     "index.js"

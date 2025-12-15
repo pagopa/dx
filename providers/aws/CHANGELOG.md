@@ -1,5 +1,11 @@
 # provider-aws
 
+## 0.1.4
+
+### Patch Changes
+
+- 5f84c6b: Add Bedrock Knowledge bases and S3 Vector buckets abbreviations
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.1.3
+
+### Patch Changes
+
+- 440fbe1: Remove useless `getPrompts` call in mcp-prompts package. The `getPrompts` function was called in the `index.ts` causing all applications importing it to run twice.
+
 ## 0.1.2
 
 ### Patch Changes

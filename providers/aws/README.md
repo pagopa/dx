@@ -159,7 +159,7 @@ Generates a resource name based on the standardized prefix and additional parame
 
 | Name            |  Type   | Required | Description                                                   |
 | :-------------- | :-----: | :------: | :------------------------------------------------------------ |
-| prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters). |
+| prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters).    |
 | environment     | String  |   Yes    | Environment where the resources will be deployed (d, u or p). |
 | region          | String  |   Yes    | AWS region where the resources will be deployed.              |
 | domain          | String  |    No    | Optional value that specify the domain.                       |
@@ -192,73 +192,82 @@ output "resource_name" {
 
 The following table lists the resource types and their abbreviations used in the resource_name function:
 
-| Type                      | Abbreviation |
-| :------------------------ | :----------: |
-| ec2_instance              |     ec2      |
-| ecs_cluster               |     ecs      |
-| ecs_service               |    ecssvc    |
-| ecs_task_definition       |    ecstd     |
-| lambda_function           |    lambda    |
-| auto_scaling_group        |     asg      |
-| launch_configuration      |      lc      |
-| launch_template           |      lt      |
-| s3_bucket                 |      s3      |
-| ebs_volume                |     ebs      |
-| efs_file_system           |     efs      |
-| rds_instance              |     rds      |
-| rds_cluster               |  rdscluster  |
-| dynamodb_table            |     ddb      |
-| elasticache_cluster       |    redis     |
-| documentdb_cluster        |    docdb     |
-| vpc                       |     vpc      |
-| subnet                    |    subnet    |
-| internet_gateway          |     igw      |
-| nat_gateway               |     nat      |
-| route_table               |      rt      |
-| security_group            |      sg      |
-| network_acl               |     nacl     |
-| vpc_endpoint              |     vpce     |
-| customer_gateway          |     cgw      |
-| vpn_connection            |     vpn      |
-| network_interface         |     eni      |
-| elastic_load_balancer     |     elb      |
-| application_load_balancer |     alb      |
-| network_load_balancer     |     nlb      |
-| target_group              |      tg      |
-| api_gateway               |    apigw     |
-| api_gateway_v2            |   apigwv2    |
-| api_gateway_stage         | apigw-stage  |
-| api_gateway_deployment    | apigw-deploy |
-| kms_key                   |     kms      |
-| iam_role                  |     role     |
-| iam_policy                |    policy    |
-| iam_user                  |     user     |
-| iam_group                 |    group     |
-| secrets_manager           |      sm      |
-| cloudwatch_log_group      |    cw-log    |
-| cloudwatch_alarm          |   cw-alarm   |
-| cloudwatch_dashboard      |   cw-dash    |
-| sns_topic                 |     sns      |
-| sqs_queue                 |     sqs      |
-| cloudfront_distribution   |      cf      |
-| cloudfront_origin         |  cf-origin   |
-| ecr_repository            |     ecr      |
-| eks_cluster               |     eks      |
-| eks_node_group            |    eks-ng    |
-| step_function             |      sf      |
-| eventbridge_rule          |   eb-rule    |
-| eventbridge_bus           |    eb-bus    |
-| kinesis_stream            |   kinesis    |
-| kinesis_firehose          |   firehose   |
-| elasticsearch_domain      |      es      |
-| opensearch_domain         |      os      |
-| resource_group            |      rg      |
-| route53_zone              |   r53-zone   |
-| route53_record            |  r53-record  |
-| route53_resolver_endpoint | r53-res-endp |
-| elasticache_redis         |    redis     |
-| sqs_dead_letter_queue     |   sqs-dlq    |
-| sns_subscription          |   sns-sub    |
+| Type                              |  Abbreviation   |
+| :-------------------------------- | :-------------: |
+| ec2_instance                      |       ec2       |
+| ecs_cluster                       |       ecs       |
+| ecs_service                       |     ecssvc      |
+| ecs_task_definition               |      ecstd      |
+| lambda_function                   |     lambda      |
+| auto_scaling_group                |       asg       |
+| launch_configuration              |       lc        |
+| launch_template                   |       lt        |
+| s3_bucket                         |       s3        |
+| s3_bucket_acl                     |     s3-acl      |
+| s3_bucket_lifecycle_configuration |  s3-lifecycle   |
+| s3_bucket_ownership_controls      |  s3-ownership   |
+| s3_bucket_policy                  |    s3-policy    |
+| s3_bucket_public_access_block     | s3-public-block |
+| s3_bucket_versioning              |  s3-versioning  |
+| s3_vector_bucket                  |    s3-vector    |
+| s3_vector_bucket_index            |  s3-vector-idx  |
+| ebs_volume                        |       ebs       |
+| efs_file_system                   |       efs       |
+| rds_instance                      |       rds       |
+| rds_cluster                       |   rdscluster    |
+| dynamodb_table                    |       ddb       |
+| elasticache_cluster               |      redis      |
+| documentdb_cluster                |      docdb      |
+| vpc                               |       vpc       |
+| subnet                            |     subnet      |
+| internet_gateway                  |       igw       |
+| nat_gateway                       |       nat       |
+| route_table                       |       rt        |
+| security_group                    |       sg        |
+| network_acl                       |      nacl       |
+| vpc_endpoint                      |      vpce       |
+| customer_gateway                  |       cgw       |
+| vpn_connection                    |       vpn       |
+| network_interface                 |       eni       |
+| elastic_load_balancer             |       elb       |
+| application_load_balancer         |       alb       |
+| network_load_balancer             |       nlb       |
+| target_group                      |       tg        |
+| api_gateway                       |      apigw      |
+| api_gateway_v2                    |     apigwv2     |
+| api_gateway_stage                 |   apigw-stage   |
+| api_gateway_deployment            |  apigw-deploy   |
+| kms_key                           |       kms       |
+| iam_role                          |      role       |
+| iam_policy                        |     policy      |
+| iam_user                          |      user       |
+| iam_group                         |      group      |
+| secrets_manager                   |       sm        |
+| cloudwatch_log_group              |     cw-log      |
+| cloudwatch_alarm                  |    cw-alarm     |
+| cloudwatch_dashboard              |     cw-dash     |
+| sns_topic                         |       sns       |
+| sqs_queue                         |       sqs       |
+| cloudfront_distribution           |       cf        |
+| cloudfront_origin                 |    cf-origin    |
+| ecr_repository                    |       ecr       |
+| eks_cluster                       |       eks       |
+| eks_node_group                    |     eks-ng      |
+| step_function                     |       sf        |
+| eventbridge_rule                  |     eb-rule     |
+| eventbridge_bus                   |     eb-bus      |
+| kinesis_stream                    |     kinesis     |
+| kinesis_firehose                  |    firehose     |
+| elasticsearch_domain              |       es        |
+| opensearch_domain                 |       os        |
+| resource_group                    |       rg        |
+| route53_zone                      |    r53-zone     |
+| route53_record                    |   r53-record    |
+| route53_resolver_endpoint         |  r53-res-endp   |
+| elasticache_redis                 |      redis      |
+| sqs_dead_letter_queue             |     sqs-dlq     |
+| sns_subscription                  |     sns-sub     |
+| bedrock_knowledge_base            |   bedrock-kb    |
 
 ## Example Configuration
 

@@ -16,7 +16,7 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "version": "changeset version && pnpm i --lockfile-only",
+    "version": "changeset version && pnpm i --lockfile-only && nx run-many --target=version",
     "release": "nx run-many --target=build --projects=tag:npm:public && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
