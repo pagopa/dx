@@ -154,25 +154,38 @@ func getResourceAbbreviations() map[string]string {
 	}
 }
 
+// configurationValues holds the extracted configuration values
+type configurationValues struct {
+	prefix            string
+	environment       string
+	location          string
+	resourceType      string
+	instanceNumberStr string
+	name              string
+	domain            string
+}
+
 // extractConfigurationValues extracts and normalizes values from the configuration map
-func extractConfigurationValues(configuration map[string]types.String) (prefix, environment, location, resourceType, instanceNumberStr, name, domain string) {
-	prefix = configuration["prefix"].ValueString()
-	environment = configuration["environment"].ValueString()
-	location = configuration["location"].ValueString()
-	resourceType = configuration["resource_type"].ValueString()
-	instanceNumberStr = configuration["instance_number"].ValueString()
+func extractConfigurationValues(configuration map[string]types.String) configurationValues {
+	config := configurationValues{
+		prefix:            configuration["prefix"].ValueString(),
+		environment:       configuration["environment"].ValueString(),
+		location:          configuration["location"].ValueString(),
+		resourceType:      configuration["resource_type"].ValueString(),
+		instanceNumberStr: configuration["instance_number"].ValueString(),
+	}
 
 	// Extract optional name
-	if nameVal, exists := configuration["name"]; exists && !nameVal.IsNull() {
-		name = nameVal.ValueString()
+	if nameVal, exists := configuration["name"]; exists {
+		config.name = strings.ToLower(nameVal.ValueString())
 	}
 
 	// Extract optional domain
-	if domainVal, exists := configuration["domain"]; exists && !domainVal.IsNull() && domainVal.ValueString() != "" {
-		domain = strings.ToLower(domainVal.ValueString())
+	if domainVal, exists := configuration["domain"]; exists {
+		config.domain = strings.ToLower(domainVal.ValueString())
 	}
 
-	return
+	return config
 }
 
 // validatePrefix checks if the prefix length is valid
@@ -206,13 +219,12 @@ func validateAndNormalizeLocation(location string) (string, *function.FuncError)
 		return normalized, nil
 	}
 
-	allowedLocations := []string{"westeurope", "italynorth", "weu", "itn"}
-	return "", function.NewFuncError(fmt.Sprintf("InvalidLocation: Location must be one of: %s", strings.Join(allowedLocations, ", ")))
+	return "", function.NewFuncError("InvalidLocation: Location must be one of: westeurope, italynorth, weu, itn")
 }
 
-// validateInstance checks if the instance number is within valid range
-func validateInstance(instanceNumberStr string) (int, *function.FuncError) {
-	instance, err := strconv.Atoi(instanceNumberStr)
+// parseInstanceNumber parses and validates the instance number string
+func parseInstanceNumber(instanceNumber string) (int, *function.FuncError) {
+	instance, err := strconv.Atoi(instanceNumber)
 	if err != nil {
 		return 0, function.NewFuncError("The instance_number must be a valid integer")
 	}
@@ -226,11 +238,11 @@ func validateInstance(instanceNumberStr string) (int, *function.FuncError) {
 
 // validateResourceType checks if the resource type is valid and returns its abbreviation
 func validateResourceType(resourceType string, abbreviations map[string]string) (string, *function.FuncError) {
-	abbreviation, exists := abbreviations[resourceType]
-	if !exists {
+	abbr, ok := abbreviations[resourceType]
+	if !ok {
 		return "", function.NewFuncError(fmt.Sprintf("InvalidResourceType: resource '%s' not found", resourceType))
 	}
-	return abbreviation, nil
+	return abbr, nil
 }
 
 // validateRedundancy checks for redundant values between domain, name, and abbreviation
@@ -248,13 +260,13 @@ func validateRedundancy(domain, name, abbreviation string) *function.FuncError {
 		return function.NewFuncError("Resource domain cannot be the same as the resource name")
 	}
 
-	// Check if abbreviation starts with domain
-	if domain != "" && (normalizedAbbreviation == domain || strings.HasPrefix(normalizedAbbreviation, domain+"-")) {
+	// Check if abbreviation starts with domain (e.g., domain="psql", abbreviation="psql-pep")
+	if domain != "" && strings.HasPrefix(normalizedAbbreviation, domain) {
 		return function.NewFuncError("Resource domain cannot be part of the resource abbreviation. The abbreviation already contains the domain prefix")
 	}
 
-	// Check if abbreviation starts with name
-	if normalizedName != "" && (normalizedAbbreviation == normalizedName || strings.HasPrefix(normalizedAbbreviation, normalizedName+"-")) {
+	// Check if abbreviation starts with name (e.g., name="cosno", abbreviation="cosno-pep")
+	if normalizedName != "" && strings.HasPrefix(normalizedAbbreviation, normalizedName) {
 		return function.NewFuncError("Resource name cannot be part of the resource abbreviation. The abbreviation already contains the name prefix")
 	}
 
@@ -313,50 +325,49 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 
 	// Extract configuration values
-	prefix, environment, location, resourceType, instanceNumberStr, name, domain := extractConfigurationValues(configuration)
+	config := extractConfigurationValues(configuration)
 
 	// Validate all inputs
-	if err := validatePrefix(prefix); err != nil {
+	if err := validatePrefix(config.prefix); err != nil {
 		resp.Error = err
 		return
 	}
 
-	if err := validateEnvironment(environment); err != nil {
+	if err := validateEnvironment(config.environment); err != nil {
 		resp.Error = err
 		return
 	}
 
-	normalizedLocation, err := validateAndNormalizeLocation(location)
+	normalizedLocation, err := validateAndNormalizeLocation(config.location)
 	if err != nil {
 		resp.Error = err
 		return
 	}
-	location = normalizedLocation
 
-	instance, err := validateInstance(instanceNumberStr)
+	instance, err := parseInstanceNumber(config.instanceNumberStr)
 	if err != nil {
 		resp.Error = err
 		return
 	}
 
 	abbreviations := getResourceAbbreviations()
-	abbreviation, err := validateResourceType(resourceType, abbreviations)
+	abbreviation, err := validateResourceType(config.resourceType, abbreviations)
 	if err != nil {
 		resp.Error = err
 		return
 	}
 
 	// Validate no redundancy between domain, name, and abbreviation
-	if err := validateRedundancy(domain, name, abbreviation); err != nil {
+	if err := validateRedundancy(config.domain, config.name, abbreviation); err != nil {
 		resp.Error = err
 		return
 	}
 
 	// Build the final resource name
-	result := buildResourceName(prefix, environment, location, domain, name, abbreviation, instance)
+	result := buildResourceName(config.prefix, config.environment, normalizedLocation, config.domain, config.name, abbreviation, instance)
 
 	// Special handling for storage accounts (remove hyphens)
-	if strings.Contains(resourceType, "storage_account") {
+	if strings.Contains(config.resourceType, "storage_account") {
 		result = strings.ReplaceAll(result, "-", "")
 	}
 
