@@ -1,10 +1,14 @@
 import { $ } from "execa";
 
+export const git$ = $({
+  shell: true,
+});
+
 export const push = (cwd: string, branch: string) =>
-  $({ cwd, shell: true })`git push -u origin ${branch}`;
+  git$({ cwd })`git push -u origin ${branch}`;
 
 export const commit = (cwd: string, message: string) =>
-  $({ cwd, shell: true })`git commit --no-gpg-sign -m "${message}"`;
+  git$({ cwd })`git commit --no-gpg-sign -m "${message}"`;
 
 export const checkout = (cwd: string, branch: string) =>
-  $({ cwd, shell: true })`git branch -M ${branch}`;
+  git$({ cwd })`git branch -M ${branch}`;
