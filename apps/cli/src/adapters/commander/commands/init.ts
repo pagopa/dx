@@ -102,6 +102,13 @@ const displaySummary = (initResult: InitResult) => {
     console.log(
       `2. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
     );
+  } else {
+    console.log(
+      chalk.yellow(`\n⚠️ There was an error during Pull Request creation.`),
+    );
+    console.log(
+      `Please, manually create a Pull Request in the GitHub repository to review the scaffolded code.\n`,
+    );
   }
 };
 
