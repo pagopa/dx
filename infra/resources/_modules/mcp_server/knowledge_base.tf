@@ -123,19 +123,25 @@ resource "aws_iam_role_policy_attachment" "bedrock_llms_access" {
 }
 
 resource "aws_s3vectors_vector_bucket" "this" {
-  encryption_configuration = [{
-    kms_key_arn = null
-    sse_type    = "AES256"
-  }]
-  region = var.naming_config.region
-  tags   = var.tags
   vector_bucket_name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "docs"
     resource_type = "s3_vector_bucket"
   }))
+  region = var.naming_config.region
+
+  encryption_configuration = [{
+    kms_key_arn = null
+    sse_type    = "AES256"
+  }]
+  tags = var.tags
 }
 
 resource "aws_s3vectors_index" "this" {
+  index_name = provider::awsdx::resource_name(merge(var.naming_config, {
+    name          = "docs"
+    resource_type = "s3_vector_bucket_index"
+  }))
+
   data_type       = "float32"
   dimension       = 1024
   distance_metric = "euclidean"
@@ -143,10 +149,6 @@ resource "aws_s3vectors_index" "this" {
     kms_key_arn = null
     sse_type    = "AES256"
   }]
-  index_name = provider::awsdx::resource_name(merge(var.naming_config, {
-    name          = "docs"
-    resource_type = "s3_vector_bucket_index"
-  }))
   region             = var.naming_config.region
   tags               = null
   vector_bucket_name = "bedrock-knowledge-base-kq899y"
