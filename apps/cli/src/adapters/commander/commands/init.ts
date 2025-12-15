@@ -5,7 +5,6 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
-import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
