@@ -5,7 +5,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | 2.8.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 2.0 |
@@ -17,7 +17,7 @@
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.3 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.55.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.56.0 |
 
 ## Modules
 
