@@ -201,7 +201,7 @@ const createPullRequest = ({
   const prBody = "This PR contains the scaffolded monorepo structure.";
   const createPrPromise = gh$({
     cwd,
-  })`gh pr create --base main --head ${branchName} --title ${prTitle} --body ${prBody}`;
+  })`gh pr create --base main --head ${branchName} --title "${prTitle}" --body "${prBody}"`;
 
   return (
     withSpinner(
