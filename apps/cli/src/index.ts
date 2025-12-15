@@ -1,6 +1,5 @@
 import "core-js/actual/set/index.js";
 import { configure, getConsoleSink } from "@logtape/logtape";
-import { Octokit } from "octokit";
 
 import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
@@ -36,12 +35,8 @@ await configure({
 const repositoryReader = makeRepositoryReader();
 const packageJsonReader = makePackageJsonReader();
 const validationReporter = makeValidationReporter();
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
 
 const deps: Dependencies = {
-  octokit,
   packageJsonReader,
   repositoryReader,
   validationReporter,

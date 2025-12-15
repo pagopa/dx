@@ -9,18 +9,14 @@ import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
-import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
+import { gh$ } from "../../execa/gh.js";
 import { checkout, commit, git$, push } from "../../execa/git.js";
 import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
-
-type InitCommandDependencies = {
-  octokit: Octokit;
-};
 
 type InitResult = {
   csp: {
@@ -37,7 +33,6 @@ type LocalWorkspace = {
 };
 
 type PullRequest = {
-  number: number;
   url: string;
 };
 
@@ -220,18 +215,17 @@ const pushLocalChangesToRemoteRepository = (
   return initializeGitRepository(repoFolder, repository);
 };
 
-// TODO: Open PR on created repository with the generated code
-const handleNewGitHubRepository =
-  (octokit: Octokit) =>
-  (answers: Answers): ResultAsync<RepositoryPullRequest, Error> =>
-    createRemoteRepository(answers)
-      .andThen(pushLocalChangesToRemoteRepository)
-      .andThen((result) =>
-        createPullRequest(octokit)(result).map((pr) => ({
-          pr,
-          repository: result.repository,
-        })),
-      );
+const handleNewGitHubRepository = (
+  answers: Answers,
+): ResultAsync<RepositoryPullRequest, Error> =>
+  createRemoteRepository(answers)
+    .andThen(pushLocalChangesToRemoteRepository)
+    .andThen((result) =>
+      createPullRequest(result).map((pr) => ({
+        pr,
+        repository: result.repository,
+      })),
+    );
 
 const makeInitResult = (
   answers: Answers,
@@ -249,35 +243,31 @@ const makeInitResult = (
   };
 };
 
-const createPullRequest =
-  (octokit: Octokit) =>
-  ({
-    branchName,
-    repository,
-  }: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> =>
-    withSpinner(
-      "Creating pull request...",
-      "Pull request created successfully!",
-      "Failed to create pull request.",
-      octokit.rest.pulls.create({
-        base: "main",
-        body: "This PR contains the scaffolded monorepo structure.",
-        head: branchName,
-        owner: repository.owner,
-        repo: repository.name,
-        title: "Scaffold repository",
-      }),
-    )
-      .map(({ data }) => ({
-        number: data.number,
-        url: data.html_url,
-      }))
-      // If PR creation fails, don't block the workflow
-      .orElse(() => okAsync(undefined));
+const createPullRequest = ({
+  branchName,
+  repository,
+}: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> => {
+  const cwd = path.resolve(repository.name);
+  const prTitle = "Scaffold repository";
+  const prBody = "This PR contains the scaffolded monorepo structure.";
+  const createPrPromise = gh$({
+    cwd,
+  })`gh pr create --base main --head ${branchName} --title ${prTitle} --body ${prBody}`;
 
-export const makeInitCommand = ({
-  octokit,
-}: InitCommandDependencies): Command =>
+  return (
+    withSpinner(
+      "Creating Pull Request...",
+      "Pull Request created successfully!",
+      "Failed to create Pull Request.",
+      createPrPromise,
+    )
+      .map(({ stdout }) => ({ url: stdout.trim() }))
+      // If PR creation fails, don't block the workflow
+      .orElse(() => okAsync(undefined))
+  );
+};
+
+export const makeInitCommand = (): Command =>
   new Command()
     .name("init")
     .description(
@@ -302,7 +292,7 @@ export const makeInitCommand = ({
                 .andThen(runGeneratorActions(generator)),
             )
             .andThen((answers) =>
-              handleNewGitHubRepository(octokit)(answers).map((repoPr) =>
+              handleNewGitHubRepository(answers).map((repoPr) =>
                 makeInitResult(answers, repoPr),
               ),
             )
