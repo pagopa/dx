@@ -38,6 +38,7 @@ export const MarkdownPromptFrontmatterSchema = z.object({
   enabled: z.boolean().default(true),
   examples: z.array(z.string()).optional(),
   id: z.string().min(1, "ID is required and cannot be empty"),
+  license: z.string().optional(),
   mode: z.enum(["agent", "assistant", "completion"]).optional(),
   model: z.string().optional(),
   tags: z.array(z.string()).default([]),
