@@ -95,19 +95,19 @@ const checkTerraformCliIsInstalled = (
   text: string,
   successText: string,
   failText: string,
-) => withSpinner(text, successText, failText, $`terraform -version`);
+) => withSpinner(text, successText, failText, tf$`terraform -version`);
 
 const checkPreconditions = () =>
   checkGhCliIsInstalled(
-    "Checking GitHub CLI is installed...",
-    "GitHub CLI is installed!",
-    "GitHub CLI is not installed.",
+    "Checking GitHub CLI ('gh') is installed...",
+    "GitHub CLI ('gh') is installed!",
+    "GitHub CLI ('gh') is not installed.",
   )
     .andThen(() =>
       checkGhCliIsLoggedIn(
-        "Checking GitHub CLI login...",
-        "GitHub CLI is logged in!",
-        "GitHub CLI is not logged in.",
+        "Checking GitHub CLI ('gh') login...",
+        "GitHub CLI ('gh') is logged in!",
+        "GitHub CLI ('gh') is not logged in.",
       ),
     )
     .andThen(() =>
