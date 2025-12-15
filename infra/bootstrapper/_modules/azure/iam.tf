@@ -50,6 +50,13 @@ resource "azurerm_role_assignment" "storage_blob_contributor" {
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
 }
 
+resource "azurerm_role_assignment" "storage_blob_contributor_to_admins" {
+  count                = var.environment.env_short == "d" ? 1 : 0
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azuread_group.admins.object_id
+}
+
 resource "azurerm_role_assignment" "contributor" {
   count                = var.environment.env_short == "d" ? 1 : 0
   scope                = data.azurerm_subscription.current.id

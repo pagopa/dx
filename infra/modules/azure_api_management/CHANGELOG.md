@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.1.0
+
+### Minor Changes
+
+- 5ea9525: Add variables to support private DNS zones in different subscriptions
+
 ## 2.0.5
 
 ### Patch Changes
