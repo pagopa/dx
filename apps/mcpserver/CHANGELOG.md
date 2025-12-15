@@ -1,5 +1,13 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.11
+
+### Patch Changes
+
+- 9bb018b: Add server.json file according to MCP standards
+- Updated dependencies [440fbe1]
+  - @pagopa/dx-mcpprompts@0.1.3
+
 ## 0.0.10
 
 ### Patch Changes
