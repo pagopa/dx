@@ -86,7 +86,3 @@ export const getEnabledPrompts = async (): Promise<CatalogEntry[]> => {
 
   return enabledPrompts;
 };
-
-getPrompts().then((prompts) => {
-  console.log(`MCP Prompts package initialized with ${prompts.length} prompts`);
-});
