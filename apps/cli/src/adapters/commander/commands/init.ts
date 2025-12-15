@@ -235,8 +235,7 @@ const handleNewGitHubRepository =
 
 const makeInitResult = (
   answers: Answers,
-  repository: Repository,
-  pr?: PullRequest,
+  { pr, repository }: RepositoryPullRequest,
 ): InitResult => {
   const csp = {
     location:
@@ -260,21 +259,21 @@ const createPullRequest =
       "Creating pull request...",
       "Pull request created successfully!",
       "Failed to create pull request.",
-      octokit.rest.pulls
-        .create({
-          base: "main",
-          body: "This PR contains the scaffolded monorepo structure.",
-          head: branchName,
-          owner: repository.owner,
-          repo: repository.name,
-          title: "Scaffold repository",
-        })
-        .then(({ data }) => ({
-          number: data.number,
-          url: data.html_url,
-        }))
-        .catch(() => undefined),
-    );
+      octokit.rest.pulls.create({
+        base: "main",
+        body: "This PR contains the scaffolded monorepo structure.",
+        head: branchName,
+        owner: repository.owner,
+        repo: repository.name,
+        title: "Scaffold repository",
+      }),
+    )
+      .map(({ data }) => ({
+        number: data.number,
+        url: data.html_url,
+      }))
+      // If PR creation fails, don't block the workflow
+      .orElse(() => okAsync(undefined));
 
 export const makeInitCommand = ({
   octokit,
@@ -303,8 +302,8 @@ export const makeInitCommand = ({
                 .andThen(runGeneratorActions(generator)),
             )
             .andThen((answers) =>
-              handleNewGitHubRepository(octokit)(answers).map(
-                ({ pr, repository }) => makeInitResult(answers, repository, pr),
+              handleNewGitHubRepository(octokit)(answers).map((repoPr) =>
+                makeInitResult(answers, repoPr),
               ),
             )
             .match(displaySummary, exitWithError(this));
