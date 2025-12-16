@@ -99,14 +99,15 @@ const createRemoteRepository = ({
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
   const cwd = path.resolve(repoName, "infra", "repository");
-  const terraformInitPromise = tf$({
-    cwd,
-  })`terraform init`.then(() => tf$({ cwd })`terraform apply -auto-approve`);
+  const applyTerraform = async () => {
+    await tf$({ cwd })`terraform init`;
+    await tf$({ cwd })`terraform apply -auto-approve`;
+  };
   return withSpinner(
     "Creating GitHub repository...",
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
-    terraformInitPromise,
+    applyTerraform(),
   ).map(() => new Repository(repoName, repoOwner));
 };
 
