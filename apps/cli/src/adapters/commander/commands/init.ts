@@ -5,12 +5,12 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
+import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
-import { git$ } from "../../execa/git.js";
 import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
@@ -114,27 +114,28 @@ const createRemoteRepository = ({
 
 const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
   const branchName = "features/scaffold-workspace";
-  const git = git$({ cwd });
-  const repoInitPromise = git`git init`
-    .then(() => git`git add README.md`)
-    .then(() =>
-      git`git commit --no-gpg-sign -m "Create README.md"`
-        .then(() => git`git branch -M main`)
-        .then(
-          () => git`git remote add origin git@github.com:${owner}/${name}.git`,
-        )
-        .then(() => git`git push -u origin main`)
-        .then(() => git`git switch -c ${branchName}`)
-        .then(() => git`git add .`)
-        .then(() => git`git commit --no-gpg-sign -m "Scaffold workspace"`),
-    )
-    .then(() => git`git push -u origin ${branchName}`);
+  const git$ = $({
+    cwd,
+    shell: true,
+  });
+  const pushToOrigin = async () => {
+    await git$`git init`;
+    await git$`git add README.md`;
+    await git$`git commit --no-gpg-sign -m "Create README.md"`;
+    await git$`git branch -M main`;
+    await git$`git remote add origin git@github.com:${owner}/${name}.git`;
+    await git$`git push -u origin main`;
+    await git$`git switch -c ${branchName}}`;
+    await git$`git add .`;
+    await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+    await git$`git push -u origin ${branchName}`;
+  };
 
   return withSpinner(
     "Pushing code to GitHub...",
     "Code pushed to GitHub successfully!",
     "Failed to push code to GitHub.",
-    repoInitPromise,
+    pushToOrigin(),
   ).map(() => branchName);
 };
 
