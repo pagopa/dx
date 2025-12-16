@@ -90,9 +90,7 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
   }
 
   const token = authHeader.slice(7); // Remove "Bearer "
-  logger.debug(
-    `[Authenticate] Token received, starting verification... ${token}`,
-  );
+  logger.debug(`[Authenticate] Token received, starting verification...`);
   let upstreamToken = null;
 
   // If the token is a GitHub token, skip JWT validation
