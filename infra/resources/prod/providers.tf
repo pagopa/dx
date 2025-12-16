@@ -25,6 +25,11 @@ terraform {
       version = "~> 6.0"
     }
 
+    awscc = {
+      source  = "hashicorp/awscc"
+      version = "~> 1.0"
+    }
+
     awsdx = {
       source  = "pagopa-dx/aws"
       version = "~> 0.0"
@@ -55,6 +60,11 @@ provider "aws" {
 }
 
 provider "aws" {
+  alias  = "eu-central-1"
+  region = "eu-central-1"
+}
+
+provider "awscc" {
   alias  = "eu-central-1"
   region = "eu-central-1"
 }

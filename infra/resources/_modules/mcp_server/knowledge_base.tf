@@ -1,52 +1,56 @@
-resource "aws_bedrockagent_knowledge_base" "this" {
+resource "awscc_bedrock_knowledge_base" "this" {
   name = provider::awsdx::resource_name(merge(var.naming_config, {
     name          = "docs"
     resource_type = "bedrock_knowledge_base"
   }))
-  region   = var.naming_config.region
   role_arn = aws_iam_role.kb.arn
   tags     = var.tags
-  knowledge_base_configuration {
+  knowledge_base_configuration = {
     type = "VECTOR"
-    vector_knowledge_base_configuration {
+    vector_knowledge_base_configuration = {
       embedding_model_arn = "arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.titan-embed-text-v2:0"
-      embedding_model_configuration {
-        bedrock_embedding_model_configuration {
+      embedding_model_configuration = {
+        bedrock_embedding_model_configuration = {
           dimensions          = 1024
           embedding_data_type = "FLOAT32"
         }
       }
     }
   }
-  storage_configuration {
+  storage_configuration = {
     type = "S3_VECTORS"
+    s3_vectors_configuration = {
+      index_name        = aws_s3vectors_index.this.index_name
+      vector_bucket_arn = aws_s3vectors_vector_bucket.this.vector_bucket_arn
+    }
   }
 }
 
-resource "aws_bedrockagent_data_source" "docs" {
-  knowledge_base_id    = aws_bedrockagent_knowledge_base.this.id
-  name                 = "${aws_bedrockagent_knowledge_base.this.name}-dx-docs-data-source"
+resource "awscc_bedrock_data_source" "docs" {
+  knowledge_base_id    = awscc_bedrock_knowledge_base.this.knowledge_base_id
+  name                 = "${awscc_bedrock_knowledge_base.this.name}-dx-docs-data-source"
   data_deletion_policy = "DELETE"
 
-  data_source_configuration {
+  data_source_configuration = {
     type = "S3"
-    s3_configuration {
+    s3_configuration = {
       bucket_arn = aws_s3_bucket.mcp_knowledge_base.arn
     }
   }
 
-  vector_ingestion_configuration {
-    chunking_configuration {
+  vector_ingestion_configuration = {
+    chunking_configuration = {
       chunking_strategy = "HIERARCHICAL"
-      hierarchical_chunking_configuration {
+      hierarchical_chunking_configuration = {
         overlap_tokens = 60
-        level_configuration {
-          max_tokens = 1500
-        }
-
-        level_configuration {
-          max_tokens = 300
-        }
+        level_configurations = [
+          {
+            max_tokens = 1500
+          },
+          {
+            max_tokens = 300
+          }
+        ]
       }
     }
   }
@@ -151,7 +155,7 @@ resource "aws_s3vectors_index" "this" {
   }]
   region             = var.naming_config.region
   tags               = null
-  vector_bucket_name = "bedrock-knowledge-base-kq899y"
+  vector_bucket_name = aws_s3vectors_vector_bucket.this.vector_bucket_name
   metadata_configuration {
     non_filterable_metadata_keys = ["AMAZON_BEDROCK_METADATA", "AMAZON_BEDROCK_TEXT"]
   }

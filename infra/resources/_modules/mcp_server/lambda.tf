@@ -17,7 +17,7 @@ resource "aws_lambda_function" "server" {
 
   environment {
     variables = {
-      BEDROCK_KNOWLEDGE_BASE_ID             = aws_bedrockagent_knowledge_base.this.id
+      BEDROCK_KNOWLEDGE_BASE_ID             = awscc_bedrock_knowledge_base.this.knowledge_base_id
       APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
       APPINSIGHTS_SAMPLING_PERCENTAGE       = 100
     }
