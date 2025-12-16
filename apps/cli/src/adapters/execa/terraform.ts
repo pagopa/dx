@@ -15,12 +15,9 @@ import { $ } from "execa";
  * - `shell: true`: Enables the use of the system shell for command execution.
  *
  * Usage:
- * Use this instance to execute Terraform commands programmatically within the application.
- * Example:
- * ```typescript
+ * @example
  * await tf$`terraform init`;
  * await tf$`terraform apply -auto-approve`;
- * ```
  */
 export const tf$ = $({
   environment: {
