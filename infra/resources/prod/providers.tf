@@ -15,6 +15,11 @@ terraform {
       version = "~> 0.0"
     }
 
+    azapi = {
+      source  = "Azure/azapi"
+      version = "2.8.0"
+    }
+
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
@@ -42,6 +47,8 @@ provider "azurerm" {
 }
 
 provider "azuredx" {}
+
+provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"

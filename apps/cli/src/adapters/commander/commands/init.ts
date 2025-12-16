@@ -21,14 +21,18 @@ type InitResult = {
     location: string;
     name: string;
   };
-  repository: Repository;
+  repository?: Repository;
 };
 
-type Repository = {
-  name: string;
-  owner: string;
-  url?: string;
-};
+class Repository {
+  get url(): string {
+    return `https://github.com/${this.owner}/${this.name}`;
+  }
+  constructor(
+    public readonly name: string,
+    public readonly owner: string,
+  ) {}
+}
 
 const withSpinner = <T>(
   text: string,
@@ -63,11 +67,11 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
 const displaySummary = (initResult: InitResult) => {
   const { csp, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
-  console.log(`- Name: ${chalk.cyan(repository.name)}`);
   console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
   console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
 
-  if (repository.url) {
+  if (repository) {
+    console.log(`- Name: ${chalk.cyan(repository.name)}`);
     console.log(`- GitHub Repository: ${chalk.cyan(repository.url)}\n`);
   } else {
     console.log(
@@ -96,19 +100,16 @@ const createRemoteRepository = ({
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
   const cwd = path.resolve(repoName, "infra", "repository");
-  const terraformInitPromise = tf$({
-    cwd,
-  })`terraform init`.then(() => tf$({ cwd })`terraform apply -auto-approve`);
+  const applyTerraform = async () => {
+    await tf$({ cwd })`terraform init`;
+    await tf$({ cwd })`terraform apply -auto-approve`;
+  };
   return withSpinner(
     "Creating GitHub repository...",
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
-    terraformInitPromise,
-  ).map(() => ({
-    name: repoName,
-    owner: repoOwner,
-    url: `https://github.com/${repoOwner}/${repoName}`,
-  }));
+    applyTerraform(),
+  ).map(() => new Repository(repoName, repoOwner));
 };
 
 const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
