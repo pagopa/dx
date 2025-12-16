@@ -9,6 +9,7 @@ import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
+import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
 import { tf$ } from "../../execa/terraform.js";
@@ -21,13 +22,33 @@ type InitResult = {
     location: string;
     name: string;
   };
+  pr?: PullRequest;
   repository?: Repository;
 };
 
+type LocalWorkspace = {
+  branchName: string;
+  repository: Repository;
+};
+
+type PullRequest = {
+  url: string;
+};
+
+type RepositoryPullRequest = {
+  pr?: PullRequest;
+  repository: Repository;
+};
+
 class Repository {
+  get ssh(): string {
+    return `git@github.com:${this.owner}/${this.name}.git`;
+  }
+
   get url(): string {
     return `https://github.com/${this.owner}/${this.name}`;
   }
+
   constructor(
     public readonly name: string,
     public readonly owner: string,
@@ -65,7 +86,7 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   ).map(() => answers);
 
 const displaySummary = (initResult: InitResult) => {
-  const { csp, repository } = initResult;
+  const { csp, pr, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
   console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
   console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
@@ -76,8 +97,25 @@ const displaySummary = (initResult: InitResult) => {
   } else {
     console.log(
       chalk.yellow(
-        `\n⚠️  GitHub repository may not have been created automatically.`,
+        `\n⚠️ GitHub repository may not have been created automatically.`,
       ),
+    );
+  }
+
+  if (pr) {
+    console.log(chalk.green.bold("\nNext Steps:"));
+    console.log(
+      `1. Review the Pull Request in the GitHub repository: ${chalk.underline(pr.url)}`,
+    );
+    console.log(
+      `2. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+    );
+  } else {
+    console.log(
+      chalk.yellow(`\n⚠️ There was an error during Pull Request creation.`),
+    );
+    console.log(
+      `Please, manually create a Pull Request in the GitHub repository to review the scaffolded code.\n`,
     );
   }
 };
@@ -112,7 +150,8 @@ const createRemoteRepository = ({
   ).map(() => new Repository(repoName, repoOwner));
 };
 
-const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
+const initializeGitRepository = (repository: Repository) => {
+  const cwd = path.resolve(repository.name);
   const branchName = "features/scaffold-workspace";
   const git$ = $({
     cwd,
@@ -123,7 +162,7 @@ const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
     await git$`git add README.md`;
     await git$`git commit --no-gpg-sign -m "Create README.md"`;
     await git$`git branch -M main`;
-    await git$`git remote add origin git@github.com:${owner}/${name}.git`;
+    await git$`git remote add origin ${repository.ssh}`;
     await git$`git push -u origin main`;
     await git$`git switch -c ${branchName}}`;
     await git$`git add .`;
@@ -136,25 +175,24 @@ const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
     "Code pushed to GitHub successfully!",
     "Failed to push code to GitHub.",
     pushToOrigin(),
-  ).map(() => branchName);
+  ).map(() => ({ branchName, repository }));
 };
 
-const pushLocalChangesToRemoteRepository = (
-  repository: Repository,
-): ResultAsync<Repository, Error> => {
-  const repoFolder = path.resolve(repository.name);
-  return initializeGitRepository(repoFolder, repository).map(() => repository);
-};
-
-// TODO: Open PR on created repository with the generated code
-const handleNewGitHubRepository = (
-  answers: Answers,
-): ResultAsync<Repository, Error> =>
-  createRemoteRepository(answers).andThen(pushLocalChangesToRemoteRepository);
+const handleNewGitHubRepository =
+  (octokit: Octokit) =>
+  (answers: Answers): ResultAsync<RepositoryPullRequest, Error> =>
+    createRemoteRepository(answers)
+      .andThen(initializeGitRepository)
+      .andThen((localWorkspace) =>
+        createPullRequest(octokit)(localWorkspace).map((pr) => ({
+          pr,
+          repository: localWorkspace.repository,
+        })),
+      );
 
 const makeInitResult = (
   answers: Answers,
-  repository: Repository,
+  { pr, repository }: RepositoryPullRequest,
 ): InitResult => {
   const csp = {
     location:
@@ -163,11 +201,41 @@ const makeInitResult = (
   };
   return {
     csp,
+    pr,
     repository,
   };
 };
 
-export const makeInitCommand = (): Command =>
+const createPullRequest =
+  (octokit: Octokit) =>
+  ({
+    branchName,
+    repository,
+  }: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> =>
+    withSpinner(
+      "Creating Pull Request...",
+      "Pull Request created successfully!",
+      "Failed to create Pull Request.",
+      octokit.rest.pulls.create({
+        base: "main",
+        body: "This PR contains the scaffolded monorepo structure.",
+        head: branchName,
+        owner: repository.owner,
+        repo: repository.name,
+        title: "Scaffold repository",
+      }),
+    )
+      .map(({ data }) => ({ url: data.html_url }))
+      // If PR creation fails, don't block the workflow
+      .orElse(() => okAsync(undefined));
+
+type InitCommandDependencies = {
+  octokit: Octokit;
+};
+
+export const makeInitCommand = ({
+  octokit,
+}: InitCommandDependencies): Command =>
   new Command()
     .name("init")
     .description(
@@ -192,8 +260,8 @@ export const makeInitCommand = (): Command =>
                 .andThen(runGeneratorActions(generator)),
             )
             .andThen((answers) =>
-              handleNewGitHubRepository(answers).map((repository) =>
-                makeInitResult(answers, repository),
+              handleNewGitHubRepository(octokit)(answers).map((repoPr) =>
+                makeInitResult(answers, repoPr),
               ),
             )
             .match(displaySummary, exitWithError(this));
