@@ -124,6 +124,7 @@ This command will:
 - Interactively prompt for project metadata (cloud provider, region, environments, cost center, etc.)
 - Generate a monorepo structure following PagoPA DevEx guidelines
 - Create a remote GitHub repository using Terraform
+- Push the initial codebase to the newly created repository
 
 **Example usage:**
 
@@ -137,6 +138,7 @@ $ dx init project
 ✔ Terraform CLI is installed!
 ✔ Workspace files created successfully!
 ✔ GitHub repository created successfully!
+✔ Code pushed to GitHub successfully!
 
 Workspace created successfully!
 - Name: my-monorepo

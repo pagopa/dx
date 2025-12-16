@@ -5,6 +5,7 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
+import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
@@ -111,11 +112,45 @@ const createRemoteRepository = ({
   ).map(() => new Repository(repoName, repoOwner));
 };
 
-// TODO: Create GitHub repository pushing the generated code
+const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
+  const branchName = "features/scaffold-workspace";
+  const git$ = $({
+    cwd,
+    shell: true,
+  });
+  const pushToOrigin = async () => {
+    await git$`git init`;
+    await git$`git add README.md`;
+    await git$`git commit --no-gpg-sign -m "Create README.md"`;
+    await git$`git branch -M main`;
+    await git$`git remote add origin git@github.com:${owner}/${name}.git`;
+    await git$`git push -u origin main`;
+    await git$`git switch -c ${branchName}}`;
+    await git$`git add .`;
+    await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+    await git$`git push -u origin ${branchName}`;
+  };
+
+  return withSpinner(
+    "Pushing code to GitHub...",
+    "Code pushed to GitHub successfully!",
+    "Failed to push code to GitHub.",
+    pushToOrigin(),
+  ).map(() => branchName);
+};
+
+const pushLocalChangesToRemoteRepository = (
+  repository: Repository,
+): ResultAsync<Repository, Error> => {
+  const repoFolder = path.resolve(repository.name);
+  return initializeGitRepository(repoFolder, repository).map(() => repository);
+};
+
 // TODO: Open PR on created repository with the generated code
 const handleNewGitHubRepository = (
   answers: Answers,
-): ResultAsync<Repository, Error> => createRemoteRepository(answers);
+): ResultAsync<Repository, Error> =>
+  createRemoteRepository(answers).andThen(pushLocalChangesToRemoteRepository);
 
 const makeInitResult = (
   answers: Answers,
