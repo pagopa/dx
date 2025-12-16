@@ -56,8 +56,12 @@ Select the following **Repository permissions**:
 | **Pull requests** | Read and write | Creating and managing pull requests                    |
 | **Metadata**      | Read-only      | Accessing repository metadata (automatically included) |
 
-:::tip[Principle of Least Privilege] For better security, grant access only to
-the repositories you need to manage with the DX CLI. :::
+:::tip[Principle of Least Privilege]
+
+For better security, grant access only to the repositories you need to manage
+with the DX CLI.
+
+:::
 
 ### Step 4: Generate and Copy the Token
 
@@ -72,98 +76,43 @@ the repositories you need to manage with the DX CLI. :::
 - Never commit your token to version control
 - Never share your token in public channels
 - Regenerate your token immediately if it's accidentally exposed
-- Use separate tokens for different purposes :::
+- Use separate tokens for different purposes
+
+:::
 
 ## Setting the Token as Environment Variable
 
-The DX CLI expects the GitHub token to be available as an environment variable.
+The DX CLI expects the GitHub token to be available as the `GITHUB_TOKEN`
+environment variable.
 
 ### Linux and macOS
 
-Add the token to your shell configuration file:
-
-#### For Bash (~/.bashrc or ~/.bash_profile)
-
-```bash
-export GITHUB_TOKEN="ghp_your_token_here"
-```
-
-#### For Zsh (~/.zshrc)
+Add the following line to your shell configuration file (`~/.bashrc`,
+`~/.zshrc`, or `~/.config/fish/config.fish`):
 
 ```bash
 export GITHUB_TOKEN="ghp_your_token_here"
 ```
 
-#### For Fish (~/.config/fish/config.fish)
-
-```fish
-set -gx GITHUB_TOKEN "ghp_your_token_here"
-```
-
-After adding the line, reload your shell configuration:
-
-```bash
-# For Bash
-source ~/.bashrc
-
-# For Zsh
-source ~/.zshrc
-
-# For Fish
-source ~/.config/fish/config.fish
-```
+Then reload your configuration: `source ~/.bashrc` (or the appropriate file for
+your shell).
 
 ### Windows
 
-#### Using Command Prompt (CMD)
-
-For the current session only:
-
-```cmd
-set GITHUB_TOKEN=ghp_your_token_here
-```
-
-To set permanently (requires administrator privileges):
+**Command Prompt** (permanent):
 
 ```cmd
 setx GITHUB_TOKEN "ghp_your_token_here"
 ```
 
-#### Using PowerShell
+### Verify Setup
 
-For the current session only:
-
-```powershell
-$env:GITHUB_TOKEN = "ghp_your_token_here"
-```
-
-To set permanently for the current user:
-
-```powershell
-[Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "ghp_your_token_here", "User")
-```
-
-### Verify the Token is Set
-
-You can verify that the environment variable is correctly set:
+Test that the variable is set correctly:
 
 ```bash
-# Linux/macOS/PowerShell
-echo $GITHUB_TOKEN
-
-# Windows CMD
-echo %GITHUB_TOKEN%
+echo $GITHUB_TOKEN  # Linux/macOS/PowerShell
+echo %GITHUB_TOKEN% # Windows CMD
 ```
-
-:::tip[Alternative: .env Files] For project-specific tokens, you can create a
-`.env` file in your project root:
-
-```bash
-GITHUB_TOKEN=ghp_your_token_here
-```
-
-Make sure to add `.env` to your `.gitignore` file to prevent accidentally
-committing it. :::
 
 ## Troubleshooting Authentication
 
