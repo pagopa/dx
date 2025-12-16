@@ -10,7 +10,7 @@ import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
-import { commit, git$, push } from "../../execa/git.js";
+import { git$ } from "../../execa/git.js";
 import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
@@ -116,14 +116,18 @@ const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
   const git = git$({ cwd });
   const promise = git`git init`
     .then(() => git`git add README.md`)
-    .then(() => commit(cwd, "Create README"))
-    .then(() => git`git branch -M main`)
-    .then(() => git`git remote add origin git@github.com:${owner}/${name}.git`)
-    .then(() => push(cwd, "main"))
-    .then(() => git`git switch -c ${branchName}`)
-    .then(() => git`git add .`)
-    .then(() => commit(cwd, "Scaffold workspace"))
-    .then(() => push(cwd, branchName));
+    .then(() =>
+      git`git commit --no-gpg-sign -m "Create README"`
+        .then(() => git`git branch -M main`)
+        .then(
+          () => git`git remote add origin git@github.com:${owner}/${name}.git`,
+        )
+        .then(() => git`git push -u origin main`)
+        .then(() => git`git switch -c ${branchName}`)
+        .then(() => git`git add .`)
+        .then(() => git`git commit --no-gpg-sign -m "Scaffold workspace"`),
+    )
+    .then(() => git`git push -u origin ${branchName}`);
 
   return withSpinner(
     "Pushing code to GitHub...",

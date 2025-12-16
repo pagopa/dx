@@ -1,11 +1,12 @@
 import { $ } from "execa";
 
+/**
+ * A pre-configured execa instance for running git commands in a shell.
+ *
+ * @example
+ * await git$`git status`;
+ * await git$({ cwd: '/path/to/repo' })`git pull`;
+ */
 export const git$ = $({
   shell: true,
 });
-
-export const push = (cwd: string, branch: string) =>
-  git$({ cwd })`git push -u origin ${branch}`;
-
-export const commit = (cwd: string, message: string) =>
-  git$({ cwd })`git commit --no-gpg-sign -m "${message}"`;
