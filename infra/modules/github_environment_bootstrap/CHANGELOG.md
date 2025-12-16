@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.4
+
+### Patch Changes
+
+- 2c0ec21: Fix link to the DX Monorepo Setup Guide
+
 ## 1.1.3
 
 ### Patch Changes
