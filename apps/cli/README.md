@@ -112,19 +112,41 @@ This command helps you:
 
 #### `init`
 
-Initialize resources such as new projects with standardized structure.
+Bootstrap a new monorepo project with standardized structure and remote repository provisioning.
 
 ```bash
-# Initialize a new monorepo project
 dx init project
 ```
 
 This command will:
 
-- Guide you through creating a new monorepo project
-- Set up the project structure according to PagoPA's DevEx guidelines
-- Configure necessary tools and dependencies
-- Bootstrap the project with best practices
+- Check that required tools (e.g., Terraform CLI) are installed
+- Interactively prompt for project metadata (cloud provider, region, environments, cost center, etc.)
+- Generate a monorepo structure following PagoPA DevEx guidelines
+- Create a remote GitHub repository using Terraform
+
+**Example usage:**
+
+```bash
+$ dx init project
+? What is the repository name? my-monorepo
+? What is the GitHub repository owner? pagopa
+? What is the repository description? My new PagoPA monorepo
+...
+
+✔ Terraform CLI is installed!
+✔ Workspace files created successfully!
+✔ GitHub repository created successfully!
+
+Workspace created successfully!
+- Name: my-monorepo
+- Cloud Service Provider: azure
+- CSP location: italynorth
+- GitHub Repository: https://github.com/pagopa/my-monorepo
+```
+
+> [!NOTE]
+> The command will fail early if required tools are missing.
 
 #### `info`
 
