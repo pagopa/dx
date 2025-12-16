@@ -20,6 +20,7 @@ import { $ } from "execa";
  * ```typescript
  * await tf$`terraform init`;
  * await tf$`terraform apply -auto-approve`;
+ * ```
  */
 export const tf$ = $({
   environment: {
