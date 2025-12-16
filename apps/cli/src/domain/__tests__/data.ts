@@ -1,4 +1,5 @@
-import { mock } from "vitest-mock-extended";
+import { Octokit } from "octokit";
+import { mock, mockDeep } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
 import {
@@ -27,6 +28,7 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = () => ({
+  octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
   validationReporter: mock<ValidationReporter>(),
