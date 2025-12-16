@@ -114,7 +114,7 @@ const createRemoteRepository = ({
 const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
   const branchName = "features/scaffold-workspace";
   const git = git$({ cwd });
-  const promise = git`git init`
+  const repoInitPromise = git`git init`
     .then(() => git`git add README.md`)
     .then(() =>
       git`git commit --no-gpg-sign -m "Create README"`
@@ -133,7 +133,7 @@ const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
     "Pushing code to GitHub...",
     "Code pushed to GitHub successfully!",
     "Failed to push code to GitHub.",
-    promise,
+    repoInitPromise,
   ).map(() => branchName);
 };
 
