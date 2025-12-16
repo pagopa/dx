@@ -41,9 +41,14 @@ type RepositoryPullRequest = {
 };
 
 class Repository {
+  get ssh(): string {
+    return `git@github.com:${this.owner}/${this.name}.git`;
+  }
+
   get url(): string {
     return `https://github.com/${this.owner}/${this.name}`;
   }
+
   constructor(
     public readonly name: string,
     public readonly owner: string,
@@ -160,7 +165,7 @@ const initializeGitRepository = (repository: Repository) => {
     await git$`git add README.md`;
     await git$`git commit --no-gpg-sign -m "Create README.md"`;
     await git$`git branch -M main`;
-    await git$`git remote add origin git@github.com:${repository.owner}/${repository.name}.git`;
+    await git$`git remote add origin ${repository.ssh}`;
     await git$`git push -u origin main`;
     await git$`git switch -c ${branchName}}`;
     await git$`git add .`;
