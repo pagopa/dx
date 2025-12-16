@@ -67,10 +67,7 @@ const withSpinner = <T>(
       successText,
       text,
     }),
-    (cause) => {
-      console.debug(`Error during: ${text}`, JSON.stringify(cause, null, 2));
-      return new Error(failText, { cause });
-    },
+    (cause) => new Error(failText, { cause }),
   );
 
 // TODO: Check repository already exists: if exists, return an error
