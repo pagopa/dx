@@ -5,7 +5,6 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
-import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
@@ -79,18 +78,6 @@ const displaySummary = (initResult: InitResult) => {
   }
 };
 
-const checkGhCliIsInstalled = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, $`gh --version`);
-
-const checkGhCliIsLoggedIn = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, $`gh auth status`);
-
 const checkTerraformCliIsInstalled = (
   text: string,
   successText: string,
@@ -98,25 +85,11 @@ const checkTerraformCliIsInstalled = (
 ) => withSpinner(text, successText, failText, tf$`terraform -version`);
 
 const checkPreconditions = () =>
-  checkGhCliIsInstalled(
-    "Checking GitHub CLI ('gh') is installed...",
-    "GitHub CLI ('gh') is installed!",
-    "GitHub CLI ('gh') is not installed.",
-  )
-    .andThen(() =>
-      checkGhCliIsLoggedIn(
-        "Checking GitHub CLI ('gh') login...",
-        "GitHub CLI ('gh') is logged in!",
-        "GitHub CLI ('gh') is not logged in.",
-      ),
-    )
-    .andThen(() =>
-      checkTerraformCliIsInstalled(
-        "Checking Terraform CLI is installed...",
-        "Terraform CLI is installed!",
-        "Terraform CLI is not installed.",
-      ),
-    );
+  checkTerraformCliIsInstalled(
+    "Checking Terraform CLI is installed...",
+    "Terraform CLI is installed!",
+    "Terraform CLI is not installed.",
+  );
 
 const createRemoteRepository = ({
   repoName,

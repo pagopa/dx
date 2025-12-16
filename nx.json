@@ -62,7 +62,8 @@
         "{projectRoot}/**/*.mod",
         "{projectRoot}/**/Dockerfile"
       ]
-    }
+    },
+    "version": {}
   },
   "plugins": [
     {
