@@ -118,7 +118,7 @@ const initializeGitRepository = (cwd: string, { name, owner }: Repository) => {
   const repoInitPromise = git`git init`
     .then(() => git`git add README.md`)
     .then(() =>
-      git`git commit --no-gpg-sign -m "Create README"`
+      git`git commit --no-gpg-sign -m "Create README.md"`
         .then(() => git`git branch -M main`)
         .then(
           () => git`git remote add origin git@github.com:${owner}/${name}.git`,
