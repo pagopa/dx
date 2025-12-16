@@ -5,13 +5,13 @@ import loadMonorepoScaffolder, {
 } from "@pagopa/monorepo-generator";
 import chalk from "chalk";
 import { Command } from "commander";
+import { $ } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
-import { git$ } from "../../execa/git.js";
 import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
@@ -23,8 +23,18 @@ type InitResult = {
     name: string;
   };
   pr?: PullRequest;
-  repository: Repository;
+  repository?: Repository;
 };
+
+class Repository {
+  get url(): string {
+    return `https://github.com/${this.owner}/${this.name}`;
+  }
+  constructor(
+    public readonly name: string,
+    public readonly owner: string,
+  ) {}
+}
 
 type LocalWorkspace = {
   branchName: string;
@@ -33,12 +43,6 @@ type LocalWorkspace = {
 
 type PullRequest = {
   url: string;
-};
-
-type Repository = {
-  name: string;
-  owner: string;
-  url?: string;
 };
 
 type RepositoryPullRequest = {
@@ -82,11 +86,11 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
 const displaySummary = (initResult: InitResult) => {
   const { csp, pr, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
-  console.log(`- Name: ${chalk.cyan(repository.name)}`);
   console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
   console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
 
-  if (repository.url) {
+  if (repository) {
+    console.log(`- Name: ${chalk.cyan(repository.name)}`);
     console.log(`- GitHub Repository: ${chalk.cyan(repository.url)}\n`);
   } else {
     console.log(
@@ -132,46 +136,43 @@ const createRemoteRepository = ({
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
   const cwd = path.resolve(repoName, "infra", "repository");
-  const terraformInitPromise = tf$({
-    cwd,
-  })`terraform init`.then(() => tf$({ cwd })`terraform apply -auto-approve`);
+  const applyTerraform = async () => {
+    await tf$({ cwd })`terraform init`;
+    await tf$({ cwd })`terraform apply -auto-approve`;
+  };
   return withSpinner(
     "Creating GitHub repository...",
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
-    terraformInitPromise,
-  ).map(() => ({
-    name: repoName,
-    owner: repoOwner,
-    url: `https://github.com/${repoOwner}/${repoName}`,
-  }));
+    applyTerraform(),
+  ).map(() => new Repository(repoName, repoOwner));
 };
 
 const initializeGitRepository = (repository: Repository) => {
   const cwd = path.resolve(repository.name);
   const branchName = "features/scaffold-workspace";
-  const git = git$({ cwd });
-  const repoInitPromise = git`git init`
-    .then(() => git`git add README.md`)
-    .then(() =>
-      git`git commit --no-gpg-sign -m "Create README"`
-        .then(() => git`git branch -M main`)
-        .then(
-          () =>
-            git`git remote add origin git@github.com:${repository.owner}/${repository.name}.git`,
-        )
-        .then(() => git`git push -u origin main`)
-        .then(() => git`git switch -c ${branchName}`)
-        .then(() => git`git add .`)
-        .then(() => git`git commit --no-gpg-sign -m "Scaffold workspace"`),
-    )
-    .then(() => git`git push -u origin ${branchName}`);
+  const git$ = $({
+    cwd,
+    shell: true,
+  });
+  const pushToOrigin = async () => {
+    await git$`git init`;
+    await git$`git add README.md`;
+    await git$`git commit --no-gpg-sign -m "Create README.md"`;
+    await git$`git branch -M main`;
+    await git$`git remote add origin git@github.com:${owner}/${name}.git`;
+    await git$`git push -u origin main`;
+    await git$`git switch -c ${branchName}}`;
+    await git$`git add .`;
+    await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+    await git$`git push -u origin ${branchName}`;
+  };
 
   return withSpinner(
     "Pushing code to GitHub...",
     "Code pushed to GitHub successfully!",
     "Failed to push code to GitHub.",
-    repoInitPromise,
+    pushToOrigin(),
   ).map(() => ({ branchName, repository }));
 };
 
