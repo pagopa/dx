@@ -79,10 +79,10 @@ resource "azurerm_dns_ns_record" "uat_dx_pagopa_it" {
   zone_name           = azurerm_dns_zone.dx_pagopa_it.name
   resource_group_name = module.azure.network_resource_group_name
   records = [
-    "ns1-05.azure-dns.com.",
-    "ns2-05.azure-dns.net.",
-    "ns3-05.azure-dns.org.",
-    "ns4-05.azure-dns.info."
+    "ns1-01.azure-dns.com.",
+    "ns2-01.azure-dns.net.",
+    "ns3-01.azure-dns.org.",
+    "ns4-01.azure-dns.info."
   ]
   ttl  = 300
   tags = local.tags
