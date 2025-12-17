@@ -19,100 +19,47 @@ content.
 
 ## Generating a Personal Access Token
 
-### Step 1: Navigate to Token Settings
+To use the DX CLI, you need a GitHub Personal Access Token (PAT) with the
+following permissions. The token must be created with access to **all
+repositories in the selected organization**.
 
-1. Log in to your GitHub account
-2. Click on your profile picture in the top-right corner
-3. Select **Settings** from the dropdown menu
-4. In the left sidebar, scroll down and click on **Developer settings** (at the
-   bottom)
-5. Click on **Personal access tokens**
-6. Choose **Fine-grained tokens**
+### Organization Permissions
 
-### Step 2: Create a New Token
+| Permission  | Access Level |
+| ----------- | ------------ |
+| **Members** | Read-only    |
 
-Fine-grained tokens provide granular control over permissions and can be scoped
-to specific repositories.
+### Repository Permissions
 
-1. Click **Generate new token** → **Generate new token (fine-grained)**
-2. Fill in the token details:
-   - **Token name**: Give it a descriptive name (e.g., `DX-CLI-Token`)
-   - **Expiration**: Select an appropriate expiration period (90 days
-     recommended)
-   - **Description**: Optional, but helpful for tracking usage
-   - **Resource owner**: Select your organization or personal account
-   - **Repository access**: Choose one of the following:
-     - **All repositories** - Token works across all your repositories
-     - **Only select repositories** - Choose specific repositories (more secure)
+| Permission         | Access Level   |
+| ------------------ | -------------- |
+| **Pull requests**  | Read and write |
+| **Secrets**        | Read and write |
+| **Variables**      | Read and write |
+| **Environments**   | Read and write |
+| **Administration** | Read and write |
+| **Metadata**       | Read-only      |
 
-### Step 3: Configure Permissions
+Grant access only to the repositories you need to manage with the DX CLI for
+better security, but for full functionality, access to all repositories in the
+organization is recommended.
 
-The DX CLI needs specific permissions to create pull requests.
+For detailed steps on how to generate a token, see the
+[GitHub documentation: Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
-Select the following **Repository permissions**:
+## Using the Token
 
-| Permission        | Access Level   | Required For                                           |
-| ----------------- | -------------- | ------------------------------------------------------ |
-| **Pull requests** | Read and write | Creating and managing pull requests                    |
-| **Metadata**      | Read-only      | Accessing repository metadata (automatically included) |
-
-:::tip[Principle of Least Privilege]
-
-For better security, grant access only to the repositories you need to manage
-with the DX CLI.
-
-:::
-
-### Step 4: Generate and Copy the Token
-
-1. Review your selections
-2. Click **Generate token** at the bottom of the page
-3. **Important**: Copy the token immediately - you won't be able to see it
-   again!
-4. Store it securely (consider using a password manager)
-
-:::warning[Token Security]
-
-- Never commit your token to version control
-- Never share your token in public channels
-- Regenerate your token immediately if it's accidentally exposed
-- Use separate tokens for different purposes
-
-:::
-
-## Setting the Token as Environment Variable
-
-The DX CLI expects the GitHub token to be available as the `GITHUB_TOKEN`
-environment variable.
-
-### Linux and macOS
-
-Add the following line to your shell configuration file (`~/.bashrc`,
-`~/.zshrc`, or `~/.config/fish/config.fish`):
+To use the DX CLI with your GitHub Personal Access Token, set the token in your
+environment and run the CLI command. For example:
 
 ```bash
-export GITHUB_TOKEN="ghp_your_token_here"
+export GITHUB_TOKEN=<your_token>
+npx @pagopa/dx-cli init
 ```
 
-Then reload your configuration: `source ~/.bashrc` (or the appropriate file for
-your shell).
-
-### Windows
-
-**Command Prompt** (permanent):
-
-```cmd
-setx GITHUB_TOKEN "ghp_your_token_here"
-```
-
-### Verify Setup
-
-Test that the variable is set correctly:
-
-```bash
-echo $GITHUB_TOKEN  # Linux/macOS/PowerShell
-echo %GITHUB_TOKEN% # Windows CMD
-```
+Replace `<your_token>` with your actual GitHub Personal Access Token. The CLI
+will use the token from the `GITHUB_TOKEN` environment variable for
+authentication.
 
 ## Troubleshooting Authentication
 
@@ -143,16 +90,7 @@ This should return your GitHub user information if the token is valid.
 
 ## Revoking a Token
 
-If you need to revoke a token:
-
-1. Go to GitHub Settings → Developer settings → Personal access tokens
-2. Find the token in the list
-3. Click **Delete** or **Revoke**
-4. Confirm the deletion
+To revoke a token, follow the instructions in the
+[GitHub documentation: Token expiration and revocation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation).
 
 Remember to update your environment variable or remove it if you revoke a token.
-
-## Additional Resources
-
-- [GitHub Documentation: Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-- [GitHub Documentation: Token expiration and revocation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation)
