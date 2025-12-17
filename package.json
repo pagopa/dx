@@ -21,6 +21,6 @@
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
     "dx": "node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check --configuration=ci"
+    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check,typecheck --configuration=ci"
   }
 }
