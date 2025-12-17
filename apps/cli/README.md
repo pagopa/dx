@@ -122,9 +122,12 @@ This command will:
 
 - Check that required tools (e.g., Terraform CLI) are installed
 - Interactively prompt for project metadata (cloud provider, region, environments, cost center, etc.)
+- **Check that the target GitHub repository does not already exist before proceeding**
 - Generate a monorepo structure following PagoPA DevEx guidelines
 - Create a remote GitHub repository using Terraform
 - Push the initial codebase to the newly created repository
+
+If the specified GitHub repository already exists, the command will fail early with a clear error message, preventing accidental overwrites.
 
 **Example usage:**
 
