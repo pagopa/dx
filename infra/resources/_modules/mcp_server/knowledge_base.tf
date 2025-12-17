@@ -8,16 +8,27 @@ resource "awscc_bedrock_knowledge_base" "this" {
   knowledge_base_configuration = {
     type = "VECTOR"
     vector_knowledge_base_configuration = {
+      # Using Amazon Titan Embed Text v2 model for text embedding.
+      # This model provides a good balance between quality and cost for documentation indexing.
+      # The v2 variant includes improved multilingual support and better semantic understanding.
       embedding_model_arn = "arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.titan-embed-text-v2:0"
       embedding_model_configuration = {
         bedrock_embedding_model_configuration = {
-          dimensions          = 1024
+          # 1024 dimensions: Standard output for Titan Embed Text v2 model.
+          # Provides sufficient expressiveness for semantic search while maintaining reasonable computational overhead.
+          # This dimensionality balances retrieval quality with performance and cost considerations.
+          dimensions = 1024
+          # FLOAT32: High-precision floating-point representation for embeddings.
+          # Ensures accurate semantic similarity calculations during vector search operations,
+          # which is critical for retrieving relevant documentation snippets from the knowledge base.
           embedding_data_type = "FLOAT32"
         }
       }
     }
   }
   storage_configuration = {
+    # S3_VECTORS: Uses Amazon S3 Vectors for scalable, cost-effective vector storage.
+    # Provides high-performance similarity search with persistent vector embeddings.
     type = "S3_VECTORS"
     s3_vectors_configuration = {
       index_name        = aws_s3vectors_index.this.index_name
@@ -40,14 +51,26 @@ resource "awscc_bedrock_data_source" "docs" {
 
   vector_ingestion_configuration = {
     chunking_configuration = {
+      # HIERARCHICAL strategy enables multi-level document chunking.
+      # Processes documents at multiple granularities (coarse and fine-grained),
+      # improving retrieval accuracy for both broad conceptual queries and detailed technical questions.
       chunking_strategy = "HIERARCHICAL"
       hierarchical_chunking_configuration = {
+        # overlap_tokens = 60: Maintains context continuity between chunks.
+        # Small overlaps ensure smooth transitions between chunks while avoiding excessive redundancy.
+        # This helps preserve semantic coherence when chunks are retrieved independently.
         overlap_tokens = 60
         level_configurations = [
           {
+            # First level (coarse): max_tokens = 1500
+            # Creates larger chunks suitable for capturing high-level topics and broad concepts.
+            # Balances informativeness with manageability for semantic search.
             max_tokens = 1500
           },
           {
+            # Second level (fine): max_tokens = 300
+            # Creates smaller, more granular chunks for detailed retrieval.
+            # Helps answer specific technical questions with precise, focused context.
             max_tokens = 300
           }
         ]
