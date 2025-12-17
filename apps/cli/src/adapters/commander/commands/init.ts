@@ -73,12 +73,42 @@ const withSpinner = <T>(
     },
   );
 
-// TODO: Check repository already exists: if exists, return an error
+const checkRepositoryDoesNotExist =
+  (octokit: Octokit) =>
+  (owner: string, name: string): ResultAsync<void, Error> => {
+    const doesRepositoryExist = ResultAsync.fromPromise(
+      octokit.rest.repos.get({
+        owner,
+        repo: name,
+      }),
+      () => new Error("Repository check failed"),
+    ).match(
+      // Repository exists, then throw an error to block the workflow
+      ({ data }) => {
+        throw new Error(`Repository ${data.full_name} already exists`);
+      },
+      // Repository does not exist, return anything
+      () => undefined,
+    );
+
+    return withSpinner(
+      `Checking if repository ${owner}/${name} already exists...`,
+      `Repository ${owner}/${name} does not exist. Proceeding...`,
+      `Repository ${owner}/${name} already exists.`,
+      doesRepositoryExist,
+    );
+  };
+
 // TODO: Check Cloud Environment exists
 // TODO: Check CSP CLI is installed
 // TODO: Check user has permissions to handle Terraform state
-const validateAnswers = (answers: Answers): ResultAsync<Answers, Error> =>
-  okAsync(answers);
+const validateAnswers =
+  (octokit: Octokit) =>
+  (answers: Answers): ResultAsync<Answers, Error> =>
+    checkRepositoryDoesNotExist(octokit)(
+      answers.repoOwner,
+      answers.repoName,
+    ).map(() => answers);
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   withSpinner(
@@ -258,7 +288,7 @@ export const makeInitCommand = ({
                 // Decode the answers to match the Answers schema
                 .andThen(decode(answersSchema))
                 // Validate the answers (like checking permissions, checking GitHub user or org existence, etc.)
-                .andThen(validateAnswers)
+                .andThen(validateAnswers(octokit))
                 // Run the generator with the provided answers (this will create the files locally)
                 .andThen(runGeneratorActions(generator)),
             )
