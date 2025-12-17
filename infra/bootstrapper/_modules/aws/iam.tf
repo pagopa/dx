@@ -25,6 +25,22 @@ data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
       "arn:aws:s3:::dx-${var.environment.env_short}-euc1-docs-kb-s3-01/*",
     ]
   }
+
+  statement {
+    sid    = "SyncKnowledgeBaseDataSource"
+    effect = "Allow"
+    actions = [
+      "bedrock:GetKnowledgeBase",
+      "bedrock:UpdateKnowledgeBase",
+      "bedrock:GetKnowledgeBaseDocuments",
+      "bedrock:IngestKnowledgeBaseDocuments",
+      "bedrock:DeleteKnowledgeBaseDocuments",
+      "bedrock:ListKnowledgeBases"
+    ]
+    resources = [
+      "*",
+    ]
+  }
 }
 
 # Create an IAM policy resource from the policy document

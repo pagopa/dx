@@ -47,7 +47,9 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       # Upload only markdown files to the knowledge base bucket deleting objects that don't exist anymore
+      # Also start an ingestion job to update the production knowledge base
       - shell: bash
         run: |
           echo "Deploying documentation to knowledge base..."
           aws s3 sync ./${OUTPUT_DIR}/ s3://${BUCKET_NAME}/ --exclude "*" --include "*.md" --include "*.mdx" --delete
+          aws bedrock-agent start-ingestion-job --knowledge-base-id ALSBZAYABZ --data-source-id 90H5AJLRJQ
