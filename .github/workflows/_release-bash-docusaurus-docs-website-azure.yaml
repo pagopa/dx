@@ -48,6 +48,8 @@ jobs:
         uses: pagopa/dx/actions/csp-login@main
       # Upload only markdown files to the knowledge base bucket deleting objects that don't exist anymore
       # Also start an ingestion job to update the production knowledge base
+      # - knowledge-base-id: AWS Console > Bedrock > Knowledge bases > [your-kb-name] > Knowledge base ID
+      # - data-source-id: AWS Console > Bedrock > Knowledge bases > [your-kb-name] > Data sources > [your-ds-name] > Data source ID
       - shell: bash
         run: |
           echo "Deploying documentation to knowledge base..."
