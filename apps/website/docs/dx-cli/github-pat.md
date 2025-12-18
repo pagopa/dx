@@ -25,27 +25,30 @@ repositories in the selected organization**.
 
 ### Organization Permissions
 
-| Permission  | Access Level |
-| ----------- | ------------ |
-| **Members** | Read-only    |
+| Permission  | Access Level | Reason                                                                        |
+| ----------- | ------------ | ----------------------------------------------------------------------------- |
+| **Members** | Read-only    | Required to read organization members for repository creation and assignment. |
 
 ### Repository Permissions
 
-| Permission         | Access Level   |
-| ------------------ | -------------- |
-| **Pull requests**  | Read and write |
-| **Secrets**        | Read and write |
-| **Variables**      | Read and write |
-| **Environments**   | Read and write |
-| **Administration** | Read and write |
-| **Metadata**       | Read-only      |
+| Permission         | Access Level   | Reason                                                              |
+| ------------------ | -------------- | ------------------------------------------------------------------- |
+| **Administration** | Read and write | Required for repository settings and management tasks.              |
+| **Environments**   | Read and write | Needed to manage repository environments for CI/CD workflows.       |
+| **Metadata**       | Read-only      | Automatically included; allows access to repository metadata.       |
+| **Pull requests**  | Read and write | Required to create and manage pull requests.                        |
+| **Secrets**        | Read and write | Needed to manage repository secrets for automation and CI/CD.       |
+| **Variables**      | Read and write | Needed to manage repository variables for workflows and automation. |
 
-Grant access only to the repositories you need to manage with the DX CLI for
-better security, but for full functionality, access to all repositories in the
-organization is recommended.
+:::note
+
+The `init` command must have permission to access all repositories in the
+organization because it creates a new repository.
+
+:::
 
 For detailed steps on how to generate a token, see the
-[GitHub documentation: Creating a personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
+[official GitHub documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token).
 
 ## Using the Token
 
@@ -65,11 +68,11 @@ authentication.
 
 If you encounter authentication errors:
 
-1. **Verify the token is set**: Check that the environment variable is correctly
+1. **Verify the token is set**: check that the environment variable is correctly
    configured
-2. **Check token expiration**: Ensure your token hasn't expired
-3. **Verify permissions**: Make sure your token has the required permissions
-4. **Test token validity**: You can test your token using the GitHub API:
+2. **Check token expiration**: ensure your token hasn't expired
+3. **Verify permissions**: make sure your token has the required permissions
+4. **Test token validity**: test your token using the GitHub API:
 
 ```bash
 curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
@@ -85,8 +88,6 @@ This should return your GitHub user information if the token is valid.
 - **Rotate tokens regularly** - even before expiration
 - **Use different tokens** for different tools and purposes
 - **Revoke unused tokens** - clean up tokens you no longer need
-- **Monitor token usage** - GitHub provides logs of token activity in Settings →
-  Developer settings → Personal access tokens
 
 ## Revoking a Token
 
