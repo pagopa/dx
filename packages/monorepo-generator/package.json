@@ -37,8 +37,7 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vitest-mock-extended": "catalog:",
-    "zod": "^4.1.12"
+    "vitest-mock-extended": "catalog:"
   },
   "scripts": {
     "build": "tsup",
