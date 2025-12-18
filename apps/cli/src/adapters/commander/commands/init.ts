@@ -11,8 +11,10 @@ import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
 import { Octokit } from "octokit";
 import { oraPromise } from "ora";
+import { z } from "zod";
 
 import { tf$ } from "../../execa/terraform.js";
+import { parseJson } from "../../node/json/index.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
@@ -138,16 +140,39 @@ const createRemoteRepository = ({
   repoOwner,
 }: Answers): ResultAsync<Repository, Error> => {
   const cwd = path.resolve(repoName, "infra", "repository");
+
+  // Define Zod schema for Terraform output
+  const terraformOutputSchema = z.object({
+    repository_id: z.object({
+      sensitive: z.boolean(),
+      type: z.string(),
+      value: z.string(),
+    }),
+    repository_name: z.object({
+      sensitive: z.boolean(),
+      type: z.string(),
+      value: z.string(),
+    }),
+  });
+
   const applyTerraform = async () => {
     await tf$({ cwd })`terraform init`;
     await tf$({ cwd })`terraform apply -auto-approve`;
+    const { stdout } = await tf$({ cwd })`terraform output -json`;
+    return stdout;
   };
+
   return withSpinner(
     "Creating GitHub repository...",
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
     applyTerraform(),
-  ).map(() => new Repository(repoName, repoOwner));
+  )
+    .map(parseJson)
+    .andThen(decode(terraformOutputSchema))
+    .map(
+      ({ repository_name }) => new Repository(repository_name.value, repoOwner),
+    );
 };
 
 const initializeGitRepository = (repository: Repository) => {
