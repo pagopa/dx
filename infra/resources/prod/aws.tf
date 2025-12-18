@@ -8,7 +8,8 @@ module "aws_core_values" {
 module "mcp_server" {
   source = "../_modules/mcp_server"
   providers = {
-    aws = aws.eu-central-1
+    aws   = aws.eu-central-1
+    awscc = awscc.eu-central-1
   }
 
   naming_config                          = merge(local.aws_naming_config, { region = "eu-central-1" })

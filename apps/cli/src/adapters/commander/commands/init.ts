@@ -164,7 +164,7 @@ const initializeGitRepository = (repository: Repository) => {
     await git$`git branch -M main`;
     await git$`git remote add origin ${repository.ssh}`;
     await git$`git push -u origin main`;
-    await git$`git switch -c ${branchName}}`;
+    await git$`git switch -c ${branchName}`;
     await git$`git add .`;
     await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
     await git$`git push -u origin ${branchName}`;

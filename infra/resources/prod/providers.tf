@@ -22,7 +22,12 @@ terraform {
 
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
+    }
+
+    awscc = {
+      source  = "hashicorp/awscc"
+      version = "~> 1.0"
     }
 
     awsdx = {
@@ -55,6 +60,11 @@ provider "aws" {
 }
 
 provider "aws" {
+  alias  = "eu-central-1"
+  region = "eu-central-1"
+}
+
+provider "awscc" {
   alias  = "eu-central-1"
   region = "eu-central-1"
 }
