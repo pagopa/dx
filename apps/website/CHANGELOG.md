@@ -1,5 +1,11 @@
 # docs
 
+## 0.11.2
+
+### Patch Changes
+
+- af0079a: Fix formatting of the tip blocks that did not render as expected
+
 ## 0.11.1
 
 ### Patch Changes
