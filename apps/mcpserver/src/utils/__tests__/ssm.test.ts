@@ -10,13 +10,13 @@ describe("getSecureParameter", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(SSMClient).mockImplementation(
-      (config?: { region?: string }) =>
-        ({
-          config: { region: config?.region },
-          send: mockSend,
-        }) as unknown as SSMClient,
-    );
+    vi.mocked(SSMClient).mockImplementation((...args: unknown[]) => {
+      const config = args[0] as { region?: string } | undefined;
+      return {
+        config: { region: config?.region },
+        send: mockSend,
+      } as unknown as SSMClient;
+    });
   });
 
   it("should retrieve a secure parameter successfully", async () => {

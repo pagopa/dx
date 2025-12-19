@@ -55,7 +55,6 @@ const server = new FastMCP({
     }
   },
   instructions: serverInstructions,
-  logger: logger,
   name: "PagoPA DX Knowledge Retrieval MCP Server",
   oauth:
     authConfig.MCP_AUTH_TYPE === "oauth"

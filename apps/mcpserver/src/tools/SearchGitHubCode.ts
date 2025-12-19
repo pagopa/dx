@@ -1,6 +1,10 @@
+import type { Context } from "fastmcp";
+
 import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
+
+import type { AuthenticationStatus } from "../types.js";
 
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
@@ -19,16 +23,16 @@ For example, search for "pagopa-dx/azure-function-app/azurerm" to find examples 
 Returns file contents matching the search query.`,
   execute: async (
     args: { extension?: string; query: string },
-    context: { session?: { token?: string } },
+    context: Context<AuthenticationStatus | undefined>,
   ): Promise<string> => {
     const logger = getLogger(["mcpserver", "github-search"]);
     const org = defaultOrg;
-    const token = context.session?.token;
 
-    if (!token) {
+    if (!context.session || !context.session.authenticated) {
       throw new Error("GitHub token not available in session");
     }
 
+    const token = context.session.token;
     const octokit = new Octokit({ auth: token });
 
     try {
