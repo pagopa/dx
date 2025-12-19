@@ -157,18 +157,21 @@ jobs:
           app_location: "./${{ env.OUTPUT_DIR }}"
           skip_app_build: true
 
-      - name: Preview comments Cleanup
+      - name: Preview Comments Cleanup
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy_preview.outcome == 'success'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              }
+            );
 
-            const botComments = comments.data.filter(comment =>
+            const botComments = comments.filter(comment =>
               comment.user.type === 'Bot' &&
               comment.body.includes('Azure Static Web Apps: Your stage site is ready!')
             );
