@@ -15,18 +15,15 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
 
 export async function startPATVerificationFlow(
   request: IncomingMessage,
-): Promise<
-  | undefined
-  | {
-      id: number;
-      token: string;
-    }
-> {
+): Promise<{
+  authenticated: boolean;
+  token: string;
+}> {
   const authHeader = request.headers["x-gh-pat"];
   const apiKey =
     typeof authHeader === "string"
       ? authHeader
-      : Array.isArray(authHeader)
+      : Array.isArray(authHeader) && authHeader.length > 0
         ? authHeader[0]
         : undefined;
 
@@ -39,7 +36,7 @@ export async function startPATVerificationFlow(
 
   // The returned object is accessible in the `context.session`.
   return {
-    id: 1,
+    authenticated: true,
     token: apiKey,
   };
 }

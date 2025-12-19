@@ -4,8 +4,8 @@ import { FastMCP } from "fastmcp";
 
 import packageJson from "../package.json" with { type: "json" };
 import { startPATVerificationFlow } from "./auth/github.js";
-import { initializeOAuthProvider, startOAuthFlow } from "./auth/oauth.js";
-import { authConfig } from "./config/auth.js";
+import { getOAuthProvider, startOAuthFlow } from "./auth/oauth.js";
+import { getConfig } from "./config/auth.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
 import { serverInstructions } from "./config/server.js";
@@ -17,6 +17,7 @@ import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
 // Configure logging
 await configureLogging();
 await configureAzureMonitoring();
+const authConfig = await getConfig();
 
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
@@ -28,7 +29,7 @@ let authProxy;
 if (authConfig.MCP_AUTH_TYPE === "oauth") {
   try {
     logger.debug("Initializing OAuth provider...");
-    authProxy = await initializeOAuthProvider();
+    authProxy = await getOAuthProvider();
     logger.debug("OAuth provider initialized successfully");
   } catch (error) {
     logger.error("Failed to initialize OAuth provider", { error });
