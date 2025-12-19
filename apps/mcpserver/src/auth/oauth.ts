@@ -1,12 +1,9 @@
 import type { IncomingMessage } from "http";
 
 import { getLogger } from "@logtape/logtape";
-import { JWTIssuer, OAuthProxy } from "fastmcp/auth";
-import * as assert from "node:assert/strict";
+import { OAuthProxy } from "fastmcp/auth";
 
 import { getConfig } from "../config/auth.js";
-import { region } from "../config/aws.js";
-import { DynamoDBStore } from "./ddbTokenStore.js";
 import { verifyGithubUser } from "./github.js";
 
 const logger = getLogger(["mcpserver", "oauth"]);
@@ -44,14 +41,7 @@ export async function initializeOAuthProvider(): Promise<OAuthProxy> {
   return new OAuthProxy({
     baseUrl: authConfig.MCP_SERVER_URL,
     enableTokenSwap: false,
-    // encryptionKey: await authConfig.getEncryptionSecret(),
-    // jwtSigningKey:
-    //   (await authConfig.getJWTSecret()) || "change-me-in-production",
     scopes: ["user"],
-    // tokenStorage: new DynamoDBStore({
-    //   region: region,
-    //   tableName: authConfig.TOKENS_DYNAMODB_TABLE_NAME || "oauth-tokens",
-    // }),
     upstreamAuthorizationEndpoint: "https://github.com/login/oauth/authorize",
     upstreamClientId: clientId,
     upstreamClientSecret: clientSecret,
@@ -71,11 +61,6 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
       token: null | string;
     }
 > {
-  const jwtIssuer = new JWTIssuer({
-    audience: authConfig.MCP_SERVER_URL, // https://api.dx.pagopa.it
-    issuer: authConfig.MCP_SERVER_URL,
-    signingKey: (await authConfig.JWT_SECRET) || "change-me-in-production",
-  });
   const authHeader = request.headers["authorization"];
 
   // If the token is missing, return undefined to indicate unauthenticated request
@@ -87,41 +72,11 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
 
   const token = authHeader.slice(7); // Remove "Bearer "
   logger.debug(`[Authenticate] Token received, starting verification...`);
-  let upstreamAccessToken: string;
 
-  // If the token is a GitHub token, skip JWT validation
-  if (token.startsWith("gh")) {
-    upstreamAccessToken = token;
-    logger.debug(
-      "[Authenticate] Token is a GitHub token, skipping JWT validation.",
-    );
-  } else {
-    // Validate JWT token
-    const validationResult = await jwtIssuer.verify(token);
-
-    // If invalid, return undefined to indicate unauthenticated request
-    if (!validationResult.valid) {
-      logger.debug(
-        `[Authenticate] Token validation failed: ${validationResult.error}`,
-      );
-      return undefined;
-    }
-
-    // Extract GitHub token from storage
-    const upstreamToken = await authProxy.loadUpstreamTokens(token);
-    assert.ok(
-      upstreamToken,
-      "Upstream token should be present after JWT validation",
-    );
-    upstreamAccessToken = upstreamToken.accessToken;
-  }
-
-  const isMember = await verifyGithubUser(upstreamAccessToken).catch(
-    (error) => {
-      logger.error("Error verifying GitHub user during OAuth flow", { error });
-      return undefined;
-    },
-  );
+  const isMember = await verifyGithubUser(token).catch((error) => {
+    logger.error("Error verifying GitHub user during OAuth flow", { error });
+    return undefined;
+  });
 
   if (!isMember) {
     logger.warn("GitHub user is not a member of the required organizations");
@@ -130,6 +85,6 @@ export async function startOAuthFlow(request: IncomingMessage): Promise<
 
   return {
     authenticated: true,
-    token: upstreamAccessToken,
+    token: token,
   };
 }
