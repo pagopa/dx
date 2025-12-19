@@ -50,10 +50,6 @@ export async function startPATVerificationFlow(
 export async function verifyGithubUser(token: string): Promise<boolean> {
   const logger = getLogger(["mcpserver", "github-auth"]);
 
-  if (!token) {
-    return false;
-  }
-
   const octokit = new Octokit({ auth: token });
 
   try {
