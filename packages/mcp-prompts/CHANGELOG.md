@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.0
+
+### Minor Changes
+
+- 9fb9054: Add new prompt that helps developers during the review and fix of the comments received throughout a PR.
+
 ## 0.1.3
 
 ### Patch Changes

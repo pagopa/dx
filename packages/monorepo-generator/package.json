@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.13.0",
+  "version": "0.14.1",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -24,7 +24,7 @@
     "neverthrow": "catalog:",
     "octokit": "^5.0.5",
     "semver": "catalog:",
-    "zod": "^4.1.13"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -37,8 +37,7 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vitest-mock-extended": "catalog:",
-    "zod": "^4.1.12"
+    "vitest-mock-extended": "catalog:"
   },
   "scripts": {
     "build": "tsup",

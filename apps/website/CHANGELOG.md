@@ -1,5 +1,24 @@
 # docs
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [9fb9054]
+  - @pagopa/dx-mcpprompts@0.2.0
+
+## 0.11.3
+
+### Patch Changes
+
+- 84422c0: Update dependencies
+
+## 0.11.2
+
+### Patch Changes
+
+- af0079a: Fix formatting of the tip blocks that did not render as expected
+
 ## 0.11.1
 
 ### Patch Changes
