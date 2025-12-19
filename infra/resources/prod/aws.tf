@@ -8,14 +8,13 @@ module "aws_core_values" {
 module "mcp_server" {
   source = "../_modules/mcp_server"
   providers = {
-    aws             = aws.eu-central-1
+    aws           = aws.eu-central-1
     aws.us_east_1 = aws.us-east-1
-    awscc = awscc.eu-central-1
+    awscc         = awscc.eu-central-1
   }
 
   naming_config                          = merge(local.aws_naming_config, { region = "eu-central-1" })
   account_id                             = data.aws_caller_identity.current.account_id
-  bedrock_knowledge_base_id              = "PR6CJIVR5X"
   application_insights_connection_string = data.azurerm_application_insights.this.connection_string
   mcp_auth_type                          = "oauth"
 
