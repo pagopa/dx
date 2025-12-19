@@ -1,5 +1,12 @@
 # docs
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [9fb9054]
+  - @pagopa/dx-mcpprompts@0.2.0
+
 ## 0.11.3
 
 ### Patch Changes
