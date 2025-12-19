@@ -29,6 +29,9 @@ const logLevelSchema = z
   .enum(["debug", "info", "warning", "error"])
   .catch(DEFAULT_LOG_LEVEL);
 
+/**
+ * Configures LogTape sinks and levels for MCP server and prompts, honoring LOG_LEVEL.
+ */
 export async function configureLogging() {
   const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel;
   if (logLevel !== process.env.LOG_LEVEL) {

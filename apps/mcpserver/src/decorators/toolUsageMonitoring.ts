@@ -4,9 +4,9 @@ import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
- * Decorator that adds logging to tool execute functions.
- * Logs when a tool is executed to both console and Azure Application Insights.
- * Preserves the exact original function signature and type.
+ * Decorates a FastMCP tool to emit telemetry and debug logs on execution while preserving its signature.
+ * @param tool Tool object exposing a `name` and `execute` function.
+ * @returns The same tool shape with logging added, or the original tool if it is not compatible.
  */
 export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
   if (typeof tool !== "object" || !tool.execute || !tool.name) {

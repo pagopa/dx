@@ -3,6 +3,8 @@ import { Octokit } from "@octokit/rest";
 import { IncomingMessage } from "http";
 import { z } from "zod/v4";
 
+import type { AuthenticationStatus } from "../types.js";
+
 const organizationsSchema = z
   .string()
   .transform((s) => s.split(",").map((v) => v.trim()))
@@ -13,12 +15,14 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
   process.env.REQUIRED_ORGANIZATIONS,
 );
 
+/**
+ * Validates GitHub PAT-based access for requests hitting the MCP server.
+ * @param request Incoming HTTP request carrying the PAT in the `x-gh-pat` header.
+ * @returns Authentication status with the provided token, or throws 401 on failure.
+ */
 export async function startPATVerificationFlow(
   request: IncomingMessage,
-): Promise<{
-  authenticated: boolean;
-  token: string;
-}> {
+): Promise<AuthenticationStatus> {
   const authHeader = request.headers["x-gh-pat"];
   const apiKey =
     typeof authHeader === "string"
@@ -42,10 +46,9 @@ export async function startPATVerificationFlow(
 }
 
 /**
- * Verifies that a user, identified by a GitHub personal access token, is a member
- * of at least one of the required GitHub organizations.
- * @param token The user's GitHub personal access token.
- * @returns A boolean indicating whether the user is a member of a required organization.
+ * Verifies that a GitHub token belongs to a user who is in at least one required organization.
+ * @param token GitHub personal access token to validate.
+ * @returns true when the token holder is a member of the allowed organizations; otherwise false.
  */
 export async function verifyGithubUser(token: string): Promise<boolean> {
   const logger = getLogger(["mcpserver", "github-auth"]);

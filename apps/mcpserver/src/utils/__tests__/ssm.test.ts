@@ -1,7 +1,7 @@
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getSecureParameter } from "../ssm.js";
+import { createSsmClient, getSecureParameter } from "../ssm.js";
 
 vi.mock("@aws-sdk/client-ssm");
 
@@ -11,8 +11,9 @@ describe("getSecureParameter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(SSMClient).mockImplementation(
-      () =>
+      (config?: { region?: string }) =>
         ({
+          config: { region: config?.region },
           send: mockSend,
         }) as unknown as SSMClient,
     );
@@ -28,7 +29,10 @@ describe("getSecureParameter", () => {
       },
     });
 
-    const result = await getSecureParameter(parameterName);
+    const client = createSsmClient();
+    const fetchParameter = getSecureParameter(client);
+
+    const result = await fetchParameter(parameterName);
 
     expect(result).toBe(expectedValue);
     expect(SSMClient).toHaveBeenCalledWith({
@@ -47,7 +51,10 @@ describe("getSecureParameter", () => {
       },
     });
 
-    await getSecureParameter(parameterName, customRegion);
+    const client = createSsmClient(customRegion);
+    const fetchParameter = getSecureParameter(client);
+
+    await fetchParameter(parameterName);
 
     expect(SSMClient).toHaveBeenCalledWith({
       region: customRegion,
@@ -65,7 +72,10 @@ describe("getSecureParameter", () => {
       },
     });
 
-    await getSecureParameter(parameterName);
+    const client = createSsmClient();
+    const fetchParameter = getSecureParameter(client);
+
+    await fetchParameter(parameterName);
 
     expect(SSMClient).toHaveBeenCalledWith({
       region: "ap-southeast-1",
@@ -86,7 +96,10 @@ describe("getSecureParameter", () => {
       Parameter: undefined,
     });
 
-    await expect(getSecureParameter(parameterName)).rejects.toThrow(
+    const client = createSsmClient();
+    const fetchParameter = getSecureParameter(client);
+
+    await expect(fetchParameter(parameterName)).rejects.toThrow(
       `Parameter ${parameterName} not found or has no value`,
     );
   });
@@ -100,7 +113,10 @@ describe("getSecureParameter", () => {
       },
     });
 
-    await expect(getSecureParameter(parameterName)).rejects.toThrow(
+    const client = createSsmClient();
+    const fetchParameter = getSecureParameter(client);
+
+    await expect(fetchParameter(parameterName)).rejects.toThrow(
       `Parameter ${parameterName} not found or has no value`,
     );
   });
@@ -111,7 +127,10 @@ describe("getSecureParameter", () => {
 
     mockSend.mockRejectedValueOnce(error);
 
-    await expect(getSecureParameter(parameterName)).rejects.toThrow(
+    const client = createSsmClient();
+    const fetchParameter = getSecureParameter(client);
+
+    await expect(fetchParameter(parameterName)).rejects.toThrow(
       "AccessDeniedException",
     );
   });

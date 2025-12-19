@@ -3,6 +3,8 @@ import type { IncomingMessage } from "http";
 import { getLogger } from "@logtape/logtape";
 import { OAuthProxy } from "fastmcp/auth";
 
+import type { AuthenticationStatus } from "../types.js";
+
 import { getConfig } from "../config/auth.js";
 import { verifyGithubUser } from "./github.js";
 
@@ -12,8 +14,8 @@ let authProxy: OAuthProxy;
 const authConfig = await getConfig();
 
 /**
- * Gets the initialized OAuth provider.
- * @throws Error if the provider hasn't been initialized yet.
+ * Returns a lazily initialized OAuth proxy for GitHub.
+ * @returns Shared OAuthProxy instance bound to the server configuration.
  */
 export async function getOAuthProvider(): Promise<OAuthProxy> {
   if (!authProxy) {
@@ -23,16 +25,16 @@ export async function getOAuthProvider(): Promise<OAuthProxy> {
 }
 
 /**
- * Initializes the GitHub OAuth provider with the client secret.
- * Must be called before accessing the authProxy.
+ * Builds the GitHub OAuth proxy using client credentials from SSM.
+ * @returns Initialized OAuthProxy ready for OAuth flows.
  */
 export async function initializeOAuthProvider(): Promise<OAuthProxy> {
   logger.debug("Fetching GitHub client ID from SSM...");
-  const clientId = await authConfig.GITHUB_CLIENT_ID;
+  const clientId = authConfig.GITHUB_CLIENT_ID;
   logger.debug(`GitHub client ID retrieved: ${clientId ? "✓" : "✗ (empty)"}`);
 
   logger.debug("Fetching GitHub client secret from SSM...");
-  const clientSecret = await authConfig.GITHUB_CLIENT_SECRET;
+  const clientSecret = authConfig.GITHUB_CLIENT_SECRET;
   logger.debug(
     `GitHub client secret retrieved: ${clientSecret ? "✓" : "✗ (empty)"}`,
   );
@@ -50,27 +52,24 @@ export async function initializeOAuthProvider(): Promise<OAuthProxy> {
 }
 
 /**
- *
- * @param request
- * @returns An object containing authentication status and GitHub token, or undefined if unauthenticated.
+ * Verifies an incoming OAuth bearer token and ensures the GitHub user is authorized.
+ * @param request Incoming HTTP request containing the Authorization header.
+ * @returns Authentication status with token if valid, otherwise undefined to trigger OAuth flow.
  */
-export async function startOAuthFlow(request: IncomingMessage): Promise<
-  | undefined
-  | {
-      authenticated: boolean;
-      token: null | string;
-    }
-> {
+export async function startOAuthFlow(
+  request: IncomingMessage,
+): Promise<AuthenticationStatus | undefined> {
   const authHeader = request.headers["authorization"];
+  const authSchema = "Bearer ";
 
   // If the token is missing, return undefined to indicate unauthenticated request
   // This will start the OAuth flow when accessing protected resources
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith(authSchema)) {
     logger.debug("No token, returning undefined for 401 response");
     return undefined;
   }
 
-  const token = authHeader.slice(7); // Remove "Bearer "
+  const token = authHeader.slice(authSchema.length); // Remove "Bearer "
   logger.debug(`[Authenticate] Token received, starting verification...`);
 
   const isMember = await verifyGithubUser(token).catch((error) => {

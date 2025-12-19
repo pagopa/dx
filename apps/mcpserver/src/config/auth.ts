@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
-import { getSecureParameter } from "../utils/ssm.js";
+import { createSsmClient, getSecureParameter } from "../utils/ssm.js";
+import { region as awsRegion } from "./aws.js";
 
 /**
  * Authentication configuration for the MCP server.
@@ -26,13 +27,22 @@ const configSchema = z.object({
   MCP_SERVER_URL: z.url(),
 });
 
+const ssmClient = createSsmClient(awsRegion);
+const fetchSecureParameter = getSecureParameter(ssmClient, {
+  region: awsRegion,
+});
+
+/**
+ * Resolves authentication configuration for the MCP server from environment and AWS SSM.
+ * @returns OAuth/PAT configuration including GitHub credentials, auth type, and server URL.
+ */
 export async function getConfig() {
   const config = configSchema.parse(process.env);
   return {
-    GITHUB_CLIENT_ID: await getSecureParameter(
+    GITHUB_CLIENT_ID: await fetchSecureParameter(
       config.GITHUB_CLIENT_ID_SSM_PARAM,
     ),
-    GITHUB_CLIENT_SECRET: await getSecureParameter(
+    GITHUB_CLIENT_SECRET: await fetchSecureParameter(
       config.GITHUB_CLIENT_SECRET_SSM_PARAM,
     ),
     MCP_AUTH_TYPE: config.MCP_AUTH_TYPE,
