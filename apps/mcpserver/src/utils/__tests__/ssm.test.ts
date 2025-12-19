@@ -11,7 +11,7 @@ describe("getSecureParameter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(SSMClient).mockImplementation((...args: unknown[]) => {
-      const config = args[0] as { region?: string } | undefined;
+      const config = args[0] as undefined | { region?: string };
       return {
         config: { region: config?.region },
         send: mockSend,
