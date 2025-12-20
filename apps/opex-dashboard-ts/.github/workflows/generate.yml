@@ -1,0 +1,88 @@
+name: Generate Dashboard
+
+on:
+  workflow_call:
+    inputs:
+      config_path:
+        description: "Path to the YAML config file"
+        required: true
+        type: string
+      output_dir:
+        description: "Directory to output generated files"
+        required: true
+        type: string
+      template_type:
+        description: "Template type for generation"
+        required: false
+        type: string
+        default: "azure-dashboard"
+      pr_title:
+        description: "Title for the pull request"
+        required: false
+        type: string
+        default: "Generate dashboard terraform"
+      pr_body:
+        description: "Body for the pull request"
+        required: false
+        type: string
+        default: "Automated generation of dashboard terraform from OpenAPI spec"
+      base_branch:
+        description: "Base branch for the pull request"
+        required: false
+        type: string
+        default: "main"
+    outputs:
+      changed:
+        description: "Whether changes were committed"
+        value: ${{ jobs.generate.outputs.changed }}
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate unique branch name
+        run: echo "branch_name=generate-dashboard-$(date +%s)-$RANDOM" >> $GITHUB_ENV
+
+      - name: Install package
+        run: npm install @gunzip/opex-dashboard-ts --registry=https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate terraform
+        run: npx opex_dashboard generate -t ${{ inputs.template_type }} -c ${{ inputs.config_path }} --package ${{ inputs.output_dir }}
+
+      - name: Commit and push changes
+        id: commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add ${{ inputs.output_dir }}/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m 'Generate dashboard terraform'
+            git push -f origin HEAD:$branch_name
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.commit.outputs.changed == 'true'
+        run: gh pr create --title "${{ inputs.pr_title }}" --body "${{ inputs.pr_body }}" --base ${{ inputs.base_branch }} --head $branch_name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

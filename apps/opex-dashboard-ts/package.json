@@ -1,0 +1,69 @@
+{
+  "name": "@gunzip/opex-dashboard-ts",
+  "repository": {
+    "url": "https://github.com/gunzip/opex-dashboard-ts"
+  },
+  "version": "0.3.3",
+  "description": "Generate operational dashboards from OpenAPI specifications",
+  "main": "dist/index.js",
+  "bin": {
+    "generate-opex-dashboard": "dist/index.js"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "config.schema.json",
+    "README.md"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsup && tsx scripts/generate-json-schema.ts",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "dashboard",
+    "openapi",
+    "azure",
+    "terraform",
+    "monitoring",
+    "observability"
+  ],
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "commander": "^14.0.2",
+    "js-yaml": "^4.1.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "^5.1.1",
+    "@tsconfig/node22": "^22.0.5",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vitest/coverage-v8": "^4.0.15",
+    "eslint": "^9.39.1",
+    "prettier": "^3.7.4",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b"
+}

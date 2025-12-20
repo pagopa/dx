@@ -1,0 +1,67 @@
+/**
+ * Zod schemas for Azure dashboard raw builder.
+ * Defines the structure of builder properties and endpoint configurations.
+ */
+
+import { z } from "zod";
+
+import {
+  DEFAULT_AVAILABILITY_THRESHOLD,
+  DEFAULT_RESPONSE_TIME_THRESHOLD,
+  EVALUATION_FREQUENCY_MINUTES,
+  EVENT_OCCURRENCES,
+  TIME_WINDOW_MINUTES,
+} from "../../constants/index.js";
+
+// Schema for endpoint configuration with default values
+export const EndpointConfigSchema = z.object({
+  availability_evaluation_frequency: z
+    .number()
+    .default(EVALUATION_FREQUENCY_MINUTES),
+  availability_evaluation_time_window: z.number().default(TIME_WINDOW_MINUTES),
+  availability_event_occurrences: z.number().default(EVENT_OCCURRENCES),
+  availability_threshold: z.number().default(DEFAULT_AVAILABILITY_THRESHOLD),
+  method: z.string().optional(),
+  path: z.string().optional(),
+  response_time_evaluation_frequency: z
+    .number()
+    .default(EVALUATION_FREQUENCY_MINUTES),
+  response_time_evaluation_time_window: z.number().default(TIME_WINDOW_MINUTES),
+  response_time_event_occurrences: z.number().default(EVENT_OCCURRENCES),
+  response_time_threshold: z.number().default(DEFAULT_RESPONSE_TIME_THRESHOLD),
+});
+
+// Schema for builder properties
+export const BuilderPropertiesSchema = z.object({
+  endpoints: z.record(z.string(), EndpointConfigSchema).optional(),
+  evaluation_frequency: z.number(),
+  evaluation_time_window: z.number(),
+  event_occurrences: z.number(),
+  hosts: z.array(z.string()).optional(),
+  location: z.string(),
+  name: z.string(),
+  resource_ids: z.array(z.string()),
+  resource_type: z.enum(["app-gateway", "api-management"]),
+  timespan: z.string(),
+});
+
+// Schema for OA3 server object
+export const OA3ServerSchema = z.object({
+  description: z.string().optional(),
+  url: z.string(),
+});
+
+// Schema for OA3 spec structure (minimal required fields)
+export const OA3SpecSchema = z.object({
+  basePath: z.string().optional(), // OA2
+  host: z.string().optional(), // OA2
+  openapi: z.string().optional(), // OA3
+  paths: z.record(z.string(), z.unknown()),
+  servers: z.array(OA3ServerSchema).optional(), // OA3
+  swagger: z.string().optional(), // OA2
+});
+
+export type BuilderProperties = z.infer<typeof BuilderPropertiesSchema>;
+export type EndpointConfig = z.infer<typeof EndpointConfigSchema>;
+export type OA3Server = z.infer<typeof OA3ServerSchema>;
+export type OA3Spec = z.infer<typeof OA3SpecSchema>;
