@@ -19,7 +19,11 @@ const mockDereference = vi.mocked(SwaggerParser.dereference);
 
 describe("OA3Resolver", () => {
   it("should resolve valid OA3 spec", async () => {
-    const mockSpec = { info: { title: "Test API", version: "1.0.0" }, openapi: "3.0.0", paths: {} };
+    const mockSpec = {
+      info: { title: "Test API", version: "1.0.0" },
+      openapi: "3.0.0",
+      paths: {},
+    };
     mockDereference.mockResolvedValue(mockSpec);
 
     const resolver = new OA3Resolver("spec.yaml");

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * CLI entry point for opex-dashboard.
  * Provides commands for generating operational dashboards from OpenAPI specs.

@@ -1,4 +1,5 @@
-*
-!src
-!src/**/*
-!README.md
+coverage/
+test/data/
+bin/
+dist/
+config.schema.json

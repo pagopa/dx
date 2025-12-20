@@ -8,7 +8,6 @@ resource_type: app-gateway
 action_groups:
   - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
   - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-slack
-
 # Optional: Terraform configuration
 # Uncomment and configure the following section to customize Terraform versions
 # and populate environment-specific configuration files (dev/uat/prod).

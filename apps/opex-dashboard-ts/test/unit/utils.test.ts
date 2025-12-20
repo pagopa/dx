@@ -4,10 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  normalizeEndpointKeys,
-  parseEndpointKey,
-} from "@/utils/index.js";
+import { normalizeEndpointKeys, parseEndpointKey } from "@/utils/index.js";
 import { overrideWith } from "@/utils/merge.js";
 
 describe("overrideWith", () => {
@@ -213,7 +210,15 @@ describe("parseEndpointKey", () => {
   });
 
   it("should handle all HTTP methods", () => {
-    const methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
+    const methods = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+    ];
 
     methods.forEach((method) => {
       const result = parseEndpointKey(`${method} /endpoint`);

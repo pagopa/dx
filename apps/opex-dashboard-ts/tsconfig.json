@@ -1,14 +1,9 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "sourceMap": true,
-    "declaration": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "rootDir": "./src",
+    "outDir": "./dist"
   },
-  "include": ["src/**/*", "test/**/*"],
-  "exclude": ["tsup.config.ts", "dist", "vitest.config.ts", "scripts"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }

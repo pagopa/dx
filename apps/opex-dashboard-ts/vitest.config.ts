@@ -9,7 +9,14 @@ export default defineConfig({
   },
   test: {
     coverage: {
-      exclude: ["dist", "node_modules", "test", "**/*.config.ts", "scripts"],
+      exclude: [
+        "dist",
+        "bin",
+        "node_modules",
+        "test",
+        "**/*.config.ts",
+        "scripts",
+      ],
       provider: "v8",
       reporter: ["text", "json", "html"],
       thresholds: {
@@ -24,8 +31,5 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./test/setup.ts"],
-    typecheck: {
-      tsconfig: "./tsconfig.test.json",
-    },
   },
 });

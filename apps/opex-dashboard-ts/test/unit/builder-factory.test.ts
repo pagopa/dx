@@ -24,9 +24,9 @@ describe("createBuilder", () => {
   };
 
   it("should throw InvalidBuilderError for unknown template type", async () => {
-    await expect(
-      createBuilder("unknown" as any, baseParams),
-    ).rejects.toThrow(InvalidBuilderError);
+    await expect(createBuilder("unknown" as any, baseParams)).rejects.toThrow(
+      InvalidBuilderError,
+    );
   });
 
   it("should create azure-dashboard-raw builder", async () => {

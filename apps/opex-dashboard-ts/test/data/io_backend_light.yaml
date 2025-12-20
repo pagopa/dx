@@ -21,8 +21,7 @@ paths:
     get:
       operationId: getService
       summary: Get Service
-      description:
-        A previously created service with the provided service ID is returned.
+      description: A previously created service with the provided service ID is returned.
       responses:
         "200":
           description: Service found.
@@ -113,8 +112,7 @@ parameters:
     name: cursor
     in: query
     minimum: 1
-    description:
-      An opaque identifier that points to the next item in the collection.
+    description: An opaque identifier that points to the next item in the collection.
 consumes:
   - application/json
 produces:

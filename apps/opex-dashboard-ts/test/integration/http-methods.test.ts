@@ -27,7 +27,8 @@ describe("HTTP Methods - Integration Tests", () => {
     expect(serviceIdEndpoint).toBeDefined();
     expect(serviceIdEndpoint?.availability_threshold).toBe(0.95);
 
-    const servicesEndpoint = config.overrides?.endpoints?.["GET /api/v1/services"];
+    const servicesEndpoint =
+      config.overrides?.endpoints?.["GET /api/v1/services"];
     expect(servicesEndpoint).toBeDefined();
     expect(servicesEndpoint?.availability_threshold).toBe(0.98);
   });
@@ -126,7 +127,7 @@ describe("HTTP Methods - Integration Tests", () => {
       const overrides = {
         endpoints: {
           "GET /api/v1/services/{service_id}": {
-            availability_threshold: 0.90,
+            availability_threshold: 0.9,
             response_time_threshold: 1.0,
           },
         },

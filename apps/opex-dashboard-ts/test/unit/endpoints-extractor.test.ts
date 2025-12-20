@@ -30,7 +30,9 @@ describe("extractEndpoints", () => {
 
     expect(result.hosts).toEqual(["api.example.com"]);
     expect(Object.keys(result.endpoints)).toEqual(["/v1/posts", "/v1/users"]);
-    expect(result.endpoints["/v1/users"]).toHaveProperty("availability_threshold");
+    expect(result.endpoints["/v1/users"]).toHaveProperty(
+      "availability_threshold",
+    );
   });
 
   it("should extract endpoints from OA2 spec with host and basePath", () => {
@@ -110,7 +112,7 @@ describe("extractEndpoints", () => {
     const oa3Spec = {
       paths: {
         "/posts/": { post: {} },
-        "users": { get: {} },
+        users: { get: {} },
       },
       servers: [{ url: "https://api.example.com/v1/" }],
     };

@@ -63,22 +63,34 @@ describe("generateTerraformAssets", () => {
 
     // Check env/dev
     expect(statSync(join(tempDir, "env", "dev")).isDirectory()).toBe(true);
-    expect(statSync(join(tempDir, "env", "dev", "backend.tfvars")).isFile()).toBe(true);
-    expect(statSync(join(tempDir, "env", "dev", "terraform.tfvars")).isFile()).toBe(true);
+    expect(
+      statSync(join(tempDir, "env", "dev", "backend.tfvars")).isFile(),
+    ).toBe(true);
+    expect(
+      statSync(join(tempDir, "env", "dev", "terraform.tfvars")).isFile(),
+    ).toBe(true);
 
     // Check env/prod
     expect(statSync(join(tempDir, "env", "prod")).isDirectory()).toBe(true);
-    expect(statSync(join(tempDir, "env", "prod", "terraform.tfvars")).isFile()).toBe(true);
+    expect(
+      statSync(join(tempDir, "env", "prod", "terraform.tfvars")).isFile(),
+    ).toBe(true);
     // prod has no backend, so no backend.tfvars
 
     // Check content
-    const devBackend = readFileSync(join(tempDir, "env", "dev", "backend.tfvars"), "utf-8");
+    const devBackend = readFileSync(
+      join(tempDir, "env", "dev", "backend.tfvars"),
+      "utf-8",
+    );
     expect(devBackend).toContain('resource_group_name  = "test-rg"');
     expect(devBackend).toContain('storage_account_name = "teststorage"');
     expect(devBackend).toContain('container_name       = "tfstate"');
     expect(devBackend).toContain('key                  = "dev.tfstate"');
 
-    const devTerraform = readFileSync(join(tempDir, "env", "dev", "terraform.tfvars"), "utf-8");
+    const devTerraform = readFileSync(
+      join(tempDir, "env", "dev", "terraform.tfvars"),
+      "utf-8",
+    );
     expect(devTerraform).toContain('prefix    = "test"');
     expect(devTerraform).toContain('env_short = "d"');
   });

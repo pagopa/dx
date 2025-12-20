@@ -36,7 +36,7 @@ const optionalFieldsWithDefaults = [
 
 if (jsonSchema.required && Array.isArray(jsonSchema.required)) {
   jsonSchema.required = jsonSchema.required.filter(
-    (field: string) => !optionalFieldsWithDefaults.includes(field)
+    (field: string) => !optionalFieldsWithDefaults.includes(field),
   );
 }
 

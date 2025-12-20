@@ -214,7 +214,7 @@ describe("HTTP Methods - Query Generation", () => {
     it("should work without method for backward compatibility", () => {
       const endpointAppGateway = "/api/v1/services";
       const endpointApiMgmt = "/api/v1/services";
-      
+
       const propsAppGateway = {
         api_hosts: ["app-backend.io.italia.it"],
         endpoint: endpointAppGateway,
@@ -236,11 +236,15 @@ describe("HTTP Methods - Query Generation", () => {
       };
 
       // Should generate valid queries without method
-      expect(() => appGateway.availabilityQuery(propsAppGateway as any)).not.toThrow();
+      expect(() =>
+        appGateway.availabilityQuery(propsAppGateway as any),
+      ).not.toThrow();
       expect(() =>
         appGateway.responseCodesQuery(propsAppGateway as any),
       ).not.toThrow();
-      expect(() => appGateway.responseTimeQuery(propsAppGateway as any)).not.toThrow();
+      expect(() =>
+        appGateway.responseTimeQuery(propsAppGateway as any),
+      ).not.toThrow();
 
       expect(() =>
         apiManagement.availabilityQuery(propsApiMgmt as any),

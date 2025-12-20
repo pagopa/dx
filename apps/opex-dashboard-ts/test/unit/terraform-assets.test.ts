@@ -47,7 +47,7 @@ describe("generateMainTf", () => {
     expect(result).toContain('required_version = ">=1.1.5"');
     expect(result).toContain('version = ">= 3.86.0, <=3.116.0"');
     expect(result).toContain('backend "azurerm" {}');
-    expect(result).toContain("provider \"azurerm\"");
+    expect(result).toContain('provider "azurerm"');
   });
 });
 

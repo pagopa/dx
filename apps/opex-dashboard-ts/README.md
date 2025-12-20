@@ -14,20 +14,20 @@ specifications.**
 
 OpEx Dashboard is distributed as an **npm package** with two components:
 
-- **CLI tool** (`opex_dashboard`) - Command-line interface for end users
+- **CLI tool** (`opex-dashboard`) - Command-line interface for end users
 - **TypeScript library** - Programmatic API for integration
 
 ## Usage
 
 ```bash
-npx @gunzip/opex-dashboard-ts generate --help
+npx @pagopa/opex-dashboard generate --help
 ```
 
 ### Local Development
 
 ```bash
-git clone https://github.com/gunzip/opex-dashboard-ts.git
-cd opex-dashboard-ts
+git clone https://github.com/pagopa/dx.git
+cd dx/apps/opex-dashboard-ts
 pnpm install
 pnpm run build
 pnpm run dev
@@ -52,10 +52,10 @@ action_groups:
 
 ```bash
 # Output to stdout
-npx @gunzip/opex-dashboard-ts generate -t azure-dashboard-raw -c config.yaml
+npx @pagopa/opex-dashboard generate -t azure-dashboard-raw -c config.yaml
 
 # Save as Terraform package
-npx @gunzip/opex-dashboard-ts generate -t azure-dashboard -c config.yaml --package ./output
+npx @pagopa/opex-dashboard generate -t azure-dashboard -c config.yaml --package ./output
 ```
 
 ### 3. Deploy with Terraform
@@ -104,7 +104,7 @@ a 30m window and 5m timespan, max is 6 events.
 ### CLI Commands
 
 ```bash
-opex_dashboard generate [options]
+opex-dashboard generate [options]
 
 Options:
   -t, --template-type <type>    Template type: azure-dashboard or azure-dashboard-raw (required)
@@ -164,7 +164,7 @@ To enable schema validation in VS Code and other compatible editors, add this
 comment at the top of your YAML configuration file:
 
 ```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/gunzip/opex-dashboard-ts/refs/heads/main/config.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/apps/opex-dashboard-ts/config.schema.json
 ```
 
 The schema is:
@@ -195,7 +195,7 @@ on:
 
 jobs:
   generate:
-    uses: gunzip/opex-dashboard-ts/.github/workflows/generate.yml@main
+    uses: pagopa/dx/.github/workflows/generate.yml@main
     with:
       # mandatory inputs:
       config_path: ./config/dashboard-config.yaml

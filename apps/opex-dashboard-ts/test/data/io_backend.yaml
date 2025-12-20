@@ -21,8 +21,7 @@ paths:
     get:
       operationId: getService
       summary: Get Service
-      description:
-        A previously created service with the provided service ID is returned.
+      description: A previously created service with the provided service ID is returned.
       responses:
         "200":
           description: Service found.
@@ -127,8 +126,7 @@ paths:
         "404":
           description: No service found for the provided ID.
         "409":
-          description:
-            Conflict. The Profile is not in the correct preference mode.
+          description: Conflict. The Profile is not in the correct preference mode.
         "429":
           description: Too many requests
         "500":
@@ -314,8 +312,7 @@ paths:
           schema:
             $ref: "#/definitions/ProblemJson"
         "500":
-          description:
-            There was an error in upserting message's status attributes.
+          description: There was an error in upserting message's status attributes.
           schema:
             $ref: "#/definitions/ProblemJson"
   "/legal-messages/{id}":
@@ -510,8 +507,7 @@ paths:
     get:
       operationId: getUserProfile
       summary: Get user's profile
-      description:
-        Returns the profile for the user identified by the provided fiscal code.
+      description: Returns the profile for the user identified by the provided fiscal code.
       responses:
         "200":
           description: Found.
@@ -548,8 +544,7 @@ paths:
     post:
       operationId: updateProfile
       summary: Update the User's profile
-      description:
-        Update the profile for the user identified by the provided fiscal code.
+      description: Update the profile for the user identified by the provided fiscal code.
       parameters:
         - in: body
           name: body
@@ -607,8 +602,7 @@ paths:
     get:
       operationId: getApiUserProfile
       summary: Get user's profile stored into the API
-      description:
-        Returns the profile for the user identified by the provided fiscal code.
+      description: Returns the profile for the user identified by the provided fiscal code.
       responses:
         "200":
           description: Found.
@@ -730,8 +724,7 @@ paths:
     put:
       operationId: createOrUpdateInstallation
       summary: Create or update an Installation
-      description:
-        Create or update an Installation to the Azure Notification hub.
+      description: Create or update an Installation to the Azure Notification hub.
       parameters:
         - name: body
           in: body
@@ -1299,8 +1292,7 @@ definitions:
   InitializedProfile:
     type: object
     title: Initialized profile
-    description:
-      Describes the user's profile after it has been stored in the Profile API.
+    description: Describes the user's profile after it has been stored in the Profile API.
     properties:
       accepted_tos_version:
         $ref: "#/definitions/AcceptedTosVersion"
@@ -1487,8 +1479,7 @@ parameters:
     name: public_message
     in: query
     type: boolean
-    description:
-      Discriminate when to return public message shape. Default to false.
+    description: Discriminate when to return public message shape. Default to false.
   EnrichResultData:
     name: enrich_result_data
     type: boolean
@@ -1530,8 +1521,7 @@ parameters:
     name: cursor
     in: query
     minimum: 1
-    description:
-      An opaque identifier that points to the next item in the collection.
+    description: An opaque identifier that points to the next item in the collection.
   UserDataProcessingChoiceParam:
     name: choice
     in: path

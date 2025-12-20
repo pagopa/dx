@@ -1,4 +1,3 @@
- 
 /**
  * Integration tests for Azure dashboard generation.
  * Tests end-to-end workflow from config to dashboard output.
@@ -58,13 +57,13 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       );
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
-      
+
       try {
         builder.package(tempDir, {});
-        
+
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
-        
+
         expect(output).toMatchSnapshot();
       } finally {
         rmSync(tempDir, { force: true, recursive: true });
@@ -103,7 +102,7 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       );
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
-      
+
       try {
         const overrides = {
           endpoints: {
@@ -121,10 +120,10 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
         };
 
         builder.package(tempDir, overrides);
-        
+
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
-        
+
         expect(output).toMatchSnapshot();
       } finally {
         rmSync(tempDir, { force: true, recursive: true });
@@ -163,7 +162,7 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       );
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
-      
+
       try {
         const overrides = {
           base_path: "basepath_override",
@@ -182,10 +181,10 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
         };
 
         builder.package(tempDir, overrides);
-        
+
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
-        
+
         expect(output).toMatchSnapshot();
       } finally {
         rmSync(tempDir, { force: true, recursive: true });
@@ -216,7 +215,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       );
 
       const output = builder.produce({});
-      
+
       expect(output).toBeTruthy();
       expect(output).toContain("Test Dashboard");
       expect(output).toContain("Microsoft.Portal/dashboards");
@@ -253,7 +252,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       };
 
       const output = builder.produce(overrides);
-      
+
       expect(output).toBeTruthy();
       expect(output).toContain("Test Dashboard");
       expect(output).toContain("example.com");
@@ -283,7 +282,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       };
 
       const output = builder.produce(overrides);
-      
+
       expect(output).toBeTruthy();
       expect(output).toContain("Test Dashboard");
       expect(output).toContain("example.com");
@@ -312,23 +311,23 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       expect(output).toBeTruthy();
       expect(output).toContain("API Management Dashboard");
     });
-    });
   });
-  
-  describe("Azure Dashboard Integration Tests - Terraform Builder", () => {
-    let tempDir: string;
-  
-    beforeEach(() => {
-      tempDir = mkdtempSync(join(tmpdir(), "opex-test-"));
-    });
-  
-    afterEach(() => {
-      if (tempDir) {
-        rmSync(tempDir, { force: true, recursive: true });
-      }
-    });
-  
-    describe("azure-dashboard terraform builder", () => {
+});
+
+describe("Azure Dashboard Integration Tests - Terraform Builder", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "opex-test-"));
+  });
+
+  afterEach(() => {
+    if (tempDir) {
+      rmSync(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  describe("azure-dashboard terraform builder", () => {
     it("should generate terraform package", async () => {
       const specPath = "test/data/io_backend_light.yaml";
       const resolver = new OA3Resolver(specPath);
@@ -380,11 +379,11 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
         false,
       );
     });
-    });
   });
-  
-  describe("Azure Dashboard Integration Tests - Factory", () => {
-    describe("builder factory", () => {
+});
+
+describe("Azure Dashboard Integration Tests - Factory", () => {
+  describe("builder factory", () => {
     it("should create azure-dashboard-raw builder", async () => {
       const resolver = new OA3Resolver("test/data/io_backend_light.yaml");
 
@@ -446,11 +445,11 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
         }),
       ).rejects.toThrow();
     });
-    });
   });
-  
-  describe("Azure Dashboard Integration Tests - Config", () => {
-    describe("config loading", () => {
+});
+
+describe("Azure Dashboard Integration Tests - Config", () => {
+  describe("config loading", () => {
     it("should load valid config from examples", () => {
       const config = loadConfig("examples/azure_dashboard_config.yaml");
 
@@ -477,11 +476,11 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
         loadConfig("test/data/io_backend_invalid.yaml");
       }).toThrow();
     });
-    });
   });
-  
-  describe("Azure Dashboard Integration Tests - Resolver", () => {
-    describe("OA3 resolver", () => {
+});
+
+describe("Azure Dashboard Integration Tests - Resolver", () => {
+  describe("OA3 resolver", () => {
     it("should resolve valid OpenAPI spec", async () => {
       const resolver = new OA3Resolver("test/data/io_backend_light.yaml");
       const spec = await resolver.resolve();

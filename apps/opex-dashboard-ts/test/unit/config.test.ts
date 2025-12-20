@@ -35,9 +35,7 @@ describe("Config Schema", () => {
     const result = ConfigSchema.parse(config);
     expect(result.timespan).toBe(DEFAULTS.timespan);
     expect(result.evaluation_frequency).toBe(DEFAULTS.evaluation_frequency);
-    expect(result.evaluation_time_window).toBe(
-      DEFAULTS.evaluation_time_window,
-    );
+    expect(result.evaluation_time_window).toBe(DEFAULTS.evaluation_time_window);
     expect(result.event_occurrences).toBe(DEFAULTS.event_occurrences);
   });
 
