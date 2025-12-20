@@ -22,17 +22,10 @@
     "access": "public"
   },
   "scripts": {
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build": "tsup && tsx scripts/generate-json-schema.ts",
     "dev": "tsup --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
