@@ -4,7 +4,10 @@
 
 /* eslint-disable perfectionist/sort-objects, perfectionist/sort-modules */
 
-import type { TemplateContext } from "../../core/template/context.schema.js";
+import type {
+  SingleEndpointConfig,
+  TemplateContext,
+} from "../../core/template/context.schema.js";
 
 import { parseEndpointKey } from "../../utils/index.js";
 import * as queries from "../queries/index.js";
@@ -54,7 +57,7 @@ function createMetadataInputs(
 function createAvailabilityPart(
   ctx: TemplateContext,
   endpoint: string,
-  props: Record<string, unknown>,
+  props: SingleEndpointConfig,
   resourceIds: string[],
   timespan: string,
   fullPath: string,
@@ -66,7 +69,7 @@ function createAvailabilityPart(
     ...ctx,
     endpoint,
     is_alarm: false,
-    threshold: props.availability_threshold as number | undefined,
+    threshold: props.availability_threshold,
     ...props, // Include method and path from queryProps
   });
 
@@ -108,7 +111,7 @@ function createAvailabilityPart(
 function createResponseCodesPart(
   ctx: TemplateContext,
   endpoint: string,
-  queryProps: Record<string, unknown>,
+  queryProps: SingleEndpointConfig,
   resourceIds: string[],
   timespan: string,
   fullPath: string,
@@ -164,7 +167,7 @@ function createResponseCodesPart(
 function createResponseTimePart(
   ctx: TemplateContext,
   endpoint: string,
-  props: Record<string, unknown>,
+  props: SingleEndpointConfig,
   resourceIds: string[],
   timespan: string,
   fullPath: string,
@@ -176,7 +179,7 @@ function createResponseTimePart(
     ...ctx,
     endpoint,
     is_alarm: false,
-    threshold: props.response_time_threshold as number | undefined,
+    threshold: props.response_time_threshold,
     ...props, // Include method and path from queryProps
   });
 
@@ -223,10 +226,7 @@ function createResponseTimePart(
  * Generate Azure Portal Dashboard JSON.
  * Uses structured objects and JSON.stringify to avoid manual comma handling.
  */
-export function azureDashboardRawTemplate(
-  ctx: Record<string, unknown>,
-): string {
-  const context = ctx as TemplateContext;
+export function azureDashboardRawTemplate(context: TemplateContext): string {
   const basePath = context.base_path ?? "";
   const resourceIds = [context.data_source_id];
   const timespan = context.timespan || "5m";
@@ -247,7 +247,7 @@ export function azureDashboardRawTemplate(
 
     // Pass method and path to query functions
     // method and path will be undefined if not specified (backward compatible)
-    const queryProps = {
+    const queryProps: SingleEndpointConfig = {
       ...props,
       method: parsed.method || props.method,
       path: parsed.path || props.path || endpoint,
@@ -298,17 +298,13 @@ export function azureDashboardRawTemplate(
 
   // Generate filteredPartIds for the first 9 parts (3 endpoints × 3 parts each)
   // These are referenced in the time range filter
-  const filteredPartIds: string[] = [];
   const baseUuid = "9badbd78-7607-4131-8fa1-8b85191432";
-  let hexCounter = 0xed; // Starting hex value (237 in decimal)
   const maxFilteredParts = 9; // Always include first 9 part IDs
 
-  for (let i = 0; i < maxFilteredParts; i++) {
-    filteredPartIds.push(
-      `StartboardPart-LogsDashboardPart-${baseUuid}${hexCounter.toString(16)}`,
-    );
-    hexCounter += 2; // Increment by 2 for each part
-  }
+  const filteredPartIds = Array.from({ length: maxFilteredParts }, (_, i) => {
+    const hex = (0xed + i * 2).toString(16);
+    return `StartboardPart-LogsDashboardPart-${baseUuid}${hex}`;
+  });
 
   // Build complete dashboard structure
   const dashboard = {

@@ -35,12 +35,9 @@ export function generateTerraformAssets(
 
   // Generate env/ directories for dev, uat, prod
   if (terraformConfig?.environments) {
-    for (const env of Object.keys(terraformConfig.environments) as (
-      | "dev"
-      | "prod"
-      | "uat"
-    )[]) {
-      const envConfig = terraformConfig.environments[env];
+    for (const [env, envConfig] of Object.entries(
+      terraformConfig.environments,
+    )) {
       if (envConfig) {
         const envPath = path.join(outputPath, "env", env);
         fs.mkdirSync(envPath, { recursive: true });

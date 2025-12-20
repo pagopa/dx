@@ -10,9 +10,8 @@ import * as queries from "../queries/index.js";
  * Generate Terraform configuration for Azure Portal Dashboard with alerts.
  */
 export function azureDashboardTerraformTemplate(
-  ctx: Record<string, unknown>,
+  context: TemplateContext,
 ): string {
-  const context = ctx as TemplateContext;
   const name = context.name;
   const dashboardProperties = context.dashboard_properties || "";
   const basePath = context.base_path ?? "";
@@ -90,7 +89,7 @@ ${Object.entries(context.endpoints)
 
   query = <<-QUERY
 
-    
+
 ${availabilityQuery}
 
   QUERY
@@ -122,7 +121,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_${i}" {
 
   query = <<-QUERY
 
-    
+
 ${responseTimeQuery}
 
   QUERY

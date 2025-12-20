@@ -21,21 +21,21 @@ export function overrideWith<T extends DeepMergeable>(
   source: T,
   overrides: DeepMergeable,
 ): T {
-  const result = { ...source } as T;
+  const result: DeepMergeable = { ...source };
 
   for (const [key, value] of Object.entries(overrides)) {
     if (isPlainObject(value)) {
-      const sourceValue = result[key as keyof T];
-      result[key as keyof T] = overrideWith(
-        isPlainObject(sourceValue) ? (sourceValue as DeepMergeable) : {},
-        value as DeepMergeable,
-      ) as T[keyof T];
+      const sourceValue = result[key];
+      result[key] = overrideWith(
+        isPlainObject(sourceValue) ? sourceValue : {},
+        value,
+      );
     } else {
-      result[key as keyof T] = value as T[keyof T];
+      result[key] = value;
     }
   }
 
-  return result;
+  return result as T;
 }
 
 // Type guard to check if a value is a plain object

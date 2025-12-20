@@ -13,23 +13,22 @@ import { type Config, ConfigSchema } from "./config.schema.js";
  * Load and validate configuration from YAML file or stdin.
  */
 export function loadConfig(configPath: string): Config {
-  let content: string;
-
-  try {
-    if (configPath === "-") {
-      // Read from stdin
-      content = fs.readFileSync(0, "utf-8");
-    } else {
+  const content = (() => {
+    try {
+      if (configPath === "-") {
+        // Read from stdin
+        return fs.readFileSync(0, "utf-8");
+      }
       // Read from file
-      content = fs.readFileSync(configPath, "utf-8");
+      return fs.readFileSync(configPath, "utf-8");
+    } catch (error) {
+      throw new FileError(
+        `Failed to read config file: ${configPath} - ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
-  } catch (error) {
-    throw new FileError(
-      `Failed to read config file: ${configPath} - ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
-  }
+  })();
 
   try {
     // Parse YAML

@@ -63,15 +63,9 @@ async function generateHandler(options: {
     const config = loadConfig(options.config);
 
     // Download spec if HTTP URL
-    let specPath = config.oa3_spec;
-    let tempFile: string | undefined;
-
-    if (specPath.startsWith("http")) {
-      tempFile = await downloadSpec(specPath);
-      if (tempFile) {
-        specPath = tempFile;
-      }
-    }
+    const isHttp = config.oa3_spec.startsWith("http");
+    const tempFile = isHttp ? await downloadSpec(config.oa3_spec) : undefined;
+    const specPath = tempFile ?? config.oa3_spec;
 
     // Validate resource type
     const allowedResourceTypes = ["app-gateway", "api-management"];

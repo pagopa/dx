@@ -51,4 +51,5 @@ export const TemplateContextSchema = z.object({
 });
 
 export type EndpointConfig = z.infer<typeof EndpointSchema>;
+export type SingleEndpointConfig = EndpointConfig[string];
 export type TemplateContext = z.infer<typeof TemplateContextSchema>;

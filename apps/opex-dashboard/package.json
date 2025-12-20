@@ -5,7 +5,7 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/opex-dashboard-ts"
   },
-  "version": "0.3.3",
+  "version": "0.1.0",
   "description": "Generate operational dashboards from OpenAPI specifications",
   "main": "dist/index.js",
   "bin": {

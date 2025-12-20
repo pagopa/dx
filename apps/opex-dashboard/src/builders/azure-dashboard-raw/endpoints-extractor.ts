@@ -61,19 +61,20 @@ export function extractEndpoints(
   };
 
   // Extract hosts from OA3 (servers) or OA2 (host/basePath)
-  let serverUrls: string[];
-  if (oa3Spec.servers && oa3Spec.servers.length > 0) {
-    // OA3 format
-    serverUrls = oa3Spec.servers.map((s: OA3Server) => s.url);
-  } else if (oa3Spec.host) {
-    // OA2 format
-    const basePath = oa3Spec.basePath || "";
-    serverUrls = [`${oa3Spec.host}${basePath}`];
-  } else {
+  const serverUrls = (() => {
+    if (oa3Spec.servers && oa3Spec.servers.length > 0) {
+      // OA3 format
+      return oa3Spec.servers.map((s: OA3Server) => s.url);
+    }
+    if (oa3Spec.host) {
+      // OA2 format
+      const basePath = oa3Spec.basePath || "";
+      return [`${oa3Spec.host}${basePath}`];
+    }
     throw new ConfigError(
       'OpenAPI spec must have either "servers" (OA3) or "host" (OA2) defined',
     );
-  }
+  })();
 
   // Validate paths exist
   if (!oa3Spec.paths || Object.keys(oa3Spec.paths).length === 0) {
