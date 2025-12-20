@@ -89,7 +89,7 @@ ${Object.entries(context.endpoints)
 
   query = <<-QUERY
 
-
+    
 ${availabilityQuery}
 
   QUERY
@@ -121,7 +121,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_${i}" {
 
   query = <<-QUERY
 
-
+    
 ${responseTimeQuery}
 
   QUERY
