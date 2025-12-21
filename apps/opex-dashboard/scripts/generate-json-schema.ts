@@ -42,7 +42,7 @@ if (jsonSchema.required && Array.isArray(jsonSchema.required)) {
 
 // Add metadata to the schema
 const schemaWithMetadata = {
-  $id: "https://github.com/gunzip/opex-dashboard-ts/blob/main/config.schema.json",
+  $id: "https://github.com/pagopa/dx/blob/main/apps/opex-dashboard/config.schema.json",
   $schema: "http://json-schema.org/draft-07/schema#",
   description:
     "Configuration schema for generating operational dashboards from OpenAPI specifications",
