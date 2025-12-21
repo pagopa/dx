@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { OA3Spec } from "@/builders/azure-dashboard-raw/builder.schema.js";
 import { extractEndpoints } from "@/builders/azure-dashboard-raw/endpoints-extractor.js";
 import { ConfigError } from "@/core/errors/index.js";
 
@@ -22,7 +23,7 @@ describe("extractEndpoints", () => {
     };
 
     const result = extractEndpoints(
-      oa3Spec as any,
+      oa3Spec as OA3Spec,
       evaluationFrequency,
       evaluationTimeWindow,
       eventOccurrences,
@@ -45,7 +46,7 @@ describe("extractEndpoints", () => {
     };
 
     const result = extractEndpoints(
-      oa2Spec as any,
+      oa2Spec as OA3Spec,
       evaluationFrequency,
       evaluationTimeWindow,
       eventOccurrences,
@@ -62,7 +63,7 @@ describe("extractEndpoints", () => {
 
     expect(() =>
       extractEndpoints(
-        spec as any,
+        spec as OA3Spec,
         evaluationFrequency,
         evaluationTimeWindow,
         eventOccurrences,
@@ -78,7 +79,7 @@ describe("extractEndpoints", () => {
 
     expect(() =>
       extractEndpoints(
-        spec as any,
+        spec as OA3Spec,
         evaluationFrequency,
         evaluationTimeWindow,
         eventOccurrences,
@@ -98,7 +99,7 @@ describe("extractEndpoints", () => {
     };
 
     const result = extractEndpoints(
-      oa3Spec as any,
+      oa3Spec as OA3Spec,
       evaluationFrequency,
       evaluationTimeWindow,
       eventOccurrences,
@@ -118,7 +119,7 @@ describe("extractEndpoints", () => {
     };
 
     const result = extractEndpoints(
-      oa3Spec as any,
+      oa3Spec as OA3Spec,
       evaluationFrequency,
       evaluationTimeWindow,
       eventOccurrences,

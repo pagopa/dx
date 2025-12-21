@@ -4,7 +4,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { createBuilder } from "@/core/builder-factory.js";
+import { type BuilderType, createBuilder } from "@/core/builder-factory.js";
 import { InvalidBuilderError } from "@/core/errors/index.js";
 import { OA3Resolver } from "@/core/resolver/index.js";
 
@@ -24,16 +24,16 @@ describe("createBuilder", () => {
   };
 
   it("should throw InvalidBuilderError for unknown template type", async () => {
-    await expect(createBuilder("unknown" as any, baseParams)).rejects.toThrow(
-      InvalidBuilderError,
-    );
+    await expect(
+      createBuilder("unknown" as unknown as BuilderType, baseParams),
+    ).rejects.toThrow(InvalidBuilderError);
   });
 
   it("should create azure-dashboard-raw builder", async () => {
     const mockSpec = { paths: {} };
     const mockResolver = {
       resolve: vi.fn().mockResolvedValue(mockSpec),
-    } as any;
+    } as unknown as OA3Resolver;
 
     const params = { ...baseParams, resolver: mockResolver };
 
@@ -47,7 +47,7 @@ describe("createBuilder", () => {
     const mockSpec = { paths: {} };
     const mockResolver = {
       resolve: vi.fn().mockResolvedValue(mockSpec),
-    } as any;
+    } as unknown as OA3Resolver;
 
     const params = { ...baseParams, resolver: mockResolver };
 
@@ -60,7 +60,7 @@ describe("createBuilder", () => {
   it("should throw InvalidBuilderError when resolver fails", async () => {
     const mockResolver = {
       resolve: vi.fn().mockRejectedValue(new Error("Resolve failed")),
-    } as any;
+    } as unknown as OA3Resolver;
 
     const params = { ...baseParams, resolver: mockResolver };
 
