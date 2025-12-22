@@ -51,8 +51,7 @@ resource "azurerm_portal_dashboard" "this" {
 
 
 ${Object.entries(context.endpoints)
-  .map(([endpoint, propsUnknown], i) => {
-    const props = propsUnknown as Record<string, unknown>;
+  .map(([endpoint, props], i) => {
     const fullPath = basePath + endpoint;
 
     // Availability alarm query
@@ -60,7 +59,7 @@ ${Object.entries(context.endpoints)
       ...context,
       endpoint,
       is_alarm: true,
-      threshold: props.availability_threshold as number | undefined,
+      threshold: props.availability_threshold,
       ...props,
     });
 
@@ -69,7 +68,7 @@ ${Object.entries(context.endpoints)
       ...context,
       endpoint,
       is_alarm: true,
-      threshold: props.response_time_threshold as number | undefined,
+      threshold: props.response_time_threshold,
       ...props,
     });
 
@@ -95,11 +94,11 @@ ${availabilityQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.availability_evaluation_frequency as number | undefined) ?? 10}
-  time_window = ${(props.availability_evaluation_time_window as number | undefined) ?? 20}
+  frequency   = ${props.availability_evaluation_frequency ?? 10}
+  time_window = ${props.availability_evaluation_time_window ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.availability_event_occurrences as number | undefined) ?? 1}
+    threshold = ${props.availability_event_occurrences ?? 1}
   }
 
   tags = var.tags
@@ -127,11 +126,11 @@ ${responseTimeQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.response_time_evaluation_frequency as number | undefined) ?? 10}
-  time_window = ${(props.response_time_evaluation_time_window as number | undefined) ?? 20}
+  frequency   = ${props.response_time_evaluation_frequency ?? 10}
+  time_window = ${props.response_time_evaluation_time_window ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.response_time_event_occurrences as number | undefined) ?? 1}
+    threshold = ${props.response_time_event_occurrences ?? 1}
   }
 
   tags = var.tags

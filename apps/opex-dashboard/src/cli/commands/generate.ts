@@ -56,7 +56,7 @@ export function createGenerateCommand(): Command {
 async function generateHandler(options: {
   config: string;
   package?: string;
-  templateType: string;
+  templateType: BuilderType;
 }): Promise<void> {
   try {
     // Load and validate configuration
@@ -100,10 +100,7 @@ async function generateHandler(options: {
     };
 
     // Create builder
-    const builder = await createBuilder(
-      options.templateType as BuilderType,
-      builderParams,
-    );
+    const builder = await createBuilder(options.templateType, builderParams);
 
     // Get overrides from config
     const overrides = config.overrides || {};
