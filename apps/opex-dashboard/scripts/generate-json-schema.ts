@@ -27,6 +27,8 @@ const jsonSchema = z.toJSONSchema(ConfigSchema);
 // Remove optional fields with defaults from the required array
 // These fields should be optional in the input but have default values
 const optionalFieldsWithDefaults = [
+  "availability_threshold",
+  "response_time_threshold",
   "evaluation_frequency",
   "evaluation_time_window",
   "event_occurrences",
