@@ -13,6 +13,107 @@ This document provides a technical overview of the `opex-dashboard` architecture
 - **Template**: Logic-less or low-logic functions that generate the final output (JSON or Terraform).
 - **Resource Type**: Defines which Azure resource is being monitored (e.g., `app-gateway`, `api-management`).
 
+### Schema Architecture
+
+The project uses Zod schemas with a shared base to eliminate duplication while maintaining layer separation:
+
+```mermaid
+classDiagram
+    %% Shared Base Schemas
+    class QueryConfigSchema {
+        <<shared>>
+        +response_time_percentile: number
+        +status_code_categories: string[]
+    }
+
+    class BaseEndpointEvaluationPropertiesSchema {
+        <<private base>>
+        +availability_evaluation_frequency: number
+        +availability_evaluation_time_window: number
+        +availability_event_occurrences: number
+        +availability_threshold: number
+        +response_time_evaluation_frequency: number
+        +response_time_evaluation_time_window: number
+        +response_time_event_occurrences: number
+        +response_time_threshold: number
+    }
+
+    %% Endpoint Schema Variants
+    class EndpointOverridePropertiesSchema {
+        <<config layer>>
+        All fields optional
+    }
+
+    class EndpointConfigSchema {
+        <<builder layer>>
+        All fields with defaults
+        +method?: string
+        +path?: string
+    }
+
+    class EndpointContextPropertiesSchema {
+        <<template layer>>
+        All fields optional
+        +method?: string
+        +path?: string
+    }
+
+    %% Main Configuration Schemas
+    class ConfigSchema {
+        <<input>>
+        +action_groups: string[]
+        +data_source: string
+        +location: string
+        +name: string
+        +oa3_spec: string
+        +overrides?: Overrides
+        +queries?: QueryConfig
+        ...
+    }
+
+    class TemplateContextSchema {
+        <<processing>>
+        +action_groups_ids: string[]
+        +data_source_id: string
+        +endpoints: EndpointSchema
+        +queries?: QueryConfig
+        ...
+    }
+
+    class BuilderPropertiesSchema {
+        <<builder state>>
+        +endpoints?: Record~string,EndpointConfig~
+        +resource_type: enum
+        +resource_ids: string[]
+        ...
+    }
+
+    %% Inheritance/Composition Relationships
+    BaseEndpointEvaluationPropertiesSchema <|-- EndpointOverridePropertiesSchema : .partial()
+    BaseEndpointEvaluationPropertiesSchema <|-- EndpointConfigSchema : with defaults + extend
+    BaseEndpointEvaluationPropertiesSchema <|-- EndpointContextPropertiesSchema : .partial().extend()
+
+    ConfigSchema *-- EndpointOverridePropertiesSchema : uses in overrides
+    ConfigSchema *-- QueryConfigSchema : uses
+    TemplateContextSchema *-- EndpointContextPropertiesSchema : uses
+    TemplateContextSchema *-- QueryConfigSchema : uses
+    BuilderPropertiesSchema *-- EndpointConfigSchema : uses
+
+    %% File Locations
+    note for QueryConfigSchema "shared/query-config.schema.ts"
+    note for BaseEndpointEvaluationPropertiesSchema "shared/endpoint-properties.schema.ts"
+    note for ConfigSchema "config/config.schema.ts"
+    note for TemplateContextSchema "template/context.schema.ts"
+    note for BuilderPropertiesSchema "builders/azure-dashboard-raw/builder.schema.ts"
+```
+
+**Key Design Decisions:**
+
+- **Shared Base**: `BaseEndpointEvaluationPropertiesSchema` defines 8 common endpoint monitoring properties
+- **Layer Separation**: Three variants serve different architectural layers (input validation, processing, builder state)
+- **Type Safety**: Factory function `createEndpointConfigPropertiesSchema()` ensures consistent default application
+- **Single Source of Truth**: `QueryConfigSchema` is 100% shared across config and template layers
+
 ## Execution Flow (Call Stack)
 
 When running `opex-dashboard generate`, the following flow is executed:
