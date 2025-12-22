@@ -21,8 +21,8 @@ export interface AzDashboardRawOptions {
   name: string;
   oa3Spec: unknown;
   queries?: {
-    response_time_percentile: number;
-    status_code_categories: string[];
+    responseTimePercentile: number;
+    statusCodeCategories: string[];
   };
   resources: string[];
   resourceType: string;
@@ -38,20 +38,20 @@ export class AzDashboardRawBuilder extends Builder<TemplateContext> {
 
   constructor(options: AzDashboardRawOptions) {
     super(azureDashboardRawTemplate, {
-      action_groups_ids: [],
-      availability_threshold: options.availabilityThreshold,
-      data_source_id: options.resources[0],
+      actionGroupsIds: [],
+      availabilityThreshold: options.availabilityThreshold,
+      dataSourceId: options.resources[0],
       endpoints: {},
-      evaluation_frequency: options.evaluationFrequency,
-      event_occurrences: options.eventOccurrences,
+      evaluationFrequency: options.evaluationFrequency,
+      eventOccurrences: options.eventOccurrences,
       hosts: [],
       location: options.location,
       name: options.name,
       queries: options.queries,
-      resource_type: options.resourceType,
-      response_time_threshold: options.responseTimeThreshold,
-      time_window: options.evaluationTimeWindow,
+      resourceType: options.resourceType,
+      responseTimeThreshold: options.responseTimeThreshold,
       timespan: options.timespan,
+      timeWindow: options.evaluationTimeWindow,
     });
 
     // Validate OA3 spec structure
@@ -71,8 +71,8 @@ export class AzDashboardRawBuilder extends Builder<TemplateContext> {
       this.evaluationFrequency,
       this.evaluationTimeWindow,
       this.eventOccurrences,
-      this.properties.availability_threshold,
-      this.properties.response_time_threshold,
+      this.properties.availabilityThreshold,
+      this.properties.responseTimeThreshold,
     );
 
     // Update properties with extracted data

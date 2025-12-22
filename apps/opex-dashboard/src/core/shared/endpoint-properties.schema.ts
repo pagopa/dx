@@ -11,16 +11,16 @@ import { z } from "zod";
  */
 const BaseEndpointEvaluationPropertiesSchema = z.object({
   // Availability monitoring properties
-  availability_evaluation_frequency: z.number(),
-  availability_evaluation_time_window: z.number(),
-  availability_event_occurrences: z.number(),
-  availability_threshold: z.number(),
+  availabilityEvaluationFrequency: z.number(),
+  availabilityEvaluationTimeWindow: z.number(),
+  availabilityEventOccurrences: z.number(),
+  availabilityThreshold: z.number(),
 
   // Response time monitoring properties
-  response_time_evaluation_frequency: z.number(),
-  response_time_evaluation_time_window: z.number(),
-  response_time_event_occurrences: z.number(),
-  response_time_threshold: z.number(),
+  responseTimeEvaluationFrequency: z.number(),
+  responseTimeEvaluationTimeWindow: z.number(),
+  responseTimeEventOccurrences: z.number(),
+  responseTimeThreshold: z.number(),
 });
 
 /**
@@ -44,26 +44,22 @@ export const createEndpointConfigPropertiesSchema = (defaults: {
   responseTimeThreshold: number;
 }) =>
   z.object({
-    availability_evaluation_frequency: z
+    availabilityEvaluationFrequency: z
       .number()
       .default(defaults.evaluationFrequency),
-    availability_evaluation_time_window: z
+    availabilityEvaluationTimeWindow: z
       .number()
       .default(defaults.evaluationTimeWindow),
-    availability_event_occurrences: z
-      .number()
-      .default(defaults.eventOccurrences),
-    availability_threshold: z.number().default(defaults.availabilityThreshold),
-    response_time_evaluation_frequency: z
+    availabilityEventOccurrences: z.number().default(defaults.eventOccurrences),
+    availabilityThreshold: z.number().default(defaults.availabilityThreshold),
+    responseTimeEvaluationFrequency: z
       .number()
       .default(defaults.evaluationFrequency),
-    response_time_evaluation_time_window: z
+    responseTimeEvaluationTimeWindow: z
       .number()
       .default(defaults.evaluationTimeWindow),
-    response_time_event_occurrences: z
-      .number()
-      .default(defaults.eventOccurrences),
-    response_time_threshold: z.number().default(defaults.responseTimeThreshold),
+    responseTimeEventOccurrences: z.number().default(defaults.eventOccurrences),
+    responseTimeThreshold: z.number().default(defaults.responseTimeThreshold),
   });
 
 /**

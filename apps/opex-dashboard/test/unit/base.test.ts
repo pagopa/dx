@@ -13,13 +13,13 @@ class TestBuilder extends Builder<TemplateContext> {}
 describe("Builder", () => {
   const mockTemplateFn = (context: TemplateContext) => JSON.stringify(context);
   const baseProperties: TemplateContext = {
-    action_groups_ids: ["ag1"],
-    data_source_id: "ds1",
+    actionGroupsIds: ["ag1"],
+    dataSourceId: "ds1",
     endpoints: {},
     hosts: ["host1"],
     location: "eastus",
     name: "test",
-    resource_type: "app-gateway",
+    resourceType: "app-gateway",
   };
 
   it("should initialize with template function and base properties", () => {

@@ -22,7 +22,7 @@ describe("HTTP Methods - Query Generation", () => {
             path: endpoint,
           },
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -40,7 +40,7 @@ describe("HTTP Methods - Query Generation", () => {
         endpoints: {
           [endpoint]: {},
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -79,7 +79,7 @@ describe("HTTP Methods - Query Generation", () => {
             path: endpoint,
           },
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 1.0,
       };
 
@@ -102,7 +102,7 @@ describe("HTTP Methods - Query Generation", () => {
               path: endpoint,
             },
           },
-          is_alarm: false,
+          isAlarm: false,
           threshold: 0.99,
         };
 
@@ -124,7 +124,7 @@ describe("HTTP Methods - Query Generation", () => {
             path: endpoint,
           },
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -142,7 +142,7 @@ describe("HTTP Methods - Query Generation", () => {
         endpoints: {
           [endpoint]: {},
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -180,7 +180,7 @@ describe("HTTP Methods - Query Generation", () => {
             path: endpoint,
           },
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 1.0,
       };
 
@@ -200,7 +200,7 @@ describe("HTTP Methods - Query Generation", () => {
             path: endpoint,
           },
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -221,7 +221,7 @@ describe("HTTP Methods - Query Generation", () => {
         endpoints: {
           [endpointAppGateway]: {},
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 
@@ -231,7 +231,7 @@ describe("HTTP Methods - Query Generation", () => {
         endpoints: {
           [endpointApiMgmt]: {},
         },
-        is_alarm: false,
+        isAlarm: false,
         threshold: 0.99,
       };
 

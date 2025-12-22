@@ -9,6 +9,7 @@ import { type BuilderType, createBuilder } from "../../core/builder-factory.js";
 import { loadConfig } from "../../core/config/index.js";
 import { ConfigError } from "../../core/errors/index.js";
 import { OA3Resolver } from "../../core/resolver/index.js";
+import { mapConfigOverrides } from "../../utils/index.js";
 import {
   ensureDirectory,
   getPackageOutputPath,
@@ -80,21 +81,22 @@ async function generateHandler(options: {
     // Create resolver
     const resolver = new OA3Resolver(specPath);
 
-    // Prepare builder parameters
+    // Prepare builder parameters (map snake_case config to camelCase params)
+    // Note: queries is already camelCase after Zod parsing
     const builderParams = {
-      action_groups_ids: config.action_groups,
-      availability_threshold: config.availability_threshold,
-      data_source_id: config.data_source,
-      evaluation_frequency: config.evaluation_frequency,
-      evaluation_time_window: config.evaluation_time_window,
-      event_occurrences: config.event_occurrences,
+      actionGroupsIds: config.action_groups,
+      availabilityThreshold: config.availability_threshold,
+      dataSourceId: config.data_source,
+      evaluationFrequency: config.evaluation_frequency,
+      evaluationTimeWindow: config.evaluation_time_window,
+      eventOccurrences: config.event_occurrences,
       location: config.location,
       name: config.name,
       queries: config.queries || config.overrides?.queries,
       resolver,
-      resource_type: config.resource_type,
       resources: [config.data_source],
-      response_time_threshold: config.response_time_threshold,
+      resourceType: config.resource_type,
+      responseTimeThreshold: config.response_time_threshold,
       terraform: config.terraform,
       timespan: config.timespan,
     };
@@ -105,16 +107,18 @@ async function generateHandler(options: {
       builderParams,
     );
 
-    // Get overrides from config
-    const overrides = config.overrides || {};
+    // Map overrides from snake_case (YAML) to camelCase (internal)
+    const mappedOverrides = config.overrides
+      ? mapConfigOverrides(config.overrides)
+      : {};
 
     // Output: package or stdout
     if (options.package) {
       const outputPath = getPackageOutputPath(options.package);
       await ensureDirectory(outputPath);
-      await builder.package(outputPath, overrides);
+      await builder.package(outputPath, mappedOverrides);
     } else {
-      const output = builder.produce(overrides);
+      const output = builder.produce(mappedOverrides);
       writeToStdout(output);
     }
 

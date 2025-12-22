@@ -77,56 +77,56 @@ describe("overrideWith", () => {
 describe("normalizeEndpointKeys", () => {
   it("should normalize 'METHOD /path' format to path-only keys", () => {
     const endpoints = {
-      "GET /users": { availability_threshold: 95 },
-      "POST /users": { availability_threshold: 98 },
+      "GET /users": { availabilityThreshold: 95 },
+      "POST /users": { availabilityThreshold: 98 },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     expect(result).toEqual({
-      "/users": { availability_threshold: 98, method: "POST" },
+      "/users": { availabilityThreshold: 98, method: "POST" },
     });
   });
 
   it("should keep path-only keys unchanged", () => {
     const endpoints = {
-      "/posts": { availability_threshold: 98 },
-      "/users": { availability_threshold: 95 },
+      "/posts": { availabilityThreshold: 98 },
+      "/users": { availabilityThreshold: 95 },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     expect(result).toEqual({
-      "/posts": { availability_threshold: 98 },
-      "/users": { availability_threshold: 95 },
+      "/posts": { availabilityThreshold: 98 },
+      "/users": { availabilityThreshold: 95 },
     });
   });
 
   it("should handle mixed formats", () => {
     const endpoints = {
-      "/posts": { availability_threshold: 98 },
-      "DELETE /comments": { availability_threshold: 99 },
-      "GET /users": { availability_threshold: 95 },
+      "/posts": { availabilityThreshold: 98 },
+      "DELETE /comments": { availabilityThreshold: 99 },
+      "GET /users": { availabilityThreshold: 95 },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     expect(result).toEqual({
-      "/comments": { availability_threshold: 99, method: "DELETE" },
-      "/posts": { availability_threshold: 98 },
-      "/users": { availability_threshold: 95, method: "GET" },
+      "/comments": { availabilityThreshold: 99, method: "DELETE" },
+      "/posts": { availabilityThreshold: 98 },
+      "/users": { availabilityThreshold: 95, method: "GET" },
     });
   });
 
   it("should preserve existing method property and override with key method", () => {
     const endpoints = {
-      "GET /users": { availability_threshold: 95, method: "POST" },
+      "GET /users": { availabilityThreshold: 95, method: "POST" },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     expect(result).toEqual({
-      "/users": { availability_threshold: 95, method: "GET" },
+      "/users": { availabilityThreshold: 95, method: "GET" },
     });
   });
 
@@ -140,30 +140,30 @@ describe("normalizeEndpointKeys", () => {
 
   it("should handle paths with multiple spaces", () => {
     const endpoints = {
-      "GET /user data": { availability_threshold: 95 },
+      "GET /user data": { availabilityThreshold: 95 },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     expect(result).toEqual({
-      "/user data": { availability_threshold: 95, method: "GET" },
+      "/user data": { availabilityThreshold: 95, method: "GET" },
     });
   });
 
   it("should handle all HTTP methods", () => {
     const endpoints = {
-      "DELETE /users": { availability_threshold: 99 },
-      "GET /users": { availability_threshold: 95 },
-      "PATCH /users": { availability_threshold: 98 },
-      "POST /users": { availability_threshold: 96 },
-      "PUT /users": { availability_threshold: 97 },
+      "DELETE /users": { availabilityThreshold: 99 },
+      "GET /users": { availabilityThreshold: 95 },
+      "PATCH /users": { availabilityThreshold: 98 },
+      "POST /users": { availabilityThreshold: 96 },
+      "PUT /users": { availabilityThreshold: 97 },
     };
 
     const result = normalizeEndpointKeys(endpoints);
 
     // Last one wins (PUT)
     expect(result).toEqual({
-      "/users": { availability_threshold: 97, method: "PUT" },
+      "/users": { availabilityThreshold: 97, method: "PUT" },
     });
   });
 });

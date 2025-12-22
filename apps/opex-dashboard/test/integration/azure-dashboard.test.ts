@@ -105,14 +105,14 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
         const overrides = {
           endpoints: {
             "/api/v1/services/{service_id}": {
-              availability_evaluation_frequency: 111,
-              availability_evaluation_time_window: 222,
-              availability_event_occurrences: 333,
-              availability_threshold: 0.12,
-              response_time_evaluation_frequency: 444,
-              response_time_evaluation_time_window: 555,
-              response_time_event_occurrences: 666,
-              response_time_threshold: 0.23,
+              availabilityEvaluationFrequency: 111,
+              availabilityEvaluationTimeWindow: 222,
+              availabilityEventOccurrences: 333,
+              availabilityThreshold: 0.12,
+              responseTimeEvaluationFrequency: 444,
+              responseTimeEvaluationTimeWindow: 555,
+              responseTimeEventOccurrences: 666,
+              responseTimeThreshold: 0.23,
             },
           },
         };
@@ -162,17 +162,17 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
 
       try {
         const overrides = {
-          base_path: "basepath_override",
+          basePath: "basepath_override",
           endpoints: {
             "/api/v1/services/{service_id}": {
-              availability_evaluation_frequency: 111,
-              availability_evaluation_time_window: 222,
-              availability_event_occurrences: 333,
-              availability_threshold: 0.12,
-              response_time_evaluation_frequency: 444,
-              response_time_evaluation_time_window: 555,
-              response_time_event_occurrences: 666,
-              response_time_threshold: 0.23,
+              availabilityEvaluationFrequency: 111,
+              availabilityEvaluationTimeWindow: 222,
+              availabilityEventOccurrences: 333,
+              availabilityThreshold: 0.12,
+              responseTimeEvaluationFrequency: 444,
+              responseTimeEvaluationTimeWindow: 555,
+              responseTimeEventOccurrences: 666,
+              responseTimeThreshold: 0.23,
             },
           },
         };
@@ -241,8 +241,8 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const overrides = {
         endpoints: {
           "/api/v1/services/{service_id}": {
-            availability_threshold: 0.95,
-            response_time_threshold: 2,
+            availabilityThreshold: 0.95,
+            responseTimeThreshold: 2,
           },
         },
         hosts: ["https://example.com"],
@@ -385,16 +385,16 @@ describe("Azure Dashboard Integration Tests - Factory", () => {
       const resolver = new OA3Resolver("test/data/io_backend_light.yaml");
 
       const builder = await createBuilder("azure-dashboard-raw", {
-        action_groups_ids: [],
-        data_source_id: "/subscriptions/test/resourceGroups/test",
-        evaluation_frequency: 10,
-        evaluation_time_window: 20,
-        event_occurrences: 1,
+        actionGroupsIds: [],
+        dataSourceId: "/subscriptions/test/resourceGroups/test",
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
         location: "West Europe",
         name: "Factory Test",
         resolver,
-        resource_type: "app-gateway",
         resources: ["/subscriptions/test/resourceGroups/test"],
+        resourceType: "app-gateway",
         timespan: "5m",
       });
 
@@ -405,18 +405,18 @@ describe("Azure Dashboard Integration Tests - Factory", () => {
       const resolver = new OA3Resolver("test/data/io_backend_light.yaml");
 
       const builder = await createBuilder("azure-dashboard", {
-        action_groups_ids: [
+        actionGroupsIds: [
           "/subscriptions/test/resourceGroups/test/providers/microsoft.insights/actionGroups/test",
         ],
-        data_source_id: "/subscriptions/test/resourceGroups/test",
-        evaluation_frequency: 10,
-        evaluation_time_window: 20,
-        event_occurrences: 1,
+        dataSourceId: "/subscriptions/test/resourceGroups/test",
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
         location: "West Europe",
         name: "Factory Test",
         resolver,
-        resource_type: "app-gateway",
         resources: ["/subscriptions/test/resourceGroups/test"],
+        resourceType: "app-gateway",
         timespan: "5m",
       });
 
@@ -428,16 +428,16 @@ describe("Azure Dashboard Integration Tests - Factory", () => {
 
       await expect(
         createBuilder("invalid-type" as BuilderType, {
-          action_groups_ids: [],
-          data_source_id: "/subscriptions/test/resourceGroups/test",
-          evaluation_frequency: 10,
-          evaluation_time_window: 20,
-          event_occurrences: 1,
+          actionGroupsIds: [],
+          dataSourceId: "/subscriptions/test/resourceGroups/test",
+          evaluationFrequency: 10,
+          evaluationTimeWindow: 20,
+          eventOccurrences: 1,
           location: "West Europe",
           name: "Factory Test",
           resolver,
-          resource_type: "app-gateway",
           resources: ["/subscriptions/test/resourceGroups/test"],
+          resourceType: "app-gateway",
           timespan: "5m",
         }),
       ).rejects.toThrow();

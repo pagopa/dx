@@ -37,17 +37,17 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
 
   constructor(options: AzDashboardOptions) {
     super(azureDashboardTerraformTemplate, {
-      action_groups_ids: options.actionGroupsIds,
-      data_source_id: options.dataSourceId,
+      actionGroupsIds: options.actionGroupsIds,
+      dataSourceId: options.dataSourceId,
       endpoints: {},
-      evaluation_frequency: options.evaluationFrequency,
-      event_occurrences: options.eventOccurrences,
+      evaluationFrequency: options.evaluationFrequency,
+      eventOccurrences: options.eventOccurrences,
       hosts: [],
       location: options.location,
       name: options.name.replace(/ /g, "_"), // Replace spaces with underscores for Terraform compatibility
-      resource_type: options.resourceType,
-      time_window: options.evaluationTimeWindow,
+      resourceType: options.resourceType,
       timespan: options.timespan,
+      timeWindow: options.evaluationTimeWindow,
     });
 
     this.rawBuilder = options.dashboardBuilder;
@@ -97,7 +97,7 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
     const dashboard = JSON.parse(rawJson) as { properties: unknown };
 
     // Extract dashboard properties and format for Terraform
-    this.properties.dashboard_properties = JSON.stringify(
+    this.properties.dashboardProperties = JSON.stringify(
       dashboard.properties,
       null,
       2,

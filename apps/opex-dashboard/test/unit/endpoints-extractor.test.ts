@@ -32,7 +32,7 @@ describe("extractEndpoints", () => {
     expect(result.hosts).toEqual(["api.example.com"]);
     expect(Object.keys(result.endpoints)).toEqual(["/v1/posts", "/v1/users"]);
     expect(result.endpoints["/v1/users"]).toHaveProperty(
-      "availability_threshold",
+      "availabilityThreshold",
     );
   });
 

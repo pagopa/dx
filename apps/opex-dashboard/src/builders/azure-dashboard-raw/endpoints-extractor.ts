@@ -48,15 +48,15 @@ export function extractEndpoints(
 
   // Default endpoint configuration
   const endpointDefaults: EndpointConfig = {
-    availability_evaluation_frequency: evaluationFrequency,
-    availability_evaluation_time_window: evaluationTimeWindow,
-    availability_event_occurrences: eventOccurrences,
-    availability_threshold:
+    availabilityEvaluationFrequency: evaluationFrequency,
+    availabilityEvaluationTimeWindow: evaluationTimeWindow,
+    availabilityEventOccurrences: eventOccurrences,
+    availabilityThreshold:
       availabilityThreshold ?? DEFAULT_AVAILABILITY_THRESHOLD,
-    response_time_evaluation_frequency: evaluationFrequency,
-    response_time_evaluation_time_window: evaluationTimeWindow,
-    response_time_event_occurrences: eventOccurrences,
-    response_time_threshold:
+    responseTimeEvaluationFrequency: evaluationFrequency,
+    responseTimeEvaluationTimeWindow: evaluationTimeWindow,
+    responseTimeEventOccurrences: eventOccurrences,
+    responseTimeThreshold:
       responseTimeThreshold ?? DEFAULT_RESPONSE_TIME_THRESHOLD,
   };
 

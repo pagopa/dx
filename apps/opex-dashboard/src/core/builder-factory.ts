@@ -12,27 +12,27 @@ import { InvalidBuilderError } from "./errors/index.js";
 import { OA3Resolver } from "./resolver/index.js";
 
 interface AzureRawBuilderParams {
-  availability_threshold?: number;
-  evaluation_frequency: number;
-  evaluation_time_window: number;
-  event_occurrences: number;
+  availabilityThreshold?: number;
+  evaluationFrequency: number;
+  evaluationTimeWindow: number;
+  eventOccurrences: number;
   location: string;
   name: string;
   queries?: {
-    response_time_percentile: number;
-    status_code_categories: string[];
+    responseTimePercentile: number;
+    statusCodeCategories: string[];
   };
   resolver: OA3Resolver;
-  resource_type: string;
   resources: string[];
-  response_time_threshold?: number;
+  resourceType: string;
+  responseTimeThreshold?: number;
   terraform?: TerraformConfig;
   timespan: string;
 }
 
 interface AzureTerraformBuilderParams extends AzureRawBuilderParams {
-  action_groups_ids: string[];
-  data_source_id: string;
+  actionGroupsIds: string[];
+  dataSourceId: string;
 }
 
 /**
@@ -45,17 +45,17 @@ async function createAzureRawBuilder(
   const oa3Spec = await params.resolver.resolve();
 
   return new AzDashboardRawBuilder({
-    availabilityThreshold: params.availability_threshold,
-    evaluationFrequency: params.evaluation_frequency,
-    evaluationTimeWindow: params.evaluation_time_window,
-    eventOccurrences: params.event_occurrences,
+    availabilityThreshold: params.availabilityThreshold,
+    evaluationFrequency: params.evaluationFrequency,
+    evaluationTimeWindow: params.evaluationTimeWindow,
+    eventOccurrences: params.eventOccurrences,
     location: params.location,
     name: params.name,
     oa3Spec,
     queries: params.queries,
     resources: params.resources,
-    resourceType: params.resource_type,
-    responseTimeThreshold: params.response_time_threshold,
+    resourceType: params.resourceType,
+    responseTimeThreshold: params.responseTimeThreshold,
     timespan: params.timespan,
   });
 }
@@ -70,15 +70,15 @@ async function createAzureTerraformBuilder(
   const rawBuilder = await createAzureRawBuilder(params);
 
   return new AzDashboardBuilder({
-    actionGroupsIds: params.action_groups_ids,
+    actionGroupsIds: params.actionGroupsIds,
     dashboardBuilder: rawBuilder,
-    dataSourceId: params.data_source_id,
-    evaluationFrequency: params.evaluation_frequency,
-    evaluationTimeWindow: params.evaluation_time_window,
-    eventOccurrences: params.event_occurrences,
+    dataSourceId: params.dataSourceId,
+    evaluationFrequency: params.evaluationFrequency,
+    evaluationTimeWindow: params.evaluationTimeWindow,
+    eventOccurrences: params.eventOccurrences,
     location: params.location,
     name: params.name,
-    resourceType: params.resource_type,
+    resourceType: params.resourceType,
     terraformConfig: params.terraform,
     timespan: params.timespan,
   });

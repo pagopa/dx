@@ -10,16 +10,16 @@ import { OA3Resolver } from "@/core/resolver/index.js";
 
 describe("createBuilder", () => {
   const baseParams = {
-    action_groups_ids: ["ag1"],
-    data_source_id: "ds1",
-    evaluation_frequency: 10,
-    evaluation_time_window: 20,
-    event_occurrences: 1,
+    actionGroupsIds: ["ag1"],
+    dataSourceId: "ds1",
+    evaluationFrequency: 10,
+    evaluationTimeWindow: 20,
+    eventOccurrences: 1,
     location: "eastus",
     name: "test",
     resolver: {} as OA3Resolver, // mock
-    resource_type: "app-gateway",
     resources: ["res1"],
+    resourceType: "app-gateway",
     timespan: "5m",
   };
 

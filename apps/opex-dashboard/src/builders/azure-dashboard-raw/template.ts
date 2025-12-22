@@ -68,8 +68,8 @@ function createAvailabilityPart(
   const availabilityQuery = queryFns.availabilityQuery({
     ...ctx,
     endpoint,
-    is_alarm: false,
-    threshold: props.availability_threshold,
+    isAlarm: false,
+    threshold: props.availabilityThreshold,
     ...props, // Include method and path from queryProps
   });
 
@@ -178,8 +178,8 @@ function createResponseTimePart(
   const responseTimeQuery = queryFns.responseTimeQuery({
     ...ctx,
     endpoint,
-    is_alarm: false,
-    threshold: props.response_time_threshold,
+    isAlarm: false,
+    threshold: props.responseTimeThreshold,
     ...props, // Include method and path from queryProps
   });
 
@@ -227,13 +227,13 @@ function createResponseTimePart(
  * Uses structured objects and JSON.stringify to avoid manual comma handling.
  */
 export function azureDashboardRawTemplate(context: TemplateContext): string {
-  const basePath = context.base_path ?? "";
-  const resourceIds = [context.data_source_id];
+  const basePath = context.basePath ?? "";
+  const resourceIds = [context.dataSourceId];
   const timespan = context.timespan || "5m";
 
   // Determine which query functions to use based on resource type
   const queryFns =
-    context.resource_type === "api-management"
+    context.resourceType === "api-management"
       ? queries.apiManagement
       : queries.appGateway;
 

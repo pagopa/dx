@@ -62,6 +62,30 @@
           "additionalProperties": {
             "type": "object",
             "properties": {
+              "availabilityEvaluationFrequency": {
+                "type": "number"
+              },
+              "availabilityEvaluationTimeWindow": {
+                "type": "number"
+              },
+              "availabilityEventOccurrences": {
+                "type": "number"
+              },
+              "availabilityThreshold": {
+                "type": "number"
+              },
+              "responseTimeEvaluationFrequency": {
+                "type": "number"
+              },
+              "responseTimeEvaluationTimeWindow": {
+                "type": "number"
+              },
+              "responseTimeEventOccurrences": {
+                "type": "number"
+              },
+              "responseTimeThreshold": {
+                "type": "number"
+              },
               "availability_evaluation_frequency": {
                 "description": "Frequency in minutes to evaluate availability alarm. Default: 10",
                 "type": "number"
@@ -109,12 +133,12 @@
           "description": "Optional query configuration overrides",
           "type": "object",
           "properties": {
-            "response_time_percentile": {
+            "responseTimePercentile": {
               "description": "Percentile for response time queries. Default: 95",
               "default": 95,
               "type": "number"
             },
-            "status_code_categories": {
+            "statusCodeCategories": {
               "description": "HTTP status code categories for response codes queries",
               "default": [
                 "1XX",
@@ -130,8 +154,8 @@
             }
           },
           "required": [
-            "response_time_percentile",
-            "status_code_categories"
+            "responseTimePercentile",
+            "statusCodeCategories"
           ],
           "additionalProperties": false
         }
@@ -142,12 +166,12 @@
       "description": "Optional global query configuration overrides",
       "type": "object",
       "properties": {
-        "response_time_percentile": {
+        "responseTimePercentile": {
           "description": "Percentile for response time queries. Default: 95",
           "default": 95,
           "type": "number"
         },
-        "status_code_categories": {
+        "statusCodeCategories": {
           "description": "HTTP status code categories for response codes queries",
           "default": [
             "1XX",
@@ -163,8 +187,8 @@
         }
       },
       "required": [
-        "response_time_percentile",
-        "status_code_categories"
+        "responseTimePercentile",
+        "statusCodeCategories"
       ],
       "additionalProperties": false
     },

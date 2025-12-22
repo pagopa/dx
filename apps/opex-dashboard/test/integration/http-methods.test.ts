@@ -57,12 +57,12 @@ describe("HTTP Methods - Integration Tests", () => {
     const overrides = {
       endpoints: {
         "GET /api/v1/services": {
-          availability_threshold: 0.98,
-          response_time_threshold: 2.0,
+          availabilityThreshold: 0.98,
+          responseTimeThreshold: 2.0,
         },
         "GET /api/v1/services/{service_id}": {
-          availability_threshold: 0.95,
-          response_time_threshold: 1.5,
+          availabilityThreshold: 0.95,
+          responseTimeThreshold: 1.5,
         },
       },
     };
@@ -126,8 +126,8 @@ describe("HTTP Methods - Integration Tests", () => {
       const overrides = {
         endpoints: {
           "GET /api/v1/services/{service_id}": {
-            availability_threshold: 0.9,
-            response_time_threshold: 1.0,
+            availabilityThreshold: 0.9,
+            responseTimeThreshold: 1.0,
           },
         },
       };
@@ -175,11 +175,11 @@ describe("HTTP Methods - Integration Tests", () => {
       endpoints: {
         // Without method filter (backward compatible)
         "/api/v1/services": {
-          availability_threshold: 0.98,
+          availabilityThreshold: 0.98,
         },
         // With method filter
         "GET /api/v1/services/{service_id}": {
-          availability_threshold: 0.95,
+          availabilityThreshold: 0.95,
         },
       },
     };
@@ -221,7 +221,7 @@ describe("HTTP Methods - Integration Tests", () => {
     const overrides = {
       endpoints: {
         "GET /api/v1/services/{service_id}": {
-          availability_threshold: 0.95,
+          availabilityThreshold: 0.95,
         },
       },
     };

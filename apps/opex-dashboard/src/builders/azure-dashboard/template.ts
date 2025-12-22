@@ -13,17 +13,17 @@ export function azureDashboardTerraformTemplate(
   context: TemplateContext,
 ): string {
   const name = context.name;
-  const dashboardProperties = context.dashboard_properties || "";
-  const basePath = context.base_path ?? "";
-  const actionGroupsJson = JSON.stringify(context.action_groups_ids).replace(
+  const dashboardProperties = context.dashboardProperties || "";
+  const basePath = context.basePath ?? "";
+  const actionGroupsJson = JSON.stringify(context.actionGroupsIds).replace(
     /,/g,
     ", ",
   );
-  const dataSourceId = context.data_source_id;
+  const dataSourceId = context.dataSourceId;
 
   // Determine which query functions to use based on resource type
   const queryFns =
-    context.resource_type === "api-management"
+    context.resourceType === "api-management"
       ? queries.apiManagement
       : queries.appGateway;
 
@@ -59,8 +59,8 @@ ${Object.entries(context.endpoints)
     const availabilityQuery = queryFns.availabilityQuery({
       ...context,
       endpoint,
-      is_alarm: true,
-      threshold: props.availability_threshold as number | undefined,
+      isAlarm: true,
+      threshold: props.availabilityThreshold as number | undefined,
       ...props,
     });
 
@@ -68,8 +68,8 @@ ${Object.entries(context.endpoints)
     const responseTimeQuery = queryFns.responseTimeQuery({
       ...context,
       endpoint,
-      is_alarm: true,
-      threshold: props.response_time_threshold as number | undefined,
+      isAlarm: true,
+      threshold: props.responseTimeThreshold as number | undefined,
       ...props,
     });
 
@@ -95,11 +95,11 @@ ${availabilityQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.availability_evaluation_frequency as number | undefined) ?? 10}
-  time_window = ${(props.availability_evaluation_time_window as number | undefined) ?? 20}
+  frequency   = ${(props.availabilityEvaluationFrequency as number | undefined) ?? 10}
+  time_window = ${(props.availabilityEvaluationTimeWindow as number | undefined) ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.availability_event_occurrences as number | undefined) ?? 1}
+    threshold = ${(props.availabilityEventOccurrences as number | undefined) ?? 1}
   }
 
   tags = var.tags
@@ -127,11 +127,11 @@ ${responseTimeQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.response_time_evaluation_frequency as number | undefined) ?? 10}
-  time_window = ${(props.response_time_evaluation_time_window as number | undefined) ?? 20}
+  frequency   = ${(props.responseTimeEvaluationFrequency as number | undefined) ?? 10}
+  time_window = ${(props.responseTimeEvaluationTimeWindow as number | undefined) ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.response_time_event_occurrences as number | undefined) ?? 1}
+    threshold = ${(props.responseTimeEventOccurrences as number | undefined) ?? 1}
   }
 
   tags = var.tags

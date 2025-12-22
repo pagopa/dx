@@ -17,24 +17,24 @@ import {
 
 describe("API Management Queries", () => {
   const baseCtx = {
-    action_groups_ids: ["ag1"],
-    data_source_id: "ds1",
+    actionGroupsIds: ["ag1"],
+    dataSourceId: "ds1",
     endpoint: "/users",
     endpoints: {},
     hosts: ["api.example.com"],
     location: "eastus",
     name: "test",
     queries: {
-      response_time_percentile: 95,
-      status_code_categories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
+      responseTimePercentile: 95,
+      statusCodeCategories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
     },
-    resource_type: "api-management",
+    resourceType: "api-management",
     timespan: "5m",
   };
 
   describe("availabilityQuery", () => {
     it("should generate availability query for dashboard", () => {
-      const ctx = { ...baseCtx, is_alarm: false };
+      const ctx = { ...baseCtx, isAlarm: false };
       const result = availabilityQuery(ctx);
 
       expect(result).toContain("let threshold = 0.99");
@@ -43,7 +43,7 @@ describe("API Management Queries", () => {
     });
 
     it("should generate availability query for alarm", () => {
-      const ctx = { ...baseCtx, is_alarm: true, threshold: 0.95 };
+      const ctx = { ...baseCtx, isAlarm: true, threshold: 0.95 };
       const result = availabilityQuery(ctx);
 
       expect(result).toContain("let threshold = 0.95");
@@ -65,7 +65,7 @@ describe("API Management Queries", () => {
 
   describe("responseTimeQuery", () => {
     it("should generate response time query for dashboard", () => {
-      const ctx = { ...baseCtx, is_alarm: false };
+      const ctx = { ...baseCtx, isAlarm: false };
       const result = responseTimeQuery(ctx);
 
       expect(result).toContain("let threshold = 1");
@@ -74,7 +74,7 @@ describe("API Management Queries", () => {
     });
 
     it("should generate response time query for alarm", () => {
-      const ctx = { ...baseCtx, is_alarm: true, threshold: 2 };
+      const ctx = { ...baseCtx, isAlarm: true, threshold: 2 };
       const result = responseTimeQuery(ctx);
 
       expect(result).toContain("let threshold = 2");
@@ -86,24 +86,24 @@ describe("API Management Queries", () => {
 
 describe("App Gateway Queries", () => {
   const baseCtx = {
-    action_groups_ids: ["ag1"],
-    data_source_id: "ds1",
+    actionGroupsIds: ["ag1"],
+    dataSourceId: "ds1",
     endpoint: "/users",
     endpoints: {},
     hosts: ["api.example.com"],
     location: "eastus",
     name: "test",
     queries: {
-      response_time_percentile: 95,
-      status_code_categories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
+      responseTimePercentile: 95,
+      statusCodeCategories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
     },
-    resource_type: "app-gateway",
+    resourceType: "app-gateway",
     timespan: "5m",
   };
 
   describe("availabilityQuery", () => {
     it("should generate availability query for dashboard", () => {
-      const ctx = { ...baseCtx, is_alarm: false };
+      const ctx = { ...baseCtx, isAlarm: false };
       const result = appGwAvailabilityQuery(ctx);
 
       expect(result).toContain("let threshold = 0.99");
@@ -111,7 +111,7 @@ describe("App Gateway Queries", () => {
     });
 
     it("should generate availability query for alarm", () => {
-      const ctx = { ...baseCtx, is_alarm: true, threshold: 0.95 };
+      const ctx = { ...baseCtx, isAlarm: true, threshold: 0.95 };
       const result = appGwAvailabilityQuery(ctx);
 
       expect(result).toContain("let threshold = 0.95");
@@ -130,14 +130,14 @@ describe("App Gateway Queries", () => {
 
   describe("responseTimeQuery", () => {
     it("should generate response time query for dashboard", () => {
-      const ctx = { ...baseCtx, is_alarm: false };
+      const ctx = { ...baseCtx, isAlarm: false };
       const result = appGwResponseTimeQuery(ctx);
 
       expect(result).toContain("render timechart");
     });
 
     it("should generate response time query for alarm", () => {
-      const ctx = { ...baseCtx, is_alarm: true, threshold: 2 };
+      const ctx = { ...baseCtx, isAlarm: true, threshold: 2 };
       const result = appGwResponseTimeQuery(ctx);
 
       expect(result).toContain("where duration_percentile_95 > threshold");

@@ -29,14 +29,14 @@ export const EndpointConfigSchema = createEndpointConfigPropertiesSchema({
 // Schema for builder properties
 export const BuilderPropertiesSchema = z.object({
   endpoints: z.record(z.string(), EndpointConfigSchema).optional(),
-  evaluation_frequency: z.number(),
-  evaluation_time_window: z.number(),
-  event_occurrences: z.number(),
+  evaluationFrequency: z.number(),
+  evaluationTimeWindow: z.number(),
+  eventOccurrences: z.number(),
   hosts: z.array(z.string()).optional(),
   location: z.string(),
   name: z.string(),
-  resource_ids: z.array(z.string()),
-  resource_type: z.enum(["app-gateway", "api-management"]),
+  resourceIds: z.array(z.string()),
+  resourceType: z.enum(["app-gateway", "api-management"]),
   timespan: z.string(),
 });
 

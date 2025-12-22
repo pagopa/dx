@@ -8,7 +8,7 @@ import { uriToRegex } from "../../core/template/helpers.js";
 
 interface QueryContext extends TemplateContext {
   endpoint: string;
-  is_alarm?: boolean;
+  isAlarm?: boolean;
   threshold?: number;
 }
 
@@ -18,7 +18,7 @@ interface QueryContext extends TemplateContext {
  */
 export function availabilityQuery(ctx: QueryContext): string {
   const endpoint = ctx.endpoint;
-  const basePath = ctx.base_path ?? "";
+  const basePath = ctx.basePath ?? "";
   const threshold = ctx.threshold ?? 0.99;
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
@@ -26,7 +26,7 @@ export function availabilityQuery(ctx: QueryContext): string {
   const uriPattern = uriToRegex(basePath + path);
   const hostsJson = JSON.stringify(ctx.hosts ?? []).replace(/,/g, ", ");
   const timespan = ctx.timespan || "5m";
-  const isAlarm = ctx.is_alarm ?? false;
+  const isAlarm = ctx.isAlarm ?? false;
   // NOTE: Threshold inversion logic to match legacy template behavior
   // For thresholds other than the default (0.99), invert to (1 - threshold)
   // This converts availability thresholds to error rate thresholds
@@ -58,7 +58,7 @@ ${
  */
 export function responseCodesQuery(ctx: QueryContext): string {
   const endpoint = ctx.endpoint;
-  const basePath = ctx.base_path ?? "";
+  const basePath = ctx.basePath ?? "";
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
@@ -88,7 +88,7 @@ AzureDiagnostics
  */
 export function responseTimeQuery(ctx: QueryContext): string {
   const endpoint = ctx.endpoint;
-  const basePath = ctx.base_path ?? "";
+  const basePath = ctx.basePath ?? "";
   const threshold = ctx.threshold ?? 1;
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
@@ -96,8 +96,8 @@ export function responseTimeQuery(ctx: QueryContext): string {
   const uriPattern = uriToRegex(basePath + path);
   const hostsJson = JSON.stringify(ctx.hosts ?? []).replace(/,/g, ", ");
   const timespan = ctx.timespan || "5m";
-  const isAlarm = ctx.is_alarm ?? false;
-  const percentile = ctx.queries?.response_time_percentile ?? 95;
+  const isAlarm = ctx.isAlarm ?? false;
+  const percentile = ctx.queries?.responseTimePercentile ?? 95;
 
   return `${isAlarm ? "" : "\n"}let api_hosts = datatable (name: string) ${hostsJson};
 let threshold = ${threshold};
