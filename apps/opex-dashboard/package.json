@@ -40,14 +40,15 @@
     "@apidevtools/swagger-parser": "^12.1.0",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",
-    "zod": "^4.1.13",
-    "tmp": "^0.2.5"
+    "tmp": "^0.2.5",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
+    "@types/tmp": "^0.2.6",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",

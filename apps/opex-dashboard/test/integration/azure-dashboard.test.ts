@@ -59,7 +59,7 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
 
       try {
-        builder.package(tempDir, {});
+        await builder.package(tempDir, {});
 
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
@@ -119,7 +119,7 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
           },
         };
 
-        builder.package(tempDir, overrides);
+        await builder.package(tempDir, overrides);
 
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
@@ -180,7 +180,7 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
           },
         };
 
-        builder.package(tempDir, overrides);
+        await builder.package(tempDir, overrides);
 
         const opexTfPath = join(tempDir, "opex.tf");
         const output = readFileSync(opexTfPath, "utf-8");
@@ -363,7 +363,7 @@ describe("Azure Dashboard Integration Tests - Terraform Builder", () => {
         undefined,
       );
 
-      builder.package(tempDir, {});
+      await builder.package(tempDir, {});
 
       const files = getAllFiles(tempDir);
       expect(files).toContain("opex.tf");
@@ -450,8 +450,8 @@ describe("Azure Dashboard Integration Tests - Factory", () => {
 
 describe("Azure Dashboard Integration Tests - Config", () => {
   describe("config loading", () => {
-    it("should load valid config from examples", () => {
-      const config = loadConfig("examples/azure_dashboard_config.yaml");
+    it("should load valid config from examples", async () => {
+      const config = await loadConfig("examples/azure_dashboard_config.yaml");
 
       expect(config.name).toBe("My spec");
       expect(config.location).toBe("West Europe");
@@ -459,8 +459,8 @@ describe("Azure Dashboard Integration Tests - Config", () => {
       expect(config.action_groups).toHaveLength(2);
     });
 
-    it("should load config with overrides", () => {
-      const config = loadConfig(
+    it("should load config with overrides", async () => {
+      const config = await loadConfig(
         "examples/azure_dashboard_overrides_config.yaml",
       );
 
@@ -471,10 +471,10 @@ describe("Azure Dashboard Integration Tests - Config", () => {
       ).toBeDefined();
     });
 
-    it("should throw error for missing required fields", () => {
-      expect(() => {
-        loadConfig("test/data/io_backend_invalid.yaml");
-      }).toThrow();
+    it("should throw error for missing required fields", async () => {
+      await expect(
+        loadConfig("test/data/io_backend_invalid.yaml"),
+      ).rejects.toThrow();
     });
   });
 });

@@ -14,8 +14,8 @@ import { loadConfig } from "@/core/config/loader.js";
 import { OA3Resolver } from "@/core/resolver/index.js";
 
 describe("HTTP Methods - Integration Tests", () => {
-  it("should load config with HTTP method overrides", () => {
-    const config = loadConfig(
+  it("should load config with HTTP method overrides", async () => {
+    const config = await loadConfig(
       "examples/azure_dashboard_http_methods_config.yaml",
     );
 
@@ -133,7 +133,7 @@ describe("HTTP Methods - Integration Tests", () => {
         },
       };
 
-      builder.package(tempDir, overrides);
+      await builder.package(tempDir, overrides);
 
       const opexTfPath = join(tempDir, "opex.tf");
       const output = readFileSync(opexTfPath, "utf-8");

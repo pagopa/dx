@@ -3,7 +3,7 @@
  * Loads and validates YAML configuration files.
  */
 
-import * as fs from "fs";
+import { readFile } from "fs/promises";
 import * as yaml from "js-yaml";
 
 import { ConfigError, FileError } from "../errors/index.js";
@@ -12,15 +12,15 @@ import { type Config, ConfigSchema } from "./config.schema.js";
 /**
  * Load and validate configuration from YAML file or stdin.
  */
-export function loadConfig(configPath: string): Config {
-  const content = (() => {
+export async function loadConfig(configPath: string): Promise<Config> {
+  const content = await (async () => {
     try {
       if (configPath === "-") {
         // Read from stdin
-        return fs.readFileSync(0, "utf-8");
+        return await readStdin();
       }
       // Read from file
-      return fs.readFileSync(configPath, "utf-8");
+      return await readFile(configPath, "utf-8");
     } catch (error) {
       throw new FileError(
         `Failed to read config file: ${configPath} - ${
@@ -53,4 +53,15 @@ export function loadConfig(configPath: string): Config {
       }`,
     );
   }
+}
+
+/**
+ * Read content from stdin.
+ */
+async function readStdin(): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(chunk as Buffer);
+  }
+  return Buffer.concat(chunks).toString("utf-8");
 }

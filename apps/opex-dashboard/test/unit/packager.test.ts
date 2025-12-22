@@ -22,8 +22,8 @@ describe("generateTerraformAssets", () => {
     rmSync(tempDir, { force: true, recursive: true });
   });
 
-  it("should generate main.tf and variables.tf without terraform config", () => {
-    generateTerraformAssets(tempDir);
+  it("should generate main.tf and variables.tf without terraform config", async () => {
+    await generateTerraformAssets(tempDir);
 
     expect(statSync(join(tempDir, "main.tf")).isFile()).toBe(true);
     expect(statSync(join(tempDir, "variables.tf")).isFile()).toBe(true);
@@ -35,7 +35,7 @@ describe("generateTerraformAssets", () => {
     expect(variablesTf).toContain("variable");
   });
 
-  it("should generate environment-specific files when terraform config is provided", () => {
+  it("should generate environment-specific files when terraform config is provided", async () => {
     const terraformConfig: TerraformConfig = {
       environments: {
         dev: {
@@ -55,7 +55,7 @@ describe("generateTerraformAssets", () => {
       },
     };
 
-    generateTerraformAssets(tempDir, terraformConfig);
+    await generateTerraformAssets(tempDir, terraformConfig);
 
     // Check main files
     expect(statSync(join(tempDir, "main.tf")).isFile()).toBe(true);
@@ -95,7 +95,7 @@ describe("generateTerraformAssets", () => {
     expect(devTerraform).toContain('env_short = "d"');
   });
 
-  it("should skip environments without config", () => {
+  it("should skip environments without config", async () => {
     const terraformConfig: TerraformConfig = {
       environments: {
         dev: undefined,
@@ -106,7 +106,7 @@ describe("generateTerraformAssets", () => {
       },
     };
 
-    generateTerraformAssets(tempDir, terraformConfig);
+    await generateTerraformAssets(tempDir, terraformConfig);
 
     // dev should not be created
     expect(() => statSync(join(tempDir, "env", "dev"))).toThrow();

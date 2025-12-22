@@ -3,14 +3,22 @@
  * Handles writing dashboard output to stdout or filesystem.
  */
 
-import * as fs from "fs";
+import { mkdir } from "fs/promises";
+
+import { FileError } from "../../core/errors/index.js";
 
 /**
  * Ensure directory exists, creating it if necessary.
  */
-export function ensureDirectory(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
+export async function ensureDirectory(dirPath: string): Promise<void> {
+  try {
+    await mkdir(dirPath, { recursive: true });
+  } catch (error) {
+    throw new FileError(
+      `Failed to create directory ${dirPath}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
   }
 }
 

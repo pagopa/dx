@@ -3,17 +3,18 @@
  * Downloads OpenAPI specs from HTTP URLs to temporary files.
  */
 
-import * as fs from "fs";
-import * as tmp from "tmp";
+import { access, unlink, writeFile } from "fs/promises";
+import tmp from "tmp";
+
+import { FileError } from "../../core/errors/index.js";
 
 /**
  * Clean up temporary spec file.
  */
-export function cleanupTempFile(filePath: string): void {
+export async function cleanupTempFile(filePath: string): Promise<void> {
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    await access(filePath);
+    await unlink(filePath);
   } catch {
     // Ignore cleanup errors
   }
@@ -40,7 +41,15 @@ export async function downloadSpec(url: string): Promise<string> {
     prefix: "opex-spec-",
   }).name;
 
-  fs.writeFileSync(tempFile, Buffer.from(arrayBuffer));
+  try {
+    await writeFile(tempFile, Buffer.from(arrayBuffer));
+  } catch (error) {
+    throw new FileError(
+      `Failed to write spec to ${tempFile}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
 
   return tempFile;
 }

@@ -60,7 +60,7 @@ async function generateHandler(options: {
 }): Promise<void> {
   try {
     // Load and validate configuration
-    const config = loadConfig(options.config);
+    const config = await loadConfig(options.config);
 
     // Download spec if HTTP URL
     const isHttp = config.oa3_spec.startsWith("http");
@@ -111,8 +111,8 @@ async function generateHandler(options: {
     // Output: package or stdout
     if (options.package) {
       const outputPath = getPackageOutputPath(options.package);
-      ensureDirectory(outputPath);
-      builder.package(outputPath, overrides);
+      await ensureDirectory(outputPath);
+      await builder.package(outputPath, overrides);
     } else {
       const output = builder.produce(overrides);
       writeToStdout(output);
@@ -120,7 +120,7 @@ async function generateHandler(options: {
 
     // Cleanup temp file if created
     if (tempFile) {
-      cleanupTempFile(tempFile);
+      await cleanupTempFile(tempFile);
     }
   } catch (error) {
     console.error(

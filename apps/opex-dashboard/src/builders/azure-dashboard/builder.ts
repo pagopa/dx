@@ -4,12 +4,13 @@
  * Uses composition pattern to reuse raw builder logic.
  */
 
-import * as fs from "fs";
+import { mkdir, writeFile } from "fs/promises";
 import * as path from "path";
 
 import type { TerraformConfig } from "../../core/config/config.schema.js";
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
+import { FileError } from "../../core/errors/index.js";
 import { normalizeEndpointKeys } from "../../utils/index.js";
 import { AzDashboardRawBuilder } from "../azure-dashboard-raw/index.js";
 import { Builder } from "../base.js";
@@ -55,19 +56,28 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
    * Package Terraform configuration.
    * Creates opex.tf and generates terraform assets (main.tf, variables.tf, env/).
    */
-  package(outputPath: string, values: Partial<TemplateContext> = {}): void {
-    // Ensure output directory exists
-    if (!fs.existsSync(outputPath)) {
-      fs.mkdirSync(outputPath, { recursive: true });
+  async package(
+    outputPath: string,
+    values: Partial<TemplateContext> = {},
+  ): Promise<void> {
+    try {
+      // Ensure output directory exists
+      await mkdir(outputPath, { recursive: true });
+
+      // Write main Terraform file as opex.tf
+      const terraformFilePath = path.join(outputPath, "opex.tf");
+      const content = this.produce(values);
+      await writeFile(terraformFilePath, content, "utf-8");
+
+      // Generate Terraform assets (boilerplate files)
+      await generateTerraformAssets(outputPath, this.terraformConfig);
+    } catch (error) {
+      throw new FileError(
+        `Failed to package Terraform configuration in ${outputPath}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
-
-    // Write main Terraform file as opex.tf
-    const terraformFilePath = path.join(outputPath, "opex.tf");
-    const content = this.produce(values);
-    fs.writeFileSync(terraformFilePath, content, "utf-8");
-
-    // Generate Terraform assets (boilerplate files)
-    generateTerraformAssets(outputPath, this.terraformConfig);
   }
 
   /**

@@ -41,7 +41,7 @@ export abstract class Builder<
     outputPath: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     values: Partial<TProps> = {} as Partial<TProps>,
-  ): void {
+  ): Promise<void> | void {
     throw new Error(
       `Packaging not supported for ${this.constructor.name}. Only azure-dashboard template type supports packaging.`,
     );
