@@ -12,9 +12,9 @@ import type {
  * Generate backend.tfvars content for Terraform backend configuration.
  */
 export function generateBackendTfvars(backend?: BackendConfig): string {
-  return `resource_group_name  = ${backend?.resource_group_name ? `"${backend.resource_group_name}"` : ""}
-storage_account_name = ${backend?.storage_account_name ? `"${backend.storage_account_name}"` : ""}
-container_name       = ${backend?.container_name ? `"${backend.container_name}"` : ""}
+  return `resource_group_name  = ${backend?.resourceGroupName ? `"${backend.resourceGroupName}"` : ""}
+storage_account_name = ${backend?.storageAccountName ? `"${backend.storageAccountName}"` : ""}
+container_name       = ${backend?.containerName ? `"${backend.containerName}"` : ""}
 key                  = ${backend?.key ? `"${backend.key}"` : ""}
 use_azuread_auth    = "true"
 `;
@@ -51,7 +51,7 @@ provider "azurerm" {
  */
 export function generateTerraformTfvars(envConfig?: EnvironmentConfig): string {
   return `prefix    = ${envConfig?.prefix ? `"${envConfig.prefix}"` : ""}
-env_short = ${envConfig?.env_short ? `"${envConfig.env_short}"` : ""}
+env_short = ${envConfig?.envShort ? `"${envConfig.envShort}"` : ""}
 `;
 }
 

@@ -14,10 +14,10 @@ import {
 describe("generateBackendTfvars", () => {
   it("should generate backend.tfvars with all fields", () => {
     const backend = {
-      container_name: "tfstate",
+      containerName: "tfstate",
       key: "test.tfstate",
-      resource_group_name: "test-rg",
-      storage_account_name: "teststorage",
+      resourceGroupName: "test-rg",
+      storageAccountName: "teststorage",
     };
 
     const result = generateBackendTfvars(backend);
@@ -54,7 +54,7 @@ describe("generateMainTf", () => {
 describe("generateTerraformTfvars", () => {
   it("should generate terraform.tfvars with all fields", () => {
     const envConfig = {
-      env_short: "d",
+      envShort: "d",
       prefix: "test",
     };
 

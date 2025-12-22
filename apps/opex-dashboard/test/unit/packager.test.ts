@@ -40,16 +40,16 @@ describe("generateTerraformAssets", () => {
       environments: {
         dev: {
           backend: {
-            container_name: "tfstate",
+            containerName: "tfstate",
             key: "dev.tfstate",
-            resource_group_name: "test-rg",
-            storage_account_name: "teststorage",
+            resourceGroupName: "test-rg",
+            storageAccountName: "teststorage",
           },
-          env_short: "d",
+          envShort: "d",
           prefix: "test",
         },
         prod: {
-          env_short: "p",
+          envShort: "p",
           prefix: "test",
         },
       },
@@ -100,7 +100,7 @@ describe("generateTerraformAssets", () => {
       environments: {
         dev: undefined,
         prod: {
-          env_short: "p",
+          envShort: "p",
           prefix: "test",
         },
       },

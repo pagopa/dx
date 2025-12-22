@@ -56,70 +56,39 @@
         "endpoints": {
           "description": "Override alarm thresholds and settings for specific endpoints (key: endpoint path)",
           "type": "object",
-          "propertyNames": {
+          "property_names": {
             "type": "string"
           },
-          "additionalProperties": {
+          "additional_properties": {
+            "description": "Optional overrides for endpoint-specific alarm thresholds and evaluation settings",
             "type": "object",
             "properties": {
-              "availabilityEvaluationFrequency": {
-                "type": "number"
-              },
-              "availabilityEvaluationTimeWindow": {
-                "type": "number"
-              },
-              "availabilityEventOccurrences": {
-                "type": "number"
-              },
-              "availabilityThreshold": {
-                "type": "number"
-              },
-              "responseTimeEvaluationFrequency": {
-                "type": "number"
-              },
-              "responseTimeEvaluationTimeWindow": {
-                "type": "number"
-              },
-              "responseTimeEventOccurrences": {
-                "type": "number"
-              },
-              "responseTimeThreshold": {
-                "type": "number"
-              },
               "availability_evaluation_frequency": {
-                "description": "Frequency in minutes to evaluate availability alarm. Default: 10",
                 "type": "number"
               },
               "availability_evaluation_time_window": {
-                "description": "Time window in minutes for availability alarm evaluation. Default: 20",
                 "type": "number"
               },
               "availability_event_occurrences": {
-                "description": "Number of event occurrences to trigger availability alarm. Default: 1",
                 "type": "number"
               },
               "availability_threshold": {
-                "description": "Minimum availability percentage (0-1). Default: 0.99 (99%)",
                 "type": "number"
               },
               "response_time_evaluation_frequency": {
-                "description": "Frequency in minutes to evaluate response time alarm. Default: 10",
                 "type": "number"
               },
               "response_time_evaluation_time_window": {
-                "description": "Time window in minutes for response time alarm evaluation. Default: 20",
                 "type": "number"
               },
               "response_time_event_occurrences": {
-                "description": "Number of event occurrences to trigger response time alarm. Default: 1",
                 "type": "number"
               },
               "response_time_threshold": {
-                "description": "Maximum response time in seconds. Default: 1",
                 "type": "number"
               }
             },
-            "additionalProperties": false
+            "additional_properties": false
           }
         },
         "hosts": {
@@ -133,12 +102,12 @@
           "description": "Optional query configuration overrides",
           "type": "object",
           "properties": {
-            "responseTimePercentile": {
+            "response_time_percentile": {
               "description": "Percentile for response time queries. Default: 95",
               "default": 95,
               "type": "number"
             },
-            "statusCodeCategories": {
+            "status_code_categories": {
               "description": "HTTP status code categories for response codes queries",
               "default": [
                 "1XX",
@@ -154,24 +123,24 @@
             }
           },
           "required": [
-            "responseTimePercentile",
-            "statusCodeCategories"
+            "response_time_percentile",
+            "status_code_categories"
           ],
-          "additionalProperties": false
+          "additional_properties": false
         }
       },
-      "additionalProperties": false
+      "additional_properties": false
     },
     "queries": {
       "description": "Optional global query configuration overrides",
       "type": "object",
       "properties": {
-        "responseTimePercentile": {
+        "response_time_percentile": {
           "description": "Percentile for response time queries. Default: 95",
           "default": 95,
           "type": "number"
         },
-        "statusCodeCategories": {
+        "status_code_categories": {
           "description": "HTTP status code categories for response codes queries",
           "default": [
             "1XX",
@@ -187,10 +156,10 @@
         }
       },
       "required": [
-        "responseTimePercentile",
-        "statusCodeCategories"
+        "response_time_percentile",
+        "status_code_categories"
       ],
-      "additionalProperties": false
+      "additional_properties": false
     },
     "resource_type": {
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
@@ -244,24 +213,24 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additionalProperties": false
+                  "additional_properties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "maxLength": 1
+                  "max_length": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "maxLength": 6
+                  "max_length": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additionalProperties": false
+              "additional_properties": false
             },
             "prod": {
               "type": "object",
@@ -293,24 +262,24 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additionalProperties": false
+                  "additional_properties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "maxLength": 1
+                  "max_length": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "maxLength": 6
+                  "max_length": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additionalProperties": false
+              "additional_properties": false
             },
             "uat": {
               "type": "object",
@@ -342,30 +311,30 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additionalProperties": false
+                  "additional_properties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "maxLength": 1
+                  "max_length": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "maxLength": 6
+                  "max_length": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additionalProperties": false
+              "additional_properties": false
             }
           },
-          "additionalProperties": false
+          "additional_properties": false
         }
       },
-      "additionalProperties": false
+      "additional_properties": false
     },
     "timespan": {
       "description": "Time range for dashboard queries (e.g., 5m, 1h, 24h). Default: 5m",
@@ -382,5 +351,5 @@
     "oa3_spec",
     "response_time_threshold"
   ],
-  "additionalProperties": false
+  "additional_properties": false
 }
