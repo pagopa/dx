@@ -44,20 +44,20 @@ async function createAzureRawBuilder(
   // Resolve OA3 spec
   const oa3Spec = await params.resolver.resolve();
 
-  return new AzDashboardRawBuilder(
+  return new AzDashboardRawBuilder({
+    availabilityThreshold: params.availability_threshold,
+    evaluationFrequency: params.evaluation_frequency,
+    evaluationTimeWindow: params.evaluation_time_window,
+    eventOccurrences: params.event_occurrences,
+    location: params.location,
+    name: params.name,
     oa3Spec,
-    params.name,
-    params.resource_type,
-    params.location,
-    params.timespan,
-    params.evaluation_frequency,
-    params.evaluation_time_window,
-    params.event_occurrences,
-    params.resources,
-    params.queries,
-    params.availability_threshold,
-    params.response_time_threshold,
-  );
+    queries: params.queries,
+    resources: params.resources,
+    resourceType: params.resource_type,
+    responseTimeThreshold: params.response_time_threshold,
+    timespan: params.timespan,
+  });
 }
 
 /**
@@ -69,19 +69,19 @@ async function createAzureTerraformBuilder(
   // Create raw builder first
   const rawBuilder = await createAzureRawBuilder(params);
 
-  return new AzDashboardBuilder(
-    rawBuilder,
-    params.name,
-    params.resource_type,
-    params.location,
-    params.timespan,
-    params.evaluation_frequency,
-    params.evaluation_time_window,
-    params.event_occurrences,
-    params.data_source_id,
-    params.action_groups_ids,
-    params.terraform,
-  );
+  return new AzDashboardBuilder({
+    actionGroupsIds: params.action_groups_ids,
+    dashboardBuilder: rawBuilder,
+    dataSourceId: params.data_source_id,
+    evaluationFrequency: params.evaluation_frequency,
+    evaluationTimeWindow: params.evaluation_time_window,
+    eventOccurrences: params.event_occurrences,
+    location: params.location,
+    name: params.name,
+    resourceType: params.resource_type,
+    terraformConfig: params.terraform,
+    timespan: params.timespan,
+  });
 }
 
 // Builder registry with type-safe factory functions

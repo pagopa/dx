@@ -42,17 +42,17 @@ describe("HTTP Methods - Integration Tests", () => {
       "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
     ];
 
-    const rawBuilder = new AzDashboardRawBuilder(
+    const rawBuilder = new AzDashboardRawBuilder({
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 1,
+      location: "West Europe",
+      name: "HTTP Methods Test Dashboard",
       oa3Spec,
-      "HTTP Methods Test Dashboard",
-      "app-gateway",
-      "West Europe",
-      "5m",
-      10,
-      20,
-      1,
-      resourceIds,
-    );
+      resources: resourceIds,
+      resourceType: "app-gateway",
+      timespan: "5m",
+    });
 
     const overrides = {
       endpoints: {
@@ -95,31 +95,30 @@ describe("HTTP Methods - Integration Tests", () => {
       "/subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group",
     ];
 
-    const rawBuilder = new AzDashboardRawBuilder(
+    const rawBuilder = new AzDashboardRawBuilder({
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 2,
+      location: "West Europe",
+      name: "Test Dashboard",
       oa3Spec,
-      "Test Dashboard",
-      "app-gateway",
-      "West Europe",
-      "5m",
-      10,
-      20,
-      2,
-      resourceIds,
-    );
+      resources: resourceIds,
+      resourceType: "app-gateway",
+      timespan: "5m",
+    });
 
-    const builder = new AzDashboardBuilder(
-      rawBuilder,
-      "PROD-IO/IO_HTTP_Methods_Test",
-      "app-gateway",
-      "West Europe",
-      "5m",
-      10,
-      20,
-      2,
+    const builder = new AzDashboardBuilder({
+      actionGroupsIds: actionGroups,
+      dashboardBuilder: rawBuilder,
       dataSourceId,
-      actionGroups,
-      undefined,
-    );
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 2,
+      location: "West Europe",
+      name: "PROD-IO/IO_HTTP_Methods_Test",
+      resourceType: "app-gateway",
+      timespan: "5m",
+    });
 
     const tempDir = mkdtempSync(join(tmpdir(), "http-methods-test-"));
 
@@ -160,17 +159,17 @@ describe("HTTP Methods - Integration Tests", () => {
       "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
     ];
 
-    const rawBuilder = new AzDashboardRawBuilder(
+    const rawBuilder = new AzDashboardRawBuilder({
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 1,
+      location: "West Europe",
+      name: "Mixed Methods Test",
       oa3Spec,
-      "Mixed Methods Test",
-      "app-gateway",
-      "West Europe",
-      "5m",
-      10,
-      20,
-      1,
-      resourceIds,
-    );
+      resources: resourceIds,
+      resourceType: "app-gateway",
+      timespan: "5m",
+    });
 
     const overrides = {
       endpoints: {
@@ -207,17 +206,17 @@ describe("HTTP Methods - Integration Tests", () => {
       "/subscriptions/test/resourceGroups/test/providers/Microsoft.ApiManagement/service/test",
     ];
 
-    const rawBuilder = new AzDashboardRawBuilder(
+    const rawBuilder = new AzDashboardRawBuilder({
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 1,
+      location: "West Europe",
+      name: "API Management Test",
       oa3Spec,
-      "API Management Test",
-      "api-management",
-      "West Europe",
-      "5m",
-      10,
-      20,
-      1,
-      resourceIds,
-    );
+      resources: resourceIds,
+      resourceType: "api-management",
+      timespan: "5m",
+    });
 
     const overrides = {
       endpoints: {

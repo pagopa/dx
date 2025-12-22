@@ -12,51 +12,53 @@ import { OA3SpecSchema } from "./builder.schema.js";
 import { extractEndpoints } from "./endpoints-extractor.js";
 import { azureDashboardRawTemplate } from "./template.js";
 
+export interface AzDashboardRawOptions {
+  availabilityThreshold?: number;
+  evaluationFrequency: number;
+  evaluationTimeWindow: number;
+  eventOccurrences: number;
+  location: string;
+  name: string;
+  oa3Spec: unknown;
+  queries?: {
+    response_time_percentile: number;
+    status_code_categories: string[];
+  };
+  resources: string[];
+  resourceType: string;
+  responseTimeThreshold?: number;
+  timespan: string;
+}
+
 export class AzDashboardRawBuilder extends Builder<TemplateContext> {
   private evaluationFrequency: number;
   private evaluationTimeWindow: number;
   private eventOccurrences: number;
   private oa3Spec: OA3Spec;
 
-  constructor(
-    oa3Spec: unknown,
-    name: string,
-    resourceType: string,
-    location: string,
-    timespan: string,
-    evaluationFrequency: number,
-    evaluationTimeWindow: number,
-    eventOccurrences: number,
-    resources: string[],
-    queries?: {
-      response_time_percentile: number;
-      status_code_categories: string[];
-    },
-    availabilityThreshold?: number,
-    responseTimeThreshold?: number,
-  ) {
+  constructor(options: AzDashboardRawOptions) {
     super(azureDashboardRawTemplate, {
       action_groups_ids: [],
-      availability_threshold: availabilityThreshold,
-      data_source_id: resources[0],
+      availability_threshold: options.availabilityThreshold,
+      data_source_id: options.resources[0],
       endpoints: {},
-      evaluation_frequency: evaluationFrequency,
-      event_occurrences: eventOccurrences,
+      evaluation_frequency: options.evaluationFrequency,
+      event_occurrences: options.eventOccurrences,
       hosts: [],
-      location,
-      name,
-      queries,
-      resource_type: resourceType,
-      response_time_threshold: responseTimeThreshold,
-      time_window: evaluationTimeWindow,
-      timespan,
+      location: options.location,
+      name: options.name,
+      queries: options.queries,
+      resource_type: options.resourceType,
+      response_time_threshold: options.responseTimeThreshold,
+      time_window: options.evaluationTimeWindow,
+      timespan: options.timespan,
     });
 
     // Validate OA3 spec structure
-    this.oa3Spec = OA3SpecSchema.parse(oa3Spec);
-    this.evaluationFrequency = evaluationFrequency;
-    this.evaluationTimeWindow = evaluationTimeWindow;
-    this.eventOccurrences = eventOccurrences;
+    this.oa3Spec = OA3SpecSchema.parse(options.oa3Spec);
+    this.evaluationFrequency = options.evaluationFrequency;
+    this.evaluationTimeWindow = options.evaluationTimeWindow;
+    this.eventOccurrences = options.eventOccurrences;
   }
 
   /**

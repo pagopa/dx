@@ -17,39 +17,41 @@ import { Builder } from "../base.js";
 import { generateTerraformAssets } from "./packager.js";
 import { azureDashboardTerraformTemplate } from "./template.js";
 
+export interface AzDashboardOptions {
+  actionGroupsIds: string[];
+  dashboardBuilder: AzDashboardRawBuilder;
+  dataSourceId: string;
+  evaluationFrequency: number;
+  evaluationTimeWindow: number;
+  eventOccurrences: number;
+  location: string;
+  name: string;
+  resourceType: string;
+  terraformConfig?: TerraformConfig;
+  timespan: string;
+}
+
 export class AzDashboardBuilder extends Builder<TemplateContext> {
   private rawBuilder: AzDashboardRawBuilder;
   private terraformConfig?: TerraformConfig;
 
-  constructor(
-    dashboardBuilder: AzDashboardRawBuilder,
-    name: string,
-    resourceType: string,
-    location: string,
-    timespan: string,
-    evaluationFrequency: number,
-    evaluationTimeWindow: number,
-    eventOccurrences: number,
-    dataSourceId: string,
-    actionGroupsIds: string[],
-    terraformConfig?: TerraformConfig,
-  ) {
+  constructor(options: AzDashboardOptions) {
     super(azureDashboardTerraformTemplate, {
-      action_groups_ids: actionGroupsIds,
-      data_source_id: dataSourceId,
+      action_groups_ids: options.actionGroupsIds,
+      data_source_id: options.dataSourceId,
       endpoints: {},
-      evaluation_frequency: evaluationFrequency,
-      event_occurrences: eventOccurrences,
+      evaluation_frequency: options.evaluationFrequency,
+      event_occurrences: options.eventOccurrences,
       hosts: [],
-      location,
-      name: name.replace(/ /g, "_"), // Replace spaces with underscores for Terraform compatibility
-      resource_type: resourceType,
-      time_window: evaluationTimeWindow,
-      timespan,
+      location: options.location,
+      name: options.name.replace(/ /g, "_"), // Replace spaces with underscores for Terraform compatibility
+      resource_type: options.resourceType,
+      time_window: options.evaluationTimeWindow,
+      timespan: options.timespan,
     });
 
-    this.rawBuilder = dashboardBuilder;
-    this.terraformConfig = terraformConfig;
+    this.rawBuilder = options.dashboardBuilder;
+    this.terraformConfig = options.terraformConfig;
   }
 
   /**

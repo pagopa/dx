@@ -30,31 +30,30 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const rawBuilder = new AzDashboardRawBuilder(
+      const rawBuilder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
         oa3Spec,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
-        resourceIds,
-      );
+        resources: resourceIds,
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
-      const builder = new AzDashboardBuilder(
-        rawBuilder,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
+      const builder = new AzDashboardBuilder({
+        actionGroupsIds: actionGroups,
+        dashboardBuilder: rawBuilder,
         dataSourceId,
-        actionGroups,
-        undefined,
-      );
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
 
@@ -75,31 +74,30 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const rawBuilder = new AzDashboardRawBuilder(
+      const rawBuilder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
         oa3Spec,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
-        resourceIds,
-      );
+        resources: resourceIds,
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
-      const builder = new AzDashboardBuilder(
-        rawBuilder,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
+      const builder = new AzDashboardBuilder({
+        actionGroupsIds: actionGroups,
+        dashboardBuilder: rawBuilder,
         dataSourceId,
-        actionGroups,
-        undefined,
-      );
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
 
@@ -135,31 +133,30 @@ describe("Azure Dashboard Integration Tests - Snapshots", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const rawBuilder = new AzDashboardRawBuilder(
+      const rawBuilder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
         oa3Spec,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
-        resourceIds,
-      );
+        resources: resourceIds,
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
-      const builder = new AzDashboardBuilder(
-        rawBuilder,
-        "PROD-IO/IO_App_Availability",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        2,
+      const builder = new AzDashboardBuilder({
+        actionGroupsIds: actionGroups,
+        dashboardBuilder: rawBuilder,
         dataSourceId,
-        actionGroups,
-        undefined,
-      );
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 2,
+        location: "West Europe",
+        name: "PROD-IO/IO_App_Availability",
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const tempDir = mkdtempSync(join(tmpdir(), "opex-snapshot-test-"));
 
@@ -200,19 +197,19 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const builder = new AzDashboardRawBuilder(
+      const builder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
+        location: "West Europe",
+        name: "Test Dashboard",
         oa3Spec,
-        "Test Dashboard",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        1,
-        [
+        resources: [
           "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
         ],
-      );
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const output = builder.produce({});
 
@@ -227,19 +224,19 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const builder = new AzDashboardRawBuilder(
+      const builder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
+        location: "West Europe",
+        name: "Test Dashboard",
         oa3Spec,
-        "Test Dashboard",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        1,
-        [
+        resources: [
           "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
         ],
-      );
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const overrides = {
         endpoints: {
@@ -263,19 +260,19 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const builder = new AzDashboardRawBuilder(
+      const builder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
+        location: "West Europe",
+        name: "Test Dashboard",
         oa3Spec,
-        "Test Dashboard",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        1,
-        [
+        resources: [
           "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
         ],
-      );
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       const overrides = {
         hosts: ["https://example.com/base"],
@@ -293,19 +290,19 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const builder = new AzDashboardRawBuilder(
+      const builder = new AzDashboardRawBuilder({
+        evaluationFrequency: 15,
+        evaluationTimeWindow: 30,
+        eventOccurrences: 2,
+        location: "East US",
+        name: "API Management Dashboard",
         oa3Spec,
-        "API Management Dashboard",
-        "api-management",
-        "East US",
-        "10m",
-        15,
-        30,
-        2,
-        [
+        resources: [
           "/subscriptions/test/resourceGroups/test/providers/Microsoft.ApiManagement/service/test",
         ],
-      );
+        resourceType: "api-management",
+        timespan: "10m",
+      });
 
       const output = builder.produce({});
       expect(output).toBeTruthy();
@@ -333,35 +330,35 @@ describe("Azure Dashboard Integration Tests - Terraform Builder", () => {
       const resolver = new OA3Resolver(specPath);
       const oa3Spec = await resolver.resolve();
 
-      const rawBuilder = new AzDashboardRawBuilder(
+      const rawBuilder = new AzDashboardRawBuilder({
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
+        location: "West Europe",
+        name: "Terraform Test",
         oa3Spec,
-        "Terraform Test",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        1,
-        [
+        resources: [
           "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
         ],
-      );
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
-      const builder = new AzDashboardBuilder(
-        rawBuilder,
-        "Terraform Test",
-        "app-gateway",
-        "West Europe",
-        "5m",
-        10,
-        20,
-        1,
-        "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
-        [
+      const builder = new AzDashboardBuilder({
+        actionGroupsIds: [
           "/subscriptions/test/resourceGroups/test/providers/microsoft.insights/actionGroups/test",
         ],
-        undefined,
-      );
+        dashboardBuilder: rawBuilder,
+        dataSourceId:
+          "/subscriptions/test/resourceGroups/test/providers/Microsoft.Network/applicationGateways/test",
+        evaluationFrequency: 10,
+        evaluationTimeWindow: 20,
+        eventOccurrences: 1,
+        location: "West Europe",
+        name: "Terraform Test",
+        resourceType: "app-gateway",
+        timespan: "5m",
+      });
 
       await builder.package(tempDir, {});
 
