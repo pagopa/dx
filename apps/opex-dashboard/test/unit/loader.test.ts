@@ -29,8 +29,8 @@ oa3_spec: spec.yaml
 
     const config = await loadConfig("config.yaml");
 
-    expect(config).toHaveProperty("action_groups", ["ag1"]);
-    expect(config).toHaveProperty("data_source", "ds1");
+    expect(config).toHaveProperty("actionGroups", ["ag1"]);
+    expect(config).toHaveProperty("dataSource", "ds1");
   });
 
   it("should throw FileError when file cannot be read", async () => {
@@ -84,6 +84,6 @@ oa3_spec: spec.yaml
 
     const config = await loadConfig("-");
 
-    expect(config).toHaveProperty("action_groups", ["ag1"]);
+    expect(config).toHaveProperty("actionGroups", ["ag1"]);
   });
 });

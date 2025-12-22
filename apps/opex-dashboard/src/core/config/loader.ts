@@ -34,7 +34,7 @@ export async function loadConfig(configPath: string): Promise<Config> {
     // Parse YAML
     const rawConfig = yaml.load(content) as unknown;
 
-    // Validate with Zod schema
+    // Validate with Zod schema (preprocessing handles snake_case to camelCase)
     const config = ConfigSchema.parse(rawConfig);
 
     return config;

@@ -9,7 +9,6 @@ import { type BuilderType, createBuilder } from "../../core/builder-factory.js";
 import { loadConfig } from "../../core/config/index.js";
 import { ConfigError } from "../../core/errors/index.js";
 import { OA3Resolver } from "../../core/resolver/index.js";
-import { mapConfigOverrides } from "../../utils/index.js";
 import {
   ensureDirectory,
   getPackageOutputPath,
@@ -64,13 +63,13 @@ async function generateHandler(options: {
     const config = await loadConfig(options.config);
 
     // Download spec if HTTP URL
-    const isHttp = config.oa3_spec.startsWith("http");
-    const tempFile = isHttp ? await downloadSpec(config.oa3_spec) : undefined;
-    const specPath = tempFile ?? config.oa3_spec;
+    const isHttp = config.oa3Spec.startsWith("http");
+    const tempFile = isHttp ? await downloadSpec(config.oa3Spec) : undefined;
+    const specPath = tempFile ?? config.oa3Spec;
 
     // Validate resource type
     const allowedResourceTypes = ["app-gateway", "api-management"];
-    if (!allowedResourceTypes.includes(config.resource_type)) {
+    if (!allowedResourceTypes.includes(config.resourceType)) {
       throw new ConfigError(
         `Invalid resource_type configuration: valid values are ${allowedResourceTypes.join(
           ", ",
@@ -81,22 +80,21 @@ async function generateHandler(options: {
     // Create resolver
     const resolver = new OA3Resolver(specPath);
 
-    // Prepare builder parameters (map snake_case config to camelCase params)
-    // Note: queries is already camelCase after Zod parsing
+    // Prepare builder parameters (config is already in camelCase after Zod preprocessing)
     const builderParams = {
-      actionGroupsIds: config.action_groups,
-      availabilityThreshold: config.availability_threshold,
-      dataSourceId: config.data_source,
-      evaluationFrequency: config.evaluation_frequency,
-      evaluationTimeWindow: config.evaluation_time_window,
-      eventOccurrences: config.event_occurrences,
+      actionGroupsIds: config.actionGroups,
+      availabilityThreshold: config.availabilityThreshold,
+      dataSourceId: config.dataSource,
+      evaluationFrequency: config.evaluationFrequency,
+      evaluationTimeWindow: config.evaluationTimeWindow,
+      eventOccurrences: config.eventOccurrences,
       location: config.location,
       name: config.name,
       queries: config.queries || config.overrides?.queries,
       resolver,
-      resources: [config.data_source],
-      resourceType: config.resource_type,
-      responseTimeThreshold: config.response_time_threshold,
+      resources: [config.dataSource],
+      resourceType: config.resourceType,
+      responseTimeThreshold: config.responseTimeThreshold,
       terraform: config.terraform,
       timespan: config.timespan,
     };
@@ -107,18 +105,16 @@ async function generateHandler(options: {
       builderParams,
     );
 
-    // Map overrides from snake_case (YAML) to camelCase (internal)
-    const mappedOverrides = config.overrides
-      ? mapConfigOverrides(config.overrides)
-      : {};
+    // Overrides are already in camelCase after Zod preprocessing
+    const overrides = config.overrides ?? {};
 
     // Output: package or stdout
     if (options.package) {
       const outputPath = getPackageOutputPath(options.package);
       await ensureDirectory(outputPath);
-      await builder.package(outputPath, mappedOverrides);
+      await builder.package(outputPath, overrides);
     } else {
-      const output = builder.produce(mappedOverrides);
+      const output = builder.produce(overrides);
       writeToStdout(output);
     }
 

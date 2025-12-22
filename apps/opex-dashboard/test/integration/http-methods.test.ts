@@ -25,12 +25,12 @@ describe("HTTP Methods - Integration Tests", () => {
     const serviceIdEndpoint =
       config.overrides?.endpoints?.["GET /api/v1/services/{service_id}"];
     expect(serviceIdEndpoint).toBeDefined();
-    expect(serviceIdEndpoint?.availability_threshold).toBe(0.95);
+    expect(serviceIdEndpoint?.availabilityThreshold).toBe(0.95);
 
     const servicesEndpoint =
       config.overrides?.endpoints?.["GET /api/v1/services"];
     expect(servicesEndpoint).toBeDefined();
-    expect(servicesEndpoint?.availability_threshold).toBe(0.98);
+    expect(servicesEndpoint?.availabilityThreshold).toBe(0.98);
   });
 
   it("should generate dashboard with method-specific filtering", async () => {

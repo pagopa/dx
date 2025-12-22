@@ -452,8 +452,8 @@ describe("Azure Dashboard Integration Tests - Config", () => {
 
       expect(config.name).toBe("My spec");
       expect(config.location).toBe("West Europe");
-      expect(config.resource_type).toBe("app-gateway");
-      expect(config.action_groups).toHaveLength(2);
+      expect(config.resourceType).toBe("app-gateway");
+      expect(config.actionGroups).toHaveLength(2);
     });
 
     it("should load config with overrides", async () => {
