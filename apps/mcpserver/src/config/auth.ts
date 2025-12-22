@@ -21,6 +21,7 @@ import { region as awsRegion } from "./aws.js";
  */
 
 const configSchema = z.object({
+  ALLOWED_ORIGINS: z.string().optional(),
   GITHUB_CLIENT_ID_SSM_PARAM: z.string().nonempty(),
   GITHUB_CLIENT_SECRET_SSM_PARAM: z.string().nonempty(),
   MCP_AUTH_TYPE: z.enum(["pat", "oauth"]),
@@ -39,6 +40,7 @@ const fetchSecureParameter = getSecureParameter(ssmClient, {
 export async function getConfig() {
   const config = configSchema.parse(process.env);
   return {
+    ALLOWED_ORIGINS: config.ALLOWED_ORIGINS,
     GITHUB_CLIENT_ID: await fetchSecureParameter(
       config.GITHUB_CLIENT_ID_SSM_PARAM,
     ),
