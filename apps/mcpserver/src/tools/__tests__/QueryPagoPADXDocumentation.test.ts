@@ -7,18 +7,32 @@ vi.mock("../../config/aws", () => ({
   kbRuntimeClient: "mockClient",
   knowledgeBaseId: "mockKbId",
 }));
-import { QueryPagoPADXDocumentationTool } from "../QueryPagoPADXDocumentation.js";
+import { executeQueryPagoPADXDocumentation } from "../QueryPagoPADXDocumentation.js";
 
 describe("QueryPagoPADXDocumentationTool", () => {
   it("should return results from the knowledge base", async () => {
-    const args = { number_of_results: 3, query: "test query" };
-    const result = await QueryPagoPADXDocumentationTool.execute(args);
-    expect(result).toBe("mocked result");
+    const args = { query: "test query" };
+    const result = await executeQueryPagoPADXDocumentation(args);
+    expect(result).toMatchObject({
+      content: [
+        {
+          text: "mocked result",
+          type: "text",
+        },
+      ],
+    });
   });
 
-  it("should use default number_of_results if not provided", async () => {
+  it("should handle query without number_of_results", async () => {
     const args = { query: "test query" };
-    const result = await QueryPagoPADXDocumentationTool.execute(args);
-    expect(result).toBe("mocked result");
+    const result = await executeQueryPagoPADXDocumentation(args);
+    expect(result).toMatchObject({
+      content: [
+        {
+          text: "mocked result",
+          type: "text",
+        },
+      ],
+    });
   });
 });

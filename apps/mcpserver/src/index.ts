@@ -1,18 +1,35 @@
 import { getLogger } from "@logtape/logtape";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import {
+  ServerRequest,
+  ServerNotification,
+} from "@modelcontextprotocol/sdk/types.js";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
-import { FastMCP } from "fastmcp";
+import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
-import { startPATVerificationFlow } from "./auth/github.js";
-import { getOAuthProvider, startOAuthFlow } from "./auth/oauth.js";
+import { tokenMiddleware } from "./auth/tokenMiddleware.js";
 import { getConfig } from "./config/auth.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
 import { serverInstructions } from "./config/server.js";
 import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
 import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
-import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
-import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
+import {
+  executeQueryPagoPADXDocumentation,
+  QueryDocsInput,
+  QueryDocsInputSchema,
+  QUERY_DOCS_TOOL_NAME,
+} from "./tools/QueryPagoPADXDocumentation.js";
+import {
+  executeSearchGitHubCode,
+  SearchGitHubCodeInput,
+  SearchGitHubCodeInputSchema,
+  SEARCH_GITHUB_CODE_TOOL_NAME,
+} from "./tools/SearchGitHubCode.js";
+import { HttpSseTransport } from "./transport/http-sse.js";
+import { executePrompt } from "./utils/prompts.js";
 
 // Configure logging
 await configureLogging();
@@ -24,97 +41,158 @@ logger.info("MCP Server starting...");
 logger.info(`Authentication type: ${authConfig.MCP_AUTH_TYPE}`);
 logger.info(`Server URL: ${authConfig.MCP_SERVER_URL}`);
 
-// Initialize OAuth provider if using OAuth authentication
-let authProxy;
-if (authConfig.MCP_AUTH_TYPE === "oauth") {
-  try {
-    logger.debug("Initializing OAuth provider...");
-    authProxy = await getOAuthProvider();
-    logger.debug("OAuth provider initialized successfully");
-  } catch (error) {
-    logger.error("Failed to initialize OAuth provider", { error });
-    throw error;
-  }
-} else {
-  logger.debug(
-    `OAuth not enabled. Using auth type: ${authConfig.MCP_AUTH_TYPE}`,
-  );
-}
+// Load enabled prompts
+logger.debug(`Loading enabled prompts...`);
+const enabledPrompts = await getEnabledPrompts();
+logger.debug(`Loaded ${enabledPrompts.length} enabled prompts`);
 
-const server = new FastMCP({
-  authenticate: async (request) => {
-    if (authConfig.MCP_AUTH_TYPE === "pat") {
-      return await startPATVerificationFlow(request);
-    } else if (authConfig.MCP_AUTH_TYPE === "oauth") {
-      return await startOAuthFlow(request);
-    } else {
-      logger.warn(
-        `Unknown authentication type: ${authConfig.MCP_AUTH_TYPE}. Proceeding without authentication.`,
-      );
-      return undefined;
-    }
+// Create MCP server instance using high-level API
+const server = new McpServer(
+  {
+    name: "PagoPA DX Knowledge Retrieval MCP Server",
+    version: packageJson.version,
   },
-  instructions: serverInstructions,
-  name: "PagoPA DX Knowledge Retrieval MCP Server",
-  oauth:
-    authConfig.MCP_AUTH_TYPE === "oauth"
-      ? {
-          authorizationServer: authProxy?.getAuthorizationServerMetadata(),
-          enabled: true,
-          protectedResource: {
-            authorizationServers: [
-              `${authProxy?.getAuthorizationServerMetadata().issuer}`,
-              `${authConfig.MCP_SERVER_URL}/.well-known/oauth-authorization-server`,
-            ],
-            bearerMethodsSupported: ["header"],
-            resource: `${authConfig.MCP_SERVER_URL}/mcp`,
-            resourceName: "PagoPA DX MCP Server",
-            scopesSupported: [],
-          },
-          proxy: authProxy,
-        }
-      : undefined,
-  version: packageJson.version as `${number}.${number}.${number}`,
-});
+  {
+    capabilities: {
+      prompts: {},
+      tools: {},
+    },
+    instructions: serverInstructions,
+  },
+);
 
 logger.debug(`Server instructions: \n\n${serverInstructions}`);
 
-logger.debug(`Loading enabled prompts...`);
+// Register prompts
+for (const catalogEntry of enabledPrompts) {
+  logger.debug(`Registering prompt: ${catalogEntry.prompt.name}`);
 
-getEnabledPrompts().then((prompts) => {
-  prompts.forEach((catalogEntry) => {
-    logger.debug(`Adding prompt: ${catalogEntry.prompt.name}`);
+  // Convert arguments to zod schema
+  const argsSchema: Record<string, z.ZodTypeAny> = {};
+  for (const arg of catalogEntry.prompt.arguments) {
+    argsSchema[arg.name] = arg.required ? z.string() : z.string().optional();
+  }
 
-    // Apply logging decorator to the prompt
-    const decoratedPrompt = withPromptLogging(
-      catalogEntry.prompt,
-      catalogEntry.id,
-    );
+  server.registerPrompt(
+    catalogEntry.prompt.name,
+    {
+      argsSchema: argsSchema,
+      description: catalogEntry.prompt.description,
+    },
+    async (args: Record<string, unknown>) => {
+      const decoratedExecutor = withPromptLogging(
+        catalogEntry.id,
+        executePrompt,
+      );
+      const result = await decoratedExecutor(catalogEntry, args);
+      return result;
+    },
+  );
 
-    server.addPrompt(decoratedPrompt);
-    logger.debug(`Added prompt: ${catalogEntry.prompt.name}`);
-  });
-});
+  logger.debug(`Registered prompt: ${catalogEntry.prompt.name}`);
+}
 
-server.addTool(withToolLogging(QueryPagoPADXDocumentationTool));
-server.addTool(withToolLogging(SearchGitHubCodeTool));
+// Register tools
+logger.debug(`Registering tool: ${QUERY_DOCS_TOOL_NAME}`);
+server.registerTool(
+  QUERY_DOCS_TOOL_NAME,
+  {
+    description: `This tool provides access to the complete PagoPA DX documentation covering:
+- Getting started, monorepo setup, dev containers, and GitHub collaboration
+- Git workflows and pull requests
+- DX pipelines setup and management
+- TypeScript development (npm scripts, ESLint, code review)
+- Terraform (folder structure, DX modules, Azure provider, pre-commit hooks, validation, deployment, drift detection)
+- Azure development (naming conventions, policies, IAM, API Management, monitoring, networking, deployments, static websites, Service Bus, data archiving)
+- Container development (Docker images)
+- Contributing to DX (Azure provider, Terraform modules, documentation)
 
-// Starts the server in HTTP Stream mode.
-server.start({
-  httpStream: {
-    port: 8080,
-    stateless: true,
+All prompts and questions should be written in English.
+For Terraform module details (input/output variables, examples), use the \`searchModules\` tool.`,
+    inputSchema: QueryDocsInputSchema,
+    title: "Query PagoPA DX documentation",
   },
-  transportType: "httpStream",
+  async (args: unknown) => {
+    const decoratedExecutor = withToolLogging(
+      QUERY_DOCS_TOOL_NAME,
+      async (validatedArgs: QueryDocsInput) =>
+        executeQueryPagoPADXDocumentation(validatedArgs),
+    );
+    const validatedArgs = QueryDocsInputSchema.parse(args);
+    return await decoratedExecutor(validatedArgs);
+  },
+);
+logger.debug(`Registered tool: ${QUERY_DOCS_TOOL_NAME}`);
+
+logger.debug(`Registering tool: ${SEARCH_GITHUB_CODE_TOOL_NAME}`);
+server.registerTool(
+  SEARCH_GITHUB_CODE_TOOL_NAME,
+  {
+    description: `Search for code in a GitHub organization (defaults to pagopa).
+Use this to find examples of specific code patterns, such as Terraform module usage.
+For example, search for "pagopa-dx/azure-function-app/azurerm" to find examples of the azure-function-app module usage.
+Returns file contents matching the search query.`,
+    inputSchema: SearchGitHubCodeInputSchema,
+    title: "Search GitHub organization code",
+  },
+  async (
+    args: unknown,
+    extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
+  ) => {
+    // Get auth info from the request extra
+    const authInfo = extra.authInfo;
+
+    const decoratedExecutor = withToolLogging(
+      SEARCH_GITHUB_CODE_TOOL_NAME,
+      async (validatedArgs: SearchGitHubCodeInput, auth: any) =>
+        executeSearchGitHubCode(validatedArgs, auth),
+    );
+    const validatedArgs = SearchGitHubCodeInputSchema.parse(args);
+    return await decoratedExecutor(validatedArgs, authInfo);
+  },
+);
+logger.debug(`Registered tool: ${SEARCH_GITHUB_CODE_TOOL_NAME}`);
+
+// Create HTTP SSE transport
+
+const transport = new HttpSseTransport({
+  authenticate:
+    authConfig.MCP_AUTH_TYPE === "oauth" ? tokenMiddleware : undefined,
+  port: 8080,
 });
 
-logger.debug(`Server started successfully on ${authConfig.MCP_SERVER_URL}`);
-logger.debug(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
+// Set the server instance in the transport
+transport.setServer(server.server);
+
+// Connect server to transport
+await server.connect(transport);
+
+logger.info(`Server started successfully on ${authConfig.MCP_SERVER_URL}`);
+logger.info(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
 logger.debug(
-  `OAuth enabled: ${authConfig.MCP_AUTH_TYPE === "oauth" && authProxy ? "YES" : "NO"}`,
+  `Authentication enabled: ${authConfig.MCP_AUTH_TYPE === "pat" ? "YES (PAT)" : authConfig.MCP_AUTH_TYPE === "oauth" ? "YES (OAuth)" : "NO"}`,
 );
 if (authConfig.MCP_AUTH_TYPE === "oauth") {
   logger.debug(
     `OAuth discovery: ${authConfig.MCP_SERVER_URL}/.well-known/oauth-authorization-server`,
   );
+}
+logger.info(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
+logger.debug(
+  `Authentication enabled: ${authConfig.MCP_AUTH_TYPE === "pat" ? "YES (PAT)" : "NO"}`,
+);
+
+// Handle graceful shutdown (only in local development, not in AWS Lambda)
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  process.on("SIGINT", async () => {
+    logger.info("Received SIGINT, shutting down gracefully...");
+    await server.close();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", async () => {
+    logger.info("Received SIGTERM, shutting down gracefully...");
+    await server.close();
+    process.exit(0);
+  });
 }

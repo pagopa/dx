@@ -1,4 +1,5 @@
-import type { Prompt } from "fastmcp";
+import type { GetPromptResult } from "@modelcontextprotocol/sdk/types.js";
+import type { CatalogEntry } from "@pagopa/dx-mcpprompts";
 
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
@@ -6,38 +7,41 @@ import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 const logger = getLogger(["mcpserver", "prompt-logging"]);
 
 /**
- * Decorates a FastMCP prompt to emit telemetry and debug logs whenever it is loaded.
- * @param prompt Prompt definition to wrap.
- * @param catalogId Catalog identifier used for traceability in telemetry.
- * @returns Wrapped prompt with logging side effects.
+ * Prompt execution handler type
  */
-export function withPromptLogging(prompt: Prompt, catalogId: string): Prompt {
-  const originalLoad = prompt.load;
+export type PromptExecutor = (
+  entry: CatalogEntry,
+  args: Record<string, unknown>,
+) => Promise<GetPromptResult>;
 
-  return {
-    ...prompt,
-    load: async (args) => {
-      const eventData = {
-        arguments: JSON.stringify(args),
-        promptId: catalogId,
-        promptName: prompt.name,
-        timestamp: new Date().toISOString(),
-      };
+/**
+ * Wraps a prompt executor with telemetry and logging
+ */
+export function withPromptLogging(
+  catalogId: string,
+  executor: PromptExecutor,
+): PromptExecutor {
+  return async (entry, args) => {
+    const eventData = {
+      arguments: JSON.stringify(args),
+      promptId: catalogId,
+      promptName: entry.prompt.name,
+      timestamp: new Date().toISOString(),
+    };
 
-      // Log to console (goes to CloudWatch in Lambda)
-      logger.debug(
-        `Prompt requested: ${prompt.name} - ${JSON.stringify(eventData)}`,
-      );
+    // Log to console (goes to CloudWatch in Lambda)
+    logger.debug(
+      `Prompt requested: ${entry.prompt.name} - ${JSON.stringify(eventData)}`,
+    );
 
-      // Emit custom event to Azure Application Insights
-      emitCustomEvent("PromptRequested", {
-        arguments: JSON.stringify(args),
-        promptId: catalogId,
-        promptName: prompt.name,
-      })("mcpserver");
+    // Emit custom event to Azure Application Insights
+    emitCustomEvent("PromptRequested", {
+      arguments: JSON.stringify(args),
+      promptId: catalogId,
+      promptName: entry.prompt.name,
+    })("mcpserver");
 
-      // Call the original load function and return the result
-      return await originalLoad(args);
-    },
+    // Call the original executor and return the result
+    return await executor(entry, args);
   };
 }

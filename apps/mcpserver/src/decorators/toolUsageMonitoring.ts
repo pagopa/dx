@@ -1,75 +1,73 @@
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
- * Decorates a FastMCP tool to emit telemetry and debug logs on execution while preserving its signature.
- * @param tool Tool object exposing a `name` and `execute` function.
- * @returns The same tool shape with logging added, or the original tool if it is not compatible.
+ * Tool execution handler type
  */
-export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
-  if (typeof tool !== "object" || !tool.execute || !tool.name) {
-    return tool;
-  }
+export type ToolExecutor<TArgs = unknown> = (
+  args: TArgs,
+  sessionData?: unknown,
+) => Promise<CallToolResult>;
 
-  const originalExecute = tool.execute as (
-    ...args: unknown[]
-  ) => Promise<unknown>;
-  const toolName = tool.name as string;
+/**
+ * Wraps a tool executor with telemetry and logging
+ */
+export function withToolLogging<TArgs = unknown>(
+  toolName: string,
+  executor: ToolExecutor<TArgs>,
+): ToolExecutor<TArgs> {
+  return async (args, sessionData) => {
+    const startTime = Date.now();
+    const eventData = {
+      arguments: JSON.stringify(args),
+      timestamp: new Date().toISOString(),
+      toolName,
+    };
 
-  return {
-    ...tool,
-    execute: async (...args: unknown[]) => {
-      const startTime = Date.now();
-      const [toolArgs] = args;
-      const eventData = {
-        arguments: JSON.stringify(toolArgs),
-        timestamp: new Date().toISOString(),
+    // Log to console (goes to CloudWatch in Lambda)
+    logger.debug(`Tool executed: ${toolName} - ${JSON.stringify(eventData)}`);
+
+    // Emit custom event to Azure Application Insights
+    emitCustomEvent("ToolExecuted", eventData)("mcpserver");
+
+    try {
+      // Call the original executor function and return the result
+      const result = await executor(args, sessionData);
+
+      const executionTime = Date.now() - startTime;
+
+      // Log successful completion
+      logger.debug(
+        `Tool completed: ${toolName} - execution time: ${executionTime}ms`,
+      );
+
+      // Emit completion event to Azure Application Insights
+      emitCustomEvent("ToolCompleted", {
+        executionTimeMs: executionTime.toString(),
         toolName,
-      };
+      })("mcpserver");
 
-      // Log to console (goes to CloudWatch in Lambda)
-      logger.debug(`Tool executed: ${toolName} - ${JSON.stringify(eventData)}`);
+      return result;
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
 
-      // Emit custom event to Azure Application Insights
-      emitCustomEvent("ToolExecuted", eventData)("mcpserver");
+      // Log error
+      logger.error(
+        `Tool failed: ${toolName} - ${error instanceof Error ? error.message : String(error)} - execution time: ${executionTime}ms`,
+      );
 
-      try {
-        // Call the original execute function and return the result
-        const result = await originalExecute(...args);
+      // Emit error event to Azure Application Insights
+      emitCustomEvent("ToolFailed", {
+        error: error instanceof Error ? error.message : String(error),
+        executionTimeMs: executionTime.toString(),
+        toolName,
+      })("mcpserver");
 
-        const executionTime = Date.now() - startTime;
-
-        // Log successful completion
-        logger.debug(
-          `Tool completed: ${toolName} - execution time: ${executionTime}ms`,
-        );
-
-        // Emit completion event to Azure Application Insights
-        emitCustomEvent("ToolCompleted", {
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
-
-        return result;
-      } catch (error) {
-        const executionTime = Date.now() - startTime;
-
-        // Log error
-        logger.error(
-          `Tool failed: ${toolName} - ${error instanceof Error ? error.message : String(error)} - execution time: ${executionTime}ms`,
-        );
-
-        // Emit error event to Azure Application Insights
-        emitCustomEvent("ToolFailed", {
-          error: error instanceof Error ? error.message : String(error),
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
-
-        throw error;
-      }
-    },
+      throw error;
+    }
   };
 }

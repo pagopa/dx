@@ -24,11 +24,11 @@
     "@aws-sdk/client-ssm": "^3.583.0",
     "@aws-sdk/lib-dynamodb": "^3.948.0",
     "@logtape/logtape": "catalog:",
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "@octokit/rest": "^22.0.0",
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.12.2",
-    "fastmcp": "^3.24.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
