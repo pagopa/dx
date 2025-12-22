@@ -40,7 +40,8 @@
     "@apidevtools/swagger-parser": "^12.1.0",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",
-    "zod": "^4.1.13"
+    "zod": "^4.1.13",
+    "tmp": "^0.2.5"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

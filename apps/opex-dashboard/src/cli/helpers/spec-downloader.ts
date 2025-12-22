@@ -6,6 +6,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as tmp from "tmp";
 
 /**
  * Clean up temporary spec file.
@@ -35,9 +36,11 @@ export async function downloadSpec(url: string): Promise<string> {
 
   const arrayBuffer = await response.arrayBuffer();
 
-  // Create temp file
-  const tempDir = os.tmpdir();
-  const tempFile = path.join(tempDir, `opex-spec-${Date.now()}.yaml`);
+  // Create secure temp file
+  const tempFile = tmp.fileSync({
+    prefix: "opex-spec-",
+    postfix: ".yaml",
+  }).name;
 
   fs.writeFileSync(tempFile, Buffer.from(arrayBuffer));
 
