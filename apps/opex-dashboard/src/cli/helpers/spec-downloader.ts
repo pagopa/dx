@@ -4,8 +4,6 @@
  */
 
 import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
 import * as tmp from "tmp";
 
 /**
@@ -38,8 +36,8 @@ export async function downloadSpec(url: string): Promise<string> {
 
   // Create secure temp file
   const tempFile = tmp.fileSync({
-    prefix: "opex-spec-",
     postfix: ".yaml",
+    prefix: "opex-spec-",
   }).name;
 
   fs.writeFileSync(tempFile, Buffer.from(arrayBuffer));

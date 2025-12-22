@@ -5,30 +5,14 @@
 
 import { z } from "zod";
 
+import { EndpointContextPropertiesSchema } from "../shared/endpoint-properties.schema.js";
+import { QueryConfigSchema } from "../shared/query-config.schema.js";
+
 // Schema for endpoint configuration
 export const EndpointSchema = z.record(
   z.string(),
-  z.object({
-    availability_evaluation_frequency: z.number().optional(),
-    availability_evaluation_time_window: z.number().optional(),
-    availability_event_occurrences: z.number().optional(),
-    availability_threshold: z.number().optional(),
-    method: z.string().optional(),
-    path: z.string().optional(),
-    response_time_evaluation_frequency: z.number().optional(),
-    response_time_evaluation_time_window: z.number().optional(),
-    response_time_event_occurrences: z.number().optional(),
-    response_time_threshold: z.number().optional(),
-  }),
+  EndpointContextPropertiesSchema,
 );
-
-// Schema for query configuration
-const QueryConfigSchema = z.object({
-  response_time_percentile: z.number().default(95),
-  status_code_categories: z
-    .array(z.string())
-    .default(["1XX", "2XX", "3XX", "4XX", "5XX"]),
-});
 
 // Schema for main template context
 export const TemplateContextSchema = z.object({

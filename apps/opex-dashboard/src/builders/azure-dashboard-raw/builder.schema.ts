@@ -12,23 +12,18 @@ import {
   EVENT_OCCURRENCES,
   TIME_WINDOW_MINUTES,
 } from "../../constants/index.js";
+import { createEndpointConfigPropertiesSchema } from "../../core/shared/endpoint-properties.schema.js";
 
 // Schema for endpoint configuration with default values
-export const EndpointConfigSchema = z.object({
-  availability_evaluation_frequency: z
-    .number()
-    .default(EVALUATION_FREQUENCY_MINUTES),
-  availability_evaluation_time_window: z.number().default(TIME_WINDOW_MINUTES),
-  availability_event_occurrences: z.number().default(EVENT_OCCURRENCES),
-  availability_threshold: z.number().default(DEFAULT_AVAILABILITY_THRESHOLD),
+export const EndpointConfigSchema = createEndpointConfigPropertiesSchema({
+  availabilityThreshold: DEFAULT_AVAILABILITY_THRESHOLD,
+  evaluationFrequency: EVALUATION_FREQUENCY_MINUTES,
+  evaluationTimeWindow: TIME_WINDOW_MINUTES,
+  eventOccurrences: EVENT_OCCURRENCES,
+  responseTimeThreshold: DEFAULT_RESPONSE_TIME_THRESHOLD,
+}).extend({
   method: z.string().optional(),
   path: z.string().optional(),
-  response_time_evaluation_frequency: z
-    .number()
-    .default(EVALUATION_FREQUENCY_MINUTES),
-  response_time_evaluation_time_window: z.number().default(TIME_WINDOW_MINUTES),
-  response_time_event_occurrences: z.number().default(EVENT_OCCURRENCES),
-  response_time_threshold: z.number().default(DEFAULT_RESPONSE_TIME_THRESHOLD),
 });
 
 // Schema for builder properties

@@ -5,10 +5,15 @@
 
 import { z } from "zod";
 
+import { EndpointOverridePropertiesSchema } from "../shared/endpoint-properties.schema.js";
+import {
+  QueryConfig,
+  QueryConfigSchema,
+} from "../shared/query-config.schema.js";
 import { DEFAULTS } from "./defaults.js";
 
 // Schema for endpoint overrides
-const EndpointOverrideSchema = z.object({
+const EndpointOverrideSchema = EndpointOverridePropertiesSchema.extend({
   availability_evaluation_frequency: z
     .number()
     .optional()
@@ -53,18 +58,6 @@ const EndpointOverrideSchema = z.object({
     .number()
     .optional()
     .describe("Maximum response time in seconds. Default: 1"),
-});
-
-// Schema for query configuration
-const QueryConfigSchema = z.object({
-  response_time_percentile: z
-    .number()
-    .default(95)
-    .describe("Percentile for response time queries. Default: 95"),
-  status_code_categories: z
-    .array(z.string())
-    .default(["1XX", "2XX", "3XX", "4XX", "5XX"])
-    .describe("HTTP status code categories for response codes queries"),
 });
 
 // Schema for overrides section
@@ -209,5 +202,5 @@ export type Config = z.infer<typeof ConfigSchema>;
 export type EndpointOverride = z.infer<typeof EndpointOverrideSchema>;
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 export type Overrides = z.infer<typeof OverridesSchema>;
-export type QueryConfig = z.infer<typeof QueryConfigSchema>;
 export type TerraformConfig = z.infer<typeof TerraformConfigSchema>;
+export type { QueryConfig };

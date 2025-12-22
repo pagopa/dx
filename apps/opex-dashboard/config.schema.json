@@ -116,14 +116,23 @@
             },
             "status_code_categories": {
               "description": "HTTP status code categories for response codes queries",
-              "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
+              "default": [
+                "1XX",
+                "2XX",
+                "3XX",
+                "4XX",
+                "5XX"
+              ],
               "type": "array",
               "items": {
                 "type": "string"
               }
             }
           },
-          "required": ["response_time_percentile", "status_code_categories"],
+          "required": [
+            "response_time_percentile",
+            "status_code_categories"
+          ],
           "additionalProperties": false
         }
       },
@@ -140,21 +149,33 @@
         },
         "status_code_categories": {
           "description": "HTTP status code categories for response codes queries",
-          "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
+          "default": [
+            "1XX",
+            "2XX",
+            "3XX",
+            "4XX",
+            "5XX"
+          ],
           "type": "array",
           "items": {
             "type": "string"
           }
         }
       },
-      "required": ["response_time_percentile", "status_code_categories"],
+      "required": [
+        "response_time_percentile",
+        "status_code_categories"
+      ],
       "additionalProperties": false
     },
     "resource_type": {
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
       "default": "app-gateway",
       "type": "string",
-      "enum": ["app-gateway", "api-management"]
+      "enum": [
+        "app-gateway",
+        "api-management"
+      ]
     },
     "response_time_threshold": {
       "description": "Default maximum response time in seconds. Default: 1.0",
@@ -212,7 +233,10 @@
                   "maxLength": 6
                 }
               },
-              "required": ["env_short", "prefix"],
+              "required": [
+                "env_short",
+                "prefix"
+              ],
               "additionalProperties": false
             },
             "prod": {
@@ -258,7 +282,10 @@
                   "maxLength": 6
                 }
               },
-              "required": ["env_short", "prefix"],
+              "required": [
+                "env_short",
+                "prefix"
+              ],
               "additionalProperties": false
             },
             "uat": {
@@ -304,7 +331,10 @@
                   "maxLength": 6
                 }
               },
-              "required": ["env_short", "prefix"],
+              "required": [
+                "env_short",
+                "prefix"
+              ],
               "additionalProperties": false
             }
           },
