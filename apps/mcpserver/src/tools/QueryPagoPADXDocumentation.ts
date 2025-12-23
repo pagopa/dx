@@ -13,6 +13,7 @@ import { queryKnowledgeBase } from "../services/bedrock.js";
  */
 export const QueryPagoPADXDocumentationTool = {
   annotations: {
+    readOnlyHint: true,
     title: "Query PagoPA DX documentation",
   },
   description: `This tool provides access to the complete PagoPA DX documentation covering:

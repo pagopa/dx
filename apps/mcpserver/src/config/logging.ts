@@ -29,12 +29,15 @@ const logLevelSchema = z
   .enum(["debug", "info", "warning", "error"])
   .catch(DEFAULT_LOG_LEVEL);
 
+/**
+ * Configures LogTape sinks and levels for MCP server and prompts, honoring LOG_LEVEL.
+ */
 export async function configureLogging() {
   const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel;
   if (logLevel !== process.env.LOG_LEVEL) {
     // Use console.warn for this early logging before LogTape is configured
     console.warn(
-      `Invalid log level: ${process.env.LOG_LEVEL}. Using ${DEFAULT_LOG_LEVEL}`,
+      `Invalid log level '${process.env.LOG_LEVEL}'. Using default '${DEFAULT_LOG_LEVEL}' instead.`,
     );
   }
 

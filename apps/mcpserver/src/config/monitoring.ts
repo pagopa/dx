@@ -16,6 +16,9 @@ import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 
 const logger = getLogger(["mcpserver", "monitoring"]);
 
+/**
+ * Initializes Azure Monitor telemetry; logs a warning when configuration is missing.
+ */
 export function configureAzureMonitoring(): void {
   try {
     // Initialize Azure Monitor using environment variables

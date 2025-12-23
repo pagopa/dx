@@ -6,8 +6,10 @@ import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 const logger = getLogger(["mcpserver", "prompt-logging"]);
 
 /**
- * Decorator that adds logging to prompt load functions.
- * Logs when a prompt is requested to both console and Azure Application Insights.
+ * Decorates a FastMCP prompt to emit telemetry and debug logs whenever it is loaded.
+ * @param prompt Prompt definition to wrap.
+ * @param catalogId Catalog identifier used for traceability in telemetry.
+ * @returns Wrapped prompt with logging side effects.
  */
 export function withPromptLogging(prompt: Prompt, catalogId: string): Prompt {
   const originalLoad = prompt.load;

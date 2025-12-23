@@ -1,11 +1,14 @@
 import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
+import { IncomingMessage } from "http";
 import { z } from "zod/v4";
 
+import type { AuthenticationStatus } from "../types.js";
+
 const organizationsSchema = z
-  .array(z.string().nonempty())
-  .nonempty()
-  .transform((orgs) => orgs.map((org) => org.trim()))
+  .string()
+  .transform((s) => s.split(",").map((v) => v.trim()))
+  .pipe(z.array(z.string().nonempty()).nonempty())
   .catch(["pagopa"]);
 
 const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
@@ -13,17 +16,42 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
 );
 
 /**
- * Verifies that a user, identified by a GitHub personal access token, is a member
- * of at least one of the required GitHub organizations.
- * @param token The user's GitHub personal access token.
- * @returns A boolean indicating whether the user is a member of a required organization.
+ * Validates GitHub PAT-based access for requests hitting the MCP server.
+ * @param request Incoming HTTP request carrying the PAT in the `x-gh-pat` header.
+ * @returns Authentication status with the provided token, or throws 401 on failure.
+ */
+export async function startPATVerificationFlow(
+  request: IncomingMessage,
+): Promise<AuthenticationStatus> {
+  const authHeader = request.headers["x-gh-pat"];
+  const apiKey =
+    typeof authHeader === "string"
+      ? authHeader
+      : Array.isArray(authHeader) && authHeader.length > 0
+        ? authHeader[0]
+        : undefined;
+
+  if (!apiKey || !(await verifyGithubUser(apiKey))) {
+    throw new Response(null, {
+      status: 401,
+      statusText: "Unauthorized",
+    });
+  }
+
+  // The returned object is accessible in the `context.session`.
+  return {
+    authenticated: true,
+    token: apiKey,
+  };
+}
+
+/**
+ * Verifies that a GitHub token belongs to a user who is in at least one required organization.
+ * @param token GitHub personal access token to validate.
+ * @returns true when the token holder is a member of the allowed organizations; otherwise false.
  */
 export async function verifyGithubUser(token: string): Promise<boolean> {
   const logger = getLogger(["mcpserver", "github-auth"]);
-
-  if (!token) {
-    return false;
-  }
 
   const octokit = new Octokit({ auth: token });
 

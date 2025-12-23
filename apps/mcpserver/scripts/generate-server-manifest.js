@@ -22,14 +22,6 @@ async function writeMCPServerManifest() {
     name: "it.pagopa/dx",
     packages: [
       {
-        httpHeaders: [
-          {
-            description: "GitHub Personal Access Token for authentication",
-            isRequired: true,
-            isSecret: true,
-            name: "x-gh-pat",
-          },
-        ],
         identifier: "https://api.dx.pagopa.it/mcp",
         registryType: "http",
         transport: {
