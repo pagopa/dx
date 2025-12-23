@@ -103,18 +103,3 @@ export class QueryPagoPADXDocumentationTool implements ITool {
     },
   );
 }
-
-/**
- * Execute function for backward compatibility with tests
- */
-export async function executeQueryPagoPADXDocumentation(
-  input: QueryDocsInput,
-): Promise<string> {
-  return await queryKnowledgeBase(
-    knowledgeBaseId,
-    input.query,
-    kbRuntimeClient,
-    undefined,
-    kbRerankingEnabled,
-  );
-}

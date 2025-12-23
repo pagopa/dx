@@ -313,9 +313,9 @@ export class HttpSseTransport implements Transport {
         // If authentication returns undefined, it means the user needs to authenticate
         if (sessionData === undefined) {
           logger.warn(
-            "[handleMcpRequest] Authenticate ha restituito undefined (non autenticato)",
+            "[handleMcpRequest] Authentication returned undefined (unauthenticated)",
           );
-          // Header WWW-Authenticate secondo MCP/OAuth2
+          // WWW-Authenticate header according to MCP/OAuth2 spec
           const proto = req.headers["x-forwarded-proto"] || "http";
           const host = req.headers.host;
           const authzUri = `${proto}://${host}/oauth/authorize`;
@@ -331,19 +331,19 @@ export class HttpSseTransport implements Transport {
 
       // Handle GET requests (SSE endpoint)
       if (req.method === "GET") {
-        logger.debug("[handleMcpRequest] Gestione SSE (GET)");
+        logger.debug("[handleMcpRequest] Handling SSE (GET)");
         await this.handleSseConnection(req, res, sessionData);
         return;
       }
 
       // Handle POST requests (JSON-RPC messages)
       if (req.method === "POST") {
-        logger.debug("[handleMcpRequest] Gestione JSON-RPC (POST)");
+        logger.debug("[handleMcpRequest] Handling JSON-RPC (POST)");
         await this.handleJsonRpcRequest(req, res, sessionData);
         return;
       }
 
-      logger.warn("[handleMcpRequest] Metodo non consentito", {
+      logger.warn("[handleMcpRequest] Method not allowed", {
         method: req.method,
       });
       res.writeHead(405, { "Content-Type": "application/json" });
