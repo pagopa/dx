@@ -5,6 +5,9 @@ import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
+import { withToolLogging } from "../decorators/toolUsageMonitoring.js";
+import type { ITool, ToolDefinition } from "../types/ITool.js";
+
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
 /**
@@ -32,90 +35,114 @@ export const SearchGitHubCodeInputSchema = z.object({
 export type SearchGitHubCodeInput = z.infer<typeof SearchGitHubCodeInputSchema>;
 
 /**
- * Tool execution handler
+ * Tool class for searching GitHub code
  */
-export async function executeSearchGitHubCode(
-  args: SearchGitHubCodeInput,
-  authInfo: AuthInfo | undefined,
-): Promise<CallToolResult> {
-  const logger = getLogger(["mcpserver", "github-search"]);
-  const org = defaultOrg;
+export class SearchGitHubCodeTool implements ITool {
+  public readonly definition: ToolDefinition = {
+    description:
+      'Searches for code in the PagoPA GitHub organization. Useful for finding examples of Terraform module usage, configuration patterns, or specific code implementations. Example: query="pagopa-dx/azure-function-app" extension="tf"',
+    inputSchema: SearchGitHubCodeInputSchema,
+    name: SEARCH_GITHUB_CODE_TOOL_NAME,
+    title: "Search GitHub Code in PagoPA Organization",
+  };
 
-  if (!authInfo || !authInfo.token) {
-    throw new Error("GitHub token not available in session");
-  }
+  /**
+   * Handler with automatic logging
+   */
+  public handler = withToolLogging(
+    SEARCH_GITHUB_CODE_TOOL_NAME,
+    async (
+      args: Record<string, unknown>,
+      sessionData?: Record<string, unknown>,
+    ): Promise<CallToolResult> => {
+      // Type guard for AuthInfo
+      const authInfo = sessionData as AuthInfo | undefined;
+      const logger = getLogger(["mcpserver", "github-search"]);
+      const validated = SearchGitHubCodeInputSchema.parse(args);
+      const org = defaultOrg;
 
-  const token = authInfo.token;
-  const octokit = new Octokit({ auth: token });
+      if (!authInfo || !authInfo.token) {
+        throw new Error("GitHub token not available in session");
+      }
 
-  try {
-    const extensionFilter = args.extension
-      ? ` extension:${args.extension}`
-      : "";
-    const searchQuery = `${args.query} org:${org}${extensionFilter}`;
-    logger.info(`Searching GitHub: ${searchQuery}`);
+      const token = authInfo.token;
+      const octokit = new Octokit({ auth: token });
 
-    const { data } = await octokit.rest.search.code({
-      per_page: 10,
-      q: searchQuery,
-    });
+      try {
+        const extensionFilter = validated.extension
+          ? ` extension:${validated.extension}`
+          : "";
+        const searchQuery = `${validated.query} org:${org}${extensionFilter}`;
+        logger.info(`Searching GitHub: ${searchQuery}`);
 
-    if (data.items.length === 0) {
-      return {
-        content: [
-          {
-            text: JSON.stringify({ message: "No results found", results: [] }),
-            type: "text",
-          },
-        ],
-      };
-    }
+        const { data } = await octokit.rest.search.code({
+          per_page: 10,
+          q: searchQuery,
+        });
 
-    const results = await Promise.all(
-      data.items.map(async (item) => {
-        try {
-          const { data: fileContent } = await octokit.rest.repos.getContent({
-            owner: org,
-            path: item.path,
-            repo: item.repository.name,
-          });
-
-          if ("content" in fileContent) {
-            return {
-              content: Buffer.from(fileContent.content, "base64").toString(
-                "utf-8",
-              ),
-              path: item.path,
-              repository: item.repository.full_name,
-              url: item.html_url,
-            };
-          }
-          return null;
-        } catch (error) {
-          logger.error(`Error fetching file ${item.path}`, { error });
-          return null;
+        if (data.items.length === 0) {
+          return {
+            content: [
+              {
+                text: JSON.stringify({
+                  message: "No results found",
+                  results: [],
+                }),
+                type: "text",
+              },
+            ],
+          };
         }
-      }),
-    );
 
-    const validResults = results.filter((r) => r !== null);
+        const results = await Promise.all(
+          data.items.map(async (item) => {
+            try {
+              const { data: fileContent } = await octokit.rest.repos.getContent(
+                {
+                  owner: org,
+                  path: item.path,
+                  repo: item.repository.name,
+                },
+              );
 
-    return {
-      content: [
-        {
-          text: JSON.stringify({
-            organization: org,
-            query: args.query,
-            results: validResults,
-            returned_results: validResults.length,
-            total_results: data.total_count,
+              if ("content" in fileContent) {
+                return {
+                  content: Buffer.from(fileContent.content, "base64").toString(
+                    "utf-8",
+                  ),
+                  path: item.path,
+                  repository: item.repository.full_name,
+                  url: item.html_url,
+                };
+              }
+              return null;
+            } catch (error) {
+              logger.error(`Error fetching file ${item.path}`, { error });
+              return null;
+            }
           }),
-          type: "text",
-        },
-      ],
-    };
-  } catch (error) {
-    logger.error("Error searching GitHub code", { error });
-    throw error;
-  }
+        );
+
+        const validResults = results.filter((r) => r !== null);
+
+        return {
+          content: [
+            {
+              text: JSON.stringify({
+                organization: org,
+                query: validated.query,
+                results: validResults,
+                returned_results: validResults.length,
+                total_results: data.total_count,
+              }),
+              type: "text",
+            },
+          ],
+        };
+      } catch (error) {
+        logger.error("Error searching GitHub code", { error });
+        throw error;
+      }
+    },
+  );
 }
