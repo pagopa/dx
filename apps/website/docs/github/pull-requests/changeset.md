@@ -41,8 +41,8 @@ First, check the
 [official documentation](https://turbo.build/repo/docs/crafting-your-repository/upgrading)
 for any doubts.
 
-- Run `pnpx @turbo/codemod migrate`, `yarn dlx @turbo/codemod migrate` or
-  `npx @turbo/codemod migrate` (official tool that should help to migrate.
+- Run `pnpx @turbo/codemod migrate`, `npx @turbo/codemod migrate` or
+  `yarn dlx @turbo/codemod migrate` (official tool that should help to migrate.
   Follow the wizard)
   - This will update the `turbo.json` file and try to install the latest version
     of `turbo`
