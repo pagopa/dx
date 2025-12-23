@@ -2,11 +2,13 @@ import { getLogger } from "@logtape/logtape";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
 import {
-  ServerRequest,
   ServerNotification,
+  ServerRequest,
 } from "@modelcontextprotocol/sdk/types.js";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { z } from "zod";
+
+import type { AuthInfo } from "./auth/tokenMiddleware.js";
 
 import packageJson from "../package.json" with { type: "json" };
 import { tokenMiddleware } from "./auth/tokenMiddleware.js";
@@ -18,15 +20,15 @@ import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
 import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
 import {
   executeQueryPagoPADXDocumentation,
+  QUERY_DOCS_TOOL_NAME,
   QueryDocsInput,
   QueryDocsInputSchema,
-  QUERY_DOCS_TOOL_NAME,
 } from "./tools/QueryPagoPADXDocumentation.js";
 import {
   executeSearchGitHubCode,
+  SEARCH_GITHUB_CODE_TOOL_NAME,
   SearchGitHubCodeInput,
   SearchGitHubCodeInputSchema,
-  SEARCH_GITHUB_CODE_TOOL_NAME,
 } from "./tools/SearchGitHubCode.js";
 import { HttpSseTransport } from "./transport/http-sse.js";
 import { executePrompt } from "./utils/prompts.js";
@@ -70,7 +72,7 @@ for (const catalogEntry of enabledPrompts) {
   // Convert arguments to zod schema
   const argsSchema: Record<string, z.ZodTypeAny> = {};
   for (const arg of catalogEntry.prompt.arguments) {
-    argsSchema[arg.name] = arg.required ? z.string() : z.string().optional();
+    argsSchema[arg.name] = arg.required ? z.string() : z.string().optional(); // Keep original for context
   }
 
   server.registerPrompt(
@@ -82,7 +84,7 @@ for (const catalogEntry of enabledPrompts) {
     async (args: Record<string, unknown>) => {
       const decoratedExecutor = withPromptLogging(
         catalogEntry.id,
-        executePrompt,
+        executePrompt, // Keep original for context
       );
       const result = await decoratedExecutor(catalogEntry, args);
       return result;
@@ -115,8 +117,9 @@ For Terraform module details (input/output variables, examples), use the \`searc
   async (args: unknown) => {
     const decoratedExecutor = withToolLogging(
       QUERY_DOCS_TOOL_NAME,
-      async (validatedArgs: QueryDocsInput) =>
-        executeQueryPagoPADXDocumentation(validatedArgs),
+      async (
+        validatedArgs: QueryDocsInput, // Keep original for context
+      ) => executeQueryPagoPADXDocumentation(validatedArgs),
     );
     const validatedArgs = QueryDocsInputSchema.parse(args);
     return await decoratedExecutor(validatedArgs);
@@ -139,16 +142,35 @@ Returns file contents matching the search query.`,
     args: unknown,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
   ) => {
-    // Get auth info from the request extra
-    const authInfo = extra.authInfo;
-
     const decoratedExecutor = withToolLogging(
       SEARCH_GITHUB_CODE_TOOL_NAME,
-      async (validatedArgs: SearchGitHubCodeInput, auth: any) =>
-        executeSearchGitHubCode(validatedArgs, auth),
+      async (
+        validatedArgs: SearchGitHubCodeInput,
+        sessionData?: Record<string, unknown>,
+      ) => {
+        // Type guard per AuthInfo
+        if (
+          sessionData &&
+          typeof sessionData.token === "string" &&
+          typeof sessionData.clientId === "string" &&
+          Array.isArray(sessionData.scopes) &&
+          typeof sessionData.extra === "object"
+        ) {
+          return executeSearchGitHubCode(
+            validatedArgs,
+            sessionData as AuthInfo,
+          );
+        }
+        throw new Error(
+          "Invalid authInfo: missing required authentication data",
+        );
+      },
     );
     const validatedArgs = SearchGitHubCodeInputSchema.parse(args);
-    return await decoratedExecutor(validatedArgs, authInfo);
+    return await decoratedExecutor(
+      validatedArgs,
+      extra.authInfo as Record<string, unknown> | undefined,
+    );
   },
 );
 logger.debug(`Registered tool: ${SEARCH_GITHUB_CODE_TOOL_NAME}`);
@@ -168,7 +190,7 @@ transport.setServer(server.server);
 await server.connect(transport);
 
 logger.info(`Server started successfully on ${authConfig.MCP_SERVER_URL}`);
-logger.info(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
+logger.info("MCP endpoint started");
 logger.debug(
   `Authentication enabled: ${authConfig.MCP_AUTH_TYPE === "pat" ? "YES (PAT)" : authConfig.MCP_AUTH_TYPE === "oauth" ? "YES (OAuth)" : "NO"}`,
 );
@@ -177,7 +199,7 @@ if (authConfig.MCP_AUTH_TYPE === "oauth") {
     `OAuth discovery: ${authConfig.MCP_SERVER_URL}/.well-known/oauth-authorization-server`,
   );
 }
-logger.info(`MCP endpoint: ${authConfig.MCP_SERVER_URL}/mcp`);
+logger.info("MCP endpoint started");
 logger.debug(
   `Authentication enabled: ${authConfig.MCP_AUTH_TYPE === "pat" ? "YES (PAT)" : "NO"}`,
 );

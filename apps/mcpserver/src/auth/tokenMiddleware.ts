@@ -1,13 +1,22 @@
-import { verifyGithubUser } from "./github.js";
+import type { IncomingMessage } from "http";
+
 import { getLogger } from "@logtape/logtape";
+
+import { verifyGithubUser } from "./github.js";
+
+// Tipo AuthInfo locale compatibile con MCP SDK
+export type AuthInfo = Record<string, unknown> & {
+  clientId: string;
+  extra: { userId: string };
+  scopes: string[];
+  token: string;
+};
 
 const logger = getLogger(["mcpserver", "token-middleware"]);
 
-// Funzione di autenticazione per HttpSseTransport
-// Ispirata al middleware requireBearerAuth dell'SDK MCP
 export const tokenMiddleware = async (
-  req: any,
-): Promise<Record<string, unknown> | undefined> => {
+  req: IncomingMessage,
+): Promise<AuthInfo | undefined> => {
   try {
     logger.debug("[tokenMiddleware] Invocato per richiesta", {
       headers: req.headers,
@@ -21,9 +30,7 @@ export const tokenMiddleware = async (
     }
 
     if (!authHeader.startsWith("Bearer ")) {
-      logger.warn("[tokenMiddleware] Header Authorization non è Bearer", {
-        authHeader,
-      });
+      logger.warn("[tokenMiddleware] Header Authorization format invalid");
       return undefined;
     }
 
@@ -46,16 +53,16 @@ export const tokenMiddleware = async (
 
     // Restituisci AuthInfo per l'SDK MCP
     return {
-      token,
       clientId: "mcp-client",
-      scopes: ["default"],
       extra: { userId: "github-user" },
+      scopes: ["default"],
+      token,
     };
   } catch (error) {
     logger.error("[tokenMiddleware] Errore dettagliato", {
       error: (error as Error).message,
-      stack: (error as Error).stack,
       name: (error as Error).name,
+      stack: (error as Error).stack,
     });
     throw error;
   }

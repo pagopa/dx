@@ -8,15 +8,15 @@ const logger = getLogger(["mcpserver", "tool-logging"]);
 /**
  * Tool execution handler type
  */
-export type ToolExecutor<TArgs = unknown> = (
+export type ToolExecutor<TArgs = Record<string, unknown>> = (
   args: TArgs,
-  sessionData?: unknown,
+  sessionData?: Record<string, unknown>,
 ) => Promise<CallToolResult>;
 
 /**
  * Wraps a tool executor with telemetry and logging
  */
-export function withToolLogging<TArgs = unknown>(
+export function withToolLogging<TArgs = Record<string, unknown>>(
   toolName: string,
   executor: ToolExecutor<TArgs>,
 ): ToolExecutor<TArgs> {

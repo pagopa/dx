@@ -4,6 +4,7 @@ import type {
   JSONRPCMessage,
   JSONRPCRequest,
   JSONRPCResponse,
+  MessageExtraInfo,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { IncomingMessage, ServerResponse } from "http";
 
@@ -11,10 +12,13 @@ import { getLogger } from "@logtape/logtape";
 import { createServer as createHttpServer } from "http";
 import { z } from "zod";
 
+import type { AuthInfo } from "../auth/tokenMiddleware.js";
+
 import {
   handleOAuthAuthorize,
   handleOAuthRegister,
   handleOAuthToken,
+  OAuthTokenSchema,
 } from "../auth/oauth.js";
 import {
   isOriginAllowed,
@@ -36,9 +40,7 @@ type HttpSseTransportOptions = {
   /**
    * Optional authentication handler
    */
-  authenticate?: (
-    request: IncomingMessage,
-  ) => Promise<Record<string, unknown> | undefined>;
+  authenticate?: (request: IncomingMessage) => Promise<AuthInfo | undefined>;
 
   /**
    * Base path for MCP endpoint
@@ -73,7 +75,7 @@ export class HttpSseTransport implements Transport {
   onerror?: (error: Error) => void;
   onmessage?: <T extends JSONRPCMessage>(
     message: T,
-    extra?: { authInfo?: unknown; requestInfo?: unknown },
+    extra?: MessageExtraInfo,
   ) => void;
 
   private mcpServer: null | Server = null;
@@ -174,7 +176,17 @@ export class HttpSseTransport implements Transport {
 
     req.on("end", async () => {
       try {
+        // Validate JSON before parsing to prevent crashes
+        if (!body || body.trim().length === 0) {
+          throw new Error("Empty request body");
+        }
         const message = JSON.parse(body) as JSONRPCRequest;
+
+        // Validate message structure
+        if (!message.jsonrpc || !message.method) {
+          throw new Error("Invalid JSON-RPC message structure");
+        }
+
         logger.debug(`Received JSON-RPC request: ${message.method}`, {
           id: message.id,
         });
@@ -182,7 +194,9 @@ export class HttpSseTransport implements Transport {
         // Store session data for this request
         if (sessionData && this.mcpServer) {
           (
-            this.mcpServer as unknown as { _sessionData?: unknown }
+            this.mcpServer as unknown as {
+              _sessionData?: Record<string, unknown>;
+            }
           )._sessionData = sessionData;
         }
 
@@ -193,7 +207,8 @@ export class HttpSseTransport implements Transport {
 
         // Process the message through the SDK
         if (this.onmessage) {
-          this.onmessage(message, { authInfo: sessionData });
+          // Cast needed: MessageExtraInfo.authInfo has internal SDK type that may differ from our Record<string, unknown>
+          this.onmessage(message, { authInfo: sessionData as any });
 
           // Wait for the response
           const response = await Promise.race([
@@ -213,7 +228,7 @@ export class HttpSseTransport implements Transport {
           throw new Error("Message handler not registered");
         }
       } catch (error) {
-        logger.error("Error processing JSON-RPC request", { error });
+        logger.error("Error processing JSON-RPC request");
         const errorResponse = {
           error: {
             code: -32603,
@@ -249,7 +264,7 @@ export class HttpSseTransport implements Transport {
             sessionData,
           });
         } catch (error) {
-          logger.error("[handleMcpRequest] Errore in authenticate", { error });
+          logger.error("[handleMcpRequest] Error in authenticate");
           if (
             error instanceof Response &&
             (error.status === 401 || error.status === 403)
@@ -302,9 +317,7 @@ export class HttpSseTransport implements Transport {
       res.writeHead(405, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Method not allowed" }));
     } catch (error) {
-      logger.error("[handleMcpRequest] Errore generale gestione MCP request", {
-        error,
-      });
+      logger.error("[handleMcpRequest] General error handling MCP request");
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
@@ -323,7 +336,7 @@ export class HttpSseTransport implements Transport {
     res: ServerResponse,
   ): Promise<void> {
     try {
-      const url = new URL(req.url || "/", `http://${req.headers.host}`);
+      const url = new URL(req.url || "/", `https://${req.headers.host}`);
       const redirectUrl = await handleOAuthAuthorize(url.searchParams);
 
       // Redirect to GitHub OAuth
@@ -332,7 +345,7 @@ export class HttpSseTransport implements Transport {
       });
       res.end();
     } catch (error) {
-      logger.error("Error handling OAuth authorize", { error });
+      logger.error("Error handling OAuth authorize");
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
@@ -418,12 +431,13 @@ export class HttpSseTransport implements Transport {
         securityConfig.MAX_REQUEST_SIZE,
       );
       const body = Object.fromEntries(formData.entries());
-      const tokenData = await handleOAuthToken(body);
+      // Assicurati che body sia validato con lo schema Zod
+      const tokenData = await handleOAuthToken(OAuthTokenSchema.parse(body));
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify(tokenData));
     } catch (error) {
-      logger.error("Error handling OAuth token exchange", { error });
+      logger.error("Error handling OAuth token exchange");
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(
         JSON.stringify({
@@ -443,7 +457,7 @@ export class HttpSseTransport implements Transport {
     res: ServerResponse,
   ): Promise<void> {
     try {
-      const url = new URL(req.url || "/", `http://${req.headers.host}`);
+      const url = new URL(req.url || "/", `https://${req.headers.host}`);
 
       // CORS validation
       const origin = req.headers.origin;
@@ -479,14 +493,19 @@ export class HttpSseTransport implements Transport {
       if (url.pathname === this.options.basePath) {
         await this.handleMcpRequest(req, res);
         // Enforce HTTPS in production
+        // Cast needed: Socket.encrypted property not in base type definition
         const proto =
           req.headers["x-forwarded-proto"] ||
-          (req.connection && req.connection.encrypted ? "https" : "http");
+          (req.connection &&
+          typeof (req.connection as any).encrypted !== "undefined" &&
+          (req.connection as any).encrypted
+            ? "https"
+            : "http");
         const isProduction = process.env.NODE_ENV === "production";
         if (isProduction && proto !== "https") {
           logger.warn("Rejected non-HTTPS request in production", {
-            url: req.url,
             proto,
+            url: req.url,
           });
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: "HTTPS required" }));
@@ -507,7 +526,7 @@ export class HttpSseTransport implements Transport {
         res.end(JSON.stringify({ error: "Not found" }));
       }
     } catch (error) {
-      logger.error("Unhandled error in request handler", { error });
+      logger.error("Unhandled error in request handler");
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Internal server error" }));
     }
@@ -582,7 +601,7 @@ export class HttpSseTransport implements Transport {
   private async readRequestBody(
     req: IncomingMessage,
     maxSize: number,
-  ): Promise<unknown> {
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       let body = "";
       let size = 0;
@@ -598,9 +617,20 @@ export class HttpSseTransport implements Transport {
 
       req.on("end", () => {
         try {
-          resolve(JSON.parse(body));
+          // Validate body is not empty
+          if (!body || body.trim().length === 0) {
+            reject(new Error("Empty request body"));
+            return;
+          }
+          // Parse and validate JSON structure
+          const parsed = JSON.parse(body);
+          if (typeof parsed !== "object" || parsed === null) {
+            reject(new Error("Invalid JSON: must be an object"));
+            return;
+          }
+          resolve(parsed);
         } catch (error) {
-          reject(new Error("Invalid JSON"));
+          reject(new Error("Invalid JSON format"));
         }
       });
 

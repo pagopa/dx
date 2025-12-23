@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getConfig } from "../config/auth.js";
 
 // Zod schema to validate Authorization header (Bearer)
-const AuthHeaderSchema = z.string().regex(/^Bearer [A-Za-z0-9\-\._~\+\/]+=*$/);
+const AuthHeaderSchema = z.string().regex(/^Bearer [A-Za-z0-9\-._~+/]+=*$/);
 
 // Zod schema for GitHub token response
 const GitHubTokenResponseSchema = z.object({
@@ -36,7 +36,7 @@ const OAuthAuthorizeSchema = z.object({
   state: z.string().optional(),
 });
 
-const OAuthTokenSchema = z.object({
+export const OAuthTokenSchema = z.object({
   client_id: z.string().min(1),
   code: z.string().min(1),
   code_verifier: z.string().min(43).max(128).optional(),
@@ -108,14 +108,25 @@ export async function handleOAuthAuthorize(
   params: URLSearchParams,
 ): Promise<string> {
   // Convert URLSearchParams to object, converting null to undefined for Zod
-  const paramsObj = {
-    client_id: params.get("client_id") || undefined,
-    code_challenge: params.get("code_challenge") || undefined,
-    code_challenge_method: params.get("code_challenge_method") || undefined,
-    redirect_uri: params.get("redirect_uri") || undefined,
-    response_type: params.get("response_type") || undefined,
-    scope: params.get("scope") || undefined,
-    state: params.get("state") || undefined,
+
+  // Basic sanitization for OAuth params to mitigate injection and path traversal
+  function sanitizeParam(value: null | string): null | string {
+    if (typeof value !== "string") return value;
+    // Remove dangerous characters (basic example, can be improved)
+    return value.replace(/[\r\n\t\0\x08\x09\x1a'"\\]/g, "");
+  }
+
+  const paramsObj: z.infer<typeof OAuthAuthorizeSchema> = {
+    client_id: sanitizeParam(params.get("client_id")) || undefined!, // Zod will validate
+    code_challenge: sanitizeParam(params.get("code_challenge")) || undefined,
+    code_challenge_method: sanitizeParam(
+      params.get("code_challenge_method"),
+    ) as "plain" | "S256" | undefined,
+    redirect_uri: sanitizeParam(params.get("redirect_uri")) || undefined!,
+    response_type:
+      (sanitizeParam(params.get("response_type")) as "code") || undefined!,
+    scope: sanitizeParam(params.get("scope")) || undefined,
+    state: sanitizeParam(params.get("state")) || undefined,
   };
 
   const validatedParams = OAuthAuthorizeSchema.parse(paramsObj);
@@ -155,8 +166,15 @@ export async function handleOAuthAuthorize(
  * Handles Dynamic Client Registration (DCR) - RFC 7591
  */
 export async function handleOAuthRegister(
-  body: unknown,
-): Promise<Record<string, unknown>> {
+  body: z.infer<typeof OAuthRegisterSchema>,
+): Promise<
+  z.infer<typeof OAuthRegisterSchema> & {
+    client_id: string;
+    client_id_issued_at: number;
+    client_secret: string;
+    client_secret_expires_at: number;
+  }
+> {
   const validatedBody = OAuthRegisterSchema.parse(body);
 
   // Generate secure client credentials
@@ -182,8 +200,8 @@ export async function handleOAuthRegister(
  * Handles OAuth token exchange with PKCE validation
  */
 export async function handleOAuthToken(
-  body: unknown,
-  headers?: Record<string, unknown>,
+  body: z.infer<typeof OAuthTokenSchema>,
+  headers?: { authorization?: string },
 ): Promise<{ access_token: string; scope: string; token_type: string }> {
   // Validate Authorization header if present
   if (headers && "authorization" in headers) {
@@ -237,7 +255,7 @@ export async function handleOAuthToken(
 
   if (!response.ok) {
     const error = await response.text();
-    logger.error(`GitHub token exchange failed: ${error}`);
+    logger.error("GitHub token exchange failed");
     throw new Error(`Failed to exchange authorization code: ${error}`);
   }
 
@@ -245,7 +263,7 @@ export async function handleOAuthToken(
   const data = GitHubTokenResponseSchema.parse(rawData);
 
   if (data.error) {
-    logger.error(`GitHub OAuth error: code ${data.error}`);
+    logger.error("GitHub OAuth error");
     throw new Error(`OAuth error: ${data.error}`);
   }
 

@@ -1,11 +1,9 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 
 import { getLogger } from "@logtape/logtape";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
-
-import type { AuthenticationStatus } from "../types.js";
 
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
