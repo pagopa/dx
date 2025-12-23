@@ -145,18 +145,19 @@ export async function handleOAuthAuthorize(
   function sanitizeParam(value: null | string): null | string {
     if (typeof value !== "string") return value;
     // Remove dangerous characters (basic example, can be improved)
+    // eslint-disable-next-line no-control-regex
     return value.replace(/[\r\n\t\0\x08\x09\x1a'"\\]/g, "");
   }
 
   const paramsObj: z.infer<typeof OAuthAuthorizeSchema> = {
-    client_id: sanitizeParam(params.get("client_id")) || undefined!, // Zod will validate
+    client_id: sanitizeParam(params.get("client_id")) || "",
     code_challenge: sanitizeParam(params.get("code_challenge")) || undefined,
     code_challenge_method: sanitizeParam(
       params.get("code_challenge_method"),
     ) as "plain" | "S256" | undefined,
-    redirect_uri: sanitizeParam(params.get("redirect_uri")) || undefined!,
+    redirect_uri: sanitizeParam(params.get("redirect_uri")) || "",
     response_type:
-      (sanitizeParam(params.get("response_type")) as "code") || undefined!,
+      (sanitizeParam(params.get("response_type")) as "code") || "code",
     scope: sanitizeParam(params.get("scope")) || undefined,
     state: sanitizeParam(params.get("state")) || undefined,
   };
@@ -317,13 +318,6 @@ export async function handleOAuthToken(
 function generateCodeChallenge(verifier: string): string {
   const hash = createHash("sha256").update(verifier).digest("base64url");
   return hash;
-}
-
-/**
- * Generates a cryptographically secure random string for PKCE
- */
-function generateCodeVerifier(): string {
-  return randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "");
 }
 
 /**

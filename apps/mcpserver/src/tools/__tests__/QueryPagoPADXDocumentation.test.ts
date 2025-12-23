@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+// Mock services and config
 vi.mock("../../services/bedrock", () => ({
   queryKnowledgeBase: vi.fn().mockResolvedValue("mocked result"),
 }));
@@ -9,9 +10,16 @@ vi.mock("../../config/aws", () => ({
   knowledgeBaseId: "mockKbId",
 }));
 
+// Mock the decorator to pass through the executor without modifications
+vi.mock("../../decorators/toolUsageMonitoring", () => ({
+  withToolLogging: vi.fn(
+    (_toolName: string, executor: (...args: unknown[]) => unknown) => executor,
+  ),
+}));
+
 import {
-  QueryPagoPADXDocumentationTool,
   QueryDocsInputSchema,
+  QueryPagoPADXDocumentationTool,
 } from "../QueryPagoPADXDocumentation.js";
 
 describe("QueryPagoPADXDocumentationTool", () => {

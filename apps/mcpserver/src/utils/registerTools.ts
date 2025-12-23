@@ -25,8 +25,6 @@ import {
   ServerRequest,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import type { ITool } from "../types/ITool.js";
-
 import { QueryPagoPADXDocumentationTool } from "../tools/QueryPagoPADXDocumentation.js";
 import { SearchGitHubCodeTool } from "../tools/SearchGitHubCode.js";
 

@@ -132,8 +132,9 @@ export class HttpSseTransport implements Transport {
    */
   async close(): Promise<void> {
     if (this.server) {
+      const server = this.server;
       await new Promise<void>((resolve) => {
-        this.server!.close(() => {
+        server.close(() => {
           logger.info("HTTP SSE server closed");
           resolve();
         });
@@ -149,10 +150,7 @@ export class HttpSseTransport implements Transport {
   /**
    * Sends a JSON-RPC message to the client
    */
-  async send(
-    message: JSONRPCResponse,
-    options?: { relatedRequestId?: number | string },
-  ): Promise<void> {
+  async send(message: JSONRPCResponse): Promise<void> {
     logger.debug(`Sending JSON-RPC response`, { id: message.id });
 
     // Resolve the pending response promise
@@ -186,8 +184,9 @@ export class HttpSseTransport implements Transport {
       await this.handleRequest(req, res);
     });
 
+    const server = this.server;
     await new Promise<void>((resolve) => {
-      this.server!.listen(this.options.port, () => {
+      server.listen(this.options.port, () => {
         logger.info(`HTTP SSE server listening on port ${this.options.port}`);
         resolve();
       });
@@ -240,6 +239,7 @@ export class HttpSseTransport implements Transport {
         // Process the message through the SDK
         if (this.onmessage) {
           // Cast needed: MessageExtraInfo.authInfo has internal SDK type that may differ from our Record<string, unknown>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           this.onmessage(message, { authInfo: sessionData as any });
 
           // Wait for the response
@@ -332,7 +332,7 @@ export class HttpSseTransport implements Transport {
       // Handle GET requests (SSE endpoint)
       if (req.method === "GET") {
         logger.debug("[handleMcpRequest] Handling SSE (GET)");
-        await this.handleSseConnection(req, res, sessionData);
+        await this.handleSseConnection(req, res);
         return;
       }
 
@@ -529,8 +529,9 @@ export class HttpSseTransport implements Transport {
         const proto =
           req.headers["x-forwarded-proto"] ||
           (req.connection &&
-          typeof (req.connection as any).encrypted !== "undefined" &&
-          (req.connection as any).encrypted
+          typeof (req.connection as { encrypted?: boolean }).encrypted !==
+            "undefined" &&
+          (req.connection as { encrypted?: boolean }).encrypted
             ? "https"
             : "http");
         const isProduction = process.env.NODE_ENV === "production";
@@ -557,7 +558,7 @@ export class HttpSseTransport implements Transport {
         res.writeHead(404, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Not found" }));
       }
-    } catch (error) {
+    } catch {
       logger.error("Unhandled error in request handler");
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Internal server error" }));
@@ -570,7 +571,6 @@ export class HttpSseTransport implements Transport {
   private async handleSseConnection(
     req: IncomingMessage,
     res: ServerResponse,
-    sessionData: Record<string, unknown> | undefined,
   ): Promise<void> {
     // Set SSE headers
     res.writeHead(200, {
@@ -618,7 +618,7 @@ export class HttpSseTransport implements Transport {
       req.on("end", () => {
         try {
           resolve(new URLSearchParams(body));
-        } catch (error) {
+        } catch {
           reject(new Error("Invalid form data"));
         }
       });
@@ -661,7 +661,7 @@ export class HttpSseTransport implements Transport {
             return;
           }
           resolve(parsed);
-        } catch (error) {
+        } catch {
           reject(new Error("Invalid JSON format"));
         }
       });
