@@ -14,7 +14,7 @@ applyTo: **/*.ts, **/*.js, package.json
 - Use async/await for asynchronous code
 - Document complex logic with comments that explain the "why"
 - Follow existing naming conventions in similar files
-- Use [zod v4](https://zod.dev/v4) for schema validation (e.g., input validation, API responses, environment variables)
+- For new code, prefer [zod v4](https://zod.dev/v4) for schema validation (e.g., input validation, API responses, environment variables); when modifying existing code, follow the zod major version already used in that package until it is explicitly migrated
 - Avoid nesting too many control structures; consider early returns or helper functions
 
 ## Dependencies
