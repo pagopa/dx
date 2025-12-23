@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Context
 
-Node.js compatible package managers, such as npm and Yarn, support the
+Node.js compatible package managers, such as npm, Yarn and pnpm, support the
 definition of "package scripts," which function as simple task runners. However,
 without shared guidelines for naming and structuring these scripts, several
 issues arise:
@@ -40,7 +40,7 @@ simplifies writing project-agnostic abstractions like CI pipelines.
 | `build`           | Compiles the project for production.                        | `tsc`, `next build`                                                          |
 | `build:watch`     | Watches for file changes and rebuilds the project.          | `build --watch`                                                              |
 | `typecheck`       | Performs type checking on TypeScript code.                  | `tsc --noEmit`                                                               |
-| `bundle`          | Packages the project into a deployable format (e.g., ZIP).  | `npm-pack-zip`, `yarn bundle`                                                |
+| `bundle`          | Packages the project into a deployable format (e.g., ZIP).  | `npm-pack-zip`, `yarn bundle`, `pnpm pack`                                   |
 | `format`          | Formats the project's files according to the style guide.   | `prettier --write .`                                                         |
 | `format:check`    | Verifies adherence to the style guide without reformatting. | `prettier --check .`                                                         |
 | `lint`            | Lints the code and fixes auto-fixable issues.               | `eslint --fix "src/**"`                                                      |
@@ -57,9 +57,10 @@ maintaining consistent naming. For example, use `format` instead of `prettify`.
 ## Guidelines for npm Scripts
 
 1. **Self-contained commands:** All commands in scripts should be executable
-   after installing dependencies via `npm install` or `yarn`. They should not
-   rely on globally installed tools (e.g., `brew`, `pip`). If external tools are
-   needed, use a task runner (e.g., `make`) to wrap the scripts.
+   after installing dependencies via `pnpm install` (recommended) or
+   `yarn install`. They should not rely on globally installed tools (e.g.,
+   `brew`, `pip`). If external tools are needed, use a task runner (e.g.,
+   `make`) to wrap the scripts.
 2. **Simplicity and atomicity:** Scripts should be as simple as possible. If a
    script becomes too complex, consider moving it to a separate JavaScript file.
    Keep scripts atomic, meaning they should focus on doing one task at a time.

@@ -42,12 +42,12 @@ Before starting development:
 1. Initialize and install dependencies:
 
    ```bash
-   yarn install
+   pnpm install
    ```
 
 2. After making changes, create a changeset:
    ```bash
-   yarn changeset
+   pnpm changeset
    ```
 
 This will prompt you to:

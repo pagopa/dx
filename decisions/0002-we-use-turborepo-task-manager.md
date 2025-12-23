@@ -4,7 +4,7 @@ Date: 2023-06-26
 
 ## Status
 
-Accepted
+Superseded
 
 ## Context
 
@@ -54,3 +54,11 @@ our codebase to its development. We prefer to have direct control over all
 aspects of codebase management and not delegate them to a single tool, so we
 decided to use `turbo` which, if in the future it does not fit our needs, can be
 replaced like all the other tools (such as `vitest` or `tsup`).
+
+## Amendment
+
+Date: 2025-12-23
+
+We have switched to Nx for multi-language support and the ability to define
+tasks at the top level. The original decision to use Turborepo is superseded by
+this change.
