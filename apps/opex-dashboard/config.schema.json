@@ -344,12 +344,10 @@
   },
   "required": [
     "action_groups",
-    "availability_threshold",
     "data_source",
     "location",
     "name",
-    "oa3_spec",
-    "response_time_threshold"
+    "oa3_spec"
   ],
   "additional_properties": false
 }

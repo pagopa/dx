@@ -51,8 +51,7 @@ resource "azurerm_portal_dashboard" "this" {
 
 
 ${Object.entries(context.endpoints)
-  .map(([endpoint, propsUnknown], i) => {
-    const props = propsUnknown as Record<string, unknown>;
+  .map(([endpoint, props], i) => {
     const fullPath = basePath + endpoint;
 
     // Availability alarm query
@@ -60,7 +59,7 @@ ${Object.entries(context.endpoints)
       ...context,
       endpoint,
       isAlarm: true,
-      threshold: props.availabilityThreshold as number | undefined,
+      threshold: props.availabilityThreshold,
       ...props,
     });
 
@@ -69,7 +68,7 @@ ${Object.entries(context.endpoints)
       ...context,
       endpoint,
       isAlarm: true,
-      threshold: props.responseTimeThreshold as number | undefined,
+      threshold: props.responseTimeThreshold,
       ...props,
     });
 
@@ -95,11 +94,11 @@ ${availabilityQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.availabilityEvaluationFrequency as number | undefined) ?? 10}
-  time_window = ${(props.availabilityEvaluationTimeWindow as number | undefined) ?? 20}
+  frequency   = ${props.availabilityEvaluationFrequency ?? 10}
+  time_window = ${props.availabilityEvaluationTimeWindow ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.availabilityEventOccurrences as number | undefined) ?? 1}
+    threshold = ${props.availabilityEventOccurrences ?? 1}
   }
 
   tags = var.tags
@@ -127,11 +126,11 @@ ${responseTimeQuery}
   QUERY
 
   severity    = 1
-  frequency   = ${(props.responseTimeEvaluationFrequency as number | undefined) ?? 10}
-  time_window = ${(props.responseTimeEvaluationTimeWindow as number | undefined) ?? 20}
+  frequency   = ${props.responseTimeEvaluationFrequency ?? 10}
+  time_window = ${props.responseTimeEvaluationTimeWindow ?? 20}
   trigger {
     operator  = "GreaterThanOrEqual"
-    threshold = ${(props.responseTimeEventOccurrences as number | undefined) ?? 1}
+    threshold = ${props.responseTimeEventOccurrences ?? 1}
   }
 
   tags = var.tags
