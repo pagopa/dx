@@ -17,9 +17,7 @@ import {
   handleOAuthToken,
 } from "../auth/oauth.js";
 import {
-  getClientIdentifier,
   isOriginAllowed,
-  rateLimiter,
   securityConfigLocal as securityConfig,
 } from "../utils/security.js";
 
@@ -445,21 +443,6 @@ export class HttpSseTransport implements Transport {
     res: ServerResponse,
   ): Promise<void> {
     try {
-      // Rate limiting
-      const clientId = getClientIdentifier(req);
-      if (
-        !rateLimiter.isAllowed(
-          clientId,
-          securityConfig.RATE_LIMIT_WINDOW_MS,
-          securityConfig.RATE_LIMIT_MAX_REQUESTS,
-        )
-      ) {
-        logger.warn(`Rate limit exceeded for client: ${clientId}`);
-        res.writeHead(429, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Too many requests" }));
-        return;
-      }
-
       const url = new URL(req.url || "/", `http://${req.headers.host}`);
 
       // CORS validation
@@ -495,6 +478,20 @@ export class HttpSseTransport implements Transport {
       // Route to appropriate handler
       if (url.pathname === this.options.basePath) {
         await this.handleMcpRequest(req, res);
+        // Enforce HTTPS in production
+        const proto =
+          req.headers["x-forwarded-proto"] ||
+          (req.connection && req.connection.encrypted ? "https" : "http");
+        const isProduction = process.env.NODE_ENV === "production";
+        if (isProduction && proto !== "https") {
+          logger.warn("Rejected non-HTTPS request in production", {
+            url: req.url,
+            proto,
+          });
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "HTTPS required" }));
+          return;
+        }
       } else if (url.pathname === "/oauth/register" && req.method === "POST") {
         await this.handleOAuthRegister(req, res);
       } else if (url.pathname === "/.well-known/oauth-authorization-server") {

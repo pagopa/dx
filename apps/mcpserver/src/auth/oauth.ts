@@ -1,12 +1,21 @@
-import type { IncomingMessage } from "http";
-
 import { getLogger } from "@logtape/logtape";
 import { randomUUID } from "crypto";
 import { createHash } from "crypto";
 import { z } from "zod";
 
 import { getConfig } from "../config/auth.js";
-import { verifyGithubUser } from "./github.js";
+
+// Zod schema to validate Authorization header (Bearer)
+const AuthHeaderSchema = z.string().regex(/^Bearer [A-Za-z0-9\-\._~\+\/]+=*$/);
+
+// Zod schema for GitHub token response
+const GitHubTokenResponseSchema = z.object({
+  access_token: z.string().min(1).optional(),
+  error: z.string().optional(),
+  error_description: z.string().optional(),
+  scope: z.string().optional(),
+  token_type: z.string().min(1).optional(),
+});
 
 // Zod schemas for validation
 const OAuthRegisterSchema = z.object({
@@ -137,7 +146,7 @@ export async function handleOAuthAuthorize(
   githubAuthUrl.searchParams.set("state", pkceKey); // Use the same state for GitHub
 
   logger.debug(
-    `Redirecting to GitHub OAuth with PKCE: ${githubAuthUrl.toString()}`,
+    "Redirecting to GitHub OAuth with PKCE (URL omitted for security)",
   );
   return githubAuthUrl.toString();
 }
@@ -174,9 +183,28 @@ export async function handleOAuthRegister(
  */
 export async function handleOAuthToken(
   body: unknown,
+  headers?: Record<string, unknown>,
 ): Promise<{ access_token: string; scope: string; token_type: string }> {
+  // Validate Authorization header if present
+  if (headers && "authorization" in headers) {
+    try {
+      AuthHeaderSchema.parse(headers["authorization"]);
+    } catch {
+      throw new Error("Invalid or missing Authorization header");
+    }
+  }
+
   const validatedBody = OAuthTokenSchema.parse(body);
   const { code, code_verifier, redirect_uri, state } = validatedBody;
+
+  // Validate redirect_uri: must be among allowed ones (if you want to restrict)
+  // Example: allow only redirect_uri starting with https:// or http://localhost
+  if (
+    !/^https:\/\//.test(redirect_uri) &&
+    !/^http:\/\/localhost/.test(redirect_uri)
+  ) {
+    throw new Error("Invalid redirect_uri: must be https or localhost");
+  }
 
   logger.debug(
     "Exchanging authorization code for access token with PKCE validation",
@@ -213,18 +241,11 @@ export async function handleOAuthToken(
     throw new Error(`Failed to exchange authorization code: ${error}`);
   }
 
-  const data = (await response.json()) as {
-    access_token?: string;
-    error?: string;
-    error_description?: string;
-    scope?: string;
-    token_type?: string;
-  };
+  const rawData = await response.json();
+  const data = GitHubTokenResponseSchema.parse(rawData);
 
   if (data.error) {
-    logger.error(
-      `GitHub OAuth error: ${data.error} - ${data.error_description}`,
-    );
+    logger.error(`GitHub OAuth error: code ${data.error}`);
     throw new Error(`OAuth error: ${data.error}`);
   }
 
