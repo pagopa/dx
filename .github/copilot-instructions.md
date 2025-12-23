@@ -6,7 +6,7 @@ This monorepo houses the DevEx Initiative: tools, patterns, and infrastructure m
 
 **Monorepo Structure**:
 
-- `apps/` - Applications: `cli` (DX CLI tool), `mcpserver` (Model Context Protocol server), `website` (documentation site), `opex-dashboard`
+- `apps/` - Applications: `cli` (DX CLI tool), `mcpserver` (Model Context Protocol server), `website` (documentation site)
 - `packages/` - Shared TypeScript libraries (e.g., `eslint-config`, `azure-tracing`, `mcp-prompts`, `monorepo-generator`, `savemoney`)
 - `actions/` - GitHub Actions for CI/CD workflows (e.g., `pr-comment`, `incremental-rollout`, `filter-terraform-plan`)
 - `infra/modules/` - Reusable Terraform modules for AWS/Azure (e.g., `azure_app_service`, `azure_function_app`, `aws_core_infra`)
