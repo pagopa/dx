@@ -12,11 +12,6 @@ variable "account_id" {
   description = "The AWS account ID where the MCP server resources will be created."
 }
 
-variable "bedrock_knowledge_base_id" {
-  type        = string
-  description = "The Bedrock knowledge base ID to be used by the MCP server."
-}
-
 variable "dns" {
   type = object({
     zone_name           = string
@@ -30,6 +25,17 @@ variable "application_insights_connection_string" {
   type        = string
   description = "The Application Insights connection string for monitoring and logging."
   sensitive   = true
+}
+
+variable "mcp_auth_type" {
+  type        = string
+  description = "The authentication type for the MCP server (allowed values: 'pat', 'oauth')."
+  default     = "pat"
+
+  validation {
+    condition     = contains(["pat", "oauth"], var.mcp_auth_type)
+    error_message = "Invalid mcp_auth_type. Allowed values are 'pat' and 'oauth'."
+  }
 }
 
 variable "tags" {
