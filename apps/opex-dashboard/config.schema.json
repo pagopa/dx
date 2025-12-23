@@ -56,10 +56,10 @@
         "endpoints": {
           "description": "Override alarm thresholds and settings for specific endpoints (key: endpoint path)",
           "type": "object",
-          "property_names": {
+          "propertyNames": {
             "type": "string"
           },
-          "additional_properties": {
+          "additionalProperties": {
             "description": "Optional overrides for endpoint-specific alarm thresholds and evaluation settings",
             "type": "object",
             "properties": {
@@ -88,7 +88,7 @@
                 "type": "number"
               }
             },
-            "additional_properties": false
+            "additionalProperties": false
           }
         },
         "hosts": {
@@ -126,10 +126,10 @@
             "response_time_percentile",
             "status_code_categories"
           ],
-          "additional_properties": false
+          "additionalProperties": false
         }
       },
-      "additional_properties": false
+      "additionalProperties": false
     },
     "queries": {
       "description": "Optional global query configuration overrides",
@@ -159,7 +159,7 @@
         "response_time_percentile",
         "status_code_categories"
       ],
-      "additional_properties": false
+      "additionalProperties": false
     },
     "resource_type": {
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
@@ -213,24 +213,24 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additional_properties": false
+                  "additionalProperties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "max_length": 1
+                  "maxLength": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "max_length": 6
+                  "maxLength": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additional_properties": false
+              "additionalProperties": false
             },
             "prod": {
               "type": "object",
@@ -262,24 +262,24 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additional_properties": false
+                  "additionalProperties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "max_length": 1
+                  "maxLength": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "max_length": 6
+                  "maxLength": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additional_properties": false
+              "additionalProperties": false
             },
             "uat": {
               "type": "object",
@@ -311,30 +311,30 @@
                     "resource_group_name",
                     "storage_account_name"
                   ],
-                  "additional_properties": false
+                  "additionalProperties": false
                 },
                 "env_short": {
                   "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
                   "type": "string",
-                  "max_length": 1
+                  "maxLength": 1
                 },
                 "prefix": {
                   "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
                   "type": "string",
-                  "max_length": 6
+                  "maxLength": 6
                 }
               },
               "required": [
                 "env_short",
                 "prefix"
               ],
-              "additional_properties": false
+              "additionalProperties": false
             }
           },
-          "additional_properties": false
+          "additionalProperties": false
         }
       },
-      "additional_properties": false
+      "additionalProperties": false
     },
     "timespan": {
       "description": "Time range for dashboard queries (e.g., 5m, 1h, 24h). Default: 5m",
@@ -349,5 +349,5 @@
     "name",
     "oa3_spec"
   ],
-  "additional_properties": false
+  "additionalProperties": false
 }

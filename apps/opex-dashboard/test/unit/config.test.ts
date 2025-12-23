@@ -4,11 +4,14 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ConfigSchema } from "@/core/config/config.schema.js";
+import {
+  ConfigSchemaRaw,
+  transformConfig,
+} from "@/core/config/config.schema.js";
 import { DEFAULTS } from "@/core/config/defaults.js";
 
 describe("Config Schema", () => {
-  it("should validate minimal valid config", () => {
+  it("should validate minimal valid config", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -18,11 +21,11 @@ describe("Config Schema", () => {
       resource_type: "app-gateway",
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(true);
   });
 
-  it("should apply default values", () => {
+  it("should apply default values", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -32,14 +35,15 @@ describe("Config Schema", () => {
       resource_type: "app-gateway",
     };
 
-    const result = ConfigSchema.parse(config);
+    const validatedRaw = await ConfigSchemaRaw.parseAsync(config);
+    const result = transformConfig(validatedRaw);
     expect(result.timespan).toBe(DEFAULTS.timespan);
     expect(result.evaluationFrequency).toBe(DEFAULTS.evaluation_frequency);
     expect(result.evaluationTimeWindow).toBe(DEFAULTS.evaluation_time_window);
     expect(result.eventOccurrences).toBe(DEFAULTS.event_occurrences);
   });
 
-  it("should validate resource type", () => {
+  it("should validate resource type", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -49,11 +53,11 @@ describe("Config Schema", () => {
       resource_type: "invalid-type",
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(false);
   });
 
-  it("should validate overrides structure", () => {
+  it("should validate overrides structure", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -72,11 +76,11 @@ describe("Config Schema", () => {
       resource_type: "app-gateway",
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(true);
   });
 
-  it("should accept valid threshold values", () => {
+  it("should accept valid threshold values", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -93,11 +97,11 @@ describe("Config Schema", () => {
       resource_type: "app-gateway",
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(true);
   });
 
-  it("should validate terraform configuration", () => {
+  it("should validate terraform configuration", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -115,11 +119,11 @@ describe("Config Schema", () => {
       },
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(true);
   });
 
-  it("should reject invalid env_short values", () => {
+  it("should reject invalid env_short values", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -137,11 +141,11 @@ describe("Config Schema", () => {
       },
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(false);
   });
 
-  it("should reject prefix longer than 6 characters", () => {
+  it("should reject prefix longer than 6 characters", async () => {
     const config = {
       action_groups: ["/subscriptions/test/actionGroups/test"],
       data_source: "/subscriptions/test/dataSource",
@@ -159,7 +163,7 @@ describe("Config Schema", () => {
       },
     };
 
-    const result = ConfigSchema.safeParse(config);
+    const result = await ConfigSchemaRaw.safeParseAsync(config);
     expect(result.success).toBe(false);
   });
 });

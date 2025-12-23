@@ -10,7 +10,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
-import { ConfigSchema } from "../src/core/config/config.schema.js";
+import { ConfigSchemaRaw } from "../src/core/config/config.schema.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -22,7 +22,8 @@ const packageJson = await import("../package.json", {
 });
 
 // Generate JSON Schema from Zod schema using built-in toJsonSchema method
-const jsonSchema = z.toJSONSchema(ConfigSchema);
+// Use ConfigSchemaRaw which already has snake_case field names matching YAML format
+const jsonSchema = z.toJSONSchema(ConfigSchemaRaw);
 
 // Remove optional fields with defaults from the required array
 // These fields should be optional in the input but have default values

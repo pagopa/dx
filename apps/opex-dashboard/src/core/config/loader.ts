@@ -7,7 +7,11 @@ import { readFile } from "fs/promises";
 import * as yaml from "js-yaml";
 
 import { ConfigError, FileError } from "../errors/index.js";
-import { type Config, ConfigSchema } from "./config.schema.js";
+import {
+  type Config,
+  ConfigSchemaRaw,
+  transformConfig,
+} from "./config.schema.js";
 
 /**
  * Load and validate configuration from YAML file or stdin.
@@ -34,8 +38,11 @@ export async function loadConfig(configPath: string): Promise<Config> {
     // Parse YAML
     const rawConfig = yaml.load(content) as unknown;
 
-    // Validate with Zod schema (preprocessing handles snake_case to camelCase)
-    const config = ConfigSchema.parse(rawConfig);
+    // Validate with Zod schema (snake_case)
+    const validatedRaw = await ConfigSchemaRaw.parseAsync(rawConfig);
+
+    // Transform to camelCase
+    const config = transformConfig(validatedRaw);
 
     return config;
   } catch (error) {

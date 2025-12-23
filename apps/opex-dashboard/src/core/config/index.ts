@@ -1,4 +1,8 @@
-export { ConfigSchema } from "./config.schema.js";
+export {
+  ConfigSchema,
+  ConfigSchemaRaw,
+  transformConfig,
+} from "./config.schema.js";
 export type { Config, EndpointOverride, Overrides } from "./config.schema.js";
 export { DEFAULTS } from "./defaults.js";
 /**
