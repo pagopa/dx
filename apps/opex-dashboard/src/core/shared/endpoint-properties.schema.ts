@@ -11,16 +11,32 @@ import { z } from "zod";
  */
 const BaseEndpointEvaluationPropertiesSchemaRaw = z.object({
   // Availability monitoring properties
-  availability_evaluation_frequency: z.number(),
-  availability_evaluation_time_window: z.number(),
-  availability_event_occurrences: z.number(),
-  availability_threshold: z.number(),
+  availability_evaluation_frequency: z
+    .number()
+    .describe("Frequency in minutes to evaluate availability alarms"),
+  availability_evaluation_time_window: z
+    .number()
+    .describe("Time window in minutes for availability alarm evaluation"),
+  availability_event_occurrences: z
+    .number()
+    .describe("Number of event occurrences to trigger availability alarm"),
+  availability_threshold: z
+    .number()
+    .describe("Minimum availability percentage (0-1) for this endpoint"),
 
   // Response time monitoring properties
-  response_time_evaluation_frequency: z.number(),
-  response_time_evaluation_time_window: z.number(),
-  response_time_event_occurrences: z.number(),
-  response_time_threshold: z.number(),
+  response_time_evaluation_frequency: z
+    .number()
+    .describe("Frequency in minutes to evaluate response time alarms"),
+  response_time_evaluation_time_window: z
+    .number()
+    .describe("Time window in minutes for response time alarm evaluation"),
+  response_time_event_occurrences: z
+    .number()
+    .describe("Number of event occurrences to trigger response time alarm"),
+  response_time_threshold: z
+    .number()
+    .describe("Maximum response time in seconds for this endpoint"),
 });
 
 /**

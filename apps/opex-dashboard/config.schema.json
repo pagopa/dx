@@ -64,27 +64,35 @@
             "type": "object",
             "properties": {
               "availability_evaluation_frequency": {
+                "description": "Frequency in minutes to evaluate availability alarms",
                 "type": "number"
               },
               "availability_evaluation_time_window": {
+                "description": "Time window in minutes for availability alarm evaluation",
                 "type": "number"
               },
               "availability_event_occurrences": {
+                "description": "Number of event occurrences to trigger availability alarm",
                 "type": "number"
               },
               "availability_threshold": {
+                "description": "Minimum availability percentage (0-1) for this endpoint",
                 "type": "number"
               },
               "response_time_evaluation_frequency": {
+                "description": "Frequency in minutes to evaluate response time alarms",
                 "type": "number"
               },
               "response_time_evaluation_time_window": {
+                "description": "Time window in minutes for response time alarm evaluation",
                 "type": "number"
               },
               "response_time_event_occurrences": {
+                "description": "Number of event occurrences to trigger response time alarm",
                 "type": "number"
               },
               "response_time_threshold": {
+                "description": "Maximum response time in seconds for this endpoint",
                 "type": "number"
               }
             },
