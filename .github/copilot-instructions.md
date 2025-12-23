@@ -60,7 +60,7 @@ This monorepo houses the DevEx Initiative: tools, patterns, and infrastructure m
 
 **Module Structure**: Terraform modules export opinionated, production-ready configurations. Review [infra/modules/azure_app_service/](../infra/modules/azure_app_service/) for the standard module pattern (README.md with usage, examples/, tests/).
 
-**GitHub Actions**: Actions in [actions/](actions/) are composite actions with `action.yaml` manifests. They follow a consistent structure with README.md, CHANGELOG.md, and package.json for dependency tracking.
+**GitHub Actions**: Actions in [actions/](../actions/) are composite actions with `action.yaml` manifests. They follow a consistent structure with README.md, CHANGELOG.md, and package.json for dependency tracking.
 
 ## References
 
