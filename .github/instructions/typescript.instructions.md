@@ -26,7 +26,7 @@ applyTo: **/*.ts, **/*.js, package.json
 ## Testing
 
 - Test files co-located with source using Vitest
-- Try hard not to cheat type safety in tests
+- Try hard not to cheat type safety in tests; the `as` keyword must NEVER used in a test file.
 - Arrange tests in Arrange-Act-Assert pattern
 - Do not mangle tests only to make them pass
 - Mock external dependencies and side effects instead of internal logic
