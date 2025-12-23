@@ -36,10 +36,10 @@ The workflow performs the following steps:
 
 ### Implementing a Canary Test Script
 
-For canary deployments, add a TypeScript (`npm` or `yarn`) script to test the
-new version and drive workflow behaviour. This script can check the results of
-integration tests and/or monitoring metrics before outputting a payload that
-influence the workflow.
+For canary deployments, add a TypeScript (`npm`, `yarn` or `pnpm`) script to
+test the new version and drive workflow behaviour. This script can check the
+results of integration tests and/or monitoring metrics before outputting a
+payload that influence the workflow.
 
 The following schemas for the script output are supported:
 
