@@ -65,4 +65,4 @@ This monorepo houses the DevEx Initiative: tools, patterns, and infrastructure m
 ## References
 
 - Documentation site: https://dx.pagopa.it/docs/
-- Existing instructions: [.github/instructions/](../.github/instructions/) (code, test, PR, commit message guidelines)
+- Existing instructions: [.github/instructions/](../.github/instructions/) (typescript, terraform, PR, commit message, and review guidelines)
