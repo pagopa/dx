@@ -57,7 +57,7 @@ maintaining consistent naming. For example, use `format` instead of `prettify`.
 ## Guidelines for npm Scripts
 
 1. **Self-contained commands:** All commands in scripts should be executable
-   after installing dependencies via `pnpm install` or `yarn`. They should not
+   after installing dependencies via `pnpm install` (recommended) or `yarn install`. They should not
    rely on globally installed tools (e.g., `brew`, `pip`). If external tools are
    needed, use a task runner (e.g., `make`) to wrap the scripts.
 2. **Simplicity and atomicity:** Scripts should be as simple as possible. If a
