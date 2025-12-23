@@ -147,6 +147,7 @@ jobs:
           RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
       - name: Deploy Preview
+        id: deploy_preview
         if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
@@ -155,6 +156,37 @@ jobs:
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
           skip_app_build: true
+
+      - name: Preview Comments Cleanup
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy_preview.outcome == 'success'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              }
+            );
+
+            const botComments = comments.filter(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Azure Static Web Apps: Your stage site is ready!')
+            );
+
+            // Keep only the most recent comment, delete all others
+            if (botComments.length > 1) {
+              const commentsToDelete = botComments.slice(0, -1);
+              for (const comment of commentsToDelete) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: comment.id,
+                });
+              }
+            }
 
       - name: Delete Preview and Deploy production
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
