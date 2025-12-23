@@ -24,60 +24,6 @@ const packageJson = await import("../package.json", {
 // Generate JSON Schema from Zod schema using built-in toJsonSchema method
 const jsonSchema = z.toJSONSchema(ConfigSchema);
 
-/**
- * Transform camelCase keys to snake_case recursively.
- * The Zod schema uses camelCase internally but the YAML config uses snake_case.
- * Special handling for overrides.endpoints to preserve endpoint path keys.
- */
-function camelToSnake(obj: unknown, path: string[] = []): unknown {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-
-  if (Array.isArray(obj)) {
-    // Special handling for 'required' arrays - convert string values to snake_case
-    const parentKey = path[path.length - 1];
-    if (parentKey === "required") {
-      return obj.map((item) =>
-        typeof item === "string"
-          ? item.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
-          : camelToSnake(item, path),
-      );
-    }
-    return obj.map((item) => camelToSnake(item, path));
-  }
-
-  if (typeof obj === "object") {
-    const result: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
-      // Check if we're at overrides.endpoints level or inside an endpoint
-      const isEndpointsLevel =
-        path.length === 2 && path[0] === "overrides" && path[1] === "endpoints";
-
-      // Don't transform endpoint path keys (they are the keys inside overrides.endpoints)
-      // but do transform property names inside endpoints
-      const shouldPreserveKey =
-        isEndpointsLevel &&
-        (key === "propertyNames" ||
-          key === "additionalProperties" ||
-          key === "type");
-
-      const snakeKey = shouldPreserveKey
-        ? key
-        : key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-
-      const newPath = [...path, key];
-      result[snakeKey] = camelToSnake(value, newPath);
-    }
-    return result;
-  }
-
-  return obj;
-}
-
-// Convert camelCase properties to snake_case for the JSON schema
-const snakeCaseSchema = camelToSnake(jsonSchema);
-
 // Remove optional fields with defaults from the required array
 // These fields should be optional in the input but have default values
 const optionalFieldsWithDefaults = [
@@ -90,8 +36,8 @@ const optionalFieldsWithDefaults = [
   "timespan",
 ];
 
-if (snakeCaseSchema.required && Array.isArray(snakeCaseSchema.required)) {
-  snakeCaseSchema.required = snakeCaseSchema.required.filter(
+if (jsonSchema.required && Array.isArray(jsonSchema.required)) {
+  jsonSchema.required = jsonSchema.required.filter(
     (field: string) => !optionalFieldsWithDefaults.includes(field),
   );
 }
@@ -104,7 +50,7 @@ const schemaWithMetadata = {
     "Configuration schema for generating operational dashboards from OpenAPI specifications",
   title: "OpEx Dashboard Configuration",
   version: packageJson.default.version,
-  ...snakeCaseSchema,
+  ...jsonSchema,
 };
 
 // Write schema to file with pretty-printing for better git diffs
