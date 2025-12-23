@@ -142,6 +142,9 @@ Server validates the token and checks organization membership before processing 
 2. **Single Point of Control**: Server manages all OAuth credentials centrally
 3. **Additional Validation**: Server can enforce organization membership before issuing tokens
 4. **Audit Trail**: All OAuth flows are logged server-side
+5. **PKCE Support**: Supports PKCE (Proof Key for Code Exchange) with S256 and plain methods for enhanced security
+6. **Input Validation**: All OAuth parameters validated with Zod schemas to prevent injection attacks
+7. **Log Sanitization**: Sensitive data (tokens, secrets) never appear in logs
 
 ## Configuration
 
@@ -152,9 +155,19 @@ The server requires these environment variables (loaded from AWS SSM Parameter S
 - `MCP_AUTH_TYPE`: Set to `"oauth"` to enable OAuth authentication
 - `MCP_SERVER_URL`: The base URL of the MCP server (e.g., `https://api.dx.pagopa.it`)
 
+### Security Best Practices
+
+- OAuth tokens are stored in-memory (consider Redis for production with multiple instances)
+- HTTPS is enforced for all OAuth endpoints
+- State parameters are validated to prevent CSRF attacks
+- Authorization codes are single-use and expire after exchange
+- All inputs are sanitized before logging
+
 ## Implementation
 
 See:
 
-- [src/auth/oauth.ts](../src/auth/oauth.ts) - OAuth proxy logic
-- [src/transport/http-sse.ts](../src/transport/http-sse.ts) - OAuth endpoints
+- [src/auth/oauth.ts](../src/auth/oauth.ts) - OAuth proxy logic with PKCE support and Zod validation
+- [src/auth/tokenMiddleware.ts](../src/auth/tokenMiddleware.ts) - Token validation middleware
+- [src/transport/http-sse.ts](../src/transport/http-sse.ts) - OAuth endpoints and HTTP SSE transport
+- [src/utils/security.ts](../src/utils/security.ts) - Security utilities (HTTPS enforcement, log sanitization)

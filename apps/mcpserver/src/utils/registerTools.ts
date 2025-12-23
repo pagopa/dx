@@ -1,3 +1,21 @@
+/**
+ * Tool Registration Utility
+ *
+ * This module provides functionality to register tools implementing the ITool
+ * interface with the MCP server.
+ *
+ * Features:
+ * - Type-safe tool registration using ITool interface
+ * - Automatic telemetry integration via tool decorators
+ * - Support for tools with and without authentication
+ * - Enhanced tool descriptions with comprehensive documentation coverage
+ *
+ * Tools are instantiated and registered with the MCP server, with some tools
+ * requiring authentication (GitHub token) passed via RequestHandlerExtra.
+ *
+ * @module utils/registerTools
+ */
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { getLogger } from "@logtape/logtape";
@@ -16,12 +34,23 @@ const logger = getLogger(["mcpserver", "register-tools"]);
 
 /**
  * Registers all tools with the MCP server
+ *
+ * This function instantiates and registers all available tools:
+ * 1. QueryPagoPADXDocumentation - Semantic search over DX documentation
+ * 2. SearchGitHubCode - Code search in GitHub organization (requires auth)
+ *
+ * Tools are registered with enhanced descriptions and proper authentication
+ * handling where required.
+ *
+ * @param server - MCP server instance to register tools with
  */
 export function registerTools(server: McpServer): void {
+  // Instantiate tool classes
   const queryDocsTool = new QueryPagoPADXDocumentationTool();
   const searchGitHubTool = new SearchGitHubCodeTool();
 
   // Register QueryPagoPADXDocumentation tool
+  // This tool queries AWS Bedrock Knowledge Base for documentation
   logger.debug(`Registering tool: ${queryDocsTool.definition.name}`);
   server.registerTool(
     queryDocsTool.definition.name,
@@ -45,7 +74,8 @@ For Terraform module details (input/output variables, examples), use the \`searc
   );
   logger.debug(`Registered tool: ${queryDocsTool.definition.name}`);
 
-  // Register SearchGitHubCode tool (requires auth)
+  // Register SearchGitHubCode tool (requires authentication)
+  // This tool searches GitHub code using the Octokit API with user's token
   logger.debug(`Registering tool: ${searchGitHubTool.definition.name}`);
   server.registerTool(
     searchGitHubTool.definition.name,
@@ -61,7 +91,8 @@ Returns file contents matching the search query.`,
       args: Record<string, unknown>,
       extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
     ) =>
-      // Pass authInfo as sessionData to the handler
+      // Pass authInfo from RequestHandlerExtra as sessionData to the handler
+      // This allows the tool to access the GitHub token for API authentication
       searchGitHubTool.handler(
         args,
         extra.authInfo as Record<string, unknown> | undefined,

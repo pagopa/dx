@@ -1,3 +1,19 @@
+/**
+ * OAuth 2.0 Authentication with PKCE Support
+ *
+ * This module implements OAuth 2.0 authorization flow with PKCE (Proof Key for Code Exchange)
+ * for enhanced security. The server acts as an OAuth proxy, keeping GitHub credentials secure.
+ *
+ * Features:
+ * - OAuth 2.0 Authorization Code flow
+ * - PKCE support (S256 and plain methods)
+ * - Input validation with Zod schemas
+ * - Organization membership verification
+ * - Token management (in-memory store, use Redis in production)
+ *
+ * @module auth/oauth
+ */
+
 import { getLogger } from "@logtape/logtape";
 import { randomUUID } from "crypto";
 import { createHash } from "crypto";
@@ -5,10 +21,16 @@ import { z } from "zod";
 
 import { getConfig } from "../config/auth.js";
 
-// Zod schema to validate Authorization header (Bearer)
+/**
+ * Zod schema to validate Authorization header format (Bearer token)
+ * Ensures the header follows RFC 6750 format
+ */
 const AuthHeaderSchema = z.string().regex(/^Bearer [A-Za-z0-9\-._~+/]+=*$/);
 
-// Zod schema for GitHub token response
+/**
+ * Zod schema for GitHub OAuth token response
+ * Validates the response from GitHub's token endpoint
+ */
 const GitHubTokenResponseSchema = z.object({
   access_token: z.string().min(1).optional(),
   error: z.string().optional(),
@@ -47,10 +69,20 @@ export const OAuthTokenSchema = z.object({
 
 const logger = getLogger(["mcpserver", "oauth"]);
 
+// Load OAuth configuration from environment/SSM parameters
 const authConfig = await getConfig();
 
 /**
  * OAuth configuration for GitHub with PKCE support
+ *
+ * This configuration defines the OAuth endpoints and credentials used
+ * to authenticate with GitHub on behalf of clients.
+ *
+ * @property authorizationEndpoint - GitHub's OAuth authorization URL
+ * @property tokenEndpoint - GitHub's OAuth token exchange URL
+ * @property clientId - GitHub OAuth App client ID (from SSM)
+ * @property clientSecret - GitHub OAuth App client secret (from SSM)
+ * @property scopes - Requested OAuth scopes for user information
  */
 export const oauthConfig = {
   authorizationEndpoint: "https://github.com/login/oauth/authorize",

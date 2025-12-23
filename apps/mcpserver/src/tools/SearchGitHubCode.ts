@@ -1,3 +1,24 @@
+/**
+ * GitHub Code Search Tool
+ *
+ * This tool provides semantic code search capabilities across the PagoPA GitHub
+ * organization, allowing users to find real-world examples of code patterns,
+ * Terraform module usage, and configuration examples.
+ *
+ * Features:
+ * - Organization-scoped search (defaults to 'pagopa')
+ * - File extension filtering
+ * - Content retrieval for matching files
+ * - GitHub token authentication
+ *
+ * Use cases:
+ * - Finding Terraform module usage examples
+ * - Discovering configuration patterns
+ * - Locating specific code implementations
+ *
+ * @module tools/SearchGitHubCode
+ */
+
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import { getLogger } from "@logtape/logtape";
@@ -5,18 +26,23 @@ import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types.js";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
-import { withToolLogging } from "../decorators/toolUsageMonitoring.js";
 import type { ITool, ToolDefinition } from "../types/ITool.js";
 
+import { withToolLogging } from "../decorators/toolUsageMonitoring.js";
+
+// Default GitHub organization to search (configurable via env var)
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
 
 /**
- * Tool name constant
+ * Tool name constant for SearchGitHubCode
  */
 export const SEARCH_GITHUB_CODE_TOOL_NAME = "SearchGitHubCode";
 
 /**
- * Input schema for the tool
+ * Input validation schema for GitHub code search
+ *
+ * Validates search parameters using Zod to ensure type safety
+ * and provide clear error messages for invalid inputs.
  */
 export const SearchGitHubCodeInputSchema = z.object({
   extension: z
@@ -32,10 +58,23 @@ export const SearchGitHubCodeInputSchema = z.object({
     ),
 });
 
+/**
+ * Type-safe input for SearchGitHubCode tool
+ */
 export type SearchGitHubCodeInput = z.infer<typeof SearchGitHubCodeInputSchema>;
 
 /**
- * Tool class for searching GitHub code
+ * GitHub Code Search Tool Implementation
+ *
+ * This tool searches for code across the PagoPA GitHub organization,
+ * requiring OAuth authentication to access the GitHub API.
+ *
+ * The tool:
+ * 1. Validates input parameters (query, optional extension filter)
+ * 2. Authenticates with GitHub using the provided token
+ * 3. Performs code search with optional extension filtering
+ * 4. Retrieves file contents for matching results
+ * 5. Returns formatted results with file paths and content
  */
 export class SearchGitHubCodeTool implements ITool {
   public readonly definition: ToolDefinition = {
@@ -55,20 +94,27 @@ export class SearchGitHubCodeTool implements ITool {
       args: Record<string, unknown>,
       sessionData?: Record<string, unknown>,
     ): Promise<CallToolResult> => {
-      // Type guard for AuthInfo
+      // Type guard to extract AuthInfo from session data
+      // AuthInfo contains the GitHub token needed for API authentication
       const authInfo = sessionData as AuthInfo | undefined;
       const logger = getLogger(["mcpserver", "github-search"]);
+
+      // Validate and parse input arguments using Zod schema
       const validated = SearchGitHubCodeInputSchema.parse(args);
       const org = defaultOrg;
 
+      // Ensure GitHub token is available for authentication
       if (!authInfo || !authInfo.token) {
         throw new Error("GitHub token not available in session");
       }
 
       const token = authInfo.token;
+      // Initialize Octokit client with authentication
       const octokit = new Octokit({ auth: token });
 
       try {
+        // Build search query with optional extension filter
+        // Example: "pagopa-dx/azure-function-app org:pagopa extension:tf"
         const extensionFilter = validated.extension
           ? ` extension:${validated.extension}`
           : "";

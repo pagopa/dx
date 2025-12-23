@@ -1,3 +1,29 @@
+/**
+ * HTTP SSE (Server-Sent Events) Transport Layer
+ *
+ * This module implements a custom HTTP transport for the MCP server using
+ * Server-Sent Events (SSE) for real-time communication. It's designed to work
+ * in serverless environments like AWS Lambda.
+ *
+ * Features:
+ * - Stateless request handling (no persistent connections)
+ * - OAuth 2.0 discovery endpoints (RFC 8414, RFC 8707)
+ * - CORS support with configurable origins
+ * - Request validation with Zod schemas
+ * - Authentication middleware integration
+ * - Security headers and HTTPS enforcement
+ *
+ * Endpoints:
+ * - POST /mcp - Main MCP protocol endpoint
+ * - GET /.well-known/oauth-authorization-server - OAuth metadata (RFC 8414)
+ * - GET /.well-known/oauth-protected-resource - Protected resource metadata (RFC 8707)
+ * - GET /oauth/authorize - OAuth authorization endpoint
+ * - POST /oauth/token - OAuth token exchange endpoint
+ * - POST /oauth/register - OAuth client registration (optional)
+ *
+ * @module transport/http-sse
+ */
+
 import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type {
@@ -27,7 +53,10 @@ import {
 
 const logger = getLogger(["mcpserver", "http-sse-transport"]);
 
-// Request validation schemas
+/**
+ * Request validation schemas for OAuth endpoints
+ * These schemas ensure incoming requests have the correct structure
+ */
 const OAuthRegisterRequestSchema = z.object({
   client_name: z.string().optional(),
   grant_types: z.array(z.string()).optional(),
@@ -36,6 +65,9 @@ const OAuthRegisterRequestSchema = z.object({
   token_endpoint_auth_method: z.string().optional(),
 });
 
+/**
+ * Configuration options for HttpSseTransport
+ */
 type HttpSseTransportOptions = {
   /**
    * Optional authentication handler

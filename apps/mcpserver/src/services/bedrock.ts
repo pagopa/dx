@@ -1,3 +1,25 @@
+/**
+ * AWS Bedrock Knowledge Base Service
+ *
+ * This module provides functionality to query AWS Bedrock Knowledge Bases
+ * for retrieving documentation and content using semantic search.
+ *
+ * Features:
+ * - Semantic search with vector similarity
+ * - Optional result reranking (region-dependent)
+ * - S3 location to public URL conversion
+ * - Result serialization for MCP responses
+ *
+ * Supported reranking models:
+ * - AMAZON (amazon.rerank-v1:0)
+ * - COHERE (cohere.rerank-v3-5:0)
+ *
+ * Note: Reranking is only available in specific AWS regions.
+ * See rerankingSupportedRegions in config/aws.ts
+ *
+ * @module services/bedrock
+ */
+
 import {
   BedrockAgentRuntimeClient,
   KnowledgeBaseRetrievalConfiguration,
@@ -8,26 +30,59 @@ import { getLogger } from "@logtape/logtape";
 
 import { rerankingSupportedRegions } from "../config/aws.js";
 
+/**
+ * Output structure for knowledge base query results
+ */
 export type QueryKnowledgeBasesOutput = {
+  /** The text content of the retrieved chunk */
   content: string;
+  /** Optional location metadata (S3 URI or public URL) */
   location?: RetrievalResultLocation;
+  /** Relevance score (0.0 to 1.0, or -1.0 if unavailable) */
   score: number;
 };
 
+/**
+ * Supported reranking model names
+ */
 type RerankingModelName = "AMAZON" | "COHERE";
 
 /**
- * Queries a Bedrock knowledge base with a given query, handling reranking and result serialization.
- * This method interacts with the AWS Bedrock service to retrieve knowledge base results.
- * It supports reranking of results in specific AWS regions using predefined models.
+ * Queries an AWS Bedrock Knowledge Base using semantic search
  *
- * @param knowledgeBaseId The ID of the knowledge base to query.
- * @param query The natural language query.
- * @param kbAgentClient The Bedrock Agent Runtime client.
- * @param numberOfResults The maximum number of results to return (default: 5).
- * @param reranking Whether to enable reranking of the results (default: false).
- * @param rerankingModelName The reranking model to use (default: AMAZON).
- * @returns A serialized string of the query results.
+ * This function performs a semantic search against a Bedrock Knowledge Base,
+ * optionally applying reranking to improve result relevance. Results are
+ * returned as a formatted string suitable for MCP responses.
+ *
+ * Process:
+ * 1. Validate reranking availability in the current AWS region
+ * 2. Configure retrieval with optional reranking
+ * 3. Execute semantic search query
+ * 4. Filter and process results (skip images)
+ * 5. Convert S3 locations to public URLs
+ * 6. Serialize results to formatted string
+ *
+ * @param knowledgeBaseId - AWS Bedrock Knowledge Base ID
+ * @param query - Natural language search query
+ * @param kbAgentClient - Configured Bedrock Agent Runtime client
+ * @param numberOfResults - Maximum results to return (default: 5)
+ * @param reranking - Enable result reranking if available (default: false)
+ * @param rerankingModelName - Reranking model to use (default: AMAZON)
+ * @returns Formatted string containing search results with sources
+ *
+ * @example
+ * ```typescript
+ * const results = await queryKnowledgeBase(
+ *   'kb-abc123',
+ *   'How to deploy a function app?',
+ *   client,
+ *   5,
+ *   true,
+ *   'AMAZON'
+ * );
+ * ```
+ *
+ * @throws Error if the Bedrock API request fails
  */
 export async function queryKnowledgeBase(
   knowledgeBaseId: string,
@@ -40,18 +95,23 @@ export async function queryKnowledgeBase(
   const logger = getLogger(["mcpserver", "bedrock"]);
   const clientRegion = await kbAgentClient.config.region();
   let rerankingEnabled = reranking;
-  // Reranking is only supported in specific AWS regions.
+
+  // Check if reranking is supported in the current AWS region
+  // Reranking improves result relevance but is only available in specific regions
   if (reranking && !rerankingSupportedRegions.includes(clientRegion)) {
     logger.warn(`Reranking is not supported in region ${clientRegion}`);
     rerankingEnabled = false;
   }
 
+  // Configure retrieval request with vector search parameters
   const retrieveRequest: KnowledgeBaseRetrievalConfiguration = {
     vectorSearchConfiguration: {
       numberOfResults,
     },
   };
 
+  // Add reranking configuration if enabled and supported
+  // Reranking uses a separate model to reorder results by relevance
   if (rerankingEnabled && retrieveRequest.vectorSearchConfiguration) {
     const modelNameMapping: Record<RerankingModelName, string> = {
       AMAZON: "amazon.rerank-v1:0",
