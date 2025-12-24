@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../config.schema.json
+# Example configuration demonstrating HTTP method-specific filtering
+# This config shows how to filter monitoring by specific HTTP methods
+oa3_spec: test/data/io_backend_light.yaml
+name: HTTP Methods Demo Dashboard
+location: West Europe
+timespan: 5m
+data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
+resource_type: app-gateway
+action_groups:
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
+# Global threshold defaults
+availability_threshold: 0.99
+response_time_threshold: 1.0
+overrides:
+  hosts:
+    - https://app-backend.io.italia.it
+  endpoints:
+    # Monitor only GET requests to /services/{service_id}
+    "GET /api/v1/services/{service_id}":
+      availability_threshold: 0.95
+      response_time_threshold: 1.5
+    # Monitor only GET requests to /services (list endpoint)
+    "GET /api/v1/services":
+      availability_threshold: 0.98
+      response_time_threshold: 2.0
