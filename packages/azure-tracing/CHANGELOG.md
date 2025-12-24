@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.11
+
+### Patch Changes
+
+- b327972: Switch package manager from Yarn to pnpm in documentation.
+
 ## 0.4.10
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 5.1.2
+
+### Patch Changes
+
+- b327972: Switch package manager from Yarn to pnpm in documentation.
+
 ## 5.1.1
 
 ### Patch Changes
