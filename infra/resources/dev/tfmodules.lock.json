@@ -4,5 +4,11 @@
     "version": "0.2.4",
     "name": "azure_core_values_exporter",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.2.4"
+  },
+  "aws_core_values": {
+    "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
+    "version": "0.1.2",
+    "name": "aws_core_values_exporter",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
   }
 }

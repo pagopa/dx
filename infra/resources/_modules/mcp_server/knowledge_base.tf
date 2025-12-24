@@ -128,16 +128,15 @@ resource "aws_iam_policy" "bedrock_llms_access" {
         Action = [
           "bedrock:InvokeModel"
         ]
-        Resource = "arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.titan-embed-text-v2:0"
+        Resource = ["arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.titan-embed-text-v2:0", "arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.rerank-v1:0"]
       },
       {
         Sid    = "BedrockInvokeRerankingModelStatement",
         Effect = "Allow",
         Action = [
-          "bedrock:Rerank",
-          "bedrock:InvokeModel"
+          "bedrock:Rerank"
         ],
-        Resource = "arn:aws:bedrock:${var.naming_config.region}::foundation-model/amazon.rerank-v1:0"
+        Resource = "*"
       }
     ]
   })
