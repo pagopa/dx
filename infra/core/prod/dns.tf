@@ -71,3 +71,19 @@ resource "azurerm_dns_ns_record" "dev_dx_pagopa_it" {
   ttl  = 300
   tags = local.tags
 }
+
+### Delegation from dx.pagopa.it to uat.dx.pagopa.it
+
+resource "azurerm_dns_ns_record" "uat_dx_pagopa_it" {
+  name                = "uat"
+  zone_name           = azurerm_dns_zone.dx_pagopa_it.name
+  resource_group_name = module.azure.network_resource_group_name
+  records = [
+    "ns1-01.azure-dns.com.",
+    "ns2-01.azure-dns.net.",
+    "ns3-01.azure-dns.org.",
+    "ns4-01.azure-dns.info."
+  ]
+  ttl  = 300
+  tags = local.tags
+}

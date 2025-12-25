@@ -16,6 +16,7 @@ locals {
 
   env_long = {
     d = "dev"
+    u = "uat"
     p = "prod"
   }[lower(var.environment.env_short)]
 
