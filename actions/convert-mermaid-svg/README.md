@@ -5,7 +5,7 @@ This GitHub Action converts Mermaid diagrams into SVG images using the official 
 Use this action to automatically render Mermaid code blocks into SVG.
 
 > [!NOTE]
-> If a makdown file is passed as input, the action will modify the file in-place, embedding the generated SVG images directly into the Markdown file, instead if a `.mmd` file is passed, a standalone `.svg` file will be created.
+> If a Markdown file is passed as input, the action will modify the file in-place, embedding the generated SVG images directly into the Markdown file, whereas if a `.mmd` file is passed, a standalone `.svg` file will be created.
 
 ## Features
 
