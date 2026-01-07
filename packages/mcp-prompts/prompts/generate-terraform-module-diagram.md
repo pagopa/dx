@@ -1,7 +1,7 @@
 ---
 id: "generate-terraform-module-diagram"
 title: "Generate Terraform Module Diagram"
-description: "Generates a Mermaid flowchart diagram for a Terraform module, analyzing its resources and dependencies, using appropriate provider icons. Adds the diagram to the module's README.md."
+description: "Generates a Mermaid flowchart diagram for a Terraform module, analyzing its resources and dependencies, using appropriate provider icons. Creates a diagram.mmd file and adds a reference to the SVG in the module's README.md."
 category: "terraform"
 enabled: true
 tags:
@@ -15,17 +15,18 @@ arguments:
     description: "Path to the Terraform module directory (e.g., infra/modules/azure_function_app)"
     required: true
 mode: "agent"
-tools: ["read_file", "list_dir", "replace_string_in_file", "searchModules"]
+tools: ["read_file", "list_dir", "write_file", "replace_string_in_file", "searchModules"]
 ---
 
-You are an AI assistant that generates Mermaid flowchart diagrams for Terraform modules and adds them to the module's README.md file.
+You are an AI assistant that generates Mermaid flowchart diagrams for Terraform modules and creates a separate diagram file with a reference in the module's README.md.
 
 Your goal is to:
 
 1. **Analyze the Terraform module** at {{module_path}}, you can use `searchModules` tool
 2. **Create a Mermaid flowchart** showing resources and their relationships
 3. **Use appropriate provider icons** based on the cloud provider
-4. **Add the diagram** to the module's README.md
+4. **Save the diagram** to a `diagram.mmd` file in the module directory
+5. **Add an image reference** to the module's README.md
 
 ---
 
@@ -204,11 +205,18 @@ class rg important  ← Only border, icon remains visible
 
 ---
 
-## 📝 Step 3: Add Diagram to README
+## 📝 Step 3: Save Diagram and Update README
+
+### Creating diagram.mmd file
+
+1. **Create or overwrite** the file `diagram.mmd` in the module directory ({{module_path}}/diagram.mmd)
+2. **Write only the Mermaid code** to this file (no markdown fences, just the flowchart code)
+
+### Adding reference to README
 
 1. **Locate the README.md** in the module directory
 2. **Check if a `## Diagram` section already exists**
-3. **Add or update the diagram** following the rules below
+3. **Add or update the diagram section** with an image reference to `diagram.svg`
 
 **POSITIONING RULES**:
 
@@ -220,7 +228,7 @@ The `## Diagram` section must be positioned **immediately before** the `<!-- BEG
 
 If you find a `## Diagram` section in the README:
 
-- **Replace only the Mermaid code block** inside that section
+- **Replace the entire content** of that section with the image reference
 - Keep the section in its current position
 - Do NOT move or recreate the section
 
@@ -240,7 +248,7 @@ If there is no `## Diagram` section:
 
 ## Diagram  ← Insert here if it doesn't exist (right before BEGIN_TF_DOCS)
 
-(mermaid diagram code)
+![diagram](./diagram.svg)
 
 <!-- BEGIN_TF_DOCS -->  ← Auto-generated content starts here
 ... (terraform-docs generated content) ...
@@ -249,23 +257,21 @@ If there is no `## Diagram` section:
 
 **Diagram section template**:
 
-When inserting for the first time, use this exact format:
+When inserting or updating, use this exact format:
 
 ```text
 ## Diagram
 
-The following diagram illustrates the architecture and relationships between the main components of this module:
-
-(insert mermaid code block here)
+![diagram](./diagram.svg)
 ```
 
 **Important**:
 
 - Use exactly `## Diagram` as the section heading
+- The diagram section contains only the image reference: `![diagram](./diagram.svg)`
 - The diagram is always the last manual section before `<!-- BEGIN_TF_DOCS -->`
 - Never place the diagram after `<!-- BEGIN_TF_DOCS -->`
-- **Do NOT add any legend or explanation after the diagram** - the diagram should be self-explanatory
-- Do NOT add additional text, notes, or descriptions after the Mermaid code block
+- **Do NOT add any legend, explanation, or additional text** - just the image reference
 
 ---
 
@@ -289,20 +295,23 @@ The following diagram illustrates the architecture and relationships between the
    - Organize resources into logical subgraphs/layers
    - Add appropriate icons for each resource
 4. **Generate Mermaid code** with minimal arrows (connect layers, not individual resources)
-5. **Read current README.md** to find `## Diagram` section or `<!-- BEGIN_TF_DOCS -->` marker
-6. **ACTUALLY MODIFY the README.md file** using `replace_string_in_file` tool:
-   - If `## Diagram` exists: replace the Mermaid code block
-   - If not: insert complete section before `<!-- BEGIN_TF_DOCS -->`
+5. **ACTUALLY CREATE/OVERWRITE the diagram.mmd file** using `write_file` tool:
+   - File path: `{{module_path}}/diagram.mmd`
+   - Content: pure Mermaid flowchart code (no markdown fences)
+6. **Read current README.md** to find `## Diagram` section or `<!-- BEGIN_TF_DOCS -->` marker
+7. **ACTUALLY MODIFY the README.md file** using `replace_string_in_file` tool:
+   - If `## Diagram` exists: replace its content with `![diagram](./diagram.svg)`
+   - If not: insert complete section with image reference before `<!-- BEGIN_TF_DOCS -->`
    - Do NOT just show the code - make the actual file modification
-7. **Verify the tool execution succeeded**
-8. **Do NOT add any legend, notes, or explanatory text after the diagram** - only the Mermaid code block
+8. **Verify all tool executions succeeded**
 
-**You MUST use the file editing tools to make actual changes. Showing the diagram without modifying the file is not sufficient.**
+**You MUST use the file editing tools to make actual changes. Showing the diagram without modifying files is not sufficient.**
 
 **After completion, provide a brief summary with**:
 
 - List of main resources included in the diagram
-- **Confirmation with file path that README.md was ACTUALLY modified** (not "I would update" or "Here's the code")
+- **Confirmation that diagram.mmd was CREATED/UPDATED** with full file path
+- **Confirmation that README.md was ACTUALLY modified** with full file path (not "I would update" or "Here's the code")
 - Any issues or limitations encountered
 
 ---
@@ -355,6 +364,8 @@ flowchart LR
 
 **Important Notes**:
 
+- The `diagram.mmd` file will be used to generate `diagram.svg` by a separate CI/CD process
+- The README only contains a reference to the SVG image that will be generated later
 - Always verify icon names in the official documentation before generating the final diagram
 - **Do NOT apply fill colors (classDef with fill) to cloud provider icon nodes** - this will hide the icons
 - **Do Not use non existing icons** - always check the documentation for valid icon names, if an icon does not exist, don't use it
