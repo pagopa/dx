@@ -8,13 +8,7 @@ import { Octokit } from "octokit";
 import { z } from "zod/v4";
 
 import { getLatestNodeVersion } from "./actions/node.js";
-import {
-  addPagoPaPnpmPlugin,
-  configureChangesets,
-  configureDevContainer,
-  enablePnpm,
-  installRootDependencies,
-} from "./actions/pnpm.js";
+import { setupMonorepoWithPnpm } from "./actions/pnpm.js";
 import { terraformVersionActions } from "./actions/terraform.js";
 import { fillWithZero } from "./adapters/node/string.js";
 
@@ -321,11 +315,7 @@ const getActions =
       ...data.environments.flatMap((env) =>
         getTerraformEnvironmentFiles(templatesPath)(env, data),
       ),
-      enablePnpm,
-      addPagoPaPnpmPlugin,
-      installRootDependencies,
-      configureChangesets,
-      configureDevContainer,
+      setupMonorepoWithPnpm(data),
     ];
   };
 

@@ -6,3 +6,4 @@
 - Don't put a period at the end of the subject line
 - Use the imperative mood
 - Try to describe the rationale behind the changes instead of the changes themselves
+- Avoid generic messages like "Refactor code to improve readability", be specific about the reason for the refactor

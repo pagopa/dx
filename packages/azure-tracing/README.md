@@ -8,7 +8,7 @@ with OpenTelemetry for distributed tracing and telemetry in Node.js applications
 Install the package using:
 
 ```bash
-yarn add @pagopa/azure-tracing
+pnpm add @pagopa/azure-tracing
 ```
 
 ## Getting Started
