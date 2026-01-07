@@ -140,9 +140,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       session,
     };
 
-    // Validate and execute tool
-    const validatedArgs = tool.parameters.parse(args);
-    const result = await tool.execute(validatedArgs, context);
+    // Validate tool arguments using Zod schema
+    const validationResult = tool.parameters.safeParse(args);
+
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors
+        .map((err) => `${err.path.join(".")}: ${err.message}`)
+        .join(", ");
+      throw new Error(`Invalid arguments: ${errors}`);
+    }
+
+    const result = await tool.execute(validationResult.data, context);
 
     return {
       content: [

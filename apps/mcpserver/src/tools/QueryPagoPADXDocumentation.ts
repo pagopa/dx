@@ -42,6 +42,7 @@ For Terraform module details (input/output variables, examples), use the \`searc
   parameters: z.object({
     query: z
       .string()
+      .min(1, "Query cannot be empty")
       .describe(
         "A natural language query in English used to search the DX documentation for relevant information.",
       ),

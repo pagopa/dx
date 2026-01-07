@@ -97,6 +97,7 @@ Returns file contents matching the search query.`,
       ),
     query: z
       .string()
+      .min(1, "Query cannot be empty")
       .describe(
         'Code search query (e.g., "pagopa-dx/azure-function-app/azurerm" to find Terraform module usage examples)',
       ),
