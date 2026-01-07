@@ -41,25 +41,6 @@ type ToolDefinition = {
   parameters: z.ZodType;
 };
 
-// Create MCP server instance
-const server = new Server(
-  {
-    name: "PagoPA DX Knowledge Retrieval MCP Server",
-    version: "0.0.0",
-  },
-  {
-    capabilities: {
-      prompts: {},
-      tools: {},
-    },
-  },
-);
-
-// Configure server error handler
-server.onerror = (error) => {
-  logger.error("Server error", { error: error.message, stack: error.stack });
-};
-
 // Store enabled prompts and tools with decorators applied
 const toolRegistry = new Map<string, ToolDefinition>();
 const promptRegistry = new Map<
@@ -90,87 +71,141 @@ enabledPrompts.forEach((catalogEntry) => {
   });
 });
 
-logger.info(
-  `Server initialized with ${toolRegistry.size} tools and ${promptRegistry.size} prompts`,
-);
+/**
+ * Creates a new MCP server instance with all handlers registered.
+ * This function is called for each request to ensure complete isolation
+ * and thread-safety in concurrent scenarios (e.g., AWS Lambda warm starts).
+ */
+function createServer(): Server {
+  const server = new Server(
+    {
+      name: "PagoPA DX Knowledge Retrieval MCP Server",
+      version: "0.0.0",
+    },
+    {
+      capabilities: {
+        prompts: {},
+        tools: {},
+      },
+    },
+  );
 
-// Request handler for listing tools
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: Array.from(toolRegistry.values()).map((tool) => {
-    const jsonSchema = zodToJsonSchema(tool.parameters, {
-      $refStrategy: "none",
-    }) as Record<string, unknown>;
+  // Configure server error handler
+  server.onerror = (error) => {
+    logger.error("Server error", { error: error.message, stack: error.stack });
+  };
 
-    // Extract only MCP-compliant inputSchema fields
-    const inputSchema: Record<string, unknown> = {
-      type: "object",
-    };
+  // Request handler for listing tools
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: Array.from(toolRegistry.values()).map((tool) => {
+      const jsonSchema = zodToJsonSchema(tool.parameters, {
+        $refStrategy: "none",
+      }) as Record<string, unknown>;
 
-    if (jsonSchema.properties) {
-      inputSchema.properties = jsonSchema.properties;
+      // Extract only MCP-compliant inputSchema fields
+      const inputSchema: Record<string, unknown> = {
+        type: "object",
+      };
+
+      if (jsonSchema.properties) {
+        inputSchema.properties = jsonSchema.properties;
+      }
+
+      if (jsonSchema.required) {
+        inputSchema.required = jsonSchema.required;
+      }
+
+      return {
+        description: tool.description,
+        inputSchema,
+        name: tool.name,
+      };
+    }),
+  }));
+
+  // Request handler for calling tools
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { arguments: args, name } = request.params;
+    const tool = toolRegistry.get(name);
+
+    if (!tool) {
+      throw new Error(`Tool not found: ${name}`);
     }
 
-    if (jsonSchema.required) {
-      inputSchema.required = jsonSchema.required;
+    try {
+      // Get session from AsyncLocalStorage
+      const session = sessionStorage.getStore();
+
+      // Build context with session information
+      const context = {
+        session,
+      };
+
+      // Validate tool arguments using Zod schema
+      const validationResult = tool.parameters.safeParse(args);
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ");
+        throw new Error(`Invalid arguments: ${errors}`);
+      }
+
+      const result = await tool.execute(validationResult.data, context);
+
+      return {
+        content: [
+          {
+            text: typeof result === "string" ? result : JSON.stringify(result),
+            type: "text",
+          },
+        ],
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(`Tool execution failed: ${name}`, { error: errorMessage });
+      throw new Error(`Tool execution failed: ${errorMessage}`);
+    }
+  });
+
+  // Request handler for listing prompts
+  server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+    prompts: Array.from(promptRegistry.values()).map(({ catalogEntry }) => {
+      const catalog = catalogEntry as {
+        prompt: {
+          arguments: {
+            description: string;
+            name: string;
+            required: boolean;
+          }[];
+          description: string;
+          name: string;
+        };
+      };
+      return {
+        arguments: catalog.prompt.arguments.map((arg) => ({
+          description: arg.description,
+          name: arg.name,
+          required: arg.required,
+        })),
+        description: catalog.prompt.description,
+        name: catalog.prompt.name,
+      };
+    }),
+  }));
+
+  // Request handler for getting a prompt
+  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    const { arguments: args, name } = request.params;
+    const promptEntry = promptRegistry.get(name);
+
+    if (!promptEntry) {
+      throw new Error(`Prompt not found: ${name}`);
     }
 
-    return {
-      description: tool.description,
-      inputSchema,
-      name: tool.name,
-    };
-  }),
-}));
-
-// Request handler for calling tools
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { arguments: args, name } = request.params;
-  const tool = toolRegistry.get(name);
-
-  if (!tool) {
-    throw new Error(`Tool not found: ${name}`);
-  }
-
-  try {
-    // Get session from AsyncLocalStorage
-    const session = sessionStorage.getStore();
-
-    // Build context with session information
-    const context = {
-      session,
-    };
-
-    // Validate tool arguments using Zod schema
-    const validationResult = tool.parameters.safeParse(args);
-
-    if (!validationResult.success) {
-      const errors = validationResult.error.errors
-        .map((err) => `${err.path.join(".")}: ${err.message}`)
-        .join(", ");
-      throw new Error(`Invalid arguments: ${errors}`);
-    }
-
-    const result = await tool.execute(validationResult.data, context);
-
-    return {
-      content: [
-        {
-          text: typeof result === "string" ? result : JSON.stringify(result),
-          type: "text",
-        },
-      ],
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Tool execution failed: ${name}`, { error: errorMessage });
-    throw new Error(`Tool execution failed: ${errorMessage}`);
-  }
-});
-
-// Request handler for listing prompts
-server.setRequestHandler(ListPromptsRequestSchema, async () => ({
-  prompts: Array.from(promptRegistry.values()).map(({ catalogEntry }) => {
-    const catalog = catalogEntry as {
+    // Validate required arguments
+    const catalog = promptEntry.catalogEntry as {
       prompt: {
         arguments: {
           description: string;
@@ -181,72 +216,47 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => ({
         name: string;
       };
     };
-    return {
-      arguments: catalog.prompt.arguments.map((arg) => ({
-        description: arg.description,
-        name: arg.name,
-        required: arg.required,
-      })),
-      description: catalog.prompt.description,
-      name: catalog.prompt.name,
-    };
-  }),
-}));
 
-// Request handler for getting a prompt
-server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-  const { arguments: args, name } = request.params;
-  const promptEntry = promptRegistry.get(name);
+    const missingArgs = catalog.prompt.arguments
+      .filter((arg) => arg.required)
+      .filter((arg) => !args || !(arg.name in args))
+      .map((arg) => arg.name);
 
-  if (!promptEntry) {
-    throw new Error(`Prompt not found: ${name}`);
-  }
+    if (missingArgs.length > 0) {
+      throw new Error(`Missing required arguments: ${missingArgs.join(", ")}`);
+    }
 
-  // Validate required arguments
-  const catalog = promptEntry.catalogEntry as {
-    prompt: {
-      arguments: {
-        description: string;
-        name: string;
-        required: boolean;
-      }[];
-      description: string;
-      name: string;
-    };
-  };
-
-  const missingArgs = catalog.prompt.arguments
-    .filter((arg) => arg.required)
-    .filter((arg) => !args || !(arg.name in args))
-    .map((arg) => arg.name);
-
-  if (missingArgs.length > 0) {
-    throw new Error(`Missing required arguments: ${missingArgs.join(", ")}`);
-  }
-
-  try {
-    const content = await (
-      promptEntry.prompt as {
-        load: (args: Record<string, unknown>) => Promise<string>;
-      }
-    ).load(args || {});
-    return {
-      messages: [
-        {
-          content: {
-            text: content,
-            type: "text",
+    try {
+      const content = await (
+        promptEntry.prompt as {
+          load: (args: Record<string, unknown>) => Promise<string>;
+        }
+      ).load(args || {});
+      return {
+        messages: [
+          {
+            content: {
+              text: content,
+              type: "text",
+            },
+            role: "user",
           },
-          role: "user",
-        },
-      ],
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error(`Prompt loading failed: ${name}`, { error: errorMessage });
-    throw new Error(`Prompt loading failed: ${errorMessage}`);
-  }
-});
+        ],
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(`Prompt loading failed: ${name}`, { error: errorMessage });
+      throw new Error(`Prompt loading failed: ${errorMessage}`);
+    }
+  });
+
+  return server;
+}
+
+logger.info(
+  `Server factory initialized with ${toolRegistry.size} tools and ${promptRegistry.size} prompts`,
+);
 
 /**
  * HTTP server for stateless MCP operations
@@ -307,7 +317,9 @@ const httpServer = http.createServer(
 
       // Execute request in isolated session context
       await sessionStorage.run(session, async () => {
-        // Create new transport for this request (stateless mode)
+        // Create new server and transport for this request
+        // This ensures complete isolation between concurrent requests
+        const server = createServer();
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
         });
