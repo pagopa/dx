@@ -15,7 +15,14 @@ arguments:
     description: "Path to the Terraform module directory (e.g., infra/modules/azure_function_app)"
     required: true
 mode: "agent"
-tools: ["read_file", "list_dir", "write_file", "replace_string_in_file", "searchModules"]
+tools:
+  [
+    "read_file",
+    "list_dir",
+    "write_file",
+    "replace_string_in_file",
+    "searchModules",
+  ]
 ---
 
 You are an AI assistant that generates Mermaid flowchart diagrams for Terraform modules and creates a separate diagram file with a reference in the module's README.md.
