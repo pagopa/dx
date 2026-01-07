@@ -10,14 +10,24 @@ terraform {
       version = "~> 2.0"
     }
 
-    dx = {
+    azuredx = {
       source  = "pagopa-dx/azure"
       version = "~> 0.0"
     }
 
+    azapi = {
+      source  = "Azure/azapi"
+      version = "2.8.0"
+    }
+
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
+    }
+
+    awscc = {
+      source  = "hashicorp/awscc"
+      version = "~> 1.0"
     }
 
     awsdx = {
@@ -41,7 +51,9 @@ provider "azurerm" {
   storage_use_azuread = true
 }
 
-provider "dx" {}
+provider "azuredx" {}
+
+provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"
@@ -52,9 +64,15 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+provider "awscc" {
+  alias  = "eu-central-1"
+  region = "eu-central-1"
+}
+
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
 }
 
 provider "awsdx" {}
+
