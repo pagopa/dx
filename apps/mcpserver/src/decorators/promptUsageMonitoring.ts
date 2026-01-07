@@ -1,4 +1,4 @@
-import type { Prompt } from "fastmcp";
+import type { PromptDefinition } from "@pagopa/dx-mcpprompts";
 
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
@@ -9,7 +9,10 @@ const logger = getLogger(["mcpserver", "prompt-logging"]);
  * Decorator that adds logging to prompt load functions.
  * Logs when a prompt is requested to both console and Azure Application Insights.
  */
-export function withPromptLogging(prompt: Prompt, catalogId: string): Prompt {
+export function withPromptLogging(
+  prompt: PromptDefinition,
+  catalogId: string,
+): PromptDefinition {
   const originalLoad = prompt.load;
 
   return {

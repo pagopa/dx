@@ -1,30 +1,40 @@
+import type { z } from "zod";
+
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
 const logger = getLogger(["mcpserver", "tool-logging"]);
+
+// Tool interface matching the structure used by FastMCP-style tools
+type ToolDefinition = {
+  annotations?: {
+    title: string;
+  };
+  description: string;
+  execute: (args: unknown, context?: unknown) => Promise<string>;
+  name: string;
+  parameters: z.ZodType;
+};
 
 /**
  * Decorator that adds logging to tool execute functions.
  * Logs when a tool is executed to both console and Azure Application Insights.
  * Preserves the exact original function signature and type.
  */
-export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
+export function withToolLogging<T extends ToolDefinition>(tool: T): T {
   if (typeof tool !== "object" || !tool.execute || !tool.name) {
     return tool;
   }
 
-  const originalExecute = tool.execute as (
-    ...args: unknown[]
-  ) => Promise<unknown>;
-  const toolName = tool.name as string;
+  const originalExecute = tool.execute;
+  const toolName = tool.name;
 
   return {
     ...tool,
-    execute: async (...args: unknown[]) => {
+    execute: async (args: unknown, context?: unknown) => {
       const startTime = Date.now();
-      const [toolArgs] = args;
       const eventData = {
-        arguments: JSON.stringify(toolArgs),
+        arguments: JSON.stringify(args),
         timestamp: new Date().toISOString(),
         toolName,
       };
@@ -37,7 +47,7 @@ export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
 
       try {
         // Call the original execute function and return the result
-        const result = await originalExecute(...args);
+        const result = await originalExecute(args, context);
 
         const executionTime = Date.now() - startTime;
 
