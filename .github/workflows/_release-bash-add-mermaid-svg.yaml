@@ -1,0 +1,61 @@
+name: Add Mermaid diagrams SVG on PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "infra/modules/**/diagram.mmd"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  convert-mermaid:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Find modified diagram.mmd file
+        id: find-file
+        run: |
+          file=$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }}...HEAD | grep 'infra/modules/.*/diagram.mmd$' | head -n 1)
+          if [ -z "$file" ]; then
+            echo "found=false" >> $GITHUB_OUTPUT
+          else
+            echo "found=true" >> $GITHUB_OUTPUT
+            echo "path=$file" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Convert diagram into SVG
+        if: steps.find-file.outputs.found == 'true'
+        uses: pagopa/dx/actions/convert-mermaid-svg@main
+        with:
+          file_path: "${{ steps.find-file.outputs.path }}"
+
+      - name: Check and push SVG file
+        if: steps.find-file.outputs.found == 'true'
+        run: |
+          svg_file=$(dirname "${{ steps.find-file.outputs.path }}")/diagram.svg
+          if [ -f "$svg_file" ]; then
+            git config user.name "dx-pagopa-bot"
+            git config user.email "dx-pagopa-github-bot@pagopa.it"
+            git add "$svg_file"
+            git commit -m "chore: add generated diagram.svg"
+            git push
+          else
+            echo "SVG file not found at $svg_file"
+            exit 1
+          fi
