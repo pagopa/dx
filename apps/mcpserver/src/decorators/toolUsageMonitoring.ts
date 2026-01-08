@@ -1,6 +1,8 @@
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
+import type { ToolContext, ToolDefinition } from "../types.js";
+
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
@@ -8,23 +10,20 @@ const logger = getLogger(["mcpserver", "tool-logging"]);
  * Logs when a tool is executed to both console and Azure Application Insights.
  * Preserves the exact original function signature and type.
  */
-export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
+export function withToolLogging<T extends ToolDefinition>(tool: T): T {
   if (typeof tool !== "object" || !tool.execute || !tool.name) {
     return tool;
   }
 
-  const originalExecute = tool.execute as (
-    ...args: unknown[]
-  ) => Promise<unknown>;
-  const toolName = tool.name as string;
+  const originalExecute = tool.execute;
+  const toolName = tool.name;
 
   return {
     ...tool,
-    execute: async (...args: unknown[]) => {
+    execute: async (args: unknown, context?: ToolContext) => {
       const startTime = Date.now();
-      const [toolArgs] = args;
       const eventData = {
-        arguments: JSON.stringify(toolArgs),
+        arguments: JSON.stringify(args),
         timestamp: new Date().toISOString(),
         toolName,
       };
@@ -37,7 +36,7 @@ export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
 
       try {
         // Call the original execute function and return the result
-        const result = await originalExecute(...args);
+        const result = await originalExecute(args, context);
 
         const executionTime = Date.now() - startTime;
 
