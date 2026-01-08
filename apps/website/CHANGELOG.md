@@ -1,5 +1,11 @@
 # docs
 
+## 0.11.5
+
+### Patch Changes
+
+- b327972: Switch package manager from Yarn to pnpm in documentation.
+
 ## 0.11.4
 
 ### Patch Changes
