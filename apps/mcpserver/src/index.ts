@@ -258,17 +258,12 @@ const httpServer = http.createServer(
             ? authHeader[0]
             : undefined;
 
-      // Separate security checks to avoid user-controlled bypass detection
-      if (!apiKey) {
-        res.writeHead(401, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Missing authentication token" }));
-        return;
-      }
-
-      const isValidUser = await verifyGithubUser(apiKey);
+      // Security check: validate token against GitHub API (server-controlled validation)
+      // verifyGithubUser() returns false for missing/invalid tokens
+      const isValidUser = await verifyGithubUser(apiKey ?? "");
       if (!isValidUser) {
         res.writeHead(401, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Invalid authentication token" }));
+        res.end(JSON.stringify({ error: "Unauthorized" }));
         return;
       }
 
