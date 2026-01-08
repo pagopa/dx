@@ -4,10 +4,7 @@ on:
   pull_request:
     types:
       - opened
-
       - synchronize
-      - reopened
-      - ready_for_review
     paths:
       - "infra/modules/**/diagram.mmd"
 
@@ -20,7 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
       pull-requests: write
     steps:
       - name: Checkout repository
@@ -47,7 +43,6 @@ jobs:
           echo "path=$file" >> $GITHUB_OUTPUT
           echo "Modified .mmd file: $file"
 
-
       - name: Convert diagram into SVG
         if: steps.find-file.outputs.found == 'true'
         uses: pagopa/dx/actions/convert-mermaid-svg@main
@@ -64,7 +59,16 @@ jobs:
             git add "$svg_file"
             if ! git diff --cached --quiet; then
               git commit -m "chore: add generated diagram.svg"
-              git push origin HEAD:${{ github.head_ref }}
+
+              # Rebase to avoid potential conflicts
+              git fetch origin ${{ github.head_ref }}
+              if ! git rebase origin/${{ github.head_ref }}; then
+                echo "Rebase failed, aborting and trying force push"
+                git rebase --abort
+                git push origin HEAD:${{ github.head_ref }} --force-with-lease
+              else
+                git push origin HEAD:${{ github.head_ref }}
+              fi
             else
               echo "No changes in SVG file to commit. Skipping commit and push."
             fi
