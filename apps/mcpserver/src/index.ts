@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { z } from "zod";
 
 import { getLogger } from "@logtape/logtape";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -13,6 +12,8 @@ import {
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import * as http from "node:http";
 import { zodToJsonSchema } from "zod-to-json-schema";
+
+import type { PromptEntry, ToolDefinition } from "./types.js";
 
 import { verifyGithubUser } from "./auth/github.js";
 import { configureLogging } from "./config/logging.js";
@@ -30,23 +31,9 @@ await configureAzureMonitoring();
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
 
-// Define tool interface for type safety
-type ToolDefinition = {
-  annotations?: {
-    title: string;
-  };
-  description: string;
-  execute: (args: unknown, context?: unknown) => Promise<string>;
-  name: string;
-  parameters: z.ZodType;
-};
-
 // Store enabled prompts and tools with decorators applied
 const toolRegistry = new Map<string, ToolDefinition>();
-const promptRegistry = new Map<
-  string,
-  { catalogEntry: unknown; prompt: unknown }
->();
+const promptRegistry = new Map<string, PromptEntry>();
 
 // Register tools with decorators
 toolRegistry.set(
@@ -171,28 +158,15 @@ function createServer(): Server {
 
   // Request handler for listing prompts
   server.setRequestHandler(ListPromptsRequestSchema, async () => ({
-    prompts: Array.from(promptRegistry.values()).map(({ catalogEntry }) => {
-      const catalog = catalogEntry as {
-        prompt: {
-          arguments: {
-            description: string;
-            name: string;
-            required: boolean;
-          }[];
-          description: string;
-          name: string;
-        };
-      };
-      return {
-        arguments: catalog.prompt.arguments.map((arg) => ({
-          description: arg.description,
-          name: arg.name,
-          required: arg.required,
-        })),
-        description: catalog.prompt.description,
-        name: catalog.prompt.name,
-      };
-    }),
+    prompts: Array.from(promptRegistry.values()).map(({ catalogEntry }) => ({
+      arguments: catalogEntry.prompt.arguments.map((arg) => ({
+        description: arg.description,
+        name: arg.name,
+        required: arg.required,
+      })),
+      description: catalogEntry.prompt.description,
+      name: catalogEntry.prompt.name,
+    })),
   }));
 
   // Request handler for getting a prompt
@@ -205,19 +179,7 @@ function createServer(): Server {
     }
 
     // Validate required arguments
-    const catalog = promptEntry.catalogEntry as {
-      prompt: {
-        arguments: {
-          description: string;
-          name: string;
-          required: boolean;
-        }[];
-        description: string;
-        name: string;
-      };
-    };
-
-    const missingArgs = catalog.prompt.arguments
+    const missingArgs = promptEntry.catalogEntry.prompt.arguments
       .filter((arg) => arg.required)
       .filter((arg) => !args || !(arg.name in args))
       .map((arg) => arg.name);
@@ -227,11 +189,7 @@ function createServer(): Server {
     }
 
     try {
-      const content = await (
-        promptEntry.prompt as {
-          load: (args: Record<string, unknown>) => Promise<string>;
-        }
-      ).load(args || {});
+      const content = await promptEntry.prompt.load(args || {});
       return {
         messages: [
           {

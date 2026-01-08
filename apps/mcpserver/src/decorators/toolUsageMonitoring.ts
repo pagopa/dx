@@ -1,20 +1,9 @@
-import type { z } from "zod";
-
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
-const logger = getLogger(["mcpserver", "tool-logging"]);
+import type { ToolContext, ToolDefinition } from "../types.js";
 
-// Tool interface matching the structure used by FastMCP-style tools
-type ToolDefinition = {
-  annotations?: {
-    title: string;
-  };
-  description: string;
-  execute: (args: unknown, context?: unknown) => Promise<string>;
-  name: string;
-  parameters: z.ZodType;
-};
+const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
  * Decorator that adds logging to tool execute functions.
@@ -31,7 +20,7 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
 
   return {
     ...tool,
-    execute: async (args: unknown, context?: unknown) => {
+    execute: async (args: unknown, context?: ToolContext) => {
       const startTime = Date.now();
       const eventData = {
         arguments: JSON.stringify(args),
