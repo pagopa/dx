@@ -1,4 +1,4 @@
-name: Add Mermaid SVG diagram on PR
+name: Convert Mermaid diagrams to SVG on PR
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   convert-mermaid:
@@ -47,10 +47,6 @@ jobs:
           echo "path=$file" >> $GITHUB_OUTPUT
           echo "Modified .mmd file: $file"
 
-      - name: Skip conversion
-        if: steps.changed-files.outputs.any_changed != 'true'
-        run: |
-          echo "No .mmd files were modified in the last commit, skipping conversion"
 
       - name: Convert diagram into SVG
         if: steps.find-file.outputs.found == 'true'
@@ -66,8 +62,12 @@ jobs:
             git config user.name "dx-pagopa-bot"
             git config user.email "dx-pagopa-github-bot@pagopa.it"
             git add "$svg_file"
-            git commit -m "chore: add generated diagram.svg"
-            git push origin HEAD:${{ github.head_ref }}
+            if ! git diff --cached --quiet; then
+              git commit -m "chore: add generated diagram.svg"
+              git push origin HEAD:${{ github.head_ref }}
+            else
+              echo "No changes in SVG file to commit. Skipping commit and push."
+            fi
           else
             echo "SVG file not found at $svg_file"
             exit 1
