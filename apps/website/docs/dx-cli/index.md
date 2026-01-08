@@ -1,5 +1,5 @@
 ---
-id: dx-cli
+id: index
 title: Using the DX CLI
 sidebar_position: 3
 description: Documentation for @pagopa/dx-cli commands and usage.
@@ -32,6 +32,17 @@ pnpm dx --help
 
 Initialize new resources such as monorepo projects following PagoPA DevEx
 conventions.
+
+:::warning[GitHub Token Required]
+
+To have a complete experience with the `init` command, you need to set up a
+`GITHUB_TOKEN` environment variable. This token is required for certain
+operations like creating pull requests and interacting with GitHub repositories.
+
+See the [GitHub Personal Access Token Setup](./github-pat.md) guide for detailed
+instructions on how to generate and configure your token.
+
+:::
 
 #### `init project` - Create a new monorepo project
 
@@ -99,11 +110,11 @@ You will get a brief list of migration identifiers. Use one of them with
 
 ##### Current Codemods
 
-| identifier           | description                                                                                                                            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `use-pnpm`           | Migrate the project to use pnpm (lockfile import, workspace rewriting, workflow updates).                                              |
-| `use-azure-appsvc`   | Migrate `web_app_deploy` and `function_app_deploy` to [`release-azure-appsvc`](./azure/application-deployment/release-azure-appsvc.md) |
-| `update-code-review` | Update [`js_code_review`](./typescript/code-review.md) workflow reference to latest commit with required permissions.                  |
+| identifier           | description                                                                                                                             |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `use-pnpm`           | Migrate the project to use pnpm (lockfile import, workspace rewriting, workflow updates).                                               |
+| `use-azure-appsvc`   | Migrate `web_app_deploy` and `function_app_deploy` to [`release-azure-appsvc`](../azure/application-deployment/release-azure-appsvc.md) |
+| `update-code-review` | Update [`js_code_review`](../typescript/code-review.md) workflow reference to latest commit with required permissions.                  |
 
 #### Apply a Codemod
 
