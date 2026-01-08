@@ -1,19 +1,23 @@
 # Convert Mermaid Diagrams to SVG
 
-This GitHub Action converts Mermaid diagrams inside Markdown files into SVG images using the official Mermaid CLI (`@mermaid-js/mermaid-cli`, aka `mmdc`).
+This GitHub Action converts Mermaid diagrams into SVG images using the official Mermaid CLI (`@mermaid-js/mermaid-cli`, aka `mmdc`).
 
-Use this action to automatically render Mermaid code blocks into SVG when you commit documentation, README files, or other Markdown content that contains diagrams.
+Use this action to automatically render Mermaid code blocks into SVG.
+
+> [!NOTE]
+> If a Markdown file is passed as input, the action will modify the file in-place, embedding the generated SVG images directly into the Markdown file, whereas if a `.mmd` file is passed, a standalone `.svg` file will be created.
 
 ## Features
 
 - Automatically detects Mermaid code blocks (` ```mermaid `) in Markdown files
 - Skips execution if no Mermaid diagrams are found (saves CI time)
 - Renders diagrams with dark theme and transparent background
-- Embeds SVG images directly into the original Markdown file
+- For `.md` files: Embeds SVG images directly into the original Markdown file
+- For `.mmd` files: Creates standalone `.svg` files (e.g., `diagram.mmd` → `diagram.svg`)
 
 ## Inputs
 
-- `file_path` (required): Path to the Markdown file to process (for example: `docs/README.md`)
+- `file_path` (required): Path to the Markdown file (for example: `docs/README.md`) or Mermaid diagram (`.mmd`) file to process
 
 ## Example workflow
 
