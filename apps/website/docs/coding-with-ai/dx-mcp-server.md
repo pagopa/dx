@@ -37,7 +37,22 @@ You'll need:
 
 - An MCP-compliant AI assistant (GitHub Copilot, VS Code with Copilot, etc.)
 - A GitHub Personal Access Token (PAT) with
-  [appropriate permissions](https://github.com/pagopa/dx/blob/main/apps/mcpserver/README.md#authentication)
+  [appropriate permissions](#authentication)
+
+### Authentication
+
+To authenticate, create a **fine-grained GitHub Personal Access Token** with the
+**minimum required permissions**
+[here](https://github.com/settings/personal-access-tokens) using the following
+configuration:
+
+- **Resource owner**
+  - Select the **pagopa** organization
+- **Repository access**
+  - **Public repositories:** Read-only
+- **Organization permissions**
+  - **Members:** Read-only  
+    _(required to verify membership in the pagopa organization)_
 
 ### Configuration
 
