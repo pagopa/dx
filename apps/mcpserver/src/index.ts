@@ -15,6 +15,7 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 import type { PromptEntry, ToolDefinition } from "./types.js";
 
+import packageJson from "../package.json" with { type: "json" };
 import { verifyGithubUser } from "./auth/github.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
@@ -67,7 +68,7 @@ function createServer(): Server {
   const server = new Server(
     {
       name: "PagoPA DX Knowledge Retrieval MCP Server",
-      version: "0.0.0",
+      version: packageJson.version,
     },
     {
       capabilities: {
