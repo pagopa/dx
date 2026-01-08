@@ -267,6 +267,9 @@ const httpServer = http.createServer(
         return;
       }
 
+      // At this point, apiKey is guaranteed to be a valid string (verified by GitHub API)
+      const validatedToken: string = apiKey ?? "";
+
       // Parse request body
       let body = "";
       for await (const chunk of req) {
@@ -275,7 +278,7 @@ const httpServer = http.createServer(
       const jsonBody = body ? JSON.parse(body) : undefined;
 
       // Create session for AsyncLocalStorage context (stateless per-request)
-      const session = { id: Date.now(), token: apiKey };
+      const session = { id: Date.now(), token: validatedToken };
 
       // Execute request in isolated session context
       await sessionStorage.run(session, async () => {
