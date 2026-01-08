@@ -1,4 +1,4 @@
-name: Add Mermaid diagrams SVG on PR
+name: Add Mermaid SVG diagram on PR
 
 on:
   pull_request:
@@ -26,18 +26,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Find modified diagram.mmd file
+      - name: Detect changed diagram.mmd files
+        id: changed-files
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        with:
+          files: |
+            infra/modules/**/diagram.mmd
+          since_last_remote_commit: true
+
+      - name: Check if conversion is needed
         id: find-file
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          file=$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }}...HEAD | grep 'infra/modules/.*/diagram.mmd$' | head -n 1)
-          if [ -z "$file" ]; then
-            echo "found=false" >> $GITHUB_OUTPUT
-          else
-            echo "found=true" >> $GITHUB_OUTPUT
-            echo "path=$file" >> $GITHUB_OUTPUT
-          fi
+          # Get the first modified .mmd file
+          file=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | head -n 1)
+          echo "found=true" >> $GITHUB_OUTPUT
+          echo "path=$file" >> $GITHUB_OUTPUT
+          echo "Modified .mmd file: $file"
+
+      - name: Skip conversion
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: |
+          echo "No .mmd files were modified in the last commit, skipping conversion"
 
       - name: Convert diagram into SVG
         if: steps.find-file.outputs.found == 'true'
@@ -54,7 +67,7 @@ jobs:
             git config user.email "dx-pagopa-github-bot@pagopa.it"
             git add "$svg_file"
             git commit -m "chore: add generated diagram.svg"
-            git push
+            git push origin HEAD:${{ github.head_ref }}
           else
             echo "SVG file not found at $svg_file"
             exit 1
