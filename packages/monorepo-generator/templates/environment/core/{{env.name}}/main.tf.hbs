@@ -1,0 +1,18 @@
+{{#each env.cloudAccounts}}
+
+module "{{accountPrefix this}}_core" {
+  source  = "pagopa-dx/azure-core-infra/azurerm"
+  version = "~> {{lookup @root.terraform.versions 'pagopa-dx/azure-core-infra/azurerm'}}"
+
+  providers = {
+    azurerm = azurerm.{{snakeCase displayName}}
+  }
+
+  environment = local.environment.{{accountPrefix this}}
+
+  tags = local.tags
+}
+
+{{/each}}
+
+

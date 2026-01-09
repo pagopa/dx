@@ -3,7 +3,6 @@ import type { ActionType, NodePlopAPI, PlopGeneratorConfig } from "plop";
 import * as fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 import { Octokit } from "octokit";
 import { z } from "zod/v4";
 
@@ -320,17 +319,15 @@ const getActions =
   };
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
-  const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const templatesPath = path.join(
-    entryPointDirectory,
-    PLOP_MONOREPO_GENERATOR_NAME,
-  );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
+  const templatesPath = path.join(import.meta.dirname, "../templates");
   plopApi.setHelper("fillWithZero", fillWithZero);
-
   plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
-    actions: getActions({ octokitClient, plopApi, templatesPath }),
+    actions: getActions({
+      octokitClient,
+      plopApi,
+      templatesPath: path.join(templatesPath, PLOP_MONOREPO_GENERATOR_NAME),
+    }),
     description: "A scaffold for a monorepo repository",
     prompts: getPrompts(),
   });

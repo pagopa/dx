@@ -1,0 +1,27 @@
+locals {
+  environment = {
+    {{#each env.cloudAccounts}}
+    {{accountPrefix this}} = {
+      prefix          = "{{@root.env.prefix}}"
+      env_short       = "{{envShort @root.env.name}}"
+      location        = "{{defaultLocation}}"
+      domain          = "{{@root.workspace.domain}}"
+      instance_number = "01"
+    }
+    {{/each}}
+  }
+
+  adgroups = {
+    admins_name   = "{{env.prefix}}-{{envShort env.name}}-adgroup-admin"
+    devs_name     = "{{env.prefix}}-{{envShort env.name}}-adgroup-developers"
+    external_name = "{{env.prefix}}-{{envShort env.name}}-adgroup-externals"
+  }
+
+  tags = {
+    CreatedBy   = "Terraform"
+    Environment = "{{env.name}}"
+    {{#each tags}}
+    {{@key}}    = "{{this}}"
+    {{/each}}
+  }
+}

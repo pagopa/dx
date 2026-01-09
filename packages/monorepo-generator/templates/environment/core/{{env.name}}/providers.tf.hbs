@@ -1,0 +1,28 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> {{lookup terraform.versions 'hashicorp/azurerm'}}"
+    }
+  }
+
+  backend "azurerm" {
+    resource_group_name  = "{{terraform.backend.resourceGroupName}}"
+    storage_account_name = "{{terraform.backend.storageAccountName}}"
+    container_name       = "terraform-state"
+    key                  = "{{env.prefix}}.core.{{env.name}}.tfstate"
+    subscription_id      = "{{terraform.backend.subscriptionId}}"
+    use_azuread_auth     = true
+  }
+}
+
+{{#each env.cloudAccounts}}
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+  subscription_id     = "{{id}}"
+  alias               = "{{snakeCase displayName}}"
+}
+
+{{/each}}
+
