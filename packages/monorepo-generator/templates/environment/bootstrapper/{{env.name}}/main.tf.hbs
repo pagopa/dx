@@ -1,0 +1,69 @@
+{{#each env.cloudAccounts}}
+
+module "{{accountPrefix this}}_core_values" {
+  source  = "pagopa-dx/azure-core-values-exporter/azurerm"
+  version = "~> {{lookup @root.terraform.versions 'pagopa-dx/azure-core-values-exporter/azurerm'}}"
+
+  providers = {
+    azurerm = azurerm.{{snakeCase displayName}}
+  }
+
+  core_state = {
+    resource_group_name  = "{{@root.terraform.backend.resourceGroupName}}"
+    storage_account_name = "{{@root.terraform.backend.storageAccountName}}"
+    container_name       = "terraform-state"
+    key                  = "{{@root.env.prefix}}.core.{{@root.env.name}}.tfstate"
+  }
+}
+
+module "{{accountPrefix this}}_bootstrap" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~> {{lookup @root.terraform.versions 'pagopa-dx/azure-github-environment-bootstrap/azurerm'}}"
+
+  providers = {
+    azurerm = azurerm.{{snakeCase displayName}}
+  }
+
+  environment = local.environment.{{accountPrefix this}}
+
+  subscription_id = module.{{accountPrefix this}}_core_values.subscription_id
+  tenant_id       = module.{{accountPrefix this}}_core_values.tenant_id
+
+  entraid_groups = {
+    admins_object_id    = data.azuread_group.admins.object_id
+    devs_object_id      = data.azuread_group.developers.object_id
+    externals_object_id = data.azuread_group.externals.object_id
+  }
+
+  terraform_storage_account = {
+    name                = "{{@root.terraform.backend.storageAccountName}}"
+    resource_group_name = "{{@root.terraform.backend.resourceGroupName}}"
+  }
+
+  repository = {
+    owner = "{{@root.github.owner}}"
+    name  = "{{@root.github.repo}}"
+  }
+
+  github_private_runner = {
+    container_app_environment_id       = module.{{accountPrefix this}}_core_values.github_runner.environment_id
+    container_app_environment_location = local.environment.{{accountPrefix this}}.location
+    labels = [
+      "{{@root.env.name}}"
+    ]
+    key_vault = {
+      name                = module.{{accountPrefix this}}_core_values.common_key_vault.name
+      resource_group_name = module.{{accountPrefix this}}_core_values.common_key_vault.resource_group_name
+    }
+  }
+
+  pep_vnet_id                        = module.{{accountPrefix this}}_core_values.common_vnet.id
+  private_dns_zone_resource_group_id = module.{{accountPrefix this}}_core_values.network_resource_group_id
+  opex_resource_group_id             = module.{{accountPrefix this}}_core_values.opex_resource_group_id
+
+  tags = local.tags
+}
+
+{{/each}}
+
+
