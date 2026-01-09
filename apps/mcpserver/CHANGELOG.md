@@ -1,5 +1,26 @@
 # @pagopa/dx-mcpserver
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [9fb9054]
+  - @pagopa/dx-mcpprompts@0.2.0
+
+## 0.0.11
+
+### Patch Changes
+
+- 9bb018b: Add server.json file according to MCP standards
+- Updated dependencies [440fbe1]
+  - @pagopa/dx-mcpprompts@0.1.3
+
+## 0.0.10
+
+### Patch Changes
+
+- 62b11e5: Add button to install the DX MCP server in VS Code
+
 ## 0.0.9
 
 ### Patch Changes

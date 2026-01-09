@@ -186,9 +186,14 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 		"s3_bucket_policy":                  "s3-policy",
 		"s3_bucket_public_access_block":     "s3-public-block",
 		"s3_bucket_versioning":              "s3-versioning",
+		"s3_vector_bucket":                  "s3-vector",
+		"s3_vector_bucket_index":            "s3-vector-idx",
 
 		// Systems Manager
 		"ssm_parameter": "ssm-param",
+
+		// AI/ML
+		"bedrock_knowledge_base": "bedrock-kb",
 	}
 
 	resp.Error = function.ConcatFuncErrors(resp.Error, req.Arguments.Get(ctx, &configuration))

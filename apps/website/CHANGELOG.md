@@ -1,5 +1,40 @@
 # docs
 
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [9fb9054]
+  - @pagopa/dx-mcpprompts@0.2.0
+
+## 0.11.3
+
+### Patch Changes
+
+- 84422c0: Update dependencies
+
+## 0.11.2
+
+### Patch Changes
+
+- af0079a: Fix formatting of the tip blocks that did not render as expected
+
+## 0.11.1
+
+### Patch Changes
+
+- 62b11e5: Add button to install the DX MCP server in VS Code
+
+## 0.11.0
+
+### Minor Changes
+
+- 9e0333e: Add Blog page about new DX tool: SaveMoney
+
+### Patch Changes
+
+- fcaf084: Remove the "Edit this page" link from website's pages
+
 ## 0.10.3
 
 ### Patch Changes

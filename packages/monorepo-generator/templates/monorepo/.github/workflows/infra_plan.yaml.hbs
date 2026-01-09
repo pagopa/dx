@@ -19,6 +19,10 @@ jobs:
   code_review_{{this}}:
     uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: Code Review Infrastructure Plan ({{this}})
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     secrets: inherit
     with:
       environment: '{{this}}'

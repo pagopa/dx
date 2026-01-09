@@ -76,6 +76,19 @@ data "azurerm_key_vault" "kv" {
   }))
 }
 
+data "azurerm_log_analytics_workspace" "law" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = null,
+    name          = "common",
+    resource_type = "resource_group"
+  }))
+}
+
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
 }
@@ -91,6 +104,11 @@ output "resource_group_name" {
 output "kv_id" {
   value = data.azurerm_key_vault.kv.id
 }
+
+output "log_analytics_workspace_id" {
+  value = data.azurerm_log_analytics_workspace.law.id
+}
+
 output "tags" {
   value = var.tags
 }

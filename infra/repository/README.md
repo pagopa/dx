@@ -11,7 +11,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_github"></a> [github](#provider\_github) | 6.6.0 |
+| <a name="provider_github"></a> [github](#provider\_github) | 6.9.0 |
 
 ## Modules
 

@@ -3,7 +3,7 @@
   "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
-    "@devcontainers/cli": "^0.80.2",
+    "@devcontainers/cli": "^0.80.3",
     "@nx/docker": "22.1.0",
     "@nx/eslint": "22.1.0",
     "@nx/js": "22.1.0",
@@ -16,11 +16,11 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "version": "changeset version && pnpm i --lockfile-only",
+    "version": "changeset version && pnpm i --lockfile-only && nx run-many --target=version",
     "release": "nx run-many --target=build --projects=tag:npm:public && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
     "sbom-validate": "sh sbom.sh --validate",
-    "dx": "ENABLE_INIT=1 node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check --configuration=ci"
+    "dx": "node ./apps/cli/bin/index.js",
+    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check,typecheck --configuration=ci"
   }
 }

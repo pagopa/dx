@@ -27,9 +27,13 @@ export const makeCli = (
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
-  program.addCommand(makeInitCommand());
+  program.addCommand(makeInitCommand(deps));
   program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps));
 
   return program;
+};
+
+export const exitWithError = (command: Command) => (error: Error) => {
+  command.error(error.message);
 };

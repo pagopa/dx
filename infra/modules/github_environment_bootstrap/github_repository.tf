@@ -35,10 +35,6 @@ resource "github_repository" "this" {
     secret_scanning_push_protection {
       status = "enabled"
     }
-
-    advanced_security {
-      status = "enabled"
-    }
   }
 
   dynamic "pages" {

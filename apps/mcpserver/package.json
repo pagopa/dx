@@ -1,8 +1,8 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.0.9",
+  "version": "0.0.12",
   "type": "module",
-  "description": "An MCP server that support developers using DX tools.",
+  "description": "An MCP server that supports developers using DX tools.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -41,6 +41,8 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "version": "node ./scripts/generate-server-manifest.js"
   }
 }

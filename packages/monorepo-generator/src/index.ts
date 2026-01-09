@@ -8,18 +8,15 @@ import { Octokit } from "octokit";
 import { z } from "zod/v4";
 
 import { getLatestNodeVersion } from "./actions/node.js";
-import {
-  addPagoPaPnpmPlugin,
-  configureChangesets,
-  configureDevContainer,
-  enablePnpm,
-  installRootDependencies,
-} from "./actions/pnpm.js";
+import { setupMonorepoWithPnpm } from "./actions/pnpm.js";
 import { terraformVersionActions } from "./actions/terraform.js";
+import { fillWithZero } from "./adapters/node/string.js";
 
 const trimmedString = z.string().trim();
 
-const answersSchema = z.object({
+export const PLOP_MONOREPO_GENERATOR_NAME = "monorepo";
+
+export const answersSchema = z.object({
   awsAccountId: z
     .string()
     .regex(/^\d{12}$/, "AWS Account ID must be a 12-digit number")
@@ -37,10 +34,9 @@ const answersSchema = z.object({
   domain: trimmedString.min(1, "Domain cannot be empty"),
   envInstanceNumber: z
     .string()
-    .regex(/^[1-9][0-9]?$/, "Instance number must be a number between 1 and 99")
-    .transform((val) =>
-      // Return zero-padded string (e.g. "01")
-      val.padStart(2, "0"),
+    .regex(
+      /^[1-9][0-9]?$/,
+      "Instance number must be a number between 1 and 99",
     ),
   environments: z
     .array(z.literal(["dev", "prod", "uat"]))
@@ -52,17 +48,16 @@ const answersSchema = z.object({
   repoDescription: z.string().optional(),
   repoName: trimmedString.min(1, "Repository name cannot be empty"),
   repoOwner: trimmedString.default("pagopa"),
-  repoSrc: trimmedString.min(1, "Repository source path cannot be empty"),
   tfStateResourceGroupName: z.string().default("dx-d-itn-terraform-rg-01"),
   tfStateStorageAccountName: z.string().default("dxditntfst01"),
 });
 
+export type Answers = z.infer<typeof answersSchema>;
 interface ActionsDependencies {
   octokitClient: Octokit;
   plopApi: NodePlopAPI;
   templatesPath: string;
 }
-type Answers = z.infer<typeof answersSchema>;
 type Environment = z.infer<typeof answersSchema.shape.environments>[number];
 
 const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
@@ -74,11 +69,6 @@ const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
 };
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
-  {
-    default: process.cwd(),
-    message: "Where do you want to create the repository?",
-    name: "repoSrc",
-  },
   {
     message: "What is the repository name?",
     name: "repoName",
@@ -202,7 +192,7 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: templatesPath,
-    destination: "{{repoSrc}}/{{repoName}}",
+    destination: "{{repoName}}",
     globOptions: { dot: true, onlyFiles: true },
     templateFiles: path.join(templatesPath, ".*"),
     type: "addMany",
@@ -210,13 +200,13 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/.github/workflows`,
-    destination: "{{repoSrc}}/{{repoName}}/.github/workflows",
+    destination: "{{repoName}}/.github/workflows",
     globOptions: { dot: true, onlyFiles: true },
     templateFiles: path.join(templatesPath, ".github", "workflows", "*.hbs"),
     type: "addMany",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/.gitignore",
+    path: "{{repoName}}/.gitignore",
     transform: (content) =>
       content
         .trimEnd()
@@ -229,17 +219,17 @@ const getDotFiles = (templatesPath: string): ActionType[] => [
 
 const getMonorepoFiles = (templatesPath: string): ActionType[] => [
   {
-    path: "{{repoSrc}}/{{repoName}}/turbo.json",
+    path: "{{repoName}}/turbo.json",
     templateFile: path.join(templatesPath, "turbo.json"),
     type: "add",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/package.json",
+    path: "{{repoName}}/package.json",
     templateFile: path.join(templatesPath, "package.json.hbs"),
     type: "add",
   },
   {
-    path: "{{repoSrc}}/{{repoName}}/README.md",
+    path: "{{repoName}}/README.md",
     templateFile: path.join(templatesPath, "README.md.hbs"),
     type: "add",
   },
@@ -249,7 +239,7 @@ const getTerraformRepositoryFiles = (templatesPath: string): ActionType[] => [
   {
     abortOnFail: true,
     base: `${templatesPath}/infra/repository`,
-    destination: "{{repoSrc}}/{{repoName}}/infra/repository",
+    destination: "{{repoName}}/infra/repository",
     templateFiles: path.join(templatesPath, "infra", "repository", "*.tf.hbs"),
     type: "addMany",
   },
@@ -298,7 +288,7 @@ const getTerraformEnvironmentFiles =
         envShort: toEnvShort(env),
         instanceNumber: envInstanceNumber,
       },
-      destination: `{{repoSrc}}/{{repoName}}/infra/bootstrapper/${env}`,
+      destination: `{{repoName}}/infra/bootstrapper/${env}`,
       templateFiles: path.join(
         templatesPath,
         "infra",
@@ -325,20 +315,21 @@ const getActions =
       ...data.environments.flatMap((env) =>
         getTerraformEnvironmentFiles(templatesPath)(env, data),
       ),
-      enablePnpm,
-      addPagoPaPnpmPlugin,
-      installRootDependencies,
-      configureChangesets,
-      configureDevContainer,
+      setupMonorepoWithPnpm(data),
     ];
   };
 
 const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
   const entryPointDirectory = path.dirname(fileURLToPath(import.meta.url));
-  const templatesPath = path.join(entryPointDirectory, "monorepo");
+  const templatesPath = path.join(
+    entryPointDirectory,
+    PLOP_MONOREPO_GENERATOR_NAME,
+  );
   const octokitClient = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-  plopApi.setGenerator("monorepo", {
+  plopApi.setHelper("fillWithZero", fillWithZero);
+
+  plopApi.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions({ octokitClient, plopApi, templatesPath }),
     description: "A scaffold for a monorepo repository",
     prompts: getPrompts(),

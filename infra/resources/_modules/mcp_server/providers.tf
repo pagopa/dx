@@ -3,6 +3,9 @@ terraform {
     aws = {
       source = "hashicorp/aws"
     }
+    awscc = {
+      source = "hashicorp/awscc"
+    }
     awsdx = {
       source = "pagopa-dx/aws"
     }

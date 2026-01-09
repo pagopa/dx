@@ -169,7 +169,9 @@ yarn --version
 
 In Visual Studio Code you can rebuild the development container by running the
 `Dev Containers: Rebuild Container` command from the command palette. In the
-terminal, you can run the `devcontainer up --workspace-folder .` command. :::
+terminal, you can run the `devcontainer up --workspace-folder .` command.
+
+:::
 
 ### Execute `yarn install` on start
 
@@ -265,7 +267,9 @@ Some features includes customizations that are automatically applied to the
 development container. For example the
 [Official Terraform Feature](https://github.com/devcontainers/features/tree/main/src/terraform)
 automatically installs the `hashicorp.terraform` VSC extension and sets up the
-`terraform` language server. :::
+`terraform` language server.
+
+:::
 
 ### Use a `Dockerfile` instead of a prebuilt image
 
@@ -331,7 +335,9 @@ like databases, caches, or message brokers alongside the development container.
 A real-world example of this setup can be found in the
 [pagopa/io-messages GitHub repository](https://github.com/pagopa/io-messages/blob/main/.devcontainer/devcontainer.json)
 where the development container is started alongside a `redis`, `azurite` and
-other services using Docker Compose. :::
+other services using Docker Compose.
+
+:::
 
 ### Extra: Use a Development Container Template
 

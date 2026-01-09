@@ -1,5 +1,36 @@
 # @pagopa/monorepo-generator
 
+## 0.14.1
+
+### Patch Changes
+
+- 84422c0: Remove zod as devDependency since it's already listed as dependency
+- 84422c0: Update dependencies
+- a65c2a7: Add missing permissions on workflows that prevent the execution when triggered
+- 91e5911: Refactored the pnpm setup action: renamed the function to `setupMonorepoWithPnpm` to better reflect its purpose, as it uses pnpm to bootstrap the monorepo tooling (plugins, turbo, changesets, devcontainer, etc.), not just configure pnpm itself.
+
+  Additionally, addressed an issue where the action did not work as expected due to the previous removal of the `repoSrc` key. The function signature and logic were updated to align with the current structure, ensuring correct monorepo initialization.
+
+  With these changes, the scaffolder now properly generates all pnpm-related configuration and setup, ensuring a working monorepo environment out of the box.
+
+## 0.13.0
+
+### Minor Changes
+
+- 49a0087: Remove repoSrc
+
+### Patch Changes
+
+- 200a33b: Fix format of module's version
+
+## 0.12.0
+
+### Patch Changes
+
+- 9998df5: Add the helper that converts a string containing a number into a two digits string.
+- 5399a25: Add the `use_azuread_auth` property to the Azure backend configuration.
+- 9998df5: Export the `Answers` type and its Zod schema
+
 ## 0.11.2
 
 ### Patch Changes

@@ -134,6 +134,7 @@ func getResourceAbbreviations() map[string]string {
 		"app_service":          "app",
 		"app_service_plan":     "asp",
 		"static_web_app":       "stapp",
+		"api_center":           "apic",
 
 		// Security
 		"key_vault":        "kv",
