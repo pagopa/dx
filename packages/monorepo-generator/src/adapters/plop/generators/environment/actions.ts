@@ -1,6 +1,7 @@
 import { type DynamicActionsFunction } from "node-plop";
 import * as path from "node:path";
 
+import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { payloadSchema } from "./prompts.js";
 
 const actions: (templatesPath: string) => DynamicActionsFunction =
@@ -72,6 +73,7 @@ const actions: (templatesPath: string) => DynamicActionsFunction =
         destination: "infra",
         force: true,
         templateFiles: path.join(templatesPath, "environment", "bootstrapper"),
+        transform: formatTerraformCode,
         type: "addMany",
         verbose: true,
       },
@@ -93,6 +95,7 @@ const actions: (templatesPath: string) => DynamicActionsFunction =
         destination: "infra",
         force: true,
         templateFiles: path.join(templatesPath, "environment", "core"),
+        transform: formatTerraformCode,
         type: "addMany",
         verbose: true,
       });
