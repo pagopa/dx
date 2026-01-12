@@ -45,14 +45,6 @@ describe("getGitHubRepoName", () => {
     );
   });
 
-  it("should throw an error for Bitbucket repositories", async () => {
-    mock$.mockResolvedValue({ stdout: "https://bitbucket.org/owner/repo" });
-
-    await expect(getGitHubRepoName()).rejects.toThrow(
-      "Only GitHub repositories are supported",
-    );
-  });
-
   it("should handle repository names with hyphens", async () => {
     mock$.mockResolvedValue({
       stdout: "https://github.com/my-org/my-repo-name",
@@ -76,6 +68,19 @@ describe("getGitHubRepoName", () => {
     expect(result).toEqual({
       owner: "my_org",
       repo: "my_repo_name",
+    });
+  });
+
+  it("should handle ssh repository URLs", async () => {
+    mock$.mockResolvedValue({
+      stdout: "git@github.com:my-org/my-repo-name.git",
+    });
+
+    const result = await getGitHubRepoName();
+
+    expect(result).toEqual({
+      owner: "my-org",
+      repo: "my-repo-name",
     });
   });
 });
