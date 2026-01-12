@@ -1,5 +1,12 @@
 # docs
 
+## 0.11.5
+
+### Patch Changes
+
+- dce58f4: Document MCP Server GH PAT setup in DX website
+- b327972: Switch package manager from Yarn to pnpm in documentation.
+
 ## 0.11.4
 
 ### Patch Changes
