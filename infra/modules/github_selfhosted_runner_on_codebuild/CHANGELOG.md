@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_codebuild
 
+## 1.1.0
+
+### Minor Changes
+
+- 9b4e4de: Update aws provider supported version for all examples
+
 ## 1.0.2
 
 ### Patch Changes
