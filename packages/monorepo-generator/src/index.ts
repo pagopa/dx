@@ -340,15 +340,12 @@ const scaffoldMonorepo = (plopApi: NodePlopAPI) => {
 export default scaffoldMonorepo;
 
 export const setDeploymentEnvironmentGenerator = (plop: NodePlopAPI) => {
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
   const credential = new DefaultAzureCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
 
   createDeploymentEnvironmentGenerator(
     plop,
-    octokit,
     cloudAccountRepository,
     cloudAccountService,
   );

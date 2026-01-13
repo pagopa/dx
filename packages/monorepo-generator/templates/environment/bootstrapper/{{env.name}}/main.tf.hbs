@@ -2,7 +2,7 @@
 
 module "{{accountPrefix this}}_core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> {{lookup @root.terraform.versions 'pagopa-dx/azure-core-values-exporter/azurerm'}}"
+  version = "~> 0.0"
 
   providers = {
     azurerm = azurerm.{{snakeCase displayName}}
@@ -18,7 +18,7 @@ module "{{accountPrefix this}}_core_values" {
 
 module "{{accountPrefix this}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> {{lookup @root.terraform.versions 'pagopa-dx/azure-github-environment-bootstrap/azurerm'}}"
+  version = "~> 3.0"
 
   providers = {
     azurerm = azurerm.{{snakeCase displayName}}

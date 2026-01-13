@@ -1,12 +1,10 @@
 import { type NodePlopAPI } from "node-plop";
 import * as path from "node:path";
-import { Octokit } from "octokit";
 
 import {
   CloudAccountRepository,
   CloudAccountService,
 } from "../../../../domain/cloud-account.js";
-import setFetchTerraformVersionsAction from "../../actions/fetch-terraform-versions.js";
 import setGetGitHubRepoNameAction from "../../actions/get-github-repo-name.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
@@ -18,7 +16,6 @@ import prompts from "./prompts.js";
 
 export default function (
   plop: NodePlopAPI,
-  octokit: Octokit,
   cloudAccountRepository: CloudAccountRepository,
   cloudAccountService: CloudAccountService,
 ) {
@@ -32,7 +29,6 @@ export default function (
 
   setGetTerraformBackend(plop, cloudAccountService);
   setGetGitHubRepoNameAction(plop);
-  setFetchTerraformVersionsAction(plop, octokit);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setInitCloudAccountsAction(plop, cloudAccountService);
 
