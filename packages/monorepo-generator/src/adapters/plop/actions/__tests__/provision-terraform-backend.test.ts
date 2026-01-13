@@ -44,6 +44,10 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
     name: "dev",
     prefix: "dx",
   },
+  github: {
+    owner: "pagopa",
+    repo: "dx",
+  },
   init: {
     cloudAccountsToInitialize: [],
     terraformBackend: {

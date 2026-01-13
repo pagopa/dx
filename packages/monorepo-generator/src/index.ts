@@ -344,8 +344,14 @@ export const setDeploymentEnvironmentGenerator = (plop: NodePlopAPI) => {
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
 
+  const templatesPath = path.join(
+    import.meta.dirname,
+    "../templates/environment",
+  );
+
   createDeploymentEnvironmentGenerator(
     plop,
+    templatesPath,
     cloudAccountRepository,
     cloudAccountService,
   );

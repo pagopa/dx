@@ -1,18 +1,19 @@
-{{#each env.cloudAccounts}}
-
-module "{{accountPrefix this}}_core" {
+{{#with cloudAccountsByCsp.azure}}
+{{#each this}}
+module "azure-{{displayName}}_core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
   version = "~> 2.0"
 
   providers = {
-    azurerm = azurerm.{{snakeCase displayName}}
+    azurerm = azurerm.{{displayName}}
   }
 
-  environment = local.environment.{{accountPrefix this}}
+  environment = merge(local.environment, local.azure_accounts.{{displayName}})
 
   tags = local.tags
 }
 
 {{/each}}
+{{/with}}
 
 

@@ -1,12 +1,16 @@
 import { $ } from "execa";
-import { type NodePlopAPI } from "node-plop";
 import * as assert from "node:assert/strict";
 
-import { githubRepoSchema } from "../../../domain/github-repo.js";
+import { githubRepoSchema } from "../../domain/github-repo.js";
+import { GitHubRepo } from "../../domain/github-repo.js";
 
-export const getGitHubRepoName = async () => {
+export const getGithubRepo = async (): Promise<GitHubRepo | undefined> => {
   const result = await $`git config --get remote.origin.url`;
   const repoUrl = result.stdout.trim();
+
+  if (repoUrl === "") {
+    return undefined;
+  }
 
   let owner: string;
   let repo: string;
@@ -35,10 +39,3 @@ export const getGitHubRepoName = async () => {
     repo,
   });
 };
-
-export default function (plop: NodePlopAPI) {
-  plop.setActionType("getGitHubRepoName", async (data) => {
-    data.github = await getGitHubRepoName();
-    return "GitHub Repository Retrieved";
-  });
-}

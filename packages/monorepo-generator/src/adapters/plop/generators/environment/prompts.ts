@@ -19,7 +19,9 @@ type InquirerChoice<T> = inquirer.Separator | { name: string; value: T };
 
 import { z } from "zod/v4";
 
+import { githubRepoSchema } from "../../../../domain/github-repo.js";
 import { workspaceSchema } from "../../../../domain/workspace.js";
+import { getGithubRepo } from "../../../github/github-repo.js";
 
 const initSchema = z.object({
   cloudAccountsToInitialize: z.array(cloudAccountSchema),
@@ -34,6 +36,7 @@ const tagsSchema = z.record(z.string(), z.string().min(1));
 
 export const payloadSchema = z.object({
   env: environmentSchema,
+  github: githubRepoSchema,
   init: initSchema.optional(),
   tags: tagsSchema,
   workspace: workspaceSchema,
@@ -48,90 +51,94 @@ export interface PromptsDependencies {
 
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (inquirer) => {
-    const payload = payloadSchema.parse(
-      await inquirer.prompt([
-        {
-          choices: [
-            { name: "PROD", value: "prod" },
-            { name: "UAT", value: "uat" },
-            { name: "DEV", value: "dev" },
-          ],
-          default: "prod",
-          message: "Environment name",
-          name: "env.name",
-          type: "list",
-        },
-        {
-          choices: [{ name: "Microsoft Azure", value: "azure" }],
-          default: ["azure"],
-          message: "Cloud provider(s)",
-          name: "csp",
-          type: "checkbox",
-          validate: (value) =>
-            Array.isArray(value) && value.length > 0
-              ? true
-              : "Please select at least one cloud provider.",
-        },
-        {
-          choices: async () =>
-            getCloudAccountChoices(await deps.cloudAccountRepository.list()),
-          loop: false,
-          message: "Account(s)",
-          name: "env.cloudAccounts",
-          type: "checkbox",
-          validate: (value) =>
-            Array.isArray(value) && value.length > 0
-              ? true
-              : "Please select a cloud account.",
-        },
-        {
-          message: "Prefix (2-4 characters)",
-          name: "env.prefix",
-          transformer: (value) => value.trim().toLowerCase(),
-          type: "input",
-          validate: (value) =>
-            value.length >= 2 && value.length <= 4
-              ? true
-              : "Please enter a valid prefix.",
-        },
-        {
-          message: "Domain (optional)",
-          name: "workspace.domain",
-          transformer: (value) => value.trim().toLowerCase(),
-          type: "input",
-        },
-        {
-          choices: [
-            {
-              name: "TECNOLOGIA E SERVIZI",
-              value: "TS000",
-            },
-          ],
-          default: "TS000 - Tecnologia e Servizi",
-          message: "Cost center",
-          name: "tags.CostCenter",
-          type: "list",
-          validate: (value) =>
-            Array.isArray(value) && value.length > 0
-              ? true
-              : "Please select a Cost Center.",
-        },
-        {
-          message: "Business unit",
-          name: "tags.BusinessUnit",
-          transformer: (value) => value.trim(),
-          validate: (value) =>
-            value.trim().length > 0 ? true : "Business Unit cannot be empty.",
-        },
-        {
-          message: "Management team",
-          name: "tags.ManagementTeam",
-          transformer: (value) => value.trim(),
-          validate: (value) =>
-            value.trim().length > 0 ? true : "Management Team cannot be empty.",
-        },
-      ]),
-    );
+    const github = await getGithubRepo();
+
+    assert.ok(github, "This generator only works inside a GitHub repository.");
+
+    const answers = await inquirer.prompt([
+      {
+        choices: [
+          { name: "PROD", value: "prod" },
+          { name: "UAT", value: "uat" },
+          { name: "DEV", value: "dev" },
+        ],
+        default: "prod",
+        message: "Environment name",
+        name: "env.name",
+        type: "list",
+      },
+      {
+        choices: [{ name: "Microsoft Azure", value: "azure" }],
+        default: ["azure"],
+        message: "Cloud provider(s)",
+        name: "csp",
+        type: "checkbox",
+        validate: (value) =>
+          Array.isArray(value) && value.length > 0
+            ? true
+            : "Please select at least one cloud provider.",
+      },
+      {
+        choices: async () =>
+          getCloudAccountChoices(await deps.cloudAccountRepository.list()),
+        loop: false,
+        message: "Account(s)",
+        name: "env.cloudAccounts",
+        type: "checkbox",
+        validate: (value) =>
+          Array.isArray(value) && value.length > 0
+            ? true
+            : "Please select a cloud account.",
+      },
+      {
+        message: "Prefix (2-4 characters)",
+        name: "env.prefix",
+        transformer: (value) => value.trim().toLowerCase(),
+        type: "input",
+        validate: (value) =>
+          value.length >= 2 && value.length <= 4
+            ? true
+            : "Please enter a valid prefix.",
+      },
+      {
+        message: "Domain (optional)",
+        name: "workspace.domain",
+        transformer: (value) => value.trim().toLowerCase(),
+        type: "input",
+      },
+      {
+        choices: [
+          {
+            name: "TECNOLOGIA E SERVIZI",
+            value: "TS000",
+          },
+        ],
+        default: "TS000 - Tecnologia e Servizi",
+        message: "Cost center",
+        name: "tags.CostCenter",
+        type: "list",
+        validate: (value) =>
+          Array.isArray(value) && value.length > 0
+            ? true
+            : "Please select a Cost Center.",
+      },
+      {
+        message: "Business unit",
+        name: "tags.BusinessUnit",
+        transformer: (value) => value.trim(),
+        validate: (value) =>
+          value.trim().length > 0 ? true : "Business Unit cannot be empty.",
+      },
+      {
+        message: "Management team",
+        name: "tags.ManagementTeam",
+        transformer: (value) => value.trim(),
+        validate: (value) =>
+          value.trim().length > 0 ? true : "Management Team cannot be empty.",
+      },
+    ]);
+
+    const payload = payloadSchema.parse({ ...answers, github });
 
     const locations = await inquirer.prompt(
       payload.env.cloudAccounts.map((account) => ({

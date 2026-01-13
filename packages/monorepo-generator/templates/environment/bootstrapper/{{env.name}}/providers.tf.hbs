@@ -1,5 +1,6 @@
 terraform {
   required_providers {
+    {{#with cloudAccountsByCsp.azure}}
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -9,32 +10,17 @@ terraform {
       source  = "hashicorp/azuread"
       version = "~> 2.0"
     }
-
-    dx = {
-      source  = "pagopa-dx/azure"
-      version = "~> 0.0"
-    }
-  }
-
-  backend "azurerm" {
-    resource_group_name  = "{{terraform.backend.resourceGroupName}}"
-    storage_account_name = "{{terraform.backend.storageAccountName}}"
-    container_name       = "terraform-state"
-    key                  = "{{github.repo}}.bootstrapper.{{env.name}}.tfstate"
-    subscription_id      = "{{terraform.backend.subscriptionId}}"
-    use_azuread_auth     = true
+    {{/with}}
   }
 }
 
-{{#each env.cloudAccounts}}
+{{#with cloudAccountsByCsp.azure}}
+{{#each this}}
 provider "azurerm" {
   features {}
   storage_use_azuread = true
   subscription_id     = "{{id}}"
-  alias               = "{{snakeCase displayName}}"
+  alias               = "{{displayName}}"
 }
-
 {{/each}}
-
-provider "dx" {}
-
+{{/with}}

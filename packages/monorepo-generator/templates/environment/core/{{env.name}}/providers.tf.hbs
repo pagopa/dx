@@ -1,28 +1,21 @@
 terraform {
   required_providers {
+    {{#with cloudAccountsByCsp.azure}}
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-  }
-
-  backend "azurerm" {
-    resource_group_name  = "{{terraform.backend.resourceGroupName}}"
-    storage_account_name = "{{terraform.backend.storageAccountName}}"
-    container_name       = "terraform-state"
-    key                  = "{{env.prefix}}.core.{{env.name}}.tfstate"
-    subscription_id      = "{{terraform.backend.subscriptionId}}"
-    use_azuread_auth     = true
+    {{/with}}
   }
 }
 
-{{#each env.cloudAccounts}}
+{{#with cloudAccountsByCsp.azure}}
+{{#each this}}
 provider "azurerm" {
   features {}
   storage_use_azuread = true
   subscription_id     = "{{id}}"
-  alias               = "{{snakeCase displayName}}"
+  alias               = "{{displayName}}"
 }
-
 {{/each}}
-
+{{/with}}

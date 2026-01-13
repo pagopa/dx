@@ -3,7 +3,7 @@ import { execa } from "execa";
 export async function formatTerraformCode(sourceCode: string) {
   try {
     const result = await execa({
-      input: sourceCode,
+      input: sourceCode.trim(),
     })("terraform", ["fmt", "-"]);
     return result.stdout;
   } catch {

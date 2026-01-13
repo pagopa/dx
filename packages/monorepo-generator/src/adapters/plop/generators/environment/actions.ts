@@ -1,54 +1,77 @@
-import { type DynamicActionsFunction } from "node-plop";
+import type { ActionType, DynamicActionsFunction } from "node-plop";
+
 import * as path from "node:path";
 
+import { Environment } from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { payloadSchema } from "./prompts.js";
 
-const actions: (templatesPath: string) => DynamicActionsFunction =
-  (templatesPath) => (data) => {
-    const payload = payloadSchema.parse(data);
+const addModule = (env: Environment, templatesPath: string) => {
+  const cloudAccountsByCsp = Object.groupBy(
+    env.cloudAccounts,
+    (account) => account.csp,
+  );
+  return (name: string, terraformBackendKey: string) => [
+    {
+      base: templatesPath,
+      data: { cloudAccountsByCsp },
+      destination: "infra",
+      force: true,
+      templateFiles: path.join(templatesPath, name),
+      transform: formatTerraformCode,
+      type: "addMany",
+      verbose: true,
+    },
+    {
+      base: path.join(templatesPath, "shared"),
+      data: { cloudAccountsByCsp, terraformBackendKey },
+      destination: `infra/${name}/{{env.name}}`,
+      force: true,
+      templateFiles: path.join(templatesPath, "shared"),
+      transform: formatTerraformCode,
+      type: "addMany",
+      verbose: true,
+    },
+  ];
+};
 
-    const actions = [
-      {
-        type: "getGitHubRepoName",
-      },
+export default function getActions(
+  templatesPath: string,
+): DynamicActionsFunction {
+  return (payload: unknown) => {
+    const { env, github, init } = payloadSchema.parse(payload);
+
+    const addEnvironmentModule = addModule(env, templatesPath);
+
+    const actions: ActionType[] = [
       {
         type: "getTerraformBackend",
       },
-      {
-        base: path.join(templatesPath, "environment"),
-        destination: "infra",
-        force: true,
-        templateFiles: path.join(templatesPath, "environment", "bootstrapper"),
-        transform: formatTerraformCode,
-        type: "addMany",
-        verbose: true,
-      },
+      ...addEnvironmentModule(
+        "bootstrapper",
+        `${github.repo}.bootstrapper.${env.name}.tfstate`,
+      ),
     ];
 
-    if (payload.init) {
+    if (init) {
       actions.unshift(
         {
           type: "initCloudAccounts",
         },
         {
-          type: payload.init.terraformBackend
+          type: init.terraformBackend
             ? "provisionTerraformBackend"
             : "getTerraformBackend",
         },
       );
-      actions.push({
-        base: path.join(templatesPath, "environment"),
-        destination: "infra",
-        force: true,
-        templateFiles: path.join(templatesPath, "environment", "core"),
-        transform: formatTerraformCode,
-        type: "addMany",
-        verbose: true,
-      });
+      actions.push(
+        ...addEnvironmentModule(
+          "core",
+          `${env.prefix}.core.${env.name}.tfstate`,
+        ),
+      );
     }
 
     return actions;
   };
-
-export default actions;
+}

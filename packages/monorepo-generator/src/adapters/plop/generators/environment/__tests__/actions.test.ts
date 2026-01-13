@@ -19,6 +19,10 @@ export const getPayload = (includeInit = false): Payload => {
       name: "dev",
       prefix: "dx",
     },
+    github: {
+      owner: "pagopa",
+      repo: "dx",
+    },
     tags: {},
     workspace: {
       domain: "mytest",
@@ -46,16 +50,11 @@ describe("actions", () => {
       payload: getPayload(false),
     },
   ])("correct order of actions", ({ payload }) => {
-    const actionsOrder = [
-      "getGitHubRepoName",
-      "getTerraformBackend",
-      "fetchTerraformVersions",
-      "addMany",
-    ];
+    const actionsOrder = ["getTerraformBackend", "addMany", "addMany"];
 
     if (payload.init) {
       actionsOrder.unshift("initCloudAccounts", "provisionTerraformBackend");
-      actionsOrder.push("addMany");
+      actionsOrder.push("addMany", "addMany");
     }
 
     const actions = getActions("/templates/path")(payload);

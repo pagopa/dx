@@ -1,11 +1,11 @@
-{{#each env.cloudAccounts}}
-
-module "{{accountPrefix this}}_core_values" {
+{{#with cloudAccountsByCsp.azure}}
+{{#each this}}
+module "azure-{{displayName}}_core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
   version = "~> 0.0"
 
   providers = {
-    azurerm = azurerm.{{snakeCase displayName}}
+    azurerm = azurerm.{{displayName}}
   }
 
   core_state = {
@@ -16,18 +16,18 @@ module "{{accountPrefix this}}_core_values" {
   }
 }
 
-module "{{accountPrefix this}}_bootstrap" {
+module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 3.0"
 
   providers = {
-    azurerm = azurerm.{{snakeCase displayName}}
+    azurerm = azurerm.{{displayName}}
   }
 
-  environment = local.environment.{{accountPrefix this}}
+  environment = merge(local.environment, local.azure_accounts.{{displayName}})
 
-  subscription_id = module.{{accountPrefix this}}_core_values.subscription_id
-  tenant_id       = module.{{accountPrefix this}}_core_values.tenant_id
+  subscription_id = module.azure-{{displayName}}_core_values.subscription_id
+  tenant_id       = module.azure-{{displayName}}_core_values.tenant_id
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
@@ -46,24 +46,24 @@ module "{{accountPrefix this}}_bootstrap" {
   }
 
   github_private_runner = {
-    container_app_environment_id       = module.{{accountPrefix this}}_core_values.github_runner.environment_id
-    container_app_environment_location = local.environment.{{accountPrefix this}}.location
+    container_app_environment_id       = module.azure-{{displayName}}_core_values.github_runner.environment_id
+    container_app_environment_location = local.azure_accounts.{{displayName}}.location
     labels = [
       "{{@root.env.name}}"
     ]
     key_vault = {
-      name                = module.{{accountPrefix this}}_core_values.common_key_vault.name
-      resource_group_name = module.{{accountPrefix this}}_core_values.common_key_vault.resource_group_name
+      name                = module.azure-{{displayName}}_core_values.common_key_vault.name
+      resource_group_name = module.azure-{{displayName}}_core_values.common_key_vault.resource_group_name
     }
   }
 
-  pep_vnet_id                        = module.{{accountPrefix this}}_core_values.common_vnet.id
-  private_dns_zone_resource_group_id = module.{{accountPrefix this}}_core_values.network_resource_group_id
-  opex_resource_group_id             = module.{{accountPrefix this}}_core_values.opex_resource_group_id
+  pep_vnet_id                        = module.azure-{{displayName}}_core_values.common_vnet.id
+  private_dns_zone_resource_group_id = module.azure-{{displayName}}_core_values.network_resource_group_id
+  opex_resource_group_id             = module.azure-{{displayName}}_core_values.opex_resource_group_id
 
   tags = local.tags
 }
-
 {{/each}}
+{{/with}}
 
 

@@ -6,19 +6,27 @@ vi.mock("execa", () => ({
 
 import { $ } from "execa";
 
-import { getGitHubRepoName } from "../get-github-repo-name.js";
+import { getGithubRepo } from "../github-repo.js";
 
 const mock$ = $ as unknown as ReturnType<typeof vi.fn>;
 
-describe("getGitHubRepoName", () => {
+describe("getGithubRepo", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("should return undefined if no remote URL is set", async () => {
+    mock$.mockResolvedValue({ stdout: "" });
+
+    const result = await getGithubRepo();
+
+    expect(result).toBeUndefined();
   });
 
   it("should parse GitHub repository URL and return owner and repo", async () => {
     mock$.mockResolvedValue({ stdout: "https://github.com/pagopa/dx" });
 
-    const result = await getGitHubRepoName();
+    const result = await getGithubRepo();
 
     expect(result).toEqual({
       owner: "pagopa",
@@ -29,7 +37,7 @@ describe("getGitHubRepoName", () => {
   it("should handle repository URLs with .git suffix", async () => {
     mock$.mockResolvedValue({ stdout: "https://github.com/pagopa/dx.git" });
 
-    const result = await getGitHubRepoName();
+    const result = await getGithubRepo();
 
     expect(result).toEqual({
       owner: "pagopa",
@@ -40,7 +48,7 @@ describe("getGitHubRepoName", () => {
   it("should throw an error for non-GitHub repositories", async () => {
     mock$.mockResolvedValue({ stdout: "https://gitlab.com/owner/repo" });
 
-    await expect(getGitHubRepoName()).rejects.toThrow(
+    await expect(getGithubRepo()).rejects.toThrow(
       "Only GitHub repositories are supported",
     );
   });
@@ -50,7 +58,7 @@ describe("getGitHubRepoName", () => {
       stdout: "https://github.com/my-org/my-repo-name",
     });
 
-    const result = await getGitHubRepoName();
+    const result = await getGithubRepo();
 
     expect(result).toEqual({
       owner: "my-org",
@@ -63,7 +71,7 @@ describe("getGitHubRepoName", () => {
       stdout: "https://github.com/my_org/my_repo_name",
     });
 
-    const result = await getGitHubRepoName();
+    const result = await getGithubRepo();
 
     expect(result).toEqual({
       owner: "my_org",
@@ -76,7 +84,7 @@ describe("getGitHubRepoName", () => {
       stdout: "git@github.com:my-org/my-repo-name.git",
     });
 
-    const result = await getGitHubRepoName();
+    const result = await getGithubRepo();
 
     expect(result).toEqual({
       owner: "my-org",
