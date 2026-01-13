@@ -57,15 +57,14 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
             { name: "DEV", value: "dev" },
           ],
           default: "prod",
-          message: "Enter the name of the new deployment environment",
+          message: "Environment name",
           name: "env.name",
           type: "list",
         },
         {
           choices: [{ name: "Microsoft Azure", value: "azure" }],
           default: ["azure"],
-          message:
-            "Which cloud provider should be configured for this environment?",
+          message: "Cloud provider(s)",
           name: "csp",
           type: "checkbox",
           validate: (value) =>
@@ -77,7 +76,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
           choices: async () =>
             getCloudAccountChoices(await deps.cloudAccountRepository.list()),
           loop: false,
-          message: "Select a cloud account to use for this environment",
+          message: "Account(s)",
           name: "env.cloudAccounts",
           type: "checkbox",
           validate: (value) =>
@@ -86,7 +85,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
               : "Please select a cloud account.",
         },
         {
-          message: "Enter the prefix to use for resource names",
+          message: "Prefix (2-4 characters)",
           name: "env.prefix",
           transformer: (value) => value.trim().toLowerCase(),
           type: "input",
@@ -96,31 +95,40 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
               : "Please enter a valid prefix.",
         },
         {
-          message: "Enter the workspace domain to use for resource names",
+          message: "Domain (optional)",
           name: "workspace.domain",
           transformer: (value) => value.trim().toLowerCase(),
           type: "input",
         },
         {
-          message: "What is the Cost Center for this project?",
+          choices: [
+            {
+              name: "TECNOLOGIA E SERVIZI",
+              value: "TS000",
+            },
+          ],
+          default: "TS000 - Tecnologia e Servizi",
+          message: "Cost center",
           name: "tags.CostCenter",
-          transformer: (value) => value.trim(),
+          type: "list",
           validate: (value) =>
-            value.trim().length > 0 ? true : "Cost Center cannot be empty.",
+            Array.isArray(value) && value.length > 0
+              ? true
+              : "Please select a Cost Center.",
         },
         {
-          message: "What is the Management Team for this project?",
-          name: "tags.ManagementTeam",
-          transformer: (value) => value.trim(),
-          validate: (value) =>
-            value.trim().length > 0 ? true : "Management Team cannot be empty.",
-        },
-        {
-          message: "What is the Business Unit for this project?",
+          message: "Business unit",
           name: "tags.BusinessUnit",
           transformer: (value) => value.trim(),
           validate: (value) =>
             value.trim().length > 0 ? true : "Business Unit cannot be empty.",
+        },
+        {
+          message: "Management team",
+          name: "tags.ManagementTeam",
+          transformer: (value) => value.trim(),
+          validate: (value) =>
+            value.trim().length > 0 ? true : "Management Team cannot be empty.",
         },
       ]),
     );
@@ -128,7 +136,8 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
     const locations = await inquirer.prompt(
       payload.env.cloudAccounts.map((account) => ({
         choices: getCloudLocationChoices(azure.cloudRegions),
-        message: `Select the default location for resources in cloud account ${account.displayName}`,
+        default: azure.defaultLocation,
+        message: `Default location for ${account.displayName}`,
         name: account.id,
         type: "list",
       })),
@@ -164,8 +173,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       },
       {
         choices: getCloudAccountChoices(payload.env.cloudAccounts),
-        message:
-          "Select the cloud account to use for the remote Terraform backend",
+        message: "Cloud Account to use for the remote Terraform backend",
         name: "terraformBackend.cloudAccount",
         type: "list",
         when: (answers) =>
