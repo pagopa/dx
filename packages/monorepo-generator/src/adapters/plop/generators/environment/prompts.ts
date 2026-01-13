@@ -17,6 +17,7 @@ import * as azure from "../../../azure/locations.js";
 
 type InquirerChoice<T> = inquirer.Separator | { name: string; value: T };
 
+import { getLogger } from "@logtape/logtape";
 import { z } from "zod/v4";
 
 import { githubRepoSchema } from "../../../../domain/github-repo.js";
@@ -51,9 +52,13 @@ export interface PromptsDependencies {
 
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (inquirer) => {
+    const logger = getLogger(["gen", "env"]);
+
     const github = await getGithubRepo();
 
     assert.ok(github, "This generator only works inside a GitHub repository.");
+
+    logger.debug("github repo {github}", { github });
 
     const answers = await inquirer.prompt([
       {
@@ -161,6 +166,8 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       deps.cloudAccountService,
       payload.env,
     );
+
+    logger.debug("initialization status {initStatus}", { initStatus });
 
     if (initStatus.initialized) {
       return payload;

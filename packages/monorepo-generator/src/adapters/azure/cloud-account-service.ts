@@ -5,6 +5,7 @@ import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 import { ResourceManagementClient } from "@azure/arm-resources";
 import { StorageManagementClient } from "@azure/arm-storage";
 import { BlobServiceClient } from "@azure/storage-blob";
+import { getLogger } from "@logtape/logtape";
 import * as assert from "node:assert/strict";
 import { z } from "zod/v4";
 
@@ -92,6 +93,9 @@ export class AzureCloudAccountService implements CloudAccountService {
       isAzureLocation(cloudAccount.defaultLocation),
       "The default location of the cloud account is not a valid Azure location",
     );
+
+    const logger = getLogger(["gen", "env"]);
+
     const resourceManagementClient = new ResourceManagementClient(
       this.#credential,
       cloudAccount.id,
@@ -117,6 +121,11 @@ export class AzureCloudAccountService implements CloudAccountService {
       parameters,
     );
 
+    logger.debug(
+      "Created resource group {resourceGroupName} in subscription {subscriptionId}",
+      { resourceGroupName, subscriptionId: cloudAccount.id },
+    );
+
     const msiClient = new ManagedServiceIdentityClient(
       this.#credential,
       cloudAccount.id,
@@ -128,6 +137,11 @@ export class AzureCloudAccountService implements CloudAccountService {
       resourceGroupName,
       identityName,
       parameters,
+    );
+
+    logger.debug(
+      "Created identity {identityName} in subscription {subscriptionId}",
+      { identityName, subscriptionId: cloudAccount.id },
     );
   }
 
@@ -146,10 +160,17 @@ export class AzureCloudAccountService implements CloudAccountService {
       query,
       subscriptions: [cloudAccountId],
     });
-    if (result.totalRecords === 0) {
-      return false;
-    }
-    return true;
+
+    const initialized = result.totalRecords > 0;
+
+    const logger = getLogger(["gen", "env"]);
+
+    logger.debug("subscription {subscriptionId} initialized: {initialized}", {
+      initialized,
+      subscriptionId: cloudAccountId,
+    });
+
+    return initialized;
   }
 
   async provisionTerraformBackend(
@@ -162,6 +183,9 @@ export class AzureCloudAccountService implements CloudAccountService {
       isAzureLocation(cloudAccount.defaultLocation),
       "The default location of the cloud account is not a valid Azure location",
     );
+
+    const logger = getLogger(["gen", "env"]);
+
     const resourceManagementClient = new ResourceManagementClient(
       this.#credential,
       cloudAccount.id,
@@ -185,6 +209,11 @@ export class AzureCloudAccountService implements CloudAccountService {
     await resourceManagementClient.resourceGroups.createOrUpdate(
       resourceGroupName,
       parameters,
+    );
+
+    logger.debug(
+      "Created resource group {resourceGroupName} in subscription {subscriptionId}",
+      { resourceGroupName, subscriptionId: cloudAccount.id },
     );
 
     const storageManagementClient = new StorageManagementClient(
@@ -213,6 +242,14 @@ export class AzureCloudAccountService implements CloudAccountService {
 
     assert.ok(storageAccount.name, "Storage account name is undefined");
 
+    logger.debug(
+      "Created storage account {storageAccountName} in subscription {subscriptionId}",
+      {
+        storageAccountName: storageAccount.name,
+        subscriptionId: cloudAccount.id,
+      },
+    );
+
     const blobServiceClient = new BlobServiceClient(
       storageAccount.primaryEndpoints?.blob,
       this.#credential,
@@ -224,9 +261,10 @@ export class AzureCloudAccountService implements CloudAccountService {
     try {
       await containerClient.create();
     } catch (e) {
-      await storageManagementClient.storageAccounts.delete(
+      // Cleanup resource group if blob container creation fails
+      // resource group deletion also deletes all contained resources
+      await resourceManagementClient.resourceGroups.beginDeleteAndWait(
         resourceGroupName,
-        storageAccount.name,
       );
       throw new Error(`Error during the creation of the blob container`, {
         cause: e,

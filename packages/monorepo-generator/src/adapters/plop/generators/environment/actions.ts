@@ -1,5 +1,6 @@
 import type { ActionType, DynamicActionsFunction } from "node-plop";
 
+import { getLogger } from "@logtape/logtape";
 import * as path from "node:path";
 
 import { Environment } from "../../../../domain/environment.js";
@@ -39,6 +40,10 @@ export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
   return (payload: unknown) => {
+    const logger = getLogger(["gen", "env"]);
+
+    logger.debug("payload {payload}", { payload });
+
     const { env, github, init } = payloadSchema.parse(payload);
 
     const addEnvironmentModule = addModule(env, templatesPath);
