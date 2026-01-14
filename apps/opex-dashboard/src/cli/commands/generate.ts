@@ -9,11 +9,7 @@ import { type BuilderType, createBuilder } from "../../core/builder-factory.js";
 import { loadConfig } from "../../core/config/index.js";
 import { ConfigError } from "../../core/errors/index.js";
 import { OA3Resolver } from "../../core/resolver/index.js";
-import {
-  ensureDirectory,
-  getPackageOutputPath,
-  writeToStdout,
-} from "../helpers/output-writer.js";
+import { ensureDirectory, writeToStdout } from "../helpers/output-writer.js";
 import { cleanupTempFile, downloadSpec } from "../helpers/spec-downloader.js";
 
 /**
@@ -107,7 +103,7 @@ async function generateHandler(options: {
 
     // Output: package or stdout
     if (options.package) {
-      const outputPath = getPackageOutputPath(options.package);
+      const outputPath = options.package;
       await ensureDirectory(outputPath);
       await builder.package(outputPath, overrides);
     } else {

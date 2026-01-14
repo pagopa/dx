@@ -23,13 +23,6 @@ export async function ensureDirectory(dirPath: string): Promise<void> {
 }
 
 /**
- * Get output directory path for packaged templates.
- */
-export function getPackageOutputPath(baseDir: string): string {
-  return baseDir;
-}
-
-/**
  * Write output to stdout.
  */
 export function writeToStdout(content: string): void {
