@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.14.3
+
+### Patch Changes
+
+- 011a256: Add a `console.error` log message to log the error
+
 ## 0.14.2
 
 ### Patch Changes

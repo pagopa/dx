@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.3.0
+
+### Minor Changes
+
+- 707b709: Add subscription_id variable
+
 ## 0.2.4
 
 ### Patch Changes
