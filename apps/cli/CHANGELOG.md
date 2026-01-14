@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.14.2
+
+### Patch Changes
+
+- f04ba73: Add Node.js version check to use-pnpm codemod
+
 ## 0.14.1
 
 ### Patch Changes
