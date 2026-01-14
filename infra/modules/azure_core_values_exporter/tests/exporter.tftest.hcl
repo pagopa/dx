@@ -16,7 +16,7 @@ run "exporter_azurerm_plan_works" {
   }
 
   assert {
-    condition = local.backend_type == "azurerm"
+    condition     = local.backend_type == "azurerm"
     error_message = "Backend type should be azurerm"
   }
 

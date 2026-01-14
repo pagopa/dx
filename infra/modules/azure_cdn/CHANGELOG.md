@@ -1,5 +1,12 @@
 # azure_cdn
 
+## 0.3.3
+
+### Patch Changes
+
+- 5a57729: Document supported CDN origins and usage
+- 7927885: Added endpoint_name output
+
 ## 0.3.2
 
 ### Patch Changes
