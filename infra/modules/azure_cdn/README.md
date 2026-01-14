@@ -176,6 +176,7 @@ No modules.
 |------|-------------|
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |
+| <a name="output_endpoint_name"></a> [endpoint\_name](#output\_endpoint\_name) | The name of the CDN FrontDoor Endpoint |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the CDN FrontDoor Profile |
 | <a name="output_name"></a> [name](#output\_name) | The name of the CDN FrontDoor Profile |
 | <a name="output_origin_group_id"></a> [origin\_group\_id](#output\_origin\_group\_id) | The ID of the CDN FrontDoor Origin Group |
