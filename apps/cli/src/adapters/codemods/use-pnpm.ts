@@ -2,6 +2,7 @@ import { getLogger } from "@logtape/logtape";
 import { $ } from "execa";
 import * as fs from "node:fs/promises";
 import { replaceInFile } from "replace-in-file";
+import semver from "semver";
 import YAML from "yaml";
 
 import { Codemod } from "../../domain/codemod.js";
@@ -156,6 +157,16 @@ async function writePnpmWorkspaceFile(
 }
 
 const apply: Codemod["apply"] = async (info) => {
+  const minNodeVersion = "20.19.5";
+  const currentNodeVersion = process.versions.node;
+
+  if (!semver.gte(currentNodeVersion, minNodeVersion)) {
+    console.error(
+      `This codemod requires Node.js >= ${minNodeVersion}. Current version: ${currentNodeVersion}`,
+    );
+    process.exit(1);
+  }
+
   if (info.packageManager === "pnpm") {
     throw new Error("Project is already using pnpm");
   }
