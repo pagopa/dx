@@ -1,18 +1,21 @@
-# complete
-
-<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | 5.90.1 |
 
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.90.1 |
+
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_runner"></a> [runner](#module\_runner) | ../../ | n/a |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | ~> 5.0 |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | >= 5.0, < 7.0 |
 
 ## Resources
 
@@ -28,4 +31,3 @@ No inputs.
 ## Outputs
 
 No outputs.
-<!-- END_TF_DOCS -->

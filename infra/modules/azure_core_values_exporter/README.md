@@ -67,7 +67,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state. Supports both S3 (AWS) and Azure Storage backends. | <pre>object({<br/>    key = string<br/><br/>    # Azure Storage backend configuration<br/>    storage_account_name = optional(string, null)<br/>    container_name       = optional(string, null)<br/>    resource_group_name  = optional(string, null)<br/><br/>    # S3 backend configuration (AWS)<br/>    bucket         = optional(string, null)<br/>    region         = optional(string, null)<br/>    dynamodb_table = optional(string, null)<br/>  })</pre> | n/a | yes |
+| <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state. Supports both S3 (AWS) and Azure Storage backends. | <pre>object({<br/>    key = string<br/><br/>    # Azure Storage backend configuration<br/>    storage_account_name = optional(string, null)<br/>    container_name       = optional(string, null)<br/>    resource_group_name  = optional(string, null)<br/>    subscription_id      = optional(string, null)<br/><br/>    # S3 backend configuration (AWS)<br/>    bucket         = optional(string, null)<br/>    region         = optional(string, null)<br/>    dynamodb_table = optional(string, null)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
