@@ -458,8 +458,6 @@ importers:
 
   infra/modules/azure_app_service_exposed: {}
 
-  infra/modules/azure_app_service_plan: {}
-
   infra/modules/azure_app_service_plan_autoscaler: {}
 
   infra/modules/azure_cdn: {}
