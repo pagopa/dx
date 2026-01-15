@@ -19,9 +19,11 @@ content.
 
 ## Generating a Personal Access Token
 
-To use the DX CLI, you need a GitHub Personal Access Token (PAT) with the
-following permissions. The token must be created with access to **all
-repositories in the selected organization**.
+To use the DX CLI, you need a GitHub Personal Access Token (PAT). Follow the
+official GitHub documentation to create a fine-grained personal access token:
+[Creating a fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token).
+The token must be created with access to **all repositories in the selected
+organization** and include the following permissions.
 
 ### Organization Permissions
 
