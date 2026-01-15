@@ -92,7 +92,7 @@ export type ToolDefinition = {
     args: Record<string, unknown>,
     context?: ToolContext,
   ) => Promise<Record<string, unknown>> | Promise<string>;
-  name?: string;
+  name: string;
   parameters: z.ZodType<unknown>;
 };
 

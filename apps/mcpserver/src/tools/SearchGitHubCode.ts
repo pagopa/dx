@@ -63,7 +63,6 @@ const SearchGitHubCodeInputSchema = z
     format: z
       .nativeEnum(ResponseFormat)
       .default(ResponseFormat.MARKDOWN)
-      .optional()
       .describe(
         "Output format: 'markdown' for human-readable or 'json' for structured data.",
       ),
@@ -72,7 +71,6 @@ const SearchGitHubCodeInputSchema = z
       .int()
       .min(1, "Page must be at least 1")
       .default(DEFAULT_PAGE)
-      .optional()
       .describe("Page number for paginated results (1-indexed, default: 1)."),
     per_page: z
       .number()
@@ -80,7 +78,6 @@ const SearchGitHubCodeInputSchema = z
       .min(1, "per_page must be at least 1")
       .max(MAX_PER_PAGE, `per_page cannot exceed ${MAX_PER_PAGE}`)
       .default(DEFAULT_PER_PAGE)
-      .optional()
       .describe(
         `Number of results per page (1-${MAX_PER_PAGE}, default: ${DEFAULT_PER_PAGE}).`,
       ),
@@ -194,9 +191,9 @@ Find code examples, patterns, and usage of specific modules or libraries across 
 
       const org = defaultOrg;
       const token = context?.session?.token;
-      const format = parsedArgs.format ?? ResponseFormat.MARKDOWN;
-      const page = parsedArgs.page ?? DEFAULT_PAGE;
-      const perPage = parsedArgs.per_page ?? DEFAULT_PER_PAGE;
+      const format = parsedArgs.format;
+      const page = parsedArgs.page;
+      const perPage = parsedArgs.per_page;
 
       if (!token) {
         return "Error: GitHub token not available in session. Please ensure you are authenticated.";
@@ -209,7 +206,7 @@ Find code examples, patterns, and usage of specific modules or libraries across 
         : "";
       const searchQuery = `${parsedArgs.query} org:${org}${extensionFilter}`;
       logger.info(
-        `Searching GitHub: ${searchQuery} (page ${page}, per_page ${perPage})`,
+        `Searching GitHub: ${searchQuery} (format: ${format}, page ${page}, per_page ${perPage})`,
       );
 
       const { data } = await octokit.rest.search.code({
@@ -305,6 +302,8 @@ Find code examples, patterns, and usage of specific modules or libraries across 
       return handleApiError(error);
     }
   },
+
+  name: "pagopa_search_github_code",
 
   parameters: SearchGitHubCodeInputSchema,
 };

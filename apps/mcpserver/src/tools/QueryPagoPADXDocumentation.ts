@@ -34,15 +34,13 @@ const QueryPagoPADXDocumentationInputSchema = z
       .default(ResponseFormat.MARKDOWN)
       .describe(
         "Output format: 'markdown' for human-readable or 'json' for machine-readable",
-      )
-      .optional(),
+      ),
     number_of_results: z
       .number()
       .int()
       .min(MIN_RESULTS, `Must return at least ${MIN_RESULTS} result`)
       .max(MAX_RESULTS, `Cannot exceed ${MAX_RESULTS} results`)
       .default(DEFAULT_NUMBER_OF_RESULTS)
-      .optional()
       .describe(
         `Number of documentation chunks to retrieve (${MIN_RESULTS}-${MAX_RESULTS}, default: ${DEFAULT_NUMBER_OF_RESULTS}). Use more for comprehensive answers, fewer for quick lookups.`,
       ),
@@ -123,8 +121,7 @@ Error Handling:
       const parsedArgs: QueryPagoPADXDocumentationInput =
         QueryPagoPADXDocumentationInputSchema.parse(args);
 
-      const numberOfResults =
-        parsedArgs.number_of_results ?? DEFAULT_NUMBER_OF_RESULTS;
+      const numberOfResults = parsedArgs.number_of_results;
 
       const result = await queryKnowledgeBase(
         knowledgeBaseId,
@@ -134,7 +131,7 @@ Error Handling:
         kbRerankingEnabled,
       );
 
-      const format = parsedArgs.format || ResponseFormat.MARKDOWN;
+      const format = parsedArgs.format;
 
       // Build structured output
       const output = {
@@ -169,6 +166,8 @@ Error Handling:
       return handleApiError(error);
     }
   },
+
+  name: "pagopa_query_documentation",
 
   parameters: QueryPagoPADXDocumentationInputSchema,
 };
