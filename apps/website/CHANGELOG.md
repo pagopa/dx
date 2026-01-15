@@ -1,5 +1,12 @@
 # docs
 
+## 0.12.0
+
+### Minor Changes
+
+- e59245d: Improve DX CLI documentation, adding a page that describes the GitHub
+  Personal Access Token
+
 ## 0.11.5
 
 ### Patch Changes
