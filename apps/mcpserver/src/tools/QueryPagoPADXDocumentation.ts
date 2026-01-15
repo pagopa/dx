@@ -5,7 +5,6 @@ import {
   kbRuntimeClient,
   knowledgeBaseId,
 } from "../config/aws.js";
-import { CHARACTER_LIMIT, TRUNCATION_MESSAGE } from "../config/constants.js";
 import { queryKnowledgeBase } from "../services/bedrock.js";
 import { handleApiError } from "../utils/errorHandling.js";
 
@@ -92,8 +91,7 @@ Returns:
   {
     "query": string,           // The original query
     "result": string,          // Documentation content matching the query
-    "number_of_results": number, // How many chunks were requested
-    "truncated": boolean       // Whether the result was truncated due to size limits
+    "number_of_results": number // How many chunks were requested
   }
 
   For Markdown format:
@@ -108,7 +106,6 @@ Notes:
   - All queries should be written in English
   - Use \`number_of_results: 1-3\` for quick lookups, \`10-20\` for comprehensive research
   - For Terraform module details (input/output variables, examples), use \`pagopa_search_github_code\` instead
-  - Results may be truncated if they exceed ${CHARACTER_LIMIT} characters
 
 Error Handling:
   - Returns "Error: Query must be at least 3 characters" for queries too short
@@ -133,35 +130,19 @@ Error Handling:
 
       const format = parsedArgs.format;
 
-      // Build structured output
-      const output = {
-        number_of_results: numberOfResults,
-        query: parsedArgs.query,
-        result,
-        truncated: false,
-      };
-
-      // Handle character limit
-      if (result.length > CHARACTER_LIMIT) {
-        const truncated = result.substring(0, CHARACTER_LIMIT);
-        output.result = truncated;
-        output.truncated = true;
-
-        return format === ResponseFormat.JSON
-          ? JSON.stringify(
-              {
-                ...output,
-                message: TRUNCATION_MESSAGE,
-              },
-              null,
-              2,
-            )
-          : `${truncated}\n\n**Note:** ${TRUNCATION_MESSAGE}`;
+      if (format === ResponseFormat.JSON) {
+        return JSON.stringify(
+          {
+            number_of_results: numberOfResults,
+            query: parsedArgs.query,
+            result,
+          },
+          null,
+          2,
+        );
       }
 
-      return format === ResponseFormat.JSON
-        ? JSON.stringify(output, null, 2)
-        : result;
+      return result;
     } catch (error) {
       return handleApiError(error);
     }
