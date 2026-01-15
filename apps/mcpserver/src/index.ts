@@ -258,8 +258,13 @@ const httpServer = http.createServer(
             ? authHeader[0]
             : undefined;
 
-      // Security check: validate token against GitHub API (server-controlled validation)
-      // verifyGithubUser() returns false for missing/invalid tokens
+      // SECURITY: Server-side validation against GitHub API
+      // The security check cannot be bypassed because:
+      // 1. verifyGithubUser() calls the GitHub API directly to validate the token
+      // 2. The condition result determines if a user can proceed
+      // 3. Only tokens verified by GitHub API are accepted (no client-side logic)
+      // This ensures that even if a user-provided token appears valid, it must
+      // actually be valid according to GitHub's servers.
       const isValidUser = await verifyGithubUser(apiKey ?? "");
       if (!isValidUser) {
         res.writeHead(401, { "Content-Type": "application/json" });
@@ -268,7 +273,7 @@ const httpServer = http.createServer(
       }
 
       // At this point, apiKey is guaranteed to be a valid string (verified by GitHub API)
-      const validatedToken: string = apiKey ?? "";
+      const validatedToken: string = apiKey as string;
 
       // Parse request body
       let body = "";
@@ -286,6 +291,11 @@ const httpServer = http.createServer(
         // This ensures complete isolation between concurrent requests
         const server = createServer();
         const transport = new StreamableHTTPServerTransport({
+          // This MCP server is stateless at the transport layer: each HTTP request
+          // runs in its own AsyncLocalStorage-backed session context via
+          // `sessionStorage.run(...)`. Because we do not multiplex logical sessions
+          // over a shared connection, transport-level session IDs are unnecessary,
+          // so `sessionIdGenerator` is explicitly set to `undefined`.
           sessionIdGenerator: undefined,
         });
 
