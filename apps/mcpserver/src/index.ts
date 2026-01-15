@@ -200,7 +200,14 @@ const httpServer = http.createServer(
       for await (const chunk of req) {
         body += chunk;
       }
-      const jsonBody = body ? JSON.parse(body) : undefined;
+      let jsonBody: unknown;
+      try {
+        jsonBody = body ? JSON.parse(body) : undefined;
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid JSON" }));
+        return;
+      }
 
       // Create session for AsyncLocalStorage context (stateless per-request)
       const session = { id: crypto.randomUUID(), token: apiKey };
