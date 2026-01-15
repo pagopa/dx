@@ -103,7 +103,7 @@ async function replacePMOccurrences(): Promise<void> {
       /\b(yarn workspace|npm -(\b-workspace\b|\bw\b))\b/g,
       /\b(yarn install --immutable|npm ci)\b/g,
       /\b(yarn -q dlx|npx)\b/g,
-      /\b(Yarn|npm)\b/gi,
+      /(^|\s)(Yarn|npm)(?!\S)/gi,
     ],
     ignore: ["**/node_modules/**", "**/dist/**", "**/build/**"],
     to: [
@@ -148,8 +148,13 @@ async function writePnpmWorkspaceFile(
   workspaces: string[],
   packageExtensions: object | undefined,
 ): Promise<void> {
+  // We inline all the default settings here because Renovate
+  // does not support PNPM's config dependencies yet.
   const pnpmWorkspace = {
+    cleanupUnusedCatalogs: true,
+    linkWorkspacePackages: true,
     packageExtensions,
+    packageImportMethod: "clone-or-copy",
     packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
   };
   const yamlContent = YAML.stringify(pnpmWorkspace);
@@ -206,8 +211,6 @@ const apply: Codemod["apply"] = async (info) => {
     file: "pnpm-workspace.yaml",
   });
   await writePnpmWorkspaceFile(workspaces, packageExtensions);
-
-  await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
 
   // Remove yarn and node_modules files and folders
   logger.info("Remove node_modules and yarn files");
