@@ -51,6 +51,24 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 }
 ```
 
+### Origins Configuration
+
+The `origins` variable accepts a map of origin configurations. Each origin must have a `host_name` and optionally a `priority` for routing preference.
+
+#### Supported Origin Types
+
+| Origin Type                          | `host_name` Value       | Terraform Resource Attribute                                               | DX Module Attribute                                              | Example                                                     | Notes                                                  |
+| ------------------------------------ | ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| **Storage Account (Static Website)** | Static website endpoint | `azurerm_storage_account.example.primary_web_host`                         | `module.storage_account.primary_web_host`                        | `example.z6.web.core.windows.net`                           | Requires static website enabled on the storage account |
+| **Storage Account (Blob)**           | Primary blob endpoint   | `azurerm_storage_account.example.primary_blob_host`                        | N/A                                                              | `example.blob.core.windows.net`                             | Direct blob access without static website hosting      |
+| **App Service**                      | Default hostname        | `azurerm_linux_web_app.example.default_hostname`                           | N/A                                                              | `myapp.azurewebsites.net`                                   | Works with both Windows and Linux App Services         |
+| **Function App**                     | Default hostname        | `azurerm_linux_function_app.example.default_hostname`                      | `module.function_app.function_app.function_app.default_hostname` | `myfunc.azurewebsites.net`                                  | Includes slot hostname if configured                   |
+| **API Management**                   | Gateway hostname        | `trim(azurerm_api_management.example.gateway_url, "https://")`             | `module.api_management.gateway_hostname`                         | `myapi.azure-api.net`                                       | Use `gateway_hostname` output (already trimmed)        |
+| **Application Gateway**              | Frontend public IP FQDN | `azurerm_public_ip.example.fqdn`                                           | N/A                                                              | `myappgw.westeurope.cloudapp.azure.com`                     | Requires public IP with DNS name configured            |
+| **Container Apps**                   | FQDN                    | `azurerm_container_app.example.latest_revision_fqdn`                       | `module.container_app.url`                                       | `myapp.nicecoast-12345678.westeurope.azurecontainerapps.io` | Use `url` output for Container Apps                    |
+| **VM / Load Balancer**               | Public IP FQDN or IP    | `azurerm_public_ip.example.fqdn` or `azurerm_public_ip.example.ip_address` | N/A                                                              | `myvm.westeurope.cloudapp.azure.com`                        | Prefer FQDN over IP when available                     |
+| **Custom Origin (External)**         | Custom domain or IP     | N/A                                                                        | N/A                                                              | `api.example.com` or `203.0.113.45`                         | Any external origin not managed by Terraform           |
+
 ### Custom domains
 
 The module supports custom domains, allowing you to expose your Azure CDN through your own domain names instead of the default Azure-provided endpoints. For most custom domains, the module automatically provisions and manages Azure CDN's managed certificates for HTTPS.
@@ -158,6 +176,7 @@ No modules.
 |------|-------------|
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |
+| <a name="output_endpoint_name"></a> [endpoint\_name](#output\_endpoint\_name) | The name of the CDN FrontDoor Endpoint |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the CDN FrontDoor Profile |
 | <a name="output_name"></a> [name](#output\_name) | The name of the CDN FrontDoor Profile |
 | <a name="output_origin_group_id"></a> [origin\_group\_id](#output\_origin\_group\_id) | The ID of the CDN FrontDoor Origin Group |

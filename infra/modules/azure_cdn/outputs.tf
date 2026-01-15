@@ -37,3 +37,8 @@ output "endpoint_id" {
   description = "The ID of the CDN FrontDoor Endpoint"
   value       = azurerm_cdn_frontdoor_endpoint.this.id
 }
+
+output "endpoint_name" {
+  description = "The name of the CDN FrontDoor Endpoint"
+  value       = azurerm_cdn_frontdoor_endpoint.this.name
+}

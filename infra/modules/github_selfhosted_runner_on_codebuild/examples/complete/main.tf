@@ -1,7 +1,7 @@
 #trivy:ignore:AVD-AWS-0178
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = ">= 5.0, < 7.0"
 
   name = "${local.app_prefix}-vpc-${local.app_suffix}"
   cidr = "10.0.0.0/16"
