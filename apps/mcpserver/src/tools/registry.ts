@@ -11,22 +11,14 @@ import { QueryPagoPADXDocumentationTool } from "./QueryPagoPADXDocumentation.js"
 import { SearchGitHubCodeTool } from "./SearchGitHubCode.js";
 
 /**
- * Tool definition with metadata for dynamic registration
+ * Tool entry for the registry with registration metadata
  */
 export type ToolEntry = {
-  /** Whether this operation can modify data */
-  destructiveHint?: boolean;
-  /** Unique tool ID for registration (snake_case, no hardcoded service name duplication) */
+  /** Unique tool ID for registration (snake_case, prefixed with service name) */
   id: string;
-  /** Whether the operation produces same results for same inputs */
-  idempotentHint?: boolean;
-  /** Whether the tool can work with open-ended inputs */
-  openWorldHint?: boolean;
-  /** Whether this is a read-only operation */
-  readOnlyHint?: boolean;
   /** Whether the tool requires session context (e.g., GitHub token) */
   requiresSession?: boolean;
-  /** The tool definition */
+  /** The tool definition with all metadata */
   tool: ToolDefinition;
 };
 
@@ -43,20 +35,12 @@ export type ToolEntry = {
  */
 export const toolDefinitions: ToolEntry[] = [
   {
-    destructiveHint: false,
     id: "pagopa_query_documentation",
-    idempotentHint: true,
-    openWorldHint: true,
-    readOnlyHint: true,
     requiresSession: false,
     tool: QueryPagoPADXDocumentationTool,
   },
   {
-    destructiveHint: false,
     id: "pagopa_search_github_code",
-    idempotentHint: true,
-    openWorldHint: true,
-    readOnlyHint: true,
     requiresSession: true,
     tool: SearchGitHubCodeTool,
   },

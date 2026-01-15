@@ -52,54 +52,45 @@ function createServer(): McpServer {
    * This pattern allows tools to be added/removed by simply updating the registry,
    * without needing to modify this registration code.
    */
-  toolDefinitions.forEach(
-    ({
-      destructiveHint,
-      id,
-      idempotentHint,
-      openWorldHint,
-      readOnlyHint,
-      requiresSession,
-      tool: toolDef,
-    }) => {
-      const decoratedTool = withToolLogging(toolDef);
+  toolDefinitions.forEach(({ id, requiresSession, tool: toolDef }) => {
+    const decoratedTool = withToolLogging(toolDef);
+    const { annotations } = decoratedTool;
 
-      mcpServer.registerTool(
-        id,
-        {
-          annotations: {
-            destructiveHint: destructiveHint ?? false,
-            idempotentHint: idempotentHint ?? true,
-            openWorldHint: openWorldHint ?? true,
-            readOnlyHint: readOnlyHint ?? true,
-          },
-          description: decoratedTool.description,
-          inputSchema:
-            (
-              decoratedTool.parameters as z.ZodObject<
-                Record<string, z.ZodTypeAny>
-              >
-            ).shape || decoratedTool.parameters,
-          title: decoratedTool.annotations?.title || toolDef.name || id,
+    mcpServer.registerTool(
+      id,
+      {
+        annotations: {
+          destructiveHint: annotations.destructiveHint ?? false,
+          idempotentHint: annotations.idempotentHint ?? true,
+          openWorldHint: annotations.openWorldHint ?? true,
+          readOnlyHint: annotations.readOnlyHint ?? true,
         },
-        async (args: Record<string, unknown>): Promise<ToolCallResult> => {
-          const context = requiresSession
-            ? { session: sessionStorage.getStore() }
-            : undefined;
-          const result = await decoratedTool.execute(args, context);
-          return {
-            content: [
-              {
-                text:
-                  typeof result === "string" ? result : JSON.stringify(result),
-                type: "text",
-              },
-            ],
-          };
-        },
-      );
-    },
-  );
+        description: decoratedTool.description,
+        inputSchema:
+          (
+            decoratedTool.parameters as z.ZodObject<
+              Record<string, z.ZodTypeAny>
+            >
+          ).shape || decoratedTool.parameters,
+        title: annotations.title,
+      },
+      async (args: Record<string, unknown>): Promise<ToolCallResult> => {
+        const context = requiresSession
+          ? { session: sessionStorage.getStore() }
+          : undefined;
+        const result = await decoratedTool.execute(args, context);
+        return {
+          content: [
+            {
+              text:
+                typeof result === "string" ? result : JSON.stringify(result),
+              type: "text",
+            },
+          ],
+        };
+      },
+    );
+  });
 
   // Register prompts using the modern registerPrompt pattern
   enabledPrompts.forEach((catalogEntry) => {
@@ -197,15 +188,12 @@ const httpServer = http.createServer(
       // 3. Only tokens verified by GitHub API are accepted (no client-side logic)
       // This ensures that even if a user-provided token appears valid, it must
       // actually be valid according to GitHub's servers.
-      const isValidUser = await verifyGithubUser(apiKey ?? "");
-      if (!isValidUser) {
+      if (!apiKey || !(await verifyGithubUser(apiKey))) {
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Unauthorized" }));
         return;
       }
-
-      // At this point, apiKey is guaranteed to be a valid string (verified by GitHub API)
-      const validatedToken: string = apiKey as string;
+      // At this point, apiKey is guaranteed to be a valid string (narrowed by the check above)
 
       // Parse request body
       let body = "";
@@ -215,7 +203,7 @@ const httpServer = http.createServer(
       const jsonBody = body ? JSON.parse(body) : undefined;
 
       // Create session for AsyncLocalStorage context (stateless per-request)
-      const session = { id: crypto.randomUUID(), token: validatedToken };
+      const session = { id: crypto.randomUUID(), token: apiKey };
 
       // Execute request in isolated session context
       await sessionStorage.run(session, async () => {

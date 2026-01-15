@@ -1,21 +1,16 @@
 /**
  * Type definitions for the MCP server
  */
+import type { CatalogEntry as PromptCatalogEntry } from "@pagopa/dx-mcpprompts";
 import type { z } from "zod";
 
 import type { Session } from "./session.js";
 
 /**
- * Catalog entry for a prompt from the prompts package
+ * Catalog entry for a prompt from the prompts package.
+ * Re-exported from @pagopa/dx-mcpprompts to stay in sync with the source type.
  */
-export type CatalogEntry = {
-  id: string;
-  prompt: {
-    arguments: PromptArgument[];
-    description: string;
-    name: string;
-  };
-};
+export type CatalogEntry = PromptCatalogEntry;
 
 /**
  * Decorated prompt with load function
@@ -84,7 +79,16 @@ export type ToolContext = {
  * Individual tool implementations can have more specific parameter types.
  */
 export type ToolDefinition = {
-  annotations?: {
+  annotations: {
+    /** Whether this operation can delete or modify data destructively */
+    destructiveHint?: boolean;
+    /** Whether the operation produces same results for same inputs */
+    idempotentHint?: boolean;
+    /** Whether the tool can work with open-ended inputs */
+    openWorldHint?: boolean;
+    /** Whether this is a read-only operation */
+    readOnlyHint?: boolean;
+    /** Display title for the tool */
     title: string;
   };
   description: string;
