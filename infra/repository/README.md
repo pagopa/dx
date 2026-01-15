@@ -24,6 +24,7 @@
 | Name | Type |
 |------|------|
 | [github_repository_environment.automated_tests](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.npm_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 
 ## Inputs
 
