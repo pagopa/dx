@@ -2,7 +2,6 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
-import { CHARACTER_LIMIT, TRUNCATION_MESSAGE } from "../config/constants.js";
 import { handleApiError } from "../utils/errorHandling.js";
 
 const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
@@ -27,7 +26,6 @@ const MAX_PER_PAGE = 30;
  */
 type SearchOutput = {
   has_more: boolean;
-  message?: string;
   organization: string;
   page: number;
   per_page: number;
@@ -36,7 +34,6 @@ type SearchOutput = {
   returned_results: number;
   total_pages: number;
   total_results: number;
-  truncated?: boolean;
 };
 
 /**
@@ -97,10 +94,7 @@ type SearchGitHubCodeInput = z.infer<typeof SearchGitHubCodeInputSchema>;
 /**
  * Format search results as markdown
  */
-function formatMarkdownResults(
-  output: SearchOutput,
-  isTruncated: boolean,
-): string {
+function formatMarkdownResults(output: SearchOutput): string {
   const lines = [
     `# Search Results for "${output.query}"`,
     "",
@@ -125,10 +119,6 @@ function formatMarkdownResults(
     lines.push(result.content);
     lines.push("```");
     lines.push("");
-  }
-
-  if (isTruncated && output.message) {
-    lines.push(`**Note:** ${output.message}`);
   }
 
   return lines.join("\n");
@@ -271,32 +261,9 @@ Find code examples, patterns, and usage of specific modules or libraries across 
         total_results: data.total_count,
       };
 
-      const jsonOutput = JSON.stringify(output, null, 2);
-
-      // Handle character limit
-      if (jsonOutput.length > CHARACTER_LIMIT) {
-        const truncatedResults = validResults.slice(
-          0,
-          Math.max(1, Math.floor(validResults.length / 2)),
-        );
-        const truncatedOutput: SearchOutput = {
-          ...output,
-          message: TRUNCATION_MESSAGE,
-          results: truncatedResults,
-          returned_results: truncatedResults.length,
-          truncated: true,
-        };
-
-        const truncatedJson = JSON.stringify(truncatedOutput, null, 2);
-
-        return format === ResponseFormat.JSON
-          ? truncatedJson
-          : formatMarkdownResults(truncatedOutput, true);
-      }
-
       return format === ResponseFormat.JSON
-        ? jsonOutput
-        : formatMarkdownResults(output, false);
+        ? JSON.stringify(output, null, 2)
+        : formatMarkdownResults(output);
     } catch (error) {
       logger.error("Error searching GitHub code", { error });
       return handleApiError(error);

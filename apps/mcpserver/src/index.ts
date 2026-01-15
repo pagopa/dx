@@ -182,6 +182,10 @@ const httpServer = http.createServer(
             : undefined;
 
       // Verify GitHub token via GitHub API
+      // lgtm[js/user-controlled-bypass] - False positive: verifyGithubUser() validates
+      // the user-provided token against GitHub's API server-side. The token MUST be
+      // user-provided (it's a GitHub PAT), and the validation happens on GitHub's servers,
+      // not on user-controlled logic. This is the standard OAuth/PAT validation pattern.
       if (!apiKey || !(await verifyGithubUser(apiKey))) {
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Unauthorized" }));
