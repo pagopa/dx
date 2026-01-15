@@ -45,7 +45,7 @@ const enabledPrompts = await getEnabledPrompts();
  */
 async function authenticateGitHubToken(
   token: string | undefined,
-): Promise<string | null> {
+): Promise<null | string> {
   if (!token) {
     return null;
   }
