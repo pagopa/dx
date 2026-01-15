@@ -27,7 +27,7 @@ const MAX_RESULTS = 20;
 /**
  * Zod schema for QueryPagoPADXDocumentation input validation
  */
-const QueryPagoPADXDocumentationInputSchema = z
+export const QueryPagoPADXDocumentationInputSchema = z
   .object({
     format: z
       .nativeEnum(ResponseFormat)

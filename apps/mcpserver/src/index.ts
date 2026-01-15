@@ -181,13 +181,7 @@ const httpServer = http.createServer(
             ? authHeader[0]
             : undefined;
 
-      // SECURITY: Server-side validation against GitHub API
-      // The security check cannot be bypassed because:
-      // 1. verifyGithubUser() calls the GitHub API directly to validate the token
-      // 2. The condition result determines if a user can proceed
-      // 3. Only tokens verified by GitHub API are accepted (no client-side logic)
-      // This ensures that even if a user-provided token appears valid, it must
-      // actually be valid according to GitHub's servers.
+      // Verify GitHub token via GitHub API
       if (!apiKey || !(await verifyGithubUser(apiKey))) {
         res.writeHead(401, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Unauthorized" }));

@@ -52,7 +52,7 @@ type SearchResultItem = {
 /**
  * Input schema for SearchGitHubCode tool (with strict mode per Anthropic guidelines)
  */
-const SearchGitHubCodeInputSchema = z
+export const SearchGitHubCodeInputSchema = z
   .object({
     extension: z
       .string()

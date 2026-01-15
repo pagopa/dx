@@ -1,32 +1,15 @@
-/* eslint-disable max-lines-per-function */
 import { describe, expect, it } from "vitest";
-import { z } from "zod";
+
+import { QueryPagoPADXDocumentationInputSchema } from "./QueryPagoPADXDocumentation.js";
+import { SearchGitHubCodeInputSchema } from "./SearchGitHubCode.js";
 
 // Test the Zod schema validation used in the tools
 describe("Query Validation", () => {
-  // Schema matching QueryPagoPADXDocumentationTool (min 3 characters)
-  const queryDocSchema = z.object({
-    query: z
-      .string()
-      .min(3, "Query must be at least 3 characters")
-      .max(500, "Query must not exceed 500 characters")
-      .describe(
-        "A natural language query in English used to search the DX documentation for relevant information.",
-      ),
-  });
+  // Use the actual schema from QueryPagoPADXDocumentationTool
+  const queryDocSchema = QueryPagoPADXDocumentationInputSchema;
 
-  // Schema matching SearchGitHubCodeTool (min 1 character)
-  const searchGitHubSchema = z.object({
-    extension: z
-      .string()
-      .optional()
-      .describe("File extension to filter results"),
-    query: z
-      .string()
-      .min(1, "Query cannot be empty")
-      .max(500, "Query too long")
-      .describe("Code search query"),
-  });
+  // Use the actual schema from SearchGitHubCodeTool
+  const searchGitHubSchema = SearchGitHubCodeInputSchema;
 
   describe("QueryPagoPADXDocumentationTool validation", () => {
     it("should accept valid queries", () => {
