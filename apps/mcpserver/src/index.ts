@@ -12,6 +12,7 @@ import { getLogger } from "@logtape/logtape";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
+import crypto from "node:crypto";
 import * as http from "node:http";
 import { z } from "zod";
 
@@ -214,7 +215,7 @@ const httpServer = http.createServer(
       const jsonBody = body ? JSON.parse(body) : undefined;
 
       // Create session for AsyncLocalStorage context (stateless per-request)
-      const session = { id: Date.now(), token: validatedToken };
+      const session = { id: crypto.randomUUID(), token: validatedToken };
 
       // Execute request in isolated session context
       await sessionStorage.run(session, async () => {
