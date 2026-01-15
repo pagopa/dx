@@ -9,7 +9,7 @@ resource "github_repository_environment" "automated_tests" {
 }
 
 resource "github_repository_environment" "npm_prod_cd" {
-  environment = "npm_prod_cd"
+  environment = "npm-prod-cd"
   repository  = module.github_repository.name
 
   deployment_branch_policy {
