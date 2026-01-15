@@ -16,7 +16,7 @@ module "github_repository" {
     app_cd_policy_tags     = ["@pagopa/dx-mcpserver@**"]
     homepage_url           = "https://dx.pagopa.it"
     pull_request_bypassers = ["/dx-pagopa-bot"]
-    environments           = ["dev", "uat", "prod", "npm-prod-cd"]
+    environments           = ["dev", "uat", "prod", "npm-prod"]
     jira_boards_ids        = ["CES"]
   }
 }
