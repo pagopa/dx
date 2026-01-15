@@ -21,7 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@logtape/logtape": "catalog:",
-    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "^22.0.0",
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",

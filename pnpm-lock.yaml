@@ -9,6 +9,9 @@ catalogs:
     '@logtape/logtape':
       specifier: ^1.3.4
       version: 1.3.4
+    '@modelcontextprotocol/sdk':
+      specifier: ^1.20.0
+      version: 1.20.0
     '@tsconfig/node22':
       specifier: 22.0.2
       version: 22.0.2
@@ -260,7 +263,7 @@ importers:
         specifier: 'catalog:'
         version: 1.3.4
       '@modelcontextprotocol/sdk':
-        specifier: ^1.12.0
+        specifier: 'catalog:'
         version: 1.20.0
       '@octokit/rest':
         specifier: ^22.0.0

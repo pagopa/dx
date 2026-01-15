@@ -1,19 +1,21 @@
+/* eslint-disable max-lines-per-function */
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 // Test the Zod schema validation used in the tools
 describe("Query Validation", () => {
-  // Schema matching QueryPagoPADXDocumentationTool
+  // Schema matching QueryPagoPADXDocumentationTool (min 3 characters)
   const queryDocSchema = z.object({
     query: z
       .string()
-      .min(1, "Query cannot be empty")
+      .min(3, "Query must be at least 3 characters")
+      .max(500, "Query must not exceed 500 characters")
       .describe(
         "A natural language query in English used to search the DX documentation for relevant information.",
       ),
   });
 
-  // Schema matching SearchGitHubCodeTool
+  // Schema matching SearchGitHubCodeTool (min 1 character)
   const searchGitHubSchema = z.object({
     extension: z
       .string()
@@ -22,6 +24,7 @@ describe("Query Validation", () => {
     query: z
       .string()
       .min(1, "Query cannot be empty")
+      .max(500, "Query too long")
       .describe("Code search query"),
   });
 
@@ -29,7 +32,7 @@ describe("Query Validation", () => {
     it("should accept valid queries", () => {
       const validQueries = [
         { query: "How do I set up the project?" },
-        { query: "a" },
+        { query: "abc" }, // minimum 3 characters
         { query: "What is the DX CLI?" },
         { query: "Terraform Azure provider setup" },
       ];
@@ -40,13 +43,29 @@ describe("Query Validation", () => {
       });
     });
 
-    it("should reject empty queries", () => {
-      const emptyQuery = { query: "" };
-      const result = queryDocSchema.safeParse(emptyQuery);
+    it("should reject queries shorter than 3 characters", () => {
+      const shortQueries = [{ query: "" }, { query: "a" }, { query: "ab" }];
+
+      shortQueries.forEach((input) => {
+        const result = queryDocSchema.safeParse(input);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error.errors[0].message).toBe(
+            "Query must be at least 3 characters",
+          );
+        }
+      });
+    });
+
+    it("should reject queries exceeding 500 characters", () => {
+      const longQuery = { query: "a".repeat(501) };
+      const result = queryDocSchema.safeParse(longQuery);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].message).toBe("Query cannot be empty");
+        expect(result.error.errors[0].message).toBe(
+          "Query must not exceed 500 characters",
+        );
       }
     });
 
@@ -95,6 +114,16 @@ describe("Query Validation", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.errors[0].message).toBe("Query cannot be empty");
+      }
+    });
+
+    it("should reject queries exceeding 500 characters", () => {
+      const longQuery = { query: "a".repeat(501) };
+      const result = searchGitHubSchema.safeParse(longQuery);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.errors[0].message).toBe("Query too long");
       }
     });
 
@@ -165,21 +194,20 @@ describe("Query Validation", () => {
       });
     });
 
-    it("should handle very long query strings", () => {
-      const longQuery = { query: "a".repeat(1000) };
+    it("should handle very long query strings within limit", () => {
+      const longQuery = { query: "a".repeat(500) }; // exactly at limit
       const result = queryDocSchema.safeParse(longQuery);
 
-      // Should accept long queries as there's no max length limit
       expect(result.success).toBe(true);
     });
 
-    it("should trim whitespace validation (not trimmed by schema)", () => {
+    it("should accept whitespace-only strings if they meet min length", () => {
       // Note: The Zod schema doesn't call .trim(), so whitespace-only strings will be accepted
-      // This is by design - validation is strict but doesn't auto-trim
-      const whitespaceOnly = { query: "   " };
+      // if they meet the minimum length requirement (3 characters for queryDoc)
+      const whitespaceOnly = { query: "   " }; // 3 spaces = 3 characters
       const result = queryDocSchema.safeParse(whitespaceOnly);
 
-      // Whitespace-only string has length > 0, so it passes
+      // Whitespace-only string has length >= 3, so it passes
       expect(result.success).toBe(true);
     });
   });

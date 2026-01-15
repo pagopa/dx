@@ -28,4 +28,25 @@ describe("QueryPagoPADXDocumentationTool", () => {
     expect(result).toContain("Error: Invalid input");
     expect(result).toContain("Unrecognized key");
   });
+
+  it("should reject queries shorter than 3 characters", async () => {
+    const args = { query: "ab" };
+    const result = await QueryPagoPADXDocumentationTool.execute(args);
+    expect(result).toContain("Error: Invalid input");
+    expect(result).toContain("Query must be at least 3 characters");
+  });
+
+  it("should reject empty queries", async () => {
+    const args = { query: "" };
+    const result = await QueryPagoPADXDocumentationTool.execute(args);
+    expect(result).toContain("Error: Invalid input");
+    expect(result).toContain("Query must be at least 3 characters");
+  });
+
+  it("should reject queries exceeding 500 characters", async () => {
+    const args = { query: "a".repeat(501) };
+    const result = await QueryPagoPADXDocumentationTool.execute(args);
+    expect(result).toContain("Error: Invalid input");
+    expect(result).toContain("Query must not exceed 500 characters");
+  });
 });

@@ -41,7 +41,7 @@ describe("MCP Server Handlers", () => {
     });
 
     it("should pass context with session data to tool execute", async () => {
-      const context = { session: { id: 123, token: "test-token" } };
+      const context = { session: { id: "session-123", token: "test-token" } };
 
       await mockTool.execute({ input: "test" }, context);
 
@@ -145,7 +145,7 @@ describe("MCP Server Handlers", () => {
       // Should succeed with context
       const result = await toolWithErrorContext.execute(
         { input: "test" },
-        { session: { id: 1, token: "token" } },
+        { session: { id: "session-1", token: "token" } },
       );
       expect(result).toBe("Success with context");
     });

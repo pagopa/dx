@@ -306,7 +306,5 @@ Find code examples, patterns, and usage of specific modules or libraries across 
     }
   },
 
-  name: "pagopa_search_github_code",
-
   parameters: SearchGitHubCodeInputSchema,
 };

@@ -170,6 +170,5 @@ Error Handling:
     }
   },
 
-  name: "pagopa_query_documentation",
   parameters: QueryPagoPADXDocumentationInputSchema,
 };
