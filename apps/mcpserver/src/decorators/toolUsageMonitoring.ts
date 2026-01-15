@@ -21,9 +21,12 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
   return {
     ...tool,
     execute: async (args: unknown, context?: ToolContext) => {
+      // Cast args to the expected type for tool execution
+      const typedArgs = args as Record<string, unknown>;
+
       const startTime = Date.now();
       const eventData = {
-        arguments: JSON.stringify(args),
+        arguments: JSON.stringify(typedArgs),
         timestamp: new Date().toISOString(),
         toolName,
       };
@@ -36,7 +39,7 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
 
       try {
         // Call the original execute function and return the result
-        const result = await originalExecute(args, context);
+        const result = await originalExecute(typedArgs, context);
 
         const executionTime = Date.now() - startTime;
 

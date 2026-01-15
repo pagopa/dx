@@ -1,19 +1,19 @@
+#!/usr/bin/env node
+/**
+ * PagoPA DX Knowledge Retrieval MCP Server
+ *
+ * This server provides tools to interact with DX documentation and GitHub repositories.
+ * It supports stateless operation via HTTP and manages session context for concurrent requests.
+ */
+
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { getLogger } from "@logtape/logtape";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import {
-  CallToolRequestSchema,
-  GetPromptRequestSchema,
-  ListPromptsRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import * as http from "node:http";
-import { zodToJsonSchema } from "zod-to-json-schema";
-
-import type { PromptEntry, ToolDefinition } from "./types.js";
+import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
 import { verifyGithubUser } from "./auth/github.js";
@@ -22,8 +22,8 @@ import { configureAzureMonitoring } from "./config/monitoring.js";
 import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
 import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
 import { sessionStorage } from "./session.js";
-import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
-import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
+import { toolDefinitions } from "./tools/registry.js";
+import { GetPromptResultType, ToolCallResult } from "./types.js";
 
 // Configure logging
 await configureLogging();
@@ -32,190 +32,119 @@ await configureAzureMonitoring();
 const logger = getLogger(["mcpserver"]);
 logger.info("MCP Server starting...");
 
-// Store enabled prompts and tools with decorators applied
-const toolRegistry = new Map<string, ToolDefinition>();
-const promptRegistry = new Map<string, PromptEntry>();
-
-// Register tools with decorators
-toolRegistry.set(
-  QueryPagoPADXDocumentationTool.name,
-  withToolLogging(QueryPagoPADXDocumentationTool as ToolDefinition),
-);
-toolRegistry.set(
-  SearchGitHubCodeTool.name,
-  withToolLogging(SearchGitHubCodeTool as ToolDefinition),
-);
-
-// Load and register enabled prompts
+// Load enabled prompts for later registration
 const enabledPrompts = await getEnabledPrompts();
-enabledPrompts.forEach((catalogEntry) => {
-  const decoratedPrompt = withPromptLogging(
-    catalogEntry.prompt,
-    catalogEntry.id,
-  );
-  promptRegistry.set(catalogEntry.prompt.name, {
-    catalogEntry,
-    prompt: decoratedPrompt,
-  });
-});
 
 /**
- * Creates a new MCP server instance with all handlers registered.
+ * Creates a new MCP server instance with all tools and prompts registered.
  * This function is called for each request to ensure complete isolation
  * and thread-safety in concurrent scenarios (e.g., AWS Lambda warm starts).
  */
-function createServer(): Server {
-  const server = new Server(
-    {
-      name: "PagoPA DX Knowledge Retrieval MCP Server",
-      version: packageJson.version,
-    },
-    {
-      capabilities: {
-        prompts: {},
-        tools: {},
-      },
+function createServer(): McpServer {
+  const mcpServer = new McpServer({
+    name: "pagopa-dx-mcp-server",
+    version: packageJson.version,
+  });
+
+  /**
+   * Register tools dynamically from the tool registry.
+   * This pattern allows tools to be added/removed by simply updating the registry,
+   * without needing to modify this registration code.
+   */
+  toolDefinitions.forEach(
+    ({
+      destructiveHint,
+      id,
+      idempotentHint,
+      openWorldHint,
+      readOnlyHint,
+      requiresSession,
+      tool: toolDef,
+    }) => {
+      const decoratedTool = withToolLogging(toolDef);
+
+      mcpServer.registerTool(
+        id,
+        {
+          annotations: {
+            destructiveHint: destructiveHint ?? false,
+            idempotentHint: idempotentHint ?? true,
+            openWorldHint: openWorldHint ?? true,
+            readOnlyHint: readOnlyHint ?? true,
+          },
+          description: decoratedTool.description,
+          inputSchema:
+            decoratedTool.parameters instanceof z.ZodObject
+              ? decoratedTool.parameters.shape
+              : decoratedTool.parameters,
+          title: decoratedTool.annotations?.title || toolDef.name || id,
+        },
+        async (args: Record<string, unknown>): Promise<ToolCallResult> => {
+          const context = requiresSession
+            ? { session: sessionStorage.getStore() }
+            : undefined;
+          const result = await decoratedTool.execute(args, context);
+          return {
+            content: [
+              {
+                text:
+                  typeof result === "string" ? result : JSON.stringify(result),
+                type: "text",
+              },
+            ],
+          };
+        },
+      );
     },
   );
 
-  // Configure server error handler
-  server.onerror = (error) => {
-    logger.error("Server error", { error: error.message, stack: error.stack });
-  };
+  // Register prompts using the modern registerPrompt pattern
+  enabledPrompts.forEach((catalogEntry) => {
+    const decoratedPrompt = withPromptLogging(
+      catalogEntry.prompt,
+      catalogEntry.id,
+    );
 
-  // Request handler for listing tools
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: Array.from(toolRegistry.values()).map((tool) => {
-      const jsonSchema = zodToJsonSchema(tool.parameters, {
-        $refStrategy: "none",
-      }) as Record<string, unknown>;
-
-      // Extract only MCP-compliant inputSchema fields
-      const inputSchema: Record<string, unknown> = {
-        type: "object",
-      };
-
-      if (jsonSchema.properties) {
-        inputSchema.properties = jsonSchema.properties;
-      }
-
-      if (jsonSchema.required) {
-        inputSchema.required = jsonSchema.required;
-      }
-
-      return {
-        description: tool.description,
-        inputSchema,
-        name: tool.name,
-      };
-    }),
-  }));
-
-  // Request handler for calling tools
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { arguments: args, name } = request.params;
-    const tool = toolRegistry.get(name);
-
-    if (!tool) {
-      throw new Error(`Tool not found: ${name}`);
+    // Build Zod schema from prompt arguments
+    const argsSchemaShape: Record<string, z.ZodTypeAny> = {};
+    for (const arg of catalogEntry.prompt.arguments) {
+      const fieldSchema = z.string().describe(arg.description);
+      argsSchemaShape[arg.name] = arg.required
+        ? fieldSchema
+        : fieldSchema.optional();
     }
 
-    try {
-      // Get session from AsyncLocalStorage
-      const session = sessionStorage.getStore();
+    const argsSchema = z.object(argsSchemaShape);
 
-      // Build context with session information
-      const context = {
-        session,
-      };
-
-      // Validate tool arguments using Zod schema
-      const validationResult = tool.parameters.safeParse(args);
-
-      if (!validationResult.success) {
-        const errors = validationResult.error.errors
-          .map((err) => `${err.path.join(".")}: ${err.message}`)
-          .join(", ");
-        throw new Error(`Invalid arguments: ${errors}`);
-      }
-
-      const result = await tool.execute(validationResult.data, context);
-
-      return {
-        content: [
-          {
-            text: typeof result === "string" ? result : JSON.stringify(result),
-            type: "text",
-          },
-        ],
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      logger.error(`Tool execution failed: ${name}`, { error: errorMessage });
-      throw new Error(`Tool execution failed: ${errorMessage}`);
-    }
-  });
-
-  // Request handler for listing prompts
-  server.setRequestHandler(ListPromptsRequestSchema, async () => ({
-    prompts: Array.from(promptRegistry.values()).map(({ catalogEntry }) => ({
-      arguments: catalogEntry.prompt.arguments.map((arg) => ({
-        description: arg.description,
-        name: arg.name,
-        required: arg.required,
-      })),
-      description: catalogEntry.prompt.description,
-      name: catalogEntry.prompt.name,
-    })),
-  }));
-
-  // Request handler for getting a prompt
-  server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-    const { arguments: args, name } = request.params;
-    const promptEntry = promptRegistry.get(name);
-
-    if (!promptEntry) {
-      throw new Error(`Prompt not found: ${name}`);
-    }
-
-    // Validate required arguments
-    const missingArgs = promptEntry.catalogEntry.prompt.arguments
-      .filter((arg) => arg.required)
-      .filter((arg) => !args || !(arg.name in args))
-      .map((arg) => arg.name);
-
-    if (missingArgs.length > 0) {
-      throw new Error(`Missing required arguments: ${missingArgs.join(", ")}`);
-    }
-
-    try {
-      const content = await promptEntry.prompt.load(args || {});
-      return {
-        messages: [
-          {
-            content: {
-              text: content,
-              type: "text",
+    mcpServer.registerPrompt(
+      catalogEntry.prompt.name,
+      {
+        argsSchema: argsSchema.shape,
+        description: catalogEntry.prompt.description,
+      },
+      async (args: Record<string, unknown>): Promise<GetPromptResultType> => {
+        const content = await decoratedPrompt.load(args || {});
+        return {
+          messages: [
+            {
+              content: {
+                text: content,
+                type: "text",
+              },
+              role: "user",
             },
-            role: "user",
-          },
-        ],
-      };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      logger.error(`Prompt loading failed: ${name}`, { error: errorMessage });
-      throw new Error(`Prompt loading failed: ${errorMessage}`);
-    }
+          ],
+        };
+      },
+    );
   });
 
-  return server;
-}
+  logger.debug(
+    `Server initialized with ${toolDefinitions.length} tools and ${enabledPrompts.length} prompts`,
+  );
 
-logger.info(
-  `Server factory initialized with ${toolRegistry.size} tools and ${promptRegistry.size} prompts`,
-);
+  return mcpServer;
+}
 
 /**
  * HTTP server for stateless MCP operations
@@ -226,7 +155,7 @@ logger.info(
  * 3. Executes in AsyncLocalStorage context for request-scoped data
  * 4. Cleans up resources after completion
  */
-const PORT = 8080;
+const PORT = parseInt(process.env.PORT || "8080", 10);
 const httpServer = http.createServer(
   async (req: IncomingMessage, res: ServerResponse) => {
     // Configure CORS headers
