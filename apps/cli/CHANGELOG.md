@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.14.4
+
+### Patch Changes
+
+- df2cb42: Update regex to avoid unwanted changes
+- df2cb42: Move pnpm-config-pagopa settings into local config
+
 ## 0.14.3
 
 ### Patch Changes
