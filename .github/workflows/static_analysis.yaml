@@ -141,11 +141,24 @@ jobs:
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
           GITHUB_TOKEN: ${{ github.token }}
           INPUT_CHECK_TO_RUN: ${{ inputs.check_to_run }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           set -eu
 
           if [ -n "$INPUT_CHECK_TO_RUN" ] && ! [[ "$INPUT_CHECK_TO_RUN" =~ ^[a-zA-Z0-9_-]+$ ]]; then
             echo "Invalid check_to_run input. Allowed: letters, numbers, _, -"
+            exit 1
+          fi
+
+          # Validate PR refs using git check-ref-format
+          if ! git check-ref-format --branch -- "$BASE_REF"; then
+            echo "Invalid base ref format: $BASE_REF"
+            exit 1
+          fi
+
+          if ! git check-ref-format --branch -- "$HEAD_REF"; then
+            echo "Invalid head ref format: $HEAD_REF"
             exit 1
           fi
 
@@ -155,14 +168,14 @@ jobs:
           fi
 
           echo "Start pre-commit only on modified files"
-          echo "- FROM  Base ref: origin/${{ github.event.pull_request.base.ref }}"
-          echo "- TO    Head ref: origin/${{ github.event.pull_request.head.ref }}"
+          echo "- FROM  Base ref: origin/$BASE_REF"
+          echo "- TO    Head ref: origin/$HEAD_REF"
 
           pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            --from-ref origin/${{ github.event.pull_request.base.ref }} \
-            --to-ref origin/${{ github.event.pull_request.head.ref }} \
+            --from-ref "origin/$BASE_REF" \
+            --to-ref "origin/$HEAD_REF" \
             "${CHECK_ARGS[@]:-}" 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit
