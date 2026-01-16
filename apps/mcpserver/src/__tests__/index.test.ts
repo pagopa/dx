@@ -72,7 +72,9 @@ describe("MCP Server Handlers", () => {
         .map((arg: { name: string }) => arg.name);
 
       const providedArgs = { arg2: "value" };
-      const missingArgs = requiredArgs.filter((arg: string) => !(arg in providedArgs));
+      const missingArgs = requiredArgs.filter(
+        (arg: string) => !(arg in providedArgs),
+      );
 
       expect(missingArgs).toEqual(["arg1"]);
     });

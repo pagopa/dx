@@ -195,9 +195,7 @@ Find code examples, patterns, and usage of specific modules or libraries across 
         ? ` extension:${parsedArgs.extension}`
         : "";
       const searchQuery = `${parsedArgs.query} org:${org}${extensionFilter}`;
-      logger.info(
-        `Searching GitHub: ${searchQuery} (format: ${format}, page ${page}, per_page ${perPage})`,
-      );
+      logger.debug("Executing GitHub code search");
 
       const { data } = await octokit.rest.search.code({
         page,
