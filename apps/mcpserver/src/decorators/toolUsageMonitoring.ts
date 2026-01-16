@@ -30,7 +30,6 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
       logger.debug(`Tool executed: ${toolName}`);
 
       // Emit custom event to Azure Application Insights
-      // Note: Arguments are not logged to avoid exposing sensitive data
       const eventData = filterUndefined({
         requestId: context?.requestId,
         timestamp: new Date().toISOString(),
