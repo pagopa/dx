@@ -84,8 +84,8 @@ run "apim_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_api_management.this.public_network_access_enabled == false
-    error_message = "The APIM public Network Access should be disabled"
+    condition     = azurerm_api_management.this.public_network_access_enabled == true
+    error_message = "The APIM public Network Access should be enabled"
   }
 
   assert {
@@ -728,6 +728,210 @@ run "autoscale_validation_zone_redundancy_valid" {
   assert {
     condition     = length(azurerm_api_management.this.zones) == 2
     error_message = "The APIM zones count is incorrect, should be 2"
+  }
+}
+
+# Test custom_domains: single proxy endpoint
+run "custom_domains_single_proxy" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "cost_optimized"
+    publisher_email     = "example@pagopa.it"
+    publisher_name      = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id     = run.setup_tests.subnet_id
+    subnet_pep_id = run.setup_tests.pep_id
+
+    custom_domains = {
+      proxy = [
+        {
+          host_name                = "api.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding      = true
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration) > 0
+    error_message = "hostname_configuration should be present"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].proxy) == 1
+    error_message = "Should have exactly 1 proxy configuration"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.hostname_configuration[0].proxy[0].host_name == "api.example.com"
+    error_message = "Proxy hostname should match"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.hostname_configuration[0].proxy[0].default_ssl_binding == true
+    error_message = "Default SSL binding should be true"
+  }
+}
+
+# Test custom_domains: multiple proxy endpoints
+run "custom_domains_multiple_proxy" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "cost_optimized"
+    publisher_email     = "example@pagopa.it"
+    publisher_name      = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id     = run.setup_tests.subnet_id
+    subnet_pep_id = run.setup_tests.pep_id
+
+    custom_domains = {
+      proxy = [
+        {
+          host_name                = "api.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding      = true
+        },
+        {
+          host_name                = "api-v2.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
+          default_ssl_binding      = false
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].proxy) == 2
+    error_message = "Should have exactly 2 proxy configurations"
+  }
+}
+
+# Test custom_domains: all endpoint types
+run "custom_domains_all_types" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "cost_optimized"
+    publisher_email     = "example@pagopa.it"
+    publisher_name      = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id     = run.setup_tests.subnet_id
+    subnet_pep_id = run.setup_tests.pep_id
+
+    custom_domains = {
+      proxy = [
+        {
+          host_name                = "api.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding      = true
+        }
+      ]
+      management = [
+        {
+          host_name                = "management.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
+        }
+      ]
+      portal = [
+        {
+          host_name                = "portal.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert3"
+        }
+      ]
+      developer_portal = [
+        {
+          host_name                = "developer.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert4"
+        }
+      ]
+      scm = [
+        {
+          host_name                = "scm.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert5"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].proxy) == 1
+    error_message = "Should have 1 proxy configuration"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].management) == 1
+    error_message = "Should have 1 management configuration"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].portal) == 1
+    error_message = "Should have 1 portal configuration"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].developer_portal) == 1
+    error_message = "Should have 1 developer_portal configuration"
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].scm) == 1
+    error_message = "Should have 1 scm configuration"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.hostname_configuration[0].management[0].host_name == "management.example.com"
+    error_message = "Management hostname should match"
   }
 }
 

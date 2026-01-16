@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_apim"></a> [azure\_apim](#module\_azure\_apim) | ../../ | n/a |
+| <a name="module_azure_apim"></a> [azure\_apim](#module\_azure\_apim) | pagopa-dx/azure-api-management/azurerm | ~> 3.0 |
 | <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
 
 ## Resources
