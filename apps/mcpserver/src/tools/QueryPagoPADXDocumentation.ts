@@ -105,7 +105,7 @@ Examples:
 Notes:
   - All queries should be written in English
   - Use \`number_of_results: 1-3\` for quick lookups, \`10-20\` for comprehensive research
-  - For Terraform module details (input/output variables, examples), use \`pagopa_search_github_code\` instead
+  - For Terraform module real world examples, use \`pagopa_search_github_code\` instead
 
 Error Handling:
   - Returns "Error: Query must be at least 3 characters" for queries too short
