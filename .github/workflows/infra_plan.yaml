@@ -56,8 +56,11 @@ jobs:
     steps:
       - name: Evaluate fork PR
         id: evaluate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.fork }}" = "true" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$IS_FORK" = "true" ]; then
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
