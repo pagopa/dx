@@ -148,9 +148,6 @@ run "app_service_with_diagnostic_settings" {
 
   variables {
     use_case = "default"
-    slot_app_settings = {
-      WEBSITE_SWAP_WARMUP_PING_PATH = "/health"
-    }
     diagnostic_settings = {
       enabled                                   = true
       log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
@@ -165,7 +162,7 @@ run "app_service_with_diagnostic_settings" {
 
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.slot) == 1
-    error_message = "Diagnostic settings should be created for the slot when enabled"
+    error_message = "Diagnostic settings should be created for the slot when enabled and slot is created (use_case=default includes slot)"
   }
 }
 

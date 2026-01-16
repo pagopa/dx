@@ -46,7 +46,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 # Diagnostic Settings for App Service Slot (if enabled)
 
 resource "azurerm_monitor_diagnostic_setting" "slot" {
-  count = var.diagnostic_settings.enabled && length(var.slot_app_settings) > 0 ? 1 : 0
+  count = var.diagnostic_settings.enabled && local.use_case_features.slot ? 1 : 0
 
   name               = "${azurerm_linux_web_app_slot.this[0].name}-diagnostics"
   target_resource_id = azurerm_linux_web_app_slot.this[0].id
