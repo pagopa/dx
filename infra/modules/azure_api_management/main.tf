@@ -132,7 +132,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = local.use_case_features.autoscale && local.autoscale_config.enabled ? 1 : 0
+  count               = local.use_case_features.autoscale ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location

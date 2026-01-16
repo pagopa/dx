@@ -72,7 +72,9 @@ This fixes the problem when `use_case` is set to `high_load` without the `autosc
 
 **Changes:**
 
+- `enabled` field does not exist anymore, autoscale is defined by `use_case`
 - Default changed from a static object to `null`
+- All fields inside `autoscale` are now optional
 - When `null`, defaults are automatically calculated based on the number of availability zones
 - For `high_load` use case (2 zones): all values are multiples of 2
 - For `cost_optimized`/`development` use cases (no zones): values remain as 1
@@ -93,6 +95,13 @@ The default value for `public_network_access_enabled` has been set to `true` and
 2. Rename it to `custom_domains`
 3. Rename `key_vault_id` to `key_vault_certificate_id`
 4. Remove all domain types that are not used (e.g., `developer_portal`, `portal`, `scm`)
+
+### Migrating Autoscale Configuration
+
+1. Find `autoscale` block in your module calls
+2. Remove the `enabled` field
+3. If you have custom values, keep them as is
+4. If you were relying on defaults, simply remove the entire `autoscale` block or only keep the fields you want to customize
 
 ## Note
 

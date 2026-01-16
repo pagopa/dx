@@ -66,18 +66,17 @@ locals {
   zone_multiplier = local.use_case_features.zones != null ? length(local.use_case_features.zones) : 1
 
   # Autoscale configuration with zone-aware defaults
-  autoscale_config = var.autoscale != null ? var.autoscale : {
-    enabled                       = true
-    minimum_instances             = local.zone_multiplier
-    default_instances             = local.zone_multiplier
-    maximum_instances             = 5 * local.zone_multiplier
-    scale_out_capacity_percentage = 60
-    scale_out_time_window         = "PT10M"
-    scale_out_value               = tostring(local.zone_multiplier)
-    scale_out_cooldown            = "PT45M"
-    scale_in_capacity_percentage  = 30
-    scale_in_time_window          = "PT30M"
-    scale_in_value                = tostring(local.zone_multiplier)
-    scale_in_cooldown             = "PT30M"
+  autoscale_config = {
+    minimum_instances             = coalesce(try(var.autoscale.minimum_instances, null), local.zone_multiplier)
+    default_instances             = coalesce(try(var.autoscale.default_instances, null), local.zone_multiplier)
+    maximum_instances             = coalesce(try(var.autoscale.maximum_instances, null), 5 * local.zone_multiplier)
+    scale_out_capacity_percentage = coalesce(try(var.autoscale.scale_out_capacity_percentage, null), 60)
+    scale_out_time_window         = coalesce(try(var.autoscale.scale_out_time_window, null), "PT10M")
+    scale_out_value               = coalesce(try(var.autoscale.scale_out_value, null), local.zone_multiplier)
+    scale_out_cooldown            = coalesce(try(var.autoscale.scale_out_cooldown, null), "PT45M")
+    scale_in_capacity_percentage  = coalesce(try(var.autoscale.scale_in_capacity_percentage, null), 30)
+    scale_in_time_window          = coalesce(try(var.autoscale.scale_in_time_window, null), "PT30M")
+    scale_in_value                = coalesce(try(var.autoscale.scale_in_value, null), local.zone_multiplier)
+    scale_in_cooldown             = coalesce(try(var.autoscale.scale_in_cooldown, null), "PT30M")
   }
 }

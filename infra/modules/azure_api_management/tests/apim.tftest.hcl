@@ -125,7 +125,6 @@ run "plan_with_invalid_parameters" {
 
     # Provide valid autoscale values (multiples of 2 for high_load zone redundancy)
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 8
@@ -192,7 +191,6 @@ run "apim_test_zones_public_ip" {
 
     # Provide valid autoscale values (multiples of the number of zones, which is 2 in this test, for high_load zone redundancy)
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 8
@@ -258,7 +256,6 @@ run "autoscale_validation_default_out_of_range" {
     subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 10
       maximum_instances             = 5
@@ -307,7 +304,6 @@ run "autoscale_validation_minimum_zero" {
     subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 0
       default_instances             = 2
       maximum_instances             = 5
@@ -356,7 +352,6 @@ run "autoscale_validation_scale_out_zero" {
     subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 2
       maximum_instances             = 5
@@ -405,7 +400,6 @@ run "autoscale_validation_scale_in_zero" {
     subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 2
       maximum_instances             = 5
@@ -455,7 +449,6 @@ run "autoscale_validation_zone_redundancy_odd_minimum" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 3
       default_instances             = 4
       maximum_instances             = 6
@@ -505,7 +498,6 @@ run "autoscale_validation_zone_redundancy_odd_maximum" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 7
@@ -555,7 +547,6 @@ run "autoscale_validation_zone_redundancy_odd_default" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 3
       maximum_instances             = 6
@@ -605,7 +596,6 @@ run "autoscale_validation_zone_redundancy_odd_scale_out" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 6
@@ -655,7 +645,6 @@ run "autoscale_validation_zone_redundancy_odd_scale_in" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 6
@@ -705,7 +694,6 @@ run "autoscale_validation_zone_redundancy_valid" {
     subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
-      enabled                       = true
       minimum_instances             = 2
       default_instances             = 4
       maximum_instances             = 8
@@ -935,6 +923,7 @@ run "custom_domains_all_types" {
   }
 }
 
+# Test autoscale defaults: for high_load use_case, values should be multiples of 2 (for 2 zones)
 run "autoscale_defaults_high_load_multiple_of_two" {
   command = plan
 
@@ -988,4 +977,46 @@ run "autoscale_defaults_high_load_multiple_of_two" {
     condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].rule[1].scale_action[0].value == 2
     error_message = "Default scale_in_value should be 2 (multiple of 2 for high_load with 2 zones)"
   }
+}
+
+# Test autoscale defaults: for high_load use_case, odd values should fail validation
+run "autoscale_config_high_load_not_multiple_of_two" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                          = run.setup_tests.tags
+    resource_group_name           = run.setup_tests.resource_group_name
+    use_case                      = "high_load"
+    publisher_email               = "example@pagopa.it"
+    publisher_name                = "Example Publisher"
+    public_ip_address_id          = run.setup_tests.pip_id
+    virtual_network_type_internal = true
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id = run.setup_tests.subnet_id
+
+    autoscale = {
+      minimum_instances             = 3
+      default_instances             = 4
+      maximum_instances             = 8
+      scale_out_capacity_percentage = 60
+    }
+  }
+
+  expect_failures = [
+    var.autoscale,
+  ]
 }
