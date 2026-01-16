@@ -8,10 +8,9 @@ const logger = getLogger(["mcpserver", "tool-logging"]);
 /**
  * Filter out undefined values from an object to match emitCustomEvent expectations
  */
-function filterUndefined(obj: Record<string, string | undefined>): Record<
-  string,
-  string
-> {
+function filterUndefined(
+  obj: Record<string, string | undefined>,
+): Record<string, string> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value !== undefined),
   ) as Record<string, string>;
@@ -84,8 +83,7 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
         emitCustomEvent(
           "ToolFailed",
           filterUndefined({
-            error:
-              error instanceof Error ? error.message : String(error),
+            error: error instanceof Error ? error.message : String(error),
             executionTimeMs: executionTime.toString(),
             requestId: context?.requestId,
             toolName,

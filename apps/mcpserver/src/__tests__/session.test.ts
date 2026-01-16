@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type Session, sessionStorage } from "./session.js";
+import { type Session, sessionStorage } from "../session.js";
 
 describe("Session Management", () => {
   it("should maintain session isolation between concurrent contexts", async () => {

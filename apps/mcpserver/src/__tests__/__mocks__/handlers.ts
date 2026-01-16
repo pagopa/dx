@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 import { z } from "zod";
 
-import type { CatalogEntry, PromptEntry, ToolDefinition } from "../types.js";
+import type { CatalogEntry, PromptEntry, ToolDefinition } from "../../types.js";
 
 export const mockTool: ToolDefinition = {
   annotations: {

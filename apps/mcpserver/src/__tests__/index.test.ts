@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { PromptEntry, ToolDefinition } from "./types.js";
+import type { PromptEntry, ToolDefinition } from "../types.js";
 
 import {
   mockCatalogEntry,
@@ -53,26 +53,26 @@ describe("MCP Server Handlers", () => {
     it("should validate required prompt arguments", () => {
       const missingRequiredArg = { arg2: "value2" };
       const hasAllRequired = mockCatalogEntry.prompt.arguments
-        .filter((arg) => arg.required)
-        .every((arg) => arg.name in missingRequiredArg);
+        .filter((arg: { required: boolean }) => arg.required)
+        .every((arg: { name: string }) => arg.name in missingRequiredArg);
 
       expect(hasAllRequired).toBe(false);
 
       const withAllRequired = { arg1: "value1", arg2: "value2" };
       const hasAllRequired2 = mockCatalogEntry.prompt.arguments
-        .filter((arg) => arg.required)
-        .every((arg) => arg.name in withAllRequired);
+        .filter((arg: { required: boolean }) => arg.required)
+        .every((arg: { name: string }) => arg.name in withAllRequired);
 
       expect(hasAllRequired2).toBe(true);
     });
 
     it("should handle missing required prompt arguments", () => {
       const requiredArgs = mockCatalogEntry.prompt.arguments
-        .filter((arg) => arg.required)
-        .map((arg) => arg.name);
+        .filter((arg: { required: boolean }) => arg.required)
+        .map((arg: { name: string }) => arg.name);
 
       const providedArgs = { arg2: "value" };
-      const missingArgs = requiredArgs.filter((arg) => !(arg in providedArgs));
+      const missingArgs = requiredArgs.filter((arg: string) => !(arg in providedArgs));
 
       expect(missingArgs).toEqual(["arg1"]);
     });
