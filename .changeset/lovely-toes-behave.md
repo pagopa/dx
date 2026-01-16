@@ -2,7 +2,7 @@
 "azure_api_management": major
 ---
 
-This is a **major breaking change**. New `custom_domains` variable structure, fix `autoscale` configuration, and added dependency on NSG resource.
+This is a **major breaking change**. New `custom_domains` variable structure, fix `autoscale` configuration, update public network definition, and added dependency on NSG resource.
 
 ## Upgrade Notes
 
@@ -80,6 +80,10 @@ This fixes the problem when `use_case` is set to `high_load` without the `autosc
 ### 3. NSG Dependency
 
 Added explicit `depends_on` relationship between APIM and NSG to prevent parallelism errors during apply operations.
+
+### 4. Public Network Access Default
+
+The default value for `public_network_access_enabled` has been setted to `true` and is not changed by the `use_case` variable anymore.
 
 ## Migration Guide
 
