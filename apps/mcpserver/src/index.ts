@@ -73,6 +73,16 @@ function createServer(): McpServer {
     const decoratedTool = withToolLogging(toolDef);
     const { annotations } = decoratedTool;
 
+    // Ensure parameters is a ZodObject (all tools must use z.object())
+    const zodObject = decoratedTool.parameters as z.ZodObject<
+      Record<string, z.ZodTypeAny>
+    >;
+    if (!zodObject.shape) {
+      throw new Error(
+        `Tool "${id}" must use z.object() for parameters schema`,
+      );
+    }
+
     mcpServer.registerTool(
       id,
       {
@@ -83,12 +93,7 @@ function createServer(): McpServer {
           readOnlyHint: annotations.readOnlyHint ?? true,
         },
         description: decoratedTool.description,
-        inputSchema:
-          (
-            decoratedTool.parameters as z.ZodObject<
-              Record<string, z.ZodTypeAny>
-            >
-          ).shape || decoratedTool.parameters,
+        inputSchema: zodObject.shape,
         title: annotations.title,
       },
       async (args: Record<string, unknown>): Promise<ToolCallResult> => {
