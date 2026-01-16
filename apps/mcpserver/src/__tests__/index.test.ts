@@ -117,7 +117,7 @@ describe("MCP Server Handlers", () => {
       const result = await mockTool.execute(args, undefined);
 
       expect(result).toContain("Tool executed with: test-input");
-      expect(mockTool.execute).toHaveBeenCalledWith();
+      expect(mockTool.execute).toHaveBeenCalledWith(args, undefined);
     });
 
     it("should reject requests with invalid tool names", () => {
