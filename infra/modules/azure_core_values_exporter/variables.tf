@@ -6,6 +6,7 @@ variable "core_state" {
     storage_account_name = optional(string, null)
     container_name       = optional(string, null)
     resource_group_name  = optional(string, null)
+    subscription_id      = optional(string, null)
 
     # S3 backend configuration (AWS)
     bucket         = optional(string, null)
