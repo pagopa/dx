@@ -935,3 +935,57 @@ run "custom_domains_all_types" {
   }
 }
 
+run "autoscale_defaults_high_load_multiple_of_two" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                          = run.setup_tests.tags
+    resource_group_name           = run.setup_tests.resource_group_name
+    use_case                      = "high_load"
+    publisher_email               = "example@pagopa.it"
+    publisher_name                = "Example Publisher"
+    public_ip_address_id          = run.setup_tests.pip_id
+    virtual_network_type_internal = true
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    subnet_id = run.setup_tests.subnet_id
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].minimum == 2
+    error_message = "Default minimum_instances should be 2 (multiple of 2 for high_load with 2 zones)"
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 2
+    error_message = "Default default_instances should be 2 (multiple of 2 for high_load with 2 zones)"
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].maximum == 10
+    error_message = "Default maximum_instances should be 10 (multiple of 2 for high_load with 2 zones)"
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].rule[0].scale_action[0].value == 2
+    error_message = "Default scale_out_value should be 2 (multiple of 2 for high_load with 2 zones)"
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].rule[1].scale_action[0].value == 2
+    error_message = "Default scale_in_value should be 2 (multiple of 2 for high_load with 2 zones)"
+  }
+}
