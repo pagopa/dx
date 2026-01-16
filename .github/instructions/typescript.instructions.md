@@ -6,6 +6,8 @@ applyTo: **/*.ts, **/*.js, package.json
 # Copilot Guidelines for TypeScript Code
 
 - Prefer named exports over default exports
+- Avvoid side effects in modules; modules must export values and functions without executing code on import
+- Avoid process.env access outside of entrypoint module; always pass configuration values as parameters
 - Use `@pagopa/eslint-config` for consistent linting
 - Modules and methods should be small and single-concern focused
 - Avoid barrel files; import directly from source files
@@ -16,6 +18,7 @@ applyTo: **/*.ts, **/*.js, package.json
 - Follow existing naming conventions in similar files
 - Always check inputs and validate external data using zod schemas
 - For new code, use [zod v4](https://zod.dev/v4) for schema validation (e.g., input validation, API responses, environment variables); when modifying existing code, follow the zod major version already used in that package until it is explicitly migrated
+- When using zod schemas, prefer `.safeParse()` for synchronous validation and handle both success and failure cases
 - Avoid nesting too many control structures; consider early returns or helper functions
 - Prefer Asynchonous methods when dealing with I/O operations
 - Favor dependency injection over directly instantiating objects within methods using `new`
