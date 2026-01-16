@@ -298,8 +298,8 @@ jobs:
             exit 1
           fi
 
-          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            echo "Invalid web_app_name input. Allowed: letters, numbers, ., _, -"
+          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9-]+$ ]]; then
+            echo "Invalid web_app_name input. Allowed: letters, numbers, -"
             exit 1
           fi
 
@@ -347,8 +347,8 @@ jobs:
             exit 1
           fi
 
-          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            echo "Invalid web_app_name input. Allowed: letters, numbers, ., _, -"
+          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9-]+$ ]]; then
+            echo "Invalid web_app_name input. Allowed: letters, numbers, -"
             exit 1
           fi
 
