@@ -72,11 +72,11 @@ locals {
     maximum_instances             = coalesce(try(var.autoscale.maximum_instances, null), 5 * local.zone_multiplier)
     scale_out_capacity_percentage = coalesce(try(var.autoscale.scale_out_capacity_percentage, null), 60)
     scale_out_time_window         = coalesce(try(var.autoscale.scale_out_time_window, null), "PT10M")
-    scale_out_value               = coalesce(try(var.autoscale.scale_out_value, null), local.zone_multiplier)
+    scale_out_value               = coalesce(try(var.autoscale.scale_out_value, null), tostring(local.zone_multiplier))
     scale_out_cooldown            = coalesce(try(var.autoscale.scale_out_cooldown, null), "PT45M")
     scale_in_capacity_percentage  = coalesce(try(var.autoscale.scale_in_capacity_percentage, null), 30)
     scale_in_time_window          = coalesce(try(var.autoscale.scale_in_time_window, null), "PT30M")
-    scale_in_value                = coalesce(try(var.autoscale.scale_in_value, null), local.zone_multiplier)
+    scale_in_value                = coalesce(try(var.autoscale.scale_in_value, null), tostring(local.zone_multiplier))
     scale_in_cooldown             = coalesce(try(var.autoscale.scale_in_cooldown, null), "PT30M")
   }
 }
