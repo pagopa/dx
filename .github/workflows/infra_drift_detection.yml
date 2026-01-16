@@ -84,14 +84,24 @@ jobs:
           if [ -z "$ENVIRONMENT" ]; then
             echo "Environment must be provided."
             exit 1
-          else
-            # Remove trailing slash from BASE_PATH if present
-            BASE_PATH="${BASE_PATH%/}"
-            # The directory is expected to be in the format
-            #  infra/resources/${{ inputs.environment }}
-            # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
+
+          if ! [[ "$ENVIRONMENT" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid environment input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
+          if ! [[ "$BASE_PATH" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+            echo "Invalid base_path input. Allowed: letters, numbers, /, _, -"
+            exit 1
+          fi
+
+          # Remove trailing slash from BASE_PATH if present
+          BASE_PATH="${BASE_PATH%/}"
+          # The directory is expected to be in the format
+          #  infra/resources/${{ inputs.environment }}
+          # Example: infra/resources/prod
+          printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # pin@v4
         name: Checkout

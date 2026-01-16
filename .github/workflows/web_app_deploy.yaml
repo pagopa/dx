@@ -63,6 +63,16 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
+      - name: Validate build inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$WORKSPACE" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+            echo "Invalid workspace_name input. Allowed: letters, numbers, /, _, -"
+            exit 1
+          fi
+
       - name: Prune
         env:
           WORKSPACE: ${{ env.WORKSPACE }}
@@ -151,6 +161,21 @@ jobs:
       contents: read
 
     steps:
+      - name: Validate deploy inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$RESOURCE_GROUP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid resource_group_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
+          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid web_app_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
       - name: Download Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
@@ -202,6 +227,18 @@ jobs:
     if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
 
     steps:
+      - name: Validate approval inputs
+        shell: bash
+        env:
+          REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$REQUIRED_ENVIRONMENT" =~ ^[a-zA-Z0-9._-]+-cd$ ]]; then
+            echo "Invalid environment input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
       - name: Approve Next Step
         run: |
 
@@ -251,6 +288,21 @@ jobs:
       contents: read
 
     steps:
+      - name: Validate deploy inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$RESOURCE_GROUP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid resource_group_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
+          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid web_app_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
       - name: Download Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
@@ -285,6 +337,21 @@ jobs:
       contents: read
 
     steps:
+      - name: Validate deploy inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$RESOURCE_GROUP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid resource_group_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
+          if ! [[ "$WEB_APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "Invalid web_app_name input. Allowed: letters, numbers, ., _, -"
+            exit 1
+          fi
+
       - name: Azure Login
         uses: pagopa/dx/.github/actions/azure-login@main
         env:

@@ -106,15 +106,32 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
           GITHUB_TOKEN: ${{ github.token }}
+          INPUT_FOLDER: ${{ inputs.folder }}
+          INPUT_CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
           set -eu
 
-          echo "Start pre-commit on specific folder ${{ inputs.folder }}"
+          if ! [[ "$INPUT_FOLDER" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+            echo "Invalid folder input. Allowed: letters, numbers, /, _, -"
+            exit 1
+          fi
 
-          find "${{ inputs.folder }}" -type f | xargs pre-commit run \
+          if [ -n "$INPUT_CHECK_TO_RUN" ] && ! [[ "$INPUT_CHECK_TO_RUN" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "Invalid check_to_run input. Allowed: letters, numbers, _, -"
+            exit 1
+          fi
+
+          CHECK_ARGS=()
+          if [ -n "$INPUT_CHECK_TO_RUN" ]; then
+            CHECK_ARGS=("$INPUT_CHECK_TO_RUN")
+          fi
+
+          echo "Start pre-commit on specific folder $INPUT_FOLDER"
+
+          find "$INPUT_FOLDER" -type f | xargs pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            ${{ inputs.check_to_run }} \
+            "${CHECK_ARGS[@]}" \
             --files 2>&1 | tee /tmp/pre-commit-output.log
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
@@ -123,8 +140,19 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
           GITHUB_TOKEN: ${{ github.token }}
+          INPUT_CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
           set -eu
+
+          if [ -n "$INPUT_CHECK_TO_RUN" ] && ! [[ "$INPUT_CHECK_TO_RUN" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "Invalid check_to_run input. Allowed: letters, numbers, _, -"
+            exit 1
+          fi
+
+          CHECK_ARGS=()
+          if [ -n "$INPUT_CHECK_TO_RUN" ]; then
+            CHECK_ARGS=("$INPUT_CHECK_TO_RUN")
+          fi
 
           echo "Start pre-commit only on modified files"
           echo "- FROM  Base ref: origin/${{ github.event.pull_request.base.ref }}"
@@ -135,7 +163,7 @@ jobs:
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
-            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+            "${CHECK_ARGS[@]}" 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
@@ -144,8 +172,19 @@ jobs:
           PRE_COMMIT_VERBOSE: ${{ inputs.verbose && '1' || '0' }}
           LOCK_MODULES_JSON_OUTPUT_FILE: "lock_output.json"
           GITHUB_TOKEN: ${{ github.token }}
+          INPUT_CHECK_TO_RUN: ${{ inputs.check_to_run }}
         run: |
           set -eu
+
+          if [ -n "$INPUT_CHECK_TO_RUN" ] && ! [[ "$INPUT_CHECK_TO_RUN" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+            echo "Invalid check_to_run input. Allowed: letters, numbers, _, -"
+            exit 1
+          fi
+
+          CHECK_ARGS=()
+          if [ -n "$INPUT_CHECK_TO_RUN" ]; then
+            CHECK_ARGS=("$INPUT_CHECK_TO_RUN")
+          fi
 
           echo "Start pre-commit on all files"
 
@@ -153,7 +192,7 @@ jobs:
             --color=always \
             --show-diff-on-failure \
             --all-files \
-            ${{ inputs.check_to_run }} 2>&1 | tee /tmp/pre-commit-output.log
+            "${CHECK_ARGS[@]}" 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Summarize pre-commit results
         if: always()
