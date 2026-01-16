@@ -2,12 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../../services/bedrock", () => ({
   queryKnowledgeBase: vi.fn().mockResolvedValue("mocked result"),
 }));
-vi.mock("../../config/aws", () => ({
-  kbRerankingEnabled: false,
-  kbRuntimeClient: "mockClient",
+import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
+
+import { createQueryPagoPADXDocumentationTool } from "../QueryPagoPADXDocumentation.js";
+
+const QueryPagoPADXDocumentationTool = createQueryPagoPADXDocumentationTool({
+  kbRuntimeClient: new BedrockAgentRuntimeClient({ region: "eu-central-1" }),
   knowledgeBaseId: "mockKbId",
-}));
-import { QueryPagoPADXDocumentationTool } from "../QueryPagoPADXDocumentation.js";
+  rerankingEnabled: false,
+});
 
 describe("QueryPagoPADXDocumentationTool", () => {
   it("should return results from the knowledge base", async () => {

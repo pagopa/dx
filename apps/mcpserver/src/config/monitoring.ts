@@ -16,11 +16,27 @@ import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 
 const logger = getLogger(["mcpserver", "monitoring"]);
 
-export function configureAzureMonitoring(): void {
+export type AzureMonitoringConfig = {
+  connectionString?: string;
+  samplingRatio?: number;
+};
+
+export function configureAzureMonitoring(config: AzureMonitoringConfig): void {
   try {
-    // Initialize Azure Monitor using environment variables
-    // This will read APPLICATIONINSIGHTS_CONNECTION_STRING and APPINSIGHTS_SAMPLING_PERCENTAGE
-    initAzureMonitor();
+    if (!config.connectionString) {
+      logger.info(
+        "Azure Application Insights connection string not provided. Monitoring disabled.",
+      );
+      return;
+    }
+
+    initAzureMonitor([], {
+      azureMonitorExporterOptions: {
+        connectionString: config.connectionString,
+      },
+      enableLiveMetrics: true,
+      samplingRatio: config.samplingRatio,
+    });
 
     logger.info(
       "Azure Application Insights monitoring configured successfully",

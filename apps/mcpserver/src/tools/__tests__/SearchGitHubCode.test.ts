@@ -27,12 +27,16 @@ vi.mock("@octokit/rest", () => ({
   })),
 }));
 
-import { SearchGitHubCodeTool } from "../SearchGitHubCode.js";
+import { createSearchGitHubCodeTool } from "../SearchGitHubCode.js";
+
+const SearchGitHubCodeTool = createSearchGitHubCodeTool({
+  defaultOrg: "pagopa",
+});
 
 describe("SearchGitHubCodeTool", () => {
   it("should reject empty queries", async () => {
     const args = { query: "" };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     expect(result).toContain("Error: Invalid input");
     expect(result).toContain("Query cannot be empty");
@@ -40,7 +44,7 @@ describe("SearchGitHubCodeTool", () => {
 
   it("should reject queries exceeding 500 characters", async () => {
     const args = { query: "a".repeat(501) };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     expect(result).toContain("Error: Invalid input");
     expect(result).toContain("Query too long");
@@ -48,7 +52,7 @@ describe("SearchGitHubCodeTool", () => {
 
   it("should reject unknown parameters due to strict schema", async () => {
     const args = { query: "test query", unknownParam: "value" };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     expect(result).toContain("Error: Invalid input");
     expect(result).toContain("Unrecognized key");
@@ -69,7 +73,7 @@ describe("SearchGitHubCodeTool", () => {
 
   it("should accept valid queries with token", async () => {
     const args = { query: "azure-function-app" };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     // Should return results, not an error
     expect(result).not.toContain("Error:");
@@ -78,14 +82,14 @@ describe("SearchGitHubCodeTool", () => {
 
   it("should support pagination parameters", async () => {
     const args = { page: 2, per_page: 20, query: "terraform module" };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     expect(result).not.toContain("Error:");
   });
 
   it("should reject per_page exceeding maximum", async () => {
     const args = { per_page: 100, query: "test query" };
-    const context = { session: { token: "test-token" } };
+    const context = { session: { id: "session-1", token: "test-token" } };
     const result = await SearchGitHubCodeTool.execute(args, context);
     expect(result).toContain("Error: Invalid input");
     expect(result).toContain("per_page cannot exceed 30");

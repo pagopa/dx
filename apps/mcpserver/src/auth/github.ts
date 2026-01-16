@@ -1,16 +1,24 @@
+/**
+ * GitHub authentication utilities.
+ *
+ * These helpers are configured from the entrypoint to avoid module side effects.
+ */
+
 import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
-import { z } from "zod/v4";
 
-const organizationsSchema = z
-  .array(z.string().nonempty())
-  .nonempty()
-  .transform((orgs) => orgs.map((org) => org.trim()))
-  .catch(["pagopa"]);
+type GithubAuthConfig = {
+  createOctokit?: (token: string) => OctokitLike;
+  requiredOrganizations: string[];
+};
 
-const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
-  process.env.REQUIRED_ORGANIZATIONS,
-);
+type OctokitLike = {
+  rest: {
+    orgs: {
+      listForAuthenticatedUser: () => Promise<{ data: { login: string }[] }>;
+    };
+  };
+};
 
 /**
  * Verifies that a user, identified by a GitHub personal access token, is a member
@@ -18,37 +26,44 @@ const REQUIRED_ORGANIZATIONS = organizationsSchema.parse(
  * @param token The user's GitHub personal access token.
  * @returns A boolean indicating whether the user is a member of a required organization.
  */
-export async function verifyGithubUser(token: string): Promise<boolean> {
+export function createGithubUserVerifier({
+  createOctokit,
+  requiredOrganizations,
+}: GithubAuthConfig): (token: string) => Promise<boolean> {
   const logger = getLogger(["mcpserver", "github-auth"]);
+  const buildOctokit =
+    createOctokit ?? ((token: string) => new Octokit({ auth: token }));
 
-  if (!token) {
-    return false;
-  }
-
-  const octokit = new Octokit({ auth: token });
-
-  try {
-    // Fetches the user's organization memberships using Octokit.
-    const { data: organizations }: { data: { login: string }[] } =
-      await octokit.rest.orgs.listForAuthenticatedUser();
-
-    const isMember = organizations.some((org) =>
-      REQUIRED_ORGANIZATIONS.includes(org.login),
-    );
-
-    if (isMember) {
-      logger.debug(
-        `User is a member of one of the required organizations: ${REQUIRED_ORGANIZATIONS.join(", ")}`,
-      );
-    } else {
-      logger.warn(
-        `User is not a member of any of the required organizations: ${REQUIRED_ORGANIZATIONS.join(", ")}`,
-      );
+  return async function verifyGithubUser(token: string): Promise<boolean> {
+    if (!token) {
+      return false;
     }
 
-    return isMember;
-  } catch (error) {
-    logger.error("Error verifying GitHub organization membership", { error });
-    return false;
-  }
+    const octokit = buildOctokit(token);
+
+    try {
+      // Fetches the user's organization memberships using Octokit.
+      const { data: organizations } =
+        await octokit.rest.orgs.listForAuthenticatedUser();
+
+      const isMember = organizations.some((org) =>
+        requiredOrganizations.includes(org.login),
+      );
+
+      if (isMember) {
+        logger.debug(
+          `User is a member of one of the required organizations: ${requiredOrganizations.join(", ")}`,
+        );
+      } else {
+        logger.warn(
+          `User is not a member of any of the required organizations: ${requiredOrganizations.join(", ")}`,
+        );
+      }
+
+      return isMember;
+    } catch (error) {
+      logger.error("Error verifying GitHub organization membership", { error });
+      return false;
+    }
+  };
 }

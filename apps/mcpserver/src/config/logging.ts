@@ -25,16 +25,17 @@ import { z } from "zod";
  */
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
 
-const logLevelSchema = z
-  .enum(["debug", "info", "warning", "error"])
-  .catch(DEFAULT_LOG_LEVEL);
+const logLevelSchema = z.enum(["debug", "info", "warning", "error"]);
 
-export async function configureLogging() {
-  const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel;
-  if (logLevel !== process.env.LOG_LEVEL) {
+export async function configureLogging(logLevelEnv: string) {
+  const parsedLogLevel = logLevelSchema.safeParse(logLevelEnv);
+  const logLevel = parsedLogLevel.success
+    ? parsedLogLevel.data
+    : DEFAULT_LOG_LEVEL;
+  if (!parsedLogLevel.success || logLevel !== logLevelEnv) {
     // Use console.warn for this early logging before LogTape is configured
     console.warn(
-      `Invalid log level: ${process.env.LOG_LEVEL}. Using ${DEFAULT_LOG_LEVEL}`,
+      `Invalid log level: ${logLevelEnv}. Using ${DEFAULT_LOG_LEVEL}`,
     );
   }
 

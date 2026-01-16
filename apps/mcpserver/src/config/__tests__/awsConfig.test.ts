@@ -1,22 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import * as awsConfig from "../aws.js";
+import {
+  createBedrockRuntimeClient,
+  rerankingSupportedRegions,
+} from "../aws.js";
 
 describe("aws config", () => {
-  it("should export kbRerankingEnabled as boolean", () => {
-    expect(typeof awsConfig.kbRerankingEnabled).toBe("boolean");
+  it("should export rerankingSupportedRegions as array", () => {
+    expect(Array.isArray(rerankingSupportedRegions)).toBe(true);
+    expect(rerankingSupportedRegions.length).toBeGreaterThan(0);
   });
 
-  it("should export knowledgeBaseId as string", () => {
-    expect(typeof awsConfig.knowledgeBaseId).toBe("string");
-  });
-
-  it("should export region as string", () => {
-    expect(typeof awsConfig.region).toBe("string");
-  });
-
-  it("should export kbRuntimeClient as object", () => {
-    expect(typeof awsConfig.kbRuntimeClient).toBe("object");
-    expect(awsConfig.kbRuntimeClient).toHaveProperty("send");
+  it("should create a Bedrock runtime client", () => {
+    const logger = {
+      error: vi.fn(),
+    };
+    const client = createBedrockRuntimeClient("eu-central-1", logger);
+    expect(client).toHaveProperty("send");
   });
 });

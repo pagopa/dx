@@ -2,13 +2,16 @@
  * Tool registry for dynamic tool registration
  *
  * This file provides a centralized, scalable way to manage MCP tools.
- * Adding a new tool only requires adding it to the toolDefinitions array.
+ * Adding a new tool only requires adding it to the createToolDefinitions return array.
  */
 
+import type { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
+
+import type { AwsRuntimeConfig } from "../config/aws.js";
 import type { ToolDefinition } from "../types.js";
 
-import { QueryPagoPADXDocumentationTool } from "./QueryPagoPADXDocumentation.js";
-import { SearchGitHubCodeTool } from "./SearchGitHubCode.js";
+import { createQueryPagoPADXDocumentationTool } from "./QueryPagoPADXDocumentation.js";
+import { createSearchGitHubCodeTool } from "./SearchGitHubCode.js";
 
 /**
  * Tool entry for the registry with registration metadata
@@ -33,15 +36,29 @@ export type ToolEntry = {
  * - Use snake_case
  * - Prefix with service name to avoid conflicts (e.g., pagopa_*)
  */
-export const toolDefinitions: ToolEntry[] = [
-  {
-    id: "pagopa_query_documentation",
-    requiresSession: false,
-    tool: QueryPagoPADXDocumentationTool,
-  },
-  {
-    id: "pagopa_search_github_code",
-    requiresSession: true,
-    tool: SearchGitHubCodeTool,
-  },
-];
+export type ToolRegistryConfig = {
+  aws: AwsRuntimeConfig;
+  githubSearchOrg: string;
+  kbRuntimeClient: BedrockAgentRuntimeClient;
+};
+
+export function createToolDefinitions(config: ToolRegistryConfig): ToolEntry[] {
+  return [
+    {
+      id: "pagopa_query_documentation",
+      requiresSession: false,
+      tool: createQueryPagoPADXDocumentationTool({
+        kbRuntimeClient: config.kbRuntimeClient,
+        knowledgeBaseId: config.aws.knowledgeBaseId,
+        rerankingEnabled: config.aws.rerankingEnabled,
+      }),
+    },
+    {
+      id: "pagopa_search_github_code",
+      requiresSession: true,
+      tool: createSearchGitHubCodeTool({
+        defaultOrg: config.githubSearchOrg,
+      }),
+    },
+  ];
+}

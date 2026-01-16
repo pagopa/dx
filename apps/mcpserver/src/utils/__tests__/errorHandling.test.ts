@@ -1,4 +1,6 @@
-import { AxiosError } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+
+import { AxiosError, AxiosHeaders } from "axios";
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
@@ -7,14 +9,16 @@ import { handleApiError, isAxiosError, isZodError } from "../errorHandling.js";
 /**
  * Helper to create an AxiosError with a response
  */
-const createAxiosResponseError = (status: number, statusText: string) =>
-  new AxiosError(statusText, "ERR_BAD_REQUEST", undefined, undefined, {
-    config: { headers: {} } as never,
+const createAxiosResponseError = (status: number, statusText: string) => {
+  const config: InternalAxiosRequestConfig = { headers: new AxiosHeaders() };
+  return new AxiosError(statusText, "ERR_BAD_REQUEST", config, undefined, {
+    config,
     data: {},
     headers: {},
     status,
     statusText,
   });
+};
 
 describe("handleApiError - Axios HTTP status codes", () => {
   it("should handle 400 Bad Request", () => {

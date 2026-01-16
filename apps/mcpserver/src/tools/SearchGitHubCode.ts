@@ -2,9 +2,9 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { z } from "zod";
 
-import { handleApiError } from "../utils/errorHandling.js";
+import type { ToolDefinition } from "../types.js";
 
-const defaultOrg = process.env.GITHUB_SEARCH_ORG || "pagopa";
+import { handleApiError } from "../utils/errorHandling.js";
 
 /**
  * Response format options for code search
@@ -20,6 +20,13 @@ enum ResponseFormat {
 const DEFAULT_PAGE = 1;
 const DEFAULT_PER_PAGE = 10;
 const MAX_PER_PAGE = 30;
+
+export type SearchGitHubCodeToolConfig = {
+  createOctokit?: OctokitFactory;
+  defaultOrg: string;
+};
+
+type OctokitFactory = (token: string) => Octokit;
 
 /**
  * Search output type
@@ -92,51 +99,25 @@ export const SearchGitHubCodeInputSchema = z
 type SearchGitHubCodeInput = z.infer<typeof SearchGitHubCodeInputSchema>;
 
 /**
- * Format search results as markdown
- */
-function formatMarkdownResults(output: SearchOutput): string {
-  const lines = [
-    `# Search Results for "${output.query}"`,
-    "",
-    `Found **${output.total_results}** total results (showing ${output.returned_results}, page ${output.page} of ${output.total_pages})`,
-    "",
-  ];
-
-  if (output.has_more) {
-    lines.push(
-      `> **Tip:** Use \`page: ${output.page + 1}\` to see more results.`,
-    );
-    lines.push("");
-  }
-
-  for (const result of output.results) {
-    lines.push(`## ${result.repository}`);
-    lines.push(`**Path:** \`${result.path}\``);
-    lines.push(`**URL:** ${result.url}`);
-    lines.push("");
-    lines.push("**Content:**");
-    lines.push("```");
-    lines.push(result.content);
-    lines.push("```");
-    lines.push("");
-  }
-
-  return lines.join("\n");
-}
-
-/**
  * A tool that searches for code in a GitHub organization.
  * Useful for finding examples of Terraform module usage or specific code patterns.
  */
-export const SearchGitHubCodeTool = {
-  annotations: {
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-    readOnlyHint: true,
-    title: "Search GitHub organization code",
-  },
-  description: `Search for code across repositories in a GitHub organization (defaults to PagoPA).
+export function createSearchGitHubCodeTool(
+  config: SearchGitHubCodeToolConfig,
+): ToolDefinition {
+  const defaultOrg = config.defaultOrg;
+  const buildOctokit =
+    config.createOctokit ?? ((token: string) => new Octokit({ auth: token }));
+
+  return {
+    annotations: {
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+      readOnlyHint: true,
+      title: "Search GitHub organization code",
+    },
+    description: `Search for code across repositories in a GitHub organization (defaults to PagoPA).
 
 **Purpose:**
 Find code examples, patterns, and usage of specific modules or libraries across the organization's repositories. Particularly useful for discovering how Terraform modules, APIs, or shared libraries are used in practice.
@@ -169,15 +150,18 @@ Find code examples, patterns, and usage of specific modules or libraries across 
 - Results are automatically truncated if they exceed character limits
 - Requires valid GitHub token in session context`,
 
-  execute: async (
-    args: Record<string, unknown>,
-    context?: { session?: { token?: string } },
-  ): Promise<string> => {
-    const logger = getLogger(["mcpserver", "github-search"]);
+    execute: async (
+      args: Record<string, unknown>,
+      context?: { session?: { token?: string } },
+    ): Promise<string> => {
+      const logger = getLogger(["mcpserver", "github-search"]);
 
-    try {
-      const parsedArgs: SearchGitHubCodeInput =
-        SearchGitHubCodeInputSchema.parse(args);
+      const parsedArgsResult = SearchGitHubCodeInputSchema.safeParse(args);
+      if (!parsedArgsResult.success) {
+        return handleApiError(parsedArgsResult.error);
+      }
+
+      const parsedArgs: SearchGitHubCodeInput = parsedArgsResult.data;
 
       const org = defaultOrg;
       const token = context?.session?.token;
@@ -189,7 +173,7 @@ Find code examples, patterns, and usage of specific modules or libraries across 
         return "Error: GitHub token not available in session. Please ensure you are authenticated.";
       }
 
-      const octokit = new Octokit({ auth: token });
+      const octokit = buildOctokit(token);
 
       const extensionFilter = parsedArgs.extension
         ? ` extension:${parsedArgs.extension}`
@@ -197,78 +181,115 @@ Find code examples, patterns, and usage of specific modules or libraries across 
       const searchQuery = `${parsedArgs.query} org:${org}${extensionFilter}`;
       logger.debug("Executing GitHub code search");
 
-      const { data } = await octokit.rest.search.code({
-        page,
-        per_page: perPage,
-        q: searchQuery,
-      });
+      try {
+        const { data } = await octokit.rest.search.code({
+          page,
+          per_page: perPage,
+          q: searchQuery,
+        });
 
-      if (data.items.length === 0) {
-        return format === ResponseFormat.JSON
-          ? JSON.stringify(
-              { message: "No results found", results: [] },
-              null,
-              2,
-            )
-          : `No results found for query: "${parsedArgs.query}"`;
-      }
+        if (data.items.length === 0) {
+          return format === ResponseFormat.JSON
+            ? JSON.stringify(
+                { message: "No results found", results: [] },
+                null,
+                2,
+              )
+            : `No results found for query: "${parsedArgs.query}"`;
+        }
 
-      const results = await Promise.all(
-        data.items.map(async (item) => {
-          try {
-            const { data: fileContent } = await octokit.rest.repos.getContent({
-              owner: org,
-              path: item.path,
-              repo: item.repository.name,
-            });
+        const results = await Promise.all(
+          data.items.map(async (item) => {
+            try {
+              const { data: fileContent } = await octokit.rest.repos.getContent(
+                {
+                  owner: org,
+                  path: item.path,
+                  repo: item.repository.name,
+                },
+              );
 
-            if ("content" in fileContent) {
-              return {
-                content: Buffer.from(fileContent.content, "base64").toString(
-                  "utf-8",
-                ),
-                path: item.path,
-                repository: item.repository.full_name,
-                url: item.html_url,
-              };
+              if ("content" in fileContent) {
+                return {
+                  content: Buffer.from(fileContent.content, "base64").toString(
+                    "utf-8",
+                  ),
+                  path: item.path,
+                  repository: item.repository.full_name,
+                  url: item.html_url,
+                };
+              }
+              return null;
+            } catch (error) {
+              logger.error(`Error fetching file ${item.path}`, { error });
+              return null;
             }
-            return null;
-          } catch (error) {
-            logger.error(`Error fetching file ${item.path}`, { error });
-            return null;
-          }
-        }),
-      );
+          }),
+        );
 
-      const validResults = results.filter(
-        (r): r is SearchResultItem => r !== null,
-      );
+        const validResults = results.filter(
+          (r): r is SearchResultItem => r !== null,
+        );
 
-      const totalPages = Math.ceil(data.total_count / perPage);
-      const hasMore = page < totalPages;
+        const totalPages = Math.ceil(data.total_count / perPage);
+        const hasMore = page < totalPages;
 
-      const output: SearchOutput = {
-        has_more: hasMore,
-        organization: org,
-        page,
-        per_page: perPage,
-        query: parsedArgs.query,
-        results: validResults,
-        returned_results: validResults.length,
-        total_pages: totalPages,
-        total_results: data.total_count,
-      };
+        const output: SearchOutput = {
+          has_more: hasMore,
+          organization: org,
+          page,
+          per_page: perPage,
+          query: parsedArgs.query,
+          results: validResults,
+          returned_results: validResults.length,
+          total_pages: totalPages,
+          total_results: data.total_count,
+        };
 
-      return format === ResponseFormat.JSON
-        ? JSON.stringify(output, null, 2)
-        : formatMarkdownResults(output);
-    } catch (error) {
-      logger.error("Error searching GitHub code", { error });
-      return handleApiError(error);
-    }
-  },
+        return format === ResponseFormat.JSON
+          ? JSON.stringify(output, null, 2)
+          : formatMarkdownResults(output);
+      } catch (error) {
+        logger.error("Error searching GitHub code", { error });
+        return handleApiError(error);
+      }
+    },
 
-  name: "pagopa_search_github_code",
+    name: "pagopa_search_github_code",
 
-  parameters: SearchGitHubCodeInputSchema,
-};
+    parameters: SearchGitHubCodeInputSchema,
+  };
+}
+
+/**
+ * Format search results as markdown
+ */
+function formatMarkdownResults(output: SearchOutput): string {
+  const lines = [
+    `# Search Results for "${output.query}"`,
+    "",
+    `Found **${output.total_results}** total results (showing ${output.returned_results}, page ${output.page} of ${output.total_pages})`,
+    "",
+  ];
+
+  if (output.has_more) {
+    lines.push(
+      `> **Tip:** Use \`page: ${output.page + 1}\` to see more results.`,
+    );
+    lines.push("");
+  }
+
+  for (const result of output.results) {
+    lines.push(`## ${result.repository}`);
+    lines.push(`**Path:** \`${result.path}\``);
+    lines.push(`**URL:** ${result.url}`);
+    lines.push("");
+    lines.push("**Content:**");
+    lines.push("```");
+    lines.push(result.content);
+    lines.push("```");
+    lines.push("");
+  }
+
+  return lines.join("\n");
+}
