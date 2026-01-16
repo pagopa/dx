@@ -1,19 +1,9 @@
-import { getLogger } from "@logtape/logtape";
-import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 import type { PromptDefinition } from "@pagopa/dx-mcpprompts";
 
-const logger = getLogger(["mcpserver", "prompt-logging"]);
+import { getLogger } from "@logtape/logtape";
+import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
-/**
- * Filter out undefined values from an object to match emitCustomEvent expectations
- */
-function filterUndefined(
-  obj: Record<string, string | undefined>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value !== undefined),
-  ) as Record<string, string>;
-}
+const logger = getLogger(["mcpserver", "prompt-logging"]);
 
 /**
  * Decorator that adds logging to prompt load functions.
@@ -48,4 +38,15 @@ export function withPromptLogging(
       return await originalLoad(args);
     },
   };
+}
+
+/**
+ * Filter out undefined values from an object to match emitCustomEvent expectations
+ */
+function filterUndefined(
+  obj: Record<string, string | undefined>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined),
+  ) as Record<string, string>;
 }

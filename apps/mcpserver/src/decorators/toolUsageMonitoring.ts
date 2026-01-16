@@ -6,17 +6,6 @@ import type { ToolContext, ToolDefinition } from "../types.js";
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
- * Filter out undefined values from an object to match emitCustomEvent expectations
- */
-function filterUndefined(
-  obj: Record<string, string | undefined>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value !== undefined),
-  ) as Record<string, string>;
-}
-
-/**
  * Decorator that adds logging to tool execute functions.
  * Logs when a tool is executed to both console and Azure Application Insights.
  * Preserves the exact original function signature and type.
@@ -94,4 +83,15 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
       }
     },
   };
+}
+
+/**
+ * Filter out undefined values from an object to match emitCustomEvent expectations
+ */
+function filterUndefined(
+  obj: Record<string, string | undefined>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined),
+  ) as Record<string, string>;
 }

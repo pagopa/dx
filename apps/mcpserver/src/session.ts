@@ -12,9 +12,9 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 export type Session = {
   id: string;
-  token: string;
   /** AWS Lambda request ID for correlating logs across CloudWatch and Application Insights */
   requestId?: string;
+  token: string;
 };
 
 export const sessionStorage = new AsyncLocalStorage<Session>();

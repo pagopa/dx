@@ -238,8 +238,8 @@ const httpServer = http.createServer(
 
       const session = {
         id: crypto.randomUUID(),
-        token: apiKey,
         requestId,
+        token: apiKey,
       };
 
       // Execute request in isolated session context
