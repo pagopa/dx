@@ -131,7 +131,7 @@ jobs:
           find "$INPUT_FOLDER" -type f | xargs pre-commit run \
             --color=always \
             --show-diff-on-failure \
-            "${CHECK_ARGS[@]}" \
+            "${CHECK_ARGS[@]:-}" \
             --files 2>&1 | tee /tmp/pre-commit-output.log
       - name: Run pre-commit on Modified Files
         if: ${{ inputs.folder == '' && github.event_name == 'pull_request' && inputs.enable_modified_files_detection }}
@@ -163,7 +163,7 @@ jobs:
             --show-diff-on-failure \
             --from-ref origin/${{ github.event.pull_request.base.ref }} \
             --to-ref origin/${{ github.event.pull_request.head.ref }} \
-            "${CHECK_ARGS[@]}" 2>&1 | tee /tmp/pre-commit-output.log
+            "${CHECK_ARGS[@]:-}" 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Run pre-commit
         if: ${{ inputs.folder == '' && (!github.event_name == 'pull_request' || !inputs.enable_modified_files_detection) }}
@@ -192,7 +192,7 @@ jobs:
             --color=always \
             --show-diff-on-failure \
             --all-files \
-            "${CHECK_ARGS[@]}" 2>&1 | tee /tmp/pre-commit-output.log
+            "${CHECK_ARGS[@]:-}" 2>&1 | tee /tmp/pre-commit-output.log
 
       - name: Summarize pre-commit results
         if: always()
