@@ -143,3 +143,69 @@ run "app_service_override_size_fail" {
     var.size,
   ]
 }
+run "app_service_with_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    slot_app_settings = {
+      WEBSITE_SWAP_WARMUP_PING_PATH = "/health"
+    }
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created when enabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 1
+    error_message = "Diagnostic settings should be created for the slot when enabled"
+  }
+}
+
+run "app_service_without_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = false
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
+    error_message = "Diagnostic settings should not be created when disabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 0
+    error_message = "Diagnostic settings should not be created for slot when disabled"
+  }
+}
+
+run "app_service_with_diagnostic_settings_only_log_analytics" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Log Analytics workspace"
+  }
+}
