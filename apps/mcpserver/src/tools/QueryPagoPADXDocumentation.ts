@@ -65,7 +65,7 @@ export const QueryPagoPADXDocumentationTool = {
   annotations: {
     destructiveHint: false,
     idempotentHint: true,
-    openWorldHint: true,
+    openWorldHint: false,
     readOnlyHint: true,
     title: "Query PagoPA DX Documentation",
   },
