@@ -1,0 +1,63 @@
+{
+  "name": "@pagopa/opex-dashboard",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "apps/opex-dashboard"
+  },
+  "version": "0.0.1",
+  "description": "Generate operational dashboards from OpenAPI specifications",
+  "main": "dist/index.js",
+  "bin": {
+    "opex-dashboard": "./bin/index.js"
+  },
+  "type": "module",
+  "files": [
+    "bin",
+    "dist",
+    "config.schema.json"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "tsup && tsx scripts/generate-json-schema.ts",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "dashboard",
+    "openapi",
+    "azure",
+    "terraform",
+    "monitoring",
+    "observability"
+  ],
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "commander": "^14.0.2",
+    "js-yaml": "^4.1.1",
+    "tmp": "^0.2.5",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "catalog:",
+    "@types/tmp": "^0.2.6",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "tsx": "^4.21.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
