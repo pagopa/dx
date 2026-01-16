@@ -70,7 +70,7 @@ variable "autoscale" {
       tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
       tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0
     )
-    error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}.  This ensures proper distribution across availability zones."
+    error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. This ensures proper distribution across availability zones."
   }
 
   validation {
@@ -131,7 +131,7 @@ variable "virtual_network_type_internal" {
 
 variable "enable_public_network_access" {
   type        = bool
-  description = "Specifies whether public network access is enabled (`true` as Default )."
+  description = "Specifies whether public network access is enabled (`true` as Default)."
   default     = true
 }
 

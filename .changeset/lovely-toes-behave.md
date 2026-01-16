@@ -54,15 +54,15 @@ custom_domains = {
       key_vault_certificate_id = "https://..."
     }
   ]
-  # Other optional types: management, portal, developer_portal, scm
+  # Other optional types: portal, developer_portal, scm
 }
 ```
 
 **Benefits:**
 
-- new variable name `custom_domains` better reflects its purpose
-- `key_vault_id` now is renamed to `key_vault_certificate_id` for clarity, as terraform documentation, refers to Key Vault Secret that contain Certificate.
-- optional domain types can be omitted if not used
+- New variable name `custom_domains` better reflects its purpose
+- `key_vault_id` is now renamed to `key_vault_certificate_id` for clarity, as the Terraform documentation refers to Key Vault Secrets that contain certificates.
+- Optional domain types can be omitted if not used
 - `default_ssl_binding` for proxy is only specified when needed
 
 ### 2. Autoscale Configuration
@@ -83,7 +83,7 @@ Added explicit `depends_on` relationship between APIM and NSG to prevent paralle
 
 ### 4. Public Network Access Default
 
-The default value for `public_network_access_enabled` has been setted to `true` and is not changed by the `use_case` variable anymore.
+The default value for `public_network_access_enabled` has been set to `true` and is not changed by the `use_case` variable anymore.
 
 ## Migration Guide
 
