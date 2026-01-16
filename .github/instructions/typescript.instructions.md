@@ -6,7 +6,7 @@ applyTo: **/*.ts, **/*.js, package.json
 # Copilot Guidelines for TypeScript Code
 
 - Prefer named exports over default exports
-- Avvoid side effects in modules; modules must export values and functions without executing code on import
+- Avoid side effects in modules; modules must export values and functions without executing code on import
 - Avoid process.env access outside of entrypoint module; always pass configuration values as parameters
 - Use `@pagopa/eslint-config` for consistent linting
 - Modules and methods should be small and single-concern focused
