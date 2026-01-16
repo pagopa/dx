@@ -143,10 +143,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-      APP_NAME: ${{ inputs.app_name }}
-      HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
 
     steps:
       - name: checkout
@@ -168,6 +164,8 @@ jobs:
       - name: Deploy
         if: ${{ inputs.use_staging_slot == false }}
         env:
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+          APP_NAME: ${{ inputs.app_name }}
           BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
           WORKSPACE: ${{ github.workspace }}
         run: |
@@ -182,6 +180,8 @@ jobs:
       - name: Deploy to Staging Slot
         if: ${{ inputs.use_staging_slot == true }}
         env:
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+          APP_NAME: ${{ inputs.app_name }}
           BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
           WORKSPACE: ${{ github.workspace }}
         run: |
@@ -196,6 +196,9 @@ jobs:
 
       - name: Ping Staging Health
         if: ${{ inputs.use_staging_slot == true }}
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
         run: |
           curl \
             --retry 5 \
