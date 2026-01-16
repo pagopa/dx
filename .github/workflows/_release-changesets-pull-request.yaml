@@ -11,6 +11,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    environment: npm-prod-cd
     permissions:
       contents: write
       id-token: write
