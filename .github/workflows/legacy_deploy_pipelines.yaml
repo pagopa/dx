@@ -149,26 +149,6 @@ jobs:
       HEALTH_CHECK_PATH: ${{ inputs.health_check_path }}
 
     steps:
-      - name: Validate deployment inputs
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if ! [[ "$RESOURCE_GROUP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            echo "Invalid resource_group_name input. Allowed: letters, numbers, ., _, -"
-            exit 1
-          fi
-
-          if ! [[ "$APP_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
-            echo "Invalid app_name input. Allowed: letters, numbers, ., _, -"
-            exit 1
-          fi
-
-          if [ -n "$HEALTH_CHECK_PATH" ] && ! [[ "$HEALTH_CHECK_PATH" =~ ^/[a-zA-Z0-9/_-]*$ ]]; then
-            echo "Invalid health_check_path input. Allowed: /, letters, numbers, _, -"
-            exit 1
-          fi
-
       - name: checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
@@ -227,7 +207,7 @@ jobs:
         if: ${{ inputs.use_staging_slot == true }}
         run: |
           az webapp deployment slot swap \
-            -g "$RESOURCE_GROUP_NAME" \
-            -n "$APP_NAME" \
+            -g ${{ inputs.resource_group_name }} \
+            -n ${{ inputs.app_name }} \
             --slot staging \
             --target-slot production
