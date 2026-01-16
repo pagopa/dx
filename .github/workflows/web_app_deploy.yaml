@@ -290,6 +290,9 @@ jobs:
     steps:
       - name: Validate deploy inputs
         shell: bash
+        env:
+          RESOURCE_GROUP_NAME: ${{ env.RESOURCE_GROUP_NAME }}
+          WEB_APP_NAME: ${{ env.WEB_APP_NAME }}
         run: |
           set -euo pipefail
 
@@ -339,6 +342,9 @@ jobs:
     steps:
       - name: Validate deploy inputs
         shell: bash
+        env:
+          RESOURCE_GROUP_NAME: ${{ env.RESOURCE_GROUP_NAME }}
+          WEB_APP_NAME: ${{ env.WEB_APP_NAME }}
         run: |
           set -euo pipefail
 
