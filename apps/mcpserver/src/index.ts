@@ -58,7 +58,7 @@ async function authenticateGitHubToken(
  * This function is called for each request to ensure complete isolation
  * and thread-safety in concurrent scenarios (e.g., AWS Lambda warm starts).
  */
-function createServer(): McpServer {
+function createServer(requestId?: string): McpServer {
   const mcpServer = new McpServer({
     name: "pagopa-dx-mcp-server",
     version: packageJson.version,
@@ -95,8 +95,12 @@ function createServer(): McpServer {
         title: annotations.title,
       },
       async (args: Record<string, unknown>): Promise<ToolCallResult> => {
+        const store = sessionStorage.getStore();
         const context = requiresSession
-          ? { session: sessionStorage.getStore() }
+          ? {
+              requestId: store?.requestId,
+              session: store,
+            }
           : undefined;
         const result = await decoratedTool.execute(args, context);
         return {
@@ -117,6 +121,7 @@ function createServer(): McpServer {
     const decoratedPrompt = withPromptLogging(
       catalogEntry.prompt,
       catalogEntry.id,
+      requestId,
     );
 
     // Build Zod schema from prompt arguments
@@ -224,13 +229,24 @@ const httpServer = http.createServer(
       }
 
       // Create session for AsyncLocalStorage context (stateless per-request)
-      const session = { id: crypto.randomUUID(), token: apiKey };
+      // Extract request ID from AWS Lambda trace (undefined if not in AWS)
+      const traceHeader = req.headers["x-amzn-trace-id"];
+      const requestId =
+        typeof traceHeader === "string"
+          ? traceHeader.split(";")[0].replace("Root=", "")
+          : undefined;
+
+      const session = {
+        id: crypto.randomUUID(),
+        token: apiKey,
+        requestId,
+      };
 
       // Execute request in isolated session context
       await sessionStorage.run(session, async () => {
         // Create new server and transport for this request
         // This ensures complete isolation between concurrent requests
-        const server = createServer();
+        const server = createServer(requestId);
         const transport = new StreamableHTTPServerTransport({
           // This MCP server is stateless at the transport layer: each HTTP request
           // runs in its own AsyncLocalStorage-backed session context via

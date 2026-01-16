@@ -70,6 +70,8 @@ export type ToolCallResult = {
  * Context passed to tool execution functions
  */
 export type ToolContext = {
+  /** AWS Lambda request ID for correlating logs across CloudWatch and Application Insights */
+  requestId?: string;
   session?: Session;
 };
 

@@ -6,6 +6,18 @@ import type { ToolContext, ToolDefinition } from "../types.js";
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
+ * Filter out undefined values from an object to match emitCustomEvent expectations
+ */
+function filterUndefined(obj: Record<string, string | undefined>): Record<
+  string,
+  string
+> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined),
+  ) as Record<string, string>;
+}
+
+/**
  * Decorator that adds logging to tool execute functions.
  * Logs when a tool is executed to both console and Azure Application Insights.
  * Preserves the exact original function signature and type.
@@ -25,16 +37,17 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
       const typedArgs = args as Record<string, unknown>;
 
       const startTime = Date.now();
-      const eventData = {
-        arguments: JSON.stringify(typedArgs),
-        timestamp: new Date().toISOString(),
-        toolName,
-      };
 
       // Log to console (goes to CloudWatch in Lambda)
-      logger.debug(`Tool executed: ${toolName} - ${JSON.stringify(eventData)}`);
+      logger.debug(`Tool executed: ${toolName}`);
 
       // Emit custom event to Azure Application Insights
+      // Note: Arguments are not logged to avoid exposing sensitive data
+      const eventData = filterUndefined({
+        requestId: context?.requestId,
+        timestamp: new Date().toISOString(),
+        toolName,
+      });
       emitCustomEvent("ToolExecuted", eventData)("mcpserver");
 
       try {
@@ -49,10 +62,14 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
         );
 
         // Emit completion event to Azure Application Insights
-        emitCustomEvent("ToolCompleted", {
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
+        emitCustomEvent(
+          "ToolCompleted",
+          filterUndefined({
+            executionTimeMs: executionTime.toString(),
+            requestId: context?.requestId,
+            toolName,
+          }),
+        )("mcpserver");
 
         return result;
       } catch (error) {
@@ -64,11 +81,16 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
         );
 
         // Emit error event to Azure Application Insights
-        emitCustomEvent("ToolFailed", {
-          error: error instanceof Error ? error.message : String(error),
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
+        emitCustomEvent(
+          "ToolFailed",
+          filterUndefined({
+            error:
+              error instanceof Error ? error.message : String(error),
+            executionTimeMs: executionTime.toString(),
+            requestId: context?.requestId,
+            toolName,
+          }),
+        )("mcpserver");
 
         throw error;
       }
