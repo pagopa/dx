@@ -1,0 +1,6 @@
+coverage/
+test/data/
+bin/
+dist/
+config.schema.json
+src/builders/azure-dashboard/template.ts

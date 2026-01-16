@@ -1,0 +1,124 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Proxy API
+  description: Mobile and web proxy API gateway.
+host: app-backend.io.italia.it
+basePath: /api/v1
+schemes:
+  - https
+security:
+  - Bearer: []
+paths:
+  "/services/{service_id}":
+    x-swagger-router-controller: ServicesController
+    parameters:
+      - name: service_id
+        in: path
+        type: string
+        required: true
+        description: The ID of an existing Service.
+    get:
+      operationId: getService
+      summary: Get Service
+      description: A previously created service with the provided service ID is returned.
+      responses:
+        "200":
+          description: Service found.
+          schema:
+            "$ref": "#/definitions/ServicePublic"
+          examples:
+            application/json:
+              department_name: "IO"
+              organization_fiscal_code: "00000000000"
+              organization_name: "IO"
+              service_id: "5a563817fcc896087002ea46c49a"
+              service_name: "App IO"
+              version: 1
+        "400":
+          description: Bad request
+          schema:
+            $ref: "#/definitions/ProblemJson"
+        "401":
+          description: Bearer token null or expired.
+        "404":
+          description: No service found for the provided ID.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+        "429":
+          description: Too many requests
+          schema:
+            $ref: "#/definitions/ProblemJson"
+        "500":
+          description: There was an error in retrieving the service.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+      parameters: []
+  "/services":
+    x-swagger-router-controller: ServicesController
+    get:
+      operationId: getVisibleServices
+      summary: Get all visible services
+      description: |-
+        Returns the description of all visible services.
+      responses:
+        "200":
+          description: Found.
+          schema:
+            $ref: "#/definitions/PaginatedServiceTupleCollection"
+          examples:
+            application/json:
+              items:
+                - service_id: "AzureDeployc49a"
+                  version: 1
+                - service_id: "5a25abf4fcc89605c082f042c49a"
+                  version: 0
+              page_size: 1
+        "401":
+          description: Bearer token null or expired.
+        "429":
+          description: Too many requests
+          schema:
+            $ref: "#/definitions/ProblemJson"
+        "500":
+          description: There was an error in retrieving the services.
+          schema:
+            $ref: "#/definitions/ProblemJson"
+      parameters:
+        - $ref: "#/parameters/PaginationRequest"
+definitions:
+  ProblemJson:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ProblemJson"
+  ServiceId:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServiceId"
+  ServiceName:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServiceName"
+  ServicePublic:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServicePublic"
+  PaginatedServiceTupleCollection:
+    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/PaginatedServiceTupleCollection"
+responses: {}
+parameters:
+  PageSize:
+    name: page_size
+    type: integer
+    in: query
+    minimum: 1
+    maximum: 100
+    required: false
+    description: How many items a page should include.
+  PaginationRequest:
+    type: string
+    name: cursor
+    in: query
+    minimum: 1
+    description: An opaque identifier that points to the next item in the collection.
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
