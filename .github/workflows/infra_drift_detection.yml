@@ -96,6 +96,10 @@ jobs:
             exit 1
           fi
 
+          if [[ "$BASE_PATH" == /* ]]; then
+            echo "Invalid base_path input. Absolute paths are not allowed."
+            exit 1
+          fi
           # Remove trailing slash from BASE_PATH if present
           BASE_PATH="${BASE_PATH%/}"
           # The directory is expected to be in the format
