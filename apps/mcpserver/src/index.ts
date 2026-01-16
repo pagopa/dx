@@ -78,9 +78,7 @@ function createServer(): McpServer {
       Record<string, z.ZodTypeAny>
     >;
     if (!zodObject.shape) {
-      throw new Error(
-        `Tool "${id}" must use z.object() for parameters schema`,
-      );
+      throw new Error(`Tool "${id}" must use z.object() for parameters schema`);
     }
 
     mcpServer.registerTool(
