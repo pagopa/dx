@@ -62,6 +62,25 @@ This monorepo houses the DevEx Initiative: tools, patterns, and infrastructure m
 
 **GitHub Actions**: Actions in [actions/](../actions/) are composite actions with `action.yaml` manifests. They follow a consistent structure with README.md, CHANGELOG.md, and package.json for dependency tracking.
 
+## Pull Request Title and Description
+
+When generating pull request titles and descriptions, follow these guidelines:
+
+- Use descriptive pull request titles that explain the purpose of the change
+- Avoid generic titles like "Update code" or "Fix bug", be specific about the reason for the change
+
+## Copilot Guidelines for Commit Messages
+
+When generating commit messages, follow these guidelines:
+
+- Keep the subject line concise, ideally under 50 characters
+- Never exceed 72 characters
+- Capitalize the subject line
+- Don't put a period at the end of the subject line
+- Use the imperative mood
+- Try to describe the rationale behind the changes instead of the changes themselves
+- Avoid generic messages like "Refactor code to improve readability", be specific about the reason for the refactor
+
 ## References
 
 - Documentation site: https://dx.pagopa.it/docs/
