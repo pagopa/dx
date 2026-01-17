@@ -4,7 +4,7 @@ import { AxiosError, AxiosHeaders } from "axios";
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
-import { handleApiError, isAxiosError, isZodError } from "../errorHandling.js";
+import { handleApiError, isAxiosError, isZodError } from "../error-handling.js";
 
 /**
  * Helper to create an AxiosError with a response

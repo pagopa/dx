@@ -10,8 +10,8 @@ import type { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-ru
 import type { AwsRuntimeConfig } from "../config/aws.js";
 import type { ToolDefinition } from "../types.js";
 
-import { createQueryPagoPADXDocumentationTool } from "./QueryPagoPADXDocumentation.js";
-import { createSearchGitHubCodeTool } from "./SearchGitHubCode.js";
+import { createQueryPagoPADXDocumentationTool } from "./query-pago-pa-dx-documentation.js";
+import { createSearchGitHubCodeTool } from "./search-git-hub-code.js";
 
 /**
  * Tool entry for the registry with registration metadata

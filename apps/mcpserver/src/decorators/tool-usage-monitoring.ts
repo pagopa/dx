@@ -3,7 +3,7 @@ import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
 import type { ToolContext, ToolDefinition } from "../types.js";
 
-import { filterUndefined } from "../utils/filterUndefined.js";
+import { filterUndefined } from "../utils/filter-undefined.js";
 
 const logger = getLogger(["mcpserver", "tool-logging"]);
 

@@ -17,16 +17,12 @@ import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
 import { createGithubUserVerifier } from "./auth/github.js";
-import { loadConfig, type AppConfig } from "./config.js";
-import {
-  createBedrockRuntimeClient,
-} from "./config/aws.js";
+import { type AppConfig, loadConfig } from "./config.js";
+import { createBedrockRuntimeClient } from "./config/aws.js";
 import { configureLogging } from "./config/logging.js";
-import {
-  configureAzureMonitoring,
-} from "./config/monitoring.js";
-import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
-import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
+import { configureAzureMonitoring } from "./config/monitoring.js";
+import { withPromptLogging } from "./decorators/prompt-usage-monitoring.js";
+import { withToolLogging } from "./decorators/tool-usage-monitoring.js";
 import { sessionStorage } from "./session.js";
 import { createToolDefinitions, type ToolEntry } from "./tools/registry.js";
 import { GetPromptResultType, ToolCallResult } from "./types.js";
@@ -37,8 +33,6 @@ type CreateServerParams = {
   toolDefinitions: ToolEntry[];
 };
 
-const DEFAULT_PORT = 8080;
-
 export async function main(
   env: NodeJS.ProcessEnv,
 ): Promise<http.Server | undefined> {
@@ -47,7 +41,6 @@ export async function main(
   await configureLogging(config.logLevel);
   configureAzureMonitoring(config.monitoring);
 
-  const logger = getLogger(["mcpserver"]);
   const enabledPrompts = await getEnabledPrompts();
 
   const httpServer = await startHttpServer(config, enabledPrompts);

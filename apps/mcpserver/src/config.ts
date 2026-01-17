@@ -5,7 +5,7 @@ import { z } from "zod";
 import { type AwsRuntimeConfig } from "./config/aws.js";
 import { type AzureMonitoringConfig } from "./config/monitoring.js";
 import { formatZodIssues } from "./utils/errors.js";
-import { normalizeBoolean } from "./utils/normalizeBoolean.js";
+import { normalizeBoolean } from "./utils/normalize-boolean.js";
 
 export type AppConfig = {
   aws: AwsRuntimeConfig;

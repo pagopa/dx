@@ -3,7 +3,7 @@ import type { PromptDefinition } from "@pagopa/dx-mcpprompts";
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
-import { filterUndefined } from "../utils/filterUndefined.js";
+import { filterUndefined } from "../utils/filter-undefined.js";
 
 const logger = getLogger(["mcpserver", "prompt-logging"]);
 

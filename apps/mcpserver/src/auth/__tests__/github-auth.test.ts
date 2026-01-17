@@ -1,4 +1,5 @@
 import { getLogger } from "@logtape/logtape";
+import { Octokit } from "@octokit/rest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createGithubUserVerifier } from "../github.js";
@@ -24,13 +25,14 @@ describe("verifyGithubUser", () => {
 
   it("returns false if no token is provided", async () => {
     const verifyGithubUser = createGithubUserVerifier({
-      createOctokit: () => ({
-        rest: {
-          orgs: {
-            listForAuthenticatedUser: vi.fn(),
+      createOctokit: () =>
+        ({
+          rest: {
+            orgs: {
+              listForAuthenticatedUser: vi.fn(),
+            },
           },
-        },
-      }),
+        }) as unknown as Octokit,
       requiredOrganizations: ["pagopa"],
     });
     const result = await verifyGithubUser("");
@@ -39,15 +41,16 @@ describe("verifyGithubUser", () => {
 
   it("returns false if Octokit throws", async () => {
     const verifyGithubUser = createGithubUserVerifier({
-      createOctokit: () => ({
-        rest: {
-          orgs: {
-            listForAuthenticatedUser: vi
-              .fn()
-              .mockRejectedValue(new Error("fail")),
+      createOctokit: () =>
+        ({
+          rest: {
+            orgs: {
+              listForAuthenticatedUser: vi
+                .fn()
+                .mockRejectedValue(new Error("fail")),
+            },
           },
-        },
-      }),
+        }) as unknown as Octokit,
       requiredOrganizations: ["pagopa"],
     });
     const result = await verifyGithubUser("token");
@@ -60,15 +63,16 @@ describe("verifyGithubUser", () => {
 
   it("returns false if user is not member of required org", async () => {
     const verifyGithubUser = createGithubUserVerifier({
-      createOctokit: () => ({
-        rest: {
-          orgs: {
-            listForAuthenticatedUser: vi.fn().mockResolvedValue({
-              data: [{ login: "otherorg" }],
-            }),
+      createOctokit: () =>
+        ({
+          rest: {
+            orgs: {
+              listForAuthenticatedUser: vi.fn().mockResolvedValue({
+                data: [{ login: "otherorg" }],
+              }),
+            },
           },
-        },
-      }),
+        }) as unknown as Octokit,
       requiredOrganizations: ["pagopa"],
     });
     const result = await verifyGithubUser("token");
@@ -80,15 +84,16 @@ describe("verifyGithubUser", () => {
 
   it("returns true if user is member of required org", async () => {
     const verifyGithubUser = createGithubUserVerifier({
-      createOctokit: () => ({
-        rest: {
-          orgs: {
-            listForAuthenticatedUser: vi.fn().mockResolvedValue({
-              data: [{ login: "pagopa" }],
-            }),
+      createOctokit: () =>
+        ({
+          rest: {
+            orgs: {
+              listForAuthenticatedUser: vi.fn().mockResolvedValue({
+                data: [{ login: "pagopa" }],
+              }),
+            },
           },
-        },
-      }),
+        }) as unknown as Octokit,
       requiredOrganizations: ["pagopa"],
     });
     const result = await verifyGithubUser("token");

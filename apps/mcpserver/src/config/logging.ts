@@ -25,6 +25,7 @@ import * as z from "zod";
  */
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logLevelSchema = z
   .enum(["error", "trace", "debug", "info", "warning", "fatal"])
   .catch(DEFAULT_LOG_LEVEL);

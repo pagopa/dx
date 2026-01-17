@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { ToolDefinition } from "../types.js";
 
-import { handleApiError } from "../utils/errorHandling.js";
+import { handleApiError } from "../utils/error-handling.js";
 
 /**
  * Response format options for code search

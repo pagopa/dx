@@ -4,7 +4,7 @@ vi.mock("../../services/bedrock", () => ({
 }));
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 
-import { createQueryPagoPADXDocumentationTool } from "../QueryPagoPADXDocumentation.js";
+import { createQueryPagoPADXDocumentationTool } from "../query-pago-pa-dx-documentation.js";
 
 const QueryPagoPADXDocumentationTool = createQueryPagoPADXDocumentationTool({
   kbRuntimeClient: new BedrockAgentRuntimeClient({ region: "eu-central-1" }),

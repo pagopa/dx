@@ -14,7 +14,7 @@ describe("aws config", () => {
   it("should create a Bedrock runtime client", () => {
     const logger = {
       error: vi.fn(),
-    };
+    } as any;
     const client = createBedrockRuntimeClient("eu-central-1", logger);
     expect(client).toHaveProperty("send");
   });
