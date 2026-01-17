@@ -5,7 +5,6 @@
  * at import time. All runtime setup flows from the main entrypoint.
  */
 
-import type { LogLevel } from "@logtape/logtape";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { getLogger } from "@logtape/logtape";
@@ -18,13 +17,12 @@ import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
 import { createGithubUserVerifier } from "./auth/github.js";
+import { loadConfig, type AppConfig } from "./config.js";
 import {
-  type AwsRuntimeConfig,
   createBedrockRuntimeClient,
 } from "./config/aws.js";
 import { configureLogging } from "./config/logging.js";
 import {
-  type AzureMonitoringConfig,
   configureAzureMonitoring,
 } from "./config/monitoring.js";
 import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
@@ -33,32 +31,16 @@ import { sessionStorage } from "./session.js";
 import { createToolDefinitions, type ToolEntry } from "./tools/registry.js";
 import { GetPromptResultType, ToolCallResult } from "./types.js";
 
-type AppConfig = {
-  aws: AwsRuntimeConfig;
-  github: {
-    requiredOrganizations: string[];
-    searchOrg: string;
-  };
-  logLevel: LogLevel;
-  monitoring: AzureMonitoringConfig;
-  port: number;
-};
-
 type CreateServerParams = {
   enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>;
   requestId?: string;
   toolDefinitions: ToolEntry[];
 };
 
-type MainOptions = {
-  returnServer?: boolean;
-};
-
 const DEFAULT_PORT = 8080;
 
 export async function main(
   env: NodeJS.ProcessEnv,
-  options?: MainOptions,
 ): Promise<http.Server | undefined> {
   const config = loadConfig(env);
 
@@ -66,16 +48,10 @@ export async function main(
   configureAzureMonitoring(config.monitoring);
 
   const logger = getLogger(["mcpserver"]);
-  logger.info("MCP Server starting...");
-
   const enabledPrompts = await getEnabledPrompts();
 
   const httpServer = await startHttpServer(config, enabledPrompts);
-  if (options?.returnServer) {
-    return httpServer;
-  }
-
-  return undefined;
+  return httpServer;
 }
 
 /**
@@ -208,77 +184,6 @@ function createServer({
   );
 
   return mcpServer;
-}
-
-const logLevelSchema = z.enum(["debug", "info", "warning", "error"]);
-
-const envSchema = z.object({
-  APPINSIGHTS_SAMPLING_PERCENTAGE: z.coerce.number().min(0).max(100).optional(),
-  APPLICATIONINSIGHTS_CONNECTION_STRING: z.string().optional(),
-  AWS_REGION: z.string().optional(),
-  BEDROCK_KB_RERANKING_ENABLED: z.string().optional(),
-  BEDROCK_KNOWLEDGE_BASE_ID: z.string().optional(),
-  GITHUB_SEARCH_ORG: z.string().optional(),
-  LOG_LEVEL: logLevelSchema,
-  PORT: z.coerce.number().int().positive().optional(),
-  REQUIRED_ORGANIZATIONS: z.string().optional(),
-});
-
-function formatZodIssues(issues: z.ZodIssue[]): string {
-  return issues
-    .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-    .join("; ");
-}
-
-function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
-  const parsedEnv = envSchema.safeParse(env);
-  if (!parsedEnv.success) {
-    throw new Error(
-      `Invalid environment variables: ${formatZodIssues(parsedEnv.error.issues)}`,
-    );
-  }
-
-  const rawEnv = parsedEnv.data;
-  const port = rawEnv.PORT ?? DEFAULT_PORT;
-  const rerankingEnabled = normalizeBoolean(
-    rawEnv.BEDROCK_KB_RERANKING_ENABLED,
-    true,
-  );
-
-  return {
-    aws: {
-      knowledgeBaseId: rawEnv.BEDROCK_KNOWLEDGE_BASE_ID ?? "",
-      region: rawEnv.AWS_REGION ?? "eu-central-1",
-      rerankingEnabled,
-    },
-    github: {
-      requiredOrganizations: parseRequiredOrganizations(
-        rawEnv.REQUIRED_ORGANIZATIONS,
-      ),
-      searchOrg: rawEnv.GITHUB_SEARCH_ORG ?? "pagopa",
-    },
-    logLevel: rawEnv.LOG_LEVEL,
-    monitoring: {
-      connectionString: rawEnv.APPLICATIONINSIGHTS_CONNECTION_STRING,
-      samplingRatio: (rawEnv.APPINSIGHTS_SAMPLING_PERCENTAGE ?? 5) / 100,
-    },
-    port,
-  };
-}
-
-function normalizeBoolean(value: string | undefined, defaultValue: boolean) {
-  if (!value) {
-    return defaultValue;
-  }
-  return value.trim().toLowerCase() === "true";
-}
-
-function parseRequiredOrganizations(value: string | undefined): string[] {
-  const organizations = (value ?? "")
-    .split(",")
-    .map((org) => org.trim())
-    .filter(Boolean);
-  return organizations.length > 0 ? organizations : ["pagopa"];
 }
 
 async function startHttpServer(
