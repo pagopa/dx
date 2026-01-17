@@ -7,7 +7,7 @@ applyTo: "**/*.test.ts, **/*.spec.ts"
 
 ## General Rules
 
-- **Location**: Place tests next to the code they exercise in a **tests** folder near the source file. Prefer co-location to keep context close.
+- **Location**: Place tests next to the code they exercise in a `__tests__` folder near the source file. Prefer co-location to keep context close.
 - **Test runner**: Use `vitest` as the test runner for all TypeScript projects in the monorepo.
 - **No unsafe casts**: Never use `as` or other type-assertions to silence TypeScript errors in tests. If types are painful to express, fix the production types or create minimal, strongly-typed test helpers.
 - **Arrange-Act-Assert**: Structure tests with clear Arrange, Act, and Assert sections. Keep each test focused on one behavior.
