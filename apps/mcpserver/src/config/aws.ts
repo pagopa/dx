@@ -6,6 +6,7 @@
  */
 
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
+import { Logger } from "@logtape/logtape";
 
 // List of AWS regions that support reranking
 export const rerankingSupportedRegions = [
@@ -22,13 +23,9 @@ export type AwsRuntimeConfig = {
   rerankingEnabled: boolean;
 };
 
-type LoggerLike = {
-  error: (message: string, details?: Record<string, unknown>) => void;
-};
-
 export function createBedrockRuntimeClient(
   region: string,
-  logger: LoggerLike,
+  logger: Logger,
 ): BedrockAgentRuntimeClient {
   try {
     return new BedrockAgentRuntimeClient({ region });

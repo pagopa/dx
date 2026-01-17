@@ -3,6 +3,8 @@ import type { PromptDefinition } from "@pagopa/dx-mcpprompts";
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
+import { filterUndefined } from "../utils/filterUndefined.js";
+
 const logger = getLogger(["mcpserver", "prompt-logging"]);
 
 /**
@@ -38,15 +40,4 @@ export function withPromptLogging(
       return await originalLoad(args);
     },
   };
-}
-
-/**
- * Filter out undefined values from an object to match emitCustomEvent expectations
- */
-function filterUndefined(
-  obj: Record<string, string | undefined>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value !== undefined),
-  ) as Record<string, string>;
 }

@@ -14,14 +14,13 @@
 import { getLogger } from "@logtape/logtape";
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 
-const logger = getLogger(["mcpserver", "monitoring"]);
-
 export type AzureMonitoringConfig = {
   connectionString?: string;
   samplingRatio?: number;
 };
 
 export function configureAzureMonitoring(config: AzureMonitoringConfig): void {
+  const logger = getLogger(["mcpserver", "monitoring"]);
   try {
     if (!config.connectionString) {
       logger.info(

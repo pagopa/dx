@@ -8,16 +8,8 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 
 type GithubAuthConfig = {
-  createOctokit?: (token: string) => OctokitLike;
+  createOctokit?: (token: string) => Octokit;
   requiredOrganizations: string[];
-};
-
-type OctokitLike = {
-  rest: {
-    orgs: {
-      listForAuthenticatedUser: () => Promise<{ data: { login: string }[] }>;
-    };
-  };
 };
 
 /**

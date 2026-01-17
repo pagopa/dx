@@ -219,7 +219,7 @@ const envSchema = z.object({
   BEDROCK_KB_RERANKING_ENABLED: z.string().optional(),
   BEDROCK_KNOWLEDGE_BASE_ID: z.string().optional(),
   GITHUB_SEARCH_ORG: z.string().optional(),
-  LOG_LEVEL: logLevelSchema.optional().default("info"),
+  LOG_LEVEL: logLevelSchema,
   PORT: z.coerce.number().int().positive().optional(),
   REQUIRED_ORGANIZATIONS: z.string().optional(),
 });
