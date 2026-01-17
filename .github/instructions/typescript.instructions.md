@@ -5,6 +5,8 @@ applyTo: "**/*.ts, **/*.js, package.json"
 
 # Copilot Guidelines for TypeScript Code
 
+## General Rules
+
 - Use kebab-case for file and folder names.
 - Use named exports; avoid default exports.
 - Keep modules free of side effects: export values and functions without executing code at import time.
