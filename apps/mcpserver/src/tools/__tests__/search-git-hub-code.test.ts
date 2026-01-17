@@ -27,7 +27,7 @@ vi.mock("@octokit/rest", () => ({
   })),
 }));
 
-import { createSearchGitHubCodeTool } from "../search-git-hub-code.js";
+import { createSearchGitHubCodeTool } from "../search-github-code.js";
 
 const SearchGitHubCodeTool = createSearchGitHubCodeTool({
   defaultOrg: "pagopa",

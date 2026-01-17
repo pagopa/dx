@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { QueryPagoPADXDocumentationInputSchema } from "../query-pago-pa-dx-documentation.js";
-import { SearchGitHubCodeInputSchema } from "../search-git-hub-code.js";
+import { QueryPagoPADXDocumentationInputSchema } from "../query-pagopa-dx-documentation.js";
+import { SearchGitHubCodeInputSchema } from "../search-github-code.js";
 
 // Test the Zod schema validation used in the tools
 describe("Query Validation", () => {
