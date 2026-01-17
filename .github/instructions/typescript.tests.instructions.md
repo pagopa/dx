@@ -5,10 +5,6 @@ applyTo: "**/*.test.ts, **/*.spec.ts"
 
 # Copilot Guidelines for Testing TypeScript Code
 
-## Purpose
-
-These guidelines explain our expectations for TypeScript unit and integration tests. They aim to keep tests readable, reliable, and fast while preserving type-safety and maintainability.
-
 ## General Rules
 
 - **Location**: Place tests next to the code they exercise in a **tests** folder near the source file. Prefer co-location to keep context close.
@@ -21,26 +17,10 @@ These guidelines explain our expectations for TypeScript unit and integration te
 
 ## Mocks and Isolation
 
-- **External dependencies**: Mock external HTTP, filesystem, database, and cloud SDK calls. Prefer `vi.mock()` for module-level mocks.
+- **Module mocks**: `vi.mock()` and `vitest-mock-extended` for typed mocks.
+- **External dependencies**: Mock external HTTP, filesystem, database, and cloud SDK calls.
 - **Side effects**: Stub or spy side effects (logging, metrics, environment-dependent behavior) rather than asserting on their internal state.
 - **Do not mock the unit under test**: Only mock collaborators; avoid mocking functions on the same module you're testing.
-
-## Integration Tests
-
-- Use integration tests sparingly for pieces that need end-to-end verification (e.g., Terraform unit tests, small service sample flows).
-- Mark long-running or environment-dependent tests with explicit tags and separate them from unit tests (e.g., `vitest --config ./vitest.integration.config.ts`).
-
-## Test Data and Fixtures
-
-- Keep fixtures minimal and specific to the test. Avoid large fixture blobs shared across many tests.
-- Use builder/factory helpers to construct objects with sensible defaults and optional overrides.
-
-## Recommended Tools
-
-- Test runner: `vitest`
-- Assertions: `expect` from `vitest`
-- Module mocks: `vi.mock()` and `vitest-mock-extended` for typed mocks
-- Snapshots: Use sparingly and prefer explicit assertions over large snapshot files
 
 ## CI and Coverage
 
