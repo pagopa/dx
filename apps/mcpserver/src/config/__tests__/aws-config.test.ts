@@ -1,3 +1,4 @@
+import { Logger } from "@logtape/logtape";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -14,7 +15,7 @@ describe("aws config", () => {
   it("should create a Bedrock runtime client", () => {
     const logger = {
       error: vi.fn(),
-    } as any;
+    } as unknown as Logger;
     const client = createBedrockRuntimeClient("eu-central-1", logger);
     expect(client).toHaveProperty("send");
   });
