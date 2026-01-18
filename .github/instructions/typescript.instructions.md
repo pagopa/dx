@@ -12,7 +12,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Keep modules free of side effects: export values and functions without executing code at import time.
 - Do not access `process.env` outside an entrypoint; pass configuration through parameters.
 - Use `@pagopa/eslint-config` for consistent linting rules.
-- Keep modules and functions small and single-responsibility.
+- Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
 - Add a short file header that states the module purpose.

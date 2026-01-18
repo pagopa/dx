@@ -26,7 +26,6 @@ applyTo: "**/*.test.ts, **/*.spec.ts"
 
 - Tests must run in CI. Use `pnpm exec nx test <project>` or `pnpm exec vitest` for package-scoped runs.
 - Keep tests fast: aim for unit tests to complete in under a few seconds each. Slow tests should be marked and run separately.
-- Maintain coverage thresholds per project. If a project requires a change to thresholds, open a PR documenting the rationale.
 
 ## When To Fix Code vs Tests
 
