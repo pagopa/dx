@@ -251,11 +251,6 @@ func validateRedundancy(domain, name, abbreviation string) *function.FuncError {
 	normalizedName := strings.ToLower(name)
 	normalizedAbbreviation := strings.ToLower(abbreviation)
 
-	// Domain can only be used when name is provided
-	if domain != "" && normalizedName == "" {
-		return function.NewFuncError("Resource domain can only be used when name is also provided")
-	}
-
 	// Domain and name cannot be the same
 	if domain != "" && normalizedName != "" && domain == normalizedName {
 		return function.NewFuncError("Resource domain cannot be the same as the resource name")

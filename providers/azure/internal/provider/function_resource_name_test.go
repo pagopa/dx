@@ -647,34 +647,6 @@ func TestResourceNameFunction_LongerPrefixes(t *testing.T) {
 	}
 }
 
-func TestResourceNameFunction_DomainWithoutName(t *testing.T) {
-	t.Parallel()
-	// Test that domain cannot be used without name
-	resource.UnitTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_8_0),
-		},
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-        output "test" {
-          value = provider::dx::resource_name({
-						prefix = "dx",
-						domain = "payments",
-						environment = "d",
-						location = "weu",
-						resource_type = "virtual_machine",
-						instance_number = "1"
-					})
-        }
-        `,
-				ExpectError: regexp.MustCompile(`Resource domain can[\s\n]+only be used when name is also provided`),
-			},
-		},
-	})
-}
-
 func TestResourceNameFunction_DomainSameAsName(t *testing.T) {
 	t.Parallel()
 	// Test that domain cannot be the same as name
