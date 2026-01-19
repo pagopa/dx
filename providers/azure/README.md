@@ -143,8 +143,8 @@ Generates a resource name based on the standardized prefix and additional parame
 | prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                        |
 | environment     | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
 | location        | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
-| domain          | String  |    No    | Domain grouping (optional value that requires `name` to be set).                  |
-| name            | String  |    No    | Resource name (cannot overlap with resource type abbreviation).                   |
+| domain          | String  |    No    | Domain grouping (optional).                                                       |
+| name            | String  |    No    | Resource name (optional, cannot overlap with resource type abbreviation).         |
 | resource_type   | String  |   Yes    | Type of the resource (see table).                                                 |
 | instance_number | Integer |   Yes    | Instance number of the resource (1-99).                                           |
 
@@ -169,7 +169,6 @@ output "resource_name" {
 > [!NOTE]
 >
 > - To call a function use the format: `provider::PROVIDER_NAME::FUNCTION_NAME(...)`
-> - `domain` can only be used when `name` is also provided
 > - `name` cannot match or be part of the resource type abbreviation (e.g., don't use `name = "kv"` with `resource_type = "key_vault"`)
 
 **Resource Types:**
