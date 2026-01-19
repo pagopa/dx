@@ -138,15 +138,15 @@ Generates a resource name based on the standardized prefix and additional parame
 
 **Inputs:**
 
-| Name        |  Type   | Required | Description                                                                       |
-| :---------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
-| prefix      | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                        |
-| environment | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
-| location    | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
-| domain      | String  |    No    | Optional value that specify the domain.                                           |
-| resource    | String  |   Yes    | Name of the resource.                                                             |
-| type        | String  |   Yes    | Type of the resource (see table).                                                 |
-| instance    | Integer |   Yes    | Instance number of the resource.                                                  |
+| Name            |  Type   | Required | Description                                                                       |
+| :-------------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
+| prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                        |
+| environment     | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
+| location        | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
+| domain          | String  |    No    | Domain grouping (optional).                                                       |
+| name            | String  |    No    | Resource name (optional, cannot overlap with resource type abbreviation).         |
+| resource_type   | String  |   Yes    | Type of the resource (see table).                                                 |
+| instance_number | Integer |   Yes    | Instance number of the resource (1-99).                                           |
 
 **Example:**
 
@@ -166,8 +166,10 @@ output "resource_name" {
 
 - **Output**: dx-d-itn-app-blob-pep-01
 
-> [!NOTE]  
-> Remember that to call a function is needed the path provider::PROVIDER_NAME::FUNCTION_NAME(...)
+> [!NOTE]
+>
+> - To call a function use the format: `provider::PROVIDER_NAME::FUNCTION_NAME(...)`
+> - `name` cannot match or be part of the resource type abbreviation (e.g., don't use `name = "kv"` with `resource_type = "key_vault"`)
 
 **Resource Types:**
 
