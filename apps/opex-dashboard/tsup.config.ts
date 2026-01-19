@@ -1,42 +1,17 @@
 import { defineConfig } from "tsup";
 
-export default defineConfig([
-  // CLI entry
-  {
-    banner: { js: "#!/usr/bin/env node" },
-    clean: true,
-    define: {
-      __CLI_VERSION__: `"${process.env.npm_package_version || "0.0.0"}"`,
-    },
-    dts: false,
-    entry: ["src/cli/index.ts"],
-    format: ["esm"],
-    loader: {
-      ".ini": "text",
-      ".kusto": "text",
-      ".sh": "text",
-      ".tf": "text",
-      ".tfvars": "text",
-    },
-    outDir: "bin",
-    sourcemap: true,
-    splitting: false,
+export default defineConfig({
+  banner: {
+    js: "#!/usr/bin/env node",
   },
-  // Library entry
-  {
-    clean: false,
-    dts: true,
-    entry: ["src/index.ts"],
-    format: ["esm"],
-    loader: {
-      ".ini": "text",
-      ".kusto": "text",
-      ".sh": "text",
-      ".tf": "text",
-      ".tfvars": "text",
-    },
-    outDir: "dist",
-    sourcemap: true,
-    splitting: false,
+  clean: true,
+  define: {
+    __CLI_VERSION__: `"${process.env.npm_package_version || "0.0.0"}"`,
   },
-]);
+  dts: false,
+  entry: ["src/cli/index.ts"],
+  format: ["esm"],
+  outDir: "bin",
+  target: "esnext",
+  tsconfig: "./tsconfig.json",
+});
