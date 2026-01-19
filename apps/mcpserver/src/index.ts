@@ -1,9 +1,8 @@
-#!/usr/bin/env node
 /**
  * PagoPA DX Knowledge Retrieval MCP Server
  *
- * This server provides tools to interact with DX documentation and GitHub repositories.
- * It supports stateless operation via HTTP and manages session context for concurrent requests.
+ * This module exposes the main server startup logic without triggering side effects
+ * at import time. All runtime setup flows from the main entrypoint.
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -17,24 +16,36 @@ import * as http from "node:http";
 import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
-import { verifyGithubUser } from "./auth/github.js";
+import { createGithubUserVerifier } from "./auth/github.js";
+import { type AppConfig, loadConfig } from "./config.js";
+import { createBedrockRuntimeClient } from "./config/aws.js";
 import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
-import { withPromptLogging } from "./decorators/promptUsageMonitoring.js";
-import { withToolLogging } from "./decorators/toolUsageMonitoring.js";
+import { withPromptLogging } from "./decorators/prompt-usage-monitoring.js";
+import { withToolLogging } from "./decorators/tool-usage-monitoring.js";
 import { sessionStorage } from "./session.js";
-import { toolDefinitions } from "./tools/registry.js";
+import { createToolDefinitions, type ToolEntry } from "./tools/registry.js";
 import { GetPromptResultType, ToolCallResult } from "./types.js";
 
-// Configure logging
-await configureLogging();
-await configureAzureMonitoring();
+type CreateServerParams = {
+  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>;
+  requestId?: string;
+  toolDefinitions: ToolEntry[];
+};
 
-const logger = getLogger(["mcpserver"]);
-logger.info("MCP Server starting...");
+export async function main(
+  env: NodeJS.ProcessEnv,
+): Promise<http.Server | undefined> {
+  const config = loadConfig(env);
 
-// Load enabled prompts for later registration
-const enabledPrompts = await getEnabledPrompts();
+  await configureLogging(config.logLevel);
+  configureAzureMonitoring(config.monitoring);
+
+  const enabledPrompts = await getEnabledPrompts();
+
+  const httpServer = await startHttpServer(config, enabledPrompts);
+  return httpServer;
+}
 
 /**
  * Validates a GitHub token via the GitHub API.
@@ -45,6 +56,7 @@ const enabledPrompts = await getEnabledPrompts();
  */
 async function authenticateGitHubToken(
   token: string | undefined,
+  verifyGithubUser: (token: string) => Promise<boolean>,
 ): Promise<null | string> {
   if (!token) {
     return null;
@@ -53,12 +65,12 @@ async function authenticateGitHubToken(
   return isValid ? token : null;
 }
 
-/**
- * Creates a new MCP server instance with all tools and prompts registered.
- * This function is called for each request to ensure complete isolation
- * and thread-safety in concurrent scenarios (e.g., AWS Lambda warm starts).
- */
-function createServer(requestId?: string): McpServer {
+function createServer({
+  enabledPrompts,
+  requestId,
+  toolDefinitions,
+}: CreateServerParams): McpServer {
+  const logger = getLogger(["mcpserver"]);
   const mcpServer = new McpServer({
     name: "pagopa-dx-mcp-server",
     version: packageJson.version,
@@ -74,12 +86,10 @@ function createServer(requestId?: string): McpServer {
     const { annotations } = decoratedTool;
 
     // Ensure parameters is a ZodObject (all tools must use z.object())
-    const zodObject = decoratedTool.parameters as z.ZodObject<
-      Record<string, z.ZodTypeAny>
-    >;
-    if (!zodObject.shape) {
+    if (!(decoratedTool.parameters instanceof z.ZodObject)) {
       throw new Error(`Tool "${id}" must use z.object() for parameters schema`);
     }
+    const zodObject = decoratedTool.parameters;
 
     mcpServer.registerTool(
       id,
@@ -125,7 +135,11 @@ function createServer(requestId?: string): McpServer {
     );
 
     // Build Zod schema from prompt arguments
-    const argsSchemaShape: Record<string, z.ZodTypeAny> = {};
+    const argsSchemaShape: Record<
+      string,
+      | z.ZodOptional<z.ZodType<string, z.ZodTypeDef, string>>
+      | z.ZodType<string, z.ZodTypeDef, string>
+    > = {};
     for (const arg of catalogEntry.prompt.arguments) {
       const fieldSchema = z.string().describe(arg.description);
       argsSchemaShape[arg.name] = arg.required
@@ -165,116 +179,138 @@ function createServer(requestId?: string): McpServer {
   return mcpServer;
 }
 
-/**
- * HTTP server for stateless MCP operations
- *
- * Each request:
- * 1. Authenticates via GitHub PAT (x-gh-pat header)
- * 2. Creates a new transport for stateless operation
- * 3. Executes in AsyncLocalStorage context for request-scoped data
- * 4. Cleans up resources after completion
- */
-const PORT = parseInt(process.env.PORT || "8080", 10);
-const httpServer = http.createServer(
-  async (req: IncomingMessage, res: ServerResponse) => {
-    // Configure CORS headers
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-gh-pat");
+async function startHttpServer(
+  config: AppConfig,
+  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
+): Promise<http.Server> {
+  const logger = getLogger(["mcpserver"]);
+  const awsLogger = getLogger(["mcpserver", "aws-config"]);
+  const kbRuntimeClient = createBedrockRuntimeClient(
+    config.aws.region,
+    awsLogger,
+  );
+  const toolDefinitions = createToolDefinitions({
+    aws: config.aws,
+    githubSearchOrg: config.github.searchOrg,
+    kbRuntimeClient,
+  });
+  const verifyGithubUser = createGithubUserVerifier({
+    requiredOrganizations: config.github.requiredOrganizations,
+  });
 
-    // Handle OPTIONS for CORS preflight
-    if (req.method === "OPTIONS") {
-      res.writeHead(200);
-      res.end();
-      return;
-    }
+  const httpServer = http.createServer(
+    async (req: IncomingMessage, res: ServerResponse) => {
+      // Configure CORS headers
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-gh-pat");
 
-    // Only allow POST and DELETE
-    if (req.method !== "POST" && req.method !== "DELETE") {
-      res.writeHead(405, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Method not allowed" }));
-      return;
-    }
+      // Handle OPTIONS for CORS preflight
+      if (req.method === "OPTIONS") {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
 
-    try {
-      // GitHub authentication - extract and validate token
-      const authHeader = req.headers["x-gh-pat"];
-      const rawToken =
-        typeof authHeader === "string"
-          ? authHeader
-          : Array.isArray(authHeader)
-            ? authHeader[0]
+      // Only allow POST and DELETE
+      if (req.method !== "POST" && req.method !== "DELETE") {
+        res.writeHead(405, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
+
+      try {
+        // GitHub authentication - extract and validate token
+        const authHeader = req.headers["x-gh-pat"];
+        const rawToken =
+          typeof authHeader === "string"
+            ? authHeader
+            : Array.isArray(authHeader)
+              ? authHeader[0]
+              : undefined;
+
+        // Authenticate via GitHub API - returns validated token or null
+        const apiKey = await authenticateGitHubToken(
+          rawToken,
+          verifyGithubUser,
+        );
+        if (apiKey === null) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+
+        // Parse request body
+        let body = "";
+        for await (const chunk of req) {
+          body += chunk;
+        }
+        let jsonBody: unknown;
+        try {
+          jsonBody = body ? JSON.parse(body) : undefined;
+        } catch {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+          return;
+        }
+
+        // Create session for AsyncLocalStorage context (stateless per-request)
+        // Extract request ID from AWS Lambda trace (undefined if not in AWS)
+        const traceHeader = req.headers["x-amzn-trace-id"];
+        const requestId =
+          typeof traceHeader === "string"
+            ? traceHeader.split(";")[0].replace("Root=", "")
             : undefined;
 
-      // Authenticate via GitHub API - returns validated token or null
-      const apiKey = await authenticateGitHubToken(rawToken);
-      if (apiKey === null) {
-        res.writeHead(401, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Unauthorized" }));
-        return;
-      }
+        const session = {
+          id: crypto.randomUUID(),
+          requestId,
+          token: apiKey,
+        };
 
-      // Parse request body
-      let body = "";
-      for await (const chunk of req) {
-        body += chunk;
-      }
-      let jsonBody: unknown;
-      try {
-        jsonBody = body ? JSON.parse(body) : undefined;
-      } catch {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Invalid JSON" }));
-        return;
-      }
+        // Execute request in isolated session context
+        await sessionStorage.run(session, async () => {
+          // Create new server and transport for this request
+          // This ensures complete isolation between concurrent requests
+          const server = createServer({
+            enabledPrompts,
+            requestId,
+            toolDefinitions,
+          });
+          const transport = new StreamableHTTPServerTransport({
+            // This MCP server is stateless at the transport layer: each HTTP request
+            // runs in its own AsyncLocalStorage-backed session context via
+            // `sessionStorage.run(...)`. Because we do not multiplex logical sessions
+            // over a shared connection, transport-level session IDs are unnecessary,
+            // so `sessionIdGenerator` is explicitly set to `undefined`.
+            sessionIdGenerator: undefined,
+          });
 
-      // Create session for AsyncLocalStorage context (stateless per-request)
-      // Extract request ID from AWS Lambda trace (undefined if not in AWS)
-      const traceHeader = req.headers["x-amzn-trace-id"];
-      const requestId =
-        typeof traceHeader === "string"
-          ? traceHeader.split(";")[0].replace("Root=", "")
-          : undefined;
+          await server.connect(transport);
+          await transport.handleRequest(req, res, jsonBody);
 
-      const session = {
-        id: crypto.randomUUID(),
-        requestId,
-        token: apiKey,
-      };
-
-      // Execute request in isolated session context
-      await sessionStorage.run(session, async () => {
-        // Create new server and transport for this request
-        // This ensures complete isolation between concurrent requests
-        const server = createServer(requestId);
-        const transport = new StreamableHTTPServerTransport({
-          // This MCP server is stateless at the transport layer: each HTTP request
-          // runs in its own AsyncLocalStorage-backed session context via
-          // `sessionStorage.run(...)`. Because we do not multiplex logical sessions
-          // over a shared connection, transport-level session IDs are unnecessary,
-          // so `sessionIdGenerator` is explicitly set to `undefined`.
-          sessionIdGenerator: undefined,
+          // Clean up after response
+          res.on("close", () => {
+            transport.close();
+            server.close();
+          });
         });
-
-        await server.connect(transport);
-        await transport.handleRequest(req, res, jsonBody);
-
-        // Clean up after response
-        res.on("close", () => {
-          transport.close();
-          server.close();
-        });
-      });
-    } catch (error) {
-      logger.error("Error handling request", { error });
-      if (!res.headersSent) {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Internal server error" }));
+      } catch (error) {
+        logger.error("Error handling request", { error });
+        if (!res.headersSent) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
       }
-    }
-  },
-);
+    },
+  );
 
-httpServer.listen(PORT, () => {
-  logger.info(`MCP Server started on port ${PORT}`);
-});
+  await new Promise<void>((resolve) => {
+    httpServer.listen(config.port, () => {
+      logger.info(`MCP Server started on port ${config.port}`);
+      resolve();
+    });
+  });
+
+  return httpServer;
+}

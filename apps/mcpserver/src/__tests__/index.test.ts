@@ -21,7 +21,7 @@ describe("MCP Server Handlers", () => {
       const invalidationResult = mockTool.parameters.safeParse(invalidArgs);
       expect(invalidationResult.success).toBe(false);
       if (!invalidationResult.success) {
-        expect(invalidationResult.error.errors[0].message).toContain(
+        expect(invalidationResult.error.issues[0].message).toContain(
           "cannot be empty",
         );
       }

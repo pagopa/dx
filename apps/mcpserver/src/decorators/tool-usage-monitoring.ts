@@ -3,6 +3,8 @@ import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
 import type { ToolContext, ToolDefinition } from "../types.js";
 
+import { filterUndefined } from "../utils/filter-undefined.js";
+
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
@@ -11,19 +13,13 @@ const logger = getLogger(["mcpserver", "tool-logging"]);
  * Preserves the exact original function signature and type.
  */
 export function withToolLogging<T extends ToolDefinition>(tool: T): T {
-  if (typeof tool !== "object" || !tool.execute || !tool.name) {
-    return tool;
-  }
-
   const originalExecute = tool.execute;
   const toolName = tool.name;
 
   return {
     ...tool,
-    execute: async (args: unknown, context?: ToolContext) => {
+    execute: async (args, context?: ToolContext) => {
       // Cast args to the expected type for tool execution
-      const typedArgs = args as Record<string, unknown>;
-
       const startTime = Date.now();
 
       // Log to console (goes to CloudWatch in Lambda)
@@ -39,7 +35,10 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
 
       try {
         // Call the original execute function and return the result
-        const result = await originalExecute(typedArgs, context);
+        const result = await originalExecute(
+          args as Record<string, unknown>,
+          context,
+        );
 
         const executionTime = Date.now() - startTime;
 
@@ -82,15 +81,4 @@ export function withToolLogging<T extends ToolDefinition>(tool: T): T {
       }
     },
   };
-}
-
-/**
- * Filter out undefined values from an object to match emitCustomEvent expectations
- */
-function filterUndefined(
-  obj: Record<string, string | undefined>,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value !== undefined),
-  ) as Record<string, string>;
 }

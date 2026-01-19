@@ -16,7 +16,7 @@
     "dist"
   ],
   "bin": {
-    "dx": "./dist/index.js"
+    "dx": "./dist/cli.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
@@ -39,7 +39,7 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "tsx src/cli.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",

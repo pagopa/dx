@@ -1,6 +1,17 @@
+import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 import { describe, expect, it } from "vitest";
 
-import { toolDefinitions } from "../registry.js";
+import { createToolDefinitions } from "../registry.js";
+
+const toolDefinitions = createToolDefinitions({
+  aws: {
+    knowledgeBaseId: "kb-id",
+    region: "eu-central-1",
+    rerankingEnabled: false,
+  },
+  githubSearchOrg: "pagopa",
+  kbRuntimeClient: new BedrockAgentRuntimeClient({ region: "eu-central-1" }),
+});
 
 describe("Tool Registry", () => {
   describe("registry structure", () => {

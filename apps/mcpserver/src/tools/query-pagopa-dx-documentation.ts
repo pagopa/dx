@@ -1,12 +1,11 @@
+import type { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
+
 import { z } from "zod";
 
-import {
-  kbRerankingEnabled,
-  kbRuntimeClient,
-  knowledgeBaseId,
-} from "../config/aws.js";
+import type { ToolDefinition } from "../types.js";
+
 import { queryKnowledgeBase } from "../services/bedrock.js";
-import { handleApiError } from "../utils/errorHandling.js";
+import { handleApiError } from "../utils/error-handling.js";
 
 /**
  * Response format options for documentation queries
@@ -53,6 +52,12 @@ export const QueryPagoPADXDocumentationInputSchema = z
   })
   .strict();
 
+export type QueryPagoPADXDocumentationToolConfig = {
+  kbRuntimeClient: BedrockAgentRuntimeClient;
+  knowledgeBaseId: string;
+  rerankingEnabled: boolean;
+};
+
 type QueryPagoPADXDocumentationInput = z.infer<
   typeof QueryPagoPADXDocumentationInputSchema
 >;
@@ -61,15 +66,18 @@ type QueryPagoPADXDocumentationInput = z.infer<
  * A tool that provides access to the complete PagoPA DX documentation.
  * It uses a Bedrock knowledge base to answer queries about DX tools, patterns, and best practices.
  */
-export const QueryPagoPADXDocumentationTool = {
-  annotations: {
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: false,
-    readOnlyHint: true,
-    title: "Query PagoPA DX Documentation",
-  },
-  description: `Query the PagoPA DX documentation knowledge base for information about developer tools, patterns, and best practices.
+export function createQueryPagoPADXDocumentationTool(
+  config: QueryPagoPADXDocumentationToolConfig,
+): ToolDefinition {
+  return {
+    annotations: {
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+      readOnlyHint: true,
+      title: "Query PagoPA DX Documentation",
+    },
+    description: `Query the PagoPA DX documentation knowledge base for information about developer tools, patterns, and best practices.
 
 This tool provides access to the complete PagoPA DX documentation covering:
 - Getting started, monorepo setup, dev containers, and GitHub collaboration
@@ -112,43 +120,47 @@ Error Handling:
   - Returns "Error: Query must not exceed 500 characters" for queries too long
   - Returns "Error: ..." for API or network errors`,
 
-  execute: async (args: Record<string, unknown>): Promise<string> => {
-    try {
-      // Parse and validate input using Zod schema
-      const parsedArgs: QueryPagoPADXDocumentationInput =
-        QueryPagoPADXDocumentationInputSchema.parse(args);
-
-      const numberOfResults = parsedArgs.number_of_results;
-
-      const result = await queryKnowledgeBase(
-        knowledgeBaseId,
-        parsedArgs.query,
-        kbRuntimeClient,
-        numberOfResults,
-        kbRerankingEnabled,
-      );
-
-      const format = parsedArgs.format;
-
-      if (format === ResponseFormat.JSON) {
-        return JSON.stringify(
-          {
-            number_of_results: numberOfResults,
-            query: parsedArgs.query,
-            result,
-          },
-          null,
-          2,
-        );
+    execute: async (args: Record<string, unknown>): Promise<string> => {
+      const parsedArgsResult =
+        QueryPagoPADXDocumentationInputSchema.safeParse(args);
+      if (!parsedArgsResult.success) {
+        return handleApiError(parsedArgsResult.error);
       }
 
-      return result;
-    } catch (error) {
-      return handleApiError(error);
-    }
-  },
+      const parsedArgs: QueryPagoPADXDocumentationInput = parsedArgsResult.data;
+      const numberOfResults = parsedArgs.number_of_results;
 
-  name: "pagopa_query_documentation",
+      try {
+        const result = await queryKnowledgeBase(
+          config.knowledgeBaseId,
+          parsedArgs.query,
+          config.kbRuntimeClient,
+          numberOfResults,
+          config.rerankingEnabled,
+        );
 
-  parameters: QueryPagoPADXDocumentationInputSchema,
-};
+        const format = parsedArgs.format;
+
+        if (format === ResponseFormat.JSON) {
+          return JSON.stringify(
+            {
+              number_of_results: numberOfResults,
+              query: parsedArgs.query,
+              result,
+            },
+            null,
+            2,
+          );
+        }
+
+        return result;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    name: "pagopa_query_documentation",
+
+    parameters: QueryPagoPADXDocumentationInputSchema,
+  };
+}

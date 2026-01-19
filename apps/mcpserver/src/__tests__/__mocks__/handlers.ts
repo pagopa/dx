@@ -13,8 +13,11 @@ export const mockTool: ToolDefinition = {
   },
   description: "A test tool",
   execute: vi.fn(async (args: unknown) => {
-    const parsed = z.object({ input: z.string() }).parse(args);
-    return `Tool executed with: ${parsed.input}`;
+    const parsedResult = z.object({ input: z.string() }).safeParse(args);
+    if (!parsedResult.success) {
+      return "Error: Invalid input";
+    }
+    return `Tool executed with: ${parsedResult.data.input}`;
   }),
   name: "TestTool",
   parameters: z.object({
