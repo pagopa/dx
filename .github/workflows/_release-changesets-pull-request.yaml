@@ -11,6 +11,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    environment: npm-prod-cd
     permissions:
       contents: write
       id-token: write
@@ -29,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      # Needed to publish using trusted actions, must be >=11.5.1
+      - name: Update npm
+        run: npm install -g npm@11.7.0
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@06245a4e0a36c064a573d4150030f5ec548e4fcc # v1.4.10
@@ -37,5 +42,4 @@ jobs:
           publish: pnpm run release
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_GH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true

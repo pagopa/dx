@@ -1,6 +1,7 @@
 import { getLogger } from "@logtape/logtape";
 import { $ } from "execa";
-import * as fs from "node:fs/promises";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import { replaceInFile } from "replace-in-file";
 import semver from "semver";
 import YAML from "yaml";
@@ -15,13 +16,12 @@ type NodePackageManager = {
   lockFileName: string;
 };
 
-class NPM implements NodePackageManager {
+export class NPM implements NodePackageManager {
   lockFileName = "package-lock.json";
 
   async listWorkspaces(): Promise<string[]> {
     const { stdout } = await $`npm query .workspace`;
     const workspaces = JSON.parse(stdout);
-    //console.log(workspaces);
     const workspaceNames = [];
     if (Array.isArray(workspaces)) {
       for (const ws of workspaces) {
@@ -34,7 +34,7 @@ class NPM implements NodePackageManager {
   }
 }
 
-class Yarn implements NodePackageManager {
+export class Yarn implements NodePackageManager {
   lockFileName = "yarn.lock";
 
   async listWorkspaces(): Promise<string[]> {
@@ -50,7 +50,7 @@ class Yarn implements NodePackageManager {
   }
 }
 
-async function extractPackageExtensions(): Promise<object | undefined> {
+export async function extractPackageExtensions(): Promise<object | undefined> {
   // Read the .yarnrc.yaml file if it exists and extract the packageExtensions field
   try {
     const yarnrc = await fs.readFile(".yarnrc.yml", "utf-8");
@@ -64,7 +64,7 @@ async function extractPackageExtensions(): Promise<object | undefined> {
   return undefined;
 }
 
-async function preparePackageJsonForPnpm(): Promise<string[]> {
+export async function preparePackageJsonForPnpm(): Promise<string[]> {
   const packageJson = await fs.readFile("package.json", "utf-8");
   const manifest = JSON.parse(packageJson);
   let workspaces: string[] = [];
@@ -79,6 +79,23 @@ async function preparePackageJsonForPnpm(): Promise<string[]> {
   }
   await fs.writeFile("package.json", JSON.stringify(manifest, null, 2));
   return workspaces;
+}
+
+export async function writePnpmWorkspaceFile(
+  workspaces: string[],
+  packageExtensions: object | undefined,
+): Promise<void> {
+  // We inline all the default settings here because Renovate
+  // does not support PNPM's config dependencies yet.
+  const pnpmWorkspace = {
+    cleanupUnusedCatalogs: true,
+    linkWorkspacePackages: true,
+    packageExtensions,
+    packageImportMethod: "clone-or-copy",
+    packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
+  };
+  const yamlContent = YAML.stringify(pnpmWorkspace);
+  await fs.writeFile("pnpm-workspace.yaml", yamlContent, "utf-8");
 }
 
 async function removeFiles(...files: string[]): Promise<void> {
@@ -103,7 +120,7 @@ async function replacePMOccurrences(): Promise<void> {
       /\b(yarn workspace|npm -(\b-workspace\b|\bw\b))\b/g,
       /\b(yarn install --immutable|npm ci)\b/g,
       /\b(yarn -q dlx|npx)\b/g,
-      /\b(Yarn|npm)\b/gi,
+      /(^|\s)(Yarn|npm)(?!\S)/gi,
     ],
     ignore: ["**/node_modules/**", "**/dist/**", "**/build/**"],
     to: [
@@ -144,44 +161,29 @@ async function updateDXWorkflows(): Promise<void> {
   });
 }
 
-async function writePnpmWorkspaceFile(
-  workspaces: string[],
-  packageExtensions: object | undefined,
-): Promise<void> {
-  const pnpmWorkspace = {
-    packageExtensions,
-    packages: workspaces.length > 0 ? workspaces : ["apps/*", "packages/*"],
-  };
-  const yamlContent = YAML.stringify(pnpmWorkspace);
-  await fs.writeFile("pnpm-workspace.yaml", yamlContent, "utf-8");
-}
-
-const apply: Codemod["apply"] = async (info) => {
+export const usePnpm = async (
+  packageManager: string,
+  currentNodeVersion: string,
+) => {
   const minNodeVersion = "20.19.5";
-  const currentNodeVersion = process.versions.node;
 
-  if (!semver.gte(currentNodeVersion, minNodeVersion)) {
-    console.error(
-      `This codemod requires Node.js >= ${minNodeVersion}. Current version: ${currentNodeVersion}`,
-    );
-    process.exit(1);
-  }
+  assert.notEqual(packageManager, "pnpm", "Project is already using pnpm");
 
-  if (info.packageManager === "pnpm") {
-    throw new Error("Project is already using pnpm");
-  }
-
-  const pm = info.packageManager === "yarn" ? new Yarn() : new NPM();
+  assert.ok(
+    semver.gte(currentNodeVersion, minNodeVersion),
+    `his codemod requires Node.js >= ${minNodeVersion}. Current version: ${currentNodeVersion}`,
+  );
 
   const logger = getLogger(["dx-cli", "codemod"]);
 
+  const pm = packageManager === "yarn" ? new Yarn() : new NPM();
   const localWorkspaces = await pm.listWorkspaces();
 
-  logger.info("Using the {protocol} protocol for local dependencies", {
-    protocol: "workspace:",
-  });
-
+  // Update local dependencies to use "workspace:" protocol
   if (localWorkspaces.length > 0) {
+    logger.info("Using the {protocol} protocol for local dependencies", {
+      protocol: "workspace:",
+    });
     await replaceInFile({
       allowEmptyPaths: true,
       files: ["**/package.json"],
@@ -196,18 +198,15 @@ const apply: Codemod["apply"] = async (info) => {
   });
   const workspaces = await preparePackageJsonForPnpm();
 
+  // Extract custom packageExtensions from .yarnrc.yml if any
   const packageExtensions =
-    info.packageManager === "yarn"
-      ? await extractPackageExtensions()
-      : undefined;
+    packageManager === "yarn" ? await extractPackageExtensions() : undefined;
 
   // Create pnpm-workspace.yaml
   logger.info("Create {file}", {
     file: "pnpm-workspace.yaml",
   });
   await writePnpmWorkspaceFile(workspaces, packageExtensions);
-
-  await $`corepack pnpm@latest add --config pnpm-plugin-pagopa`;
 
   // Remove yarn and node_modules files and folders
   logger.info("Remove node_modules and yarn files");
@@ -247,6 +246,17 @@ const apply: Codemod["apply"] = async (info) => {
   // Set pnpm as the package manager
   logger.info("Setting pnpm as the package manager...");
   await $`corepack use pnpm@latest`;
+};
+
+const apply: Codemod["apply"] = async (info) => {
+  const logger = getLogger(["dx-cli", "codemod"]);
+  try {
+    await usePnpm(info.packageManager, process.versions.node);
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(error.message);
+    }
+  }
 };
 
 export default {

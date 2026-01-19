@@ -1,0 +1,360 @@
+{
+  "$id": "https://github.com/pagopa/dx/blob/main/apps/opex-dashboard/config.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Configuration schema for generating operational dashboards from OpenAPI specifications",
+  "title": "OpEx Dashboard Configuration",
+  "version": "0.0.0",
+  "type": "object",
+  "properties": {
+    "action_groups": {
+      "description": "Array of Azure Action Group resource IDs for alarm notifications",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "availability_threshold": {
+      "description": "Default minimum availability percentage (0-1). Default: 0.99 (99%)",
+      "default": 0.99,
+      "type": "number"
+    },
+    "data_source": {
+      "description": "Azure resource ID for metrics data source (Application Gateway or API Management)",
+      "type": "string"
+    },
+    "evaluation_frequency": {
+      "description": "Default frequency in minutes to evaluate alarms. Default: 10",
+      "default": 10,
+      "type": "number"
+    },
+    "evaluation_time_window": {
+      "description": "Default time window in minutes for alarm evaluation. Default: 20",
+      "default": 20,
+      "type": "number"
+    },
+    "event_occurrences": {
+      "description": "Default number of event occurrences to trigger an alarm. Default: 1",
+      "default": 1,
+      "type": "number"
+    },
+    "location": {
+      "description": "Azure region/location for the dashboard (e.g., West Europe)",
+      "type": "string"
+    },
+    "name": {
+      "description": "Name of the dashboard",
+      "type": "string"
+    },
+    "oa3_spec": {
+      "description": "Path or HTTP URL to OpenAPI 3.x specification file (supports OA2 and OA3)",
+      "type": "string"
+    },
+    "overrides": {
+      "description": "Optional overrides for hosts, per-endpoint alarm thresholds, and query configurations",
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "description": "Override alarm thresholds and settings for specific endpoints (key: endpoint path)",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "availability_evaluation_frequency": {
+                "description": "Frequency in minutes to evaluate availability alarm. Default: 10",
+                "type": "number"
+              },
+              "availability_evaluation_time_window": {
+                "description": "Time window in minutes for availability alarm evaluation. Default: 20",
+                "type": "number"
+              },
+              "availability_event_occurrences": {
+                "description": "Number of event occurrences to trigger availability alarm. Default: 1",
+                "type": "number"
+              },
+              "availability_threshold": {
+                "description": "Minimum availability percentage (0-1). Default: 0.99 (99%)",
+                "type": "number"
+              },
+              "response_time_evaluation_frequency": {
+                "description": "Frequency in minutes to evaluate response time alarm. Default: 10",
+                "type": "number"
+              },
+              "response_time_evaluation_time_window": {
+                "description": "Time window in minutes for response time alarm evaluation. Default: 20",
+                "type": "number"
+              },
+              "response_time_event_occurrences": {
+                "description": "Number of event occurrences to trigger response time alarm. Default: 1",
+                "type": "number"
+              },
+              "response_time_threshold": {
+                "description": "Maximum response time in seconds. Default: 1",
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "hosts": {
+          "description": "Override host URLs from OpenAPI spec (e.g., https://example.com)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "queries": {
+          "description": "Optional query configuration overrides",
+          "type": "object",
+          "properties": {
+            "response_time_percentile": {
+              "description": "Percentile for response time queries. Default: 95",
+              "default": 95,
+              "type": "number"
+            },
+            "status_code_categories": {
+              "description": "HTTP status code categories for response codes queries",
+              "default": [
+                "1XX",
+                "2XX",
+                "3XX",
+                "4XX",
+                "5XX"
+              ],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "response_time_percentile",
+            "status_code_categories"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "queries": {
+      "description": "Optional global query configuration overrides",
+      "type": "object",
+      "properties": {
+        "response_time_percentile": {
+          "description": "Percentile for response time queries. Default: 95",
+          "default": 95,
+          "type": "number"
+        },
+        "status_code_categories": {
+          "description": "HTTP status code categories for response codes queries",
+          "default": [
+            "1XX",
+            "2XX",
+            "3XX",
+            "4XX",
+            "5XX"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "response_time_percentile",
+        "status_code_categories"
+      ],
+      "additionalProperties": false
+    },
+    "resource_type": {
+      "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
+      "default": "app-gateway",
+      "type": "string",
+      "enum": [
+        "app-gateway",
+        "api-management"
+      ]
+    },
+    "response_time_threshold": {
+      "description": "Default maximum response time in seconds. Default: 1.0",
+      "default": 1,
+      "type": "number"
+    },
+    "terraform": {
+      "description": "Optional Terraform and environment-specific configuration",
+      "type": "object",
+      "properties": {
+        "environments": {
+          "description": "Environment-specific configurations for dev/uat/prod",
+          "type": "object",
+          "properties": {
+            "dev": {
+              "type": "object",
+              "properties": {
+                "backend": {
+                  "description": "Azure backend configuration for Terraform state",
+                  "type": "object",
+                  "properties": {
+                    "container_name": {
+                      "description": "Blob container name for Terraform state",
+                      "type": "string"
+                    },
+                    "key": {
+                      "description": "State file key/path",
+                      "type": "string"
+                    },
+                    "resource_group_name": {
+                      "description": "Azure resource group for backend state",
+                      "type": "string"
+                    },
+                    "storage_account_name": {
+                      "description": "Storage account for Terraform state",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "container_name",
+                    "key",
+                    "resource_group_name",
+                    "storage_account_name"
+                  ],
+                  "additionalProperties": false
+                },
+                "env_short": {
+                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                  "type": "string",
+                  "maxLength": 1
+                },
+                "prefix": {
+                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                  "type": "string",
+                  "maxLength": 6
+                }
+              },
+              "required": [
+                "env_short",
+                "prefix"
+              ],
+              "additionalProperties": false
+            },
+            "prod": {
+              "type": "object",
+              "properties": {
+                "backend": {
+                  "description": "Azure backend configuration for Terraform state",
+                  "type": "object",
+                  "properties": {
+                    "container_name": {
+                      "description": "Blob container name for Terraform state",
+                      "type": "string"
+                    },
+                    "key": {
+                      "description": "State file key/path",
+                      "type": "string"
+                    },
+                    "resource_group_name": {
+                      "description": "Azure resource group for backend state",
+                      "type": "string"
+                    },
+                    "storage_account_name": {
+                      "description": "Storage account for Terraform state",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "container_name",
+                    "key",
+                    "resource_group_name",
+                    "storage_account_name"
+                  ],
+                  "additionalProperties": false
+                },
+                "env_short": {
+                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                  "type": "string",
+                  "maxLength": 1
+                },
+                "prefix": {
+                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                  "type": "string",
+                  "maxLength": 6
+                }
+              },
+              "required": [
+                "env_short",
+                "prefix"
+              ],
+              "additionalProperties": false
+            },
+            "uat": {
+              "type": "object",
+              "properties": {
+                "backend": {
+                  "description": "Azure backend configuration for Terraform state",
+                  "type": "object",
+                  "properties": {
+                    "container_name": {
+                      "description": "Blob container name for Terraform state",
+                      "type": "string"
+                    },
+                    "key": {
+                      "description": "State file key/path",
+                      "type": "string"
+                    },
+                    "resource_group_name": {
+                      "description": "Azure resource group for backend state",
+                      "type": "string"
+                    },
+                    "storage_account_name": {
+                      "description": "Storage account for Terraform state",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "container_name",
+                    "key",
+                    "resource_group_name",
+                    "storage_account_name"
+                  ],
+                  "additionalProperties": false
+                },
+                "env_short": {
+                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                  "type": "string",
+                  "maxLength": 1
+                },
+                "prefix": {
+                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                  "type": "string",
+                  "maxLength": 6
+                }
+              },
+              "required": [
+                "env_short",
+                "prefix"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "timespan": {
+      "description": "Time range for dashboard queries (e.g., 5m, 1h, 24h). Default: 5m",
+      "default": "5m",
+      "type": "string"
+    }
+  },
+  "required": [
+    "action_groups",
+    "data_source",
+    "location",
+    "name",
+    "oa3_spec"
+  ],
+  "additionalProperties": false
+}
