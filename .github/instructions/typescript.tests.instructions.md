@@ -17,8 +17,8 @@ applyTo: "**/*.test.ts, **/*.spec.ts"
 
 ## Mocks and Isolation
 
-- **Module mocks**: `vi.mock()` and `vitest-mock-extended` for typed mocks.
-- **External dependencies**: Mock external HTTP, filesystem, database, and cloud SDK calls.
+- **Module mocks**: `vi.mock()` for typed mocks.
+- **External dependencies**: Mock external HTTP, filesystem, database, and cloud SDK calls. USe vi.spyOn() when partial mocking is needed.
 - **Side effects**: Stub or spy side effects (logging, metrics, environment-dependent behavior) rather than asserting on their internal state.
 - **Do not mock the unit under test**: Only mock collaborators; avoid mocking functions on the same module you're testing.
 

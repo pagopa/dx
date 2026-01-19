@@ -22,6 +22,7 @@ When generating pull request titles and descriptions, follow these guidelines:
 
 - Explain the rationale behind the changes, providing a summary of the problem solved or feature added.
 - Include relevant context without images or links (use comments for additional details).
+- Don’t assume or create issue IDs. Instead, ask if none have been provided.
 - Reference tracking system issues at the end using keywords like "Resolves DX-1234" or "Depends on #42".
 - Place references on a separate line, preceded by a blank line, starting with an uppercase letter.
 
@@ -51,10 +52,10 @@ Follow the format `<activity-type>/<activity-name>` for branch names to maintain
 ### Guidelines
 
 - Use lowercase and hyphens (`-`) to separate words.
-- Keep names concise but descriptive, avoiding generic terms like `update` or `fix`.
+- Keep names concise but descriptive, avoiding generic terms like `fix`.
 - Do not include tracking system activity IDs (e.g., Jira task IDs) in the branch name; reference them in the PR description instead.
 
 ### Examples
 
-- Good: `feats/user-authentication`, `fixes/login-errors`, `refactors/update-react-in-ui-components-workspace`
+- Good: `feats/user-authentication`, `fixes/login-errors`, `refactors/update-react`
 - Bad: `CES-666-fix-that`, `fix-bug`, `new-feature`, `update`, `v1.2.0-release`
