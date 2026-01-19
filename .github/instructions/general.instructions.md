@@ -11,6 +11,8 @@ Never commit code or open pull requests without being asked to do so.
 
 When generating pull request titles and descriptions, follow these guidelines:
 
+- Keep the subject line concise, ideally under 50 characters
+- Never exceed 72 characters
 - Use descriptive pull request titles that explain the purpose of the change
 - Avoid generic titles like "Update code" or "Fix bug", be specific about the reason for the change
 
@@ -18,8 +20,6 @@ When generating pull request titles and descriptions, follow these guidelines:
 
 When generating commit messages, follow these guidelines:
 
-- Keep the subject line concise, ideally under 50 characters
-- Never exceed 72 characters
 - Capitalize the subject line
 - Don't put a period at the end of the subject line
 - Use the imperative mood
