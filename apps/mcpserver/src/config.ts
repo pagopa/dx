@@ -20,7 +20,9 @@ export type AppConfig = {
 
 export const DEFAULT_PORT = 8080;
 
-const logLevelSchema = z.enum(["debug", "info", "warning", "error"]);
+const logLevelSchema = z
+  .enum(["debug", "info", "warning", "error"])
+  .default("info");
 
 export const envSchema = z.object({
   APPINSIGHTS_SAMPLING_PERCENTAGE: z.coerce.number().min(0).max(100).optional(),
