@@ -4,8 +4,8 @@ import { type Session, sessionStorage } from "../session.js";
 
 describe("Session Management", () => {
   it("should maintain session isolation between concurrent contexts", async () => {
-    const session1: Session = { id: "session-1", token: "token-1" };
-    const session2: Session = { id: "session-2", token: "token-2" };
+    const session1: Session = { id: "session-1" };
+    const session2: Session = { id: "session-2" };
 
     const results: Session[] = [];
 
@@ -32,9 +32,6 @@ describe("Session Management", () => {
     // Each session should have its own data
     const ids = results.map((r) => r.id).sort();
     expect(ids).toEqual(["session-1", "session-2"]);
-    const tokens = results.map((r) => r.token);
-    expect(tokens).toContain("token-1");
-    expect(tokens).toContain("token-2");
   });
 
   it("should return undefined when accessed outside of run context", async () => {
@@ -45,19 +42,17 @@ describe("Session Management", () => {
   it("should provide correct session data within run context", async () => {
     const session: Session = {
       id: "test-session-123",
-      token: "test-token-xyz",
     };
 
     await sessionStorage.run(session, async () => {
       const stored = sessionStorage.getStore();
       expect(stored).toBeDefined();
       expect(stored?.id).toBe("test-session-123");
-      expect(stored?.token).toBe("test-token-xyz");
     });
   });
 
   it("should properly clean up session data after run context completes", async () => {
-    const session: Session = { id: "cleanup-456", token: "cleanup-test" };
+    const session: Session = { id: "cleanup-456" };
 
     await sessionStorage.run(session, async () => {
       expect(sessionStorage.getStore()).toBeDefined();
@@ -68,19 +63,19 @@ describe("Session Management", () => {
   });
 
   it("should handle nested session contexts correctly", async () => {
-    const session1: Session = { id: "outer-1", token: "outer" };
-    const session2: Session = { id: "inner-2", token: "inner" };
+    const session1: Session = { id: "outer-1" };
+    const session2: Session = { id: "inner-2" };
 
     await sessionStorage.run(session1, async () => {
-      expect(sessionStorage.getStore()?.token).toBe("outer");
+      expect(sessionStorage.getStore()?.id).toBe("outer-1");
 
       await sessionStorage.run(session2, async () => {
         // Inner context should override outer
-        expect(sessionStorage.getStore()?.token).toBe("inner");
+        expect(sessionStorage.getStore()?.id).toBe("inner-2");
       });
 
       // After inner context exits, outer context should be restored
-      expect(sessionStorage.getStore()?.token).toBe("outer");
+      expect(sessionStorage.getStore()?.id).toBe("outer-1");
     });
   });
 });

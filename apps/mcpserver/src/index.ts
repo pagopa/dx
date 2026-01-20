@@ -16,7 +16,6 @@ import * as http from "node:http";
 import { z } from "zod";
 
 import packageJson from "../package.json" with { type: "json" };
-import { createGithubUserVerifier } from "./auth/github.js";
 import { type AppConfig, loadConfig } from "./config.js";
 import { createBedrockRuntimeClient } from "./config/aws.js";
 import { configureLogging } from "./config/logging.js";
@@ -45,24 +44,6 @@ export async function main(
 
   const httpServer = await startHttpServer(config, enabledPrompts);
   return httpServer;
-}
-
-/**
- * Validates a GitHub token via the GitHub API.
- * Returns the token if valid, null otherwise.
- *
- * This function encapsulates the authentication logic to make
- * the security flow clearer to static analyzers.
- */
-async function authenticateGitHubToken(
-  token: string | undefined,
-  verifyGithubUser: (token: string) => Promise<boolean>,
-): Promise<null | string> {
-  if (!token) {
-    return null;
-  }
-  const isValid = await verifyGithubUser(token);
-  return isValid ? token : null;
 }
 
 function createServer({
@@ -194,16 +175,13 @@ async function startHttpServer(
     githubSearchOrg: config.github.searchOrg,
     kbRuntimeClient,
   });
-  const verifyGithubUser = createGithubUserVerifier({
-    requiredOrganizations: config.github.requiredOrganizations,
-  });
 
   const httpServer = http.createServer(
     async (req: IncomingMessage, res: ServerResponse) => {
       // Configure CORS headers
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-gh-pat");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
       // Handle OPTIONS for CORS preflight
       if (req.method === "OPTIONS") {
@@ -220,26 +198,6 @@ async function startHttpServer(
       }
 
       try {
-        // GitHub authentication - extract and validate token
-        const authHeader = req.headers["x-gh-pat"];
-        const rawToken =
-          typeof authHeader === "string"
-            ? authHeader
-            : Array.isArray(authHeader)
-              ? authHeader[0]
-              : undefined;
-
-        // Authenticate via GitHub API - returns validated token or null
-        const apiKey = await authenticateGitHubToken(
-          rawToken,
-          verifyGithubUser,
-        );
-        if (apiKey === null) {
-          res.writeHead(401, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Unauthorized" }));
-          return;
-        }
-
         // Parse request body
         let body = "";
         for await (const chunk of req) {
@@ -265,7 +223,6 @@ async function startHttpServer(
         const session = {
           id: crypto.randomUUID(),
           requestId,
-          token: apiKey,
         };
 
         // Execute request in isolated session context
