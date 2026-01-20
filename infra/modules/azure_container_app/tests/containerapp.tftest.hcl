@@ -561,3 +561,25 @@ run "container_app_override_size_too_large" {
     var.size,
   ]
 }
+
+run "container_app_diagnostics_enabled_plan" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+      storage_account_id         = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.container_app) == 1
+    error_message = "Diagnostic setting should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.container_app[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+    error_message = "Log Analytics workspace ID should be set correctly"
+  }
+}
