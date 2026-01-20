@@ -2,9 +2,7 @@ import { getLogger } from "@logtape/logtape";
 import { Octokit } from "@octokit/rest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as githubAuth from "../github.js";
-
-vi.mock("@octokit/rest");
+import { createGithubUserVerifier } from "../github.js";
 
 describe("verifyGithubUser", () => {
   let loggerSpy: {
@@ -15,8 +13,6 @@ describe("verifyGithubUser", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.REQUIRED_ORGANIZATIONS = "pagopa";
-
     // Get logger and spy on its methods - no need for special configuration
     const logger = getLogger(["mcpserver", "github-auth"]);
 
@@ -28,13 +24,24 @@ describe("verifyGithubUser", () => {
   });
 
   it("returns false if no token is provided", async () => {
-    const result = await githubAuth.verifyGithubUser("");
+    const verifyGithubUser = createGithubUserVerifier({
+      createOctokit: () =>
+        ({
+          rest: {
+            orgs: {
+              listForAuthenticatedUser: vi.fn(),
+            },
+          },
+        }) as unknown as Octokit,
+      requiredOrganizations: ["pagopa"],
+    });
+    const result = await verifyGithubUser("");
     expect(result).toBe(false);
   });
 
   it("returns false if Octokit throws", async () => {
-    vi.mocked(Octokit).mockImplementation(
-      () =>
+    const verifyGithubUser = createGithubUserVerifier({
+      createOctokit: () =>
         ({
           rest: {
             orgs: {
@@ -43,9 +50,10 @@ describe("verifyGithubUser", () => {
                 .mockRejectedValue(new Error("fail")),
             },
           },
-        }) as unknown as InstanceType<typeof Octokit>,
-    );
-    const result = await githubAuth.verifyGithubUser("token");
+        }) as unknown as Octokit,
+      requiredOrganizations: ["pagopa"],
+    });
+    const result = await verifyGithubUser("token");
     expect(result).toBe(false);
     expect(loggerSpy.error).toHaveBeenCalledWith(
       "Error verifying GitHub organization membership",
@@ -54,8 +62,8 @@ describe("verifyGithubUser", () => {
   });
 
   it("returns false if user is not member of required org", async () => {
-    vi.mocked(Octokit).mockImplementation(
-      () =>
+    const verifyGithubUser = createGithubUserVerifier({
+      createOctokit: () =>
         ({
           rest: {
             orgs: {
@@ -64,9 +72,10 @@ describe("verifyGithubUser", () => {
               }),
             },
           },
-        }) as unknown as InstanceType<typeof Octokit>,
-    );
-    const result = await githubAuth.verifyGithubUser("token");
+        }) as unknown as Octokit,
+      requiredOrganizations: ["pagopa"],
+    });
+    const result = await verifyGithubUser("token");
     expect(result).toBe(false);
     expect(loggerSpy.warn).toHaveBeenCalledWith(
       "User is not a member of any of the required organizations: pagopa",
@@ -74,8 +83,8 @@ describe("verifyGithubUser", () => {
   });
 
   it("returns true if user is member of required org", async () => {
-    vi.mocked(Octokit).mockImplementation(
-      () =>
+    const verifyGithubUser = createGithubUserVerifier({
+      createOctokit: () =>
         ({
           rest: {
             orgs: {
@@ -84,9 +93,10 @@ describe("verifyGithubUser", () => {
               }),
             },
           },
-        }) as unknown as InstanceType<typeof Octokit>,
-    );
-    const result = await githubAuth.verifyGithubUser("token");
+        }) as unknown as Octokit,
+      requiredOrganizations: ["pagopa"],
+    });
+    const result = await verifyGithubUser("token");
     expect(result).toBe(true);
     expect(loggerSpy.debug).toHaveBeenCalledWith(
       "User is a member of one of the required organizations: pagopa",
