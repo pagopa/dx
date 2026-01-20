@@ -16,11 +16,10 @@ const toolDefinitions = createToolDefinitions({
 describe("Tool Registry", () => {
   describe("registry structure", () => {
     it("should contain expected tools", () => {
-      expect(toolDefinitions).toHaveLength(2);
+      expect(toolDefinitions).toHaveLength(1);
 
       const toolIds = toolDefinitions.map((entry) => entry.id);
       expect(toolIds).toContain("pagopa_query_documentation");
-      expect(toolIds).toContain("pagopa_search_github_code");
     });
 
     it("should have unique tool IDs", () => {
@@ -80,13 +79,6 @@ describe("Tool Registry", () => {
       );
       expect(docTool?.requiresSession).toBe(false);
     });
-
-    it("should mark GitHub search tool as requiring session", () => {
-      const githubTool = toolDefinitions.find(
-        (entry) => entry.id === "pagopa_search_github_code",
-      );
-      expect(githubTool?.requiresSession).toBe(true);
-    });
   });
 
   describe("pagopa_query_documentation", () => {
@@ -99,19 +91,6 @@ describe("Tool Registry", () => {
       expect(docTool?.tool.annotations.readOnlyHint).toBe(true);
       expect(docTool?.tool.annotations.destructiveHint).toBe(false);
       expect(docTool?.tool.annotations.idempotentHint).toBe(true);
-    });
-  });
-
-  describe("pagopa_search_github_code", () => {
-    const githubTool = toolDefinitions.find(
-      (entry) => entry.id === "pagopa_search_github_code",
-    );
-
-    it("should have correct metadata", () => {
-      expect(githubTool?.tool.name).toBe("pagopa_search_github_code");
-      expect(githubTool?.tool.annotations.readOnlyHint).toBe(true);
-      expect(githubTool?.tool.annotations.destructiveHint).toBe(false);
-      expect(githubTool?.tool.annotations.openWorldHint).toBe(true);
     });
   });
 });

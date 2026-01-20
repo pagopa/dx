@@ -11,7 +11,6 @@ import type { AwsRuntimeConfig } from "../config/aws.js";
 import type { ToolDefinition } from "../types.js";
 
 import { createQueryPagoPADXDocumentationTool } from "./query-pagopa-dx-documentation.js";
-import { createSearchGitHubCodeTool } from "./search-github-code.js";
 
 /**
  * Tool entry for the registry with registration metadata
@@ -51,13 +50,6 @@ export function createToolDefinitions(config: ToolRegistryConfig): ToolEntry[] {
         kbRuntimeClient: config.kbRuntimeClient,
         knowledgeBaseId: config.aws.knowledgeBaseId,
         rerankingEnabled: config.aws.rerankingEnabled,
-      }),
-    },
-    {
-      id: "pagopa_search_github_code",
-      requiresSession: true,
-      tool: createSearchGitHubCodeTool({
-        defaultOrg: config.githubSearchOrg,
       }),
     },
   ];
