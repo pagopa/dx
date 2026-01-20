@@ -36,9 +36,11 @@ jobs:
       - name: Check if conversion is needed
         id: find-file
         if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
           # Get the first modified .mmd file
-          file=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | head -n 1)
+          file=$(echo "$CHANGED_FILES" | tr ' ' '\n' | head -n 1)
           echo "found=true" >> $GITHUB_OUTPUT
           echo "path=$file" >> $GITHUB_OUTPUT
           echo "Modified .mmd file: $file"
@@ -51,8 +53,11 @@ jobs:
 
       - name: Check and push SVG file
         if: steps.find-file.outputs.found == 'true'
+        env:
+          MMD_FILE_PATH: ${{ steps.find-file.outputs.path }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          svg_file=$(dirname "${{ steps.find-file.outputs.path }}")/diagram.svg
+          svg_file=$(dirname "$MMD_FILE_PATH")/diagram.svg
           if [ -f "$svg_file" ]; then
             git config user.name "dx-pagopa-bot"
             git config user.email "dx-pagopa-github-bot@pagopa.it"
@@ -61,13 +66,13 @@ jobs:
               git commit -m "chore: add generated diagram.svg"
 
               # Rebase to avoid potential conflicts
-              git fetch origin ${{ github.head_ref }}
-              if ! git rebase origin/${{ github.head_ref }}; then
+              git fetch origin "$HEAD_REF"
+              if ! git rebase "origin/$HEAD_REF"; then
                 echo "Rebase failed, aborting and trying force push"
                 git rebase --abort
-                git push origin HEAD:${{ github.head_ref }} --force-with-lease
+                git push origin "HEAD:$HEAD_REF" --force-with-lease
               else
-                git push origin HEAD:${{ github.head_ref }}
+                git push origin "HEAD:$HEAD_REF"
               fi
             else
               echo "No changes in SVG file to commit. Skipping commit and push."
