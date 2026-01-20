@@ -485,3 +485,162 @@ run "function_app_with_partial_dns_zone_override" {
     error_message = "st_queue private endpoint should use the data source DNS zone ID"
   }
 }
+
+run "function_app_with_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this[0].enabled_log) > 0
+    error_message = "At least one log category should be enabled"
+  }
+
+  assert {
+    condition     = length([for log in azurerm_monitor_diagnostic_setting.this[0].enabled_log : log if log.category == "FunctionAppLogs"]) > 0
+    error_message = "FunctionAppLogs category should be enabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this[0].enabled_metric) > 0
+    error_message = "At least one metric category should be enabled"
+  }
+
+  assert {
+    condition     = length([for metric in azurerm_monitor_diagnostic_setting.this[0].enabled_metric : metric if metric.category == "AllMetrics"]) > 0
+    error_message = "AllMetrics category should be enabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 1
+    error_message = "Diagnostic settings should be created for the slot when enabled and slot is created (use_case=default includes slot)"
+  }
+
+  assert {
+    condition     = length([for log in azurerm_monitor_diagnostic_setting.slot[0].enabled_log : log if log.category == "FunctionAppLogs"]) > 0
+    error_message = "FunctionAppLogs category should be enabled for the slot"
+  }
+
+  assert {
+    condition     = length([for metric in azurerm_monitor_diagnostic_setting.slot[0].enabled_metric : metric if metric.category == "AllMetrics"]) > 0
+    error_message = "AllMetrics category should be enabled for the slot"
+  }
+}
+
+run "function_app_without_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = false
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
+    error_message = "Diagnostic settings should not be created when disabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 0
+    error_message = "Diagnostic settings should not be created for slot when disabled"
+  }
+}
+
+run "function_app_with_diagnostic_settings_only_log_analytics" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Log Analytics workspace"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == null
+    error_message = "Storage account ID should be null when not provided"
+  }
+}
+
+run "function_app_with_diagnostic_settings_only_storage" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Storage Account"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == null
+    error_message = "Log Analytics workspace ID should be null when not provided"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+}
+
+run "function_app_with_diagnostic_settings_enabled_but_no_destinations" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  expect_failures = [
+    var.diagnostic_settings,
+  ]
+}
