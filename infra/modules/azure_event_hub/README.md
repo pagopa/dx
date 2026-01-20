@@ -15,9 +15,9 @@ This Terraform module provisions an Azure Event Hub namespace, event hubs, consu
 
 ## Use cases and Configurations
 
-| Use case  | Description                                                          | Capacity | Auto Inflate | Maximum Throughput Units |
-|-----------|----------------------------------------------------------------------|----------|--------------|--------------------------|
-| `default` | Suitable for production environments with low to moderate demands.   | 1        | No           | N/A                      |
+| Use case  | Description                                                        | Capacity | Auto Inflate | Maximum Throughput Units |
+| --------- | ------------------------------------------------------------------ | -------- | ------------ | ------------------------ |
+| `default` | Suitable for production environments with low to moderate demands. | 1        | No           | N/A                      |
 
 ### Usage Example
 
