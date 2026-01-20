@@ -17,7 +17,7 @@
  */
 
 import { configure, getConsoleSink, type LogLevel } from "@logtape/logtape";
-import { z } from "zod";
+import * as z from "zod";
 
 /**
  * Zod schema for validating log levels.
@@ -25,29 +25,24 @@ import { z } from "zod";
  */
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logLevelSchema = z
-  .enum(["debug", "info", "warning", "error"])
+  .enum(["error", "trace", "debug", "info", "warning", "fatal"])
   .catch(DEFAULT_LOG_LEVEL);
 
-export async function configureLogging() {
-  const logLevel = logLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel;
-  if (logLevel !== process.env.LOG_LEVEL) {
-    // Use console.warn for this early logging before LogTape is configured
-    console.warn(
-      `Invalid log level: ${process.env.LOG_LEVEL}. Using ${DEFAULT_LOG_LEVEL}`,
-    );
-  }
+type LogLevelEnv = z.infer<typeof logLevelSchema>;
 
+export async function configureLogging(logLevelEnv: LogLevelEnv) {
   await configure({
     loggers: [
       {
         category: ["mcpserver"],
-        lowestLevel: logLevel,
+        lowestLevel: logLevelEnv,
         sinks: ["console"],
       },
       {
         category: ["mcp-prompts"],
-        lowestLevel: logLevel,
+        lowestLevel: logLevelEnv,
         sinks: ["console"],
       },
       {
