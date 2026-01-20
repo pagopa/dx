@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "type": "module",
   "description": "An MCP server that supports developers using DX tools.",
   "repository": {

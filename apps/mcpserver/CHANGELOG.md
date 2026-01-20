@@ -1,5 +1,12 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.0
+
+### Minor Changes
+
+- deb54fd: Due to the slow implementation of features, the DX MCP server will start using the Official MCP SDK instead of the FastMCP library.
+- d83d537: Remove PAT authentication from the MCP server.
+
 ## 0.0.12
 
 ### Patch Changes
