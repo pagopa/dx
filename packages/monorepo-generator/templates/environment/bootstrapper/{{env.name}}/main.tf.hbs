@@ -11,6 +11,7 @@ module "azure-{{displayName}}_core_values" {
   core_state = {
     resource_group_name  = "{{@root.terraform.backend.resourceGroupName}}"
     storage_account_name = "{{@root.terraform.backend.storageAccountName}}"
+    subscription_id      = "{{@root.terraform.backend.subscriptionId}}"
     container_name       = "terraform-state"
     key                  = "{{@root.env.prefix}}.core.{{@root.env.name}}.tfstate"
   }

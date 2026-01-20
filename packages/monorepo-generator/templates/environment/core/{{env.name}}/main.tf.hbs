@@ -8,7 +8,9 @@ module "azure-{{displayName}}_core" {
     azurerm = azurerm.{{displayName}}
   }
 
-  environment = merge(local.environment, local.azure_accounts.{{displayName}})
+  environment = merge(local.environment, local.azure_accounts.{{displayName}}, {
+    app_name = "core"
+  })
 
   tags = local.tags
 }
