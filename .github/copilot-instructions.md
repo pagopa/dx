@@ -49,11 +49,6 @@ This monorepo houses the DevEx Initiative: tools, patterns, and infrastructure m
 - Tools: `QueryPagoPADXDocumentation`, `SearchGitHubCode`
 - Prompts: `GenerateTerraformConfiguration`
 
-**SBOM Management**:
-
-- Generate: `pnpm sbom-generate`
-- Validate: `pnpm sbom-validate`
-
 ## Common Patterns
 
 **Workspace Cross-References**: Internal packages reference each other via `workspace:^` in package.json. Check dependencies in [apps/cli/package.json](../apps/cli/package.json) for examples.
