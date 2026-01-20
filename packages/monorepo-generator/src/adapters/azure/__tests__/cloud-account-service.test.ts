@@ -38,10 +38,10 @@ describe("getTerraformBackend", () => {
       data: [],
       totalRecords: 0,
     });
-    const result = await cloudAccountService.getTerraformBackend(
-      "sub-1",
-      expect.objectContaining({ name: "dev", prefix: "dx" }),
-    );
+    const result = await cloudAccountService.getTerraformBackend("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
     expect(result).toBeUndefined();
   });
 
@@ -60,17 +60,18 @@ describe("getTerraformBackend", () => {
       ],
       totalRecords: 1,
     });
-    const result = await cloudAccountService.getTerraformBackend(
-      "sub-1",
-      expect.objectContaining({ name: "dev", prefix: "dx" }),
+    const result = await cloudAccountService.getTerraformBackend("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        resourceGroupName: "dx-d-itn-tfstate-rg-01",
+        storageAccountName: "dxditntfstatest01",
+        type: "azurerm",
+      }),
     );
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty("storageAccountName", "dxditntfstatest01");
-    expect(result).toHaveProperty(
-      "resourceGroupName",
-      "dx-d-itn-tfstate-rg-01",
-    );
-    expect(result).toHaveProperty("type", "azurerm");
   });
 
   test("returns the best matching storage account among multiple", async ({
@@ -102,16 +103,17 @@ describe("getTerraformBackend", () => {
       ],
       totalRecords: 3,
     });
-    const result = await cloudAccountService.getTerraformBackend(
-      "sub-1",
-      expect.objectContaining({ name: "dev", prefix: "dx" }),
+    const result = await cloudAccountService.getTerraformBackend("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        resourceGroupName: "dx-d-itn-tfstate-rg-01",
+        storageAccountName: "dxditntfstatest02",
+        type: "azurerm",
+      }),
     );
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty("storageAccountName", "dxditntfstatest02");
-    expect(result).toHaveProperty(
-      "resourceGroupName",
-      "dx-d-itn-tfstate-rg-01",
-    );
-    expect(result).toHaveProperty("type", "azurerm");
   });
 });

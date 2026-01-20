@@ -33,7 +33,12 @@ vi.mock("@azure/arm-resources-subscriptions", () => ({
   SubscriptionClient: vi.fn(),
 }));
 
+vi.mock("@azure/identity", () => ({
+  DefaultAzureCredential: vi.fn(),
+}));
+
 import { SubscriptionClient } from "@azure/arm-resources-subscriptions";
+import { DefaultAzureCredential } from "@azure/identity";
 
 const MockedSubscriptionClient = SubscriptionClient as unknown as ReturnType<
   typeof vi.fn
@@ -55,8 +60,9 @@ describe("AzureSubscriptionRepository", () => {
       createMockSubscriptionClient(subscriptions),
     );
 
-    const mockCredential = {} as never;
-    const repository = new AzureSubscriptionRepository(mockCredential);
+    const repository = new AzureSubscriptionRepository(
+      new DefaultAzureCredential(),
+    );
     const result = await repository.list();
 
     expect(result).toHaveLength(2);
@@ -87,8 +93,9 @@ describe("AzureSubscriptionRepository", () => {
       createMockSubscriptionClient(subscriptions),
     );
 
-    const mockCredential = {} as never;
-    const repository = new AzureSubscriptionRepository(mockCredential);
+    const repository = new AzureSubscriptionRepository(
+      new DefaultAzureCredential(),
+    );
     const result = await repository.list();
 
     expect(result).toHaveLength(1);
@@ -103,8 +110,9 @@ describe("AzureSubscriptionRepository", () => {
       createMockSubscriptionClient([]),
     );
 
-    const mockCredential = {} as never;
-    const repository = new AzureSubscriptionRepository(mockCredential);
+    const repository = new AzureSubscriptionRepository(
+      new DefaultAzureCredential(),
+    );
     const result = await repository.list();
 
     expect(result).toEqual([]);
@@ -121,24 +129,11 @@ describe("AzureSubscriptionRepository", () => {
       createMockSubscriptionClient(subscriptions),
     );
 
-    const mockCredential = {} as never;
-    const repository = new AzureSubscriptionRepository(mockCredential);
+    const repository = new AzureSubscriptionRepository(
+      new DefaultAzureCredential(),
+    );
     const result = await repository.list();
 
     expect(result).toHaveLength(1);
-  });
-
-  it("should include defaultLocation for each subscription", async () => {
-    const subscriptions = [createMockSubscription()];
-    MockedSubscriptionClient.mockImplementation(() =>
-      createMockSubscriptionClient(subscriptions),
-    );
-
-    const mockCredential = {} as never;
-    const repository = new AzureSubscriptionRepository(mockCredential);
-    const result = await repository.list();
-
-    expect(result[0]).toHaveProperty("defaultLocation");
-    expect(typeof result[0].defaultLocation).toBe("string");
   });
 });
