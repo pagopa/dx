@@ -187,3 +187,87 @@ run "cosmos_account_local_auth_disabled" {
     error_message = "The Cosmos DB account must not have capabilities EnableMongo, EnableCassandra, EnableTable, or EnableGremlin"
   }
 }
+
+run "cosmos_with_diagnostic_settings" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created when enabled"
+  }
+}
+
+run "cosmos_without_diagnostic_settings" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = false
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
+    error_message = "Diagnostic settings should not be created when disabled"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_only_log_analytics" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Log Analytics workspace"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_only_storage" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Storage Account"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_enabled_but_no_destinations" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  expect_failures = [
+    var.diagnostic_settings,
+  ]
+}

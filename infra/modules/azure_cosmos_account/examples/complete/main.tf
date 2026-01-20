@@ -13,7 +13,8 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "cosmos_db" {
-  source = "../../"
+  source  = "pagopa-dx/azure-cosmos-account/azurerm"
+  version = "~> 0.3"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
