@@ -471,9 +471,9 @@ func TestResourceNameFunction_InvalidInstanceNumberString(t *testing.T) {
 	})
 }
 
-func TestResourceNameFunction_EmptyResourceName(t *testing.T) {
+func TestResourceNameFunction_WithoutName(t *testing.T) {
 	t.Parallel()
-	// Test empty resource name
+	// Test resource name generation without name (only abbreviation)
 	resource.UnitTest(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_8_0),
@@ -487,13 +487,14 @@ func TestResourceNameFunction_EmptyResourceName(t *testing.T) {
 						prefix = "dx",
 						environment = "d",
 						location = "weu",
-						name = "",
 						resource_type = "virtual_machine",
 						instance_number = "1"
 					})
         }
         `,
-				ExpectError: regexp.MustCompile(`Resource name cannot\s+be empty`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("dx-d-weu-vm-01")),
+				},
 			},
 		},
 	})
@@ -644,6 +645,120 @@ func TestResourceNameFunction_LongerPrefixes(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestResourceNameFunction_DomainSameAsName(t *testing.T) {
+	t.Parallel()
+	// Test that domain cannot be the same as name
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						domain = "test",
+						environment = "d",
+						location = "weu",
+						name = "test",
+						resource_type = "virtual_machine",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`Resource domain cannot[\s\n]+be the same as the resource name`),
+			},
+		},
+	})
+}
+
+func TestResourceNameFunction_NameMatchesAbbreviation(t *testing.T) {
+	t.Parallel()
+	// Test that name cannot be the same as abbreviation
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						environment = "d",
+						location = "weu",
+						name = "kv",
+						resource_type = "key_vault",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`Resource name cannot[\s\n]+be part of the resource abbreviation`),
+			},
+		},
+	})
+}
+
+func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
+	t.Parallel()
+	// Test that name cannot match the prefix of a composite abbreviation (e.g., cosno in cosno-pep)
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						environment = "d",
+						location = "weu",
+						name = "cosno",
+						resource_type = "cosmos_private_endpoint",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`Resource name cannot[\s\n]+be part of the resource abbreviation`),
+			},
+		},
+	})
+}
+
+func TestResourceNameFunction_DomainMatchesCompositeAbbreviation(t *testing.T) {
+	t.Parallel()
+	// Test that domain cannot match the prefix of a composite abbreviation
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						domain = "psql",
+						environment = "d",
+						location = "weu",
+						name = "database",
+						resource_type = "postgre_private_endpoint",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`Resource domain cannot[\s\n]+be part of the resource abbreviation`),
+			},
+		},
+	})
 }
 
 func TestResourceNameFunction_CaseInsensitiveLocation(t *testing.T) {

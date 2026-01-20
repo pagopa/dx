@@ -31,4 +31,4 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1@sha256:46d6625e68cbb
 COPY --from=base /app/deploy .
 
 EXPOSE 8080
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/cli.js"]

@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../config.schema.json
+oa3_spec: test/data/io_backend.yaml # If start with http the file would be download from the internet
+name: My spec
+location: West Europe
+timespan: 5m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
+resource_type: app-gateway
+action_groups:
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-slack
+# Optional: Terraform configuration
+# Uncomment and configure the following section to customize Terraform versions
+# and populate environment-specific configuration files (dev/uat/prod).
+# If not specified, default versions are used and env files contain empty placeholders.
+#
+# terraform:
+#   environments:
+#     dev:
+#       prefix: "io"                         # Max 6 chars (required)
+#       env_short: "d"                       # Max 1 char: 'd', 'u', 'p' (required)
+#       backend:                             # Backend state configuration (optional)
+#         resource_group_name: "terraform-state-rg"
+#         storage_account_name: "tfstate"
+#         container_name: "terraform-state"
+#         key: "opex-dashboards.tfstate"
+#     uat:
+#       prefix: "io"
+#       env_short: "u"
+#       backend:
+#         resource_group_name: "terraform-state-rg"
+#         storage_account_name: "tfstate"
+#         container_name: "terraform-state"
+#         key: "opex-dashboards.tfstate"
+#     prod:
+#       prefix: "io"
+#       env_short: "p"
+#       backend:
+#         resource_group_name: "terraform-state-rg"
+#         storage_account_name: "tfstate"
+#         container_name: "terraform-state"
+#         key: "opex-dashboards.tfstate"
