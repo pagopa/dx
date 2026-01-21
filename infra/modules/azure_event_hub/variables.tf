@@ -110,3 +110,28 @@ variable "metric_alerts" {
   }))
   default = {}
 }
+
+#-----------#
+# Monitoring #
+#-----------#
+variable "diagnostic_settings" {
+  type = object({
+    enabled                    = bool
+    log_analytics_workspace_id = optional(string, null)
+    storage_account_id         = optional(string, null)
+  })
+  description = "Diagnostic settings for Event Hub logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account."
+  default = {
+    enabled                    = false
+    log_analytics_workspace_id = null
+  }
+
+  validation {
+    condition = (
+      !var.diagnostic_settings.enabled ||
+      var.diagnostic_settings.log_analytics_workspace_id != null ||
+      var.diagnostic_settings.storage_account_id != null
+    )
+    error_message = "Either log_analytics_workspace_id or storage_account_id must be provided when diagnostic settings are enabled."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "type": "module",
   "description": "An MCP server that supports developers using DX tools.",
   "repository": {
@@ -16,16 +16,16 @@
     "dist"
   ],
   "bin": {
-    "dx": "./dist/index.js"
+    "dx": "./dist/cli.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
     "@logtape/logtape": "catalog:",
+    "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "^22.0.0",
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.12.2",
-    "fastmcp": "^3.19.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "vitest": "catalog:"
   },
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "tsx src/cli.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",

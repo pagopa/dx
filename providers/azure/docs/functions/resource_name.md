@@ -47,8 +47,8 @@ resource_name(configuration map of string) string
 | prefix          |   String   |   Yes    | Prefix that define the repository domain (Max 2 characters)                      |
 | environment     |   String   |   Yes    | Environment where the resources will be deployed (d, u or p)                     |
 | location        |   String   |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope) |
-| domain          |   String   |    No    | Optional value that specify the domain                                           |
-| name            |   String   |   Yes    | Name of the resource                                                             |
+| domain          |   String   |    No    | Domain grouping (optional).                                                      |
+| name            |   String   |    No    | Resource name (optional, cannot overlap with resource type abbreviation).        |
 | resource_type   |   String   |   Yes    | Type of the resource (see the table below)                                       |
 | instance_number |  Integer   |   Yes    | Instance number of the resource (1-99)                                           |
 

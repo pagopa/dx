@@ -1,9 +1,9 @@
 name: "Convert Mermaid into SVG"
-description: "Given a .md file containing Mermaid diagrams, this action converts them into SVG format."
+description: "Given a .md file containing Mermaid diagrams, this action converts them into SVG format. If a .mmd file is provided, it converts it to SVG."
 
 inputs:
   file_path:
-    description: "Path to the .md file containing Mermaid diagrams."
+    description: "Path to the .md or .mmd file containing Mermaid diagrams."
     required: true
 
 runs:
@@ -14,19 +14,36 @@ runs:
       id: check-mermaid
       shell: bash
       env:
-        MD_FILE: ${{ inputs.file_path }}
+        INPUT_FILE: ${{ inputs.file_path }}
       run: |
-        if [ ! -f "$MD_FILE" ]; then
-          echo "File $MD_FILE not found"
+        # Basic path traversal protection
+        if [[ "$INPUT_FILE" == /* ]] || [[ "$INPUT_FILE" == ../* ]]; then
+          echo "::error::Absolute paths or path traversal not allowed: $INPUT_FILE"
+          exit 1
+        fi
+
+        if [ ! -f "$INPUT_FILE" ]; then
+          printf "File %s not found\n" "$INPUT_FILE"
           echo "has_mermaid=false" >> $GITHUB_OUTPUT
           exit 0
         fi
 
-        if grep -q '```mermaid' "$MD_FILE"; then
-          echo "Mermaid diagrams found in $MD_FILE"
+        # Determine file type
+        if [[ "$INPUT_FILE" == *.mmd ]]; then
+          echo "Mermaid diagram file (.mmd) found"
+          echo "file_type=mmd" >> $GITHUB_OUTPUT
           echo "has_mermaid=true" >> $GITHUB_OUTPUT
+        elif [[ "$INPUT_FILE" == *.md ]]; then
+          if grep -q '```mermaid' "$INPUT_FILE"; then
+            printf "Mermaid diagrams found in %s\n" "$INPUT_FILE"
+            echo "file_type=md" >> $GITHUB_OUTPUT
+            echo "has_mermaid=true" >> $GITHUB_OUTPUT
+          else
+            printf "No Mermaid diagrams found in %s. Skipping conversion.\n" "$INPUT_FILE"
+            echo "has_mermaid=false" >> $GITHUB_OUTPUT
+          fi
         else
-          echo "No Mermaid diagrams found in $MD_FILE. Skipping conversion."
+          echo "File type not supported. Expected .md or .mmd"
           echo "has_mermaid=false" >> $GITHUB_OUTPUT
         fi
 
@@ -38,21 +55,28 @@ runs:
     - name: Install mermaid-cli
       if: steps.check-mermaid.outputs.has_mermaid == 'true'
       shell: bash
-      run: npm install -g @mermaid-js/mermaid-cli
+      run: npm install -g @mermaid-js/mermaid-cli@11.12.0
 
     - name: Convert Mermaid to SVG
       if: steps.check-mermaid.outputs.has_mermaid == 'true'
       shell: bash
       env:
-        MD_FILE: ${{ inputs.file_path }}
+        INPUT_FILE: ${{ inputs.file_path }}
+        FILE_TYPE: ${{ steps.check-mermaid.outputs.file_type }}
       run: |
-        # Convert .md to .svg
-        echo "Converting $MD_FILE to SVG..."
         puppeteer_config="$(mktemp)"
+        trap 'rm -f "$puppeteer_config"' EXIT
         echo '{"args": ["--no-sandbox"]}' > "$puppeteer_config"
 
-        # This command will convert the Mermaid diagrams in the .md file to SVG format
-        # creating a new .svg file and overwriting the original .md file adding the image url.
-
-        mmdc -i "$MD_FILE" -o "$MD_FILE" -t dark -b transparent -p "$puppeteer_config"
-        echo "✅ Successfully converted into svg"
+        if [ "$FILE_TYPE" = "md" ]; then
+          # Convert .md file: embed SVG images in markdown, overwrite original file
+          printf "Converting Mermaid diagrams in %s to inline SVG references...\n" "$INPUT_FILE"
+          mmdc -i "$INPUT_FILE" -o "$INPUT_FILE" -t dark -b transparent --iconPacks @iconify-json/logos --iconPacksNamesAndUrls azure#https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json -p "$puppeteer_config"
+          echo "✅ Successfully converted .md file with embedded SVG references"
+        elif [ "$FILE_TYPE" = "mmd" ]; then
+          # Convert .mmd file: create standalone .svg file
+          OUTPUT_FILE="${INPUT_FILE%.mmd}.svg"
+          printf "Converting %s to SVG: %s\n" "$INPUT_FILE" "$OUTPUT_FILE"
+          mmdc -i "$INPUT_FILE" -o "$OUTPUT_FILE" -t dark -b transparent --iconPacks @iconify-json/logos --iconPacksNamesAndUrls azure#https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json -p "$puppeteer_config"
+          echo "✅ Successfully converted .mmd file to SVG"
+        fi

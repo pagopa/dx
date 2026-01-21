@@ -4,7 +4,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
-    app_name        = "appcs"
+    app_name        = "appcstest"
     instance_number = "01"
   }
 

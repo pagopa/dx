@@ -1,5 +1,11 @@
 # docs
 
+## 0.12.1
+
+### Patch Changes
+
+- d83d537: Remove PAT authentication from the MCP server.
+
 ## 0.12.0
 
 ### Minor Changes
