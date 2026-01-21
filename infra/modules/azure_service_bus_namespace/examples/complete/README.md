@@ -12,8 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
-| <a name="module_service_bus_01"></a> [service\_bus\_01](#module\_service\_bus\_01) | ../../ | n/a |
+| <a name="module_service_bus_01"></a> [service\_bus\_01](#module\_service\_bus\_01) | pagopa-dx/azure-service-bus-namespace/azurerm | ~> 0.1 |
 
 ## Resources
 
