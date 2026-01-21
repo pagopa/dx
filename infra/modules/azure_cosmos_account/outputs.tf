@@ -27,3 +27,10 @@ output "write_endpoints" {
   description = "A list of write endpoints for the Azure Cosmos DB account."
   value       = azurerm_cosmosdb_account.this.write_endpoints
 }
+
+output "diagnostic_settings" {
+  description = "Details of the diagnostic settings configured for the Cosmos DB Account."
+  value = {
+    id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
+  }
+}
