@@ -4,7 +4,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
-    app_name        = "appcs"
+    app_name        = "appcstest"
     instance_number = "01"
   }
 
@@ -213,5 +213,26 @@ run "authorized_teams_roles" {
   assert {
     condition     = length(local.appconfig_role_assignments) == 3
     error_message = "Three role assignments must be in local map"
+  }
+}
+
+run "app_configuration_diagnostics_enabled" {
+  command = plan
+  variables {
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+      storage_account_id         = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.app_configuration) == 1
+    error_message = "Diagnostic setting should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.app_configuration[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
+    error_message = "Log Analytics workspace ID should be set correctly"
   }
 }

@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cosmos_db"></a> [cosmos\_db](#module\_cosmos\_db) | ../../ | n/a |
+| <a name="module_cosmos_db"></a> [cosmos\_db](#module\_cosmos\_db) | pagopa-dx/azure-cosmos-account/azurerm | ~> 0.4 |
 
 ## Resources
 

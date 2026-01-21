@@ -27,3 +27,23 @@ resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
 
   tags = local.tags
 }
+
+# Diagnostic Settings for Event Hub Namespace
+# Logs namespace operations and metrics
+resource "azurerm_monitor_diagnostic_setting" "event_hub_namespace" {
+  count = var.diagnostic_settings.enabled ? 1 : 0
+
+  name               = "${azurerm_eventhub_namespace.this.name}-diagnostics"
+  target_resource_id = azurerm_eventhub_namespace.this.id
+
+  log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
+  storage_account_id         = var.diagnostic_settings.storage_account_id
+
+  enabled_log {
+    category_group = "allLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
