@@ -7,6 +7,7 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 
+import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
 import { getLogger } from "@logtape/logtape";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -23,7 +24,10 @@ import { configureAzureMonitoring } from "./config/monitoring.js";
 import { withPromptLogging } from "./decorators/prompt-usage-monitoring.js";
 import { withToolLogging } from "./decorators/tool-usage-monitoring.js";
 import { retrieveAndGenerate } from "./services/bedrock-retrieve-and-generate.js";
-import { resolveToWebsiteUrl } from "./services/bedrock.js";
+import {
+  queryKnowledgeBaseStructured,
+  resolveToWebsiteUrl,
+} from "./services/bedrock.js";
 import { sessionStorage } from "./session.js";
 import { createToolDefinitions, type ToolEntry } from "./tools/registry.js";
 import { GetPromptResultType, ToolCallResult } from "./types.js";
@@ -223,6 +227,82 @@ async function handleAskEndpoint(
   }
 }
 
+async function handleSearchEndpoint(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: AppConfig,
+  kbRuntimeClient: BedrockAgentRuntimeClient,
+  logger: ReturnType<typeof getLogger>,
+): Promise<void> {
+  logger.info("Handling /search endpoint");
+  try {
+    let body = "";
+    for await (const chunk of req) {
+      body += chunk;
+    }
+
+    const jsonBody = JSON.parse(body);
+    const query = jsonBody.query;
+    const numberOfResults = jsonBody.number_of_results ?? 5;
+
+    if (!query || typeof query !== "string") {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Missing required field: query" }));
+      return;
+    }
+
+    if (
+      typeof numberOfResults !== "number" ||
+      numberOfResults < 1 ||
+      numberOfResults > 20
+    ) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          error: "number_of_results must be between 1 and 20",
+        }),
+      );
+      return;
+    }
+
+    const results = await queryKnowledgeBaseStructured(
+      config.aws.knowledgeBaseId,
+      query,
+      kbRuntimeClient,
+      numberOfResults,
+      config.aws.rerankingEnabled,
+    );
+
+    // Format results with content, score, and source URL
+    const formattedResults = results.map((result) => ({
+      content: result.content,
+      score: result.score,
+      source:
+        result.location?.type === "WEB"
+          ? result.location.webLocation?.url
+          : undefined,
+    }));
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        query,
+        results: formattedResults,
+      }),
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error handling /search request: ${errorMessage}`);
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+  }
+}
+
 async function startHttpServer(
   config: AppConfig,
   enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
@@ -263,6 +343,12 @@ async function startHttpServer(
       // Handle /ask endpoint for Bedrock Knowledge Base queries
       if (req.url?.includes("/ask") && req.method === "POST") {
         await handleAskEndpoint(req, res, config, kbRuntimeClient, logger);
+        return;
+      }
+
+      // Handle /search endpoint for documentation search
+      if (req.url?.includes("/search") && req.method === "POST") {
+        await handleSearchEndpoint(req, res, config, kbRuntimeClient, logger);
         return;
       }
 
