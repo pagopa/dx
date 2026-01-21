@@ -1,9 +1,9 @@
 {
   "azure_core_values": {
-    "hash": "9d17c2786991abf8af52245d73bb724877914c4eb8f72389a831b5385878974e",
-    "version": "0.2.4",
+    "hash": "0c9133c47c377b758f5b4d6ab35133aec35d211157fdd03eb4d10423d84876ed",
+    "version": "0.3.0",
     "name": "azure_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.2.4"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.3.0"
   },
   "aws_core_values": {
     "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
