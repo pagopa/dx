@@ -1,5 +1,5 @@
 ---
-"azure_cosmos_account": patch
+"azure_cosmos_account": minor
 ---
 
 Add Diagnostic Settings configuration, update tests, align example
