@@ -7,12 +7,6 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = local.environment.app_name,
@@ -24,7 +18,8 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "service_bus_01" {
-  source = "../../"
+  source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
+  version = "~> 0.0"
 
   environment = {
     prefix          = "dx"
