@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_service_bus_01"></a> [service\_bus\_01](#module\_service\_bus\_01) | pagopa-dx/azure-service-bus-namespace/azurerm | ~> 0.0 |
+| <a name="module_service_bus_01"></a> [service\_bus\_01](#module\_service\_bus\_01) | pagopa-dx/azure-service-bus-namespace/azurerm | ~> 0.1 |
 
 ## Resources
 
