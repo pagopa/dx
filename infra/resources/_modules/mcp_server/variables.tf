@@ -37,3 +37,9 @@ variable "waf_rate_limit_per_ip" {
   description = "Maximum number of requests per IP address within the evaluation window (5 minutes). Requests exceeding this limit will be blocked."
   default     = 500
 }
+
+variable "bedrock_model_id" {
+  type        = string
+  description = "The ARN of the Amazon Bedrock model to use for generating responses."
+  default     = "amazon.nova-2-lite-v1:0"
+}

@@ -6,6 +6,7 @@ import { createToolDefinitions } from "../registry.js";
 const toolDefinitions = createToolDefinitions({
   aws: {
     knowledgeBaseId: "kb-id",
+    modelArn: "arn:aws:bedrock:eu-central-1:123456789012:model/model-id",
     region: "eu-central-1",
     rerankingEnabled: false,
   },

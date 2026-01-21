@@ -19,6 +19,7 @@ export const rerankingSupportedRegions = [
 
 export type AwsRuntimeConfig = {
   knowledgeBaseId: string;
+  modelArn: string;
   region: string;
   rerankingEnabled: boolean;
 };

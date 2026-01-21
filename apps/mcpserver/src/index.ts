@@ -22,6 +22,8 @@ import { configureLogging } from "./config/logging.js";
 import { configureAzureMonitoring } from "./config/monitoring.js";
 import { withPromptLogging } from "./decorators/prompt-usage-monitoring.js";
 import { withToolLogging } from "./decorators/tool-usage-monitoring.js";
+import { retrieveAndGenerate } from "./services/bedrock-retrieve-and-generate.js";
+import { resolveToWebsiteUrl } from "./services/bedrock.js";
 import { sessionStorage } from "./session.js";
 import { createToolDefinitions, type ToolEntry } from "./tools/registry.js";
 import { GetPromptResultType, ToolCallResult } from "./types.js";
@@ -160,6 +162,67 @@ function createServer({
   return mcpServer;
 }
 
+async function handleAskEndpoint(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: AppConfig,
+  kbRuntimeClient: BedrockAgentRuntimeClient,
+  logger: ReturnType<typeof getLogger>,
+): Promise<void> {
+  logger.info("Handling /ask endpoint");
+  try {
+    let body = "";
+    for await (const chunk of req) {
+      body += chunk;
+    }
+
+    const jsonBody = JSON.parse(body);
+    const query = jsonBody.query;
+
+    if (!query || typeof query !== "string") {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Missing required field: query" }));
+      return;
+    }
+
+    const response = await retrieveAndGenerate(
+      config.aws.knowledgeBaseId,
+      config.aws.modelArn,
+      query,
+      kbRuntimeClient,
+    );
+
+    // Extract unique source URLs from citations
+    const sourceUrls = new Set<string>();
+    response.citations?.forEach((citation) => {
+      citation.retrievedReferences?.forEach((ref) => {
+        const webLocation = resolveToWebsiteUrl(ref.location);
+        if (webLocation?.webLocation?.url) {
+          sourceUrls.add(webLocation.webLocation.url);
+        }
+      });
+    });
+
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        answer: response.output?.text || "",
+        sources: Array.from(sourceUrls),
+      }),
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`Error handling /ask request: ${errorMessage}`);
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      }),
+    );
+  }
+}
+
 async function startHttpServer(
   config: AppConfig,
   enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
@@ -178,6 +241,13 @@ async function startHttpServer(
 
   const httpServer = http.createServer(
     async (req: IncomingMessage, res: ServerResponse) => {
+      // Log incoming request for debugging
+      logger.debug("Incoming request", {
+        headers: req.headers,
+        method: req.method,
+        url: req.url,
+      });
+
       // Configure CORS headers
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
@@ -190,7 +260,13 @@ async function startHttpServer(
         return;
       }
 
-      // Only allow POST and DELETE
+      // Handle /ask endpoint for Bedrock Knowledge Base queries
+      if (req.url?.includes("/ask") && req.method === "POST") {
+        await handleAskEndpoint(req, res, config, kbRuntimeClient, logger);
+        return;
+      }
+
+      // Only allow POST and DELETE for MCP endpoints
       if (req.method !== "POST" && req.method !== "DELETE") {
         res.writeHead(405, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Method not allowed" }));

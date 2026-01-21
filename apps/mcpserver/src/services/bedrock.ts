@@ -135,6 +135,10 @@ export function resolveToWebsiteUrl(
       else {
         url = `https://dx.pagopa.it/docs/${key.replace(/\.md$/, "")}`;
       }
+
+      // Post-process: remove trailing /index from URLs
+      url = url.replace(/\/index$/, "/");
+
       // Return a RetrievalResultLocation object of type WEB with the computed URL
       return {
         type: "WEB",
