@@ -42,3 +42,10 @@ output "endpoint_name" {
   description = "The name of the CDN FrontDoor Endpoint"
   value       = azurerm_cdn_frontdoor_endpoint.this.name
 }
+
+output "diagnostic_settings" {
+  description = "Details of the diagnostic settings configured for the CDN FrontDoor Profile."
+  value = {
+    id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
+  }
+}
