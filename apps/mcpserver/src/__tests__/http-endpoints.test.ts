@@ -43,7 +43,9 @@ describe("HTTP Endpoints", () => {
     });
 
     it("should use default number_of_results if not provided", () => {
-      const request = { query: "test" };
+      const request: { query: string; number_of_results?: number } = {
+        query: "test",
+      };
       const numberOfResults = request.number_of_results ?? 5;
       expect(numberOfResults).toBe(5);
     });
