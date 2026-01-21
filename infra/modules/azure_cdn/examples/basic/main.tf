@@ -59,7 +59,7 @@ data "azurerm_key_vault_certificate" "cert" {
 
 module "azure_cdn" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.3"
+  version = "~> 0.4"
 
   resource_group_name = azurerm_resource_group.example.name
 
