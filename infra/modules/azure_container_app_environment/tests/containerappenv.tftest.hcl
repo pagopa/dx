@@ -134,3 +134,56 @@ run "user_assigned_identity" {
     error_message = "The container app environment resource group is not correct"
   }
 }
+
+run "container_app_env_diagnostics_enabled_plan" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create Container App Environment with Diagnostic Settings"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    log_analytics_workspace_id = run.setup_tests.log_analytics_id
+
+    virtual_network = {
+      name                = "dx-d-itn-common-vnet-01"
+      resource_group_name = "dx-d-itn-network-rg-01"
+    }
+    subnet_pep_id = run.setup_tests.pep_snet_id
+    subnet_cidr   = "10.50.100.0/24"
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = run.setup_tests.log_analytics_id
+      storage_account_id         = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.container_app_environment) == 1
+    error_message = "Diagnostic setting should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.container_app_environment[0].log_analytics_workspace_id == run.setup_tests.log_analytics_id
+    error_message = "Log Analytics workspace ID should be set correctly"
+  }
+}
