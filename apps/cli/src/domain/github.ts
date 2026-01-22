@@ -1,12 +1,4 @@
-export type PullRequestBody = {
-  base: string;
-  body: string;
-  head: string;
-  owner: string;
-  repo: string;
-  title: string;
-};
-
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface GitHubService {
   /**
    * Creates a pull request in a GitHub repository.
@@ -21,6 +13,15 @@ export interface GitHubService {
    */
   getRepository(owner: string, name: string): Promise<Repository>;
 }
+
+type PullRequestBody = {
+  base: string;
+  body: string;
+  head: string;
+  owner: string;
+  repo: string;
+  title: string;
+};
 
 export class PullRequest {
   constructor(public readonly url: string) {}
