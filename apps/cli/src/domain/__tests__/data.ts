@@ -2,6 +2,7 @@ import { Octokit } from "octokit";
 import { mock, mockDeep } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
+import { GitHubService } from "../github.js";
 import {
   Dependency,
   PackageJson,
@@ -28,6 +29,7 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = () => ({
+  gitHubService: mock<GitHubService>(),
   octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
