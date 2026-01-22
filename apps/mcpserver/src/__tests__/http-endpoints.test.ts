@@ -77,6 +77,12 @@ vi.mock("../config/aws.js", () => ({
 let server: Server;
 let baseUrl: string;
 
+async function closeTestServer() {
+  return new Promise<void>((resolve) => {
+    server.close(() => resolve());
+  });
+}
+
 async function setupTestServer() {
   const testEnv = {
     AWS_BEDROCK_KNOWLEDGE_BASE_ID: "test-kb-id",
@@ -96,12 +102,6 @@ async function setupTestServer() {
   const address = server.address();
   const port = typeof address === "object" ? address?.port : 8080;
   baseUrl = `http://localhost:${port}`;
-}
-
-async function closeTestServer() {
-  return new Promise<void>((resolve) => {
-    server.close(() => resolve());
-  });
 }
 
 describe("HTTP Endpoints Integration Tests", () => {
@@ -195,7 +195,7 @@ describe("HTTP Endpoints Integration Tests", () => {
 
       const data = (await response.json()) as {
         query: string;
-        results: Array<{ content: string; score: number; source?: string }>;
+        results: { content: string; score: number; source?: string }[];
       };
       expect(data).toHaveProperty("query");
       expect(data).toHaveProperty("results");
