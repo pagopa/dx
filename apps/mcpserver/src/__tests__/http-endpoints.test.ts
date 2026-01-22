@@ -1,105 +1,285 @@
-import { describe, expect, it } from "vitest";
+import type { Server } from "node:http";
 
-describe("HTTP Endpoints", () => {
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+import { loadConfig } from "../config.js";
+import { createBedrockRuntimeClient } from "../config/aws.js";
+
+// Mock AWS SDK to avoid external dependencies
+vi.mock("@aws-sdk/client-bedrock-agent-runtime", () => ({
+  BedrockAgentRuntimeClient: vi.fn().mockImplementation(() => ({
+    config: {
+      apiVersion: "2023-11-20",
+      region: async () => "eu-central-1",
+      requestHandler: { handle: vi.fn() },
+    },
+    destroy: vi.fn(),
+    middlewareStack: {},
+    send: vi.fn(),
+  })),
+  RetrieveAndGenerateCommand: vi.fn(),
+  RetrieveCommand: vi.fn(),
+}));
+
+vi.mock("../config/aws.js", () => ({
+  createBedrockRuntimeClient: vi.fn(() => ({
+    config: {
+      apiVersion: "2023-11-20",
+      region: async () => "eu-central-1",
+      requestHandler: { handle: vi.fn() },
+    },
+    destroy: vi.fn(),
+    middlewareStack: {},
+    send: vi.fn().mockImplementation((command) => {
+      // Mock different responses based on command type
+      if (command.constructor.name === "RetrieveAndGenerateCommand") {
+        return Promise.resolve({
+          citations: [
+            {
+              retrievedReferences: [
+                {
+                  content: { text: "Reference content", type: "TEXT" },
+                  location: {
+                    s3Location: {
+                      uri: "s3://bucket/docs/terraform/setup.md",
+                    },
+                    type: "S3",
+                  },
+                },
+              ],
+            },
+          ],
+          output: { text: "This is how you setup Terraform." },
+          sessionId: "test-session",
+        });
+      } else if (command.constructor.name === "RetrieveCommand") {
+        return Promise.resolve({
+          retrievalResults: [
+            {
+              content: { text: "Azure naming conventions guide", type: "TEXT" },
+              location: {
+                s3Location: { uri: "s3://bucket/docs/azure/naming.md" },
+                type: "S3",
+              },
+              score: 0.95,
+            },
+          ],
+        });
+      }
+      return Promise.resolve({});
+    }),
+  })),
+  rerankingSupportedRegions: ["us-east-1", "eu-central-1"],
+}));
+
+describe("HTTP Endpoints Integration Tests", () => {
+  let server: Server;
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    // Set up minimal test environment
+    const testEnv = {
+      AWS_BEDROCK_KNOWLEDGE_BASE_ID: "test-kb-id",
+      AWS_BEDROCK_MODEL_ARN: "arn:aws:bedrock:test",
+      AWS_REGION: "eu-central-1",
+      LOG_LEVEL: "error", // Suppress logs during tests
+      NODE_ENV: "test",
+    };
+
+    const config = loadConfig(testEnv);
+
+    // Import and start server dynamically
+    const { startHttpServer } = await import("../index.js");
+    const { getEnabledPrompts } = await import("@pagopa/dx-mcpprompts");
+
+    const enabledPrompts = await getEnabledPrompts();
+    server = await startHttpServer(config, enabledPrompts);
+
+    // Get dynamic port
+    const address = server.address();
+    const port = typeof address === "object" ? address?.port : 8080;
+    baseUrl = `http://localhost:${port}`;
+  });
+
+  afterAll((done) => {
+    server.close(done);
+  });
+
   describe("POST /ask", () => {
-    it("should validate query is a string", () => {
-      const validQuery = { query: "How do I setup Terraform?" };
-      expect(typeof validQuery.query).toBe("string");
+    it("should return 200 with answer and sources for valid request", async () => {
+      const response = await fetch(`${baseUrl}/ask`, {
+        body: JSON.stringify({ query: "How do I setup Terraform?" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
 
-      const invalidQuery = { query: 123 };
-      expect(typeof invalidQuery.query).not.toBe("string");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain(
+        "application/json",
+      );
+
+      const data = await response.json();
+      expect(data).toHaveProperty("answer");
+      expect(data).toHaveProperty("sources");
+      expect(typeof data.answer).toBe("string");
+      expect(Array.isArray(data.sources)).toBe(true);
     });
 
-    it("should return answer and sources on success", () => {
-      const expectedResponse = {
-        answer: "To setup Terraform...",
-        sources: ["https://dx.pagopa.it/docs/terraform/"],
-      };
+    it("should return 400 for missing query field", async () => {
+      const response = await fetch(`${baseUrl}/ask`, {
+        body: JSON.stringify({}),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
 
-      expect(expectedResponse).toHaveProperty("answer");
-      expect(expectedResponse).toHaveProperty("sources");
-      expect(Array.isArray(expectedResponse.sources)).toBe(true);
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Missing required field: query");
+    });
+
+    it("should return 400 for empty query string", async () => {
+      const response = await fetch(`${baseUrl}/ask`, {
+        body: JSON.stringify({ query: "   " }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Missing required field: query");
+    });
+
+    it("should return 400 for invalid JSON", async () => {
+      const response = await fetch(`${baseUrl}/ask`, {
+        body: "not valid json{",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Invalid JSON in request body");
+    });
+
+    it("should return 400 for non-string query", async () => {
+      const response = await fetch(`${baseUrl}/ask`, {
+        body: JSON.stringify({ query: 123 }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Missing required field: query");
     });
   });
 
   describe("POST /search", () => {
-    it("should return 400 if query is missing", () => {
-      const requestBody = {};
-      const hasQuery = "query" in requestBody;
-      expect(hasQuery).toBe(false);
-    });
-
-    it("should validate number_of_results range", () => {
-      const validCounts = [1, 5, 10, 20];
-      validCounts.forEach((count) => {
-        expect(count).toBeGreaterThanOrEqual(1);
-        expect(count).toBeLessThanOrEqual(20);
+    it("should return 200 with results for valid request", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ query: "Azure naming conventions" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       });
 
-      const invalidCounts = [0, 21, -1, 100];
-      invalidCounts.forEach((count) => {
-        expect(count < 1 || count > 20).toBe(true);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain(
+        "application/json",
+      );
+
+      const data = await response.json();
+      expect(data).toHaveProperty("query");
+      expect(data).toHaveProperty("results");
+      expect(Array.isArray(data.results)).toBe(true);
+
+      if (data.results.length > 0) {
+        const result = data.results[0];
+        expect(result).toHaveProperty("content");
+        expect(result).toHaveProperty("score");
+        expect(typeof result.score).toBe("number");
+      }
+    });
+
+    it("should use default number_of_results when not provided", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ query: "test query" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       });
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty("results");
     });
 
-    it("should use default number_of_results if not provided", () => {
-      const request: { number_of_results?: number; query: string } = {
-        query: "test",
-      };
-      const numberOfResults = request.number_of_results ?? 5;
-      expect(numberOfResults).toBe(5);
-    });
-
-    it("should return results with content, score, and source", () => {
-      const expectedResult = {
-        content: "Documentation content...",
-        score: 0.9542,
-        source: "https://dx.pagopa.it/docs/azure/",
-      };
-
-      expect(expectedResult).toHaveProperty("content");
-      expect(expectedResult).toHaveProperty("score");
-      expect(expectedResult).toHaveProperty("source");
-      expect(typeof expectedResult.score).toBe("number");
-    });
-  });
-
-  describe("CORS Headers", () => {
-    it("should include required CORS headers", () => {
-      const corsHeaders = {
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Methods": "POST, OPTIONS, DELETE",
-        "Access-Control-Allow-Origin": "*",
-      };
-
-      expect(corsHeaders["Access-Control-Allow-Origin"]).toBe("*");
-      expect(corsHeaders["Access-Control-Allow-Methods"]).toContain("POST");
-    });
-  });
-
-  describe("Error Handling", () => {
-    it("should return 500 on internal errors", () => {
-      const errorResponse = {
-        error: "Internal server error",
-        message: "Something went wrong",
-      };
-
-      expect(errorResponse).toHaveProperty("error");
-      expect(errorResponse).toHaveProperty("message");
-    });
-
-    it("should return 400 for invalid request body", () => {
-      const invalidBodies = ["not json", "{invalid}", ""];
-
-      invalidBodies.forEach((body) => {
-        let isValid = true;
-        try {
-          JSON.parse(body);
-        } catch {
-          isValid = false;
-        }
-        expect(isValid).toBe(false);
+    it("should accept custom number_of_results", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ number_of_results: 10, query: "test query" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
       });
+
+      expect(response.status).toBe(200);
+    });
+
+    it("should return 400 for missing query field", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({}),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Missing required field: query");
+    });
+
+    it("should return 400 for empty query string", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ query: "" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Missing required field: query");
+    });
+
+    it("should return 400 for invalid JSON", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: "{invalid json",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("Invalid JSON in request body");
+    });
+
+    it("should return 400 for number_of_results out of range (too low)", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ number_of_results: 0, query: "test" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("number_of_results must be between 1 and 20");
+    });
+
+    it("should return 400 for number_of_results out of range (too high)", async () => {
+      const response = await fetch(`${baseUrl}/search`, {
+        body: JSON.stringify({ number_of_results: 21, query: "test" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+
+      expect(response.status).toBe(400);
+      const data = await response.json();
+      expect(data.error).toBe("number_of_results must be between 1 and 20");
     });
   });
 });

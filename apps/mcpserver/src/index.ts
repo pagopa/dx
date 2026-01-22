@@ -319,7 +319,7 @@ async function handleSearchEndpoint(
   }
 }
 
-async function startHttpServer(
+export async function startHttpServer(
   config: AppConfig,
   enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
 ): Promise<http.Server> {
