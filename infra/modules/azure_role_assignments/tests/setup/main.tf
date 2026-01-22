@@ -64,13 +64,19 @@ data "azurerm_resource_group" "rg" {
 resource "azurerm_user_assigned_identity" "id" {
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
-  name                = "${module.naming_convention.prefix}-id-role-${module.naming_convention.suffix}"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "managed_identity"
+  }))
 
   tags = local.tags
 }
 
 resource "azurerm_servicebus_namespace" "this" {
-  name                = "dx-d-itn-playground-sb-01"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test",
+    resource_type = "servicebus_namespace"
+  }))
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
   sku                 = "Standard"

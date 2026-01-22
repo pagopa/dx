@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "example" {
 
 module "function" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 2.0"
+  version = "~> 4.1"
 
   environment = local.environment
 

@@ -10,8 +10,8 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "azure_function_app_1" {
-  source  = "pagopa-dx/azure-function-app/azure"
-  version = "~> 4.2"
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 4.1"
 
   environment         = local.environment
   use_case            = "default"
@@ -33,8 +33,8 @@ module "azure_function_app_1" {
 }
 
 module "azure_function_app_2" {
-  source  = "pagopa-dx/azure-function-app/azure"
-  version = "~> 4.2"
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 4.1"
 
   environment         = merge(local.environment, { instance_number = "02" })
   use_case            = "default"

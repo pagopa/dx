@@ -11,7 +11,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azure | ~> 4.2 |
+| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azurerm | ~> 4.2 |
 | <a name="module_func_autoscaler"></a> [func\_autoscaler](#module\_func\_autoscaler) | pagopa-dx/azure-app-service-plan-autoscaler/azurerm | ~> 2.0 |
 
 ## Resources

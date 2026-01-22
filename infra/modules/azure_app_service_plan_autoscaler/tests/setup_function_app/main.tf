@@ -8,8 +8,8 @@ terraform {
 }
 
 module "azure_function_app" {
-  source  = "pagopa-dx/azure-function-app/azure"
-  version = "~> 4.2"
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 4.1"
 
   environment         = var.environment
   use_case            = "default"
