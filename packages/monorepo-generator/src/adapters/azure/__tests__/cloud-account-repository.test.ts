@@ -1,21 +1,19 @@
+import type { Subscription } from "@azure/arm-resources-subscriptions";
+
 import { describe, expect, it, vi } from "vitest";
 
 import { AzureSubscriptionRepository } from "../cloud-account-repository.js";
 
 const createMockSubscription = (
-  overrides: {
-    displayName?: string;
-    state?: string;
-    subscriptionId?: string;
-  } = {},
-) => ({
+  overrides: Partial<Subscription> = {},
+): Subscription => ({
   displayName: "Test Subscription",
   state: "Enabled",
   subscriptionId: "00000000-0000-0000-0000-000000000001",
   ...overrides,
 });
 
-const createMockSubscriptionClient = (subscriptions: unknown[]) => {
+const createMockSubscriptionClient = (subscriptions: Subscription[]) => {
   const listIterator = async function* () {
     for (const sub of subscriptions) {
       yield sub;
