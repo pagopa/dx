@@ -7,11 +7,10 @@ import {
   RepositoryNotFoundError,
 } from "../../domain/github.js";
 
-export class OctokitGitHubService extends GitHubService {
+export class OctokitGitHubService implements GitHubService {
   #octokit;
 
   constructor(octokit: Octokit) {
-    super();
     this.#octokit = octokit;
   }
 

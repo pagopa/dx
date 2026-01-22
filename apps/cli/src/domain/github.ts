@@ -1,9 +1,9 @@
-export abstract class GitHubService {
+export interface GitHubService {
   /**
    * Creates a pull request in a GitHub repository.
    * @throws Error if pull request creation fails
    */
-  abstract createPullRequest(params: {
+  createPullRequest(params: {
     base: string;
     body: string;
     head: string;
@@ -17,7 +17,7 @@ export abstract class GitHubService {
    * @throws RepositoryNotFoundError if repository doesn't exist (404)
    * @throws Error for other failures
    */
-  abstract getRepository(owner: string, name: string): Promise<Repository>;
+  getRepository(owner: string, name: string): Promise<Repository>;
 }
 
 export class PullRequest {
