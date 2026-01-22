@@ -180,10 +180,18 @@ async function handleAskEndpoint(
       body += chunk;
     }
 
-    const jsonBody = JSON.parse(body);
+    let jsonBody: { query?: unknown };
+    try {
+      jsonBody = JSON.parse(body);
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON in request body" }));
+      return;
+    }
+
     const query = jsonBody.query;
 
-    if (!query || typeof query !== "string") {
+    if (!query || typeof query !== "string" || query.trim() === "") {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Missing required field: query" }));
       return;
@@ -241,11 +249,19 @@ async function handleSearchEndpoint(
       body += chunk;
     }
 
-    const jsonBody = JSON.parse(body);
+    let jsonBody: { number_of_results?: unknown; query?: unknown };
+    try {
+      jsonBody = JSON.parse(body);
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON in request body" }));
+      return;
+    }
+
     const query = jsonBody.query;
     const numberOfResults = jsonBody.number_of_results ?? 5;
 
-    if (!query || typeof query !== "string") {
+    if (!query || typeof query !== "string" || query.trim() === "") {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Missing required field: query" }));
       return;

@@ -124,7 +124,37 @@ resource "aws_api_gateway_integration" "bedrock_ask" {
   uri                     = aws_lambda_function.server.invoke_arn
 }
 
+## /search endpoint for Bedrock Knowledge Base semantic search
 
+# /search resource
+resource "aws_api_gateway_resource" "search" {
+  rest_api_id = aws_api_gateway_rest_api.mcp_server.id
+  parent_id   = aws_api_gateway_rest_api.mcp_server.root_resource_id
+  path_part   = "search"
+}
+
+# POST method on /search resource
+# trivy:ignore:AVD-AWS-0004 - Authorization handled by OAuth 2.0 at application level
+resource "aws_api_gateway_method" "search" {
+  rest_api_id   = aws_api_gateway_rest_api.mcp_server.id
+  resource_id   = aws_api_gateway_resource.search.id
+  http_method   = "POST"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.header.Content-Type" = true
+  }
+}
+
+# Lambda integration for /search endpoint (reuses MCP server Lambda)
+resource "aws_api_gateway_integration" "bedrock_search" {
+  rest_api_id             = aws_api_gateway_rest_api.mcp_server.id
+  resource_id             = aws_api_gateway_resource.search.id
+  http_method             = aws_api_gateway_method.search.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.server.invoke_arn
+}
 
 # Deployment
 resource "aws_api_gateway_deployment" "mcp_server" {
@@ -140,6 +170,9 @@ resource "aws_api_gateway_deployment" "mcp_server" {
       aws_api_gateway_resource.ask.id,
       aws_api_gateway_method.ask.id,
       aws_api_gateway_integration.bedrock_ask.id,
+      aws_api_gateway_resource.search.id,
+      aws_api_gateway_method.search.id,
+      aws_api_gateway_integration.bedrock_search.id,
     ]))
   }
 
@@ -150,7 +183,8 @@ resource "aws_api_gateway_deployment" "mcp_server" {
   depends_on = [
     aws_api_gateway_integration.lambda_proxy,
     aws_api_gateway_integration.lambda_root,
-    aws_api_gateway_integration.bedrock_ask
+    aws_api_gateway_integration.bedrock_ask,
+    aws_api_gateway_integration.bedrock_search
   ]
 }
 

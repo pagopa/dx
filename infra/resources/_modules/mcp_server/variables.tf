@@ -40,6 +40,6 @@ variable "waf_rate_limit_per_ip" {
 
 variable "bedrock_model_id" {
   type        = string
-  description = "The ARN of the Amazon Bedrock model to use for generating responses."
+  description = "The model ID of the Amazon Bedrock model to use for generating responses."
   default     = "amazon.nova-2-lite-v1:0"
 }
