@@ -20,7 +20,8 @@ resource "azurerm_subnet" "example" {
 }
 
 module "azure_event_hub" {
-  source = "../../"
+  source  = "pagopa-dx/azure-event-hub/azurerm"
+  version = "~> 0.1"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

@@ -1,9 +1,3 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_resource_group" "example" {
@@ -78,7 +72,8 @@ resource "azurerm_key_vault_secret" "postgres_password" {
 }
 
 module "azure_postgres" {
-  source = "../../"
+  source  = "pagopa-dx/azure-postgres-server/azurerm"
+  version = "~> 2.0"
 
   environment                          = local.environment
   resource_group_name                  = azurerm_resource_group.example.name

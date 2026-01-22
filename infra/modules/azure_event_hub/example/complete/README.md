@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_event_hub"></a> [azure\_event\_hub](#module\_azure\_event\_hub) | ../../ | n/a |
+| <a name="module_azure_event_hub"></a> [azure\_event\_hub](#module\_azure\_event\_hub) | pagopa-dx/azure-event-hub/azurerm | ~> 0.1 |
 
 ## Resources
 

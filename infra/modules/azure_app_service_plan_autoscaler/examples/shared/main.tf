@@ -1,9 +1,3 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
@@ -16,10 +10,11 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "azure_function_app_1" {
-  source = "../../../azure_function_app"
+  source  = "pagopa-dx/azure-function-app/azure"
+  version = "~> 4.2"
 
   environment         = local.environment
-  tier                = "m"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
@@ -38,10 +33,11 @@ module "azure_function_app_1" {
 }
 
 module "azure_function_app_2" {
-  source = "../../../azure_function_app"
+  source  = "pagopa-dx/azure-function-app/azure"
+  version = "~> 4.2"
 
   environment         = merge(local.environment, { instance_number = "02" })
-  tier                = "m"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   app_service_plan_id = module.azure_function_app_1.function_app.plan.id
@@ -62,10 +58,11 @@ module "azure_function_app_2" {
 }
 
 module "azure_app_service_1" {
-  source = "../../../azure_app_service"
+  source  = "pagopa-dx/azure-app-service/azurerm"
+  version = "~> 2.0"
 
   environment         = local.environment
-  tier                = "m"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   app_service_plan_id = module.azure_function_app_1.function_app.plan.id
@@ -87,7 +84,8 @@ module "azure_app_service_1" {
 
 
 module "func_autoscaler" {
-  source = "../../"
+  source  = "pagopa-dx/azure-app-service-plan-autoscaler/azurerm"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
   location            = local.environment.location

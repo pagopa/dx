@@ -1,5 +1,6 @@
 module "container_app_job_selfhosted_runner" {
-  source = "../.."
+  source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
+  version = "~> 1.2"
 
   environment = local.environment
 

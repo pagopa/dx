@@ -1,9 +1,3 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 data "azurerm_subnet" "pep" {
   name                 = "${local.project}-pep-snet-01"
   virtual_network_name = "${local.project}-common-vnet-01"
@@ -16,10 +10,11 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "azure_function_app" {
-  source = "../../../azure_function_app"
+  source  = "pagopa-dx/azure-function-app/azure"
+  version = "~> 4.2"
 
   environment         = local.environment
-  tier                = "m"
+  use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   virtual_network = {
@@ -39,7 +34,8 @@ module "azure_function_app" {
 
 
 module "func_autoscaler" {
-  source = "../../"
+  source  = "pagopa-dx/azure-app-service-plan-autoscaler/azurerm"
+  version = "~> 2.0"
 
   resource_group_name = module.azure_function_app.function_app.resource_group_name
   location            = local.environment.location

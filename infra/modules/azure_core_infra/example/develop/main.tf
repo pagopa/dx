@@ -3,7 +3,8 @@
 #------------#
 
 module "core" {
-  source = "../.."
+  source  = "pagopa-dx/azure-core-infra/azurerm"
+  version = "~> 2.3"
 
   test_enabled = true
 
@@ -29,11 +30,12 @@ resource "azurerm_subnet" "apim" {
 }
 
 module "apim" {
-  source = "../../../azure_api_management"
+  source  = "pagopa-dx/azure-api-management/azurerm"
+  version = "~> 2.1"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  tier                = "s"
+  use_case            = "development"
 
   publisher_email = "common-dx@pagopa.it"
   publisher_name  = "Common DX"
@@ -56,11 +58,12 @@ module "apim" {
 
 ## Cosmos Account
 module "cosmos" {
-  source = "../../../azure_cosmos_account"
+  source  = "pagopa-dx/azure-cosmos-account/azurerm"
+  version = "~> 0.3"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
-  tier                = "s"
+  use_case            = "development"
 
   subnet_pep_id = module.core.common_pep_snet.id
 
@@ -91,7 +94,8 @@ resource "azurerm_cosmosdb_sql_database" "db" {
 #-----------------#
 
 module "storage_account" {
-  source = "../../../azure_storage_account"
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.1"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -99,7 +103,7 @@ module "storage_account" {
   subnet_pep_id                       = module.core.common_pep_snet.id
   force_public_network_access_enabled = false
 
-  tier = "s"
+  use_case = "development"
 
   subservices_enabled = {
     blob  = true
