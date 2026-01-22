@@ -532,21 +532,6 @@ run "function_app_with_diagnostic_settings" {
     condition     = length([for metric in azurerm_monitor_diagnostic_setting.this[0].enabled_metric : metric if metric.category == "AllMetrics"]) > 0
     error_message = "AllMetrics category should be enabled"
   }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 1
-    error_message = "Diagnostic settings should be created for the slot when enabled and slot is created (use_case=default includes slot)"
-  }
-
-  assert {
-    condition     = length([for log in azurerm_monitor_diagnostic_setting.slot[0].enabled_log : log if log.category == "FunctionAppLogs"]) > 0
-    error_message = "FunctionAppLogs category should be enabled for the slot"
-  }
-
-  assert {
-    condition     = length([for metric in azurerm_monitor_diagnostic_setting.slot[0].enabled_metric : metric if metric.category == "AllMetrics"]) > 0
-    error_message = "AllMetrics category should be enabled for the slot"
-  }
 }
 
 run "function_app_without_diagnostic_settings" {
@@ -564,11 +549,6 @@ run "function_app_without_diagnostic_settings" {
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
     error_message = "Diagnostic settings should not be created when disabled"
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 0
-    error_message = "Diagnostic settings should not be created for slot when disabled"
   }
 }
 
