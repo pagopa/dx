@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { execa } from "execa";
 
 export async function formatTerraformCode(sourceCode: string) {
@@ -7,6 +8,10 @@ export async function formatTerraformCode(sourceCode: string) {
     })("terraform", ["fmt", "-"]);
     return result.stdout;
   } catch {
+    const logger = getLogger(["gen", "env"]);
+    logger.error("Failed to format Terraform code. {sourceCode}", {
+      sourceCode,
+    });
     throw new Error("Failed to format Terraform code");
   }
 }
