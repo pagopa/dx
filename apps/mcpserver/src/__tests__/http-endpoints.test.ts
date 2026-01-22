@@ -77,10 +77,6 @@ vi.mock("../config/aws.js", () => ({
 let server: Server;
 let baseUrl: string;
 
-function closeTestServer(done: () => void) {
-  server.close(done);
-}
-
 async function setupTestServer() {
   const testEnv = {
     AWS_BEDROCK_KNOWLEDGE_BASE_ID: "test-kb-id",
@@ -102,6 +98,12 @@ async function setupTestServer() {
   baseUrl = `http://localhost:${port}`;
 }
 
+async function closeTestServer() {
+  return new Promise<void>((resolve) => {
+    server.close(() => resolve());
+  });
+}
+
 describe("HTTP Endpoints Integration Tests", () => {
   beforeAll(setupTestServer);
   afterAll(closeTestServer);
@@ -119,7 +121,10 @@ describe("HTTP Endpoints Integration Tests", () => {
         "application/json",
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        answer: string;
+        sources: string[];
+      };
       expect(data).toHaveProperty("answer");
       expect(data).toHaveProperty("sources");
       expect(typeof data.answer).toBe("string");
@@ -134,7 +139,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Missing required field: query");
     });
 
@@ -146,7 +151,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Missing required field: query");
     });
 
@@ -158,7 +163,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Invalid JSON in request body");
     });
 
@@ -170,7 +175,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Missing required field: query");
     });
   });
@@ -188,7 +193,10 @@ describe("HTTP Endpoints Integration Tests", () => {
         "application/json",
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        query: string;
+        results: Array<{ content: string; score: number; source?: string }>;
+      };
       expect(data).toHaveProperty("query");
       expect(data).toHaveProperty("results");
       expect(Array.isArray(data.results)).toBe(true);
@@ -209,7 +217,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = (await response.json()) as { results: unknown[] };
       expect(data).toHaveProperty("results");
     });
 
@@ -231,7 +239,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Missing required field: query");
     });
 
@@ -243,7 +251,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Missing required field: query");
     });
 
@@ -255,7 +263,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("Invalid JSON in request body");
     });
 
@@ -267,7 +275,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("number_of_results must be between 1 and 20");
     });
 
@@ -279,7 +287,7 @@ describe("HTTP Endpoints Integration Tests", () => {
       });
 
       expect(response.status).toBe(400);
-      const data = await response.json();
+      const data = (await response.json()) as { error: string };
       expect(data.error).toBe("number_of_results must be between 1 and 20");
     });
   });
