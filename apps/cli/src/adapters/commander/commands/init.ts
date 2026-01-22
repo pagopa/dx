@@ -6,12 +6,17 @@ import loadMonorepoScaffolder, {
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
-import { okAsync, ResultAsync } from "neverthrow";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { PlopGenerator } from "node-plop";
 import * as path from "node:path";
-import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
+import {
+  GitHubService,
+  PullRequest,
+  Repository,
+  RepositoryNotFoundError,
+} from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
@@ -31,29 +36,10 @@ type LocalWorkspace = {
   repository: Repository;
 };
 
-type PullRequest = {
-  url: string;
-};
-
 type RepositoryPullRequest = {
   pr?: PullRequest;
   repository: Repository;
 };
-
-class Repository {
-  get ssh(): string {
-    return `git@github.com:${this.owner}/${this.name}.git`;
-  }
-
-  get url(): string {
-    return `https://github.com/${this.owner}/${this.name}`;
-  }
-
-  constructor(
-    public readonly name: string,
-    public readonly owner: string,
-  ) {}
-}
 
 const withSpinner = <T>(
   text: string,
@@ -73,42 +59,27 @@ const withSpinner = <T>(
     },
   );
 
-const checkRepositoryDoesNotExist =
-  (octokit: Octokit) =>
-  (owner: string, name: string): ResultAsync<void, Error> => {
-    const doesRepositoryExist = ResultAsync.fromPromise(
-      octokit.rest.repos.get({
-        owner,
-        repo: name,
-      }),
-      () => new Error("Repository check failed"),
-    ).match(
-      // Repository exists, then throw an error to block the workflow
-      ({ data }) => {
-        throw new Error(`Repository ${data.full_name} already exists`);
-      },
-      // Repository does not exist, return anything
-      () => undefined,
-    );
-
-    return withSpinner(
-      `Checking if repository ${owner}/${name} already exists...`,
-      `Repository ${owner}/${name} does not exist. Proceeding...`,
-      `Repository ${owner}/${name} already exists.`,
-      doesRepositoryExist,
-    );
-  };
-
 // TODO: Check Cloud Environment exists
 // TODO: Check CSP CLI is installed
 // TODO: Check user has permissions to handle Terraform state
 const validateAnswers =
-  (octokit: Octokit) =>
+  (githubService: GitHubService) =>
   (answers: Answers): ResultAsync<Answers, Error> =>
-    checkRepositoryDoesNotExist(octokit)(
-      answers.repoOwner,
-      answers.repoName,
-    ).map(() => answers);
+    ResultAsync.fromPromise(
+      githubService.getRepository(answers.repoOwner, answers.repoName),
+      (error) => error as Error,
+    )
+      .andThen(({ fullName }) =>
+        errAsync(new Error(`Repository ${fullName} already exists.`)),
+      )
+      .orElse((error) =>
+        error instanceof RepositoryNotFoundError
+          ? // If repository is not found, it's safe to proceed
+            okAsync(answers)
+          : // Otherwise, propagate the error
+            errAsync(error),
+      )
+      .map(() => answers);
 
 const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   withSpinner(
@@ -212,12 +183,12 @@ const initializeGitRepository = (repository: Repository) => {
 };
 
 const handleNewGitHubRepository =
-  (octokit: Octokit) =>
+  (githubService: GitHubService) =>
   (answers: Answers): ResultAsync<RepositoryPullRequest, Error> =>
     createRemoteRepository(answers)
       .andThen(initializeGitRepository)
       .andThen((localWorkspace) =>
-        createPullRequest(octokit)(localWorkspace).map((pr) => ({
+        createPullRequest(githubService)(localWorkspace).map((pr) => ({
           pr,
           repository: localWorkspace.repository,
         })),
@@ -240,7 +211,7 @@ const makeInitResult = (
 };
 
 const createPullRequest =
-  (octokit: Octokit) =>
+  (githubService: GitHubService) =>
   ({
     branchName,
     repository,
@@ -249,7 +220,7 @@ const createPullRequest =
       "Creating Pull Request...",
       "Pull Request created successfully!",
       "Failed to create Pull Request.",
-      octokit.rest.pulls.create({
+      githubService.createPullRequest({
         base: "main",
         body: "This PR contains the scaffolded monorepo structure.",
         head: branchName,
@@ -258,16 +229,15 @@ const createPullRequest =
         title: "Scaffold repository",
       }),
     )
-      .map(({ data }) => ({ url: data.html_url }))
       // If PR creation fails, don't block the workflow
       .orElse(() => okAsync(undefined));
 
 type InitCommandDependencies = {
-  octokit: Octokit;
+  gitHubService: GitHubService;
 };
 
 export const makeInitCommand = ({
-  octokit,
+  gitHubService,
 }: InitCommandDependencies): Command =>
   new Command()
     .name("init")
@@ -288,12 +258,12 @@ export const makeInitCommand = ({
                 // Decode the answers to match the Answers schema
                 .andThen(decode(answersSchema))
                 // Validate the answers (like checking permissions, checking GitHub user or org existence, etc.)
-                .andThen(validateAnswers(octokit))
+                .andThen(validateAnswers(gitHubService))
                 // Run the generator with the provided answers (this will create the files locally)
                 .andThen(runGeneratorActions(generator)),
             )
             .andThen((answers) =>
-              handleNewGitHubRepository(octokit)(answers).map((repoPr) =>
+              handleNewGitHubRepository(gitHubService)(answers).map((repoPr) =>
                 makeInitResult(answers, repoPr),
               ),
             )
