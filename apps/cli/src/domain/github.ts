@@ -1,16 +1,18 @@
+export type PullRequestBody = {
+  base: string;
+  body: string;
+  head: string;
+  owner: string;
+  repo: string;
+  title: string;
+};
+
 export interface GitHubService {
   /**
    * Creates a pull request in a GitHub repository.
    * @throws Error if pull request creation fails
    */
-  createPullRequest(params: {
-    base: string;
-    body: string;
-    head: string;
-    owner: string;
-    repo: string;
-    title: string;
-  }): Promise<PullRequest>;
+  createPullRequest(params: PullRequestBody): Promise<PullRequest>;
 
   /**
    * Gets a GitHub repository by owner and name.
