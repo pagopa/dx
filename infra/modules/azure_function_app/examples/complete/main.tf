@@ -22,7 +22,8 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "azure_function_app" {
-  source = "../../"
+  source  = "pagopa-dx/azure-function-app/azure"
+  version = "~> 4.2"
 
   environment         = local.environment
   use_case            = "default"

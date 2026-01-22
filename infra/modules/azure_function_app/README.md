@@ -55,6 +55,7 @@ No modules.
 |------|------|
 | [azurerm_linux_function_app.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app) | resource |
 | [azurerm_linux_function_app_slot.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_function_app_slot) | resource |
+| [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_monitor_metric_alert.function_app_health_check](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_monitor_metric_alert.storage_account_health_check](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_private_endpoint.function_sites](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
@@ -101,6 +102,7 @@ No modules.
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | The connection string for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | The instrumentation key for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | The sampling percentage for Application Insights telemetry. Default is 5. | `number` | `5` | no |
+| <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_has_durable_functions"></a> [has\_durable\_functions](#input\_has\_durable\_functions) | Set to true if the Function App hosts Durable Functions. | `bool` | `false` | no |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The endpoint path where the health probe is exposed for the Function App. | `string` | n/a | yes |
@@ -126,6 +128,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the Function App. |
 | <a name="output_function_app"></a> [function\_app](#output\_function\_app) | Details of the Function App, including its resource group, service plan, and app-specific information such as ID, name, principal ID, and default hostname. Also includes details of the app slot if configured. |
 | <a name="output_storage_account"></a> [storage\_account](#output\_storage\_account) | Details of the primary storage account used by the Function App, including its ID and name. |
 | <a name="output_storage_account_durable"></a> [storage\_account\_durable](#output\_storage\_account\_durable) | Details of the storage account used for durable functions, including its ID and name. Returns null if not configured. |
