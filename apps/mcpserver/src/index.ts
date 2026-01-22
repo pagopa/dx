@@ -52,6 +52,137 @@ export async function main(
   return httpServer;
 }
 
+export async function startHttpServer(
+  config: AppConfig,
+  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
+): Promise<http.Server> {
+  const logger = getLogger(["mcpserver"]);
+  const awsLogger = getLogger(["mcpserver", "aws-config"]);
+  const kbRuntimeClient = createBedrockRuntimeClient(
+    config.aws.region,
+    awsLogger,
+  );
+  const toolDefinitions = createToolDefinitions({
+    aws: config.aws,
+    githubSearchOrg: config.github.searchOrg,
+    kbRuntimeClient,
+  });
+
+  const httpServer = http.createServer(
+    async (req: IncomingMessage, res: ServerResponse) => {
+      // Log incoming request for debugging
+      logger.debug("Incoming request", {
+        headers: req.headers,
+        method: req.method,
+        url: req.url,
+      });
+
+      // Configure CORS headers
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+      // Handle OPTIONS for CORS preflight
+      if (req.method === "OPTIONS") {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+
+      // Handle /ask endpoint for Bedrock Knowledge Base queries
+      if (req.url?.includes("/ask") && req.method === "POST") {
+        await handleAskEndpoint(req, res, config, kbRuntimeClient, logger);
+        return;
+      }
+
+      // Handle /search endpoint for documentation search
+      if (req.url?.includes("/search") && req.method === "POST") {
+        await handleSearchEndpoint(req, res, config, kbRuntimeClient, logger);
+        return;
+      }
+
+      // Only allow POST and DELETE for MCP endpoints
+      if (req.method !== "POST" && req.method !== "DELETE") {
+        res.writeHead(405, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
+
+      try {
+        // Parse request body
+        let body = "";
+        for await (const chunk of req) {
+          body += chunk;
+        }
+        let jsonBody: unknown;
+        try {
+          jsonBody = body ? JSON.parse(body) : undefined;
+        } catch {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid JSON" }));
+          return;
+        }
+
+        // Create session for AsyncLocalStorage context (stateless per-request)
+        // Extract request ID from AWS Lambda trace (undefined if not in AWS)
+        const traceHeader = req.headers["x-amzn-trace-id"];
+        const requestId =
+          typeof traceHeader === "string"
+            ? traceHeader.split(";")[0].replace("Root=", "")
+            : undefined;
+
+        const session = {
+          id: crypto.randomUUID(),
+          requestId,
+        };
+
+        // Execute request in isolated session context
+        await sessionStorage.run(session, async () => {
+          // Create new server and transport for this request
+          // This ensures complete isolation between concurrent requests
+          const server = createServer({
+            enabledPrompts,
+            requestId,
+            toolDefinitions,
+          });
+          const transport = new StreamableHTTPServerTransport({
+            // This MCP server is stateless at the transport layer: each HTTP request
+            // runs in its own AsyncLocalStorage-backed session context via
+            // `sessionStorage.run(...)`. Because we do not multiplex logical sessions
+            // over a shared connection, transport-level session IDs are unnecessary,
+            // so `sessionIdGenerator` is explicitly set to `undefined`.
+            sessionIdGenerator: undefined,
+          });
+
+          await server.connect(transport);
+          await transport.handleRequest(req, res, jsonBody);
+
+          // Clean up after response
+          res.on("close", () => {
+            transport.close();
+            server.close();
+          });
+        });
+      } catch (error) {
+        logger.error("Error handling request", { error });
+        if (!res.headersSent) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
+      }
+    },
+  );
+
+  await new Promise<void>((resolve) => {
+    httpServer.listen(config.port, () => {
+      logger.info(`MCP Server started on port ${config.port}`);
+      resolve();
+    });
+  });
+
+  return httpServer;
+}
+
 function createServer({
   enabledPrompts,
   requestId,
@@ -317,135 +448,4 @@ async function handleSearchEndpoint(
       }),
     );
   }
-}
-
-export async function startHttpServer(
-  config: AppConfig,
-  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
-): Promise<http.Server> {
-  const logger = getLogger(["mcpserver"]);
-  const awsLogger = getLogger(["mcpserver", "aws-config"]);
-  const kbRuntimeClient = createBedrockRuntimeClient(
-    config.aws.region,
-    awsLogger,
-  );
-  const toolDefinitions = createToolDefinitions({
-    aws: config.aws,
-    githubSearchOrg: config.github.searchOrg,
-    kbRuntimeClient,
-  });
-
-  const httpServer = http.createServer(
-    async (req: IncomingMessage, res: ServerResponse) => {
-      // Log incoming request for debugging
-      logger.debug("Incoming request", {
-        headers: req.headers,
-        method: req.method,
-        url: req.url,
-      });
-
-      // Configure CORS headers
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-      // Handle OPTIONS for CORS preflight
-      if (req.method === "OPTIONS") {
-        res.writeHead(200);
-        res.end();
-        return;
-      }
-
-      // Handle /ask endpoint for Bedrock Knowledge Base queries
-      if (req.url?.includes("/ask") && req.method === "POST") {
-        await handleAskEndpoint(req, res, config, kbRuntimeClient, logger);
-        return;
-      }
-
-      // Handle /search endpoint for documentation search
-      if (req.url?.includes("/search") && req.method === "POST") {
-        await handleSearchEndpoint(req, res, config, kbRuntimeClient, logger);
-        return;
-      }
-
-      // Only allow POST and DELETE for MCP endpoints
-      if (req.method !== "POST" && req.method !== "DELETE") {
-        res.writeHead(405, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Method not allowed" }));
-        return;
-      }
-
-      try {
-        // Parse request body
-        let body = "";
-        for await (const chunk of req) {
-          body += chunk;
-        }
-        let jsonBody: unknown;
-        try {
-          jsonBody = body ? JSON.parse(body) : undefined;
-        } catch {
-          res.writeHead(400, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Invalid JSON" }));
-          return;
-        }
-
-        // Create session for AsyncLocalStorage context (stateless per-request)
-        // Extract request ID from AWS Lambda trace (undefined if not in AWS)
-        const traceHeader = req.headers["x-amzn-trace-id"];
-        const requestId =
-          typeof traceHeader === "string"
-            ? traceHeader.split(";")[0].replace("Root=", "")
-            : undefined;
-
-        const session = {
-          id: crypto.randomUUID(),
-          requestId,
-        };
-
-        // Execute request in isolated session context
-        await sessionStorage.run(session, async () => {
-          // Create new server and transport for this request
-          // This ensures complete isolation between concurrent requests
-          const server = createServer({
-            enabledPrompts,
-            requestId,
-            toolDefinitions,
-          });
-          const transport = new StreamableHTTPServerTransport({
-            // This MCP server is stateless at the transport layer: each HTTP request
-            // runs in its own AsyncLocalStorage-backed session context via
-            // `sessionStorage.run(...)`. Because we do not multiplex logical sessions
-            // over a shared connection, transport-level session IDs are unnecessary,
-            // so `sessionIdGenerator` is explicitly set to `undefined`.
-            sessionIdGenerator: undefined,
-          });
-
-          await server.connect(transport);
-          await transport.handleRequest(req, res, jsonBody);
-
-          // Clean up after response
-          res.on("close", () => {
-            transport.close();
-            server.close();
-          });
-        });
-      } catch (error) {
-        logger.error("Error handling request", { error });
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Internal server error" }));
-        }
-      }
-    },
-  );
-
-  await new Promise<void>((resolve) => {
-    httpServer.listen(config.port, () => {
-      logger.info(`MCP Server started on port ${config.port}`);
-      resolve();
-    });
-  });
-
-  return httpServer;
 }

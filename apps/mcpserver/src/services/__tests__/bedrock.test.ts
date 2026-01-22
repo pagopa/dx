@@ -6,6 +6,20 @@ import {
   queryKnowledgeBaseStructured,
 } from "../bedrock.js";
 
+// Helper to create mock Bedrock client
+function createMockBedrockClient(sendMock: ReturnType<typeof vi.fn>) {
+  return {
+    config: {
+      apiVersion: "2023-11-20",
+      region: async () => "eu-central-1",
+      requestHandler: { handle: vi.fn() },
+    },
+    destroy: vi.fn(),
+    middlewareStack: {},
+    send: sendMock,
+  } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+}
+
 describe("queryKnowledgeBase", () => {
   let loggerSpy: {
     warn: ReturnType<typeof vi.spyOn>;
@@ -75,7 +89,7 @@ describe("queryKnowledgeBase", () => {
   });
 });
 
-describe("queryKnowledgeBaseStructured", () => {
+describe("queryKnowledgeBaseStructured - Basic Functionality", () => {
   let loggerSpy: {
     warn: ReturnType<typeof vi.spyOn>;
   };
@@ -90,15 +104,8 @@ describe("queryKnowledgeBaseStructured", () => {
   });
 
   it("should return structured QueryKnowledgeBasesOutput[] instead of a string", async () => {
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "eu-central-1",
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: vi.fn().mockResolvedValue({
+    const mockClient = createMockBedrockClient(
+      vi.fn().mockResolvedValue({
         retrievalResults: [
           {
             content: { text: "Documentation content", type: "TEXT" },
@@ -110,7 +117,7 @@ describe("queryKnowledgeBaseStructured", () => {
           },
         ],
       }),
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    );
 
     const result = await queryKnowledgeBaseStructured(
       "kbId",
@@ -126,15 +133,8 @@ describe("queryKnowledgeBaseStructured", () => {
   });
 
   it("should return result objects with content, location, and score properties", async () => {
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "eu-central-1",
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: vi.fn().mockResolvedValue({
+    const mockClient = createMockBedrockClient(
+      vi.fn().mockResolvedValue({
         retrievalResults: [
           {
             content: { text: "Test content", type: "TEXT" },
@@ -146,7 +146,7 @@ describe("queryKnowledgeBaseStructured", () => {
           },
         ],
       }),
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    );
 
     const result = await queryKnowledgeBaseStructured(
       "kbId",
@@ -162,15 +162,8 @@ describe("queryKnowledgeBaseStructured", () => {
   });
 
   it("should resolve S3 locations to website URLs via resolveToWebsiteUrl", async () => {
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "eu-central-1",
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: vi.fn().mockResolvedValue({
+    const mockClient = createMockBedrockClient(
+      vi.fn().mockResolvedValue({
         retrievalResults: [
           {
             content: { text: "Content", type: "TEXT" },
@@ -184,7 +177,7 @@ describe("queryKnowledgeBaseStructured", () => {
           },
         ],
       }),
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    );
 
     const result = await queryKnowledgeBaseStructured(
       "kbId",
@@ -202,29 +195,28 @@ describe("queryKnowledgeBaseStructured", () => {
   });
 
   it("should skip image content with warning logs", async () => {
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "eu-central-1",
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: vi.fn().mockResolvedValue({
+    const mockClient = createMockBedrockClient(
+      vi.fn().mockResolvedValue({
         retrievalResults: [
           {
             content: { text: "Valid text content", type: "TEXT" },
-            location: { s3Location: { uri: "s3://bucket/file.md" }, type: "S3" },
+            location: {
+              s3Location: { uri: "s3://bucket/file.md" },
+              type: "S3",
+            },
             score: 0.9,
           },
           {
             content: { type: "IMAGE" },
-            location: { s3Location: { uri: "s3://bucket/image.png" }, type: "S3" },
+            location: {
+              s3Location: { uri: "s3://bucket/image.png" },
+              type: "S3",
+            },
             score: 0.85,
           },
         ],
       }),
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    );
 
     const result = await queryKnowledgeBaseStructured(
       "kbId",
@@ -238,6 +230,21 @@ describe("queryKnowledgeBaseStructured", () => {
       "Images are not supported at this time. Skipping...",
     );
   });
+});
+
+describe("queryKnowledgeBaseStructured - Reranking", () => {
+  let loggerSpy: {
+    warn: ReturnType<typeof vi.spyOn>;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    const logger = getLogger(["mcpserver", "bedrock"]);
+    loggerSpy = {
+      warn: vi.spyOn(logger, "warn"),
+    };
+  });
 
   it("should apply reranking configuration when enabled in supported region", async () => {
     const sendSpy = vi.fn().mockResolvedValue({
@@ -250,16 +257,9 @@ describe("queryKnowledgeBaseStructured", () => {
       ],
     });
 
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "us-east-1", // Supported region
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: sendSpy,
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    const mockClient = createMockBedrockClient(sendSpy);
+    // Override region for this test
+    mockClient.config.region = async () => "us-east-1"; // Supported region
 
     await queryKnowledgeBaseStructured(
       "kbId",
@@ -289,16 +289,9 @@ describe("queryKnowledgeBaseStructured", () => {
       retrievalResults: [],
     });
 
-    const mockClient = {
-      config: {
-        apiVersion: "2023-11-20",
-        region: async () => "ap-southeast-1", // Unsupported region
-        requestHandler: { handle: vi.fn() },
-      },
-      destroy: vi.fn(),
-      middlewareStack: {},
-      send: sendSpy,
-    } as unknown as import("@aws-sdk/client-bedrock-agent-runtime").BedrockAgentRuntimeClient;
+    const mockClient = createMockBedrockClient(sendSpy);
+    // Override region for this test
+    mockClient.config.region = async () => "ap-southeast-1"; // Unsupported region
 
     await queryKnowledgeBaseStructured(
       "kbId",

@@ -3,7 +3,45 @@ import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { loadConfig } from "../config.js";
-import { createBedrockRuntimeClient } from "../config/aws.js";
+
+// Helper to create mock Bedrock responses
+function createMockBedrockResponse(command: { constructor: { name: string } }) {
+  if (command.constructor.name === "RetrieveAndGenerateCommand") {
+    return Promise.resolve({
+      citations: [
+        {
+          retrievedReferences: [
+            {
+              content: { text: "Reference content", type: "TEXT" },
+              location: {
+                s3Location: {
+                  uri: "s3://bucket/docs/terraform/setup.md",
+                },
+                type: "S3",
+              },
+            },
+          ],
+        },
+      ],
+      output: { text: "This is how you setup Terraform." },
+      sessionId: "test-session",
+    });
+  } else if (command.constructor.name === "RetrieveCommand") {
+    return Promise.resolve({
+      retrievalResults: [
+        {
+          content: { text: "Azure naming conventions guide", type: "TEXT" },
+          location: {
+            s3Location: { uri: "s3://bucket/docs/azure/naming.md" },
+            type: "S3",
+          },
+          score: 0.95,
+        },
+      ],
+    });
+  }
+  return Promise.resolve({});
+}
 
 // Mock AWS SDK to avoid external dependencies
 vi.mock("@aws-sdk/client-bedrock-agent-runtime", () => ({
@@ -30,80 +68,43 @@ vi.mock("../config/aws.js", () => ({
     },
     destroy: vi.fn(),
     middlewareStack: {},
-    send: vi.fn().mockImplementation((command) => {
-      // Mock different responses based on command type
-      if (command.constructor.name === "RetrieveAndGenerateCommand") {
-        return Promise.resolve({
-          citations: [
-            {
-              retrievedReferences: [
-                {
-                  content: { text: "Reference content", type: "TEXT" },
-                  location: {
-                    s3Location: {
-                      uri: "s3://bucket/docs/terraform/setup.md",
-                    },
-                    type: "S3",
-                  },
-                },
-              ],
-            },
-          ],
-          output: { text: "This is how you setup Terraform." },
-          sessionId: "test-session",
-        });
-      } else if (command.constructor.name === "RetrieveCommand") {
-        return Promise.resolve({
-          retrievalResults: [
-            {
-              content: { text: "Azure naming conventions guide", type: "TEXT" },
-              location: {
-                s3Location: { uri: "s3://bucket/docs/azure/naming.md" },
-                type: "S3",
-              },
-              score: 0.95,
-            },
-          ],
-        });
-      }
-      return Promise.resolve({});
-    }),
+    send: vi.fn().mockImplementation(createMockBedrockResponse),
   })),
   rerankingSupportedRegions: ["us-east-1", "eu-central-1"],
 }));
 
+// Shared server instance
+let server: Server;
+let baseUrl: string;
+
+function closeTestServer(done: () => void) {
+  server.close(done);
+}
+
+async function setupTestServer() {
+  const testEnv = {
+    AWS_BEDROCK_KNOWLEDGE_BASE_ID: "test-kb-id",
+    AWS_BEDROCK_MODEL_ARN: "arn:aws:bedrock:test",
+    AWS_REGION: "eu-central-1",
+    LOG_LEVEL: "error",
+    NODE_ENV: "test",
+  };
+
+  const config = loadConfig(testEnv);
+  const { startHttpServer } = await import("../index.js");
+  const { getEnabledPrompts } = await import("@pagopa/dx-mcpprompts");
+
+  const enabledPrompts = await getEnabledPrompts();
+  server = await startHttpServer(config, enabledPrompts);
+
+  const address = server.address();
+  const port = typeof address === "object" ? address?.port : 8080;
+  baseUrl = `http://localhost:${port}`;
+}
+
 describe("HTTP Endpoints Integration Tests", () => {
-  let server: Server;
-  let baseUrl: string;
-
-  beforeAll(async () => {
-    // Set up minimal test environment
-    const testEnv = {
-      AWS_BEDROCK_KNOWLEDGE_BASE_ID: "test-kb-id",
-      AWS_BEDROCK_MODEL_ARN: "arn:aws:bedrock:test",
-      AWS_REGION: "eu-central-1",
-      LOG_LEVEL: "error", // Suppress logs during tests
-      NODE_ENV: "test",
-    };
-
-    const config = loadConfig(testEnv);
-
-    // Import and start server dynamically
-    const { startHttpServer } = await import("../index.js");
-    const { getEnabledPrompts } = await import("@pagopa/dx-mcpprompts");
-
-    const enabledPrompts = await getEnabledPrompts();
-    server = await startHttpServer(config, enabledPrompts);
-
-    // Get dynamic port
-    const address = server.address();
-    const port = typeof address === "object" ? address?.port : 8080;
-    baseUrl = `http://localhost:${port}`;
-  });
-
-  afterAll((done) => {
-    server.close(done);
-  });
+  beforeAll(setupTestServer);
+  afterAll(closeTestServer);
 
   describe("POST /ask", () => {
     it("should return 200 with answer and sources for valid request", async () => {
