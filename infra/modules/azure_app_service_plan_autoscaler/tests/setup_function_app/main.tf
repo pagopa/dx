@@ -8,10 +8,11 @@ terraform {
 }
 
 module "azure_function_app" {
-  source = "../../../azure_function_app"
+  source  = "pagopa-dx/azure-function-app/azure"
+  version = "~> 4.2"
 
   environment         = var.environment
-  tier                = "s"
+  use_case            = "default"
   resource_group_name = var.resource_group_name
   app_service_plan_id = var.app_service_plan_id
 
