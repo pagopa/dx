@@ -19,6 +19,14 @@
     "templates"
   ],
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./generators/*": {
+      "import": "./dist/adapters/plop/generators/*/index.js"
+    }
+  },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
     "@azure/arm-msi": "^2.2.0",

@@ -4,7 +4,10 @@ import {
   getConsoleSink,
 } from "@logtape/logtape";
 
-import { setDeploymentEnvironmentGenerator } from "./dist/index.js";
+import {
+  setDeploymentEnvironmentGenerator,
+  setMonorepoGenerator,
+} from "./dist/index.js";
 
 await configure({
   loggers: [
@@ -27,5 +30,6 @@ await configure({
 });
 
 export default function (plop) {
+  setMonorepoGenerator(plop);
   setDeploymentEnvironmentGenerator(plop);
 }
