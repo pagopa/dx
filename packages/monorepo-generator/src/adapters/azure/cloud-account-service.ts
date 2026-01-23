@@ -1,11 +1,13 @@
 import type { TokenCredential } from "@azure/identity";
 
+import { AuthorizationManagementClient } from "@azure/arm-authorization";
 import { ManagedServiceIdentityClient } from "@azure/arm-msi";
 import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 import { ResourceManagementClient } from "@azure/arm-resources";
 import { StorageManagementClient } from "@azure/arm-storage";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
+import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
 import { z } from "zod/v4";
 
@@ -29,6 +31,10 @@ export const resourceGraphDataSchema = z.object({
   location: z.enum(locations),
   name: z.string(),
   resourceGroup: z.string(),
+});
+
+export const azureJsonWebTokenSchema = z.object({
+  oid: z.string(), // Object ID
 });
 
 export class AzureCloudAccountService implements CloudAccountService {
@@ -81,6 +87,53 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccountId,
       type: "azurerm",
     });
+  }
+
+  async hasUserPermissionToInitialize(
+    cloudAccountId: CloudAccount["id"],
+  ): Promise<boolean> {
+    // All principal IDs to check (user + all groups)
+    const allPrincipalIds = await this.#getCurrentPrincipalIds();
+
+    // Get role assignments for the subscription
+    const authClient = new AuthorizationManagementClient(
+      this.#credential,
+      cloudAccountId,
+    );
+
+    const requiredRoles = [
+      "8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
+      "ba92f5b4-2d11-453d-a403-e96b0029c9fe", // Storage Blob Data Contributor
+    ];
+
+    const scope = `/subscriptions/${cloudAccountId}`;
+
+    // Collect all role definition IDs assigned to the user or their groups
+    const assignedRoleDefinitionIds = new Set<string>();
+
+    for await (const assignment of authClient.roleAssignments.listForScope(
+      scope,
+    )) {
+      // Check if this assignment is for the user or any of their groups
+      if (
+        assignment.principalId &&
+        allPrincipalIds.has(assignment.principalId)
+      ) {
+        // Extract role definition ID from the full resource ID
+        // Format: /subscriptions/{sub}/providers/Microsoft.Authorization/roleDefinitions/{roleId}
+        const roleDefId = assignment.roleDefinitionId?.split("/").pop();
+        if (roleDefId) {
+          assignedRoleDefinitionIds.add(roleDefId);
+        }
+      }
+    }
+
+    // Check if all required roles are present
+    const hasAllRoles = requiredRoles.every((requiredRole) =>
+      assignedRoleDefinitionIds.has(requiredRole),
+    );
+
+    return hasAllRoles;
   }
 
   async initialize(
@@ -277,5 +330,45 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
+  }
+
+  async #getCurrentPrincipalIds(): Promise<Set<string>> {
+    // Get access token for Microsoft Graph
+    const tokenResponse = await this.#credential.getToken(
+      "https://graph.microsoft.com/.default",
+    );
+
+    if (!tokenResponse) {
+      throw new Error("Failed to acquire token for Microsoft Graph");
+    }
+
+    // Create Graph client with custom auth provider
+    const graphClient = Client.init({
+      authProvider: (done) => {
+        done(null, tokenResponse.token);
+      },
+    });
+
+    // Get current user's info
+    const me = await graphClient.api("/me").get();
+    const userObjectId: string = me.id;
+
+    // Get all group memberships (transitive - includes nested groups)
+    const groupIds: string[] = [];
+    let nextLink = "/me/transitiveMemberOf?$select=id";
+
+    while (nextLink) {
+      const response = await graphClient.api(nextLink).get();
+      for (const item of response.value) {
+        if (item.id) {
+          groupIds.push(item.id);
+        }
+      }
+      nextLink = response["@odata.nextLink"];
+    }
+
+    // All principal IDs to check (user + all groups)
+    const allPrincipalIds = new Set([userObjectId, ...groupIds]);
+    return allPrincipalIds;
   }
 }

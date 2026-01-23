@@ -20,6 +20,7 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
+    "@azure/arm-authorization": "^9.0.0",
     "@azure/arm-msi": "^2.2.0",
     "@azure/arm-resourcegraph": "^4.2.1",
     "@azure/arm-resources": "^7.0.0",
@@ -28,6 +29,7 @@
     "@azure/identity": "^4.13.0",
     "@azure/storage-blob": "^12.29.1",
     "@logtape/logtape": "catalog:",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "execa": "catalog:",
     "inquirer": "^9.3.8",
     "neverthrow": "catalog:",
@@ -39,6 +41,7 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/inquirer": "^9.0.9",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
