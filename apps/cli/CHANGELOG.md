@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.14.5
+
+### Patch Changes
+
+- 4cc5bf7: The `init` command now checks if the specified GitHub repository already exists before proceeding. If the repository exists, the command will fail early with a clear error message, preventing accidental overwrites and ensuring that only new repositories can be created.
+
 ## 0.14.4
 
 ### Patch Changes

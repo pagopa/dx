@@ -1,6 +1,6 @@
 {
   "name": "azure_container_app",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "private": true,
   "provider": "azurerm",
   "description": "Provisions an Azure Container App with a given configuration"

@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.2.1
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 1.2.0
 
 ### Minor Changes

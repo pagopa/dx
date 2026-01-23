@@ -1,5 +1,15 @@
 # azure_container_app
 
+## 4.1.0
+
+### Minor Changes
+
+- 37f5ab3: Allow setting of diagnostic settings
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 4.0.0
 
 ### Major Changes
