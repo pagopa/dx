@@ -22,3 +22,5 @@ data "terraform_remote_state" "core_s3" {
     dynamodb_table = var.core_state.dynamodb_table
   }
 }
+
+data "azurerm_subscription" "current" {}
