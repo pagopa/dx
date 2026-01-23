@@ -1,0 +1,26 @@
+locals {
+  environment = {
+    prefix          = "{{@root.env.prefix}}"
+    env_short       = "{{envShort @root.env.name}}"
+    domain          = "{{@root.workspace.domain}}"
+    instance_number = "01"
+  }
+
+  {{#with cloudAccountsByCsp.azure}}
+  azure_accounts = {
+  {{#each this}}
+    {{displayName}} = {
+      location = "{{this.defaultLocation}}"
+    }
+  {{/each}}
+  }
+  {{/with}}
+
+  tags = {
+    CreatedBy   = "Terraform"
+    Environment = "{{env.name}}"
+    {{#each tags}}
+    {{@key}}    = "{{this}}"
+    {{/each}}
+  }
+}
