@@ -65,7 +65,7 @@ resource "azurerm_user_assigned_identity" "id" {
   location            = data.azurerm_resource_group.rg.location
   resource_group_name = data.azurerm_resource_group.rg.name
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+    name          = "temp",
     resource_type = "managed_identity"
   }))
 
