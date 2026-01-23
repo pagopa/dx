@@ -4,21 +4,14 @@
   "name": "it.pagopa/dx",
   "packages": [
     {
-      "httpHeaders": [
-        {
-          "description": "GitHub Personal Access Token for authentication",
-          "isRequired": true,
-          "isSecret": true,
-          "name": "x-gh-pat"
-        }
-      ],
+      "httpHeaders": [],
       "identifier": "https://api.dx.pagopa.it/mcp",
       "registryType": "http",
       "transport": {
         "type": "streamable-http",
         "url": "https://api.dx.pagopa.it/mcp"
       },
-      "version": "0.0.12"
+      "version": "0.1.0"
     }
   ],
   "repository": {
@@ -26,5 +19,5 @@
     "subfolder": "apps/mcpserver",
     "url": "https://github.com/pagopa/dx"
   },
-  "version": "0.0.12"
+  "version": "0.1.0"
 }

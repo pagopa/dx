@@ -1,6 +1,6 @@
 ---
 description: This file describes the Terraform code style for the project.
-applyTo: **/*.tf, **/*.tfvars
+applyTo: "**/*.tf, **/*.tfvars"
 ---
 
 # Copilot Guidelines for Terraform Code

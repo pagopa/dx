@@ -12,8 +12,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | ../../ | n/a |
-| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | ../../../azure_container_app_environment | n/a |
+| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | pagopa-dx/azure-container-app/azurerm | ~> 4.0 |
+| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | pagopa-dx/azure-container-app-environment/azurerm | ~> 1.0 |
 
 ## Resources
 

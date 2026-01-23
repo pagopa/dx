@@ -1,9 +1,3 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = local.environment.app_name,

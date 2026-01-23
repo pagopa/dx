@@ -42,7 +42,8 @@ resource "dx_available_subnet_cidr" "next_cidr" {
 }
 
 module "container_app_environment" {
-  source = "../../../azure_container_app_environment"
+  source  = "pagopa-dx/azure-container-app-environment/azurerm"
+  version = "~> 1.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -60,7 +61,8 @@ module "container_app_environment" {
 }
 
 module "container_app" {
-  source = "../../"
+  source  = "pagopa-dx/azure-container-app/azurerm"
+  version = "~> 4.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

@@ -1,6 +1,10 @@
 import { getLogger } from "@logtape/logtape";
 import { emitCustomEvent } from "@pagopa/azure-tracing/logger";
 
+import type { ToolContext, ToolDefinition } from "../types.js";
+
+import { filterUndefined } from "../utils/filter-undefined.js";
+
 const logger = getLogger(["mcpserver", "tool-logging"]);
 
 /**
@@ -8,36 +12,33 @@ const logger = getLogger(["mcpserver", "tool-logging"]);
  * Logs when a tool is executed to both console and Azure Application Insights.
  * Preserves the exact original function signature and type.
  */
-export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
-  if (typeof tool !== "object" || !tool.execute || !tool.name) {
-    return tool;
-  }
-
-  const originalExecute = tool.execute as (
-    ...args: unknown[]
-  ) => Promise<unknown>;
-  const toolName = tool.name as string;
+export function withToolLogging<T extends ToolDefinition>(tool: T): T {
+  const originalExecute = tool.execute;
+  const toolName = tool.name;
 
   return {
     ...tool,
-    execute: async (...args: unknown[]) => {
+    execute: async (args, context?: ToolContext) => {
+      // Cast args to the expected type for tool execution
       const startTime = Date.now();
-      const [toolArgs] = args;
-      const eventData = {
-        arguments: JSON.stringify(toolArgs),
-        timestamp: new Date().toISOString(),
-        toolName,
-      };
 
       // Log to console (goes to CloudWatch in Lambda)
-      logger.debug(`Tool executed: ${toolName} - ${JSON.stringify(eventData)}`);
+      logger.debug(`Tool executed: ${toolName}`);
 
       // Emit custom event to Azure Application Insights
+      const eventData = filterUndefined({
+        requestId: context?.requestId,
+        timestamp: new Date().toISOString(),
+        toolName,
+      });
       emitCustomEvent("ToolExecuted", eventData)("mcpserver");
 
       try {
         // Call the original execute function and return the result
-        const result = await originalExecute(...args);
+        const result = await originalExecute(
+          args as Record<string, unknown>,
+          context,
+        );
 
         const executionTime = Date.now() - startTime;
 
@@ -47,10 +48,14 @@ export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
         );
 
         // Emit completion event to Azure Application Insights
-        emitCustomEvent("ToolCompleted", {
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
+        emitCustomEvent(
+          "ToolCompleted",
+          filterUndefined({
+            executionTimeMs: executionTime.toString(),
+            requestId: context?.requestId,
+            toolName,
+          }),
+        )("mcpserver");
 
         return result;
       } catch (error) {
@@ -62,11 +67,15 @@ export function withToolLogging<T extends Record<string, unknown>>(tool: T): T {
         );
 
         // Emit error event to Azure Application Insights
-        emitCustomEvent("ToolFailed", {
-          error: error instanceof Error ? error.message : String(error),
-          executionTimeMs: executionTime.toString(),
-          toolName,
-        })("mcpserver");
+        emitCustomEvent(
+          "ToolFailed",
+          filterUndefined({
+            error: error instanceof Error ? error.message : String(error),
+            executionTimeMs: executionTime.toString(),
+            requestId: context?.requestId,
+            toolName,
+          }),
+        )("mcpserver");
 
         throw error;
       }

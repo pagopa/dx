@@ -31,64 +31,25 @@ The DX MCP Server provides AI assistants with access to:
 
 ## Getting Started
 
-### Prerequisites
-
-You'll need:
-
-- An MCP-compliant AI assistant (GitHub Copilot, VS Code with Copilot, etc.)
-- A GitHub Personal Access Token (PAT) with
-  [appropriate permissions](#authentication)
-
-### Authentication
-
-To authenticate, create a **fine-grained GitHub Personal Access Token** with the
-**minimum required permissions**
-[here](https://github.com/settings/personal-access-tokens) using the following
-configuration:
-
-- **Resource owner**
-  - Select the **pagopa** organization
-- **Repository access**
-  - **Public repositories:** Read-only
-- **Organization permissions**
-  - **Members:** Read-only  
-    _(required to verify membership in the pagopa organization)_
-
 ### Configuration
 
 ### VS Code / GitHub Copilot
 
-[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_DX_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22dx%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fapi.dx.pagopa.it%2Fmcp%22%2C%22headers%22%3A%7B%22x-gh-pat%22%3A%22%24%7Binput%3Agithub_mcp_pat%7D%22%7D%7D)
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_DX_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](vscode:mcp/install?%7B%22name%22%3A%22dx%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fapi.dx.pagopa.it%2Fmcp%22%7D)
 
-After installing the MCP server in VS Code, you need to configure the GitHub
-Personal Access Token (PAT) for authentication.
-
-Update your MCP configuration file adding the `inputs` key to your MCP
-configuration as follows:
+After installing the MCP server in VS Code, update your MCP configuration file
+as follows:
 
 ```json
 {
   "servers": {
     "dx": {
       "url": "https://api.dx.pagopa.it/mcp",
-      "type": "http",
-      "headers": {
-        "x-gh-pat": "${input:github_mcp_pat}"
-      }
+      "type": "http"
     }
-  },
-  "inputs": [
-    {
-      "type": "promptString",
-      "id": "github_mcp_pat",
-      "description": "GitHub Personal Access Token",
-      "password": true
-    }
-  ]
+  }
 }
 ```
-
-You will be prompted to enter your GitHub PAT when you first use the server.
 
 See
 [VS Code MCP docs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
@@ -106,10 +67,7 @@ for more info.
     "pagopa-dx": {
       "url": "https://api.dx.pagopa.it/mcp",
       "type": "http",
-      "tools": ["*"],
-      "headers": {
-        "x-gh-pat": "$COPILOT_MCP_BOT_GH_PAT"
-      }
+      "tools": ["*"]
     }
   }
 }
@@ -126,7 +84,7 @@ Follow the guided wizard to start using the DX MCP server:
 1. **Server Name**: `pagopa-dx`
 2. **Server Type**: `2` (HTTP)
 3. **URL**: `https://api.dx.pagopa.it/mcp`
-4. **HTTP Headers**: `{"x-gh-pat": "<your-gh-PAT>"}`
+4. **HTTP Headers**: leave as is (no headers needed)
 5. **Tools**: `*` (leave as is)
 
 Use `Tab` to navigate between fields and `Ctrl+S` to save.

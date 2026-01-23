@@ -1,26 +1,33 @@
 ---
 description: This file describes the TypeScript code style for the project.
-applyTo: **/*.ts, **/*.js, package.json
+applyTo: "**/*.ts, **/*.js, package.json"
 ---
 
 # Copilot Guidelines for TypeScript Code
 
-- Prefer named exports over default exports
-- Use `@pagopa/eslint-config` for consistent linting
-- Modules and methods should be small and single-concern focused
-- Avoid barrel files; import directly from source files
-- Add file header comments explaining module purpose
-- Prefer const, immutable data structures and pure functions over let/var mutations
-- Use async/await for asynchronous code
-- Document complex logic with comments that explain the "why"
-- Follow existing naming conventions in similar files
-- Always check inputs and validate external data using zod schemas
-- For new code, use [zod v4](https://zod.dev/v4) for schema validation (e.g., input validation, API responses, environment variables); when modifying existing code, follow the zod major version already used in that package until it is explicitly migrated
-- Avoid nesting too many control structures; consider early returns or helper functions
-- Prefer Asynchonous methods when dealing with I/O operations
-- Favor dependency injection over directly instantiating objects within methods using `new`
-- Avoid using `as` for type casting, especially to `any`; instead, use zod schemas or, as a secondary option, type guards
-- Use ES Modules (import/export) syntax with `.js`/`.ts` extensions for new code
+## General Rules
+
+- Use kebab-case for file and folder names.
+- Use named exports; avoid default exports.
+- Keep modules free of side effects: export values and functions without executing code at import time.
+- Do not access `process.env` outside an entrypoint; pass configuration through parameters.
+- Use `@pagopa/eslint-config` for consistent linting rules.
+- Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
+- Do not create global utility or types packages; keep helpers and types close to where they are used.
+- Avoid barrel files; import directly from source files.
+- Add a short file header that states the module purpose.
+- Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
+- Use `async/await` for asynchronous code for clarity.
+- Document non-obvious decisions and the rationale (the "why") in comments.
+- Follow existing naming and style conventions used in similar files.
+- Always validate external inputs and external data with zod schemas.
+- For new code, use zod v4; when editing existing code, keep that package's current zod major version until explicitly migrated.
+- Prefer `.safeParse()` for synchronous zod validation and handle both success and failure paths.
+- Avoid deeply nested control flow; prefer early returns or small helper functions.
+- Use asynchronous functions for I/O-bound operations.
+- Favor dependency injection over instantiating collaborators with `new` inside methods.
+- Avoid `as` casts, especially to `any`; prefer zod validation or explicit type guards instead.
+- Use ES Modules (`import`/`export`) and include `.js`/`.ts` extensions in new code.
 
 ## NodeJS
 
@@ -34,12 +41,3 @@ When coding for NodeJS environments:
 - Use catalog versions from [pnpm-workspace.yaml](../../pnpm-workspace.yaml) for common packages
 - Add dependencies: `pnpm --filter <workspace-name> add <package-name>`
 - Add root-level dependencies: `pnpm add -w <package-name>`
-
-## Testing
-
-- Test files co-located with source using Vitest
-- Try hard not to cheat type safety in tests; the `as` keyword must NEVER used in a test file.
-- Arrange tests in Arrange-Act-Assert pattern
-- Do not mangle tests only to make them pass; fix the underlying code instead
-- Mock external dependencies and side effects instead of internal logic
-- Use descriptive test names that explain the expected behavior

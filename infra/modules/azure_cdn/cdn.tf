@@ -72,19 +72,3 @@ resource "azurerm_cdn_frontdoor_route" "this" {
     query_string_caching_behavior = "IgnoreQueryString"
   }
 }
-
-resource "azurerm_monitor_diagnostic_setting" "diagnostic_settings_cdn_profile" {
-  count                      = var.diagnostic_settings.enabled ? 1 : 0
-  name                       = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_monitor_diagnostic_setting" }))
-  target_resource_id         = azurerm_cdn_frontdoor_profile.this.id
-  log_analytics_workspace_id = var.diagnostic_settings.log_analytics_workspace_id
-  storage_account_id         = var.diagnostic_settings.diagnostic_setting_destination_storage_id
-
-  enabled_log {
-    category_group = "allLogs"
-  }
-
-  metric {
-    category = "AllMetrics"
-  }
-}

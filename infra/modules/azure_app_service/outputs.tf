@@ -28,3 +28,11 @@ output "app_service" {
     }
   }
 }
+
+output "diagnostic_settings" {
+  description = "Details of the diagnostic settings configured for the App Service."
+  value = {
+    id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
+  }
+}
+

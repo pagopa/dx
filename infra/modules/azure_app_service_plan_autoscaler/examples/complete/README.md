@@ -11,9 +11,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | ../../../azure_function_app | n/a |
-| <a name="module_func_autoscaler"></a> [func\_autoscaler](#module\_func\_autoscaler) | ../../ | n/a |
-| <a name="module_naming_convention"></a> [naming\_convention](#module\_naming\_convention) | ../../../azure_naming_convention | n/a |
+| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azurerm | ~> 4.2 |
+| <a name="module_func_autoscaler"></a> [func\_autoscaler](#module\_func\_autoscaler) | pagopa-dx/azure-app-service-plan-autoscaler/azurerm | ~> 2.0 |
 
 ## Resources
 
