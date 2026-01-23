@@ -41,7 +41,6 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/inquirer": "^9.0.9",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
