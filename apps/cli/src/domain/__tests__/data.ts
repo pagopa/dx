@@ -10,6 +10,7 @@ import {
   Script,
 } from "../package-json.js";
 import { RepositoryReader } from "../repository.js";
+import { TfvarsService } from "../tfvars.js";
 import { ValidationReporter } from "../validation.js";
 
 export const makeMockPackageJson = (
@@ -39,6 +40,7 @@ export const makeMockDependencies = (): {
   octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
+  tfvarsService: mock<TfvarsService>(),
   validationReporter: mock<ValidationReporter>(),
 });
 
