@@ -12,7 +12,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_app_service_exposed"></a> [azure\_app\_service\_exposed](#module\_azure\_app\_service\_exposed) | ../../ | n/a |
+| <a name="module_azure_app_service_exposed"></a> [azure\_app\_service\_exposed](#module\_azure\_app\_service\_exposed) | pagopa-dx/azure-app-service-exposed/azurerm | ~> 2.0 |
 
 ## Resources
 

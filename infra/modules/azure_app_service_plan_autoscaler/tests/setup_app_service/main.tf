@@ -9,10 +9,11 @@ terraform {
 
 
 module "azure_app_service" {
-  source = "../../../azure_app_service"
+  source  = "pagopa-dx/azure-app-service/azurerm"
+  version = "~> 2.0"
 
   environment         = var.environment
-  tier                = "s"
+  use_case            = "default"
   resource_group_name = var.resource_group_name
 
   virtual_network = {

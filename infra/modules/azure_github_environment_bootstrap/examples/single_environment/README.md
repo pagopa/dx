@@ -13,7 +13,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_dev"></a> [dev](#module\_dev) | ../.. | n/a |
+| <a name="module_dev"></a> [dev](#module\_dev) | pagopa-dx/azure-github-environment-bootstrap/azurerm | ~> 3.1 |
 
 ## Resources
 

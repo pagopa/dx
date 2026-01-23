@@ -100,10 +100,10 @@ Then, in different modules, you can use these data sources as follows:
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_apim"></a> [apim](#module\_apim) | ../../../azure_api_management | n/a |
-| <a name="module_core"></a> [core](#module\_core) | ../.. | n/a |
-| <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | ../../../azure_cosmos_account | n/a |
-| <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | ../../../azure_storage_account | n/a |
+| <a name="module_apim"></a> [apim](#module\_apim) | pagopa-dx/azure-api-management/azurerm | ~> 2.1 |
+| <a name="module_core"></a> [core](#module\_core) | pagopa-dx/azure-core-infra/azurerm | ~> 2.3 |
+| <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | pagopa-dx/azure-cosmos-account/azurerm | ~> 0.3 |
+| <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | pagopa-dx/azure-storage-account/azurerm | ~> 2.1 |
 
 ## Resources
 
