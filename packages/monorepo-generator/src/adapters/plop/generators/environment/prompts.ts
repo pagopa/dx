@@ -179,7 +179,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
         deps.cloudAccountService,
         payload.env,
       ),
-      "You don't have permission to initialize this environment. Ask to your Engineering Leader to initialize it for you.",
+      "You don't have permission to initialize this environment. Ask your Engineering Leader to initialize it for you.",
     );
 
     const missingRemoteBackend = initStatus.issues.some(
