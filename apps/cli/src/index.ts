@@ -7,6 +7,7 @@ import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
+import { OctokitGitHubService } from "./adapters/octokit/index.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
@@ -41,8 +42,10 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+const gitHubService = new OctokitGitHubService(octokit);
+
 const deps: Dependencies = {
-  octokit,
+  gitHubService,
   packageJsonReader,
   repositoryReader,
   validationReporter,

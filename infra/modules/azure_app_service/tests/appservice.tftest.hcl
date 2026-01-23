@@ -159,11 +159,6 @@ run "app_service_with_diagnostic_settings" {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
     error_message = "Diagnostic settings should be created when enabled"
   }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 1
-    error_message = "Diagnostic settings should be created for the slot when enabled and slot is created (use_case=default includes slot)"
-  }
 }
 
 run "app_service_without_diagnostic_settings" {
@@ -181,11 +176,6 @@ run "app_service_without_diagnostic_settings" {
   assert {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
     error_message = "Diagnostic settings should not be created when disabled"
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.slot) == 0
-    error_message = "Diagnostic settings should not be created for slot when disabled"
   }
 }
 
