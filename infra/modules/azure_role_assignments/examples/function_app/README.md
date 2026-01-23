@@ -9,8 +9,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_function"></a> [function](#module\_function) | ../../../azure_function_app | n/a |
-| <a name="module_roles"></a> [roles](#module\_roles) | ../../ | n/a |
+| <a name="module_function"></a> [function](#module\_function) | pagopa-dx/azure-function-app/azurerm | ~> 4.1 |
+| <a name="module_roles"></a> [roles](#module\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.3 |
 
 ## Resources
 

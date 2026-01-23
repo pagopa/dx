@@ -38,7 +38,9 @@ resource "azurerm_app_configuration" "this" {
 }
 
 module "roles" {
-  source          = "../../"
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 1.3"
+
   principal_id    = module.test_app.app_service.app_service.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
 

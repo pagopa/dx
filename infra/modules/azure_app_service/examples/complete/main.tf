@@ -22,7 +22,9 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "azure_app_service" {
-  source              = "../../"
+  source  = "pagopa-dx/azure-app-service/azurerm"
+  version = "~> 2.0"
+
   environment         = local.environment
   use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name

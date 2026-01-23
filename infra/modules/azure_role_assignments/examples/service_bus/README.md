@@ -11,9 +11,9 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_app_service_exposed"></a> [app\_service\_exposed](#module\_app\_service\_exposed) | ../../../azure_app_service_exposed | n/a |
-| <a name="module_roles"></a> [roles](#module\_roles) | ../../ | n/a |
-| <a name="module_service_bus"></a> [service\_bus](#module\_service\_bus) | ../../../azure_service_bus_namespace | n/a |
+| <a name="module_app_service_exposed"></a> [app\_service\_exposed](#module\_app\_service\_exposed) | pagopa-dx/azure-function-app-exposed/azurerm | ~> 2.0 |
+| <a name="module_roles"></a> [roles](#module\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.3 |
+| <a name="module_service_bus"></a> [service\_bus](#module\_service\_bus) | pagopa-dx/azure-service-bus-namespace/azurerm | ~> 0.0 |
 
 ## Resources
 
