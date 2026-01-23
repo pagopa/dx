@@ -1,5 +1,11 @@
 # azure_service_bus_alerts
 
+## 0.1.4
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 0.1.3
 
 ### Patch Changes

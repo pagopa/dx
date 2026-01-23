@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.1
+
+### Patch Changes
+
+- 4f526a2: Update the diagram generation prompt to output Mermaid diagrams as standalone .mmd files instead of embedding the Mermaid code directly in README files.
+
 ## 0.2.0
 
 ### Minor Changes

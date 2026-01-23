@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/convert-mermaid-svg",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "GitHub Action to convert Mermaid diagrams in markdown file into SVG format",
   "type": "module",
   "private": true,
