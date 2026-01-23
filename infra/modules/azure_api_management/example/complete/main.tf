@@ -1,9 +1,3 @@
-module "naming_convention" {
-  source = "../../../azure_naming_convention"
-
-  environment = local.environment
-}
-
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = local.environment.app_name,
@@ -20,7 +14,8 @@ resource "azurerm_subnet" "example" {
 }
 
 module "azure_apim" {
-  source = "../../"
+  source  = "pagopa-dx/azure-api-management/azurerm"
+  version = "~> 2.1"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
