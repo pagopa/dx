@@ -8,6 +8,7 @@ import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
 import setEnvShortHelper from "../../helpers/env-short.js";
+import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
 import getActions from "./actions.js";
 import getPrompts from "./prompts.js";
@@ -20,6 +21,7 @@ export default function (
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
+  setEqHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
