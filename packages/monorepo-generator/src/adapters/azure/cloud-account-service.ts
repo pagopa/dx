@@ -33,10 +33,6 @@ export const resourceGraphDataSchema = z.object({
   resourceGroup: z.string(),
 });
 
-export const azureJsonWebTokenSchema = z.object({
-  oid: z.string(), // Object ID
-});
-
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
   #resourceGraphClient: ResourceGraphClient;
