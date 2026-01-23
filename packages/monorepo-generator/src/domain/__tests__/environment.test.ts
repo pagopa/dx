@@ -5,6 +5,7 @@ import {
   Environment,
   getInitializationStatus,
   getTerraformBackend,
+  hasUserPermissionToInitialize,
 } from "../environment.js";
 import { TerraformBackend } from "../remote-backend.js";
 
@@ -272,5 +273,93 @@ describe("getTerraformBackend", () => {
     const result = await getTerraformBackend(mockService, environment);
 
     expect(result).toBeUndefined();
+  });
+});
+
+describe("hasUserPermissionToInitialize", () => {
+  it("should return true when all cloud accounts have permission", async () => {
+    const mockService = createMockCloudAccountService({
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+    });
+    const environment = createMockEnvironment({
+      cloudAccounts: [
+        createMockCloudAccount({ id: "account-1" }),
+        createMockCloudAccount({ id: "account-2" }),
+      ],
+    });
+
+    const result = await hasUserPermissionToInitialize(
+      mockService,
+      environment,
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it("should return false when any cloud account lacks permission", async () => {
+    const hasUserPermissionMock = vi
+      .fn()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    const mockService = createMockCloudAccountService({
+      hasUserPermissionToInitialize: hasUserPermissionMock,
+    });
+    const environment = createMockEnvironment({
+      cloudAccounts: [
+        createMockCloudAccount({ id: "account-1" }),
+        createMockCloudAccount({ id: "account-2" }),
+      ],
+    });
+
+    const result = await hasUserPermissionToInitialize(
+      mockService,
+      environment,
+    );
+
+    expect(result).toBe(false);
+    expect(hasUserPermissionMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("should short-circuit and return false on first unauthorized account", async () => {
+    const hasUserPermissionMock = vi.fn().mockResolvedValue(false);
+    const mockService = createMockCloudAccountService({
+      hasUserPermissionToInitialize: hasUserPermissionMock,
+    });
+    const environment = createMockEnvironment({
+      cloudAccounts: [
+        createMockCloudAccount({ id: "account-1" }),
+        createMockCloudAccount({ id: "account-2" }),
+        createMockCloudAccount({ id: "account-3" }),
+      ],
+    });
+
+    const result = await hasUserPermissionToInitialize(
+      mockService,
+      environment,
+    );
+
+    expect(result).toBe(false);
+    // Should only check the first account before short-circuiting
+    expect(hasUserPermissionMock).toHaveBeenCalledTimes(1);
+    expect(hasUserPermissionMock).toHaveBeenCalledWith("account-1");
+  });
+
+  it("should call service with correct cloud account IDs", async () => {
+    const hasUserPermissionMock = vi.fn().mockResolvedValue(true);
+    const mockService = createMockCloudAccountService({
+      hasUserPermissionToInitialize: hasUserPermissionMock,
+    });
+    const environment = createMockEnvironment({
+      cloudAccounts: [
+        createMockCloudAccount({ id: "account-a" }),
+        createMockCloudAccount({ id: "account-b" }),
+      ],
+    });
+
+    await hasUserPermissionToInitialize(mockService, environment);
+
+    expect(hasUserPermissionMock).toHaveBeenCalledTimes(2);
+    expect(hasUserPermissionMock).toHaveBeenNthCalledWith(1, "account-a");
+    expect(hasUserPermissionMock).toHaveBeenNthCalledWith(2, "account-b");
   });
 });
