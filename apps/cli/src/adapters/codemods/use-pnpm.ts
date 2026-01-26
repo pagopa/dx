@@ -120,7 +120,8 @@ async function replacePMOccurrences(): Promise<void> {
       /\b(yarn workspace|npm -(\b-workspace\b|\bw\b))\b/g,
       /\b(yarn install --immutable|npm ci)\b/g,
       /\b(yarn -q dlx|npx)\b/g,
-      /(^|\s)(Yarn|npm)(?!\S)/gi,
+      /\b((yarn|npm) run)\b/g,
+      /(^|\s|")(yarn|npm)(?!\S)/gi,
     ],
     ignore: ["**/node_modules/**", "**/dist/**", "**/build/**"],
     to: [
@@ -130,6 +131,7 @@ async function replacePMOccurrences(): Promise<void> {
       "pnpm --filter <package-selector>",
       "pnpm install --frozen-lockfile",
       "pnpm dlx",
+      "pnpm run",
       "$1pnpm",
     ],
   });
