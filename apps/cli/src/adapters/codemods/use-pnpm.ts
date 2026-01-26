@@ -130,7 +130,7 @@ async function replacePMOccurrences(): Promise<void> {
       "pnpm --filter <package-selector>",
       "pnpm install --frozen-lockfile",
       "pnpm dlx",
-      "pnpm",
+      "$1pnpm",
     ],
   });
   const count = results.reduce(
