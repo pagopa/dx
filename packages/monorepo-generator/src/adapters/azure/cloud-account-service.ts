@@ -1,11 +1,13 @@
 import type { TokenCredential } from "@azure/identity";
 
+import { AuthorizationManagementClient } from "@azure/arm-authorization";
 import { ManagedServiceIdentityClient } from "@azure/arm-msi";
 import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 import { ResourceManagementClient } from "@azure/arm-resources";
 import { StorageManagementClient } from "@azure/arm-storage";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
+import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
 import { z } from "zod/v4";
 
@@ -29,6 +31,19 @@ export const resourceGraphDataSchema = z.object({
   location: z.enum(locations),
   name: z.string(),
   resourceGroup: z.string(),
+});
+
+const graphUserResponseSchema = z.object({
+  id: z.string(),
+});
+
+const graphGroupMembershipItemSchema = z.object({
+  id: z.string(),
+});
+
+const graphGroupMembershipResponseSchema = z.object({
+  "@odata.nextLink": z.string().optional(),
+  value: z.array(graphGroupMembershipItemSchema),
 });
 
 export class AzureCloudAccountService implements CloudAccountService {
@@ -81,6 +96,76 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccountId,
       type: "azurerm",
     });
+  }
+
+  async hasUserPermissionToInitialize(
+    cloudAccountId: CloudAccount["id"],
+  ): Promise<boolean> {
+    try {
+      // All principal IDs to check (user + all groups)
+      const allPrincipalIds = await this.#getCurrentPrincipalIds();
+
+      // Get role assignments for the subscription
+      const authClient = new AuthorizationManagementClient(
+        this.#credential,
+        cloudAccountId,
+      );
+
+      const requiredRoles = [
+        "8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
+        "ba92f5b4-2d11-453d-a403-e96b0029c9fe", // Storage Blob Data Contributor
+      ];
+
+      const scope = `/subscriptions/${cloudAccountId}`;
+
+      // Collect all role definition IDs assigned to the user or their groups
+      const assignedRoleDefinitionIds = new Set<string>();
+
+      for await (const assignment of authClient.roleAssignments.listForScope(
+        scope,
+      )) {
+        // Check if this assignment is for the user or any of their groups
+        if (
+          assignment.principalId &&
+          allPrincipalIds.has(assignment.principalId)
+        ) {
+          // Extract role definition ID from the full resource ID
+          // Format: /subscriptions/{sub}/providers/Microsoft.Authorization/roleDefinitions/{roleId}
+          const roleDefId = assignment.roleDefinitionId?.split("/").pop();
+          if (roleDefId) {
+            assignedRoleDefinitionIds.add(roleDefId);
+          }
+        }
+
+        // Short-circuit: stop if all required roles have been found
+        if (
+          requiredRoles.every((requiredRole) =>
+            assignedRoleDefinitionIds.has(requiredRole),
+          )
+        ) {
+          return true;
+        }
+      }
+
+      // Check if all required roles are present
+      const hasAllRoles = requiredRoles.every((requiredRole) =>
+        assignedRoleDefinitionIds.has(requiredRole),
+      );
+
+      return hasAllRoles;
+    } catch (error: unknown) {
+      // Handle authorization errors (403 Forbidden) - user lacks permissions
+      if (
+        error &&
+        typeof error === "object" &&
+        "statusCode" in error &&
+        error.statusCode === 403
+      ) {
+        return false;
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   async initialize(
@@ -277,5 +362,50 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
+  }
+
+  async #getCurrentPrincipalIds(): Promise<Set<string>> {
+    // Create Graph client with custom auth provider that fetches fresh tokens
+    const graphClient = Client.init({
+      authProvider: async (done) => {
+        try {
+          const tokenResponse = await this.#credential.getToken(
+            "https://graph.microsoft.com/.default",
+          );
+          if (!tokenResponse) {
+            done(
+              new Error("Failed to acquire token for Microsoft Graph"),
+              null,
+            );
+            return;
+          }
+          done(null, tokenResponse.token);
+        } catch (error) {
+          done(error as Error, null);
+        }
+      },
+    });
+
+    // Get current user's info
+    const meResponse = await graphClient.api("/me").get();
+    const me = graphUserResponseSchema.parse(meResponse);
+    const userObjectId = me.id;
+
+    // Get all group memberships (transitive - includes nested groups)
+    const groupIds: string[] = [];
+    let nextLink: string | undefined = "/me/transitiveMemberOf?$select=id";
+
+    while (nextLink) {
+      const rawResponse = await graphClient.api(nextLink).get();
+      const response = graphGroupMembershipResponseSchema.parse(rawResponse);
+      for (const item of response.value) {
+        groupIds.push(item.id);
+      }
+      nextLink = response["@odata.nextLink"];
+    }
+
+    // All principal IDs to check (user + all groups)
+    const allPrincipalIds = new Set([userObjectId, ...groupIds]);
+    return allPrincipalIds;
   }
 }

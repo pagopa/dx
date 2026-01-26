@@ -97,3 +97,18 @@ export async function getTerraformBackend(
   }
   return undefined;
 }
+
+export async function hasUserPermissionToInitialize(
+  cloudAccountService: CloudAccountService,
+  environment: Environment,
+): Promise<boolean> {
+  for (const cloudAccount of environment.cloudAccounts) {
+    const result = await cloudAccountService.hasUserPermissionToInitialize(
+      cloudAccount.id,
+    );
+    if (!result) {
+      return false;
+    }
+  }
+  return true;
+}

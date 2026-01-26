@@ -22,6 +22,10 @@ export interface CloudAccountService {
     environment: EnvironmentId,
   ): Promise<TerraformBackend | undefined>;
 
+  hasUserPermissionToInitialize(
+    cloudAccountId: CloudAccount["id"],
+  ): Promise<boolean>;
+
   initialize(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
