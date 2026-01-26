@@ -17,7 +17,7 @@ import {
  * - Group 3: The closing bracket and everything after until end of directory_readers block
  */
 const DIRECTORY_READERS_REGEX =
-  /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(\][\s\S]*?\})/;
+  /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(][\s\S]*?})/;
 
 /**
  * Creates a TfvarsService implementation that uses regex-based parsing.
@@ -27,6 +27,7 @@ export const makeTfvarsService = (): TfvarsService => ({
     content: string,
     identityId: string,
   ): Result<string, TfvarsError> {
+    // Use regex to find and capture the directory_readers.service_principals_name list
     const match = content.match(DIRECTORY_READERS_REGEX);
 
     if (!match) {
@@ -37,28 +38,43 @@ export const makeTfvarsService = (): TfvarsService => ({
       );
     }
 
+    // Extract the three captured groups from the regex:
+    // - prefix: everything before the list content (e.g., "service_principals_name = [")
+    // - existingItems: the current list content (may include newlines and indentation)
+    // - suffix: the closing bracket and everything after (e.g., "]\n}")
     const [, prefix, existingItems, suffix] = match;
 
-    // Check for duplicates
+    // Check if the identity already exists in the list to prevent duplicates
     if (existingItems.includes(`"${identityId}"`)) {
       return err(new IdentityAlreadyExistsError(identityId));
     }
 
-    // Parse existing items to determine formatting
+    // Determine if the list currently has items by checking if there's any non-whitespace content
     const trimmedItems = existingItems.trim();
     const hasExistingItems = trimmedItems.length > 0;
 
-    // Build the new list content
+    // Build the new list content following HCL formatting rules:
+    // - Items are indented with 4 spaces
+    // - Items are separated by commas
+    // - The LAST item must NOT have a trailing comma (critical for HCL)
+    // - Closing bracket is indented with 2 spaces
     let newListContent: string;
     if (hasExistingItems) {
-      // Remove trailing whitespace/newlines from existing items and add comma + new item
-      const cleanedItems = trimmedItems.replace(/,?\s*$/, "");
-      newListContent = `${cleanedItems},\n    "${identityId}",\n  `;
+      // When appending to an existing list:
+      // 1. Keep the original leading whitespace/newlines to preserve formatting
+      // 2. Remove any trailing comma and whitespace from the last existing item
+      //    (since we're adding a new last item)
+      // 3. Add a comma after the previous last item (making it no longer the last)
+      // 4. Add the new identity WITHOUT a trailing comma (it's now the last item)
+      const cleanedItems = existingItems.replace(/,?\s*$/, "");
+      newListContent = `${cleanedItems},\n    "${identityId}"\n  `;
     } else {
-      // Empty list, just add the new item
-      newListContent = `\n    "${identityId}",\n  `;
+      // When adding to an empty list:
+      // Start with a newline, add the item with 4-space indent, no trailing comma
+      newListContent = `\n    "${identityId}"\n  `;
     }
 
+    // Reconstruct the file by replacing the matched section with our updated list
     const updatedContent = content.replace(
       DIRECTORY_READERS_REGEX,
       `${prefix}${newListContent}${suffix}`,
