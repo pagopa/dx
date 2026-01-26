@@ -99,10 +99,6 @@ export class OctokitGitHubService implements GitHubService {
       if (error instanceof RequestError && error.status === 404) {
         throw new FileNotFoundError(params.path);
       }
-      // Re-throw errors that we created (not from the API)
-      if (error instanceof Error && error.message.startsWith("Path ")) {
-        throw error;
-      }
       throw new Error(`Failed to get file content: ${params.path}`, {
         cause: error,
       });
