@@ -1,4 +1,4 @@
-import { ok } from "neverthrow";
+import { err, ok } from "neverthrow";
 import { describe, expect, it } from "vitest";
 import { mock } from "vitest-mock-extended";
 
@@ -190,13 +190,13 @@ directory_readers = {
         sha: "sha-123",
       });
       tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue({
-        error: new InvalidTfvarsFormatError(
-          "Could not find directory_readers.service_principals_name list",
+      tfvarsService.appendToDirectoryReaders.mockReturnValue(
+        err(
+          new InvalidTfvarsFormatError(
+            "Could not find directory_readers.service_principals_name list",
+          ),
         ),
-        isErr: () => true,
-        isOk: () => false,
-      } as never);
+      );
 
       const result = await requestAzureAuthorization(
         gitHubService,
