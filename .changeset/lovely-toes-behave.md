@@ -1,14 +1,14 @@
 ---
-"azure_api_management": major
+"azure_api_management": minor
 ---
 
-This is a **major breaking change**. New `custom_domains` variable structure, fix `autoscale` configuration, update public network definition, and added dependency on NSG resource.
+This is a **Minor change**. New `hostname_configuration` variable structure, fix `autoscale` configuration, update public network definition, and added dependency on NSG resource.
 
 ## Upgrade Notes
 
 ### 1. Custom Domains Variable Structure
 
-The `custom_domains` variable has been completely redesigned from a flat list to a structured object for better ergonomics and type safety.
+The `hostname_configuration` variable has been redesigned from a flat list to a structured object for better ergonomics and type safety.
 
 **Before:**
 
@@ -40,18 +40,18 @@ hostname_configuration = {
 **After:**
 
 ```terraform
-custom_domains = {
+hostname_configuration = {
   proxy = [
     {
       host_name                = "api.example.com"
-      key_vault_certificate_id = "https://..."
+      key_vault_id             = "https://..."
       default_ssl_binding      = true
     }
   ]
   management = [
     {
       host_name                = "mgmt.example.com"
-      key_vault_certificate_id = "https://..."
+      key_vault_id             = "https://..."
     }
   ]
   # Other optional types: portal, developer_portal, scm
@@ -60,9 +60,7 @@ custom_domains = {
 
 **Benefits:**
 
-- New variable name `custom_domains` better reflects its purpose
-- `key_vault_id` is now renamed to `key_vault_certificate_id` for clarity, as the Terraform documentation refers to Key Vault Secrets that contain certificates.
-- Optional domain types can be omitted if not used
+- Optional endpoint types can be omitted entirely or set to empty lists `[]` if not used
 - `default_ssl_binding` for proxy is only specified when needed
 
 ### 2. Autoscale Configuration
@@ -72,9 +70,9 @@ This fixes the problem when `use_case` is set to `high_load` without the `autosc
 
 **Changes:**
 
-- `enabled` field does not exist anymore, autoscale is defined by `use_case`
+- `enabled` field does not exist anymore, autoscale is defined by `use_case` (this change is backward compatible as the field was ignored)
 - Default changed from a static object to `null`
-- All fields inside `autoscale` are now optional
+- All fields inside `autoscale` are now optional so you can now specify only the fields you want to customize
 - When `null`, defaults are automatically calculated based on the number of availability zones
 - For `high_load` use case (2 zones): all values are multiples of 2
 - For `cost_optimized`/`development` use cases (no zones): values remain as 1
@@ -87,14 +85,13 @@ Added explicit `depends_on` relationship between APIM and NSG to prevent paralle
 
 The default value for `public_network_access_enabled` has been set to `true` and is not changed by the `use_case` variable anymore.
 
-## Migration Guide
+## Migration Guide (Optional)
 
 ### Migrating Custom Domains
 
 1. Find `hostname_configuration` block in your module calls
-2. Rename it to `custom_domains`
-3. Rename `key_vault_id` to `key_vault_certificate_id`
-4. Remove all domain types that are not used (e.g., `developer_portal`, `portal`, `scm`)
+2. Remove all endpoint types that are set to `null` or use empty lists `[]` instead
+3. Existing configurations with explicit `null` values remain compatible
 
 ### Migrating Autoscale Configuration
 
@@ -103,6 +100,7 @@ The default value for `public_network_access_enabled` has been set to `true` and
 3. If you have custom values, keep them as is
 4. If you were relying on defaults, simply remove the entire `autoscale` block or only keep the fields you want to customize
 
-## Note
+## Notes
 
-With this major change, all custom domain types are now configurable. Previously, only `proxy` was configurable.
+- With this change, all custom domain types are now configurable. Previously, only `proxy` was configurable.
+- The `key_vault_id` field accept Key Vault Secret IDs containing certificates, as per the [Azure Terraform provider documentation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management#key_vault_certificate_id-1)

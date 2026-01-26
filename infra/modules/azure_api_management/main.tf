@@ -57,56 +57,56 @@ resource "azurerm_api_management" "this" {
 
   dynamic "hostname_configuration" {
     for_each = length(concat(
-      var.custom_domains.proxy,
-      var.custom_domains.management,
-      var.custom_domains.portal,
-      var.custom_domains.developer_portal,
-      var.custom_domains.scm
+      var.hostname_configuration.proxy,
+      var.hostname_configuration.management,
+      var.hostname_configuration.portal,
+      var.hostname_configuration.developer_portal,
+      var.hostname_configuration.scm
     )) > 0 ? ["dummy"] : []
     content {
       dynamic "proxy" {
-        for_each = var.custom_domains.proxy
+        for_each = var.hostname_configuration.proxy
         iterator = domain
         content {
           default_ssl_binding      = domain.value.default_ssl_binding
           host_name                = domain.value.host_name
-          key_vault_certificate_id = domain.value.key_vault_certificate_id
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
 
       dynamic "management" {
-        for_each = var.custom_domains.management
+        for_each = var.hostname_configuration.management
         iterator = domain
         content {
           host_name                = domain.value.host_name
-          key_vault_certificate_id = domain.value.key_vault_certificate_id
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
 
       dynamic "portal" {
-        for_each = var.custom_domains.portal
+        for_each = var.hostname_configuration.portal
         iterator = domain
         content {
           host_name                = domain.value.host_name
-          key_vault_certificate_id = domain.value.key_vault_certificate_id
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
 
       dynamic "developer_portal" {
-        for_each = var.custom_domains.developer_portal
+        for_each = var.hostname_configuration.developer_portal
         iterator = domain
         content {
           host_name                = domain.value.host_name
-          key_vault_certificate_id = domain.value.key_vault_certificate_id
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
 
       dynamic "scm" {
-        for_each = var.custom_domains.scm
+        for_each = var.hostname_configuration.scm
         iterator = domain
         content {
           host_name                = domain.value.host_name
-          key_vault_certificate_id = domain.value.key_vault_certificate_id
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
     }

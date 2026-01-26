@@ -186,28 +186,28 @@ variable "xml_content" {
   description = "XML content for all API policies."
 }
 
-variable "custom_domains" {
+variable "hostname_configuration" {
   type = object({
     proxy = optional(list(object({
-      host_name                = string
-      key_vault_certificate_id = string
-      default_ssl_binding      = optional(bool, false)
+      host_name           = string
+      key_vault_id        = string
+      default_ssl_binding = optional(bool, false)
     })), [])
     management = optional(list(object({
-      host_name                = string
-      key_vault_certificate_id = string
+      host_name    = string
+      key_vault_id = string
     })), [])
     portal = optional(list(object({
-      host_name                = string
-      key_vault_certificate_id = string
+      host_name    = string
+      key_vault_id = string
     })), [])
     developer_portal = optional(list(object({
-      host_name                = string
-      key_vault_certificate_id = string
+      host_name    = string
+      key_vault_id = string
     })), [])
     scm = optional(list(object({
-      host_name                = string
-      key_vault_certificate_id = string
+      host_name    = string
+      key_vault_id = string
     })), [])
   })
   default     = {}

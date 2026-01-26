@@ -747,12 +747,12 @@ run "custom_domains_single_proxy" {
     subnet_id     = run.setup_tests.subnet_id
     subnet_pep_id = run.setup_tests.pep_id
 
-    custom_domains = {
+    hostname_configuration = {
       proxy = [
         {
-          host_name                = "api.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
-          default_ssl_binding      = true
+          host_name           = "api.example.com"
+          key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding = true
         }
       ]
     }
@@ -807,17 +807,17 @@ run "custom_domains_multiple_proxy" {
     subnet_id     = run.setup_tests.subnet_id
     subnet_pep_id = run.setup_tests.pep_id
 
-    custom_domains = {
+    hostname_configuration = {
       proxy = [
         {
-          host_name                = "api.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
-          default_ssl_binding      = true
+          host_name           = "api.example.com"
+          key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding = true
         },
         {
-          host_name                = "api-v2.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
-          default_ssl_binding      = false
+          host_name           = "api-v2.example.com"
+          key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
+          default_ssl_binding = false
         }
       ]
     }
@@ -857,36 +857,36 @@ run "custom_domains_all_types" {
     subnet_id     = run.setup_tests.subnet_id
     subnet_pep_id = run.setup_tests.pep_id
 
-    custom_domains = {
+    hostname_configuration = {
       proxy = [
         {
-          host_name                = "api.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
-          default_ssl_binding      = true
+          host_name           = "api.example.com"
+          key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+          default_ssl_binding = true
         }
       ]
       management = [
         {
-          host_name                = "management.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
+          host_name    = "management.example.com"
+          key_vault_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
         }
       ]
       portal = [
         {
-          host_name                = "portal.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert3"
+          host_name    = "portal.example.com"
+          key_vault_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert3"
         }
       ]
       developer_portal = [
         {
-          host_name                = "developer.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert4"
+          host_name    = "developer.example.com"
+          key_vault_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert4"
         }
       ]
       scm = [
         {
-          host_name                = "scm.example.com"
-          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert5"
+          host_name    = "scm.example.com"
+          key_vault_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert5"
         }
       ]
     }
