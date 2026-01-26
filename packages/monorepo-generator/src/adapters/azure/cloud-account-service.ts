@@ -389,7 +389,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     // Get current user's info
     const meResponse = await graphClient.api("/me").get();
     const me = graphUserResponseSchema.parse(meResponse);
-    const userObjectId: string = me.id;
+    const userObjectId = me.id;
 
     // Get all group memberships (transitive - includes nested groups)
     const groupIds: string[] = [];
