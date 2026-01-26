@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
 import { GitHubService, PullRequest } from "../domain/github.js";
@@ -29,6 +30,7 @@ const BASE_BRANCH = "main";
 export const requestAzureAuthorization =
   (gitHubService: GitHubService, tfvarsService: TfvarsService) =>
   (input: RequestAzureAuthorizationInput): ResultAsync<PullRequest, Error> => {
+    const logger = getLogger(["dx-cli", "azure-auth"]);
     const { bootstrapIdentityId, subscriptionName } = input;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars`;
     const branchName = `feats/add-${subscriptionName}-bootstrap-identity`;
@@ -43,42 +45,61 @@ export const requestAzureAuthorization =
         }),
         (error) => error as Error,
       )
-        // Check for duplicate and modify content
+        .orTee((error) => {
+          logger.error("Failed to fetch file content", {
+            error: error.message,
+            path: filePath,
+          });
+        })
+        // Check for duplicates and modify the file content
         .andThen(({ content, sha }) => {
-          // Check if identity already exists
+          // Verify the identity doesn't already exist to prevent duplicates
           if (
             tfvarsService.containsServicePrincipal(content, bootstrapIdentityId)
           ) {
+            logger.warn("Identity already exists", {
+              identityId: bootstrapIdentityId,
+              subscription: subscriptionName,
+            });
             return errAsync(
               new IdentityAlreadyExistsError(bootstrapIdentityId),
             );
           }
 
-          // Modify the content
           const modifyResult = tfvarsService.appendToDirectoryReaders(
             content,
             bootstrapIdentityId,
           );
 
           if (modifyResult.isErr()) {
+            logger.error("Failed to modify tfvars", {
+              error: modifyResult.error.message,
+            });
             return errAsync(modifyResult.error);
           }
 
+          // Return both the file SHA (needed for update) and the updated content
           return okAsync({ sha, updatedContent: modifyResult.value });
         })
-        // Create branch
-        .andThen(({ sha, updatedContent }) =>
-          ResultAsync.fromPromise(
-            gitHubService.createBranch({
-              branchName,
-              fromRef: BASE_BRANCH,
-              owner: REPO_OWNER,
-              repo: REPO_NAME,
-            }),
-            (error) => error as Error,
-          ).map(() => ({ sha, updatedContent })),
+        .andThen(
+          ({ sha, updatedContent }) =>
+            ResultAsync.fromPromise(
+              gitHubService.createBranch({
+                branchName,
+                fromRef: BASE_BRANCH,
+                owner: REPO_OWNER,
+                repo: REPO_NAME,
+              }),
+              (error) => error as Error,
+            ).map(() => ({ sha, updatedContent })), // Pass along sha and content to next step
         )
-        // Update file on the new branch
+        .orTee((error) => {
+          logger.error("Failed to create branch", {
+            branchName,
+            error: error.message,
+          });
+        })
+        // Update the file on the new branch
         .andThen(({ sha, updatedContent }) =>
           ResultAsync.fromPromise(
             gitHubService.updateFile({
@@ -88,12 +109,19 @@ export const requestAzureAuthorization =
               owner: REPO_OWNER,
               path: filePath,
               repo: REPO_NAME,
-              sha,
+              sha, // Required by GitHub API to prevent conflicts
             }),
             (error) => error as Error,
           ),
         )
-        // Create pull request
+        .orTee((error) => {
+          logger.error("Failed to update file", {
+            branch: branchName,
+            error: error.message,
+            path: filePath,
+          });
+        })
+        // Create a pull request for review
         .andThen(() =>
           ResultAsync.fromPromise(
             gitHubService.createPullRequest({
@@ -107,5 +135,10 @@ export const requestAzureAuthorization =
             (error) => error as Error,
           ),
         )
+        .orTee((error) => {
+          logger.error("Failed to create pull request", {
+            error: error.message,
+          });
+        })
     );
   };

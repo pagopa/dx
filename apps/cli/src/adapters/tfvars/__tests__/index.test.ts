@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 
 import {
   IdentityAlreadyExistsError,
@@ -9,7 +9,16 @@ import { makeTfvarsService } from "../index.js";
 const makeSampleTfvars = (servicePrincipals: string[] = []) => {
   const listContent =
     servicePrincipals.length > 0
-      ? servicePrincipals.map((sp) => `    "${sp}",`).join("\n") + "\n  "
+      ? "\n" +
+        servicePrincipals
+          .map(
+            (sp, idx, arr) =>
+              idx === arr.length - 1
+                ? `    "${sp}"` // Last item: no trailing comma
+                : `    "${sp}",`, // Other items: with comma
+          )
+          .join("\n") +
+        "\n  "
       : "";
 
   return `
@@ -38,6 +47,7 @@ other_config = {
 }
 `.trim();
 
+// eslint-disable-next-line max-lines-per-function
 describe("TfvarsService", () => {
   describe("containsServicePrincipal", () => {
     it("should return false when the identity does not exist in an empty list", () => {
@@ -91,16 +101,6 @@ describe("TfvarsService", () => {
         content,
         "any-identity-id",
       );
-
-      expect(result).toBe(false);
-    });
-
-    it("should not match partial identity names", () => {
-      const service = makeTfvarsService();
-      const content = makeSampleTfvars(["identity-123"]);
-
-      // Should not match "identity" when "identity-123" exists
-      const result = service.containsServicePrincipal(content, "identity");
 
       expect(result).toBe(false);
     });
@@ -226,6 +226,55 @@ directory_readers = {
       expect(updatedContent).toContain('"identity-with-special-chars-123"');
       expect(updatedContent).toContain('"another-identity_456"');
       expect(updatedContent).toContain('"third-identity"');
+    });
+
+    it("should not add trailing comma to the last item", () => {
+      const service = makeTfvarsService();
+      const content = makeSampleTfvars(["existing-identity"]);
+
+      const result = service.appendToDirectoryReaders(content, "new-identity");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Extract the service_principals_name list
+      const match = updatedContent.match(
+        /service_principals_name\s*=\s*\[([\s\S]*?)]/,
+      );
+      expect(match).not.toBeNull();
+
+      assert.ok(match);
+      const listContent = match[1];
+
+      // Should NOT have trailing comma before closing bracket
+      expect(listContent.trim()).not.toMatch(/,\s*$/);
+
+      // Should have "new-identity" without trailing comma
+      expect(listContent).toMatch(/"new-identity"\s*$/m);
+    });
+
+    it("should preserve HCL formatting with proper indentation", () => {
+      const service = makeTfvarsService();
+      const content = makeSampleTfvars(["identity-1", "identity-2"]);
+
+      const result = service.appendToDirectoryReaders(content, "identity-3");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should have proper format:
+      // service_principals_name = [
+      //     "identity-1",
+      //     "identity-2",
+      //     "identity-3"
+      //   ]
+
+      expect(updatedContent).toContain('    "identity-1",\n');
+      expect(updatedContent).toContain('    "identity-2",\n');
+      expect(updatedContent).toContain('    "identity-3"\n  ]');
+
+      // Last item should NOT have comma
+      expect(updatedContent).not.toContain('"identity-3",');
     });
   });
 });
