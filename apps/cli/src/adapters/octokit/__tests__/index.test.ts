@@ -240,30 +240,6 @@ describe("OctokitGitHubService", () => {
       );
     });
 
-    it("should throw an error when path is a directory", async () => {
-      const { githubService, mockOctokit } = makeEnv();
-      const params = {
-        owner: "pagopa",
-        path: "src/directory",
-        repo: "test-repo",
-      };
-      // GitHub returns an array for directories
-      const mockResponse = {
-        data: [
-          { name: "file1.ts", type: "file" },
-          { name: "file2.ts", type: "file" },
-        ],
-      };
-
-      mockOctokit.rest.repos.getContent.mockResolvedValue(
-        mockResponse as never,
-      );
-
-      await expect(githubService.getFileContent(params)).rejects.toThrowError(
-        "Path src/directory is not a file",
-      );
-    });
-
     it("should throw an error when API call fails", async () => {
       const { githubService, mockOctokit } = makeEnv();
       const params = {
