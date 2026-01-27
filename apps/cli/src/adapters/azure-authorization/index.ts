@@ -1,11 +1,11 @@
 import { err, ok, Result } from "neverthrow";
 
 import {
+  AzureAuthorizationError,
+  AzureAuthorizationService,
   IdentityAlreadyExistsError,
-  InvalidTfvarsFormatError,
-  TfvarsError,
-  TfvarsService,
-} from "../../domain/tfvars.js";
+  InvalidAuthorizationFileFormatError,
+} from "../../domain/azure-authorization.js";
 
 /**
  * Regex pattern to match the directory_readers block and capture the service_principals_name list.
@@ -20,19 +20,20 @@ const DIRECTORY_READERS_REGEX =
   /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(][\s\S]*?})/;
 
 /**
- * Creates a TfvarsService implementation that uses regex-based parsing.
+ * Creates an AzureAuthorizationService implementation that uses regex-based parsing
+ * of terraform.tfvars files.
  */
-export const makeTfvarsService = (): TfvarsService => ({
+export const makeAzureAuthorizationService = (): AzureAuthorizationService => ({
   appendToDirectoryReaders(
     content: string,
     identityId: string,
-  ): Result<string, TfvarsError> {
+  ): Result<string, AzureAuthorizationError> {
     // Use regex to find and capture the directory_readers.service_principals_name list
     const match = content.match(DIRECTORY_READERS_REGEX);
 
     if (!match) {
       return err(
-        new InvalidTfvarsFormatError(
+        new InvalidAuthorizationFileFormatError(
           "Could not find directory_readers.service_principals_name list",
         ),
       );
