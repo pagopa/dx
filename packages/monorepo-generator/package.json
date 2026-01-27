@@ -2,6 +2,7 @@
   "name": "@pagopa/monorepo-generator",
   "version": "0.15.1",
   "type": "module",
+  "private": true,
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
     "type": "git",
