@@ -1,30 +1,31 @@
 # subscription roles defined in `eng-azure-authorization` repo
 
-# Resource Group
-resource "azurerm_role_assignment" "admins_group_rgs" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Owner role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "admins_group_subscription_owner" {
+  scope                = var.subscription_id
   role_definition_name = "Owner"
   principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group the complete ownership at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} AD Admin group the complete ownership at managed resource group scopes"
 }
 
-# Key Vault
-resource "azurerm_role_assignment" "admins_group_rgs_kv_data" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Key Vault Data Access Administrator role at subscription level with ABAC condition
+resource "azurerm_role_assignment" "admins_group_subscription_kv_data" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Data Access Administrator"
   principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group to changes to apply changes to KeyVault's data at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} AD Admin group to apply changes to KeyVault's data at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "admins_group_rgs_kv_admin" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Key Vault Administrator role at subscription level with ABAC condition
+resource "azurerm_role_assignment" "admins_group_subscription_kv_admin" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Administrator"
   principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group to changes to apply changes to KeyVault at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} AD Admin group to apply changes to KeyVault at managed resource group scopes"
 }

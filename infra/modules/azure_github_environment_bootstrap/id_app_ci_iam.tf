@@ -6,21 +6,22 @@ resource "azurerm_role_assignment" "app_ci_subscription_reader" {
   description          = "Allow ${var.repository.name} App CI identity to read resources at subscription scope"
 }
 
-# Resource Group
+# PagoPA IaC Reader role at subscription level with ABAC condition for managed resource groups
 resource "azurerm_role_assignment" "app_ci_subscription_pagopa_iac_reader" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+  scope                = var.subscription_id
   role_definition_name = "PagoPA IaC Reader"
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
-  description          = "Allow ${var.repository.name} App CI identity to read resources configuration at resource group scope. Allows to read AppServices and Function Apps configuration."
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CI identity to read resources configuration at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "app_ci_rgs_static_webapp_secrets" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# PagoPA Static Web Apps List Secrets role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_ci_subscription_static_webapp_secrets" {
+  scope                = var.subscription_id
   role_definition_name = "PagoPA Static Web Apps List Secrets"
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
-  description          = "Allow ${var.repository.name} App CI identity to to read Static Web Apps secrets at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CI identity to read Static Web Apps secrets at managed resource group scopes"
 }

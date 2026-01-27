@@ -1,19 +1,19 @@
-# Resource Group
-resource "azurerm_role_assignment" "devs_group_rgs" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "devs_group_subscription" {
+  scope                = var.subscription_id
   role_definition_name = "Contributor"
   principal_id         = var.entraid_groups.devs_object_id
-  description          = "Allow ${var.repository.name} AD Dev group to apply changes at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} AD Dev group to apply changes at managed resource group scopes"
 }
 
-# Key Vault
-resource "azurerm_role_assignment" "devs_group_tf_rgs_kv_secr" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Key Vault Secrets Officer role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "devs_group_subscription_kv_secr" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = var.entraid_groups.devs_object_id
-  description          = "Allow ${var.repository.name} AD Dev group to changes to KeyVault's secrets at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} AD Dev group to change KeyVault's secrets at managed resource group scopes"
 }

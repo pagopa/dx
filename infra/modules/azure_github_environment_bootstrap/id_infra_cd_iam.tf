@@ -13,23 +13,24 @@ resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
   description          = "Allow ${var.repository.name} Infra CD identity to manage IAM roles at subscription scope"
 }
 
-# Resource Group
-resource "azurerm_role_assignment" "infra_cd_rgs_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_cd_subscription_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to resources at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rgs_user_access_admin" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# User Access Administrator role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_cd_subscription_user_access_admin" {
+  scope                = var.subscription_id
   role_definition_name = "User Access Administrator"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to manage locks at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to manage locks at managed resource group scopes"
 }
 
 # VNet
@@ -103,32 +104,32 @@ resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
   description          = "Allow ${var.repository.name} Infra CD identity to apply changes to the Terraform state file Storage Account scope"
 }
 
-# Key Vault
-resource "azurerm_role_assignment" "infra_cd_rgs_kv_secr" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Key Vault roles at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_cd_subscription_kv_secr" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to changes to KeyVault's secrets at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's secrets at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rgs_kv_cert" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_cd_subscription_kv_cert" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Certificates Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's certificates at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's certificates at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_cd_rgs_kv_crypto" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_cd_subscription_kv_crypto" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Crypto Officer"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's keys at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to change KeyVault's keys at managed resource group scopes"
 }
 
 resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
@@ -141,40 +142,40 @@ resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
   secret_permissions = ["Get", "List", "Set"]
 }
 
-# Storage Account - Blob, Queue and Table
-resource "azurerm_role_assignment" "infra_cd_rgs_st_blob_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Storage Account - Blob, Queue and Table roles at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_cd_subscription_st_blob_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account blobs monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account blobs at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_st_queue_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_cd_subscription_st_queue_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account queues at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_st_table_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_cd_subscription_st_table_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account tables monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to write Storage Account tables at managed resource group scopes"
 }
 
-# Container App
-resource "azurerm_role_assignment" "infra_cd_rgs_ca_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Container App role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_cd_subscription_ca_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Container Apps Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to write Container App configuration at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to Container App configuration at managed resource group scopes"
 }

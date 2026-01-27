@@ -6,41 +6,44 @@ resource "azurerm_role_assignment" "app_cd_subscription_reader" {
   description          = "Allow ${var.repository.name} App CD identity to read resources at subscription scope"
 }
 
-# Resource Group
-resource "azurerm_role_assignment" "app_cd_rgs_website_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Website Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_cd_subscription_website_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Website Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to deploy code to AppService and Function Apps at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CD identity to deploy code to AppService and Function Apps at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "app_cd_rgs_cdn_profile_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# CDN Profile Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_cd_subscription_cdn_profile_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "CDN Profile Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply purge CDNs at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CD identity to apply purge CDNs at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "app_cd_rgs_cae_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Container Apps Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_cd_subscription_cae_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Container Apps Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply changes to Container App Environment at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CD identity to apply changes to Container App Environment at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "app_cd_rgs_blob_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Storage Blob Data Contributor role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_cd_subscription_blob_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply changes to resources at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CD identity to apply changes to resources at managed resource group scopes"
 }
 
 resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {
@@ -50,11 +53,12 @@ resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {
   description          = "Allow ${var.repository.name} App CD identity to apply changes to the Terraform state file Storage Account scope"
 }
 
-resource "azurerm_role_assignment" "app_cd_rgs_static_webapp_secrets" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# PagoPA Static Web Apps List Secrets role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "app_cd_subscription_static_webapp_secrets" {
+  scope                = var.subscription_id
   role_definition_name = "PagoPA Static Web Apps List Secrets"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to to read Static Web Apps secrets at ${each.value} resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} App CD identity to read Static Web Apps secrets at managed resource group scopes"
 }

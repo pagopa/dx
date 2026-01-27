@@ -20,13 +20,13 @@ resource "azurerm_role_assignment" "infra_ci_subscription_pagopa_iac_reader" {
   description          = "Allow ${var.repository.name} Infra CI identity to read resources configuration at subscription scope"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_cosmos_contributor" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_ci_subscription_cosmos_contributor" {
+  scope                = var.subscription_id
   role_definition_name = "DocumentDB Account Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read Cosmos DB configuration at resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read Cosmos DB configuration at managed resource group scopes"
 }
 
 # Storage Account - Terraform state file
@@ -37,32 +37,32 @@ resource "azurerm_role_assignment" "infra_ci_tf_st_blob_contributor" {
   description          = "Allow ${var.repository.name} Infra CI identity to apply changes to the Terraform state file Storage Account scope"
 }
 
-# Key Vault
-resource "azurerm_role_assignment" "infra_ci_rgs_kv_secr" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Key Vault roles at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_ci_subscription_kv_secr" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's secrets at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's secrets at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_kv_cert" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_ci_subscription_kv_cert" {
+  scope                = var.subscription_id
   role_definition_name = "Key Vault Certificate User"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's certificates at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's certificates at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_kv_crypto" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
-  role_definition_name = "Key Vault Crypto Officer" # Need officer to get rotation policy: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key#example-usage
+resource "azurerm_role_assignment" "infra_ci_subscription_kv_crypto" {
+  scope                = var.subscription_id
+  role_definition_name = "Key Vault Crypto Officer"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's keys at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read KeyVault's keys at managed resource group scopes"
 }
 
 resource "azurerm_key_vault_access_policy" "infra_ci_kv_common" {
@@ -75,50 +75,40 @@ resource "azurerm_key_vault_access_policy" "infra_ci_kv_common" {
   secret_permissions = ["Get", "List"]
 }
 
-# Storage Account - Blob and Queue
-resource "azurerm_role_assignment" "infra_ci_rgs_st_blob_reader" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Storage Account - Blob and Queue roles at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_ci_subscription_st_blob_reader" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account blobs monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account blobs at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_st_queue_reader" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_ci_subscription_st_queue_reader" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Queue Data Reader"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account queues monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account queues at managed resource group scopes"
 }
 
-resource "azurerm_role_assignment" "infra_ci_rgs_st_table_reader" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+resource "azurerm_role_assignment" "infra_ci_subscription_st_table_reader" {
+  scope                = var.subscription_id
   role_definition_name = "Storage Table Data Reader"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account tables monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read Storage Account tables at managed resource group scopes"
 }
 
-# API Management
-resource "azurerm_role_assignment" "infra_ci_subscription_apim_secrets" {
-  count = local.has_apim
-
-  scope                = var.apim_id
-  role_definition_name = "PagoPA API Management Service List Secrets"
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read secrets at APIM scope"
-}
-
-# Container App
-resource "azurerm_role_assignment" "infra_ci_rgs_ca_operator" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
+# Container App role at subscription level with ABAC condition for managed resource groups
+resource "azurerm_role_assignment" "infra_ci_subscription_ca_operator" {
+  scope                = var.subscription_id
   role_definition_name = "Container Apps Operator"
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read Container App configuration at monorepository resource group scope"
+  condition            = local.condition_for_managed_resource_groups
+  condition_version    = "2.0"
+  description          = "Allow ${var.repository.name} Infra CI identity to read Container App configuration at managed resource group scopes"
 }

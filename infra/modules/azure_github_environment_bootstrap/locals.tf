@@ -117,4 +117,11 @@ locals {
       "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
     }
   }
+
+  # ABAC condition to restrict role assignments to managed resource groups
+  # This condition allows actions only on resource groups whose IDs match those in local.resource_group_ids
+  condition_for_managed_resource_groups = join(" || ", [
+    for rg_id in values(local.resource_group_ids) : "(@Resource[Microsoft.Authorization/resourceGroups/resourceId] StringEquals '${rg_id}')"
+  ])
 }
+

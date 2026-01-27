@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## Unreleased
+
+### Minor Changes
+
+- Optimize role assignments using Azure RBAC ABAC conditions: consolidated role assignments from resource group scope to subscription scope with ABAC conditions to reduce the number of assignments and improve Terraform performance when managing multiple resource groups
+
 ## 3.1.2
 
 ### Patch Changes
