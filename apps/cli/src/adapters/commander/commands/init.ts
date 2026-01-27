@@ -1,9 +1,3 @@
-import { setMonorepoGenerator } from "@pagopa/monorepo-generator";
-import {
-  Payload as Answers,
-  payloadSchema as answersSchema,
-  PLOP_MONOREPO_GENERATOR_NAME,
-} from "@pagopa/monorepo-generator/generators/monorepo";
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
@@ -19,6 +13,12 @@ import {
   RepositoryNotFoundError,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import {
+  Payload as Answers,
+  payloadSchema as answersSchema,
+  PLOP_MONOREPO_GENERATOR_NAME,
+} from "../../plop/generators/monorepo/index.js";
+import { setMonorepoGenerator } from "../../plop/index.js";
 import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
 import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";

@@ -22,7 +22,6 @@ import { getLogger } from "@logtape/logtape";
 import { z } from "zod/v4";
 
 import { githubRepoSchema } from "../../../../domain/github-repo.js";
-import { workspaceSchema } from "../../../../domain/workspace.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 
 const initSchema = z.object({
@@ -36,6 +35,10 @@ const initSchema = z.object({
 
 const tagsSchema = z.record(z.string(), z.string().min(1));
 
+export const workspaceSchema = z.object({
+  domain: z.string().default(""),
+});
+
 export const payloadSchema = z.object({
   env: environmentSchema,
   github: githubRepoSchema,
@@ -46,10 +49,10 @@ export const payloadSchema = z.object({
 
 export type Payload = z.infer<typeof payloadSchema>;
 
-export interface PromptsDependencies {
+export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
-}
+};
 
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (inquirer) => {

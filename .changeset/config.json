@@ -3,7 +3,6 @@
   "changelog": "@changesets/cli/changelog",
   "commit": false,
   "fixed": [],
-  "linked": [["@pagopa/dx-cli", "@pagopa/monorepo-generator"]],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",

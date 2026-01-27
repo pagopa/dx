@@ -1,5 +1,4 @@
 ---
-"@pagopa/monorepo-generator": patch
 "@pagopa/dx-mcpprompts": patch
 ---
 

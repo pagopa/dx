@@ -13,7 +13,9 @@
     "CLI"
   ],
   "files": [
-    "bin"
+    "bin",
+    "dist",
+    "templates"
   ],
   "bin": {
     "dx": "./bin/index.js"
@@ -21,7 +23,6 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@pagopa/dx-savemoney": "workspace:^",
-    "@pagopa/monorepo-generator": "workspace:^",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "core-js": "^3.47.0",
@@ -34,7 +35,17 @@
     "replace-in-file": "^8.4.0",
     "semver": "catalog:",
     "yaml": "^2.8.2",
-    "zod": "^4.2.1"
+    "zod": "^4.2.1",
+    "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-msi": "^2.2.0",
+    "@azure/arm-resourcegraph": "^4.2.1",
+    "@azure/arm-resources": "^7.0.0",
+    "@azure/arm-resources-subscriptions": "^2.1.0",
+    "@azure/arm-storage": "^19.1.0",
+    "@azure/identity": "^4.13.0",
+    "@azure/storage-blob": "^12.29.1",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "inquirer": "^9.3.8"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -45,16 +56,17 @@
     "eslint": "catalog:",
     "memfs": "^4.51.1",
     "prettier": "catalog:",
-    "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vitest-mock-extended": "catalog:"
+    "vitest-mock-extended": "catalog:",
+    "@types/inquirer": "^9.0.9",
+    "node-plop": "^0.32.3",
+    "plop": "catalog:"
   },
   "scripts": {
-    "build": "tsup",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "plop": "plop"
   },
   "engines": {
     "node": ">=22.0.0"
