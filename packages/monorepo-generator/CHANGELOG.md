@@ -1,5 +1,17 @@
 # @pagopa/monorepo-generator
 
+## 0.15.1
+
+### Patch Changes
+
+- c1dfbea: Check Azure permission to initialize Subscription
+
+## 0.15.0
+
+### Minor Changes
+
+- 493ddd1: Add DX_DeploymentEnvironment generator
+
 ## 0.14.1
 
 ### Patch Changes

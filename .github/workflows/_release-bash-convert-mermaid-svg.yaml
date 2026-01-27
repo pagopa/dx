@@ -1,0 +1,85 @@
+name: Convert Mermaid diagrams to SVG on PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    paths:
+      - "infra/modules/**/diagram.mmd"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  convert-mermaid:
+    # Only run for PRs from the same repo, not forks (security: prevents untrusted code execution)
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Detect changed diagram.mmd files
+        id: changed-files
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+        with:
+          files: |
+            infra/modules/**/diagram.mmd
+          since_last_remote_commit: true
+
+      - name: Check if conversion is needed
+        id: find-file
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          # Get the first modified .mmd file
+          file=$(echo "$CHANGED_FILES" | tr ' ' '\n' | head -n 1)
+          echo "found=true" >> $GITHUB_OUTPUT
+          echo "path=$file" >> $GITHUB_OUTPUT
+          echo "Modified .mmd file: $file"
+
+      - name: Convert diagram into SVG
+        if: steps.find-file.outputs.found == 'true'
+        uses: pagopa/dx/actions/convert-mermaid-svg@main
+        with:
+          file_path: "${{ steps.find-file.outputs.path }}"
+
+      - name: Check and push SVG file
+        if: steps.find-file.outputs.found == 'true'
+        env:
+          MMD_FILE_PATH: ${{ steps.find-file.outputs.path }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          svg_file=$(dirname "$MMD_FILE_PATH")/diagram.svg
+          if [ -f "$svg_file" ]; then
+            git config user.name "dx-pagopa-bot"
+            git config user.email "dx-pagopa-github-bot@pagopa.it"
+            git add "$svg_file"
+            if ! git diff --cached --quiet; then
+              git commit -m "chore: add generated diagram.svg"
+
+              # Rebase to avoid potential conflicts
+              git fetch origin "$HEAD_REF"
+              if ! git rebase "origin/$HEAD_REF"; then
+                echo "Rebase failed, aborting and trying force push"
+                git rebase --abort
+                git push origin "HEAD:$HEAD_REF" --force-with-lease
+              else
+                git push origin "HEAD:$HEAD_REF"
+              fi
+            else
+              echo "No changes in SVG file to commit. Skipping commit and push."
+            fi
+          else
+            echo "SVG file not found at $svg_file"
+            exit 1
+          fi

@@ -23,7 +23,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "Dev"
     Owner       = "DevEx"
-    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/complete"
+    Source      = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/function_app"
     CostCenter  = "TS700 - ENGINEERING"
   }
 }

@@ -1,0 +1,14 @@
+{{#*inline "azurerm"}}
+backend "azurerm" {
+  resource_group_name  = "{{resourceGroupName}}"
+  storage_account_name = "{{storageAccountName}}"
+  container_name       = "terraform-state"
+  key                  = "{{key}}"
+  subscription_id      = "{{subscriptionId}}"
+  use_azuread_auth     = true
+}
+{{/inline}}
+
+terraform {
+  {{> (lookup terraform.backend 'type') terraform.backend key=terraformBackendKey  }}
+}

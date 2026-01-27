@@ -16,6 +16,6 @@ locals {
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/azure_app_service_plan_autoscaler/examples/develop"
+    Source         = "https://github.com/pagopa/dx/modules/azure_app_service_plan_autoscaler/examples/shared"
   }
 }

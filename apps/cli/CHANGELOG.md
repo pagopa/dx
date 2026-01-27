@@ -1,5 +1,32 @@
 # @pagopa/dx-cli
 
+## 0.15.2
+
+### Patch Changes
+
+- 73f2d78: Add version to workflow name
+
+## 0.15.1
+
+### Patch Changes
+
+- 58cdd75: Fix regex to preserve whitespace when replacing package manager names
+- Updated dependencies [c1dfbea]
+  - @pagopa/monorepo-generator@0.15.1
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [493ddd1]
+  - @pagopa/monorepo-generator@0.15.0
+
+## 0.14.5
+
+### Patch Changes
+
+- 4cc5bf7: The `init` command now checks if the specified GitHub repository already exists before proceeding. If the repository exists, the command will fail early with a clear error message, preventing accidental overwrites and ensuring that only new repositories can be created.
+
 ## 0.14.4
 
 ### Patch Changes

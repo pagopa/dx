@@ -68,7 +68,7 @@ jobs:
 `;
     const output = migrate(input, "workflow.yaml");
     expect(output).toContain(
-      `uses: pagopa/dx/.github/workflows/release-azure-appsvc.yaml@${sha}`,
+      `uses: pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@${sha}`,
     );
   });
 

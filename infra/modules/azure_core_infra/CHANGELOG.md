@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.3.1
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 2.3.0
 
 ### Minor Changes

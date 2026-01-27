@@ -11,7 +11,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_app_service"></a> [azure\_app\_service](#module\_azure\_app\_service) | ../../../azure_app_service | n/a |
+| <a name="module_azure_app_service"></a> [azure\_app\_service](#module\_azure\_app\_service) | pagopa-dx/azure-app-service/azurerm | ~> 2.0 |
 
 ## Resources
 

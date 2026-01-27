@@ -166,3 +166,34 @@ variable "tls_version" {
   default     = 1.2
   description = "Minimum TLS version for the App Service."
 }
+
+variable "diagnostic_settings" {
+  type = object({
+    enabled                                   = bool
+    log_analytics_workspace_id                = optional(string)
+    diagnostic_setting_destination_storage_id = optional(string)
+  })
+
+  default = {
+    enabled                                   = false
+    log_analytics_workspace_id                = null
+    diagnostic_setting_destination_storage_id = null
+  }
+
+  description = <<-EOT
+    Define if diagnostic settings should be enabled.
+    If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
+    optionally the ID of the Storage Account where logs should be sent.
+  EOT
+
+  validation {
+    condition = (
+      !var.diagnostic_settings.enabled
+      || (
+        var.diagnostic_settings.log_analytics_workspace_id != null
+        || var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
+      )
+    )
+    error_message = "At least one of log_analytics_workspace_id or diagnostic_setting_destination_storage_id must be specified when diagnostic settings are enabled."
+  }
+}

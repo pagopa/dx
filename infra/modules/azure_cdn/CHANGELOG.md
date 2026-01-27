@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.4.0
+
+### Minor Changes
+
+- 7bdef8f: Update diagnostic settings configuration, add new tests, align example
+
 ## 0.3.3
 
 ### Patch Changes
