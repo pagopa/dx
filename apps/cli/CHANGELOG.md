@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.15.1
+
+### Patch Changes
+
+- 58cdd75: Fix regex to preserve whitespace when replacing package manager names
+- Updated dependencies [c1dfbea]
+  - @pagopa/monorepo-generator@0.15.1
+
 ## 0.15.0
 
 ### Patch Changes
