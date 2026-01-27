@@ -27,7 +27,7 @@ module "storage_account" {
   use_case            = "default"
   subnet_pep_id       = data.azurerm_subnet.pep.id
 
-  force_public_network_access_enabled = false # Private access only
+  force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 
   static_website = {
     enabled        = true

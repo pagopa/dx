@@ -27,8 +27,8 @@ This will create:
 
 The [advanced example](./advanced) demonstrates advanced features including:
 
-- **WAF Protection**: Web Application Firewall with DefaultRuleSet and BotManagerRuleSet
-- **Managed Identity**: Automatic role assignment for private storage access
+- **WAF Protection**: Web Application Firewall policy (no managed rule sets on Standard SKU; users must configure custom rules)
+- **Managed Identity**: Automatic role assignment for managed identity authentication to storage
 - **Existing Profile**: Reusing an existing CDN FrontDoor profile
 - **Multiple Origins**: Failover configuration with priority-based routing
 
