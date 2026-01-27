@@ -2,6 +2,7 @@ import { Octokit } from "octokit";
 import { DeepMockProxy, mock, mockDeep, MockProxy } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
+import { AzureAuthorizationService } from "../azure-authorization.js";
 import { GitHubService } from "../github.js";
 import {
   Dependency,
@@ -10,7 +11,6 @@ import {
   Script,
 } from "../package-json.js";
 import { RepositoryReader } from "../repository.js";
-import { TfvarsService } from "../tfvars.js";
 import { ValidationReporter } from "../validation.js";
 
 export const makeMockPackageJson = (
@@ -30,17 +30,18 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = (): {
+  azureAuthorizationService: MockProxy<AzureAuthorizationService>;
   gitHubService: MockProxy<GitHubService>;
   octokit: DeepMockProxy<Octokit>;
   packageJsonReader: MockProxy<PackageJsonReader>;
   repositoryReader: MockProxy<RepositoryReader>;
   validationReporter: MockProxy<ValidationReporter>;
 } => ({
+  azureAuthorizationService: mock<AzureAuthorizationService>(),
   gitHubService: mock<GitHubService>(),
   octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
-  tfvarsService: mock<TfvarsService>(),
   validationReporter: mock<ValidationReporter>(),
 });
 

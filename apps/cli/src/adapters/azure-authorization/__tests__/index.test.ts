@@ -2,9 +2,9 @@ import { assert, describe, expect, it } from "vitest";
 
 import {
   IdentityAlreadyExistsError,
-  InvalidTfvarsFormatError,
-} from "../../../domain/tfvars.js";
-import { makeTfvarsService } from "../index.js";
+  InvalidAuthorizationFileFormatError,
+} from "../../../domain/azure-authorization.js";
+import { makeAzureAuthorizationService } from "../index.js";
 
 const makeSampleTfvars = (servicePrincipals: string[] = []) => {
   const listContent =
@@ -48,10 +48,10 @@ other_config = {
 `.trim();
 
 // eslint-disable-next-line max-lines-per-function
-describe("TfvarsService", () => {
+describe("AzureAuthorizationService", () => {
   describe("containsServicePrincipal", () => {
     it("should return false when the identity does not exist in an empty list", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
       const result = service.containsServicePrincipal(
@@ -63,7 +63,7 @@ describe("TfvarsService", () => {
     });
 
     it("should return false when the identity does not exist in a populated list", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([
         "existing-identity-1",
         "existing-identity-2",
@@ -78,7 +78,7 @@ describe("TfvarsService", () => {
     });
 
     it("should return true when the identity exists in the list", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([
         "existing-identity-1",
         "target-identity",
@@ -94,7 +94,7 @@ describe("TfvarsService", () => {
     });
 
     it("should return false when directory_readers block does not exist", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
       const result = service.containsServicePrincipal(
@@ -108,7 +108,7 @@ describe("TfvarsService", () => {
 
   describe("appendToDirectoryReaders", () => {
     it("should append identity to an empty service_principals_name list", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
       const result = service.appendToDirectoryReaders(
@@ -128,7 +128,7 @@ describe("TfvarsService", () => {
     });
 
     it("should append identity to an existing service_principals_name list", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([
         "existing-identity-1",
         "existing-identity-2",
@@ -148,7 +148,7 @@ describe("TfvarsService", () => {
     });
 
     it("should return IdentityAlreadyExistsError when identity already exists", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
       const result = service.appendToDirectoryReaders(
@@ -163,8 +163,8 @@ describe("TfvarsService", () => {
       expect(result._unsafeUnwrapErr().message).toContain("existing-identity");
     });
 
-    it("should return InvalidTfvarsFormatError when directory_readers block is missing", () => {
-      const service = makeTfvarsService();
+    it("should return InvalidAuthorizationFileFormatError when directory_readers block is missing", () => {
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
       const result = service.appendToDirectoryReaders(
@@ -174,7 +174,7 @@ describe("TfvarsService", () => {
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
-        InvalidTfvarsFormatError,
+        InvalidAuthorizationFileFormatError,
       );
       expect(result._unsafeUnwrapErr().message).toContain(
         "Could not find directory_readers.service_principals_name list",
@@ -182,7 +182,7 @@ describe("TfvarsService", () => {
     });
 
     it("should preserve other content in the tfvars file", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
       const result = service.appendToDirectoryReaders(
@@ -202,7 +202,7 @@ describe("TfvarsService", () => {
     });
 
     it("should handle complex formatting in existing lists", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       // Create a more complex tfvars content
       const complexContent = `
 subscription_name = "complex-subscription"
@@ -229,7 +229,7 @@ directory_readers = {
     });
 
     it("should not add trailing comma to the last item", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
       const result = service.appendToDirectoryReaders(content, "new-identity");
@@ -254,7 +254,7 @@ directory_readers = {
     });
 
     it("should preserve HCL formatting with proper indentation", () => {
-      const service = makeTfvarsService();
+      const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["identity-1", "identity-2"]);
 
       const result = service.appendToDirectoryReaders(content, "identity-3");

@@ -1,13 +1,13 @@
 import "core-js/actual/set/index.js";
 import { Octokit } from "octokit";
 
+import { makeAzureAuthorizationService } from "./adapters/azure-authorization/index.js";
 import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import { OctokitGitHubService } from "./adapters/octokit/index.js";
-import { makeTfvarsService } from "./adapters/tfvars/index.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
@@ -20,7 +20,7 @@ export const runCli = (version: string) => {
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();
   const validationReporter = makeValidationReporter();
-  const tfvarsService = makeTfvarsService();
+  const azureAuthorizationService = makeAzureAuthorizationService();
 
   const octokit = new Octokit({
     auth: process.env.GITHUB_TOKEN,
@@ -29,10 +29,10 @@ export const runCli = (version: string) => {
   const gitHubService = new OctokitGitHubService(octokit);
 
   const deps: Dependencies = {
+    azureAuthorizationService,
     gitHubService,
     packageJsonReader,
     repositoryReader,
-    tfvarsService,
     validationReporter,
   };
 
@@ -43,7 +43,7 @@ export const runCli = (version: string) => {
     listCodemods: listCodemods(codemodRegistry),
     requestAzureAuthorization: requestAzureAuthorization(
       gitHubService,
-      tfvarsService,
+      azureAuthorizationService,
     ),
   };
 
