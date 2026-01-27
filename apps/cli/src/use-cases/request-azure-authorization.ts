@@ -66,20 +66,19 @@ export const requestAzureAuthorization =
             );
           }
 
-          const modifyResult = tfvarsService.appendToDirectoryReaders(
-            content,
-            bootstrapIdentityId,
-          );
-
-          if (modifyResult.isErr()) {
-            logger.error("Failed to modify tfvars", {
-              error: modifyResult.error.message,
-            });
-            return errAsync(modifyResult.error);
-          }
-
           // Return both the file SHA (needed for update) and the updated content
-          return okAsync({ sha, updatedContent: modifyResult.value });
+          return tfvarsService
+            .appendToDirectoryReaders(content, bootstrapIdentityId)
+            .mapErr((error) => {
+              logger.error("Failed to modify tfvars", {
+                error: error.message,
+              });
+              return error;
+            })
+            .match(
+              (updatedContent) => okAsync({ sha, updatedContent }),
+              (error) => errAsync(error),
+            );
         })
         .andThen(
           ({ sha, updatedContent }) =>
