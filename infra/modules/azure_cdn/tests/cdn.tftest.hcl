@@ -489,7 +489,7 @@ run "cdn_with_existing_profile" {
       location        = "italynorth"
       domain          = "modules"
       app_name        = "test"
-      instance_number = "02"
+      instance_number = "03"
     }
 
     existing_cdn_frontdoor_profile_id = run.setup_tests.cdn_profile_id
@@ -521,4 +521,111 @@ run "cdn_with_existing_profile" {
     condition     = length(data.azurerm_cdn_frontdoor_profile.existing) == 1
     error_message = "Data source for existing CDN profile should be created"
   }
+}
+
+run "cdn_with_existing_profile_and_waf" {
+  command = plan
+
+  variables {
+    resource_group_name = run.setup_tests.resource_group_name
+
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "04"
+    }
+
+    existing_cdn_frontdoor_profile_id = run.setup_tests.cdn_profile_id
+    waf_enabled                       = true
+
+    origins = {
+      tertiary = {
+        host_name = run.setup_tests.storage_account_host_name
+      }
+    }
+
+    custom_domains = [
+      {
+        host_name = "secure-existing.devex.pagopa.it",
+        dns = {
+          zone_name                = run.setup_tests.devex_pagopa_it_zone_name
+          zone_resource_group_name = run.setup_tests.resource_group_name
+        }
+      }
+    ]
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create CDN with existing profile and WAF enabled"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_profile.this) == 0
+    error_message = "CDN profile should not be created when existing_cdn_frontdoor_profile_id is provided"
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_firewall_policy.this) == 1
+    error_message = "WAF policy should be created when waf_enabled is true with existing profile"
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_security_policy.this) == 1
+    error_message = "Security policy should be created when waf_enabled is true with existing profile"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_firewall_policy.this[0].sku_name == "Standard_AzureFrontDoor"
+    error_message = "WAF policy SKU should match the existing profile SKU"
+  }
+}
+
+run "cdn_with_managed_identity_without_storage_account_id" {
+  command = plan
+
+  variables {
+    resource_group_name = run.setup_tests.resource_group_name
+
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "05"
+    }
+
+    origins = {
+      primary = {
+        host_name            = run.setup_tests.storage_account_host_name
+        use_managed_identity = true
+        # storage_account_id is intentionally omitted to test the precondition
+      }
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Test precondition: managed identity without storage account ID"
+    }
+  }
+
+  expect_failures = [
+    azurerm_role_assignment.origin_storage_blob_data_reader,
+  ]
 }

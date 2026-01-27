@@ -72,21 +72,6 @@ module "azure_cdn" {
     }
   }
 
-  # Optional: Enable WAF for security (default: false)
-  # waf_enabled = true
-
-  # Optional: Use managed identity for private storage access
-  # origins = {
-  #   primary = {
-  #     host_name            = module.storage_account.primary_web_host
-  #     use_managed_identity = true
-  #     storage_account_id   = module.storage_account.id
-  #   }
-  # }
-
-  # Optional: Reuse an existing CDN FrontDoor profile
-  # existing_cdn_frontdoor_profile_id = "/subscriptions/.../resourceGroups/.../providers/Microsoft.Cdn/profiles/..."
-
   custom_domains = [
     {
       # A record with name foo will be created in bar.com zone
