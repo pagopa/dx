@@ -1,5 +1,90 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.1
+
+### Patch Changes
+
+- f419161: Add `/ask` REST endpoint for AI-powered documentation Q&A
+
+  This change introduces a new `/ask` HTTP endpoint that enables direct natural language queries against the PagoPA DX documentation knowledge base with AI-generated responses.
+
+  **Endpoint**: `POST /ask`
+
+  **Request**:
+
+  ```json
+  {
+    "query": "How do I setup Terraform modules?"
+  }
+  ```
+
+  **Response**:
+
+  ```json
+  {
+    "answer": "AI-generated answer based on documentation...",
+    "sources": [
+      "https://dx.pagopa.it/docs/terraform/modules/",
+      "https://dx.pagopa.it/docs/getting-started/"
+    ]
+  }
+  ```
+
+  **Features**:
+  - Uses Amazon Bedrock RetrieveAndGenerate API for contextual AI responses
+  - Automatically converts S3 URIs to public documentation URLs
+  - Returns unique source URLs (no duplicates)
+  - Comprehensive error handling with detailed error messages
+  - CORS-enabled for browser usage
+
+  **Use Cases**:
+  - Quick documentation lookups via API
+  - Integration with chatbots or custom tools
+  - Automated documentation assistance in CI/CD pipelines
+
+- f419161: Add `/search` REST endpoint for documentation search
+
+  This change introduces a new `/search` HTTP endpoint that provides semantic search capabilities across the PagoPA DX documentation knowledge base.
+
+  **Endpoint**: `POST /search`
+
+  **Request**:
+
+  ```json
+  {
+    "query": "Azure naming conventions",
+    "number_of_results": 5
+  }
+  ```
+
+  **Response**:
+
+  ```json
+  {
+    "query": "Azure naming conventions",
+    "results": [
+      {
+        "content": "Documentation chunk content...",
+        "score": 0.9542,
+        "source": "https://dx.pagopa.it/docs/azure/naming/"
+      }
+    ]
+  }
+  ```
+
+  **Features**:
+  - Uses Amazon Bedrock Retrieve API with optional reranking
+  - Configurable result count (1-20, default: 5)
+  - Returns relevance scores for each result
+  - Automatically converts S3 URIs to public documentation URLs
+  - CORS-enabled for browser usage
+
+  **Use Cases**:
+  - Semantic documentation search
+  - Finding relevant code examples and patterns
+  - Building custom search interfaces
+  - Research and documentation analysis
+
 ## 0.1.0
 
 ### Minor Changes
