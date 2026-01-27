@@ -8,7 +8,5 @@
     "declaration": true,
     "target": "ES2022"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
