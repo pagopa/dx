@@ -11,6 +11,7 @@ import {
   IdentityAlreadyExistsError,
   InvalidTfvarsFormatError,
   RequestAzureAuthorizationInput,
+  requestAzureAuthorizationInputSchema,
   TfvarsService,
 } from "../../domain/tfvars.js";
 import { requestAzureAuthorization } from "../request-azure-authorization.js";
@@ -26,10 +27,10 @@ const makeEnv = () => {
 };
 
 const makeSampleInput = (): RequestAzureAuthorizationInput =>
-  ({
+  requestAzureAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
     subscriptionName: "test-subscription",
-  }) as RequestAzureAuthorizationInput;
+  });
 
 // eslint-disable-next-line max-lines-per-function
 describe("requestAzureAuthorization", () => {
