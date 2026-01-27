@@ -141,7 +141,10 @@ directory_readers = {
       )(input);
 
       expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(FileNotFoundError);
+      const error = result._unsafeUnwrapErr();
+      expect(error.message).toContain("Unable to get");
+      expect(error.message).toContain("test-subscription/terraform.tfvars");
+      expect(error.cause).toBeInstanceOf(FileNotFoundError);
 
       // Should not proceed with other operations
       expect(tfvarsService.containsServicePrincipal).not.toHaveBeenCalled();
@@ -240,7 +243,7 @@ directory_readers = {
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr().message).toContain(
-        "Failed to create branch",
+        "Unable to create branch",
       );
 
       // Should not proceed with file update
@@ -275,9 +278,7 @@ directory_readers = {
       )(input);
 
       expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr().message).toContain(
-        "Failed to update file",
-      );
+      expect(result._unsafeUnwrapErr().message).toContain("Unable to update");
 
       // Should not proceed with PR creation
       expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
@@ -313,7 +314,7 @@ directory_readers = {
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr().message).toContain(
-        "Failed to create pull request",
+        "Unable to create pull request",
       );
     });
   });

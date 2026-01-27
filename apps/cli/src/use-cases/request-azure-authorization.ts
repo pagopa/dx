@@ -43,13 +43,13 @@ export const requestAzureAuthorization =
           ref: BASE_BRANCH,
           repo: REPO_NAME,
         }),
-        (error) => error as Error,
+        (cause) =>
+          new Error(`Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`, {
+            cause,
+          }),
       )
         .orTee((error) => {
-          logger.error("Failed to fetch file content", {
-            error: error.message,
-            path: filePath,
-          });
+          logger.error(error.message);
         })
         // Check for duplicates and modify the file content
         .andThen(({ content, sha }) => {
@@ -90,14 +90,15 @@ export const requestAzureAuthorization =
                 owner: REPO_OWNER,
                 repo: REPO_NAME,
               }),
-              (error) => error as Error,
+              (cause) =>
+                new Error(
+                  `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                  { cause },
+                ),
             ).map(() => ({ sha, updatedContent })), // Pass along sha and content to next step
         )
         .orTee((error) => {
-          logger.error("Failed to create branch", {
-            branchName,
-            error: error.message,
-          });
+          logger.error(error.message);
         })
         // Update the file on the new branch
         .andThen(({ sha, updatedContent }) =>
@@ -111,15 +112,15 @@ export const requestAzureAuthorization =
               repo: REPO_NAME,
               sha, // Required by GitHub API to prevent conflicts
             }),
-            (error) => error as Error,
+            (cause) =>
+              new Error(
+                `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                { cause },
+              ),
           ),
         )
         .orTee((error) => {
-          logger.error("Failed to update file", {
-            branch: branchName,
-            error: error.message,
-            path: filePath,
-          });
+          logger.error(error.message);
         })
         // Create a pull request for review
         .andThen(() =>
@@ -132,13 +133,15 @@ export const requestAzureAuthorization =
               repo: REPO_NAME,
               title: `Add directory reader for ${subscriptionName}`,
             }),
-            (error) => error as Error,
+            (cause) =>
+              new Error(
+                `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
+                { cause },
+              ),
           ),
         )
         .orTee((error) => {
-          logger.error("Failed to create pull request", {
-            error: error.message,
-          });
+          logger.error(error.message);
         })
     );
   };
