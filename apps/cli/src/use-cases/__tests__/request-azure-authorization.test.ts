@@ -80,10 +80,17 @@ directory_readers = {
       );
 
       // Verify correct API calls
+      expect(gitHubService.createBranch).toHaveBeenCalledWith({
+        branchName: "feats/add-test-subscription-bootstrap-identity",
+        fromRef: "main",
+        owner: "pagopa",
+        repo: "eng-azure-authorization",
+      });
+
       expect(gitHubService.getFileContent).toHaveBeenCalledWith({
         owner: "pagopa",
         path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
-        ref: "main",
+        ref: "feats/add-test-subscription-bootstrap-identity",
         repo: "eng-azure-authorization",
       });
 
@@ -96,13 +103,6 @@ directory_readers = {
         originalContent,
         "test-bootstrap-identity-id",
       );
-
-      expect(gitHubService.createBranch).toHaveBeenCalledWith({
-        branchName: "feats/add-test-subscription-bootstrap-identity",
-        fromRef: "main",
-        owner: "pagopa",
-        repo: "eng-azure-authorization",
-      });
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith({
         branch: "feats/add-test-subscription-bootstrap-identity",
@@ -130,6 +130,7 @@ directory_readers = {
       const { gitHubService, tfvarsService } = makeEnv();
       const input = makeSampleInput();
 
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockRejectedValue(
         new FileNotFoundError(
           "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
@@ -149,7 +150,7 @@ directory_readers = {
 
       // Should not proceed with other operations
       expect(tfvarsService.containsServicePrincipal).not.toHaveBeenCalled();
-      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when identity already exists", async () => {
@@ -163,6 +164,7 @@ directory_readers = {
 }
 `.trim();
 
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content,
         sha: "sha-123",
@@ -181,7 +183,7 @@ directory_readers = {
 
       // Should not proceed with modification or branch creation
       expect(tfvarsService.appendToDirectoryReaders).not.toHaveBeenCalled();
-      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when tfvars format is invalid", async () => {
@@ -189,6 +191,7 @@ directory_readers = {
       const input = makeSampleInput();
       const invalidContent = "invalid content without directory_readers";
 
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content: invalidContent,
         sha: "sha-123",
@@ -213,26 +216,13 @@ directory_readers = {
       );
 
       // Should not proceed with branch creation
-      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when branch creation fails", async () => {
       const { gitHubService, tfvarsService } = makeEnv();
       const input = makeSampleInput();
-      const content = `
-directory_readers = {
-  service_principals_name = []
-}
-`.trim();
 
-      gitHubService.getFileContent.mockResolvedValue({
-        content,
-        sha: "sha-123",
-      });
-      tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue(
-        ok("updated content"),
-      );
       gitHubService.createBranch.mockRejectedValue(
         new Error("Failed to create branch: branch already exists"),
       );
@@ -247,7 +237,8 @@ directory_readers = {
         "Unable to create branch",
       );
 
-      // Should not proceed with file update
+      // Should not proceed with file reading or update
+      expect(gitHubService.getFileContent).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
