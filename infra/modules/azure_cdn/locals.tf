@@ -33,7 +33,8 @@ locals {
   }
 
   # Map of origins that use managed identity to set RBAC
+  # Filter based only on use_managed_identity flag to avoid "known after apply" issues
   origins_with_rbac = {
-    for k, v in var.origins : k => v if v.use_managed_identity && v.storage_account_id != null
+    for k, v in var.origins : k => v if v.use_managed_identity
   }
 }

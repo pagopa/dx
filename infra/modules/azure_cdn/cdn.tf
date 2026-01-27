@@ -78,31 +78,24 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 resource "azurerm_cdn_frontdoor_firewall_policy" "this" {
   count = var.waf_enabled ? 1 : 0
 
-  name                = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_firewall_policy" })), "-", "")
+  name                = replace(replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" })), "-", ""), "fde", "fdfp")
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
   enabled             = true
   mode                = "Prevention"
 
-  managed_rule {
-    type    = "DefaultRuleSet"
-    version = "1.0"
-    action  = "Block"
-  }
-
-  managed_rule {
-    type    = "Microsoft_BotManagerRuleSet"
-    version = "1.0"
-    action  = "Log"
-  }
+  # Note: managed_rule blocks require Premium_AzureFrontDoor SKU
+  # For Standard SKU, use custom_rule blocks instead
 
   tags = local.tags
 }
 
 resource "azurerm_cdn_frontdoor_security_policy" "this" {
+  # Only create security policy if WAF is enabled and we have at least one domain (custom or endpoint)
   count = var.waf_enabled ? 1 : 0
 
-  name                     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_security_policy" }))
+  name = replace(replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" })), "-", ""), "fde", "fdsp")
+
   cdn_frontdoor_profile_id = local.profile_id
 
   security_policies {
@@ -110,6 +103,11 @@ resource "azurerm_cdn_frontdoor_security_policy" "this" {
       cdn_frontdoor_firewall_policy_id = azurerm_cdn_frontdoor_firewall_policy.this[0].id
 
       association {
+        # Always include the default endpoint
+        domain {
+          cdn_frontdoor_domain_id = azurerm_cdn_frontdoor_endpoint.this.id
+        }
+        # Include custom domains if any
         dynamic "domain" {
           for_each = azurerm_cdn_frontdoor_custom_domain.this
           content {
