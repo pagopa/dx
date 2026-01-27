@@ -9,6 +9,11 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
+  create_profile      = var.existing_cdn_frontdoor_profile_id == null
+  profile_id          = local.create_profile ? azurerm_cdn_frontdoor_profile.this[0].id : var.existing_cdn_frontdoor_profile_id
+  profile_name        = local.create_profile ? azurerm_cdn_frontdoor_profile.this[0].name : data.azurerm_cdn_frontdoor_profile.existing[0].name
+  profile_identity_id = local.create_profile ? azurerm_cdn_frontdoor_profile.this[0].identity[0].principal_id : data.azurerm_cdn_frontdoor_profile.existing[0].identity[0].principal_id
+
   is_apex = {
     for cd in var.custom_domains : cd.host_name => (cd.host_name == cd.dns.zone_name)
   }
@@ -25,5 +30,10 @@ locals {
     for custom_domain in var.custom_domains :
     "${custom_domain.custom_certificate.key_vault_name}:${custom_domain.custom_certificate.key_vault_resource_group_name}" => custom_domain...
     if lookup(local.is_apex, custom_domain.host_name, false) && !custom_domain.custom_certificate.key_vault_has_rbac_support
+  }
+
+  # Map of origins that use managed identity to set RBAC
+  origins_with_rbac = {
+    for k, v in var.origins : k => v if v.use_managed_identity && v.storage_account_id != null
   }
 }

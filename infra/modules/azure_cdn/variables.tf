@@ -22,10 +22,24 @@ variable "tags" {
 
 variable "origins" {
   type = map(object({
-    host_name = string
-    priority  = optional(number, 1)
+    host_name            = string
+    priority             = optional(number, 1)
+    storage_account_id   = optional(string, null)
+    use_managed_identity = optional(bool, false)
   }))
-  description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority)"
+  description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use_managed_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage_account_id if provided."
+}
+
+variable "existing_cdn_frontdoor_profile_id" {
+  type        = string
+  description = "Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile."
+  default     = null
+}
+
+variable "waf_enabled" {
+  type        = bool
+  description = "Whether to enable the WAF policy and associate it with the endpoint."
+  default     = false
 }
 
 variable "custom_domains" {
