@@ -16,10 +16,10 @@ const BASE_BRANCH = "main";
  * Creates a pull request to add a bootstrap identity to the Azure authorization repository.
  *
  * This use case:
- * 1. Fetches the terraform.tfvars file for the given subscription
- * 2. Checks if the identity already exists (returns error if so)
- * 3. Appends the bootstrap identity to the directory_readers.service_principals_name list
- * 4. Creates a new branch
+ * 1. Creates a new branch from main
+ * 2. Fetches the terraform.tfvars file from the new branch
+ * 3. Checks if the identity already exists (returns error if so)
+ * 4. Appends the bootstrap identity to the directory_readers.service_principals_name list
  * 5. Updates the file on the new branch
  * 6. Creates a pull request
  *
@@ -36,18 +36,39 @@ export const requestAzureAuthorization =
     const branchName = `feats/add-${subscriptionName}-bootstrap-identity`;
 
     return (
+      // Step 1: Create branch first to avoid race condition with main branch updates
       ResultAsync.fromPromise(
-        gitHubService.getFileContent({
+        gitHubService.createBranch({
+          branchName,
+          fromRef: BASE_BRANCH,
           owner: REPO_OWNER,
-          path: filePath,
-          ref: BASE_BRANCH,
           repo: REPO_NAME,
         }),
         (cause) =>
-          new Error(`Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`, {
-            cause,
-          }),
+          new Error(
+            `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+            { cause },
+          ),
       )
+        .orTee((error) => {
+          logger.error(error.message);
+        })
+        // Step 2: Fetch file content from the newly created branch
+        .andThen(() =>
+          ResultAsync.fromPromise(
+            gitHubService.getFileContent({
+              owner: REPO_OWNER,
+              path: filePath,
+              ref: branchName,
+              repo: REPO_NAME,
+            }),
+            (cause) =>
+              new Error(
+                `Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`,
+                { cause },
+              ),
+          ),
+        )
         .orTee((error) => {
           logger.error(error.message);
         })
@@ -79,25 +100,6 @@ export const requestAzureAuthorization =
               (updatedContent) => okAsync({ sha, updatedContent }),
               (error) => errAsync(error),
             );
-        })
-        .andThen(
-          ({ sha, updatedContent }) =>
-            ResultAsync.fromPromise(
-              gitHubService.createBranch({
-                branchName,
-                fromRef: BASE_BRANCH,
-                owner: REPO_OWNER,
-                repo: REPO_NAME,
-              }),
-              (cause) =>
-                new Error(
-                  `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
-                  { cause },
-                ),
-            ).map(() => ({ sha, updatedContent })), // Pass along sha and content to next step
-        )
-        .orTee((error) => {
-          logger.error(error.message);
         })
         // Update the file on the new branch
         .andThen(({ sha, updatedContent }) =>

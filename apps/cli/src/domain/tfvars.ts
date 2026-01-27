@@ -3,13 +3,28 @@ import { z } from "zod/v4";
 
 /**
  * Branded type for subscription name.
+ * Validates that the name contains only letters, numbers, and hyphens to prevent path traversal attacks.
  */
-const SubscriptionName = z.string().min(1).brand<"SubscriptionName">();
+const SubscriptionName = z
+  .string()
+  .min(1)
+  .regex(/^[A-Za-z0-9-]+$/, {
+    message: "Subscription name may contain only letters, numbers, and hyphens",
+  })
+  .brand<"SubscriptionName">();
 
 /**
  * Branded type for bootstrap identity ID.
+ * Validates that the ID contains only lowercase letters, numbers, and hyphens to prevent HCL injection attacks.
  */
-const BootstrapIdentityId = z.string().min(1).brand<"BootstrapIdentityId">();
+const BootstrapIdentityId = z
+  .string()
+  .min(1)
+  .regex(/^[a-z0-9-]+$/, {
+    message:
+      "Bootstrap identity ID may contain only lowercase letters, numbers, and hyphens",
+  })
+  .brand<"BootstrapIdentityId">();
 
 /**
  * Input validation schema for the request Azure authorization use case.
