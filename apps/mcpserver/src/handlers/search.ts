@@ -44,7 +44,7 @@ export async function handleSearchEndpoint(
     let jsonBody;
     try {
       jsonBody = await parseJsonBody(req);
-    } catch (error) {
+    } catch {
       return sendErrorResponse(res, 400, "Invalid JSON in request body");
     }
     const result = SearchBodySchema.safeParse(jsonBody);
