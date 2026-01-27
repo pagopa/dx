@@ -15,7 +15,13 @@ import {
 } from "../utils/http.js";
 
 const AskBodySchema = z.object({
-  query: z.string().trim().min(1, "Missing required field: query"),
+  query: z
+    .string({
+      invalid_type_error: "Missing required field: query",
+      required_error: "Missing required field: query",
+    })
+    .trim()
+    .min(1, "Missing required field: query"),
 });
 
 export async function handleAskEndpoint(
@@ -27,7 +33,12 @@ export async function handleAskEndpoint(
   const logger = getLogger(["mcpserver", "handler", "ask"]);
   logger.debug("Handling /ask endpoint");
   try {
-    const jsonBody = await parseJsonBody(req);
+    let jsonBody;
+    try {
+      jsonBody = await parseJsonBody(req);
+    } catch {
+      return sendErrorResponse(res, 400, "Invalid JSON in request body");
+    }
     const result = AskBodySchema.safeParse(jsonBody);
 
     if (!result.success) {

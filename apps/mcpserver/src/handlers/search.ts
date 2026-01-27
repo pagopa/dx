@@ -23,7 +23,13 @@ const SearchBodySchema = z.object({
     .max(20, "number_of_results must be between 1 and 20")
     .optional()
     .default(5),
-  query: z.string().trim().min(1, "Missing required field: query"),
+  query: z
+    .string({
+      invalid_type_error: "Missing required field: query",
+      required_error: "Missing required field: query",
+    })
+    .trim()
+    .min(1, "Missing required field: query"),
 });
 
 export async function handleSearchEndpoint(
@@ -35,7 +41,12 @@ export async function handleSearchEndpoint(
   const logger = getLogger(["mcpserver", "handler", "search"]);
   logger.debug("Handling /search endpoint");
   try {
-    const jsonBody = await parseJsonBody(req);
+    let jsonBody;
+    try {
+      jsonBody = await parseJsonBody(req);
+    } catch (error) {
+      return sendErrorResponse(res, 400, "Invalid JSON in request body");
+    }
     const result = SearchBodySchema.safeParse(jsonBody);
 
     if (!result.success) {
