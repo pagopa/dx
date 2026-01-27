@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.15.2
+
+### Patch Changes
+
+- 73f2d78: Add version to workflow name
+
 ## 0.15.1
 
 ### Patch Changes
