@@ -1,5 +1,11 @@
 # azure_core_values_exporter
 
+## 0.4.0
+
+### Minor Changes
+
+- d47051f: Add support for core states with multiple Azure Subscriptions
+
 ## 0.3.0
 
 ### Minor Changes

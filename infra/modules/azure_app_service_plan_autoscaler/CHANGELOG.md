@@ -1,5 +1,11 @@
 # azure_app_service_plan_autoscaler
 
+## 2.0.1
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 2.0.0
 
 ### Major Changes

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/monorepo-generator",
-  "version": "0.14.1",
+  "version": "0.15.1",
   "type": "module",
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
@@ -20,7 +20,18 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
+    "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-msi": "^2.2.0",
+    "@azure/arm-resourcegraph": "^4.2.1",
+    "@azure/arm-resources": "^7.0.0",
+    "@azure/arm-resources-subscriptions": "^2.1.0",
+    "@azure/arm-storage": "^19.1.0",
+    "@azure/identity": "^4.13.0",
+    "@azure/storage-blob": "^12.29.1",
+    "@logtape/logtape": "catalog:",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "execa": "catalog:",
+    "inquirer": "^9.3.8",
     "neverthrow": "catalog:",
     "octokit": "^5.0.5",
     "semver": "catalog:",
@@ -29,18 +40,18 @@
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
+    "@types/inquirer": "^9.0.9",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "node-plop": "^0.32.3",
     "plop": "catalog:",
-    "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"
   },
   "scripts": {
-    "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "plop": "plop"
   }
 }

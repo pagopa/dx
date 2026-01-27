@@ -1,5 +1,11 @@
 # azure_function_app
 
+## 4.2.0
+
+### Minor Changes
+
+- 14947fa: Add Diagnostic Settings configuration, add new tests, align example
+
 ## 4.1.1
 
 ### Patch Changes

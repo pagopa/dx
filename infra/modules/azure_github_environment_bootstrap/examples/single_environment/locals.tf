@@ -48,7 +48,7 @@ locals {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_github_environment_bootstrap/examples/multi-environment"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_github_environment_bootstrap/examples/single_environment"
     ManagementTeam = "Developer Experience"
     Test           = "true"
     TestName       = "Create Azure Github environment bootstrap for test"

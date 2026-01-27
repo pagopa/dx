@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 2.1.2
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 2.1.1
 
 ### Patch Changes
