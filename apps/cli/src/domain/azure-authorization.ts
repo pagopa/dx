@@ -34,49 +34,51 @@ export const requestAzureAuthorizationInputSchema = z.object({
   subscriptionName: SubscriptionName,
 });
 
-export type RequestAzureAuthorizationInput = z.infer<
-  typeof requestAzureAuthorizationInputSchema
->;
-
 /**
- * Service interface for manipulating terraform.tfvars files.
+ * Service interface for managing Azure authorization operations.
+ * Handles operations related to granting Azure resource access by managing
+ * authorization configuration files.
  */
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface TfvarsService {
+export interface AzureAuthorizationService {
   /**
    * Appends a service principal ID to the directory_readers.service_principals_name list.
-   * @param content - The current tfvars file content
+   * @param content - The current authorization file content
    * @param identityId - The identity ID to append
-   * @returns Updated tfvars content or error
+   * @returns Updated authorization file content or error
    */
   appendToDirectoryReaders(
     content: string,
     identityId: string,
-  ): Result<string, TfvarsError>;
+  ): Result<string, AzureAuthorizationError>;
 
   /**
    * Checks if a service principal ID already exists in the directory_readers list.
-   * @param content - The tfvars file content to search
+   * @param content - The authorization file content to search
    * @param identityId - The identity ID to check for
    * @returns true if the identity already exists
    */
   containsServicePrincipal(content: string, identityId: string): boolean;
 }
 
+export type RequestAzureAuthorizationInput = z.infer<
+  typeof requestAzureAuthorizationInputSchema
+>;
+
 /**
- * Base error class for tfvars-related errors.
+ * Base error class for Azure authorization-related errors.
  */
-export class TfvarsError extends Error {
+export class AzureAuthorizationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "TfvarsError";
+    this.name = "AzureAuthorizationError";
   }
 }
 
 /**
  * Error thrown when attempting to add an identity that already exists.
  */
-export class IdentityAlreadyExistsError extends TfvarsError {
+export class IdentityAlreadyExistsError extends AzureAuthorizationError {
   constructor(identityId: string) {
     super(`Identity "${identityId}" already exists in directory_readers`);
     this.name = "IdentityAlreadyExistsError";
@@ -84,11 +86,11 @@ export class IdentityAlreadyExistsError extends TfvarsError {
 }
 
 /**
- * Error thrown when the tfvars file format is invalid or cannot be parsed.
+ * Error thrown when the authorization file format is invalid or cannot be parsed.
  */
-export class InvalidTfvarsFormatError extends TfvarsError {
+export class InvalidAuthorizationFileFormatError extends AzureAuthorizationError {
   constructor(details: string) {
-    super(`Invalid tfvars format: ${details}`);
-    this.name = "InvalidTfvarsFormatError";
+    super(`Invalid authorization file format: ${details}`);
+    this.name = "InvalidAuthorizationFileFormatError";
   }
 }

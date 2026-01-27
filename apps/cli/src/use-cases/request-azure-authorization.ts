@@ -1,12 +1,12 @@
 import { getLogger } from "@logtape/logtape";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 
-import { GitHubService, PullRequest } from "../domain/github.js";
 import {
+  AzureAuthorizationService,
   IdentityAlreadyExistsError,
   RequestAzureAuthorizationInput,
-  TfvarsService,
-} from "../domain/tfvars.js";
+} from "../domain/azure-authorization.js";
+import { GitHubService, PullRequest } from "../domain/github.js";
 
 const REPO_OWNER = "pagopa";
 const REPO_NAME = "eng-azure-authorization";
@@ -24,11 +24,14 @@ const BASE_BRANCH = "main";
  * 6. Creates a pull request
  *
  * @param gitHubService - The GitHub service for API operations
- * @param tfvarsService - The service for manipulating tfvars content
+ * @param azureAuthorizationService - The service for managing Azure authorization
  * @returns A function that takes input and returns a ResultAsync with the created PullRequest
  */
 export const requestAzureAuthorization =
-  (gitHubService: GitHubService, tfvarsService: TfvarsService) =>
+  (
+    gitHubService: GitHubService,
+    azureAuthorizationService: AzureAuthorizationService,
+  ) =>
   (input: RequestAzureAuthorizationInput): ResultAsync<PullRequest, Error> => {
     const logger = getLogger(["dx-cli", "azure-auth"]);
     const { bootstrapIdentityId, subscriptionName } = input;
@@ -76,7 +79,10 @@ export const requestAzureAuthorization =
         .andThen(({ content, sha }) => {
           // Verify the identity doesn't already exist to prevent duplicates
           if (
-            tfvarsService.containsServicePrincipal(content, bootstrapIdentityId)
+            azureAuthorizationService.containsServicePrincipal(
+              content,
+              bootstrapIdentityId,
+            )
           ) {
             logger.warn("Identity already exists", {
               identityId: bootstrapIdentityId,
@@ -88,7 +94,7 @@ export const requestAzureAuthorization =
           }
 
           // Return both the file SHA (needed for update) and the updated content
-          return tfvarsService
+          return azureAuthorizationService
             .appendToDirectoryReaders(content, bootstrapIdentityId)
             .mapErr((error) => {
               logger.error("Failed to modify tfvars", {

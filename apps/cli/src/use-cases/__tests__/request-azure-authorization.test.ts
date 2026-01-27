@@ -3,26 +3,26 @@ import { describe, expect, it } from "vitest";
 import { mock } from "vitest-mock-extended";
 
 import {
+  AzureAuthorizationService,
+  IdentityAlreadyExistsError,
+  InvalidAuthorizationFileFormatError,
+  RequestAzureAuthorizationInput,
+  requestAzureAuthorizationInputSchema,
+} from "../../domain/azure-authorization.js";
+import {
   FileNotFoundError,
   GitHubService,
   PullRequest,
 } from "../../domain/github.js";
-import {
-  IdentityAlreadyExistsError,
-  InvalidTfvarsFormatError,
-  RequestAzureAuthorizationInput,
-  requestAzureAuthorizationInputSchema,
-  TfvarsService,
-} from "../../domain/tfvars.js";
 import { requestAzureAuthorization } from "../request-azure-authorization.js";
 
 const makeEnv = () => {
   const gitHubService = mock<GitHubService>();
-  const tfvarsService = mock<TfvarsService>();
+  const azureAuthorizationService = mock<AzureAuthorizationService>();
 
   return {
+    azureAuthorizationService,
     gitHubService,
-    tfvarsService,
   };
 };
 
@@ -36,7 +36,7 @@ const makeSampleInput = (): RequestAzureAuthorizationInput =>
 describe("requestAzureAuthorization", () => {
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = `
 directory_readers = {
@@ -56,8 +56,8 @@ directory_readers = {
         content: originalContent,
         sha: "original-sha-123",
       });
-      tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
+      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
         ok(updatedContent),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -70,7 +70,7 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isOk()).toBe(true);
@@ -94,15 +94,13 @@ directory_readers = {
         repo: "eng-azure-authorization",
       });
 
-      expect(tfvarsService.containsServicePrincipal).toHaveBeenCalledWith(
-        originalContent,
-        "test-bootstrap-identity-id",
-      );
+      expect(
+        azureAuthorizationService.containsServicePrincipal,
+      ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
 
-      expect(tfvarsService.appendToDirectoryReaders).toHaveBeenCalledWith(
-        originalContent,
-        "test-bootstrap-identity-id",
-      );
+      expect(
+        azureAuthorizationService.appendToDirectoryReaders,
+      ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith({
         branch: "feats/add-test-subscription-bootstrap-identity",
@@ -127,7 +125,7 @@ directory_readers = {
 
   describe("error handling", () => {
     it("should return error when file is not found", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -139,7 +137,7 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
@@ -149,12 +147,14 @@ directory_readers = {
       expect(error.cause).toBeInstanceOf(FileNotFoundError);
 
       // Should not proceed with other operations
-      expect(tfvarsService.containsServicePrincipal).not.toHaveBeenCalled();
+      expect(
+        azureAuthorizationService.containsServicePrincipal,
+      ).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when identity already exists", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
@@ -169,11 +169,11 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      tfvarsService.containsServicePrincipal.mockReturnValue(true);
+      azureAuthorizationService.containsServicePrincipal.mockReturnValue(true);
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
@@ -182,12 +182,14 @@ directory_readers = {
       );
 
       // Should not proceed with modification or branch creation
-      expect(tfvarsService.appendToDirectoryReaders).not.toHaveBeenCalled();
+      expect(
+        azureAuthorizationService.appendToDirectoryReaders,
+      ).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when tfvars format is invalid", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const invalidContent = "invalid content without directory_readers";
 
@@ -196,10 +198,10 @@ directory_readers = {
         content: invalidContent,
         sha: "sha-123",
       });
-      tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
+      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
         err(
-          new InvalidTfvarsFormatError(
+          new InvalidAuthorizationFileFormatError(
             "Could not find directory_readers.service_principals_name list",
           ),
         ),
@@ -207,12 +209,12 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
-        InvalidTfvarsFormatError,
+        InvalidAuthorizationFileFormatError,
       );
 
       // Should not proceed with branch creation
@@ -220,7 +222,7 @@ directory_readers = {
     });
 
     it("should return error when branch creation fails", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
       gitHubService.createBranch.mockRejectedValue(
@@ -229,7 +231,7 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
@@ -243,7 +245,7 @@ directory_readers = {
     });
 
     it("should return error when file update fails", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
@@ -255,8 +257,8 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
+      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
         ok("updated content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -266,7 +268,7 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
@@ -277,7 +279,7 @@ directory_readers = {
     });
 
     it("should return error when PR creation fails", async () => {
-      const { gitHubService, tfvarsService } = makeEnv();
+      const { azureAuthorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
@@ -289,8 +291,8 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      tfvarsService.containsServicePrincipal.mockReturnValue(false);
-      tfvarsService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
+      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
         ok("updated content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -301,7 +303,7 @@ directory_readers = {
 
       const result = await requestAzureAuthorization(
         gitHubService,
-        tfvarsService,
+        azureAuthorizationService,
       )(input);
 
       expect(result.isErr()).toBe(true);
