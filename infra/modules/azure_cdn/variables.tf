@@ -39,10 +39,9 @@ variable "existing_cdn_frontdoor_profile_id" {
     condition = (
       var.existing_cdn_frontdoor_profile_id == null
       || (
-        can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Cdn/profiles/[^/]+$", var.existing_cdn_frontdoor_profile_id))
-        && length(split("/", var.existing_cdn_frontdoor_profile_id)) >= 9
-        && lower(split("/", var.existing_cdn_frontdoor_profile_id)[6]) == "microsoft.cdn"
-        && lower(split("/", var.existing_cdn_frontdoor_profile_id)[7]) == "profiles"
+        can(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id))
+        && lower(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id)["resource_provider"]) == "microsoft.cdn"
+        && lower(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id)["resource_type"]) == "profiles"
       )
     )
     error_message = "existing_cdn_frontdoor_profile_id must be a valid Azure resource ID for a Microsoft.Cdn/profiles resource, e.g. /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Cdn/profiles/<name>."

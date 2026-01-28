@@ -38,8 +38,8 @@ locals {
     for k, v in var.origins : k => v if v.use_managed_identity
   }
 
-  # Define regex match for existing CDN Front Door Profile
-  existing_cdn_frontdoor_profile_match = var.existing_cdn_frontdoor_profile_id != null ? regex("^/subscriptions/[^/]+/resourceGroups/([^/]+)/providers/[^/]+/[^/]+/([^/]+)$", var.existing_cdn_frontdoor_profile_id) : []
+  # Define existing CDN FrontDoor profile resource ID parts
+  existing_cdn_frontdoor_profile_match = var.existing_cdn_frontdoor_profile_id != null ? provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id) : null
 
   # Check if existing Profile SKU is compatible with WAF
   compatible_sku = var.existing_cdn_frontdoor_profile_id != null ? data.azurerm_cdn_frontdoor_profile.existing[0].sku_name == "Standard_AzureFrontDoor" : true
