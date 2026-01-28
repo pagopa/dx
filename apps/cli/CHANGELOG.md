@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.15.3
+
+### Patch Changes
+
+- 2e76daf: Move plop generators from @pagopa/monorepo-generator
+
 ## 0.15.2
 
 ### Patch Changes
