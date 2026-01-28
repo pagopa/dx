@@ -27,7 +27,7 @@ func (f *resourceNameFunction) Definition(ctx context.Context, req function.Defi
 		Parameters: []function.Parameter{
 			function.MapParameter{
 				Name:           "configuration",
-				Description:    "A map containing the following keys: prefix, environment, location, domain (Optional), name, resource_type and instance_number.",
+				Description:    "A map containing the following keys: prefix, environment (or env_short), location, domain (Optional), name (or app_name - Optional), resource_type and instance_number.",
 				ElementType:    types.StringType,
 				AllowNullValue: true,
 			},
@@ -170,15 +170,23 @@ type configurationValues struct {
 func extractConfigurationValues(configuration map[string]types.String) configurationValues {
 	config := configurationValues{
 		prefix:            configuration["prefix"].ValueString(),
-		environment:       configuration["environment"].ValueString(),
 		location:          configuration["location"].ValueString(),
 		resourceType:      configuration["resource_type"].ValueString(),
 		instanceNumberStr: configuration["instance_number"].ValueString(),
 	}
 
-	// Extract optional name
+	// Extract environment (support both 'environment' and 'env_short')
+	if envVal, exists := configuration["environment"]; exists {
+		config.environment = envVal.ValueString()
+	} else if envShortVal, exists := configuration["env_short"]; exists {
+		config.environment = envShortVal.ValueString()
+	}
+
+	// Extract optional name (support both 'name' and 'app_name')
 	if nameVal, exists := configuration["name"]; exists {
 		config.name = strings.ToLower(nameVal.ValueString())
+	} else if appNameVal, exists := configuration["app_name"]; exists {
+		config.name = strings.ToLower(appNameVal.ValueString())
 	}
 
 	// Extract optional domain
@@ -300,8 +308,8 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	}
 
 	// Define and validate configuration keys
-	requiredKeys := []string{"prefix", "environment", "location", "resource_type", "instance_number"}
-	optionalKeys := []string{"domain", "name"}
+	requiredKeys := []string{"prefix", "location", "resource_type", "instance_number"}
+	optionalKeys := []string{"domain", "name", "app_name", "environment", "env_short"}
 	allowedKeys := append(requiredKeys, optionalKeys...)
 
 	// Validate required keys are present
@@ -310,6 +318,26 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 			resp.Error = function.NewFuncError(fmt.Sprintf("Missing key in input. The required key '%s' is missing from the input map", key))
 			return
 		}
+	}
+
+	// Validate that either 'environment' or 'env_short' is provided (but not both)
+	_, hasEnvironment := configuration["environment"]
+	_, hasEnvShort := configuration["env_short"]
+	if !hasEnvironment && !hasEnvShort {
+		resp.Error = function.NewFuncError("Missing required configuration key: either 'environment' or 'env_short' must be provided")
+		return
+	}
+	if hasEnvironment && hasEnvShort {
+		resp.Error = function.NewFuncError("Invalid key combination. 'environment' and 'env_short' are mutually exclusive, provide only one.")
+		return
+	}
+
+	// Validate that 'name' and 'app_name' are not both provided
+	_, hasName := configuration["name"]
+	_, hasAppName := configuration["app_name"]
+	if hasName && hasAppName {
+		resp.Error = function.NewFuncError("Invalid key combination. 'name' and 'app_name' are mutually exclusive, provide only one")
+		return
 	}
 
 	// Validate no unexpected keys are provided

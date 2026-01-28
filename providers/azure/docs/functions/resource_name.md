@@ -42,15 +42,15 @@ resource_name(configuration map of string) string
 
 1. `configuration` (Map) A map containing the following keys: prefix, environment, location, domain (Optional), name, resource_type and instance_number.
 
-| Name            | Value Type | Required | Description                                                                      |
-| :-------------- | :--------: | :------: | :------------------------------------------------------------------------------- |
-| prefix          |   String   |   Yes    | Prefix that define the repository domain (Max 2 characters)                      |
-| environment     |   String   |   Yes    | Environment where the resources will be deployed (d, u or p)                     |
-| location        |   String   |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope) |
-| domain          |   String   |    No    | Domain grouping (optional).                                                      |
-| name            |   String   |    No    | Resource name (optional, cannot overlap with resource type abbreviation).        |
-| resource_type   |   String   |   Yes    | Type of the resource (see the table below)                                       |
-| instance_number |  Integer   |   Yes    | Instance number of the resource (1-99)                                           |
+| Name                       | Value Type | Required | Description                                                                          |
+| :------------------------- | :--------: | :------: | :----------------------------------------------------------------------------------- |
+| prefix                     |   String   |   Yes    | Prefix that define the repository domain (Max 2 characters)                          |
+| environment (or env_short) |   String   |   Yes    | Environment where the resources will be deployed (d, u or p).                        |
+| location                   |   String   |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope)     |
+| domain                     |   String   |    No    | Domain grouping (optional).                                                          |
+| name (or app_name)         |   String   |    No    | Resource name (optional, cannot overlap with resource type abbreviation).            |
+| resource_type              |   String   |   Yes    | Type of the resource (see the table below)                                           |
+| instance_number            |  Integer   |   Yes    | Instance number of the resource (1-99), also accepts string format (e.g. "02", "4"). |
 
 ### Resource Types
 
