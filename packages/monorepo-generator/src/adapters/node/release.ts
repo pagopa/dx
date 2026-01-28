@@ -1,12 +1,7 @@
-import type { ActionType } from "plop";
-
-import { ResultAsync } from "neverthrow";
 import * as assert from "node:assert/strict";
 import { SemVer } from "semver";
 import semverParse from "semver/functions/parse.js";
 import { z } from "zod/v4";
-
-import { fetchLatestSemver, FetchSemverFn } from "./semver.js";
 
 const nodeReleaseSchema = z.object({
   lts: z.union([z.string(), z.boolean()]).nullable(),
@@ -15,7 +10,7 @@ const nodeReleaseSchema = z.object({
 
 type NodeRelease = z.infer<typeof nodeReleaseSchema>;
 
-async function getLatestByCodename(codename: "Jod"): Promise<SemVer> {
+export async function getLatestByCodename(codename: "Jod"): Promise<SemVer> {
   const releases = await nodeReleases();
   for (const release of releases) {
     if (release.lts === codename) {
@@ -44,13 +39,3 @@ async function nodeReleases(): Promise<NodeRelease[]> {
     throw err;
   }
 }
-
-const fetchNodeVersion: FetchSemverFn = () =>
-  ResultAsync.fromPromise(
-    // Jod is the codename for Node.js 22 LTS
-    getLatestByCodename("Jod"),
-    (e) => new Error("Failed to fetch Node.js releases", { cause: e }),
-  );
-
-export const getLatestNodeVersion = (): ActionType => async (answers) =>
-  fetchLatestSemver(fetchNodeVersion, answers, "nodeVersion");

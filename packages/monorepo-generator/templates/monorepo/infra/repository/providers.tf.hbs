@@ -2,11 +2,9 @@ terraform {
   required_providers {
     github = {
       source  = "integrations/github"
-      version = "~> {{ githubTfProviderVersion }}"
+      version = "~> 6.0"
     }
   }
-
-  {{> terraformRepositoryBackendState }}
 }
 
 # GitHub provider configuration

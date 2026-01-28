@@ -15,7 +15,7 @@
     "ghcr.io/devcontainers-extra/features/grype:1": {},
     "ghcr.io/pagopa/devcontainer-features/plantuml:1": {},
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "22",
+      "version": "24",
       "installYarnUsingApt": false,
       "pnpmVersion": "none",
       "nvmInstallPath": "/opt/nvm"

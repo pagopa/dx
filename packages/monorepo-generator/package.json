@@ -2,6 +2,7 @@
   "name": "@pagopa/monorepo-generator",
   "version": "0.15.1",
   "type": "module",
+  "private": true,
   "description": "A package that will generate a monorepo, following DX conventions, from a template",
   "repository": {
     "type": "git",
@@ -19,6 +20,14 @@
     "templates"
   ],
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./generators/*": {
+      "import": "./dist/adapters/plop/generators/*/index.js"
+    }
+  },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
     "@azure/arm-msi": "^2.2.0",

@@ -1,8 +1,9 @@
-import { Answers } from "@pagopa/monorepo-generator";
-import loadMonorepoScaffolder, {
-  answersSchema,
+import { setMonorepoGenerator } from "@pagopa/monorepo-generator";
+import {
+  Payload as Answers,
+  payloadSchema as answersSchema,
   PLOP_MONOREPO_GENERATOR_NAME,
-} from "@pagopa/monorepo-generator";
+} from "@pagopa/monorepo-generator/generators/monorepo";
 import chalk from "chalk";
 import { Command } from "commander";
 import { $ } from "execa";
@@ -23,10 +24,6 @@ import { decode } from "../../zod/index.js";
 import { exitWithError } from "../index.js";
 
 type InitResult = {
-  csp: {
-    location: string;
-    name: string;
-  };
   pr?: PullRequest;
   repository?: Repository;
 };
@@ -90,10 +87,8 @@ const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
   ).map(() => answers);
 
 const displaySummary = (initResult: InitResult) => {
-  const { csp, pr, repository } = initResult;
+  const { pr, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
-  console.log(`- Cloud Service Provider: ${chalk.cyan(csp.name)}`);
-  console.log(`- CSP location: ${chalk.cyan(csp.location)}`);
 
   if (repository) {
     console.log(`- Name: ${chalk.cyan(repository.name)}`);
@@ -197,18 +192,10 @@ const handleNewGitHubRepository =
 const makeInitResult = (
   answers: Answers,
   { pr, repository }: RepositoryPullRequest,
-): InitResult => {
-  const csp = {
-    location:
-      answers.csp === "azure" ? answers.azureLocation : answers.awsRegion,
-    name: answers.csp,
-  };
-  return {
-    csp,
-    pr,
-    repository,
-  };
-};
+): InitResult => ({
+  pr,
+  repository,
+});
 
 const createPullRequest =
   (githubService: GitHubService) =>
@@ -250,7 +237,7 @@ export const makeInitCommand = ({
         .action(async function () {
           await checkPreconditions()
             .andThen(initPlop)
-            .andTee(loadMonorepoScaffolder)
+            .andTee(setMonorepoGenerator)
             .andThen((plop) => getGenerator(plop)(PLOP_MONOREPO_GENERATOR_NAME))
             .andThen((generator) =>
               // Ask the user the questions defined in the plop generator
