@@ -34,6 +34,19 @@ variable "existing_cdn_frontdoor_profile_id" {
   type        = string
   description = "Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile."
   default     = null
+
+  validation {
+    condition = (
+      var.existing_cdn_frontdoor_profile_id == null
+      || (
+        can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Cdn/profiles/[^/]+$", var.existing_cdn_frontdoor_profile_id))
+        && length(split("/", var.existing_cdn_frontdoor_profile_id)) >= 9
+        && lower(split("/", var.existing_cdn_frontdoor_profile_id)[6]) == "microsoft.cdn"
+        && lower(split("/", var.existing_cdn_frontdoor_profile_id)[7]) == "profiles"
+      )
+    )
+    error_message = "existing_cdn_frontdoor_profile_id must be a valid Azure resource ID for a Microsoft.Cdn/profiles resource, e.g. /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Cdn/profiles/<name>."
+  }
 }
 
 variable "waf_enabled" {

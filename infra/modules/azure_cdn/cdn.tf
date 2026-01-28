@@ -76,7 +76,7 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 }
 
 resource "azurerm_cdn_frontdoor_firewall_policy" "this" {
-  count = var.waf_enabled ? 1 : 0
+  count = var.waf_enabled && local.compatible_sku ? 1 : 0
 
   name                = replace(replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" })), "-", ""), "fde", "fdfp")
   resource_group_name = var.resource_group_name
@@ -84,15 +84,12 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "this" {
   enabled             = true
   mode                = "Prevention"
 
-  # Note: managed_rule blocks require Premium_AzureFrontDoor SKU
-  # For Standard SKU, use custom_rule blocks instead
-
   tags = local.tags
 }
 
 resource "azurerm_cdn_frontdoor_security_policy" "this" {
   # Only create security policy if WAF is enabled and we have at least one domain (custom or endpoint)
-  count = var.waf_enabled ? 1 : 0
+  count = var.waf_enabled && local.compatible_sku ? 1 : 0
 
   name = replace(replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_endpoint" })), "-", ""), "fde", "fdsp")
 
