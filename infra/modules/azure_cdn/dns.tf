@@ -34,6 +34,6 @@ resource "azurerm_dns_txt_record" "validation" {
   }
   tags = merge(local.tags, {
     Origin = each.value.host_name
-    Cdn    = azurerm_cdn_frontdoor_profile.this.name
+    Cdn    = local.profile_name
   })
 }
