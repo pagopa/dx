@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { mock, mockDeep } from "vitest-mock-extended";
+import { DeepMockProxy, mock, mockDeep, MockProxy } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
 import { GitHubService } from "../github.js";
@@ -28,7 +28,13 @@ export const makeMockPackageJson = (
   };
 };
 
-export const makeMockDependencies = () => ({
+export const makeMockDependencies = (): {
+  gitHubService: MockProxy<GitHubService>;
+  octokit: DeepMockProxy<Octokit>;
+  packageJsonReader: MockProxy<PackageJsonReader>;
+  repositoryReader: MockProxy<RepositoryReader>;
+  validationReporter: MockProxy<ValidationReporter>;
+} => ({
   gitHubService: mock<GitHubService>(),
   octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),

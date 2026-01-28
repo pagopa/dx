@@ -12,11 +12,11 @@ export const cloudAccountSchema = z.object({
 
 export type CloudAccount = z.infer<typeof cloudAccountSchema>;
 
-export interface CloudAccountRepository {
+export type CloudAccountRepository = {
   list(): Promise<CloudAccount[]>;
-}
+};
 
-export interface CloudAccountService {
+export type CloudAccountService = {
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
@@ -42,7 +42,7 @@ export interface CloudAccountService {
     environment: EnvironmentId,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
-}
+};
 
 export const cloudRegionSchema = z.object({
   displayName: z.string().min(1),

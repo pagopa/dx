@@ -32,18 +32,18 @@ export type EnvironmentInitStatus =
       initialized: true;
     };
 
-interface CloudAccountNotInitializedIssue {
+type CloudAccountNotInitializedIssue = {
   cloudAccount: CloudAccount;
   type: "CLOUD_ACCOUNT_NOT_INITIALIZED";
-}
+};
 
 type EnvironmentInitIssue =
   | CloudAccountNotInitializedIssue
   | MissingRemoteBackendIssue;
 
-interface MissingRemoteBackendIssue {
+type MissingRemoteBackendIssue = {
   type: "MISSING_REMOTE_BACKEND";
-}
+};
 
 export async function getInitializationStatus(
   cloudAccountService: CloudAccountService,
