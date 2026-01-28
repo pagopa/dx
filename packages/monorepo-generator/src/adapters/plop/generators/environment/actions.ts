@@ -12,10 +12,13 @@ const addModule = (env: Environment, templatesPath: string) => {
     env.cloudAccounts,
     (account) => account.csp,
   );
+  const includesProdIO = env.cloudAccounts.some(
+    (account) => account.displayName === "PROD-IO",
+  );
   return (name: string, terraformBackendKey: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp },
+      data: { cloudAccountsByCsp, includesProdIO },
       destination: "infra",
       force: true,
       templateFiles: path.join(templatesPath, name),
