@@ -138,15 +138,15 @@ Generates a resource name based on the standardized prefix and additional parame
 
 **Inputs:**
 
-| Name            |  Type   | Required | Description                                                                       |
-| :-------------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
-| prefix          | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                        |
-| environment     | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
-| location        | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
-| domain          | String  |    No    | Domain grouping (optional).                                                       |
-| name            | String  |    No    | Resource name (optional, cannot overlap with resource type abbreviation).         |
-| resource_type   | String  |   Yes    | Type of the resource (see table).                                                 |
-| instance_number | Integer |   Yes    | Instance number of the resource (1-99).                                           |
+| Name                       |  Type   | Required | Description                                                                          |
+| :------------------------- | :-----: | :------: | :----------------------------------------------------------------------------------- |
+| prefix                     | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                           |
+| environment (or env_short) | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                        |
+| location                   | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope).    |
+| domain                     | String  |    No    | Domain grouping (optional).                                                          |
+| name (or app_name)         | String  |    No    | Resource name (optional, cannot overlap with resource type abbreviation).            |
+| resource_type              | String  |   Yes    | Type of the resource (see table).                                                    |
+| instance_number            | Integer |   Yes    | Instance number of the resource (1-99), also accepts string format (e.g. "02", "4"). |
 
 **Example:**
 
