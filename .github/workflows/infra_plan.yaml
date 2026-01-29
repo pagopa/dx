@@ -58,7 +58,7 @@ jobs:
         id: evaluate
         env:
           EVENT_NAME: ${{ github.event_name }}
-          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ] && [ "$IS_FORK" = "true" ]; then
             echo "run=false" >> "$GITHUB_OUTPUT"
