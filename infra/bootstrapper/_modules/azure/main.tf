@@ -6,9 +6,9 @@ module "core_values" {
 }
 
 module "bootstrap" {
-  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
-
+  # source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  # version = "~> 3.0"
+  source      = "github.com/pagopa/dx//infra/modules/azure_github_environment_bootstrap?ref=test-merged-roles"
   environment = var.environment
 
   subscription_id = data.azurerm_subscription.current.id

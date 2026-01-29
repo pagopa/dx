@@ -1,5 +1,4 @@
-# subscription roles defined in `eng-azure-authorization` repo
-
+# Move this to the pagopa/eng-azure-governance repo
 module "merge_roles_admin_group" {
   source    = "./modules/merge-roles"
   role_name = "PagoPA DX Admin Group Role"

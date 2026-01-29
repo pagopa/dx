@@ -9,7 +9,7 @@ No requirements.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_bootstrap"></a> [bootstrap](#module\_bootstrap) | pagopa-dx/azure-github-environment-bootstrap/azurerm | ~> 3.0 |
+| <a name="module_bootstrap"></a> [bootstrap](#module\_bootstrap) | github.com/pagopa/dx//infra/modules/azure_github_environment_bootstrap | test-merged-roles |
 | <a name="module_core_values"></a> [core\_values](#module\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
 | <a name="module_roles_cd"></a> [roles\_cd](#module\_roles\_cd) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_roles_ci"></a> [roles\_ci](#module\_roles\_ci) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
