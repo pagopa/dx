@@ -7,7 +7,7 @@ import {
 import {
   setDeploymentEnvironmentGenerator,
   setMonorepoGenerator,
-} from "./dist/index.js";
+} from "./dist/adapters/plop/index.js";
 
 await configure({
   loggers: [
