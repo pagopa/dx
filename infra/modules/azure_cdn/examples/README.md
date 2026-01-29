@@ -27,10 +27,9 @@ This will create:
 
 The [advanced example](./advanced) demonstrates advanced features including:
 
-- **WAF Protection**: Web Application Firewall policy (no managed rule sets on Standard SKU; users must configure custom rules)
-- **Managed Identity**: Automatic role assignment for managed identity authentication to storage
-- **Existing Profile**: Reusing an existing CDN FrontDoor profile
-- **Multiple Origins**: Failover configuration with priority-based routing
+- **WAF Protection**: Web Application Firewall policy with Prevention mode enabled
+- **Existing Profile**: Reusing an existing CDN FrontDoor profile to create additional endpoints
+- **Multiple Storage Origins**: Different storage accounts as origins
 
 ### Usage
 
@@ -43,7 +42,7 @@ terraform apply
 
 This will create:
 
-- Multiple CDN configurations demonstrating different features
-- Storage accounts with private endpoints
-- WAF policies and security policies
-- Role assignments for managed identity access
+- A CDN profile with WAF protection enabled
+- A secondary endpoint reusing the existing profile
+- Storage accounts for origin content
+- WAF firewall and security policies

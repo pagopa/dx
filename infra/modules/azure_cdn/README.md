@@ -6,11 +6,14 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 
 ## Features
 
-- **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile.
+- **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile or reuses an existing one.
+- **WAF Protection**: Optional Web Application Firewall policy with Prevention mode for enhanced security.
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
 - **Routing Rules**: Allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
+
+> **Note:** The module includes support for managed identity authentication to storage origins with automatic RBAC assignment. This feature is currently in preview and disabled by validation. It will be enabled once the feature becomes generally available. See [Azure documentation](https://learn.microsoft.com/en-us/azure/frontdoor/origin-authentication-with-managed-identities) for more information.
 
 ### Routing rules
 
@@ -123,7 +126,7 @@ In these cases, you must provide custom certificate information through the cust
 
 ## Usage Example
 
-A complete example of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) directory.
+Complete examples of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) and [examples/advanced](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/advanced) directories.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
