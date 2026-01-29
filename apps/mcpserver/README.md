@@ -8,11 +8,88 @@ This package contains the implementation of a Model Context Protocol (MCP) serve
 
 The server currently exposes the following capabilities:
 
+### MCP Protocol
+
 - **Tools**:
   - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the [DX documentation](https://dx.pagopa.it/).
   - `SearchGitHubCode`: Searches for code snippets in specified GitHub organization (defaults to pagopa), allowing users to find real-world examples of code usage.
 - **Prompts**:
   - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
+
+### REST API Endpoints
+
+The server also exposes HTTP REST endpoints for direct documentation access:
+
+#### POST /ask
+
+AI-powered Q&A endpoint that generates contextual answers from the DX documentation.
+
+**Request**:
+
+```bash
+curl -X POST https://api.dx.pagopa.it/ask \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How do I setup Terraform modules?"}'
+```
+
+**Response**:
+
+```json
+{
+  "answer": "To setup Terraform modules in PagoPA DX...",
+  "sources": [
+    "https://dx.pagopa.it/docs/terraform/modules/",
+    "https://dx.pagopa.it/docs/getting-started/"
+  ]
+}
+```
+
+**Features**:
+
+- Uses Amazon Bedrock RetrieveAndGenerate for AI-generated responses
+- Returns relevant source URLs from documentation
+- Automatically converts internal S3 URIs to public web URLs
+
+#### POST /search
+
+Semantic search endpoint that retrieves relevant documentation chunks.
+
+**Request**:
+
+```bash
+curl -X POST https://api.dx.pagopa.it/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Azure naming conventions",
+    "number_of_results": 5
+  }'
+```
+
+**Response**:
+
+```json
+{
+  "query": "Azure naming conventions",
+  "results": [
+    {
+      "content": "Azure resources must follow...",
+      "score": 0.9542,
+      "source": "https://dx.pagopa.it/docs/azure/naming/"
+    }
+  ]
+}
+```
+
+**Parameters**:
+
+- `query` (required): Natural language search query
+- `number_of_results` (optional): Number of results to return (1-20, default: 5)
+
+**Features**:
+
+- Uses Amazon Bedrock Retrieve API with optional reranking
+- Returns relevance scores for each result
+- Configurable result count
 
 ## Usage
 

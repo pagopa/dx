@@ -1,8 +1,8 @@
 {
   "portal": {
-    "hash": "427ed0f251d29f1599fabadb981c168c0ec3fe9e4fcdd909c1ef78c3eeb803d9",
-    "version": "0.3.2",
+    "hash": "20d852cbfe3fbb963ec8cda6e518659f6beac4ce8d9efff9e8d67f6a7bae359d",
+    "version": "0.3.3",
     "name": "azure_cdn",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/0.3.2"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/0.3.3"
   }
 }

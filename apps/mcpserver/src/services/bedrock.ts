@@ -94,6 +94,74 @@ export async function queryKnowledgeBase(
 }
 
 /**
+ * Returns structured results from knowledge base query without serialization.
+ * Same as queryKnowledgeBase but returns structured data instead of string.
+ */
+export async function queryKnowledgeBaseStructured(
+  knowledgeBaseId: string,
+  query: string,
+  kbAgentClient: BedrockAgentRuntimeClient,
+  numberOfResults = 5,
+  reranking = false,
+  rerankingModelName: RerankingModelName = "AMAZON",
+): Promise<QueryKnowledgeBasesOutput[]> {
+  const logger = getLogger(["mcpserver", "bedrock"]);
+  const clientRegion = await kbAgentClient.config.region();
+  let rerankingEnabled = reranking;
+
+  if (reranking && !rerankingSupportedRegions.includes(clientRegion)) {
+    logger.warn(`Reranking is not supported in region ${clientRegion}`);
+    rerankingEnabled = false;
+  }
+
+  const retrieveRequest: KnowledgeBaseRetrievalConfiguration = {
+    vectorSearchConfiguration: {
+      numberOfResults,
+    },
+  };
+
+  if (rerankingEnabled && retrieveRequest.vectorSearchConfiguration) {
+    const modelNameMapping: Record<RerankingModelName, string> = {
+      AMAZON: "amazon.rerank-v1:0",
+      COHERE: "cohere.rerank-v3-5:0",
+    };
+    retrieveRequest.vectorSearchConfiguration.rerankingConfiguration = {
+      bedrockRerankingConfiguration: {
+        modelConfiguration: {
+          modelArn: `arn:aws:bedrock:${clientRegion}::foundation-model/${modelNameMapping[rerankingModelName]}`,
+        },
+      },
+      type: "BEDROCK_RERANKING_MODEL",
+    };
+  }
+
+  const command = new RetrieveCommand({
+    knowledgeBaseId,
+    retrievalConfiguration: retrieveRequest,
+    retrievalQuery: { text: query },
+  });
+
+  const response = await kbAgentClient.send(command);
+  const results = response.retrievalResults || [];
+  const documents: QueryKnowledgeBasesOutput[] = [];
+
+  for (const result of results) {
+    if (result.content?.type === "IMAGE") {
+      logger.warn("Images are not supported at this time. Skipping...");
+      continue;
+    } else if (result.content?.text) {
+      documents.push({
+        content: result.content.text,
+        location: resolveToWebsiteUrl(result.location),
+        score: result.score || -1.0,
+      });
+    }
+  }
+
+  return documents;
+}
+
+/**
  * Resolves an S3 location from a knowledge base result to a public website URL.
  * This method converts S3 URIs to publicly accessible URLs based on specific rules.
  * If the location is not an S3 URI, it returns the original location.
@@ -135,6 +203,10 @@ export function resolveToWebsiteUrl(
       else {
         url = `https://dx.pagopa.it/docs/${key.replace(/\.md$/, "")}`;
       }
+
+      // Post-process: remove trailing /index from URLs
+      url = url.replace(/\/index$/, "/");
+
       // Return a RetrievalResultLocation object of type WEB with the computed URL
       return {
         type: "WEB",

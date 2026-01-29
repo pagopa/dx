@@ -29,14 +29,12 @@ resource "azurerm_api_management" "this" {
 
   min_api_version = "2021-08-01"
 
-  # Managed identity type: System
   identity {
     type = "SystemAssigned"
   }
 
   virtual_network_type = local.virtual_network_type
 
-  # subnet
   dynamic "virtual_network_configuration" {
     for_each = local.virtual_network_configuration_enabled ? ["dummy"] : []
     content {
@@ -113,6 +111,13 @@ resource "azurerm_api_management" "this" {
   }
 
   tags = local.tags
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to sku_name capacity when autoscaling is enabled
+      sku_name,
+    ]
+  }
 
   depends_on = [azurerm_network_security_group.nsg_apim]
 }

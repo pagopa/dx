@@ -30,6 +30,7 @@ export const envSchema = z.object({
   AWS_REGION: z.string().optional(),
   BEDROCK_KB_RERANKING_ENABLED: z.string().optional(),
   BEDROCK_KNOWLEDGE_BASE_ID: z.string().optional(),
+  BEDROCK_MODEL_ARN: z.string().optional(),
   GITHUB_SEARCH_ORG: z.string().optional(),
   LOG_LEVEL: logLevelSchema,
   PORT: z.coerce.number().int().positive().optional(),
@@ -61,6 +62,7 @@ export function loadConfig(env: NodeJS.ProcessEnv): AppConfig {
   return {
     aws: {
       knowledgeBaseId: rawEnv.BEDROCK_KNOWLEDGE_BASE_ID ?? "",
+      modelArn: rawEnv.BEDROCK_MODEL_ARN ?? "",
       region: rawEnv.AWS_REGION ?? "eu-central-1",
       rerankingEnabled,
     },

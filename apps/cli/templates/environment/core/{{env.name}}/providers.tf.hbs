@@ -1,0 +1,21 @@
+terraform {
+  required_providers {
+    {{#with cloudAccountsByCsp.azure}}
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+    {{/with}}
+  }
+}
+
+{{#with cloudAccountsByCsp.azure}}
+{{#each this}}
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+  subscription_id     = "{{id}}"
+  alias               = "{{displayName}}"
+}
+{{/each}}
+{{/with}}

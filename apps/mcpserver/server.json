@@ -11,7 +11,7 @@
         "type": "streamable-http",
         "url": "https://api.dx.pagopa.it/mcp"
       },
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ],
   "repository": {
@@ -19,5 +19,5 @@
     "subfolder": "apps/mcpserver",
     "url": "https://github.com/pagopa/dx"
   },
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

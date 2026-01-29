@@ -1,0 +1,8 @@
+
+output "values" {
+  value = {
+    {{#each cloudAccountsByCsp.azure}}
+    "{{id}}" = module.azure-{{displayName}}_core
+    {{/each}}
+  }
+}

@@ -1,5 +1,4 @@
 import "core-js/actual/set/index.js";
-import { configure, getConsoleSink } from "@logtape/logtape";
 import { Octokit } from "octokit";
 
 import codemodRegistry from "./adapters/codemods/index.js";
@@ -14,50 +13,33 @@ import { getInfo } from "./domain/info.js";
 import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
 
-await configure({
-  loggers: [
-    { category: ["dx-cli"], lowestLevel: "info", sinks: ["console"] },
-    { category: ["savemoney"], lowestLevel: "debug", sinks: ["console"] },
-    { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
-    {
-      category: ["logtape", "meta"],
-      lowestLevel: "warning",
-      sinks: ["console"],
-    },
-  ],
-  sinks: {
-    console: getConsoleSink(),
-    rawJson(record) {
-      console.log(record.rawMessage);
-    },
-  },
-});
+export const runCli = (version: string) => {
+  // Creating the adapters
+  const repositoryReader = makeRepositoryReader();
+  const packageJsonReader = makePackageJsonReader();
+  const validationReporter = makeValidationReporter();
 
-// Creating the adapters
-const repositoryReader = makeRepositoryReader();
-const packageJsonReader = makePackageJsonReader();
-const validationReporter = makeValidationReporter();
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN,
+  });
 
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
+  const gitHubService = new OctokitGitHubService(octokit);
 
-const gitHubService = new OctokitGitHubService(octokit);
+  const deps: Dependencies = {
+    gitHubService,
+    packageJsonReader,
+    repositoryReader,
+    validationReporter,
+  };
 
-const deps: Dependencies = {
-  gitHubService,
-  packageJsonReader,
-  repositoryReader,
-  validationReporter,
+  const config = getConfig();
+
+  const useCases = {
+    applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
+    listCodemods: listCodemods(codemodRegistry),
+  };
+
+  const program = makeCli(deps, config, useCases, version);
+
+  program.parse();
 };
-
-const config = getConfig();
-
-const useCases = {
-  applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
-  listCodemods: listCodemods(codemodRegistry),
-};
-
-const program = makeCli(deps, config, useCases);
-
-program.parse();

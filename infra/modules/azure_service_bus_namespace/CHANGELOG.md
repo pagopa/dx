@@ -1,5 +1,11 @@
 # azure_service_bus_namespace
 
+## 0.1.0
+
+### Minor Changes
+
+- 033128f: Add Diagnostic Settings configuration, update tests and align example
+
 ## 0.0.6
 
 ### Patch Changes
