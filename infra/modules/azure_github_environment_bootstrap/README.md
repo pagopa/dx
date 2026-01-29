@@ -438,7 +438,6 @@ This module includes practical examples to help you get started quickly:
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~>4 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.7, < 1.0.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~>6 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.9 |
 
 ## Modules
 
@@ -527,7 +526,6 @@ This module includes practical examples to help you get started quickly:
 | [github_actions_environment_secret.opex_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.opex_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_secret.repo_secrets](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
-| [time_sleep.wait_for_admin_role](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 
 ## Inputs
 

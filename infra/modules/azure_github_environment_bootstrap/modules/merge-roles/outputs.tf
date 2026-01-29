@@ -9,5 +9,5 @@ output "merged_actions_count" {
 
 output "custom_role_id" {
   description = "ID of the newly created custom role definition"
-  value       = azurerm_role_definition.merged.role_definition_id
+  value       = azurerm_role_definition.merged.role_definition_resource_id
 }
