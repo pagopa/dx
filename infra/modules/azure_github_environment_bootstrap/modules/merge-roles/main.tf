@@ -17,8 +17,6 @@ resource "azurerm_role_definition" "merged" {
     not_data_actions = local.not_data_actions
   }
 
-  # This role can be assigned at the subscription level
-  assignable_scopes = [
-    data.azurerm_subscription.current.id
-  ]
+  # By not specifying assignable_scopes, the role can be assigned at any level
+  # within the subscription (subscription, resource group, or resource level)
 }

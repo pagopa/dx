@@ -14,5 +14,10 @@ terraform {
       source  = "pagopa-dx/azure"
       version = ">= 0.0.7, < 1.0.0"
     }
+
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9"
+    }
   }
 }
