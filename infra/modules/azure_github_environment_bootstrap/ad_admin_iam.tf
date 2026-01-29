@@ -1,30 +1,21 @@
 # subscription roles defined in `eng-azure-authorization` repo
 
-# Resource Group
-resource "azurerm_role_assignment" "admins_group_rgs" {
-  for_each = local.resource_group_ids
+module "merge_roles_admin_group" {
+  source    = "./modules/merge-roles"
+  role_name = "PagoPA DX Admin Group Role"
 
-  scope                = each.value
-  role_definition_name = "Owner"
-  principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group the complete ownership at ${each.value} resource group scope"
-}
-
-# Key Vault
-resource "azurerm_role_assignment" "admins_group_rgs_kv_data" {
-  for_each = local.resource_group_ids
-
-  scope                = each.value
-  role_definition_name = "Key Vault Data Access Administrator"
-  principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group to changes to apply changes to KeyVault's data at ${each.value} resource group scope"
+  source_roles = [
+    "Owner",
+    "Key Vault Data Access Administrator",
+    "Key Vault Administrator"
+  ]
 }
 
 resource "azurerm_role_assignment" "admins_group_rgs_kv_admin" {
   for_each = local.resource_group_ids
 
-  scope                = each.value
-  role_definition_name = "Key Vault Administrator"
-  principal_id         = var.entraid_groups.admins_object_id
-  description          = "Allow ${var.repository.name} AD Admin group to changes to apply changes to KeyVault at ${each.value} resource group scope"
+  scope              = each.value
+  role_definition_id = module.merge_roles_admin_group.custom_role_id
+  principal_id       = var.entraid_groups.admins_object_id
+  description        = "Allow ${var.repository.name} AD Admin group to changes to apply changes to KeyVault at ${each.value} resource group scope"
 }
