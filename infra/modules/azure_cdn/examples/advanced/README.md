@@ -13,7 +13,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_cdn_multi_origin"></a> [azure\_cdn\_multi\_origin](#module\_azure\_cdn\_multi\_origin) | pagopa-dx/azure-cdn/azurerm | ~> 0.5 |
+| <a name="module_azure_cdn_reuse_profile"></a> [azure\_cdn\_reuse\_profile](#module\_azure\_cdn\_reuse\_profile) | pagopa-dx/azure-cdn/azurerm | ~> 0.5 |
 | <a name="module_azure_cdn_with_waf"></a> [azure\_cdn\_with\_waf](#module\_azure\_cdn\_with\_waf) | pagopa-dx/azure-cdn/azurerm | ~> 0.5 |
 | <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | pagopa-dx/azure-storage-account/azurerm | ~> 2.1 |
 | <a name="module_storage_account_secondary"></a> [storage\_account\_secondary](#module\_storage\_account\_secondary) | pagopa-dx/azure-storage-account/azurerm | ~> 2.1 |
@@ -33,7 +33,7 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cdn_multi_origin_endpoint"></a> [cdn\_multi\_origin\_endpoint](#output\_cdn\_multi\_origin\_endpoint) | CDN endpoint with multiple storage origins |
+| <a name="output_cdn_reuse_profile_endpoint"></a> [cdn\_reuse\_profile\_endpoint](#output\_cdn\_reuse\_profile\_endpoint) | CDN endpoint reusing existing profile |
 | <a name="output_cdn_with_waf_endpoint"></a> [cdn\_with\_waf\_endpoint](#output\_cdn\_with\_waf\_endpoint) | CDN endpoint with WAF protection |
 | <a name="output_cdn_with_waf_profile_id"></a> [cdn\_with\_waf\_profile\_id](#output\_cdn\_with\_waf\_profile\_id) | CDN profile ID that can be reused |
 <!-- END_TF_DOCS -->

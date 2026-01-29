@@ -466,15 +466,21 @@ run "cdn_with_managed_identity_origin" {
     }
   }
 
-  assert {
-    condition     = length(azurerm_role_assignment.origin_storage_blob_data_reader) == 1
-    error_message = "Role assignment should be created for managed identity origin"
-  }
+  # NOTE: Uncomment these assertions when managed identity support is generally available
+  # assert {
+  #   condition     = length(azurerm_role_assignment.origin_storage_blob_data_reader) == 1
+  #   error_message = "Role assignment should be created for managed identity origin"
+  # }
 
-  assert {
-    condition     = azurerm_role_assignment.origin_storage_blob_data_reader["primary"].role_definition_name == "Storage Blob Data Reader"
-    error_message = "Role assignment should grant Storage Blob Data Reader role"
-  }
+  # assert {
+  #   condition     = azurerm_role_assignment.origin_storage_blob_data_reader["primary"].role_definition_name == "Storage Blob Data Reader"
+  #   error_message = "Role assignment should grant Storage Blob Data Reader role"
+  # }
+
+  # NOTE: Remove the expect_failures block when managed identity support is generally available
+  expect_failures = [
+    var.origins,
+  ]
 }
 
 run "cdn_with_existing_profile" {
@@ -590,42 +596,43 @@ run "cdn_with_existing_profile_and_waf" {
   }
 }
 
-run "cdn_with_managed_identity_without_storage_account_id" {
-  command = plan
+# NOTE: Uncomment this test when managed identity support is generally available
+# run "cdn_with_managed_identity_without_storage_account_id" {
+#   command = plan
 
-  variables {
-    resource_group_name = run.setup_tests.resource_group_name
+#   variables {
+#     resource_group_name = run.setup_tests.resource_group_name
 
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "modules"
-      app_name        = "test"
-      instance_number = "05"
-    }
+#     environment = {
+#       prefix          = "dx"
+#       env_short       = "d"
+#       location        = "italynorth"
+#       domain          = "modules"
+#       app_name        = "test"
+#       instance_number = "05"
+#     }
 
-    origins = {
-      primary = {
-        host_name            = run.setup_tests.storage_account_host_name
-        use_managed_identity = true
-        # storage_account_id is intentionally omitted to test the precondition
-      }
-    }
+#     origins = {
+#       primary = {
+#         host_name            = run.setup_tests.storage_account_host_name
+#         use_managed_identity = true
+#         # storage_account_id is intentionally omitted to test the precondition
+#       }
+#     }
 
-    tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
-      CreatedBy      = "Terraform"
-      Environment    = "Dev"
-      BusinessUnit   = "DevEx"
-      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
-      ManagementTeam = "Developer Experience"
-      Test           = "true"
-      TestName       = "Test precondition: managed identity without storage account ID"
-    }
-  }
+#     tags = {
+#       CostCenter     = "TS000 - Tecnologia e Servizi"
+#       CreatedBy      = "Terraform"
+#       Environment    = "Dev"
+#       BusinessUnit   = "DevEx"
+#       Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
+#       ManagementTeam = "Developer Experience"
+#       Test           = "true"
+#       TestName       = "Test precondition: managed identity without storage account ID"
+#     }
+#   }
 
-  expect_failures = [
-    azurerm_role_assignment.origin_storage_blob_data_reader,
-  ]
-}
+#   expect_failures = [
+#     azurerm_role_assignment.origin_storage_blob_data_reader,
+#   ]
+# }

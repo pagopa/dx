@@ -41,7 +41,7 @@ module "storage_account" {
   tags = local.tags
 }
 
-# Example 1: CDN with WAF enabled and managed identity for storage origin
+# Example 1: Create a CDN profile with WAF enabled
 module "azure_cdn_with_waf" {
   source  = "pagopa-dx/azure-cdn/azurerm"
   version = "~> 0.5"
@@ -53,31 +53,22 @@ module "azure_cdn_with_waf" {
   # Enable WAF for security
   waf_enabled = true
 
-  # Configure origin with managed identity for private storage access
   origins = {
     primary = {
-      host_name            = module.storage_account.primary_web_host
-      priority             = 1
-      use_managed_identity = true
-      storage_account_id   = module.storage_account.id
+      host_name = module.storage_account.primary_web_host
+      priority  = 1
     }
   }
-
-  # Note: Remove custom_domains if you don't have a real DNS zone
-  # custom_domains = [
-  #   {
-  #     host_name = "secure-app.example.com",
-  #     dns = {
-  #       zone_name                = "example.com",
-  #       zone_resource_group_name = azurerm_resource_group.example.name
-  #     }
-  #   }
-  # ]
 
   tags = local.tags
 }
 
-# Example 2: Multiple storage origins with managed identity
+# Example 2: Reuse the existing CDN profile and add a new endpoint with different origin
+
+# NOTE: This module depends on resource attributes that cannot be determined until apply
+# To work around this, use the -target argument to first apply only example 1,
+# then apply the full configuration including example 2.
+
 module "storage_account_secondary" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
   version = "~> 2.1"
@@ -105,33 +96,27 @@ module "storage_account_secondary" {
   tags = local.tags
 }
 
-module "azure_cdn_multi_origin" {
+module "azure_cdn_reuse_profile" {
   source  = "pagopa-dx/azure-cdn/azurerm"
   version = "~> 0.5"
 
   resource_group_name = azurerm_resource_group.example.name
 
   environment = merge(local.environment, {
-    app_name        = "multi"
+    app_name        = "reuse"
     instance_number = "01"
   })
 
+  # Reuse the existing CDN profile created above
+  existing_cdn_frontdoor_profile_id = module.azure_cdn_with_waf.id
+
+  # WAF is already enabled on the profile, create security policy for this endpoint
   waf_enabled = true
 
-  # Multiple origins with different priorities and managed identity
-  # Note: Origin keys cannot contain underscores, use hyphens instead
   origins = {
-    primary = {
-      host_name            = module.storage_account.primary_web_host
-      priority             = 1
-      use_managed_identity = true
-      storage_account_id   = module.storage_account.id
-    }
     secondary = {
-      host_name            = module.storage_account_secondary.primary_web_host
-      priority             = 2
-      use_managed_identity = true
-      storage_account_id   = module.storage_account_secondary.id
+      host_name = module.storage_account_secondary.primary_web_host
+      priority  = 1
     }
   }
 
@@ -148,7 +133,7 @@ output "cdn_with_waf_profile_id" {
   description = "CDN profile ID that can be reused"
 }
 
-output "cdn_multi_origin_endpoint" {
-  value       = module.azure_cdn_multi_origin.endpoint_hostname
-  description = "CDN endpoint with multiple storage origins"
+output "cdn_reuse_profile_endpoint" {
+  value       = module.azure_cdn_reuse_profile.endpoint_hostname
+  description = "CDN endpoint reusing existing profile"
 }

@@ -28,6 +28,14 @@ variable "origins" {
     use_managed_identity = optional(bool, false)
   }))
   description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use_managed_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage_account_id if provided."
+
+  # NOTE: Remove this validation block when managed identity support is generally available
+  validation {
+    condition = alltrue([
+      for k, v in var.origins : !v.use_managed_identity
+    ])
+    error_message = "Managed identity for origins is currently in preview and not yet supported. Please set use_managed_identity to false for all origins."
+  }
 }
 
 variable "existing_cdn_frontdoor_profile_id" {
