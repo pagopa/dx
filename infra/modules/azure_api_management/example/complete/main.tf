@@ -15,7 +15,7 @@ resource "azurerm_subnet" "example" {
 
 module "azure_apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 2.1"
+  version = "~> 2.2"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -31,6 +31,37 @@ module "azure_apim" {
   }
   subnet_id                     = azurerm_subnet.example.id
   virtual_network_type_internal = true
+
+  hostname_configuration = {
+    proxy = [
+      {
+        default_ssl_binding = false
+        host_name           = "api.example.com"
+        key_vault_id        = null
+      },
+      {
+        default_ssl_binding = true
+        host_name           = "api2.example.com"
+        key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+      },
+      {
+        default_ssl_binding = false
+        host_name           = "api3.example.com"
+        key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
+      },
+    ]
+    developer_portal = null
+    management       = null
+    portal           = null
+  }
+
+  autoscale = {
+    enabled                       = true
+    minimum_instances             = 4
+    default_instances             = 4
+    maximum_instances             = 8
+    scale_out_capacity_percentage = 60
+  }
 
   tags = local.tags
 }

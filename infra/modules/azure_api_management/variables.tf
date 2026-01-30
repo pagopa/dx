@@ -44,66 +44,54 @@ variable "use_case" {
 variable "autoscale" {
   type = object(
     {
-      enabled                       = bool
-      default_instances             = number
-      minimum_instances             = number
-      maximum_instances             = number
-      scale_out_capacity_percentage = number
-      scale_out_time_window         = string
-      scale_out_value               = string
-      scale_out_cooldown            = string
-      scale_in_capacity_percentage  = number
-      scale_in_time_window          = string
-      scale_in_value                = string
-      scale_in_cooldown             = string
+      default_instances             = optional(number)
+      minimum_instances             = optional(number)
+      maximum_instances             = optional(number)
+      scale_out_capacity_percentage = optional(number)
+      scale_out_time_window         = optional(string)
+      scale_out_value               = optional(string)
+      scale_out_cooldown            = optional(string)
+      scale_in_capacity_percentage  = optional(number)
+      scale_in_time_window          = optional(string)
+      scale_in_value                = optional(string)
+      scale_in_cooldown             = optional(string)
     }
   )
-  default = {
-    enabled                       = true
-    default_instances             = 2
-    minimum_instances             = 2
-    maximum_instances             = 6
-    scale_out_capacity_percentage = 60
-    scale_out_time_window         = "PT10M"
-    scale_out_value               = "2"
-    scale_out_cooldown            = "PT45M"
-    scale_in_capacity_percentage  = 30
-
-    scale_in_time_window = "PT30M"
-    scale_in_value       = "2"
-    scale_in_cooldown    = "PT30M"
-  }
+  default     = null
   description = "Configuration for autoscaling rules on capacity metrics."
 
   validation {
-    condition = var.autoscale.enabled == false || local.use_case_features.zones == null || (
-      # coalesce is used to handle the use cases where zones is set to null
-      var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
-      var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
-      var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
-      tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0 &&
-      tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0
+    condition = var.autoscale == null || local.use_case_features.zones == null || (
+      # Validate user-provided values only (if not null)
+      (var.autoscale.minimum_instances == null || var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (var.autoscale.maximum_instances == null || var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (var.autoscale.default_instances == null || var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (var.autoscale.scale_out_value == null || tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (var.autoscale.scale_in_value == null || tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0)
     )
-    error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. Current values: minimum_instances=${var.autoscale.minimum_instances}, maximum_instances=${var.autoscale.maximum_instances}, default_instances=${var.autoscale.default_instances}, scale_out_value=${var.autoscale.scale_out_value}, scale_in_value=${var.autoscale.scale_in_value}. This ensures proper distribution across availability zones."
+    error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. This ensures proper distribution across availability zones."
   }
 
   validation {
-    condition     = var.autoscale.minimum_instances <= var.autoscale.default_instances && var.autoscale.default_instances <= var.autoscale.maximum_instances
+    condition = var.autoscale == null || (
+      var.autoscale.minimum_instances == null || var.autoscale.default_instances == null || var.autoscale.maximum_instances == null ||
+      (var.autoscale.minimum_instances <= var.autoscale.default_instances && var.autoscale.default_instances <= var.autoscale.maximum_instances)
+    )
     error_message = "The default_instances must be between minimum_instances and maximum_instances."
   }
 
   validation {
-    condition     = var.autoscale.minimum_instances > 0
+    condition     = var.autoscale == null || var.autoscale.minimum_instances == null || var.autoscale.minimum_instances > 0
     error_message = "The minimum_instances must be greater than 0."
   }
 
   validation {
-    condition     = tonumber(var.autoscale.scale_out_value) > 0
+    condition     = var.autoscale == null || var.autoscale.scale_out_value == null || tonumber(var.autoscale.scale_out_value) > 0
     error_message = "The scale_out_value must be greater than 0."
   }
 
   validation {
-    condition     = tonumber(var.autoscale.scale_in_value) > 0
+    condition     = var.autoscale == null || var.autoscale.scale_in_value == null || tonumber(var.autoscale.scale_in_value) > 0
     error_message = "The scale_in_value must be greater than 0."
   }
 }
@@ -145,8 +133,8 @@ variable "virtual_network_type_internal" {
 
 variable "enable_public_network_access" {
   type        = bool
-  description = "Specifies whether public network access is enabled."
-  default     = null
+  description = "Specifies whether public network access is enabled (`true` as Default)."
+  default     = true
 }
 
 variable "public_ip_address_id" {
@@ -200,32 +188,30 @@ variable "xml_content" {
 
 variable "hostname_configuration" {
   type = object({
-
-    proxy = list(object(
-      {
-        default_ssl_binding = bool
-        host_name           = string
-        key_vault_id        = string
-    }))
-
-    management = object({
+    proxy = optional(list(object({
+      host_name           = string
+      key_vault_id        = string
+      default_ssl_binding = optional(bool, false)
+    })), [])
+    management = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
-    portal = object({
+    })), [])
+    portal = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
-    developer_portal = object({
+    })), [])
+    developer_portal = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
+    })), [])
+    scm = optional(list(object({
+      host_name    = string
+      key_vault_id = string
+    })), [])
   })
-  default     = null
-  description = "Configuration for custom domains."
+  default     = {}
+  description = "Custom domain configurations organized by type. Each type (proxy, management, portal, developer_portal, scm) contains a list of domain configurations."
 }
 
 #---------------#
