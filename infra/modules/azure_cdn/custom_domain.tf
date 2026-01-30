@@ -2,7 +2,7 @@ resource "azurerm_cdn_frontdoor_secret" "certificate" {
   for_each = { for custom_domain in var.custom_domains : custom_domain.host_name => custom_domain if lookup(local.is_apex, custom_domain.host_name, false) }
 
   name                     = "${replace(each.key, ".", "-")}-customer-certificate"
-  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
+  cdn_frontdoor_profile_id = local.profile_id
 
   secret {
     customer_certificate {
@@ -15,7 +15,7 @@ resource "azurerm_cdn_frontdoor_custom_domain" "this" {
   for_each = { for custom_domain in var.custom_domains : custom_domain.host_name => custom_domain }
 
   name                     = replace(each.key, ".", "-")
-  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.this.id
+  cdn_frontdoor_profile_id = local.profile_id
   host_name                = each.value.host_name
 
   # Not an apex domain, so we can use a managed certificate
@@ -63,7 +63,7 @@ resource "azurerm_role_assignment" "this" {
   description          = "Role assignment for Front Door's managed identity to access the customer certificate in Key Vault"
   scope                = data.azurerm_key_vault.this[each.key].id
   role_definition_name = "Key Vault Secret User"
-  principal_id         = azurerm_cdn_frontdoor_profile.this.identity[0].principal_id
+  principal_id         = local.profile_identity_id
 }
 
 # Create access policies for the Front Door's managed identity to access
@@ -73,7 +73,7 @@ resource "azurerm_key_vault_access_policy" "this" {
 
   key_vault_id = data.azurerm_key_vault.this[each.key].id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_cdn_frontdoor_profile.this.identity[0].principal_id
+  object_id    = local.profile_identity_id
 
   secret_permissions = ["List", "Get"]
 }
