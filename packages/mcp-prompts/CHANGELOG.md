@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.2
+
+### Patch Changes
+
+- 14a5573: Add private flag in order to avoid publish the package on NPM registry
+
 ## 0.2.1
 
 ### Patch Changes

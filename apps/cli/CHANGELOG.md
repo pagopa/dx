@@ -1,5 +1,23 @@
 # @pagopa/dx-cli
 
+## 0.15.5
+
+### Patch Changes
+
+- cf52efc: Fix GitHub workflows glob pattern when applying pnpm codemod
+
+## 0.15.4
+
+### Patch Changes
+
+- b6a064c: Move node-plop to dependencies
+
+## 0.15.3
+
+### Patch Changes
+
+- 2e76daf: Move plop generators from @pagopa/monorepo-generator
+
 ## 0.15.2
 
 ### Patch Changes

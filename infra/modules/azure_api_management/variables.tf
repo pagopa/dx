@@ -60,9 +60,9 @@ variable "autoscale" {
   )
   default = {
     enabled                       = true
-    default_instances             = 1
-    minimum_instances             = 1
-    maximum_instances             = 5
+    default_instances             = 2
+    minimum_instances             = 2
+    maximum_instances             = 6
     scale_out_capacity_percentage = 60
     scale_out_time_window         = "PT10M"
     scale_out_value               = "2"
@@ -70,7 +70,7 @@ variable "autoscale" {
     scale_in_capacity_percentage  = 30
 
     scale_in_time_window = "PT30M"
-    scale_in_value       = "1"
+    scale_in_value       = "2"
     scale_in_cooldown    = "PT30M"
   }
   description = "Configuration for autoscaling rules on capacity metrics."

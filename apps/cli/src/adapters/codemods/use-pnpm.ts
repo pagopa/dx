@@ -150,14 +150,14 @@ async function updateDXWorkflows(): Promise<void> {
   // Update the js_code_review workflow to use the latest commit sha
   const results = await replaceInFile({
     allowEmptyPaths: true,
-    files: [".github/workflows/*.yaml"],
+    files: [".github/workflows/*.yaml", ".github/workflows/*.yml"],
     processor: updateJSCodeReviewJob(sha),
   });
   const ignore = results.filter((r) => r.hasChanged).map((r) => r.file);
   // Update the legacy deployment workflow to release-azure-appsvc-v1.yaml
   await replaceInFile({
     allowEmptyPaths: true,
-    files: [".github/workflows/*.yaml"],
+    files: [".github/workflows/*.yaml", ".github/workflows/*.yml"],
     ignore,
     processor: migrateWorkflow(sha),
   });

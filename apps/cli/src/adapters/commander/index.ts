@@ -17,13 +17,11 @@ export const makeCli = (
   deps: Dependencies,
   config: Config,
   cliDeps: CliDependencies,
+  version: string,
 ) => {
   const program = new Command();
 
-  program
-    .name("dx")
-    .description("The CLI for DX-Platform")
-    .version(__CLI_VERSION__);
+  program.name("dx").description("The CLI for DX-Platform").version(version);
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
