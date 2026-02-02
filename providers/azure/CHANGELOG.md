@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.8.3
+
+### Patch Changes
+
+- 5d6a57f: Add `env_short` and `app_name` inputs support for naming convention function, alternatively to `environment` and `name`
+
 ## 0.8.2
 
 ### Patch Changes
