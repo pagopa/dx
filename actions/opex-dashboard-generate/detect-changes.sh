@@ -9,6 +9,13 @@ set -euo pipefail
 # Outputs:
 #   Sets GITHUB_OUTPUT: changed_dashboards (JSON array)
 
+# Validate CONFIG_PATTERN to prevent injection attacks
+if [[ "${CONFIG_PATTERN}" =~ [\;\|\&\`\$\(\)] ]]; then
+  echo "::error::Invalid characters in config_pattern: ${CONFIG_PATTERN}"
+  echo "::error::Pattern must not contain: ; | & \` $ ( )"
+  exit 1
+fi
+
 # Get list of changed files
 if [ "${EVENT_NAME}" == "pull_request" ]; then
   CHANGED_FILES=$(git diff --name-only "origin/${BASE_REF}"...HEAD)

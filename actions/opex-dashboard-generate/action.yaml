@@ -63,6 +63,15 @@ runs:
       with:
         node-version: ${{ inputs.node_version }}
 
+    - name: Cache npm packages
+      uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-opex-${{ inputs.opex_dashboard_version }}
+        restore-keys: |
+          ${{ runner.os }}-npm-opex-
+          ${{ runner.os }}-npm-
+
     - name: Detect modified configs and OpenAPI specs
       id: detect
       shell: bash
@@ -93,6 +102,20 @@ runs:
           echo "has_changes=false" >> "${GITHUB_OUTPUT}"
           echo "No changes detected"
         fi
+
+    - name: Dry Run Summary
+      if: steps.check-changes.outputs.has_changes == 'true' && inputs.dry_run == 'true'
+      shell: bash
+      run: |
+        echo "### 🔍 Dry Run - Changes Detected" >> "${GITHUB_STEP_SUMMARY}"
+        echo "" >> "${GITHUB_STEP_SUMMARY}"
+        echo "The following files would be modified:" >> "${GITHUB_STEP_SUMMARY}"
+        echo "" >> "${GITHUB_STEP_SUMMARY}"
+        echo '```diff' >> "${GITHUB_STEP_SUMMARY}"
+        git diff --stat >> "${GITHUB_STEP_SUMMARY}"
+        echo '```' >> "${GITHUB_STEP_SUMMARY}"
+        echo "" >> "${GITHUB_STEP_SUMMARY}"
+        echo "**No PR will be created (dry-run mode enabled)**" >> "${GITHUB_STEP_SUMMARY}"
 
     - name: Create Pull Request
       id: create-pr

@@ -6,9 +6,12 @@ Automatically detect changes to dashboard configuration files and their referenc
 
 - 🔍 **Smart Detection**: Monitors both config files and their referenced OpenAPI specs
 - 🔄 **Automatic Generation**: Uses `@pagopa/opex-dashboard` to generate Terraform
+- ⚡ **Parallel Processing**: Generates multiple dashboards concurrently for improved performance
+- 💾 **NPM Caching**: Caches npm packages to speed up subsequent runs
 - 🤖 **PR Automation**: Creates pull requests with detailed change summaries
 - 🔒 **Fork Protection**: Automatically skips execution on forked repositories
-- 🛡️ **Security Hardened**: Shell scripts follow security best practices
+- 🛡️ **Security Hardened**: Input validation and safe git operations to prevent injection attacks
+- 🧪 **Dry Run Support**: Preview changes without creating pull requests
 
 ## Usage
 
@@ -104,15 +107,21 @@ jobs:
 1. **Detection Phase**: Scans for changes to:
    - Dashboard config files matching the specified pattern
    - OpenAPI specifications referenced by those configs
+   - Validates inputs to prevent injection attacks
 
 2. **Generation Phase**: For each changed dashboard:
-   - Runs `@pagopa/opex-dashboard generate`
+   - Runs `@pagopa/opex-dashboard generate` in parallel (max 4 concurrent)
    - Outputs Terraform files in the same directory as the config
+   - Uses npm caching to improve performance
 
 3. **PR Creation Phase**: If changes are detected and `dry_run` is false:
    - Creates a new branch with a unique name
-   - Commits all generated changes
+   - Commits only Terraform-related files
    - Opens a pull request with a summary of changed dashboards
+4. **Dry Run Mode**: When enabled:
+   - Performs detection and generation
+   - Shows a summary of changes that would be committed
+   - Skips PR creation
 
 ## Config File Format
 
@@ -131,7 +140,10 @@ Both absolute and relative paths are supported for `oa3_spec`.
 - **Fork Protection**: The action should be used with a job-level condition to prevent execution on forks
 - **Permissions**: Requires `contents: write` and `pull-requests: write`
 - **Token Scope**: Uses `GITHUB_TOKEN` by default with minimal required permissions
-- **Input Validation**: All shell scripts properly quote variables to prevent injection attacks
+- **Input Validation**:
+  - `config_pattern` is validated to prevent glob injection attacks
+  - `opex_dashboard_version` is validated to ensure proper semantic versioning format
+- **Safe Git Operations**: Only Terraform files (`*.tf`, `*.tf.json`, `*.tfvars`) are committed to prevent accidental inclusion of sensitive files
 
 ## Recommended Workflow Setup
 

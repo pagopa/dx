@@ -19,7 +19,16 @@ git config user.email "github-actions[bot]@users.noreply.github.com"
 
 # Create and push branch
 git checkout -b "${BRANCH_NAME}"
-git add .
+
+# Add only Terraform files to avoid including unintended files
+git add --all -- '*.tf' '*.tf.json' '*.tfvars'
+
+# Check if there are staged changes
+if [ -z "$(git diff --cached --name-only)" ]; then
+  echo "::error::No Terraform files to commit"
+  exit 1
+fi
+
 git commit -m "${PR_TITLE}"
 git push origin "${BRANCH_NAME}"
 
