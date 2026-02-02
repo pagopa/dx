@@ -71,7 +71,7 @@ jobs:
           pr_title: "chore(dashboards): update OpEx dashboards"
           pr_body: |
             Automated update of Azure Dashboard Terraform configurations.
-            
+
             Please review the generated changes carefully.
           base_branch: "main"
           dry_run: ${{ inputs.dry_run || false }}
@@ -80,24 +80,24 @@ jobs:
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `config_pattern` | Glob pattern to find dashboard config files | Yes | - |
-| `node_version` | Node.js version to use | No | `22` |
-| `opex_dashboard_version` | Version of @pagopa/opex-dashboard to use | No | `latest` |
-| `pr_title` | Title for the generated pull request | No | `chore: update OpEx dashboards` |
-| `pr_body` | Body for the generated pull request | No | `Automated update of dashboard Terraform from OpenAPI specifications.` |
-| `base_branch` | Base branch for the pull request | No | `main` |
-| `dry_run` | If true, only detect changes without creating PR | No | `false` |
-| `github_token` | GitHub token for creating pull requests | No | `${{ github.token }}` |
+| Input                    | Description                                      | Required | Default                                                                |
+| ------------------------ | ------------------------------------------------ | -------- | ---------------------------------------------------------------------- |
+| `config_pattern`         | Glob pattern to find dashboard config files      | Yes      | -                                                                      |
+| `node_version`           | Node.js version to use                           | No       | `22`                                                                   |
+| `opex_dashboard_version` | Version of @pagopa/opex-dashboard to use         | No       | `latest`                                                               |
+| `pr_title`               | Title for the generated pull request             | No       | `chore: update OpEx dashboards`                                        |
+| `pr_body`                | Body for the generated pull request              | No       | `Automated update of dashboard Terraform from OpenAPI specifications.` |
+| `base_branch`            | Base branch for the pull request                 | No       | `main`                                                                 |
+| `dry_run`                | If true, only detect changes without creating PR | No       | `false`                                                                |
+| `github_token`           | GitHub token for creating pull requests          | No       | `${{ github.token }}`                                                  |
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `has_changes` | Whether any dashboard changes were detected (true/false) |
-| `changed_dashboards` | JSON array of changed dashboard paths |
-| `pr_number` | Number of the created pull request (if any) |
+| Output               | Description                                              |
+| -------------------- | -------------------------------------------------------- |
+| `has_changes`        | Whether any dashboard changes were detected (true/false) |
+| `changed_dashboards` | JSON array of changed dashboard paths                    |
+| `pr_number`          | Number of the created pull request (if any)              |
 
 ## How It Works
 
@@ -106,7 +106,7 @@ jobs:
    - OpenAPI specifications referenced by those configs
 
 2. **Generation Phase**: For each changed dashboard:
-   - Runs `@pagopa/opex-dashboard generate` 
+   - Runs `@pagopa/opex-dashboard generate`
    - Outputs Terraform files in the same directory as the config
 
 3. **PR Creation Phase**: If changes are detected and `dry_run` is false:
