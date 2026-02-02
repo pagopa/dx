@@ -12,7 +12,7 @@ while IFS= read -r config; do
   echo "Generating dashboard from: ${config}"
 
   # Generate Terraform in the same directory as the config
-  npx "@pagopa/opex-dashboard@${OPEX_VERSION}" generate \
+  npx --yes "@pagopa/opex-dashboard@${OPEX_VERSION}" generate \
     -t azure-dashboard \
     -c "${config}" \
     --package "${CONFIG_DIR}"
