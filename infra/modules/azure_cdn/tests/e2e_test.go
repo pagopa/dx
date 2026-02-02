@@ -14,7 +14,7 @@ import (
 
 // TestCDNEndpointAccessibility tests that the CDN endpoint is accessible via HTTPS
 func TestCDNEndpointAccessibility(t *testing.T) {
-	fixtureFolder := "../examples/advanced"
+	fixtureFolder := "../examples/e2e"
 
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{

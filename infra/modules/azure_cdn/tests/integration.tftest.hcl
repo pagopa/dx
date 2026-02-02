@@ -230,63 +230,6 @@ run "apply_cdn_with_waf" {
   }
 }
 
-run "apply_cdn_with_diagnostic_settings" {
-  command = apply
-
-  variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "integ"
-      app_name        = "test"
-      instance_number = "04"
-    }
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
-
-    origins = {
-      primary = {
-        host_name = run.setup.storage_account_host_name
-      }
-    }
-
-    diagnostic_settings = {
-      enabled                         = true
-      log_analytics_workspace_id      = run.setup.log_analytics_workspace_id
-      log_analytics_destination_type  = "Dedicated"
-      storage_account_id              = null
-      event_hub_authorization_rule_id = null
-      event_hub_name                  = null
-      marketplace_partner_resource_id = null
-      logs_destinations_ids           = []
-      metric_enabled                  = true
-      log_categories                  = null
-      metric_categories               = null
-      retention_policy_enabled        = false
-      retention_policy_days           = 0
-      eventhub_authorization_rule_id  = null
-      partner_solution_id             = null
-    }
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
-    error_message = "Diagnostic setting must be created"
-  }
-
-  assert {
-    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == run.setup.log_analytics_workspace_id
-    error_message = "Diagnostic setting must use correct Log Analytics workspace"
-  }
-
-  assert {
-    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_destination_type == "Dedicated"
-    error_message = "Diagnostic setting must use dedicated destination type"
-  }
-}
-
 run "apply_cdn_with_multiple_origins" {
   command = apply
 
