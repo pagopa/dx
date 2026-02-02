@@ -81,8 +81,8 @@ resource "azurerm_dns_zone" "devex_pagopa_it" {
 
 # Create a test CDN profile for existing profile tests
 data "azurerm_cdn_frontdoor_profile" "test" {
-  name                = "dx-d-itn-pagopa-afd-02"
-  resource_group_name = "dx-d-itn-pagopa-rg-01"
+  name                = "dx-d-itn-test-afd-01"
+  resource_group_name = "dx-d-itn-integration-rg-01"
 }
 
 output "pep_id" {

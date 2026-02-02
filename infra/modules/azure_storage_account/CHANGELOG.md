@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 2.1.3
+
+### Patch Changes
+
+- a596707: fix variable validation when values are null
+
 ## 2.1.2
 
 ### Patch Changes

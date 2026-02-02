@@ -50,7 +50,7 @@ resource "azurerm_cdn_frontdoor_origin" "this" {
 }
 
 resource "azurerm_cdn_frontdoor_rule_set" "this" {
-  name                     = "ruleset"
+  name                     = local.create_profile ? "ruleset" : "additionalruleset"
   cdn_frontdoor_profile_id = local.profile_id
 }
 
