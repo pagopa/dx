@@ -36,12 +36,109 @@ const BootstrapIdentityId = z
   .brand<"BootstrapIdentityId">();
 
 /**
+ * Branded type for resource prefix (e.g., "dx", "io").
+ * Validates that the prefix contains only lowercase letters to prevent injection.
+ */
+const ResourcePrefix = z
+  .string()
+  .min(1)
+  .regex(/^[a-z]+$/, {
+    message: "Resource prefix may contain only lowercase letters",
+  })
+  .brand<"ResourcePrefix">();
+
+/**
+ * Branded type for environment short name (e.g., "d", "u", "p").
+ * Validates single lowercase letter for environment.
+ */
+const EnvShort = z
+  .string()
+  .min(1)
+  .max(1)
+  .regex(/^[a-z]$/, {
+    message: "Environment short name must be a single lowercase letter",
+  })
+  .brand<"EnvShort">();
+
+/**
  * Input validation schema for the request Azure authorization use case.
  */
 export const requestAzureAuthorizationInputSchema = z.object({
   bootstrapIdentityId: BootstrapIdentityId,
+  envShort: EnvShort,
+  prefix: ResourcePrefix,
   subscriptionName: SubscriptionName,
 });
+
+/**
+ * Configuration for an AD group with its roles.
+ */
+export type GroupConfig = {
+  readonly members: readonly string[];
+  readonly name: string;
+  readonly roles: readonly string[];
+};
+
+/**
+ * Group suffix and roles configuration for default AD groups.
+ */
+type DefaultGroupSpec = {
+  readonly roles: readonly string[];
+  readonly suffix: string;
+};
+
+/**
+ * Default AD groups that should be created for each subscription.
+ * These follow the PagoPA standard pattern: <prefix>-<envShort>-<suffix>
+ */
+export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
+  { roles: ["Owner"], suffix: "adgroup-admin" },
+  { roles: ["Owner"], suffix: "adgroup-developers" },
+  {
+    roles: [
+      "Reader",
+      "Monitoring Contributor",
+      "Support Request Contributor",
+      "Storage Blob Data Reader",
+      "Storage Queue Data Reader",
+      "Cosmos DB Account Reader Role",
+    ],
+    suffix: "adgroup-operations",
+  },
+  {
+    roles: ["Reader", "Support Request Contributor"],
+    suffix: "adgroup-security",
+  },
+  {
+    roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
+    suffix: "adgroup-technical-project-managers",
+  },
+  {
+    roles: ["Reader", "Support Request Contributor"],
+    suffix: "adgroup-product-owners",
+  },
+  { roles: ["Owner"], suffix: "adgroup-externals" },
+  {
+    roles: [
+      "Reader",
+      "Monitoring Contributor",
+      "Support Request Contributor",
+      "Storage Blob Data Reader",
+      "Storage Queue Data Reader",
+      "Cosmos DB Account Reader Role",
+    ],
+    suffix: "adgroup-oncall",
+  },
+];
+
+/**
+ * Generates the full group name from prefix, envShort, and suffix.
+ */
+export const makeGroupName = (
+  prefix: string,
+  envShort: string,
+  suffix: string,
+): string => `${prefix}-${envShort}-${suffix}`;
 
 /**
  * Service interface for managing Azure authorization operations.
@@ -70,6 +167,22 @@ export interface AzureAuthorizationService {
    * @returns true if the identity already exists
    */
   containsIdentityId(content: string, identityId: string): boolean;
+
+  /**
+   * Adds or updates AD groups in the tfvars content.
+   * - If a group doesn't exist, adds it with empty members array
+   * - If a group exists with different roles, updates the roles (preserving members)
+   * - If a group exists with correct roles, skips it
+   * @param content - The current authorization file content
+   * @param prefix - The resource prefix (e.g., "dx")
+   * @param envShort - The environment short name (e.g., "d")
+   * @returns Updated authorization file content or error
+   */
+  upsertGroups(
+    content: string,
+    prefix: string,
+    envShort: string,
+  ): Result<string, AzureAuthorizationError>;
 }
 
 export type RequestAzureAuthorizationInput = z.infer<

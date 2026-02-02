@@ -29,6 +29,8 @@ const makeEnv = () => {
 const makeSampleInput = (): RequestAzureAuthorizationInput =>
   requestAzureAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
+    envShort: "d",
+    prefix: "test",
     subscriptionName: "test-subscription",
   });
 
@@ -43,12 +45,23 @@ directory_readers = {
   service_principals_name = []
 }
 `.trim();
-      const updatedContent = `
+      const contentWithIdentity = `
 directory_readers = {
   service_principals_name = [
-    "test-bootstrap-identity-id",
+    "test-bootstrap-identity-id"
   ]
 }
+`.trim();
+      const finalContent = `
+directory_readers = {
+  service_principals_name = [
+    "test-bootstrap-identity-id"
+  ]
+}
+
+groups = [
+  { name = "test-d-adgroup-admin", members = [], roles = ["Owner"] }
+]
 `.trim();
 
       // Setup mocks
@@ -57,7 +70,10 @@ directory_readers = {
         sha: "original-sha-123",
       });
       azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(ok(updatedContent));
+      azureAuthorizationService.addIdentity.mockReturnValue(
+        ok(contentWithIdentity),
+      );
+      azureAuthorizationService.upsertGroups.mockReturnValue(ok(finalContent));
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockResolvedValue(undefined);
       gitHubService.createPullRequest.mockResolvedValue(
@@ -102,10 +118,16 @@ directory_readers = {
         "test-bootstrap-identity-id",
       );
 
+      expect(azureAuthorizationService.upsertGroups).toHaveBeenCalledWith(
+        contentWithIdentity,
+        "test",
+        "d",
+      );
+
       expect(gitHubService.updateFile).toHaveBeenCalledWith({
         branch: "feats/add-test-subscription-bootstrap-identity",
-        content: updatedContent,
-        message: "Add directory reader for test-subscription",
+        content: finalContent,
+        message: "Add bootstrap identity and AD groups for test-subscription",
         owner: "pagopa",
         path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
         repo: "eng-azure-authorization",
@@ -114,11 +136,11 @@ directory_readers = {
 
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
+        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-subscription-bootstrap-identity",
         owner: "pagopa",
         repo: "eng-azure-authorization",
-        title: "Add directory reader for test-subscription",
+        title: "Add bootstrap identity and AD groups for test-subscription",
       });
     });
   });
@@ -257,7 +279,10 @@ directory_readers = {
       });
       azureAuthorizationService.containsIdentityId.mockReturnValue(false);
       azureAuthorizationService.addIdentity.mockReturnValue(
-        ok("updated content"),
+        ok("content with identity"),
+      );
+      azureAuthorizationService.upsertGroups.mockReturnValue(
+        ok("final content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockRejectedValue(
@@ -291,7 +316,10 @@ directory_readers = {
       });
       azureAuthorizationService.containsIdentityId.mockReturnValue(false);
       azureAuthorizationService.addIdentity.mockReturnValue(
-        ok("updated content"),
+        ok("content with identity"),
+      );
+      azureAuthorizationService.upsertGroups.mockReturnValue(
+        ok("final content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockResolvedValue(undefined);

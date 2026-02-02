@@ -1,8 +1,10 @@
 import { assert, describe, expect, it } from "vitest";
 
 import {
+  DEFAULT_GROUP_SPECS,
   IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
+  makeGroupName,
 } from "../../../domain/azure-authorization.js";
 import { makeAzureAuthorizationService } from "../index.js";
 
@@ -47,6 +49,7 @@ other_config = {
 }
 `.trim();
 
+// eslint-disable-next-line max-lines-per-function
 describe("AzureAuthorizationService", () => {
   describe("containsIdentityId", () => {
     it("should return false when the identity does not exist in an empty list", () => {
@@ -241,6 +244,215 @@ directory_readers = {
 
       // Last item should NOT have comma
       expect(updatedContent).not.toContain('"identity-3",');
+    });
+  });
+
+  // eslint-disable-next-line max-lines-per-function
+  describe("upsertGroups", () => {
+    const makeTfvarsWithGroups = (groups: string) =>
+      `
+env_short = "d"
+prefix    = "test"
+
+directory_readers = {
+  service_principals_name = []
+}
+
+groups = [
+${groups}
+]
+
+vpn = {
+  members = []
+}
+`.trim();
+
+    const makeTfvarsWithoutGroups = () =>
+      `
+env_short = "d"
+prefix    = "test"
+
+directory_readers = {
+  service_principals_name = []
+}
+
+vpn = {
+  members = []
+}
+`.trim();
+
+    it("should create groups list when it does not exist", () => {
+      const service = makeAzureAuthorizationService();
+      const content = makeTfvarsWithoutGroups();
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should contain all 8 default groups
+      for (const spec of DEFAULT_GROUP_SPECS) {
+        const groupName = makeGroupName("test", "d", spec.suffix);
+        expect(updatedContent).toContain(`name = "${groupName}"`);
+      }
+
+      // Should have groups = [ block
+      expect(updatedContent).toContain("groups = [");
+    });
+
+    it("should add missing groups to existing groups list", () => {
+      const service = makeAzureAuthorizationService();
+      // Only has admin group
+      const existingGroup = `  {
+    name = "test-d-adgroup-admin"
+    members = [
+      "user@example.com"
+    ],
+    roles = [
+      "Owner"
+    ]
+  }`;
+      const content = makeTfvarsWithGroups(existingGroup);
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should contain all 8 default groups
+      for (const spec of DEFAULT_GROUP_SPECS) {
+        const groupName = makeGroupName("test", "d", spec.suffix);
+        expect(updatedContent).toContain(`name = "${groupName}"`);
+      }
+
+      // Should preserve existing member
+      expect(updatedContent).toContain('"user@example.com"');
+    });
+
+    it("should update roles when they differ from expected", () => {
+      const service = makeAzureAuthorizationService();
+      // Admin group with wrong roles
+      const existingGroup = `  {
+    name = "test-d-adgroup-admin"
+    members = [
+      "admin@example.com"
+    ],
+    roles = [
+      "Reader"
+    ]
+  }`;
+      const content = makeTfvarsWithGroups(existingGroup);
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should have updated to Owner role
+      expect(updatedContent).toContain('"Owner"');
+      // Should preserve existing member
+      expect(updatedContent).toContain('"admin@example.com"');
+    });
+
+    it("should preserve groups that already have correct configuration", () => {
+      const service = makeAzureAuthorizationService();
+      const existingGroup = `  {
+    name = "test-d-adgroup-admin"
+    members = [
+      "existing@example.com"
+    ],
+    roles = [
+      "Owner"
+    ]
+  }`;
+      const content = makeTfvarsWithGroups(existingGroup);
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should preserve existing member
+      expect(updatedContent).toContain('"existing@example.com"');
+    });
+
+    it("should preserve non-default groups", () => {
+      const service = makeAzureAuthorizationService();
+      const existingGroups = `  {
+    name = "test-d-adgroup-admin"
+    members = [],
+    roles = [
+      "Owner"
+    ]
+  },
+  {
+    name = "test-d-custom-group"
+    members = [
+      "custom@example.com"
+    ],
+    roles = [
+      "Contributor"
+    ]
+  }`;
+      const content = makeTfvarsWithGroups(existingGroups);
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should preserve custom group
+      expect(updatedContent).toContain('"test-d-custom-group"');
+      expect(updatedContent).toContain('"custom@example.com"');
+      expect(updatedContent).toContain('"Contributor"');
+    });
+
+    it("should create groups with empty members array", () => {
+      const service = makeAzureAuthorizationService();
+      const content = makeTfvarsWithoutGroups();
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // New groups should have empty members
+      expect(updatedContent).toContain("members = []");
+    });
+
+    it("should preserve other content in the tfvars file", () => {
+      const service = makeAzureAuthorizationService();
+      const content = makeTfvarsWithoutGroups();
+
+      const result = service.upsertGroups(content, "test", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Should preserve other configurations
+      expect(updatedContent).toContain('env_short = "d"');
+      expect(updatedContent).toContain('prefix    = "test"');
+      expect(updatedContent).toContain("directory_readers");
+      expect(updatedContent).toContain("vpn");
+    });
+
+    it("should handle all default groups with correct roles", () => {
+      const service = makeAzureAuthorizationService();
+      const content = makeTfvarsWithoutGroups();
+
+      const result = service.upsertGroups(content, "dx", "d");
+
+      expect(result.isOk()).toBe(true);
+      const updatedContent = result._unsafeUnwrap();
+
+      // Check specific groups have expected roles
+      // Admin should have Owner
+      expect(updatedContent).toContain('"dx-d-adgroup-admin"');
+
+      // Operations should have multiple roles including Reader
+      expect(updatedContent).toContain('"dx-d-adgroup-operations"');
+      expect(updatedContent).toContain('"Monitoring Contributor"');
+      expect(updatedContent).toContain('"Storage Blob Data Reader"');
     });
   });
 });

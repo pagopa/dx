@@ -3,8 +3,11 @@ import { err, ok, Result } from "neverthrow";
 import {
   AzureAuthorizationError,
   AzureAuthorizationService,
+  DEFAULT_GROUP_SPECS,
+  GroupConfig,
   IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
+  makeGroupName,
 } from "../../domain/azure-authorization.js";
 
 /**
@@ -18,6 +21,138 @@ import {
  */
 const DIRECTORY_READERS_REGEX =
   /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(][\s\S]*?})/;
+
+/**
+ * Finds and extracts the groups list from content using bracket counting.
+ * Returns the match info including start/end positions and content.
+ */
+const findGroupsList = (
+  content: string,
+): undefined | { content: string; end: number; start: number } => {
+  const startMatch = content.match(/groups\s*=\s*\[/);
+  if (!startMatch || startMatch.index === undefined) {
+    return undefined;
+  }
+
+  const listStartIndex = startMatch.index + startMatch[0].length;
+  let depth = 1;
+  let i = listStartIndex;
+
+  while (i < content.length && depth > 0) {
+    if (content[i] === "[") {
+      depth++;
+    } else if (content[i] === "]") {
+      depth--;
+    }
+    i++;
+  }
+
+  if (depth !== 0) {
+    return undefined;
+  }
+
+  return {
+    content: content.slice(listStartIndex, i - 1),
+    end: i,
+    start: startMatch.index,
+  };
+};
+
+/**
+ * Parses all group objects from the groups list content.
+ * Uses a bracket-counting approach to handle nested arrays within group objects.
+ */
+const parseGroupObjects = (groupsContent: string): string[] => {
+  const groups: string[] = [];
+  let depth = 0;
+  let currentGroup = "";
+  let inGroup = false;
+
+  for (const char of groupsContent) {
+    if (char === "{") {
+      if (depth === 0) {
+        inGroup = true;
+        currentGroup = "";
+      }
+      depth++;
+      currentGroup += char;
+    } else if (char === "}") {
+      depth--;
+      currentGroup += char;
+      if (depth === 0 && inGroup) {
+        groups.push(currentGroup);
+        inGroup = false;
+      }
+    } else if (inGroup) {
+      currentGroup += char;
+    }
+  }
+
+  return groups;
+};
+
+/**
+ * Parses a single group object from HCL format.
+ */
+const parseGroupObject = (groupStr: string): GroupConfig | undefined => {
+  const nameMatch = groupStr.match(/name\s*=\s*"([^"]+)"/);
+  const rolesMatch = groupStr.match(/roles\s*=\s*\[([\s\S]*?)]/);
+  const membersMatch = groupStr.match(/members\s*=\s*\[([\s\S]*?)]/);
+
+  if (!nameMatch) {
+    return undefined;
+  }
+
+  const name = nameMatch[1];
+  const roles = rolesMatch
+    ? [...rolesMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
+    : [];
+  const members = membersMatch
+    ? [...membersMatch[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
+    : [];
+
+  return { members, name, roles };
+};
+
+/**
+ * Formats a group config to HCL format.
+ */
+const formatGroupToHcl = (group: GroupConfig): string => {
+  const membersStr =
+    group.members.length > 0
+      ? group.members.map((m) => `      "${m}"`).join(",\n")
+      : "";
+
+  const rolesStr = group.roles.map((r) => `      "${r}"`).join(",\n");
+
+  const membersBlock =
+    group.members.length > 0
+      ? `    members = [\n${membersStr}\n    ]`
+      : `    members = []`;
+
+  return `  {
+    name = "${group.name}"
+${membersBlock},
+    roles = [
+${rolesStr}
+    ]
+  }`;
+};
+
+/**
+ * Checks if two role arrays are equivalent (same roles, order-independent).
+ */
+const rolesAreEqual = (
+  roles1: readonly string[],
+  roles2: readonly string[],
+): boolean => {
+  if (roles1.length !== roles2.length) {
+    return false;
+  }
+  const sorted1 = [...roles1].sort();
+  const sorted2 = [...roles2].sort();
+  return sorted1.every((role, idx) => role === sorted2[idx]);
+};
 
 /**
  * Creates an AzureAuthorizationService implementation that uses regex-based parsing
@@ -92,5 +227,95 @@ export const makeAzureAuthorizationService = (): AzureAuthorizationService => ({
     const listContent = match[2];
     // Check if the identity ID exists as a quoted string in the list
     return listContent.includes(`"${identityId}"`);
+  },
+
+  upsertGroups(
+    content: string,
+    prefix: string,
+    envShort: string,
+  ): Result<string, AzureAuthorizationError> {
+    // Build expected groups from defaults
+    const expectedGroups: GroupConfig[] = DEFAULT_GROUP_SPECS.map((spec) => ({
+      members: [],
+      name: makeGroupName(prefix, envShort, spec.suffix),
+      roles: [...spec.roles],
+    }));
+
+    // Check if groups list exists using bracket-counting approach
+    const groupsListInfo = findGroupsList(content);
+
+    if (!groupsListInfo) {
+      // Groups list doesn't exist - create it with all default groups
+      const groupsHcl = expectedGroups.map(formatGroupToHcl).join(",\n");
+      const newGroupsBlock = `\ngroups = [\n${groupsHcl}\n]\n`;
+
+      // Find a good place to insert - after directory_readers or at end
+      const directoryReadersMatch = content.match(DIRECTORY_READERS_REGEX);
+      if (directoryReadersMatch) {
+        const insertIndex =
+          (directoryReadersMatch.index ?? 0) + directoryReadersMatch[0].length;
+        const updatedContent =
+          content.slice(0, insertIndex) +
+          newGroupsBlock +
+          content.slice(insertIndex);
+        return ok(updatedContent);
+      }
+
+      // Append at end if no directory_readers found
+      return ok(content + newGroupsBlock);
+    }
+
+    // Parse existing groups
+    const groupObjects = parseGroupObjects(groupsListInfo.content);
+    const existingGroups: GroupConfig[] = groupObjects
+      .map(parseGroupObject)
+      .filter((g): g is GroupConfig => g !== undefined);
+
+    // Create a map of existing groups by name for quick lookup
+    const existingGroupsMap = new Map(existingGroups.map((g) => [g.name, g]));
+
+    // Process each expected group
+    const finalGroups: GroupConfig[] = [];
+    const processedNames = new Set<string>();
+
+    // First, add/update expected groups
+    for (const expected of expectedGroups) {
+      const existing = existingGroupsMap.get(expected.name);
+      processedNames.add(expected.name);
+
+      if (!existing) {
+        // Group doesn't exist - add it with empty members
+        finalGroups.push(expected);
+      } else if (!rolesAreEqual(existing.roles, expected.roles)) {
+        // Group exists but roles differ - update roles, preserve members
+        finalGroups.push({
+          members: existing.members,
+          name: expected.name,
+          roles: [...expected.roles],
+        });
+      } else {
+        // Group exists with correct roles - keep as is
+        finalGroups.push(existing);
+      }
+    }
+
+    // Keep any extra groups that aren't in our defaults (preserve user-added groups)
+    for (const existing of existingGroups) {
+      if (!processedNames.has(existing.name)) {
+        finalGroups.push(existing);
+      }
+    }
+
+    // Format all groups to HCL
+    const groupsHcl = finalGroups.map(formatGroupToHcl).join(",\n");
+    const newGroupsBlock = `groups = [\n${groupsHcl}\n]`;
+
+    // Replace the existing groups block
+    const updatedContent =
+      content.slice(0, groupsListInfo.start) +
+      newGroupsBlock +
+      content.slice(groupsListInfo.end);
+
+    return ok(updatedContent);
   },
 });
