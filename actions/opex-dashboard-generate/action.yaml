@@ -1,0 +1,116 @@
+name: OpEx Dashboard Generate
+description: Automatically generate Azure Dashboard Terraform from OpenAPI specifications
+author: PagoPA
+
+branding:
+  icon: bar-chart-2
+  color: blue
+
+inputs:
+  config_pattern:
+    description: "Glob pattern to find dashboard config files (e.g., 'infra/dashboards/**/config.yaml')"
+    required: true
+  node_version:
+    description: "Node.js version to use"
+    required: false
+    default: "22"
+  opex_dashboard_version:
+    description: "Version of @pagopa/opex-dashboard to use"
+    required: false
+    default: "latest"
+  pr_title:
+    description: "Title for the generated pull request"
+    required: false
+    default: "chore: update OpEx dashboards"
+  pr_body:
+    description: "Body for the generated pull request"
+    required: false
+    default: "Automated update of dashboard Terraform from OpenAPI specifications."
+  base_branch:
+    description: "Base branch for the pull request"
+    required: false
+    default: "main"
+  dry_run:
+    description: "If true, only detect changes without creating PR"
+    required: false
+    default: "false"
+  github_token:
+    description: "GitHub token for creating pull requests"
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  has_changes:
+    description: "Whether any dashboard changes were detected"
+    value: ${{ steps.check-changes.outputs.has_changes }}
+  changed_dashboards:
+    description: "JSON array of changed dashboard paths"
+    value: ${{ steps.detect.outputs.changed_dashboards }}
+  pr_number:
+    description: "Number of the created pull request (if any)"
+    value: ${{ steps.create-pr.outputs.pull-request-number }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Detect modified configs and OpenAPI specs
+      id: detect
+      shell: bash
+      env:
+        CONFIG_PATTERN: ${{ inputs.config_pattern }}
+        BASE_REF: ${{ github.event.pull_request.base.ref || inputs.base_branch }}
+        EVENT_NAME: ${{ github.event_name }}
+      run: ${{ github.action_path }}/detect-changes.sh
+
+    - name: Generate Terraform for changed dashboards
+      id: generate
+      if: fromJson(steps.detect.outputs.changed_dashboards)[0] != null
+      shell: bash
+      env:
+        CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
+        OPEX_VERSION: ${{ inputs.opex_dashboard_version }}
+      run: ${{ github.action_path }}/generate-terraform.sh
+
+    - name: Check for changes
+      id: check-changes
+      shell: bash
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          echo "Changes detected:"
+          git status --short
+        else
+          echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+          echo "No changes detected"
+        fi
+
+    - name: Create Pull Request
+      id: create-pr
+      if: steps.check-changes.outputs.has_changes == 'true' && inputs.dry_run == 'false'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        PR_TITLE: ${{ inputs.pr_title }}
+        PR_BODY: ${{ inputs.pr_body }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
+        RUN_ID: ${{ github.run_id }}
+      run: ${{ github.action_path }}/create-pr.sh
+
+    - name: PR Created Summary
+      if: steps.create-pr.outputs.pull-request-number
+      shell: bash
+      run: |
+        echo "### ✅ Pull Request Created" >> "${GITHUB_STEP_SUMMARY}"
+        echo "" >> "${GITHUB_STEP_SUMMARY}"
+        echo "PR #${{ steps.create-pr.outputs.pull-request-number }}: ${{ steps.create-pr.outputs.pull-request-url }}" >> "${GITHUB_STEP_SUMMARY}"
