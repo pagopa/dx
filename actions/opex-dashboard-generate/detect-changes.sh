@@ -26,6 +26,7 @@ echo "Found config files:"
 echo "${CONFIG_FILES}"
 
 CHANGED_DASHBOARDS="[]"
+WORKSPACE_ROOT=$(pwd)
 
 for config in ${CONFIG_FILES}; do
   if [ -z "${config}" ]; then
@@ -48,7 +49,7 @@ for config in ${CONFIG_FILES}; do
     if [ -n "${OA3_SPEC}" ]; then
       # Handle relative paths
       if [[ "${OA3_SPEC}" != /* ]] && [[ "${OA3_SPEC}" != http* ]]; then
-        OA3_SPEC_FULL=$(cd "${CONFIG_DIR}" && realpath -m "${OA3_SPEC}" 2>/dev/null | sed "s|^$(pwd)/||" || echo "")
+        OA3_SPEC_FULL=$(cd "${CONFIG_DIR}" && realpath -m "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
 
         if [ -n "${OA3_SPEC_FULL}" ] && echo "${CHANGED_FILES}" | grep -q "^${OA3_SPEC_FULL}$"; then
           echo "OpenAPI spec modified: ${OA3_SPEC_FULL} (referenced by ${config})"
