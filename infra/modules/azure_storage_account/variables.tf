@@ -131,7 +131,7 @@ variable "blob_features" {
   }
 
   validation {
-    condition     = var.blob_features.immutability_policy.state == null || contains(["Locked", "Unlocked"], var.blob_features.immutability_policy.state)
+    condition     = try(var.blob_features.immutability_policy.state, null) == null ? true : contains(["Locked", "Unlocked"], var.blob_features.immutability_policy.state)
     error_message = "Immutability policy state must be either 'Locked' or 'Unlocked'. Note: Locking is irreversible and prevents account deletion."
   }
 
@@ -245,9 +245,9 @@ variable "containers" {
   validation {
     condition = alltrue([
       for c in var.containers :
-      c.immutability_policy == null || (
-        c.immutability_policy.period_in_days >= 1 &&
-        c.immutability_policy.period_in_days <= 146000
+      c.immutability_policy == null ? true : (
+        try(c.immutability_policy.period_in_days, 0) >= 1 &&
+        try(c.immutability_policy.period_in_days, 0) <= 146000
       )
     ])
     error_message = "Container immutability policy period must be between 1 and 146000 days (400 years)."
