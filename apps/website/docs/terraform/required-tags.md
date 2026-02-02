@@ -12,20 +12,12 @@ resource management.
 
 | Tag              | Description                                  | Example Values                                                                       |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `CostCenter`     | Budget tracking identifier                   | Always `"TS000 - Tecnologia e Servizi"`                                              |
+| `CostCenter`     | Budget tracking identifier                   | `"TS000 - Tecnologia e Servizi"` for IO                                              |
 | `CreatedBy`      | How the resource was created                 | Always `"Terraform"`                                                                 |
 | `Environment`    | Deployment environment                       | `"Prod"`, `"Dev"`, `"Uat"`                                                           |
 | `BusinessUnit`   | Product or business unit                     | `"App IO"`, `"CGN"`, `"Carta della Cultura"`, `"IT Wallet"`, `"DevEx"`               |
 | `Source`         | Link to the Terraform source code            | `"https://github.com/pagopa/<repo>/blob/main/infra/resources/<env>"`                 |
 | `ManagementTeam` | Team responsible for the resource management | `"IO Platform"`, `"IO Wallet"`, `"IO Comunicazione"`, `"Developer Experience"`, etc. |
-
-:::caution Fixed Values
-
-The `CostCenter` tag must **always** be `"TS000 - Tecnologia e Servizi"` and
-`CreatedBy` must **always** be `"Terraform"`. These values are company-wide
-standards.
-
-:::
 
 ## Implementation
 
