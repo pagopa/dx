@@ -292,7 +292,7 @@ vpn = {
 
       // Should contain all 8 default groups
       for (const spec of DEFAULT_GROUP_SPECS) {
-        const groupName = makeGroupName("test", "d", spec.suffix);
+        const groupName = makeGroupName("test", "d", spec.groupName);
         expect(updatedContent).toContain(`name = "${groupName}"`);
       }
 
@@ -321,7 +321,7 @@ vpn = {
 
       // Should contain all 8 default groups
       for (const spec of DEFAULT_GROUP_SPECS) {
-        const groupName = makeGroupName("test", "d", spec.suffix);
+        const groupName = makeGroupName("test", "d", spec.groupName);
         expect(updatedContent).toContain(`name = "${groupName}"`);
       }
 

@@ -80,20 +80,20 @@ export type GroupConfig = {
 };
 
 /**
- * Group suffix and roles configuration for default AD groups.
+ * Group name and roles configuration for default AD groups.
  */
 type DefaultGroupSpec = {
   readonly roles: readonly string[];
-  readonly suffix: string;
+  readonly groupName: string;
 };
 
 /**
  * Default AD groups that should be created for each subscription.
- * These follow the PagoPA standard pattern: <prefix>-<envShort>-<suffix>
+ * These follow the PagoPA standard pattern: <prefix>-<envShort>-adgroup-<groupName>
  */
 export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
-  { roles: ["Owner"], suffix: "adgroup-admin" },
-  { roles: ["Owner"], suffix: "adgroup-developers" },
+  { roles: ["Owner"], groupName: "admin" },
+  { roles: ["Owner"], groupName: "developers" },
   {
     roles: [
       "Reader",
@@ -103,21 +103,21 @@ export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
       "Storage Queue Data Reader",
       "Cosmos DB Account Reader Role",
     ],
-    suffix: "adgroup-operations",
+    groupName: "operations",
   },
   {
     roles: ["Reader", "Support Request Contributor"],
-    suffix: "adgroup-security",
+    groupName: "security",
   },
   {
     roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
-    suffix: "adgroup-technical-project-managers",
+    groupName: "technical-project-managers",
   },
   {
     roles: ["Reader", "Support Request Contributor"],
-    suffix: "adgroup-product-owners",
+    groupName: "product-owners",
   },
-  { roles: ["Owner"], suffix: "adgroup-externals" },
+  { roles: ["Owner"], groupName: "externals" },
   {
     roles: [
       "Reader",
@@ -127,18 +127,18 @@ export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
       "Storage Queue Data Reader",
       "Cosmos DB Account Reader Role",
     ],
-    suffix: "adgroup-oncall",
+    groupName: "oncall",
   },
 ];
 
 /**
- * Generates the full group name from prefix, envShort, and suffix.
+ * Generates the full group name from prefix, envShort, and groupName.
  */
 export const makeGroupName = (
   prefix: string,
   envShort: string,
-  suffix: string,
-): string => `${prefix}-${envShort}-${suffix}`;
+  groupName: string,
+): string => `${prefix}-${envShort}-adgroup-${groupName}`;
 
 /**
  * Service interface for managing Azure authorization operations.
