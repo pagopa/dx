@@ -57,9 +57,7 @@ directory_readers = {
         sha: "original-sha-123",
       });
       azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(
-        ok(updatedContent),
-      );
+      azureAuthorizationService.addIdentity.mockReturnValue(ok(updatedContent));
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockResolvedValue(undefined);
       gitHubService.createPullRequest.mockResolvedValue(
@@ -94,13 +92,15 @@ directory_readers = {
         repo: "eng-azure-authorization",
       });
 
-      expect(
-        azureAuthorizationService.containsIdentityId,
-      ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
+      expect(azureAuthorizationService.containsIdentityId).toHaveBeenCalledWith(
+        originalContent,
+        "test-bootstrap-identity-id",
+      );
 
-      expect(
-        azureAuthorizationService.addIdentity,
-      ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
+      expect(azureAuthorizationService.addIdentity).toHaveBeenCalledWith(
+        originalContent,
+        "test-bootstrap-identity-id",
+      );
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith({
         branch: "feats/add-test-subscription-bootstrap-identity",
@@ -182,9 +182,7 @@ directory_readers = {
       );
 
       // Should not proceed with modification or branch creation
-      expect(
-        azureAuthorizationService.addIdentity,
-      ).not.toHaveBeenCalled();
+      expect(azureAuthorizationService.addIdentity).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 

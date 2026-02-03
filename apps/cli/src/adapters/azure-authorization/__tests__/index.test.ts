@@ -47,17 +47,13 @@ other_config = {
 }
 `.trim();
 
-// eslint-disable-next-line max-lines-per-function
 describe("AzureAuthorizationService", () => {
   describe("containsIdentityId", () => {
     it("should return false when the identity does not exist in an empty list", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
-      const result = service.containsIdentityId(
-        content,
-        "new-identity-id",
-      );
+      const result = service.containsIdentityId(content, "new-identity-id");
 
       expect(result).toBe(false);
     });
@@ -69,10 +65,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.containsIdentityId(
-        content,
-        "new-identity-id",
-      );
+      const result = service.containsIdentityId(content, "new-identity-id");
 
       expect(result).toBe(false);
     });
@@ -85,10 +78,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.containsIdentityId(
-        content,
-        "target-identity",
-      );
+      const result = service.containsIdentityId(content, "target-identity");
 
       expect(result).toBe(true);
     });
@@ -97,10 +87,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
-      const result = service.containsIdentityId(
-        content,
-        "any-identity-id",
-      );
+      const result = service.containsIdentityId(content, "any-identity-id");
 
       expect(result).toBe(false);
     });
@@ -111,19 +98,13 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
-      const result = service.addIdentity(
-        content,
-        "new-bootstrap-identity",
-      );
+      const result = service.addIdentity(content, "new-bootstrap-identity");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();
       expect(updatedContent).toContain('"new-bootstrap-identity"');
       expect(
-        service.containsIdentityId(
-          updatedContent,
-          "new-bootstrap-identity",
-        ),
+        service.containsIdentityId(updatedContent, "new-bootstrap-identity"),
       ).toBe(true);
     });
 
@@ -134,10 +115,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.addIdentity(
-        content,
-        "new-bootstrap-identity",
-      );
+      const result = service.addIdentity(content, "new-bootstrap-identity");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();
@@ -151,10 +129,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
-      const result = service.addIdentity(
-        content,
-        "existing-identity",
-      );
+      const result = service.addIdentity(content, "existing-identity");
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
@@ -167,10 +142,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
-      const result = service.addIdentity(
-        content,
-        "new-bootstrap-identity",
-      );
+      const result = service.addIdentity(content, "new-bootstrap-identity");
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
@@ -185,10 +157,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
-      const result = service.addIdentity(
-        content,
-        "new-bootstrap-identity",
-      );
+      const result = service.addIdentity(content, "new-bootstrap-identity");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();
@@ -216,10 +185,7 @@ directory_readers = {
 }
 `.trim();
 
-      const result = service.addIdentity(
-        complexContent,
-        "third-identity",
-      );
+      const result = service.addIdentity(complexContent, "third-identity");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();
