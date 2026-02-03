@@ -63,7 +63,7 @@ Example: For the `azure-function-app` module, retrieve details from:
 
 **Ask the user for project-specific values** when not found in the existing codebase:
 
-- **Module use_case**: Present all available `use_case` options from the module documentation and ask the user to select the appropriate one (e.g., "default", "high_load", "spot")
+- **Module use_case**: Present all available `use_case` options from the chosen modules' documentation and **always ask the user to select the appropriate one** (e.g., "default", "high_load", "spot")
 - `environment` values: prefix, env_short, location, domain, app_name, instance_number
 - `tags` values: BusinessUnit, ManagementTeam
 - Backend state configuration
