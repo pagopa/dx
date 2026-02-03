@@ -90,7 +90,9 @@ If project-specific configuration is not found in the workspace, ask the user.
 - [ ] **Always use DX Registry modules (`pagopa-dx/*`)** — only use raw resources if the specific use case is not supported
 - [ ] DX provider configured for resource naming (`pagopa-dx/azure` or `pagopa-dx/aws`)
 - [ ] `provider::dx::resource_name()` used for all resource names
-- [ ] Module versions are the latest from Registry
+- [ ] Module versions specified using `~>` operator with major and minor versions only (e.g., `~> 1.5`)
+  - Ensures compatibility while allowing patch updates
+  - See [Semantic Versioning](https://dx.pagopa.it/docs/azure/using-azure-registry-provider#semantic-versioning) for details
 
 ### Project Structure
 
