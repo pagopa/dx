@@ -75,31 +75,57 @@ runs:
     - name: Build version command
       id: build-version-command
       shell: bash
+      env:
+        PM: ${{ steps.node-setup.outputs.package-manager }}
+        CMD_INPUT: ${{ inputs.version-command }}
       run: |
-        PM="${{ steps.node-setup.outputs.package-manager }}"
-        CMD="${{ inputs.version-command }}"
+        # Normalize and validate package manager
+        PM="${PM:-npm}"
+        case "$PM" in
+          npm|yarn|pnpm)
+            ;;
+          *)
+            echo "Unsupported package manager: $PM" >&2
+            exit 1
+            ;;
+        esac
+
+        CMD="$CMD_INPUT"
 
         if [[ "$CMD" =~ ^(npm|yarn|pnpm)[[:space:]] ]]; then
           # Command already includes package manager, use as-is
-          echo "version-cmd=$CMD" >> $GITHUB_OUTPUT
+          echo "version-cmd=$CMD" >> "$GITHUB_OUTPUT"
         else
           # Prepend package manager
-          echo "version-cmd=$PM run $CMD" >> $GITHUB_OUTPUT
+          echo "version-cmd=$PM run $CMD" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Build publish command
       id: build-publish-command
       shell: bash
+      env:
+        PM: ${{ steps.node-setup.outputs.package-manager }}
+        CMD_INPUT: ${{ inputs.publish-command }}
       run: |
-        PM="${{ steps.node-setup.outputs.package-manager }}"
-        CMD="${{ inputs.publish-command }}"
+        # Normalize and validate package manager
+        PM="${PM:-npm}"
+        case "$PM" in
+          npm|yarn|pnpm)
+            ;;
+          *)
+            echo "Unsupported package manager: $PM" >&2
+            exit 1
+            ;;
+        esac
+
+        CMD="$CMD_INPUT"
 
         if [[ "$CMD" =~ ^(npm|yarn|pnpm)[[:space:]] ]]; then
           # Command already includes package manager, use as-is
-          echo "publish-cmd=$CMD" >> $GITHUB_OUTPUT
+          echo "publish-cmd=$CMD" >> "$GITHUB_OUTPUT"
         else
           # Prepend package manager
-          echo "publish-cmd=$PM run $CMD" >> $GITHUB_OUTPUT
+          echo "publish-cmd=$PM run $CMD" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Create Release Pull Request or Publish to npm
