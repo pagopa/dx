@@ -47,9 +47,26 @@ brew install coreutils
 
 ### Static Analysis Fails
 
-- Run `terraform fmt -recursive` to fix formatting
-- Run `terraform validate` to check syntax
-- Fix tflint violations shown in the error output
+Run the pre-commit hooks to automatically fix formatting and validate syntax:
+
+**If files are already staged:**
+
+```bash
+pre-commit run
+```
+
+**If you want to check specific files:**
+
+```bash
+pre-commit run --files infra/resources/**/*.tf
+```
+
+This will:
+
+- Format code with `terraform fmt`
+- Validate Terraform syntax
+- Update and format the documentation
+- Run tflint and report any violations
 
 ## Module Upgrade Issues
 
@@ -70,16 +87,6 @@ Ensure GitHub secrets are configured:
 - `ARM_SUBSCRIPTION_ID`
 - `ARM_TENANT_ID`
 - `ARM_CLIENT_ID`
-
-### State Lock Issues
-
-If state is locked and the operation was interrupted:
-
-```bash
-terraform force-unlock <lock-id>
-```
-
-**Use with caution** - only if you're sure no other operation is running.
 
 ### Missing Required Variables
 
