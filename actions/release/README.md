@@ -112,7 +112,6 @@ jobs:
   uses: pagopa/dx/actions/release@main
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
-    npm-token: ${{ secrets.NPM_TOKEN }}
     version-command: "pnpm run version"
     publish-command: "pnpm run release"
 ```

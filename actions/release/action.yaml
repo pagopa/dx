@@ -53,13 +53,13 @@ runs:
       if: steps.node-setup.outputs.package-manager == 'pnpm'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: pnpm install --lockfile-only
+      run: pnpm install --frozen-lockfile
 
     - name: Install dependencies (yarn)
       if: steps.node-setup.outputs.package-manager == 'yarn'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
-      run: yarn install --frozen-lockfile
+      run: yarn install --immutable
 
     - name: Install dependencies (npm)
       if: steps.node-setup.outputs.package-manager == 'npm'
@@ -70,7 +70,7 @@ runs:
     - name: Update npm (for provenance support)
       if: inputs.enable-provenance == 'true'
       shell: bash
-      run: npm install -g npm@^11.7.0
+      run: npm install -g npm@11.7.0
 
     - name: Build version command
       id: build-version-command
