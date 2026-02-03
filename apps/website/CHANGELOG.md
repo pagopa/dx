@@ -1,5 +1,11 @@
 # docs
 
+## 0.12.2
+
+### Patch Changes
+
+- d7f2fdf: Document DX best practices when writing terraform
+
 ## 0.12.1
 
 ### Patch Changes
