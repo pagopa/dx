@@ -51,7 +51,11 @@ for config in ${CONFIG_FILES}; do
 
   # Extract oa3_spec path from config and check if it was modified
   if [ -f "${config}" ]; then
-    OA3_SPEC=$(grep -E "^oa3_spec:" "${config}" | sed 's/oa3_spec:\s*//' | tr -d '"' | tr -d "'" | xargs)
+    if command -v yq >/dev/null 2>&1; then
+      OA3_SPEC=$(yq -r '.oa3_spec // ""' "${config}" 2>/dev/null | tr -d '"' | tr -d "'" | xargs)
+    else
+      OA3_SPEC=$(grep -E "^[[:space:]]*oa3_spec:" "${config}" | sed 's/^[[:space:]]*oa3_spec:[[:space:]]*//' | tr -d '"' | tr -d "'" | xargs)
+    fi
 
     if [ -n "${OA3_SPEC}" ]; then
       # Handle relative paths
