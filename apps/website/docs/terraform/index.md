@@ -50,16 +50,10 @@ Custom Terraform provider for Azure resources:
 
 - **[IaC Folder structure](./infra-folder-structure.md)** - Organize
   Infrastructure as Code
-- **[Code style](./code-style.md)** - File organization, variables, outputs, and
-  formatting conventions
-- **[Required tags](./required-tags.md)** - Mandatory tags for all Azure
-  resources
 - **[Pre-commit hooks](./pre-commit-terraform.md)** - Validate and format
   Terraform code
 - **[Azure naming conventions](../azure/azure-naming-convention.md)** -
   Consistent resource naming
-- **[Secrets management](../azure/application-deployment/appservice-hidden-appsettings.md)** -
-  Use Key Vault references in AppSettings
 
 ## Azure Resources Guide
 
