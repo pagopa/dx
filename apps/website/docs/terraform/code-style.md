@@ -4,8 +4,7 @@ sidebar_position: 3
 
 # Terraform Code Style
 
-This guide describes the code style conventions for Terraform configurations in
-PagoPA projects. Following these conventions ensures consistency and
+This guide describes the DX code style conventions for Terraform configurations. Following these conventions ensures consistency and
 maintainability across all infrastructure code.
 
 :::tip Before you start
