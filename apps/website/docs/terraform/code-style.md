@@ -28,6 +28,14 @@ Organize Terraform code into dedicated files based on their purpose:
 | `main.tf` or `<resource>.tf` | Resources and modules (e.g., `azure.tf`, `function.tf`)        |
 | `data.tf`                    | Data sources                                                   |
 
+:::info About project structure
+
+This guide covers code style conventions for individual terraform
+configurations. For the overall infrastructure project structure, see
+[Infrastructure Folder Structure](./infra-folder-structure.md).
+
+:::
+
 ## Variable Definitions
 
 :::info Always include descriptions and validations
