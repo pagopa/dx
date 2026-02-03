@@ -47,12 +47,14 @@ The API returns a JSON object with:
 
 ### 2. Check Terraform Registry for Module Versions
 
-**Always use Terraform HashiCorp MCP tools** to retrieve module information from the Terraform Registry:
+**Always use Terraform HashiCorp MCP tools**, if present, to retrieve module information from the Terraform Registry:
 
 - Call `search_modules` to find DX modules in the `pagopa-dx` namespace
 - Call `get_module_details` to retrieve module inputs, outputs, required providers, and usage examples
 - Call `get_latest_module_version` to get the most recent version
 - Always use the latest available version in your code
+
+Otherwise consider to query Terraform registry using its API as described here: https://developer.hashicorp.com/terraform/registry/api-docs
 
 Example: For the `azure-function-app` module, retrieve details from:
 `https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest`
