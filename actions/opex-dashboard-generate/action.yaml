@@ -79,7 +79,8 @@ runs:
         CONFIG_PATTERN: ${{ inputs.config_pattern }}
         BASE_REF: ${{ github.event.pull_request.base.ref || inputs.base_branch }}
         EVENT_NAME: ${{ github.event_name }}
-      run: ${{ github.action_path }}/detect-changes.sh
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/detect-changes.sh"
 
     - name: Generate Terraform for changed dashboards
       id: generate
@@ -88,7 +89,8 @@ runs:
       env:
         CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
         OPEX_VERSION: ${{ inputs.opex_dashboard_version }}
-      run: ${{ github.action_path }}/generate-terraform.sh
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/generate-terraform.sh"
 
     - name: Check for changes
       id: check-changes
@@ -128,12 +130,16 @@ runs:
         BASE_BRANCH: ${{ inputs.base_branch }}
         CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
         RUN_ID: ${{ github.run_id }}
-      run: ${{ github.action_path }}/create-pr.sh
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/create-pr.sh"
 
     - name: PR Created Summary
       if: steps.create-pr.outputs.pull-request-number
       shell: bash
+      env:
+        PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
       run: |
         echo "### ✅ Pull Request Created" >> "${GITHUB_STEP_SUMMARY}"
         echo "" >> "${GITHUB_STEP_SUMMARY}"
-        echo "PR #${{ steps.create-pr.outputs.pull-request-number }}: ${{ steps.create-pr.outputs.pull-request-url }}" >> "${GITHUB_STEP_SUMMARY}"
+        echo "PR #${PR_NUMBER}: ${PR_URL}" >> "${GITHUB_STEP_SUMMARY}"
