@@ -71,7 +71,7 @@ Example: For the `azure-function-app` module, retrieve details from:
 When asking the user, offer choices when possible:
 
 - `env_short`: "p (prod)", "d (dev)", "u (uat)"
-- `location`: "italynorth", "westeurope", "germanywestcentral"
+- `location`: "italynorth", "westeurope", "spaincentral"
 - `BusinessUnit`: "App IO", "CGN", "Carta della Cultura", "IT Wallet", "DevEx", or "Other (specify)"
 - `ManagementTeam`: "IO Platform", "IO Wallet", "IO Comunicazione", "IO Enti & Servizi", "IO Autenticazione", "IO Bonus & Pagamenti", "IO Firma", "Developer Experience", or "Other (specify)"
 
