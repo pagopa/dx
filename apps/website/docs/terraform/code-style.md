@@ -10,9 +10,8 @@ maintainability across all infrastructure code.
 
 :::tip Before you start
 
-Run `terraform fmt -recursive` before committing to ensure consistent
-formatting. Better yet, set up [pre-commit hooks](./pre-commit-terraform.md) to
-automate this.
+Set up [pre-commit hooks](./pre-commit-terraform.md) to
+automate formatting of Terraform sources.
 
 :::
 
