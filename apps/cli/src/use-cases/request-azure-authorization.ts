@@ -20,8 +20,9 @@ const BASE_BRANCH = "main";
  * 2. Fetches the terraform.tfvars file from the new branch
  * 3. Checks if the identity already exists (returns error if so)
  * 4. Appends the bootstrap identity to the directory_readers.service_principals_name list
- * 5. Updates the file on the new branch
- * 6. Creates a pull request
+ * 5. Upserts AD groups into the configuration
+ * 6. Updates the file on the new branch
+ * 7. Creates a pull request
  *
  * @param gitHubService - The GitHub service for API operations
  * @param azureAuthorizationService - The service for managing Azure authorization
@@ -34,7 +35,7 @@ export const requestAzureAuthorization =
   ) =>
   (input: RequestAzureAuthorizationInput): ResultAsync<PullRequest, Error> => {
     const logger = getLogger(["dx-cli", "azure-auth"]);
-    const { bootstrapIdentityId, subscriptionName } = input;
+    const { bootstrapIdentityId, envShort, prefix, subscriptionName } = input;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars`;
     const branchName = `feats/add-${subscriptionName}-bootstrap-identity`;
 
@@ -93,19 +94,32 @@ export const requestAzureAuthorization =
             );
           }
 
-          // Return both the file SHA (needed for update) and the updated content
-          return azureAuthorizationService
-            .addIdentity(content, bootstrapIdentityId)
-            .mapErr((error) => {
-              logger.error("Failed to modify tfvars", {
-                error: error.message,
-              });
-              return error;
-            })
-            .match(
-              (updatedContent) => okAsync({ sha, updatedContent }),
-              (error) => errAsync(error),
-            );
+          // Step 3a: Add identity to directory_readers
+          return (
+            azureAuthorizationService
+              .addIdentity(content, bootstrapIdentityId)
+              .mapErr((error) => {
+                logger.error("Failed to modify tfvars", {
+                  error: error.message,
+                });
+                return error;
+              })
+              // Step 3b: Upsert AD groups
+              .andThen((contentWithIdentity) =>
+                azureAuthorizationService
+                  .upsertGroups(contentWithIdentity, prefix, envShort)
+                  .mapErr((error) => {
+                    logger.error("Failed to upsert groups", {
+                      error: error.message,
+                    });
+                    return error;
+                  }),
+              )
+              .match(
+                (updatedContent) => okAsync({ sha, updatedContent }),
+                (error) => errAsync(error),
+              )
+          );
         })
         // Update the file on the new branch
         .andThen(({ sha, updatedContent }) =>
@@ -113,7 +127,7 @@ export const requestAzureAuthorization =
             gitHubService.updateFile({
               branch: branchName,
               content: updatedContent,
-              message: `Add directory reader for ${subscriptionName}`,
+              message: `Add bootstrap identity and AD groups for ${subscriptionName}`,
               owner: REPO_OWNER,
               path: filePath,
               repo: REPO_NAME,
@@ -134,11 +148,11 @@ export const requestAzureAuthorization =
           ResultAsync.fromPromise(
             gitHubService.createPullRequest({
               base: BASE_BRANCH,
-              body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers for subscription \`${subscriptionName}\`.`,
+              body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
               head: branchName,
               owner: REPO_OWNER,
               repo: REPO_NAME,
-              title: `Add directory reader for ${subscriptionName}`,
+              title: `Add bootstrap identity and AD groups for ${subscriptionName}`,
             }),
             (cause) =>
               new Error(
