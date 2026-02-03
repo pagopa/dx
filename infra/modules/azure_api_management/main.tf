@@ -54,15 +54,57 @@ resource "azurerm_api_management" "this" {
   }
 
   dynamic "hostname_configuration" {
-    for_each = var.hostname_configuration != null ? ["dummy"] : []
+    for_each = length(concat(
+      var.hostname_configuration.proxy,
+      var.hostname_configuration.management,
+      var.hostname_configuration.portal,
+      var.hostname_configuration.developer_portal,
+      var.hostname_configuration.scm
+    )) > 0 ? ["dummy"] : []
     content {
       dynamic "proxy" {
         for_each = var.hostname_configuration.proxy
         iterator = domain
         content {
-          default_ssl_binding = domain.value.default_ssl_binding
-          host_name           = domain.value.host_name
-          key_vault_id        = domain.value.key_vault_id
+          default_ssl_binding      = domain.value.default_ssl_binding
+          host_name                = domain.value.host_name
+          key_vault_certificate_id = domain.value.key_vault_id
+        }
+      }
+
+      dynamic "management" {
+        for_each = var.hostname_configuration.management
+        iterator = domain
+        content {
+          host_name                = domain.value.host_name
+          key_vault_certificate_id = domain.value.key_vault_id
+        }
+      }
+
+      dynamic "portal" {
+        for_each = var.hostname_configuration.portal
+        iterator = domain
+        content {
+          host_name                = domain.value.host_name
+          key_vault_certificate_id = domain.value.key_vault_id
+        }
+      }
+
+      dynamic "developer_portal" {
+        for_each = var.hostname_configuration.developer_portal
+        iterator = domain
+        content {
+          host_name                = domain.value.host_name
+          key_vault_certificate_id = domain.value.key_vault_id
+        }
+      }
+
+      dynamic "scm" {
+        for_each = var.hostname_configuration.scm
+        iterator = domain
+        content {
+          host_name                = domain.value.host_name
+          key_vault_certificate_id = domain.value.key_vault_id
         }
       }
     }
@@ -76,6 +118,8 @@ resource "azurerm_api_management" "this" {
       sku_name,
     ]
   }
+
+  depends_on = [azurerm_network_security_group.nsg_apim]
 }
 
 #--------#
@@ -93,7 +137,7 @@ resource "azurerm_api_management_policy" "this" {
 
 # NOTE: only Premium sku support autoscaling
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = local.use_case_features.autoscale && var.autoscale != null && var.autoscale.enabled ? 1 : 0
+  count               = local.use_case_features.autoscale ? 1 : 0
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location
@@ -103,9 +147,9 @@ resource "azurerm_monitor_autoscale_setting" "this" {
     name = "default"
 
     capacity {
-      default = var.autoscale.default_instances
-      minimum = var.autoscale.minimum_instances
-      maximum = var.autoscale.maximum_instances
+      default = local.autoscale_config.default_instances
+      minimum = local.autoscale_config.minimum_instances
+      maximum = local.autoscale_config.maximum_instances
     }
 
     rule {
@@ -115,18 +159,18 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         metric_namespace         = "microsoft.apimanagement/service"
         time_grain               = "PT1M"
         statistic                = "Average"
-        time_window              = var.autoscale.scale_out_time_window
+        time_window              = local.autoscale_config.scale_out_time_window
         time_aggregation         = "Average"
         operator                 = "GreaterThan"
-        threshold                = var.autoscale.scale_out_capacity_percentage
+        threshold                = local.autoscale_config.scale_out_capacity_percentage
         divide_by_instance_count = false
       }
 
       scale_action {
         direction = "Increase"
         type      = "ChangeCount"
-        value     = var.autoscale.scale_out_value
-        cooldown  = var.autoscale.scale_out_cooldown
+        value     = local.autoscale_config.scale_out_value
+        cooldown  = local.autoscale_config.scale_out_cooldown
       }
     }
 
@@ -137,18 +181,18 @@ resource "azurerm_monitor_autoscale_setting" "this" {
         metric_namespace         = "microsoft.apimanagement/service"
         time_grain               = "PT1M"
         statistic                = "Average"
-        time_window              = var.autoscale.scale_in_time_window
+        time_window              = local.autoscale_config.scale_in_time_window
         time_aggregation         = "Average"
         operator                 = "LessThan"
-        threshold                = var.autoscale.scale_in_capacity_percentage
+        threshold                = local.autoscale_config.scale_in_capacity_percentage
         divide_by_instance_count = false
       }
 
       scale_action {
         direction = "Decrease"
         type      = "ChangeCount"
-        value     = var.autoscale.scale_in_value
-        cooldown  = var.autoscale.scale_in_cooldown
+        value     = local.autoscale_config.scale_in_value
+        cooldown  = local.autoscale_config.scale_in_cooldown
       }
     }
   }
