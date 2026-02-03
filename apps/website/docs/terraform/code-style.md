@@ -237,9 +237,6 @@ resource "azurerm_subnet" "bad" {
 
 ## Formatting Rules
 
-- ✅ Use `terraform fmt` for consistent formatting
-- ✅ Align `=` signs in blocks for readability
-- ✅ Add blank lines between logical sections
 - ✅ Use `try()` for optional attribute access:
   `try(resource.attr[0].value, null)`
 
