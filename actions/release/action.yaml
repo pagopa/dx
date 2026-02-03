@@ -1,0 +1,118 @@
+name: "Release"
+description: "Publishes packages from a monorepo"
+author: "PagoPA DX Team"
+
+inputs:
+  github-token:
+    description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
+    required: true
+  version-command:
+    description: "Command to run for versioning packages (e.g., 'pnpm run version' or 'yarn version')"
+    required: false
+    default: "version"
+  publish-command:
+    description: "Command to run for publishing packages (e.g., 'pnpm run release' or 'yarn release')"
+    required: false
+    default: "release"
+  working-directory:
+    description: "Working directory for the action"
+    required: false
+    default: "."
+  enable-provenance:
+    description: "Enable npm provenance for published packages (requires npm >=11.5.1)"
+    required: false
+    default: "true"
+
+outputs:
+  published:
+    description: "Whether packages were published (true) or a PR was created (false)"
+    value: ${{ steps.release.outputs.published }}
+  publishedPackages:
+    description: "JSON array of published packages with name and version"
+    value: ${{ steps.release.outputs.publishedPackages }}
+  pullRequestNumber:
+    description: "The number of the created release PR (if applicable)"
+    value: ${{ steps.release.outputs.pullRequestNumber }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        fetch-tags: "true"
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      id: node-setup
+      uses: pagopa/dx/.github/actions/node-setup@main
+      with:
+        working_dir: ${{ inputs.working-directory }}
+
+    - name: Install dependencies (pnpm)
+      if: steps.node-setup.outputs.package-manager == 'pnpm'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pnpm install --lockfile-only
+
+    - name: Install dependencies (yarn)
+      if: steps.node-setup.outputs.package-manager == 'yarn'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: yarn install --frozen-lockfile
+
+    - name: Install dependencies (npm)
+      if: steps.node-setup.outputs.package-manager == 'npm'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci
+
+    - name: Update npm (for provenance support)
+      if: inputs.enable-provenance == 'true'
+      shell: bash
+      run: npm install -g npm@^11.7.0
+
+    - name: Build version command
+      id: build-version-command
+      shell: bash
+      run: |
+        PM="${{ steps.node-setup.outputs.package-manager }}"
+        CMD="${{ inputs.version-command }}"
+
+        if [[ "$CMD" =~ ^(npm|yarn|pnpm)[[:space:]] ]]; then
+          # Command already includes package manager, use as-is
+          echo "version-cmd=$CMD" >> $GITHUB_OUTPUT
+        else
+          # Prepend package manager
+          echo "version-cmd=$PM run $CMD" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build publish command
+      id: build-publish-command
+      shell: bash
+      run: |
+        PM="${{ steps.node-setup.outputs.package-manager }}"
+        CMD="${{ inputs.publish-command }}"
+
+        if [[ "$CMD" =~ ^(npm|yarn|pnpm)[[:space:]] ]]; then
+          # Command already includes package manager, use as-is
+          echo "publish-cmd=$CMD" >> $GITHUB_OUTPUT
+        else
+          # Prepend package manager
+          echo "publish-cmd=$PM run $CMD" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Release Pull Request or Publish to npm
+      id: release
+      uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+      with:
+        version: ${{ steps.build-version-command.outputs.version-cmd }}
+        publish: ${{ steps.build-publish-command.outputs.publish-cmd }}
+        cwd: ${{ inputs.working-directory }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        NPM_CONFIG_PROVENANCE: ${{ inputs.enable-provenance }}
+
+branding:
+  icon: "package"
+  color: "green"
