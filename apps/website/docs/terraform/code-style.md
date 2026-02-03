@@ -10,8 +10,8 @@ maintainability across all infrastructure code.
 
 :::tip Before you start
 
-Set up [pre-commit hooks](./pre-commit-terraform.md) to
-automate formatting of Terraform sources.
+Set up [pre-commit hooks](./pre-commit-terraform.md) to automate formatting of
+Terraform sources.
 
 :::
 
@@ -110,6 +110,64 @@ locals {
   ))
 }
 ```
+
+### Automatic Subnet CIDR Generation
+
+The DX provider includes a `dx_available_subnet_cidr` resource to automatically
+allocate subnet CIDR blocks within a Virtual Network. This eliminates manual
+CIDR calculations and prevents overlapping address ranges:
+
+```hcl title="locals.tf"
+# First, create your Virtual Network
+resource "azurerm_virtual_network" "this" {
+  name                = "vnet-example"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+}
+```
+
+```hcl title="main.tf"
+# Automatically allocate CIDR for app subnet
+resource "dx_available_subnet_cidr" "app" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 24  # /24 subnet
+}
+
+resource "azurerm_subnet" "app" {
+  name                 = "snet-app"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [dx_available_subnet_cidr.app.cidr_block]
+}
+
+# When creating multiple subnets, use depends_on for sequential allocation
+resource "dx_available_subnet_cidr" "db" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = 25  # /25 subnet
+  depends_on         = [azurerm_subnet.app]
+}
+
+resource "azurerm_subnet" "db" {
+  name                 = "snet-db"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [dx_available_subnet_cidr.db.cidr_block]
+}
+```
+
+:::tip Best Practices
+
+- **Use `depends_on`** when creating multiple subnets to ensure sequential,
+  non-overlapping allocation
+- **Plan prefix lengths** before deployment (e.g., /24 for large subnets, /25
+  for smaller ones)
+- **The resource is virtual** — it doesn't create actual Azure resources, only
+  calculates CIDR blocks
+- **Automatic conflict prevention** — the provider analyzes existing subnets and
+  allocates safely
+
+:::
 
 ### Define Use Cases with Maps
 
