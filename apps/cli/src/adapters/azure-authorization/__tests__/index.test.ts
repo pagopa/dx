@@ -49,12 +49,12 @@ other_config = {
 
 // eslint-disable-next-line max-lines-per-function
 describe("AzureAuthorizationService", () => {
-  describe("containsServicePrincipal", () => {
+  describe("containsIdentityId", () => {
     it("should return false when the identity does not exist in an empty list", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
-      const result = service.containsServicePrincipal(
+      const result = service.containsIdentityId(
         content,
         "new-identity-id",
       );
@@ -69,7 +69,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.containsServicePrincipal(
+      const result = service.containsIdentityId(
         content,
         "new-identity-id",
       );
@@ -85,7 +85,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.containsServicePrincipal(
+      const result = service.containsIdentityId(
         content,
         "target-identity",
       );
@@ -97,7 +97,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
-      const result = service.containsServicePrincipal(
+      const result = service.containsIdentityId(
         content,
         "any-identity-id",
       );
@@ -106,12 +106,12 @@ describe("AzureAuthorizationService", () => {
     });
   });
 
-  describe("appendToDirectoryReaders", () => {
+  describe("addIdentity", () => {
     it("should append identity to an empty service_principals_name list", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars([]);
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         content,
         "new-bootstrap-identity",
       );
@@ -120,7 +120,7 @@ describe("AzureAuthorizationService", () => {
       const updatedContent = result._unsafeUnwrap();
       expect(updatedContent).toContain('"new-bootstrap-identity"');
       expect(
-        service.containsServicePrincipal(
+        service.containsIdentityId(
           updatedContent,
           "new-bootstrap-identity",
         ),
@@ -134,7 +134,7 @@ describe("AzureAuthorizationService", () => {
         "existing-identity-2",
       ]);
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         content,
         "new-bootstrap-identity",
       );
@@ -151,7 +151,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         content,
         "existing-identity",
       );
@@ -167,7 +167,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvarsWithoutDirectoryReaders();
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         content,
         "new-bootstrap-identity",
       );
@@ -185,7 +185,7 @@ describe("AzureAuthorizationService", () => {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         content,
         "new-bootstrap-identity",
       );
@@ -216,7 +216,7 @@ directory_readers = {
 }
 `.trim();
 
-      const result = service.appendToDirectoryReaders(
+      const result = service.addIdentity(
         complexContent,
         "third-identity",
       );
@@ -232,7 +232,7 @@ directory_readers = {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["existing-identity"]);
 
-      const result = service.appendToDirectoryReaders(content, "new-identity");
+      const result = service.addIdentity(content, "new-identity");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();
@@ -257,7 +257,7 @@ directory_readers = {
       const service = makeAzureAuthorizationService();
       const content = makeSampleTfvars(["identity-1", "identity-2"]);
 
-      const result = service.appendToDirectoryReaders(content, "identity-3");
+      const result = service.addIdentity(content, "identity-3");
 
       expect(result.isOk()).toBe(true);
       const updatedContent = result._unsafeUnwrap();

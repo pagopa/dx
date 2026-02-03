@@ -56,8 +56,8 @@ directory_readers = {
         content: originalContent,
         sha: "original-sha-123",
       });
-      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
-      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
+      azureAuthorizationService.addIdentity.mockReturnValue(
         ok(updatedContent),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -95,11 +95,11 @@ directory_readers = {
       });
 
       expect(
-        azureAuthorizationService.containsServicePrincipal,
+        azureAuthorizationService.containsIdentityId,
       ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
 
       expect(
-        azureAuthorizationService.appendToDirectoryReaders,
+        azureAuthorizationService.addIdentity,
       ).toHaveBeenCalledWith(originalContent, "test-bootstrap-identity-id");
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith({
@@ -148,7 +148,7 @@ directory_readers = {
 
       // Should not proceed with other operations
       expect(
-        azureAuthorizationService.containsServicePrincipal,
+        azureAuthorizationService.containsIdentityId,
       ).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
@@ -169,7 +169,7 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsServicePrincipal.mockReturnValue(true);
+      azureAuthorizationService.containsIdentityId.mockReturnValue(true);
 
       const result = await requestAzureAuthorization(
         gitHubService,
@@ -183,7 +183,7 @@ directory_readers = {
 
       // Should not proceed with modification or branch creation
       expect(
-        azureAuthorizationService.appendToDirectoryReaders,
+        azureAuthorizationService.addIdentity,
       ).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
@@ -198,8 +198,8 @@ directory_readers = {
         content: invalidContent,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
-      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
+      azureAuthorizationService.addIdentity.mockReturnValue(
         err(
           new InvalidAuthorizationFileFormatError(
             "Could not find directory_readers.service_principals_name list",
@@ -257,8 +257,8 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
-      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
+      azureAuthorizationService.addIdentity.mockReturnValue(
         ok("updated content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -291,8 +291,8 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsServicePrincipal.mockReturnValue(false);
-      azureAuthorizationService.appendToDirectoryReaders.mockReturnValue(
+      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
+      azureAuthorizationService.addIdentity.mockReturnValue(
         ok("updated content"),
       );
       gitHubService.createBranch.mockResolvedValue(undefined);
