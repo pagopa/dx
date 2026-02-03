@@ -11,7 +11,15 @@ When generating Terraform code, follow these instructions:
 
 ### 1. Search DX Documentation for Best Practices
 
-**Always query the DX documentation** for up-to-date best practices before generating code. Make a POST request to the DX Search API:
+**Always query the DX documentation** for up-to-date best practices before generating code.
+
+**Prefer delegating to a subagent** for documentation searches to save context. Instruct the subagent to:
+
+- Make POST requests to the DX Search API: `https://api.dx.pagopa.it/search`
+- Search for relevant topics and summarize key findings
+- Return concise, actionable information
+
+Alternatively, make a direct POST request to the DX Search API:
 
 ```bash
 curl -X POST https://api.dx.pagopa.it/search \
@@ -39,16 +47,21 @@ The API returns a JSON object with:
 
 ### 2. Check Terraform Registry for Module Versions
 
-**Always use tools to get the latest module versions** from the Terraform Registry before writing module blocks:
+**Always use Terraform HashiCorp MCP tools** to retrieve module information from the Terraform Registry:
 
-- Search for DX modules in the `pagopa-dx` namespace
-- Get module details including inputs, outputs, and usage examples
-- Always use the latest available version
+- Call `search_modules` to find DX modules in the `pagopa-dx` namespace
+- Call `get_module_details` to retrieve module inputs, outputs, required providers, and usage examples
+- Call `get_latest_module_version` to get the most recent version
+- Always use the latest available version in your code
+
+Example: For the `azure-function-app` module, retrieve details from:
+`https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest`
 
 ### 3. Ask User for Required Values
 
 **Ask the user for project-specific values** when not found in the existing codebase:
 
+- **Module use_case**: Present all available `use_case` options from the module documentation and ask the user to select the appropriate one (e.g., "default", "high_load", "spot")
 - `environment` values: prefix, env_short, location, domain, app_name, instance_number
 - `tags` values: BusinessUnit, ManagementTeam
 - Backend state configuration
