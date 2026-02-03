@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.15.5
+
+### Patch Changes
+
+- cf52efc: Fix GitHub workflows glob pattern when applying pnpm codemod
+
 ## 0.15.4
 
 ### Patch Changes

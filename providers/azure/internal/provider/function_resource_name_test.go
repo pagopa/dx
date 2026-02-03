@@ -41,6 +41,37 @@ func TestResourceNameFunction_Known(t *testing.T) {
 	})
 }
 
+func TestResourceNameFunction_KnownAlternative(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						domain = "test",
+						env_short = "d",
+						location = "itn",
+						app_name = "example",
+						resource_type = "subnet",
+						instance_number = "01"
+					})
+        }
+        `,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("dx-d-itn-test-example-snet-01")),
+				},
+			},
+		},
+	})
+}
+
 func TestResourceNameFunction_InvalidLocation(t *testing.T) {
 	t.Parallel()
 	// Test to verify the error when location is invalid
@@ -805,4 +836,89 @@ func TestResourceNameFunction_CaseInsensitiveLocation(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestResourceNameFunction_BothEnvironmentAndEnvShort(t *testing.T) {
+	t.Parallel()
+	// Test that providing both environment and env_short causes an error
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						environment = "d",
+						env_short = "d",
+						location = "weu",
+						name = "test",
+						resource_type = "virtual_machine",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`'environment' and 'env_short' are mutually exclusive`),
+			},
+		},
+	})
+}
+
+func TestResourceNameFunction_BothNameAndAppName(t *testing.T) {
+	t.Parallel()
+	// Test that providing both name and app_name causes an error
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						environment = "d",
+						location = "weu",
+						name = "test",
+						app_name = "myapp",
+						resource_type = "virtual_machine",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`'name' and 'app_name' are mutually exclusive`),
+			},
+		},
+	})
+}
+
+func TestResourceNameFunction_MissingEnvironmentAndEnvShort(t *testing.T) {
+	t.Parallel()
+	// Test that not providing either environment or env_short causes an error
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						location = "weu",
+						name = "test",
+						resource_type = "virtual_machine",
+						instance_number = "1"
+					})
+        }
+        `,
+				ExpectError: regexp.MustCompile(`Missing required[\s\n]+configuration key: either 'environment' or 'env_short' must be provided`),
+			},
+		},
+	})
 }
