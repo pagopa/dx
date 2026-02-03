@@ -79,7 +79,7 @@ export const requestAzureAuthorization =
         .andThen(({ content, sha }) => {
           // Verify the identity doesn't already exist to prevent duplicates
           if (
-            azureAuthorizationService.containsServicePrincipal(
+            azureAuthorizationService.containsIdentityId(
               content,
               bootstrapIdentityId,
             )
@@ -95,7 +95,7 @@ export const requestAzureAuthorization =
 
           // Return both the file SHA (needed for update) and the updated content
           return azureAuthorizationService
-            .appendToDirectoryReaders(content, bootstrapIdentityId)
+            .addIdentity(content, bootstrapIdentityId)
             .mapErr((error) => {
               logger.error("Failed to modify tfvars", {
                 error: error.message,

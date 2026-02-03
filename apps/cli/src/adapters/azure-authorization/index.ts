@@ -24,7 +24,7 @@ const DIRECTORY_READERS_REGEX =
  * of terraform.tfvars files.
  */
 export const makeAzureAuthorizationService = (): AzureAuthorizationService => ({
-  appendToDirectoryReaders(
+  addIdentity(
     content: string,
     identityId: string,
   ): Result<string, AzureAuthorizationError> {
@@ -84,7 +84,7 @@ export const makeAzureAuthorizationService = (): AzureAuthorizationService => ({
     return ok(updatedContent);
   },
 
-  containsServicePrincipal(content: string, identityId: string): boolean {
+  containsIdentityId(content: string, identityId: string): boolean {
     const match = content.match(DIRECTORY_READERS_REGEX);
     if (!match) {
       return false;
