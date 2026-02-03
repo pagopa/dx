@@ -230,6 +230,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
+      # always check for latest available release
       version = "~> 0.0"
     }
   }
