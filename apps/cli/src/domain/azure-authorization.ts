@@ -83,8 +83,8 @@ export type GroupConfig = {
  * Group name and roles configuration for default AD groups.
  */
 type DefaultGroupSpec = {
-  readonly roles: readonly string[];
   readonly groupName: string;
+  readonly roles: readonly string[];
 };
 
 /**
@@ -92,33 +92,10 @@ type DefaultGroupSpec = {
  * These follow the PagoPA standard pattern: <prefix>-<envShort>-adgroup-<groupName>
  */
 export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
-  { roles: ["Owner"], groupName: "admin" },
-  { roles: ["Owner"], groupName: "developers" },
+  { groupName: "admin", roles: ["Owner"] },
+  { groupName: "developers", roles: ["Owner"] },
   {
-    roles: [
-      "Reader",
-      "Monitoring Contributor",
-      "Support Request Contributor",
-      "Storage Blob Data Reader",
-      "Storage Queue Data Reader",
-      "Cosmos DB Account Reader Role",
-    ],
     groupName: "operations",
-  },
-  {
-    roles: ["Reader", "Support Request Contributor"],
-    groupName: "security",
-  },
-  {
-    roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
-    groupName: "technical-project-managers",
-  },
-  {
-    roles: ["Reader", "Support Request Contributor"],
-    groupName: "product-owners",
-  },
-  { roles: ["Owner"], groupName: "externals" },
-  {
     roles: [
       "Reader",
       "Monitoring Contributor",
@@ -127,7 +104,30 @@ export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
       "Storage Queue Data Reader",
       "Cosmos DB Account Reader Role",
     ],
+  },
+  {
+    groupName: "security",
+    roles: ["Reader", "Support Request Contributor"],
+  },
+  {
+    groupName: "technical-project-managers",
+    roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
+  },
+  {
+    groupName: "product-owners",
+    roles: ["Reader", "Support Request Contributor"],
+  },
+  { groupName: "externals", roles: ["Owner"] },
+  {
     groupName: "oncall",
+    roles: [
+      "Reader",
+      "Monitoring Contributor",
+      "Support Request Contributor",
+      "Storage Blob Data Reader",
+      "Storage Queue Data Reader",
+      "Cosmos DB Account Reader Role",
+    ],
   },
 ];
 

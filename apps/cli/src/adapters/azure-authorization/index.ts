@@ -229,16 +229,6 @@ export const makeAzureAuthorizationService = (): AzureAuthorizationService => ({
     return listContent.includes(`"${identityId}"`);
   },
 
-  containsServicePrincipal(content: string, identityId: string): boolean {
-    const match = content.match(DIRECTORY_READERS_REGEX);
-    if (!match) {
-      return false;
-    }
-    const listContent = match[2];
-    // Check if the service principal exists as a quoted string in the list
-    return listContent.includes(`"${identityId}"`);
-  },
-
   upsertGroups(
     content: string,
     prefix: string,
