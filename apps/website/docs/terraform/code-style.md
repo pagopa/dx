@@ -122,7 +122,9 @@ See the full usage and examples in the DX provider docs:
 
 ### Define Use Cases with Maps
 
-Use maps to define configurable use cases:
+Many DX Registry modules already have built-in `use_case` configurations for
+common scenarios. For custom resources or when modules don't provide the needed
+use cases, define your own using maps:
 
 ```hcl title="locals.tf"
 locals {
