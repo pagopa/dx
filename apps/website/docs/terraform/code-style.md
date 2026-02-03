@@ -9,7 +9,7 @@ maintainability across all infrastructure code.
 
 :::tip Before you start
 
-Set up [pre-commit hooks](./pre-commit-terraform.md) to automate formatting of
+Ensure [pre-commit hooks](./pre-commit-terraform.md) are set up to automate validation and formatting of
 Terraform sources.
 
 :::
