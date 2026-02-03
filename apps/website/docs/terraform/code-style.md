@@ -72,24 +72,27 @@ variable "use_case" {
 
 ## Output Definitions
 
-Group related outputs in objects for better organization and discoverability:
+Group related outputs in objects for better organization and discoverability.
+Avoid nesting the resource name in the output structure to prevent redundant
+keys when consuming the module (e.g., avoid
+`module.x.function_app.function_app.id`):
 
 ```hcl title="outputs.tf"
-output "function_app" {
-  description = "Details of the Function App including resource group, plan, and app information."
+output "postgres" {
+  description = "Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name."
   value = {
-    resource_group_name = azurerm_linux_function_app.this.resource_group_name
-    plan = {
-      id   = azurerm_service_plan.this.id
-      name = azurerm_service_plan.this.name
-    }
-    function_app = {
-      id               = azurerm_linux_function_app.this.id
-      name             = azurerm_linux_function_app.this.name
-      principal_id     = azurerm_linux_function_app.this.identity[0].principal_id
-      default_hostname = azurerm_linux_function_app.this.default_hostname
-    }
+    name                = azurerm_postgresql_flexible_server.this.name
+    id                  = azurerm_postgresql_flexible_server.this.id
+    resource_group_name = azurerm_postgresql_flexible_server.this.resource_group_name
   }
+}
+
+output "postgres_replica" {
+  description = "Details of the PostgreSQL Flexible Server Replica, including its name and ID."
+  value = local.replica.create == true ? {
+    name = azurerm_postgresql_flexible_server.replica[0].name
+    id   = azurerm_postgresql_flexible_server.replica[0].id
+  } : {}
 }
 ```
 
