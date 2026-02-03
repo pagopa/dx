@@ -77,7 +77,7 @@ When asking the user, offer choices when possible:
 - `BusinessUnit`: "App IO", "CGN", "Carta della Cultura", "IT Wallet", "DevEx", or "Other (specify)"
 - `ManagementTeam`: "IO Platform", "IO Wallet", "IO Comunicazione", "IO Enti & Servizi", "IO Autenticazione", "IO Bonus & Pagamenti", "IO Firma", "Developer Experience", or "Other (specify)"
 
-Use free-form only for truly unknown values like `prefix`, `domain`, `app_name`.
+Use free-form only for truly unknown values like `prefix`, `domain`, `app_name`. Prefix and domain may be inferred from existing code if available.
 
 ### 5. Never Assume Default Values
 
