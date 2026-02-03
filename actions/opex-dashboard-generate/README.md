@@ -11,8 +11,6 @@ Automatically detect changes to dashboard configuration files and their referenc
 
 ## Usage
 
-### Basic Example
-
 ```yaml
 name: Update OpEx Dashboards
 
@@ -20,8 +18,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "infra/dashboards/**/*.yaml"
-      - "infra/openapi/**/*.yaml"
+      - "infra/dashboards/**/config.yaml"
+      - "openapi/**/*.yaml"
 
 permissions:
   contents: write
@@ -30,50 +28,10 @@ permissions:
 jobs:
   update-dashboards:
     runs-on: ubuntu-latest
-    # Prevent forks from creating PRs
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     steps:
       - uses: pagopa/dx/actions/opex-dashboard-generate@main
         with:
           config_pattern: "infra/dashboards/**/config.yaml"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### Advanced Example
-
-```yaml
-name: Update OpEx Dashboards
-
-on:
-  schedule:
-    - cron: "0 2 * * *" # Daily at 2 AM
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Run without creating PR"
-        type: boolean
-        default: false
-
-permissions:
-  contents: write
-  pull-requests: write
-
-jobs:
-  update-dashboards:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
-    steps:
-      - uses: pagopa/dx/actions/opex-dashboard-generate@v1
-        with:
-          config_pattern: "infra/dashboards/**/config.yaml"
-          opex_dashboard_version: "1.2.3"
-          pr_title: "chore(dashboards): update OpEx dashboards"
-          pr_body: |
-            Automated update of Azure Dashboard Terraform configurations.
-
-            Please review the generated changes carefully.
-          base_branch: "main"
-          dry_run: ${{ inputs.dry_run || false }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -114,10 +72,17 @@ jobs:
    - Creates a new branch with a unique name
    - Commits only Terraform-related files
    - Opens a pull request with a summary of changed dashboards
+
 4. **Dry Run Mode**: When enabled:
    - Performs detection and generation
    - Shows a summary of changes that would be committed
    - Skips PR creation
+
+5. **Infrastructure Apply** (after PR merge):
+   - Once the PR is merged to `main`, the Terraform CI/CD workflow takes over
+   - The workflow should detect changes to `*.tf` files in the dashboard directories
+   - Runs `terraform plan` and `terraform apply` to deploy the updated dashboards to Azure
+   - This ensures dashboards are automatically provisioned/updated in your Azure environment
 
 ## Config File Format
 
@@ -143,13 +108,26 @@ Both absolute and relative paths are supported for `oa3_spec`.
 
 ## Recommended Workflow Setup
 
+### Generation Workflow
+
+This workflow generates Terraform code when dashboard configs or OpenAPI specs change:
+
 ```yaml
+name: Generate OpEx Dashboards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/dashboards/**/*.yaml"
+      - "infra/openapi/**/*.yaml"
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  update-dashboards:
+  generate-dashboards:
     runs-on: ubuntu-latest
     # CRITICAL: Prevent forks from creating PRs
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
@@ -159,20 +137,141 @@ jobs:
           config_pattern: "infra/dashboards/**/config.yaml"
 ```
 
+### Infrastructure Plan Workflow
+
+When the automated PR is opened, this workflow runs Terraform plan to validate the changes.
+Each dashboard has its own Terraform state, so we need to detect which dashboards changed:
+
+```yaml
+name: OpEx Dashboards Plan
+
+on:
+  pull_request:
+    paths:
+      - "infra/dashboards/**/*.tf"
+
+jobs:
+  detect-changed-dashboards:
+    runs-on: ubuntu-latest
+    outputs:
+      dashboards: ${{ steps.detect.outputs.dashboards }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed dashboards
+        id: detect
+        run: |
+          # Get list of changed directories under infra/dashboards
+          CHANGED_DIRS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | 
+            grep '^infra/dashboards/' | 
+            cut -d'/' -f1-3 | 
+            sort -u | 
+            jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "dashboards=${CHANGED_DIRS}" >> $GITHUB_OUTPUT
+
+  terraform-plan:
+    needs: detect-changed-dashboards
+    if: needs.detect-changed-dashboards.outputs.dashboards != '[]'
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.detect-changed-dashboards.outputs.dashboards) }}
+    name: Plan - ${{ matrix.dashboard }}
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    secrets: inherit
+    with:
+      environment: prod
+      base_path: ${{ matrix.dashboard }}
+```
+
+### Infrastructure Apply Workflow
+
+After the generated PR is merged, this workflow applies the Terraform changes.
+Each dashboard has its own Terraform state:
+
+```yaml
+name: OpEx Dashboards Apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/dashboards/**/*.tf"
+
+jobs:
+  detect-changed-dashboards:
+    runs-on: ubuntu-latest
+    outputs:
+      dashboards: ${{ steps.detect.outputs.dashboards }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed dashboards
+        id: detect
+        run: |
+          # Get list of changed directories under infra/dashboards
+          CHANGED_DIRS=$(git diff --name-only HEAD^1 HEAD | 
+            grep '^infra/dashboards/' | 
+            cut -d'/' -f1-3 | 
+            sort -u | 
+            jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "dashboards=${CHANGED_DIRS}" >> $GITHUB_OUTPUT
+
+  terraform-apply:
+    needs: detect-changed-dashboards
+    if: needs.detect-changed-dashboards.outputs.dashboards != '[]'
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.detect-changed-dashboards.outputs.dashboards) }}
+
+    name: Apply - ${{ matrix.dashboard }}
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    secrets: inherit
+    with:
+      environment: prod
+      base_path: ${{ matrix.dashboard }}
+```
+
+**Note**:
+
+- Each dashboard directory (e.g., `infra/dashboards/issuer/`, `infra/dashboards/wallet/`) should have its own Terraform state
+- The workflows automatically detect which dashboards changed and apply Terraform only to those
+- Dashboards are applied in parallel since each has an independent state
+- If dashboards share Azure resources that could cause race conditions, consider adding `max-parallel: 1` to the matrix strategy
+- Adjust the `environment` parameter based on your infrastructure setup
+
 ## Migration Guide
 
 This section provides step-by-step instructions for migrating from existing OpEx dashboard deployment workflows to this action.
 
-### Example: io-sign Repository Migration
-
 The `pagopa` repositories that uses the former workflow approach for OpEx dashboards
 can migrate to this action by following these steps.
 
-#### Migration Steps
+### Migration Steps
 
 1. **Reorganize Dashboard Configurations**
 
    Move all dashboard configs to a dedicated `infra/dashboards/` directory.
+   Each dashboard should have its own subdirectory with its own Terraform state:
+
+   ```
+   infra/dashboards/
+   ├── issuer/
+   │   ├── config.yaml
+   │   ├── ...
+   │   └── backend.tf  # Separate state for issuer
+   ├── wallet/
+   │   ├── config.yaml
+   │   ├── ...
+   │   └── backend.tf  # Separate state for wallet
+   └── verifier/
+       ├── config.yaml
+       ├── ...
+       └── backend.tf  # Separate state for verifier
+   ```
 
 2. **Update Dashboard Config Files**
 
@@ -184,7 +283,12 @@ can migrate to this action by following these steps.
    # ... other configuration
    ```
 
-3. **Create GitHub Workflow**
+3. **CleanUp Obsolete Workflows**
+
+   Remove any existing workflows related to OpEx dashboard generation and deployment
+   to avoid conflicts with the new action-based workflow.
+
+4. **Create OpEx HCL Generation Workflow**
 
    Add `.github/workflows/opex-dashboards.yaml`:
 
@@ -212,18 +316,25 @@ can migrate to this action by following these steps.
              github_token: ${{ secrets.GITHUB_TOKEN }}
    ```
 
-4. **Test the Migration**
+5. **Create Terraform Plan/Apply Workflows**
 
-   ```bash
-   # Test generation locally first
-   npx --yes @pagopa/opex-dashboard generate \
-     --config infra/dashboards/issuer/config.yaml \
-     --output infra/dashboards/issuer/
+   Add the Terraform plan and apply workflows as described in the
+   [Recommended Workflow Setup](#recommended-workflow-setup) section.
 
-   # Trigger workflow manually with dry_run
-   gh workflow run opex-dashboards.yaml -f dry_run=true
-   ```
+6. **Test the Migration**
 
-5. **Cleanup Old Workflow**
+Example:
 
-   Once verified, remove old OpEx workflow files
+```shell
+# Test generation locally for a specific dashboard
+npx --yes @pagopa/opex-dashboard generate \
+  --config infra/dashboards/issuer/config.yaml \
+  --output infra/dashboards/issuer/
+
+# Verify the directory structure (each dashboard has its own state)
+ls -la infra/dashboards/issuer/
+# Should contain: config.yaml, main.tf, backend.tf, etc.
+
+# Trigger workflow manually with dry_run
+gh workflow run opex-dashboards.yaml -f dry_run=true
+```
