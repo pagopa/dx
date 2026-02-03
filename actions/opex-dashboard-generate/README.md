@@ -7,10 +7,6 @@ Automatically detect changes to dashboard configuration files and their referenc
 - 🔍 **Smart Detection**: Monitors both config files and their referenced OpenAPI specs
 - 🔄 **Automatic Generation**: Uses `@pagopa/opex-dashboard` to generate Terraform
 - ⚡ **Parallel Processing**: Generates multiple dashboards concurrently for improved performance
-- 💾 **NPM Caching**: Caches npm packages to speed up subsequent runs
-- 🤖 **PR Automation**: Creates pull requests with detailed change summaries
-- 🔒 **Fork Protection**: Automatically skips execution on forked repositories
-- 🛡️ **Security Hardened**: Input validation and safe git operations to prevent injection attacks
 - 🧪 **Dry Run Support**: Preview changes without creating pull requests
 
 ## Usage
@@ -163,6 +159,71 @@ jobs:
           config_pattern: "infra/dashboards/**/config.yaml"
 ```
 
-## License
+## Migration Guide
 
-MIT © PagoPA S.p.A.
+This section provides step-by-step instructions for migrating from existing OpEx dashboard deployment workflows to this action.
+
+### Example: io-sign Repository Migration
+
+The `pagopa` repositories that uses the former workflow approach for OpEx dashboards
+can migrate to this action by following these steps.
+
+#### Migration Steps
+
+1. **Reorganize Dashboard Configurations**
+
+   Move all dashboard configs to a dedicated `infra/dashboards/` directory.
+
+2. **Update Dashboard Config Files**
+
+   Ensure each `config.yaml` references the correct OpenAPI spec,
+   for example:
+
+   ```yaml
+   oa3_spec: apps/issuer/openapi.yaml
+   # ... other configuration
+   ```
+
+3. **Create GitHub Workflow**
+
+   Add `.github/workflows/opex-dashboards.yaml`:
+
+   ```yaml
+   name: Update OpEx Dashboards
+
+   on:
+     push:
+       branches: [main]
+       paths:
+         - "infra/dashboards/**/*.yaml"
+         - "apps/*/openapi.yaml"
+
+   permissions:
+     contents: write
+     pull-requests: write
+
+   jobs:
+     update-dashboards:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: pagopa/dx/actions/opex-dashboard-generate@v1
+           with:
+             config_pattern: "infra/dashboards/**/config.yaml"
+             github_token: ${{ secrets.GITHUB_TOKEN }}
+   ```
+
+4. **Test the Migration**
+
+   ```bash
+   # Test generation locally first
+   npx --yes @pagopa/opex-dashboard generate \
+     --config infra/dashboards/issuer/config.yaml \
+     --output infra/dashboards/issuer/
+
+   # Trigger workflow manually with dry_run
+   gh workflow run opex-dashboards.yaml -f dry_run=true
+   ```
+
+5. **Cleanup Old Workflow**
+
+   Once verified, remove old OpEx workflow files
