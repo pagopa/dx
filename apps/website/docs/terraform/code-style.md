@@ -47,6 +47,100 @@ each component independently.
 
 :::
 
+### What is a Workload?
+
+A **workload** is a logical unit of infrastructure that serves a specific
+purpose and operates independently from other components. Each workload should:
+
+- Have a clear, single responsibility
+- Manage its own resources and dependencies
+- Include related infrastructure components (compute, storage, IAM permissions)
+- Be deployable and testable in isolation
+
+**Examples of workloads:**
+
+- **API Management (APIM)**: APIM instance, policies, API definitions, private
+  endpoint
+- **Data Processor Function**: Function App + Storage Account + Blob Storage +
+  IAM permissions
+- **Message Notifier**: Function App + Service Bus connection + IAM for Service
+  Bus
+- **Reporting Service**: App Service + Application Insights + Database
+  connection + IAM
+- **Cache Layer**: Redis instance + private endpoint + firewall rules + IAM
+
+### What NOT to Do (Anti-pattern)
+
+❌ **Flat structure** - All resources in `main.tf` of root module:
+
+```
+infra/resources/prod/
+├── locals.tf
+├── main.tf              # Contains EVERYTHING (APIM, 5 functions, storage, etc.)
+├── variables.tf         # Should not exist here!
+├── outputs.tf
+└── iam.tf               # Mixed permissions from all resources
+```
+
+This causes:
+
+- Hard to understand what resources belong together
+- Difficult to modify one workload without affecting others
+- Challenging to test or reuse configurations
+- Risk of IAM permission management becoming chaotic
+- Team members must coordinate on the entire main.tf
+
+❌ **Over-nesting resources** - Multiple resources stuffed in one module:
+
+```
+infra/resources/prod/_modules/
+└── backend/
+    ├── main.tf         # Has: Function 1, Function 2, Function 3, Storage 1, Storage 2, + all IAM
+    ├── variables.tf
+    └── iam.tf
+```
+
+This still causes the same problems, just at a smaller scale.
+
+### What TO DO (Best Practice)
+
+✅ **Module per workload** - Each module owns its workload:
+
+```
+infra/resources/prod/_modules/
+├── apim/               # APIM workload: instance + policies + private endpoint
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+├── func_processor/     # Processor Function: function + storage + blob container + IAM
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+├── func_notifier/      # Notifier Function: function + Service Bus connection + IAM
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+└── reporting/          # Reporting workload: App Service + App Insights + DB connection + IAM
+    ├── main.tf
+    ├── variables.tf
+    ├── iam.tf
+    └── outputs.tf
+```
+
+Benefits:
+
+- ✅ Clear ownership: "func_processor module manages everything about data
+  processing"
+- ✅ Easy to modify: "Change notifier Function? Edit only func_notifier module"
+- ✅ Team can work in parallel: Different teams manage different modules
+- ✅ IAM is localized: "func_processor/iam.tf has only permissions for processor
+  function"
+- ✅ Reusable: Can deploy the same function in another environment just by
+  calling the module
+
 ### Why Use Local Modules?
 
 Local modules provide several benefits:
