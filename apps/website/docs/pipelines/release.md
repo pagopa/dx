@@ -41,32 +41,23 @@ permissions:
 Your top level `package.json` should include scripts for versioning and
 publishing:
 
-```json
-{
-  "scripts": {
-    "version": "changeset version",
-    "release": "changeset publish"
-  }
-}
-```
-
-#### Example with NX
+#### Example with NX and pnpm
 
 ```json
 {
   "scripts": {
-    "version": "changeset version && nx run-many --target=version",
+    "version": "changeset version && pnpm i --lockfile-only && nx run-many --target=version",
     "release": "nx run-many --target=build --projects=tag:npm:public && changeset publish"
   }
 }
 ```
 
-#### Example with Turborepo
+#### Example with Turborepo and Yarn
 
 ```json
 {
   "scripts": {
-    "version": "changeset version && turbo run version --filter=tag:npm:public",
+    "version": "changeset version && yarn --mode update-lockfile && turbo run version --filter=tag:npm:public",
     "release": "turbo run build --filter=tag:npm:public && changeset publish"
   }
 }
