@@ -15,8 +15,8 @@ strategy.
   OpenAPI specs
 - 🔄 **Automatic Generation**: Uses `@pagopa/opex-dashboard` to generate
   Terraform
-- ⚡ **Parallel Processing**: Generates and deploys multiple dashboards
-  concurrently (max 5 parallel)
+- ⚡ **Parallel Processing**: Generates dashboards with up to 4 concurrent
+  processes and deploys up to 5 dashboards in parallel
 - 🚀 **Automated Deployment**: Integrates with
   `infra_apply.yaml`/`infra_plan.yaml` for infrastructure deployment
 - 🧪 **Dry Run Support**: Run Terraform plan instead of apply for validation
