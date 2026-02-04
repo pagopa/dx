@@ -1,10 +1,6 @@
 on:
   workflow_call:
     inputs:
-      environment:
-        description: Environment for GitHub environment protection and secrets context
-        type: string
-        required: true
       config_pattern:
         description: |
           Glob pattern(s) to find dashboard config files. Supports multiple patterns (one per line).
@@ -13,6 +9,10 @@ on:
             Multiple: |
               infra/dashboards/**/config.yaml
               .opex/**/config.yaml
+        type: string
+        required: true
+      github_environment:
+        description: GitHub Environment to use for Terraform operations
         type: string
         required: true
       dry_run:
@@ -47,11 +47,6 @@ on:
         default: false
       override_labels:
         description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
-        type: string
-        required: false
-        default: ""
-      override_github_environment:
-        description: Set a value if GitHub Environment name is different than the TF environment folder
         type: string
         required: false
         default: ""
@@ -134,7 +129,7 @@ jobs:
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
       override_labels: ${{ inputs.override_labels }}
-      override_github_environment: ${{ inputs.override_github_environment }}
+      override_github_environment: ${{ inputs.github_environment }}
       env_vars: ${{ inputs.env_vars }}
 
   deploy-apply:
@@ -154,5 +149,5 @@ jobs:
       use_private_agent: ${{ inputs.use_private_agent }}
       use_labels: ${{ inputs.use_labels }}
       override_labels: ${{ inputs.override_labels }}
-      override_github_environment: ${{ inputs.override_github_environment }}
+      override_github_environment: ${{ inputs.github_environment }}
       env_vars: ${{ inputs.env_vars }}
