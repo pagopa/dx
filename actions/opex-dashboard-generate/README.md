@@ -51,6 +51,15 @@ The action consists of three shell scripts:
 - **generate-terraform.sh**: Runs `@pagopa/opex-dashboard` to generate Terraform
 - **extract-directories.sh**: Formats generated Terraform directories for matrix deployment
 
+### Cross-Platform Compatibility
+
+The scripts are designed to work on both GNU/Linux (GitHub Actions runners) and BSD-based systems (macOS):
+
+- Path normalization uses a fallback mechanism that works without the GNU-specific `realpath -m` flag
+- All scripts are compatible with both POSIX-compliant shells and bash
+
+For local testing on macOS, ensure you have basic POSIX tools available (`bash`, `find`, `grep`, `sed`, `git`). Optional tools like `yq` provide enhanced parsing but have graceful fallbacks.
+
 ## Documentation
 
 For comprehensive documentation including:

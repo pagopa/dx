@@ -8,6 +8,27 @@ set -euo pipefail
 # Outputs:
 #   Sets GITHUB_OUTPUT: changed_dashboards (JSON array)
 
+# Helper function to normalize paths (realpath fallback for macOS compatibility)
+# The -m flag (for non-existent paths) is a GNU extension not available on macOS
+normalize_path() {
+  local path="${1}"
+
+  # Try GNU realpath with -m flag first (for non-existent paths)
+  if realpath -m "${path}" 2>/dev/null; then
+    return 0
+  fi
+
+  # Fallback for systems without GNU realpath -m (e.g., macOS)
+  # Manually construct the absolute path without requiring the file to exist
+  if [[ "${path}" = /* ]]; then
+    # Absolute path - just normalize it
+    echo "${path}"
+  else
+    # Relative path - make it absolute
+    echo "$(cd "$(dirname "${path}")" && pwd)/$(basename "${path}")"
+  fi
+}
+
 # Validate CONFIG_PATTERN to prevent injection attacks
 if [[ "${CONFIG_PATTERN}" =~ [\;\|\&\`\$\(\)] ]]; then
   echo "::error::Invalid characters in config_pattern: ${CONFIG_PATTERN}"
@@ -21,6 +42,12 @@ if [ -z "${BASE_REF:-}" ]; then
   exit 1
 fi
 
+# Validate BASE_REF to prevent injection attacks
+if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^-] ]]; then
+  echo "::error::Invalid characters in BASE_REF: ${BASE_REF}"
+  echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^)"
+  exit 1
+fi
 CHANGED_FILES=$(git diff --name-only HEAD "${BASE_REF}" 2>/dev/null || echo "")
 
 echo "Changed files:"
@@ -52,7 +79,7 @@ echo "${CONFIG_FILES}"
 CHANGED_DASHBOARDS="[]"
 WORKSPACE_ROOT=$(pwd)
 
-for config in ${CONFIG_FILES}; do
+while IFS= read -r config; do
   if [ -z "${config}" ]; then
     continue
   fi
@@ -77,7 +104,7 @@ for config in ${CONFIG_FILES}; do
     if [ -n "${OA3_SPEC}" ]; then
       # Handle relative paths
       if [[ "${OA3_SPEC}" != /* ]] && [[ "${OA3_SPEC}" != http* ]]; then
-        OA3_SPEC_FULL=$(cd "${CONFIG_DIR}" && realpath -m "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
+        OA3_SPEC_FULL=$(cd "${CONFIG_DIR}" && normalize_path "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
 
         if [ -n "${OA3_SPEC_FULL}" ] && echo "${CHANGED_FILES}" | grep -q "^${OA3_SPEC_FULL}$"; then
           echo "OpenAPI spec modified: ${OA3_SPEC_FULL} (referenced by ${config})"
@@ -90,7 +117,7 @@ for config in ${CONFIG_FILES}; do
   if [ "${SHOULD_REGENERATE}" = true ]; then
     CHANGED_DASHBOARDS=$(echo "${CHANGED_DASHBOARDS}" | jq --arg c "${config}" '. + [$c]')
   fi
-done
+done <<< "${CONFIG_FILES}"
 
 echo "changed_dashboards=${CHANGED_DASHBOARDS}" >> "${GITHUB_OUTPUT}"
 echo "Dashboards to regenerate: ${CHANGED_DASHBOARDS}"

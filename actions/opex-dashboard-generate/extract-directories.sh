@@ -29,10 +29,8 @@ fi
 echo "has_changes=true" >> "${GITHUB_OUTPUT}"
 
 # Extract unique directories and split into base_path/environment
-CHANGED_DIRS=$(echo "${CHANGED_TF_FILES}" | xargs dirname | sort -u)
-
 MATRIX_JSON="[]"
-for dir in ${CHANGED_DIRS}; do
+while IFS= read -r dir; do
   # Split path: everything except last component is base_path, last component is environment
   BASE_PATH=$(dirname "${dir}")
   ENVIRONMENT=$(basename "${dir}")
@@ -44,7 +42,7 @@ for dir in ${CHANGED_DIRS}; do
 
   MATRIX_JSON=$(echo "${MATRIX_JSON}" | jq --arg bp "${BASE_PATH}" --arg env "${ENVIRONMENT}" --arg fp "${dir}" \
     '. + [{"base_path": $bp, "environment": $env, "full_path": $fp}]')
-done
+done < <(echo "${CHANGED_TF_FILES}" | xargs dirname | sort -u)
 
 echo "changed_directories=${MATRIX_JSON}" >> "${GITHUB_OUTPUT}"
 echo "Generated Terraform in directories:"
