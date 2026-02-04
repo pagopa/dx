@@ -97,6 +97,12 @@ variable "service_bus_namespace_id" {
   description = "Id of the Service Bus Namespace to monitor for dead-lettered messages"
 }
 
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = "Name of the resource group where the alert will be created. If not provided, it will be parsed from the service_bus_namespace_id"
+}
+
 variable "action_group_ids" {
   type        = list(string)
   description = "Id list of the action groups to notify when the alert is triggered"
