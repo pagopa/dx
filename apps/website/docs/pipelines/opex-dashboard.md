@@ -347,7 +347,7 @@ to the new reusable workflow.
 
 4. **Create New Workflow**
 
-   Add `.github/workflows/opex-dashboards-deploy.yaml`:
+   Add `.github/workflows/opex-dashboard-deploy.yaml`:
 
    ```yaml
    name: Deploy OpEx Dashboards
@@ -372,7 +372,7 @@ to the new reusable workflow.
 
 5. **Add Dry-Run Workflow (Optional)**
 
-   For PR validation, add `.github/workflows/opex-dashboards-plan.yaml`:
+   For PR validation, add `.github/workflows/opex-dashboard-plan.yaml`:
 
    ```yaml
    name: Plan OpEx Dashboards
@@ -406,7 +406,7 @@ to the new reusable workflow.
    # Should show: config.yaml, opex.tf, backend.tf, variables.tf, etc.
 
    # Test workflow with dry-run (requires GitHub CLI)
-   gh workflow run opex-dashboards-deploy.yaml \
+   gh workflow run opex-dashboard-deploy.yaml \
      -f github_environment=opex-dev \
      -f config_pattern="infra/dashboards/**/config.yaml" \
      -f dry_run=true
