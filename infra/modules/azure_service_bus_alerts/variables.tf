@@ -100,7 +100,7 @@ variable "service_bus_namespace_id" {
 variable "resource_group_name" {
   type        = string
   default     = null
-  description = "Name of the resource group where the alert will be created. If not provided, it will be parsed from the service_bus_namespace_id"
+  description = "Optional. Name of the resource group where the alert will be created. When null (the default), locals.tf uses coalesce(...) to derive the resource group name from service_bus_namespace_id; if a non-null value is provided, it overrides the derived value."
 }
 
 variable "action_group_ids" {
