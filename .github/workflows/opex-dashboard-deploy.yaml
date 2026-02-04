@@ -96,13 +96,18 @@ jobs:
       - name: Set base reference
         id: set-base-ref
         run: |
-          if [ -n "${{ inputs.base_ref }}" ]; then
-            echo "base_ref=${{ inputs.base_ref }}" >> "${GITHUB_OUTPUT}"
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "base_ref=${{ github.event.pull_request.base.sha }}" >> "${GITHUB_OUTPUT}"
+          if [ -n "${BASE_REF_INPUT}" ]; then
+            echo "base_ref=${BASE_REF_INPUT}" >> "${GITHUB_OUTPUT}"
+          elif [ "${EVENT_NAME}" = "pull_request" ]; then
+            echo "base_ref=${PR_BASE_SHA}" >> "${GITHUB_OUTPUT}"
           else
-            echo "base_ref=${{ github.event.before }}" >> "${GITHUB_OUTPUT}"
+            echo "base_ref=${EVENT_BEFORE}" >> "${GITHUB_OUTPUT}"
           fi
+        env:
+          BASE_REF_INPUT: ${{ inputs.base_ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - name: Generate dashboards
         id: generate-action
