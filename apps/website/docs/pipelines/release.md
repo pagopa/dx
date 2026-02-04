@@ -2,7 +2,7 @@
 sidebar_position: 5
 ---
 
-# Release Action
+# Automate versioning and publishing
 
 A GitHub Action that automates package versioning and publishing. This action is
 package-manager agnostic and works with pnpm, yarn, and npm.
