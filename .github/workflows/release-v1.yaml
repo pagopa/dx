@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to deploy to (e.g., app-prod-cd)"
+        required: true
+        type: string
+        default: "app-prod-cd"
+    secrets:
+      github-token:
+        description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
+        required: true
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-tags: "true"
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        id: node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Update npm (for provenance support)
+        shell: bash
+        run: npm install -g npm@11.8.0
+
+      - name: Install dependencies (pnpm)
+        if: steps.node-setup.outputs.package-manager == 'pnpm'
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Install dependencies (yarn)
+        if: steps.node-setup.outputs.package-manager == 'yarn'
+        shell: bash
+        run: yarn install --immutable
+
+      - name: Install dependencies (npm)
+        if: steps.node-setup.outputs.package-manager == 'npm'
+        shell: bash
+        run: npm ci
+
+      - name: Create Release Pull Request or Publish to npm
+        id: release
+        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+        with:
+          version: ${{ steps.node-setup.outputs.package-manager }} run version
+          publish: ${{ steps.node-setup.outputs.package-manager }} run publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token }}
+          NPM_CONFIG_PROVENANCE: true
