@@ -4,8 +4,7 @@ set -euo pipefail
 # Detect modified config files and OpenAPI specifications
 # Inputs:
 #   CONFIG_PATTERN - Glob pattern to find dashboard config files
-#   BASE_REF - Base branch reference for diff
-#   EVENT_NAME - GitHub event name (pull_request or other)
+#   BASE_REF - Base git reference for change detection (commit SHA or ref)
 # Outputs:
 #   Sets GITHUB_OUTPUT: changed_dashboards (JSON array)
 
@@ -16,18 +15,36 @@ if [[ "${CONFIG_PATTERN}" =~ [\;\|\&\`\$\(\)] ]]; then
   exit 1
 fi
 
-# Get list of changed files
-if [ "${EVENT_NAME}" == "pull_request" ]; then
-  CHANGED_FILES=$(git diff --name-only "origin/${BASE_REF}"...HEAD)
-else
-  CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+# Get list of changed files using provided BASE_REF
+if [ -z "${BASE_REF:-}" ]; then
+  echo "::error::BASE_REF environment variable is required"
+  exit 1
 fi
+
+CHANGED_FILES=$(git diff --name-only HEAD "${BASE_REF}" 2>/dev/null || echo "")
 
 echo "Changed files:"
 echo "${CHANGED_FILES}"
 
-# Find all config files matching the pattern
-CONFIG_FILES=$(find . -path "./${CONFIG_PATTERN}" -type f 2>/dev/null | sed 's|^\./||' || echo "")
+# Find all config files matching the pattern(s)
+# CONFIG_PATTERN can be multiple patterns (newline-separated)
+CONFIG_FILES=""
+while IFS= read -r pattern; do
+  # Skip empty lines
+  if [ -z "${pattern}" ]; then
+    continue
+  fi
+
+  # Find files matching this pattern
+  PATTERN_FILES=$(find . -path "./${pattern}" -type f 2>/dev/null | sed 's|^\./||' || echo "")
+
+  if [ -n "${PATTERN_FILES}" ]; then
+    CONFIG_FILES="${CONFIG_FILES}${PATTERN_FILES}"$'\n'
+  fi
+done <<< "${CONFIG_PATTERN}"
+
+# Remove trailing newline and duplicates
+CONFIG_FILES=$(echo "${CONFIG_FILES}" | grep -v '^$' | sort -u)
 
 echo "Found config files:"
 echo "${CONFIG_FILES}"

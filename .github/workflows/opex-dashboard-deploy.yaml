@@ -1,0 +1,153 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment for GitHub environment protection and secrets context
+        type: string
+        required: true
+      config_pattern:
+        description: |
+          Glob pattern(s) to find dashboard config files. Supports multiple patterns (one per line).
+          Examples:
+            Single: 'infra/dashboards/**/config.yaml'
+            Multiple: |
+              infra/dashboards/**/config.yaml
+              .opex/**/config.yaml
+        type: string
+        required: true
+      dry_run:
+        description: If true, run terraform plan instead of apply
+        type: boolean
+        required: false
+        default: false
+      node_version:
+        description: Node.js version to use
+        type: string
+        required: false
+        default: "22"
+      opex_dashboard_version:
+        description: Version of @pagopa/opex-dashboard to use
+        type: string
+        required: false
+        default: "latest"
+      base_ref:
+        description: Base git reference for change detection (defaults to github.event.before for push, github.event.pull_request.base.sha for PRs)
+        type: string
+        required: false
+        default: ""
+      use_private_agent:
+        description: Use a private agent to run Terraform operations
+        type: boolean
+        required: false
+        default: false
+      use_labels:
+        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ""
+      override_github_environment:
+        description: Set a value if GitHub Environment name is different than the TF environment folder
+        type: string
+        required: false
+        default: ""
+      env_vars:
+        description: List of environment variables to set up, given in env=value format
+        type: string
+        required: false
+
+concurrency:
+  group: ${{ github.workflow }}-opex-dashboards
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate Dashboard Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has_changes: ${{ steps.generate-action.outputs.has_changes }}
+      changed_directories: ${{ steps.generate-action.outputs.changed_directories }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Cache npm packages
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-opex-${{ inputs.opex_dashboard_version }}
+          restore-keys: |
+            ${{ runner.os }}-npm-opex-
+            ${{ runner.os }}-npm-
+
+      - name: Set base reference
+        id: set-base-ref
+        run: |
+          if [ -n "${{ inputs.base_ref }}" ]; then
+            echo "base_ref=${{ inputs.base_ref }}" >> "${GITHUB_OUTPUT}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base_ref=${{ github.event.pull_request.base.sha }}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "base_ref=${{ github.event.before }}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Generate dashboards
+        id: generate-action
+        uses: pagopa/dx/actions/opex-dashboard-generate@main
+        with:
+          config_pattern: ${{ inputs.config_pattern }}
+          opex_dashboard_version: ${{ inputs.opex_dashboard_version }}
+          base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
+
+  deploy-plan:
+    name: Plan - ${{ matrix.dashboard.full_path }}
+    needs: generate
+    if: needs.generate.outputs.has_changes == 'true' && inputs.dry_run == true
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    secrets: inherit
+    with:
+      environment: ${{ matrix.dashboard.environment }}
+      base_path: ${{ matrix.dashboard.base_path }}
+      use_private_agent: ${{ inputs.use_private_agent }}
+      use_labels: ${{ inputs.use_labels }}
+      override_labels: ${{ inputs.override_labels }}
+      override_github_environment: ${{ inputs.override_github_environment }}
+      env_vars: ${{ inputs.env_vars }}
+
+  deploy-apply:
+    name: Apply - ${{ matrix.dashboard.full_path }}
+    needs: generate
+    if: needs.generate.outputs.has_changes == 'true' && inputs.dry_run == false
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    secrets: inherit
+    with:
+      environment: ${{ matrix.dashboard.environment }}
+      base_path: ${{ matrix.dashboard.base_path }}
+      use_private_agent: ${{ inputs.use_private_agent }}
+      use_labels: ${{ inputs.use_labels }}
+      override_labels: ${{ inputs.override_labels }}
+      override_github_environment: ${{ inputs.override_github_environment }}
+      env_vars: ${{ inputs.env_vars }}
