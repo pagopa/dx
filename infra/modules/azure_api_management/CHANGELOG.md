@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.2.1
+
+### Patch Changes
+
+- 0dd28ab: Fix variable validation with null values for CI Static Analysis
+
 ## 2.2.0
 
 ### Minor Changes
