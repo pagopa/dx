@@ -48,6 +48,12 @@ if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^-] ]]; then
   echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^)"
   exit 1
 fi
+# Validate BASE_REF to prevent injection attacks
+if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^-] ]]; then
+  echo "::error::Invalid characters in BASE_REF: ${BASE_REF}"
+  echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^)"
+  exit 1
+fi
 CHANGED_FILES=$(git diff --name-only HEAD "${BASE_REF}" 2>/dev/null || echo "")
 
 echo "Changed files:"
