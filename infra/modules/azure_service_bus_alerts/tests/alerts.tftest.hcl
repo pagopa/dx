@@ -201,3 +201,57 @@ run "plan_alerts_on_dlq_messages" {
     error_message = "Active messages alerts should not be present when only DLQ alert is configured"
   }
 }
+
+run "plan_with_custom_resource_group_name" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+    tags        = run.setup_tests.tags
+
+    service_bus_namespace_id = run.setup_tests.service_bus_namespace_id
+    action_group_ids         = [run.setup_tests.action_group_id]
+    resource_group_name      = "custom-rg-name"
+
+    alerts_on_active_messages = {
+      description     = "Alert on active messages with custom RG"
+      check_every     = "PT15M"
+      lookback_period = "PT30M"
+      auto_mitigate   = true
+      threshold       = 10
+      entity_names    = ["queue1"]
+    }
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.active[0].resource_group_name == "custom-rg-name"
+    error_message = "Alert should use the custom resource_group_name when provided"
+  }
+}
+
+run "plan_with_default_resource_group_name" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+    tags        = run.setup_tests.tags
+
+    service_bus_namespace_id = run.setup_tests.service_bus_namespace_id
+    action_group_ids         = [run.setup_tests.action_group_id]
+
+    alerts_on_dlq_messages = {
+      description     = "Alert on DLQ messages with default RG"
+      check_every     = "PT1M"
+      lookback_period = "PT5M"
+      auto_mitigate   = true
+      threshold       = 0
+      entity_names    = ["queue1"]
+    }
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.dlq[0].resource_group_name == run.setup_tests.resource_group_name
+    error_message = "Alert should use the resource_group_name parsed from service_bus_namespace_id when not explicitly provided"
+  }
+}
+
