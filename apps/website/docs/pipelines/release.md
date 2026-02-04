@@ -63,8 +63,8 @@ publishing:
 ```json
 {
   "scripts": {
-    "version": "changeset version && yarn --mode update-lockfile && turbo run version --filter=tag:npm:public",
-    "release": "turbo run build --filter=tag:npm:public && changeset publish"
+    "version": "changeset version && yarn --mode update-lockfile && turbo run version",
+    "release": "turbo run build && changeset publish"
   }
 }
 ```
@@ -99,9 +99,9 @@ jobs:
 
 ## Inputs
 
-| Input         | Description                                    | Required | Default |
-| ------------- | ---------------------------------------------- | -------- | ------- |
-| `environment` | Environment to deploy to (e.g., `npm-prod-cd`) | Yes      | -       |
+| Input         | Description                                                | Required | Default |
+| ------------- | ---------------------------------------------------------- | -------- | ------- |
+| `environment` | Repository Environment that holds the `github-token` value | Yes      | -       |
 
 ## Secrets
 
@@ -114,7 +114,7 @@ jobs:
 1. **Setup**: Detects your package manager (pnpm, yarn, or npm) and sets up
    Node.js
 2. **Install**: Installs dependencies using the detected package manager
-3. **npm Update**: Updates npm to version 11.8.0 to support provenance
+3. **Npm Update**: Updates npm to version 11.8.0 to support provenance
 4. **Version or Publish**:
    - If there are changesets on the default branch, creates/updates a release PR
    - If the release PR is merged, publishes the new versions to npm with
