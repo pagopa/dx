@@ -17,7 +17,13 @@ echo "Changes detected:"
 git status --short
 
 # Get only .tf files that were just generated (modified in working directory)
-CHANGED_TF_FILES=$(git status --porcelain | grep '\.tf$' | awk '{print $2}' || echo "")
+# Use porcelain-safe parsing:
+# - limit to *.tf via pathspec
+# - strip the two-status characters and following space
+# - for renames (old -> new), keep only the new path
+CHANGED_TF_FILES=$(git status --porcelain -- '*.tf' \
+  | sed -E 's/^.. //' \
+  | sed -E 's/.* -> //' || echo "")
 
 if [ -z "${CHANGED_TF_FILES}" ]; then
   echo "has_changes=true" >> "${GITHUB_OUTPUT}"
