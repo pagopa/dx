@@ -70,7 +70,7 @@ runs:
     - name: Update npm (for provenance support)
       if: inputs.enable-provenance == 'true'
       shell: bash
-      run: npm install -g npm@11.7.0
+      run: npm install -g npm@11.8.0
 
     - name: Build version command
       id: build-version-command
