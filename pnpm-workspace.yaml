@@ -25,7 +25,11 @@ catalog:
   vitest-mock-extended: ^3.1.0
 
 onlyBuiltDependencies:
+  - '@swc/core'
+  - core-js
+  - core-js-pure
   - esbuild
   - nx
+  - protobufjs
 
 pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs
