@@ -73,7 +73,8 @@ publishing:
 
 ## Usage
 
-### Basic Usage
+To use this workflow in your repository, create a new workflow file (e.g.,
+`.github/workflows/release.yaml`) with the following content:
 
 ```yaml
 name: Release
@@ -87,37 +88,13 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
     uses: pagopa/dx/.github/workflows/release-v1.yaml@main
     with:
       environment: npm-prod-cd
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### With Custom Commands
-
-```yaml
-jobs:
-  release:
-    uses: pagopa/dx/.github/workflows/release-v1.yaml@main
-    with:
-      environment: npm-prod-cd
-      version-command: "version:packages"
-      publish-command: "publish:packages"
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-### With Full Package Manager Command
-
-```yaml
-jobs:
-  release:
-    uses: pagopa/dx/.github/workflows/release-v1.yaml@main
-    with:
-      environment: npm-prod-cd
-      version-command: "pnpm run version"
-      publish-command: "pnpm run release"
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
