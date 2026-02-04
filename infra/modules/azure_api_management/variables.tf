@@ -61,37 +61,37 @@ variable "autoscale" {
   description = "Configuration for autoscaling rules on capacity metrics."
 
   validation {
-    condition = var.autoscale == null || local.use_case_features.zones == null || (
+    condition = var.autoscale == null || local.use_case_features.zones == null ? true : (
       # Validate user-provided values only (if not null)
-      (var.autoscale.minimum_instances == null || var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
-      (var.autoscale.maximum_instances == null || var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
-      (var.autoscale.default_instances == null || var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
-      (var.autoscale.scale_out_value == null || tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
-      (var.autoscale.scale_in_value == null || tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0)
+      (try(var.autoscale.minimum_instances, null) == null || var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.maximum_instances, null) == null || var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.default_instances, null) == null || var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.scale_out_value, null) == null || tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.scale_in_value, null) == null || tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0)
     )
     error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. This ensures proper distribution across availability zones."
   }
 
   validation {
-    condition = var.autoscale == null || (
-      var.autoscale.minimum_instances == null || var.autoscale.default_instances == null || var.autoscale.maximum_instances == null ||
+    condition = var.autoscale == null ? true : (
+      try(var.autoscale.minimum_instances, null) == null || try(var.autoscale.default_instances, null) == null || try(var.autoscale.maximum_instances, null) == null ||
       (var.autoscale.minimum_instances <= var.autoscale.default_instances && var.autoscale.default_instances <= var.autoscale.maximum_instances)
     )
     error_message = "The default_instances must be between minimum_instances and maximum_instances."
   }
 
   validation {
-    condition     = var.autoscale == null || var.autoscale.minimum_instances == null || var.autoscale.minimum_instances > 0
+    condition     = var.autoscale == null ? true : (try(var.autoscale.minimum_instances, null) == null || var.autoscale.minimum_instances > 0)
     error_message = "The minimum_instances must be greater than 0."
   }
 
   validation {
-    condition     = var.autoscale == null || var.autoscale.scale_out_value == null || tonumber(var.autoscale.scale_out_value) > 0
+    condition     = var.autoscale == null ? true : (try(var.autoscale.scale_out_value, null) == null || tonumber(var.autoscale.scale_out_value) > 0)
     error_message = "The scale_out_value must be greater than 0."
   }
 
   validation {
-    condition     = var.autoscale == null || var.autoscale.scale_in_value == null || tonumber(var.autoscale.scale_in_value) > 0
+    condition     = var.autoscale == null ? true : (try(var.autoscale.scale_in_value, null) == null || tonumber(var.autoscale.scale_in_value) > 0)
     error_message = "The scale_in_value must be greater than 0."
   }
 }
