@@ -4,14 +4,14 @@ sidebar_position: 5
 
 # Automate versioning and publishing
 
-A GitHub Action that automates package versioning and publishing. This action is
-package-manager agnostic and works with pnpm, yarn, and npm.
+A reusable GitHub workflow that automates package versioning and publishing.
+This workflow is package-manager agnostic and works with pnpm, yarn, and npm.
 
 ## Features
 
 - 🔄 Automatically creates or updates release pull requests
 - 📦 Publishes packages to npm when PRs are merged
-- 🔒 Supports npm provenance for enhanced security
+- 🔒 Mandatory npm provenance for enhanced security
 - 🎯 Package manager agnostic (pnpm, yarn, npm)
 - 🛠️ Customizable version and publish commands
 - 📊 Outputs published package information
@@ -27,14 +27,22 @@ package-manager agnostic and works with pnpm, yarn, and npm.
 
 ### Required Permissions
 
-The GitHub token must have the following permissions:
+The workflow runs with the following permissions:
 
 ```yaml
 permissions:
   contents: write # To push version bumps and tags
-  id-token: write # For npm provenance
+  id-token: write # For npm provenance (trusted publishing)
   pull-requests: write # To create/update release PRs
 ```
+
+:::info
+
+This workflow uses npm's
+[trusted publishing](https://docs.npmjs.com/generating-provenance-statements)
+with provenance, which eliminates the need for npm tokens.
+
+:::
 
 ### Package.json Scripts
 
@@ -79,50 +87,55 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
-    name: Release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-      pull-requests: write
-    steps:
-      - name: Create Release PR or Publish
-        uses: pagopa/dx/actions/release@main
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    uses: pagopa/dx/.github/workflows/release-v1.yaml@main
+    with:
+      environment: npm-prod-cd
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### With Custom Commands
 
 ```yaml
-- name: Create Release PR or Publish
-  uses: pagopa/dx/actions/release@main
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-    version-command: "version:packages"
-    publish-command: "publish:packages"
+jobs:
+  release:
+    uses: pagopa/dx/.github/workflows/release-v1.yaml@main
+    with:
+      environment: npm-prod-cd
+      version-command: "version:packages"
+      publish-command: "publish:packages"
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### With Full Package Manager Command
 
 ```yaml
-- name: Create Release PR or Publish
-  uses: pagopa/dx/actions/release@main
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
-    version-command: "pnpm run version"
-    publish-command: "pnpm run release"
+jobs:
+  release:
+    uses: pagopa/dx/.github/workflows/release-v1.yaml@main
+    with:
+      environment: npm-prod-cd
+      version-command: "pnpm run version"
+      publish-command: "pnpm run release"
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Inputs
 
 | Input               | Description                                                            | Required | Default   |
 | ------------------- | ---------------------------------------------------------------------- | -------- | --------- |
-| `github-token`      | GitHub token with contents:write and pull-requests:write permissions   | Yes      | -         |
+| `environment`       | Environment to deploy to (e.g., `npm-prod-cd`)                         | Yes      | -         |
 | `version-command`   | Command to run for versioning (with or without package manager prefix) | No       | `version` |
 | `publish-command`   | Command to run for publishing (with or without package manager prefix) | No       | `release` |
 | `working-directory` | Working directory for the action                                       | No       | `.`       |
-| `enable-provenance` | Enable npm provenance for published packages (requires npm >=11.5.1)   | No       | `true`    |
+
+## Secrets
+
+| Secret         | Description                                                          | Required |
+| -------------- | -------------------------------------------------------------------- | -------- |
+| `github-token` | GitHub token with contents:write and pull-requests:write permissions | Yes      |
 
 ## Outputs
 
@@ -137,17 +150,25 @@ jobs:
 1. **Setup**: Detects your package manager (pnpm, yarn, or npm) and sets up
    Node.js
 2. **Install**: Installs dependencies using the detected package manager
-3. **npm Update**: Updates npm to support provenance (if enabled)
+3. **npm Update**: Updates npm to version 11.8.0 to support provenance
 4. **Version or Publish**:
    - If there are changesets on the default branch, creates/updates a release PR
-   - If the release PR is merged, publishes the new versions to npm
+   - If the release PR is merged, publishes the new versions to npm with
+     provenance
 
 ## Environment Variables
 
-The action automatically sets:
+The workflow automatically sets:
 
-- `GITHUB_TOKEN`: For creating PRs and pushing commits
-- `NPM_CONFIG_PROVENANCE`: Enables npm provenance when publishing (if enabled)
+- `GITHUB_TOKEN`: For creating PRs and pushing commits (passed as secret)
+- `NPM_CONFIG_PROVENANCE`: Always set to `true` to enable npm provenance
+
+:::info
+
+No npm token is required. The workflow uses npm's trusted publishing feature
+with OpenID Connect (OIDC) tokens for authentication.
+
+:::
 
 ## Troubleshooting
 
