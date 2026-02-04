@@ -13,8 +13,6 @@ This workflow is package-manager agnostic and works with pnpm, yarn, and npm.
 - 📦 Publishes packages to npm when PRs are merged
 - 🔒 Mandatory npm provenance for enhanced security
 - 🎯 Package manager agnostic (pnpm, yarn, npm)
-- 🛠️ Customizable version and publish commands
-- 📊 Outputs published package information
 
 ## Prerequisites
 
@@ -22,8 +20,8 @@ This workflow is package-manager agnostic and works with pnpm, yarn, and npm.
   [Changesets](https://github.com/changesets/changesets) for version management
 - A `.changeset/config.json` file configured in your repository
 - Changesets CLI added as a dev dependency
-- Scripts defined in `package.json` for versioning and publishing (e.g.,
-  `version`, `release`)
+- Scripts defined in `package.json` for versioning and publishing ( `version`,
+  `release`)
 
 ### Required Permissions
 
@@ -46,7 +44,7 @@ with provenance, which eliminates the need for npm tokens.
 
 ### Package.json Scripts
 
-Your top level `package.json` should include scripts for versioning and
+Your top level `package.json` must include scripts for versioning and
 publishing:
 
 #### Example with NX and pnpm
@@ -101,26 +99,15 @@ jobs:
 
 ## Inputs
 
-| Input               | Description                                                            | Required | Default   |
-| ------------------- | ---------------------------------------------------------------------- | -------- | --------- |
-| `environment`       | Environment to deploy to (e.g., `npm-prod-cd`)                         | Yes      | -         |
-| `version-command`   | Command to run for versioning (with or without package manager prefix) | No       | `version` |
-| `publish-command`   | Command to run for publishing (with or without package manager prefix) | No       | `release` |
-| `working-directory` | Working directory for the action                                       | No       | `.`       |
+| Input         | Description                                    | Required | Default |
+| ------------- | ---------------------------------------------- | -------- | ------- |
+| `environment` | Environment to deploy to (e.g., `npm-prod-cd`) | Yes      | -       |
 
 ## Secrets
 
 | Secret         | Description                                                          | Required |
 | -------------- | -------------------------------------------------------------------- | -------- |
 | `github-token` | GitHub token with contents:write and pull-requests:write permissions | Yes      |
-
-## Outputs
-
-| Output              | Description                                                                    |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `published`         | Whether packages were published (`true`) or a release PR was created (`false`) |
-| `publishedPackages` | JSON array of published packages with name and version                         |
-| `pullRequestNumber` | The number of the created release PR (if applicable)                           |
 
 ## How It Works
 
