@@ -163,8 +163,8 @@ Check that:
 
 If you see provenance-related errors:
 
-- Ensure you're using an npm version that supports provenance. This action
-  currently installs `npm@11.7.0` automatically when provenance is enabled.
+- Ensure you're using an npm version that supports provenance. Minimum version
+  is `11.5.1`.
 - Verify the `id-token: write` permission is granted
 - Check that your npm registry supports provenance
 
