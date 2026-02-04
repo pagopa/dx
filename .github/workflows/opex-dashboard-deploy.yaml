@@ -108,7 +108,7 @@ jobs:
 
       - name: Generate dashboards
         id: generate-action
-        uses: pagopa/dx/actions/opex-dashboard-generate@main
+        uses: pagopa/dx/actions/opex-dashboard-generate@opex-workflow
         with:
           config_pattern: ${{ inputs.config_pattern }}
           opex_dashboard_version: ${{ inputs.opex_dashboard_version }}
