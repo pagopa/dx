@@ -347,7 +347,7 @@ to the new reusable workflow.
 
 4. **Create New Workflow**
 
-   Add `.github/workflows/opex-dashboards-deploy.yaml`:
+   Add `.github/workflows/opex-dashboard-deploy.yaml`:
 
    ```yaml
    name: Deploy OpEx Dashboards
