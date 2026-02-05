@@ -12,11 +12,12 @@ const addModule = (env: Environment, templatesPath: string) => {
     env.cloudAccounts,
     (account) => account.csp,
   );
+  const cwd = process.cwd();
   return (name: string, terraformBackendKey: string) => [
     {
       base: templatesPath,
       data: { cloudAccountsByCsp },
-      destination: "infra",
+      destination: path.join(cwd, "infra"),
       force: true,
       templateFiles: path.join(templatesPath, name),
       transform: formatTerraformCode,
@@ -26,7 +27,7 @@ const addModule = (env: Environment, templatesPath: string) => {
     {
       base: path.join(templatesPath, "shared"),
       data: { cloudAccountsByCsp, terraformBackendKey },
-      destination: `infra/${name}/{{env.name}}`,
+      destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
       templateFiles: path.join(templatesPath, "shared"),
       transform: formatTerraformCode,

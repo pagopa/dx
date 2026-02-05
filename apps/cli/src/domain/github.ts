@@ -32,6 +32,10 @@ export class Repository {
     return `${this.owner}/${this.name}`;
   }
 
+  get origin(): string {
+    return `https://github.com/${this.owner}/${this.name}.git`;
+  }
+
   get ssh(): string {
     return `git@github.com:${this.owner}/${this.name}.git`;
   }
