@@ -21,23 +21,6 @@ runs:
       id: node-setup
       uses: pagopa/dx/.github/actions/node-setup@main
 
-    - name: Install dependencies (pnpm)
-      if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
-      shell: bash
-      run: pnpm --filter "$WORKSPACE_NAME..." install
-      env:
-        WORKSPACE_NAME: ${{ inputs.workspace_name }}
-
-    - name: Install dependencies (yarn)
-      if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
-      shell: bash
-      run: yarn install --immutable
-
-    - name: Install dependencies (npm)
-      if: ${{ steps.node-setup.outputs.package-manager == 'npm' }}
-      shell: bash
-      run: npm ci
-
     - name: Detect build tool
       id: detect-build-tool
       shell: bash
@@ -47,20 +30,6 @@ runs:
         else
           echo "build-tool=turbo" >> $GITHUB_OUTPUT
         fi
-
-    - name: Build (turbo)
-      if: ${{ steps.detect-build-tool.outputs.build-tool == 'turbo' }}
-      shell: bash
-      run: npx turbo build --filter $WORKSPACE_NAME
-      env:
-        WORKSPACE_NAME: ${{ inputs.workspace_name }}
-
-    - name: Build (nx)
-      if: ${{ steps.detect-build-tool.outputs.build-tool == 'nx' }}
-      shell: bash
-      run: npx nx run $WORKSPACE_NAME:build
-      env:
-        WORKSPACE_NAME: ${{ inputs.workspace_name }}
 
     - name: Get Workspace path
       id: get-workspace-path
@@ -75,3 +44,64 @@ runs:
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}
         BUILD_TOOL: ${{ steps.detect-build-tool.outputs.build-tool }}
+
+    # If certain conditions are met, use flat node_modules structure
+    - name: Enable compatibility mode
+      id: compatibility-mode
+      shell: bash
+      run: |
+        if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+          echo "enabled=true" >> $GITHUB_OUTPUT
+        elif grep -rq --include='next.config.*' 'standalone' "$WORKSPACE_PATH"; then
+          echo "enabled=true" >> $GITHUB_OUTPUT
+        else
+          echo "enabled=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        WORKSPACE_PATH: ${{ steps.get-workspace-path.outputs.workspace-path }}
+        PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
+
+    - name: Install dependencies (pnpm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'pnpm' }}
+      shell: bash
+      run: |
+        if [ "$COMPABILITY_MODE" = "true" ]; then
+          pnpm config set --location=project nodeLinker hoisted
+          rm -rf node_modules
+          pnpm -r exec rm -rf node_modules
+        fi
+        pnpm --filter "$WORKSPACE_NAME..." install
+      env:
+        COMPABILITY_MODE: ${{ steps.compatibility-mode.outputs.enabled }}
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Install dependencies (yarn)
+      if: ${{ steps.node-setup.outputs.package-manager == 'yarn' }}
+      shell: bash
+      run: |
+        if [ "$COMPABILITY_MODE" = "true" ]; then
+          yarn config set nodeLinker node-modules
+          yarn config set nmHoistingLimits workspaces
+        fi
+        yarn install --immutable
+      env:
+        COMPABILITY_MODE: ${{ steps.compatibility-mode.outputs.enabled }}
+
+    - name: Install dependencies (npm)
+      if: ${{ steps.node-setup.outputs.package-manager == 'npm' }}
+      shell: bash
+      run: npm ci
+
+    - name: Build (turbo)
+      if: ${{ steps.detect-build-tool.outputs.build-tool == 'turbo' }}
+      shell: bash
+      run: npx turbo build --filter $WORKSPACE_NAME
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}
+
+    - name: Build (nx)
+      if: ${{ steps.detect-build-tool.outputs.build-tool == 'nx' }}
+      shell: bash
+      run: npx nx run $WORKSPACE_NAME:build
+      env:
+        WORKSPACE_NAME: ${{ inputs.workspace_name }}

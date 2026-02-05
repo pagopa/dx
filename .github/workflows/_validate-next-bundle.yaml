@@ -1,0 +1,101 @@
+# Integration test workflow to validate Next.js standalone builds
+# Action tested: "build-workspace", "make-artifact
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - .github/workflows/_validate-next-bundle.yaml
+      - .github/actions/build-workspace/action.yaml
+      - ./actions/make-artifact/action.yaml
+
+jobs:
+  test-next-bundle:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        package-manager: ["pnpm", "yarn"]
+        nextjs-version: ["13", "14", "15", "16"]
+    steps:
+      - name: Build the project
+        run: |
+          echo "22.17.0" > .node-version
+          echo '{ "name": "test", "devDependencies": { "turbo": "latest" } }' > package.json
+          echo '{ "tasks": { "build": {} } }' > turbo.json
+          corepack enable
+          corepack use $PACKAGE_MANAGER@latest
+          mkdir apps
+        env:
+          CI: false
+          PACKAGE_MANAGER: ${{ matrix.package-manager }}
+
+      - name: Setup the pnpm workspace
+        if: matrix.package-manager == 'pnpm'
+        run: |
+          pnpm config set --location=project --json packages '["apps/*"]'
+
+      - name: Setup the yarn workspace
+        if: matrix.package-manager == 'yarn'
+        run: |
+          npm pkg set workspaces[]="apps/*"
+
+      - name: Scaffold Next.js app
+        run: |
+          "$PACKAGE_MANAGER" dlx create-next-app@$NEXTJS_VERSION "apps/my-app" \
+            --ts --no-eslint --no-tailwind \
+            --app --src-dir --import-alias "@/*" \
+            --turbopack --no-react-compiler \
+            --skip-install
+          rm apps/my-app/next.config.*
+          echo "module.exports = { output: 'standalone' };" > apps/my-app/next.config.js
+          "$PACKAGE_MANAGER" install
+        env:
+          CI: false
+          NEXTJS_VERSION: ${{ matrix.nextjs-version }}
+          PACKAGE_MANAGER: ${{ matrix.package-manager }}
+
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-tags: "true"
+          fetch-depth: 0
+          path: dx
+
+      - name: Build Package
+        id: build-package
+        uses: ./dx/.github/actions/build-workspace
+        with:
+          workspace_name: my-app
+
+      - name: Make artifact
+        id: make-artifact
+        uses: ./dx/actions/make-artifact
+        with:
+          package-manager: ${{ steps.build-package.outputs.package-manager }}
+          workspace-name: my-app
+          workspace-path: ${{ steps.build-package.outputs.workspace-path }}
+
+      - name: Test Next.js bundle
+        env:
+          ARTIFACT_PATH: ${{ steps.make-artifact.outputs.artifact-path }}
+        run: |
+          temp_dir=$(mktemp -d)
+          unzip -d "$temp_dir" -q "$ARTIFACT_PATH"
+
+          PORT=$(($RANDOM+1024)) node "$temp_dir/server.js" &
+          sleep 2
+
+          pid=$!
+          if ! kill -0 $pid 2>/dev/null; then
+            echo "Next.js app failed to start"
+            exit 1
+          fi
+          echo "Next.js app started successfully with PID $pid"
+          kill $pid
+
+          exit 0

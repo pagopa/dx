@@ -99,43 +99,11 @@ jobs:
       - name: Make artifact
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         id: make-artifact
-        env:
-          PACKAGE_MANAGER: ${{ steps.build-package.outputs.package-manager }}
-          WORKSPACE_PATH: ${{ steps.build-package.outputs.workspace-path }}
-        working-directory: ${{ steps.build-package.outputs.workspace-path }}
-        run: |
-          if grep -rq --include='next.config.*' 'output: "standalone"' .; then
-            echo "::debug::The workspace contains a Next.js standalone app"
-            mv .next/static .next/standalone/"$WORKSPACE_PATH"/.next
-            mv public .next/standalone/"$WORKSPACE_PATH"
-            cd .next/standalone/"$WORKSPACE_PATH"
-            zip -r "$BUNDLE_NAME".zip .
-            echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [ "$PACKAGE_MANAGER" = "pnpm" ]; then
-            echo "::debug::The workspace uses pnpm"
-            # we use --legacy to avoid hardlinking workspace packages
-            # https://github.com/orgs/pnpm/discussions/9015
-            pnpm --filter $WORKSPACE_NAME deploy --legacy --prod bundle
-            cd bundle && zip -yr $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          if [ "$PACKAGE_MANAGER" = "yarn" ]; then
-            echo "::debug::The workspace uses yarn"
-            yarn config set nodeLinker node-modules
-            yarn config set nmHoistingLimits workspaces
-            yarn workspaces focus --production
-            zip -r $BUNDLE_NAME.zip .
-            echo "artifact-path=$(realpath $BUNDLE_NAME.zip)" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "::error::Unsupported package manager: $PACKAGE_MANAGER"
-          exit 1
+        uses: pagopa/dx/actions/make-artifact@main
+        with:
+          package-manager: ${{ steps.build-package.outputs.package-manager }}
+          workspace-name: ${{ env.WORKSPACE_NAME }}
+          workspace-path: ${{ steps.build-package.outputs.workspace-path }}
 
       - name: Upload Artifact
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
