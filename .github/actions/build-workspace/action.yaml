@@ -36,9 +36,9 @@ runs:
       shell: bash
       run: |
         if [ "$BUILD_TOOL" == "turbo" ]; then
-          WORKSPACE_PATH=$(npx turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+          WORKSPACE_PATH=$(npx --yes turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
         else
-          WORKSPACE_PATH=$(npx nx show project "$WORKSPACE_NAME" --json | jq -r .root)
+          WORKSPACE_PATH=$(npx --yes nx show project "$WORKSPACE_NAME" --json | jq -r .root)
         fi
         echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
       env:
