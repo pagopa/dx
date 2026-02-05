@@ -1,0 +1,60 @@
+name: "Log Telemetry Event"
+description: "Append an event to the session file created and read by setup-telemetry action to send events to Application Insights"
+
+inputs:
+  name:
+    description: "Event name"
+    required: true
+
+  body:
+    description: "(Optional) Event body/message plain text"
+    required: false
+    default: ""
+
+  is_exception:
+    description: "If 'true', logs this event as an exception instead of a custom event"
+    required: false
+    default: "false"
+
+  phase:
+    description: "(Optional) 'start' to mark span start, 'end' to mark span end"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Append Event to OpenTelemetry Session
+      shell: bash
+      env:
+        INPUT_NAME: ${{inputs.name }}
+        INPUT_BODY: ${{inputs.body}}
+        INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
+        INPUT_SPAN_PHASE: ${{inputs.phase}}
+      run: |
+        if [ -z "$OTEL_EVENT_FILE" ]; then
+          echo "OTEL_EVENT_FILE not set" >&2; exit 1;
+        fi
+
+        exc=false; [ "$INPUT_IS_EXCEPTION" = "true" ] && exc=true
+
+        now=$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ')
+
+        # write the event to OTEL session file according to input parameters (each event on a single line)
+        case "$INPUT_SPAN_PHASE" in
+          start)
+            line="$(jq -n -c --arg span "$INPUT_NAME" --arg startSpan "$now" '{span: $span, startSpan: $startSpan}')"
+            ;;
+          end)
+            line="$(jq -n -c --arg span "$INPUT_NAME" --arg endSpan "$now" '{span: $span, endSpan: $endSpan}')"
+            ;;
+          "")
+            line="$(jq -n -c --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exception "$exc" '{name: $name, body: $body, exception: $exception}')"
+            ;;
+          *)
+            echo "Unknown phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
+            line="$(jq -n -c --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exception "$exc" '{name: $name, body: $body, exception: $exception}')"
+            ;;
+        esac
+
+        printf '%s\n' "$line" >> "$OTEL_EVENT_FILE"

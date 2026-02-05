@@ -27,3 +27,20 @@ runs:
       with:
         role-to-assume: ${{ env.ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION && env.AWS_REGION || 'eu-south-1' }}
+
+    - name: Export Logged CSP
+      shell: bash
+      run: |
+        csp_list=""
+        if [ -n "$ROLE_ARN" ]; then
+          csp_list="aws"
+        fi
+        if [ -n "$ARM_CLIENT_ID" ] && [ -n "$ARM_TENANT_ID" ] && [ -n "$ARM_SUBSCRIPTION_ID" ]; then
+          if [ -n "$csp_list" ]; then
+            csp_list="$csp_list,azure"
+          else
+            csp_list="azure"
+          fi
+        fi
+
+        echo "CSP_LIST=$csp_list" >> "$GITHUB_ENV"

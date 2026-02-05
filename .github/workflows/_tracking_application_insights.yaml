@@ -1,0 +1,57 @@
+name: Tracking Application Insights
+
+on:
+  push:
+    branches:
+      - CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+  workflow_dispatch:
+    inputs:
+      use_otel:
+        description: "Use OTEL SDK"
+        required: false
+        default: "true"
+        type: string
+
+jobs:
+  tracker:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          connection_string: ${{ secrets.APPI_CONNECTION_STRING }}
+
+      - name: Open a child span for random work
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          name: Random work
+          phase: start
+
+      - name: Do random work and collect output
+        shell: bash
+        run: |
+          FILE_COUNT=$(ls -1 | wc -l)
+          echo "WORK_RESULT=$FILE_COUNT" >> $GITHUB_ENV
+          echo "Computed result: $FILE_COUNT"
+          sleep 5s
+      - name: end a child span for random work
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          name: Random work
+          phase: end
+
+      - name: Log collected result as telemetry event
+        uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
+        with:
+          name: Number of Items
+          body: ${{ env.WORK_RESULT }}

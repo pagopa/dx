@@ -1,0 +1,39 @@
+{
+  "name": "setup-telemetry-action",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Setup OpenTelemetry",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "github",
+    "action",
+    "otel",
+    "opentelemetry",
+    "open-telemetry"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "^0.206.0",
+    "@opentelemetry/resources": "^2.1.0",
+    "@pagopa/azure-tracing": "workspace:^",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}
