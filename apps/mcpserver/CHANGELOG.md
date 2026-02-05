@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.2
+
+### Patch Changes
+
+- 18b209c: Upgrade MCP SDK
+
 ## 0.1.1
 
 ### Patch Changes
