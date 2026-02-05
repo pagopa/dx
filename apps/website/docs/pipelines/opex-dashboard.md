@@ -2,7 +2,7 @@
 sidebar_position: 6
 ---
 
-# OpEx Dashboard Deployment
+# Deploy OpEx Dashboards
 
 Reusable workflow for automatically detecting changes to dashboard configuration
 files and their referenced OpenAPI specifications, generating Azure Dashboard
