@@ -50,6 +50,7 @@ while IFS= read -r dir; do
     '. + [{"base_path": $bp, "environment": $env, "full_path": $fp}]')
 done < <(echo "${CHANGED_TF_FILES}" | xargs dirname | sort -u)
 
-echo "changed_directories=${MATRIX_JSON}" >> "${GITHUB_OUTPUT}"
+# Write compact JSON to GITHUB_OUTPUT (single line for proper parsing)
+echo "changed_directories=$(echo "${MATRIX_JSON}" | jq -c '.')" >> "${GITHUB_OUTPUT}"
 echo "Generated Terraform in directories:"
 echo "${MATRIX_JSON}" | jq '.'

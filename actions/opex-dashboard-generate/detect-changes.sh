@@ -43,9 +43,9 @@ if [ -z "${BASE_REF:-}" ]; then
 fi
 
 # Validate BASE_REF to prevent injection attacks
-if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^-] ]]; then
+if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^~.-] ]]; then
   echo "::error::Invalid characters in BASE_REF: ${BASE_REF}"
-  echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^)"
+  echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^), tilde (~), dot (.)"
   exit 1
 fi
 CHANGED_FILES=$(git diff --name-only HEAD "${BASE_REF}" 2>/dev/null || echo "")
@@ -119,5 +119,6 @@ while IFS= read -r config; do
   fi
 done <<< "${CONFIG_FILES}"
 
-echo "changed_dashboards=${CHANGED_DASHBOARDS}" >> "${GITHUB_OUTPUT}"
+# Write compact JSON to GITHUB_OUTPUT (single line for proper parsing)
+echo "changed_dashboards=$(echo "${CHANGED_DASHBOARDS}" | jq -c '.')" >> "${GITHUB_OUTPUT}"
 echo "Dashboards to regenerate: ${CHANGED_DASHBOARDS}"
