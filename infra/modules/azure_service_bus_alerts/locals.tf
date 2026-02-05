@@ -10,7 +10,7 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  resource_group_name = provider::azurerm::parse_resource_id(var.service_bus_namespace_id)["resource_group_name"]
+  resource_group_name = coalesce(var.resource_group_name, provider::azurerm::parse_resource_id(var.service_bus_namespace_id)["resource_group_name"])
 
   severity_map = {
     "Critical"      = 0

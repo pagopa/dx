@@ -81,11 +81,21 @@ To use the MCP server with
 
 Follow the guided wizard to start using the DX MCP server:
 
-1. **Server Name**: `pagopa-dx`
-2. **Server Type**: `2` (HTTP)
-3. **URL**: `https://api.dx.pagopa.it/mcp`
+1. **Server Name**:
+
+```text
+pagopa-dx
+```
+
+2. **Server Type**: HTTP
+3. **URL**:
+
+```text
+https://api.dx.pagopa.it/mcp
+```
+
 4. **HTTP Headers**: leave as is (no headers needed)
-5. **Tools**: `*` (leave as is)
+5. **Tools**: `"*"` (leave as is)
 
 Use `Tab` to navigate between fields and `Ctrl+S` to save.
 

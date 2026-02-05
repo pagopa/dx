@@ -1,5 +1,12 @@
 # docs
 
+## 0.12.3
+
+### Patch Changes
+
+- ad9c693: Put the server name and server URL in a code block, using three
+  backtick, to enable the copy to clipboard button
+
 ## 0.12.2
 
 ### Patch Changes
