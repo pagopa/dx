@@ -58,9 +58,12 @@ jobs:
         id: evaluate
         env:
           EVENT_NAME: ${{ github.event_name }}
-          IS_FORK: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          CURRENT_REPO: ${{ github.repository }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ] && [ "$IS_FORK" = "true" ]; then
+          # Only block forked PRs; allow all other events
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$PR_HEAD_REPO" ] && [ "$PR_HEAD_REPO" != "$CURRENT_REPO" ]; then
+            echo "Blocking forked PR from $PR_HEAD_REPO"
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"

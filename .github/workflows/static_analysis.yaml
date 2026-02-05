@@ -151,6 +151,17 @@ jobs:
             exit 1
           fi
 
+          # Validate PR refs are not empty
+          if [ -z "$BASE_REF" ]; then
+            echo "Error: BASE_REF is empty. This step requires a pull_request event context."
+            exit 1
+          fi
+
+          if [ -z "$HEAD_REF" ]; then
+            echo "Error: HEAD_REF is empty. This step requires a pull_request event context."
+            exit 1
+          fi
+
           # Validate PR refs using git check-ref-format
           if ! git check-ref-format --branch -- "$BASE_REF"; then
             echo "Invalid base ref format: $BASE_REF"
