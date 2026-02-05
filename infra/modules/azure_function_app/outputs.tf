@@ -11,6 +11,9 @@ output "storage_account" {
   value = {
     id   = azurerm_storage_account.this.id
     name = azurerm_storage_account.this.name
+    endpoints = {
+      queue = azurerm_storage_account.this.primary_queue_endpoint
+    }
   }
 }
 
