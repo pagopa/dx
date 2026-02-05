@@ -162,14 +162,17 @@ jobs:
             exit 1
           fi
 
-          # Validate PR refs using git check-ref-format
-          if ! git check-ref-format --branch -- "$BASE_REF"; then
-            echo "Invalid base ref format: $BASE_REF"
+          # Validate PR refs are safe strings (alphanumeric, /, _, -, .)
+          # This prevents command injection while allowing valid branch names
+          if ! [[ "$BASE_REF" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "Error: Invalid base ref format: $BASE_REF"
+            echo "Allowed characters: letters, numbers, /, _, -, ."
             exit 1
           fi
 
-          if ! git check-ref-format --branch -- "$HEAD_REF"; then
-            echo "Invalid head ref format: $HEAD_REF"
+          if ! [[ "$HEAD_REF" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "Error: Invalid head ref format: $HEAD_REF"
+            echo "Allowed characters: letters, numbers, /, _, -, ."
             exit 1
           fi
 
