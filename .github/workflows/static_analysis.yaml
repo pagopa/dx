@@ -162,17 +162,17 @@ jobs:
             exit 1
           fi
 
-          # Validate PR refs are safe strings (alphanumeric, /, _, -, .)
+          # Validate PR refs are safe strings (alphanumeric, /, _, -, ., ~)
           # This prevents command injection while allowing valid branch names
-          if ! [[ "$BASE_REF" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! [[ "$BASE_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
             echo "Error: Invalid base ref format: $BASE_REF"
-            echo "Allowed characters: letters, numbers, /, _, -, ."
+            echo "Allowed characters: letters, numbers, /, _, -, ., ~"
             exit 1
           fi
 
-          if ! [[ "$HEAD_REF" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          if ! [[ "$HEAD_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
             echo "Error: Invalid head ref format: $HEAD_REF"
-            echo "Allowed characters: letters, numbers, /, _, -, ."
+            echo "Allowed characters: letters, numbers, /, _, -, ., ~"
             exit 1
           fi
 
