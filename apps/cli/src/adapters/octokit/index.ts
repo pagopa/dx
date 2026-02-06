@@ -1,3 +1,4 @@
+import { $ } from "execa";
 import { ResultAsync } from "neverthrow";
 import { Octokit, RequestError } from "octokit";
 import semverParse from "semver/functions/parse.js";
@@ -68,6 +69,22 @@ export class OctokitGitHubService implements GitHubService {
     }
   }
 }
+
+// Follow the same order of precedence of gh cli
+// https://cli.github.com/manual/gh_help_environment
+export const getGitHubPAT = async (): Promise<string | undefined> => {
+  if (process.env.GH_TOKEN) {
+    return process.env.GH_TOKEN;
+  }
+  if (process.env.GITHUB_TOKEN) {
+    return process.env.GITHUB_TOKEN;
+  }
+  const result = await $({ reject: false })`gh auth token`;
+  if (!result.failed && result.exitCode === 0) {
+    return result.stdout.trim();
+  }
+  return undefined;
+};
 
 export const fetchLatestTag = ({ client, owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(

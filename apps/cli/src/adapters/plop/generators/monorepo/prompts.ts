@@ -19,18 +19,18 @@ const validatePrompt = (schema: z.ZodSchema) => (input: unknown) => {
 
 const getPrompts = (): PlopGeneratorConfig["prompts"] => [
   {
-    message: "Repository name",
+    message: "Name",
     name: "repoName",
     validate: validatePrompt(payloadSchema.shape.repoName),
   },
   {
     default: payloadSchema.shape.repoOwner.def.defaultValue,
-    message: "GitHub repository owner (User or Organization)",
+    message: "GitHub Organization",
     name: "repoOwner",
     validate: validatePrompt(payloadSchema.shape.repoOwner),
   },
   {
-    message: "Repository description",
+    message: "Description",
     name: "repoDescription",
   },
 ];

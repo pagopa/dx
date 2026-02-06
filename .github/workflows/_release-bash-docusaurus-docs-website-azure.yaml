@@ -25,10 +25,10 @@ jobs:
       environment: "app-prod"
 
   feed_docs_knowledge_base:
-    # Only if a changeset PR is merged
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.title == 'Version Packages'
+    # Only run after push to main with a "Version Packages" commit (changeset PR merge)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Version Packages')
     name: Update MCP Server Knowledge Base
-    environment: app-prod-cd
+    environment: app-prod-ci
     needs: deploy_to_static_web_app
     runs-on: ubuntu-latest
     permissions:
@@ -54,4 +54,4 @@ jobs:
         run: |
           echo "Deploying documentation to knowledge base..."
           aws s3 sync ./${OUTPUT_DIR}/ s3://${BUCKET_NAME}/ --exclude "*" --include "*.md" --include "*.mdx" --delete
-          aws bedrock-agent start-ingestion-job --knowledge-base-id ALSBZAYABZ --data-source-id 90H5AJLRJQ
+          aws bedrock-agent start-ingestion-job --knowledge-base-id ALSBZAYABZ --data-source-id XITRER7DER

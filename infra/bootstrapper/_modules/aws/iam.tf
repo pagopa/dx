@@ -54,7 +54,7 @@ resource "aws_iam_policy" "docs_knowledge_base_policy" {
 # Attach the docs knowledge base policy to the continuous deployment (CD) role
 # This gives the CD pipeline permissions to access the S3 bucket for docs operations
 resource "aws_iam_role_policy_attachment" "docs_knowledge_base_role_attachment" {
-  role       = module.bootstrap.identities.app.cd.name
+  role       = module.bootstrap.identities.app.ci.name
   policy_arn = aws_iam_policy.docs_knowledge_base_policy.arn
 }
 
