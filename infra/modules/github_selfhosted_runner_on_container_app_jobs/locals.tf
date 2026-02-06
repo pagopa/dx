@@ -27,11 +27,13 @@ locals {
   })
 
   runner_secrets = merge(var.container_app_environment.secrets, {
-    GITHUB_PAT = var.key_vault.secret_name
+    GITHUB_APP_KEY             = var.key_vault.app_key_secret_name
+    GITHUB_APP_ID              = var.key_vault.app_id_secret_name
+    GITHUB_APP_INSTALLATION_ID = var.key_vault.installation_id_secret_name
   })
 
   labels = join(",", coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]))
 
-  key_vault_id  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.key_vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.key_vault.name}"
+  key_vault_id  = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.key_vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.key_vault.name}")
   key_vault_uri = "https://${var.key_vault.name}.vault.azure.net/"
 }

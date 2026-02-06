@@ -51,11 +51,13 @@ variable "container_app_environment" {
 
 variable "key_vault" {
   type = object({
-    name                = string
-    resource_group_name = string
-    use_rbac            = optional(bool, false)
-    secret_name         = optional(string, "github-runner-pat")
+    name                        = string
+    resource_group_name         = string
+    use_rbac                    = optional(bool, false)
+    app_key_secret_name         = optional(string, "gh-app-engineering")
+    app_id_secret_name          = optional(string, "github-runner-app-id")
+    installation_id_secret_name = optional(string, "github-runner-installation-id")
   })
 
-  description = "Details of the Key Vault used to store secrets for the Container App Job."
+  description = "Details of the Key Vault used to store GitHub App credentials."
 }
