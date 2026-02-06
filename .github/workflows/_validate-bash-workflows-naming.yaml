@@ -28,6 +28,27 @@ jobs:
         run: |
           set -eu
 
+          if [ -z "$BASE_REF" ]; then
+            echo "Error: BASE_REF is empty."
+            exit 1
+          fi
+
+          if [ -z "$HEAD_REF" ]; then
+            echo "Error: HEAD_REF is empty."
+            exit 1
+          fi
+
+          # Validate PR refs are safe strings (alphanumeric, /, _, -, ., ~)
+          if ! [[ "$BASE_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
+            echo "Error: Invalid base ref format: $BASE_REF"
+            exit 1
+          fi
+
+          if ! [[ "$HEAD_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
+            echo "Error: Invalid head ref format: $HEAD_REF"
+            exit 1
+          fi
+
           echo "Checking naming convention for new workflow files in .github/workflows directory"
           BASE_BRANCH="origin/$BASE_REF"
           HEAD_BRANCH="origin/$HEAD_REF"
