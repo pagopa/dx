@@ -1,6 +1,7 @@
 go 1.25.3
 
 use (
+	./infra/modules/azure_cdn/tests
 	./infra/modules/azure_cosmos_account/tests
 	./providers/aws
 	./providers/aws/tools
