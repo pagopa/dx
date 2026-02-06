@@ -14,14 +14,9 @@ on:
         type: string
         required: true
       github_environment:
-        description: GitHub Environment to use for Terraform operations
+        description: GitHub Environment to use for Terraform operations (will use -ci suffix for plan, -cd suffix for apply)
         type: string
         required: true
-      dry_run:
-        description: If true, run terraform plan instead of apply
-        type: boolean
-        required: false
-        default: false
       node_version:
         description: Node.js version to use
         type: string
@@ -42,20 +37,18 @@ on:
         type: boolean
         required: false
         default: false
-      use_labels:
-        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
-        type: boolean
-        required: false
-        default: false
-      override_labels:
-        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+      terraform_version:
+        description: Terraform version to use
         type: string
         required: false
-        default: ""
-      env_vars:
-        description: List of environment variables to set up, given in env=value format
-        type: string
-        required: false
+        default: "1.10.4"
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
 
 concurrency:
   group: ${{ github.workflow }}-opex-dashboards
@@ -129,42 +122,177 @@ jobs:
           opex_dashboard_version: ${{ inputs.opex_dashboard_version }}
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
 
-  deploy-plan:
+      - name: Upload generated Terraform files
+        if: steps.generate-action.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: generated-terraform
+          path: |
+            **/*.tf
+            **/.terraform.lock.hcl
+          retention-days: 7
+
+  tf_plan:
     name: Plan - ${{ matrix.dashboard.full_path }}
     needs: generate
-    if: needs.generate.outputs.has_changes == 'true' && inputs.dry_run == true
+    if: needs.generate.outputs.has_changes == 'true'
+    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.github_environment }}-ci
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
       fail-fast: false
       max-parallel: 5
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
-    secrets: inherit
-    with:
-      environment: ${{ matrix.dashboard.environment }}
-      base_path: ${{ matrix.dashboard.base_path }}
-      use_private_agent: ${{ inputs.use_private_agent }}
-      use_labels: ${{ inputs.use_labels }}
-      override_labels: ${{ inputs.override_labels }}
-      override_github_environment: ${{ inputs.github_environment }}
-      env_vars: ${{ inputs.env_vars }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
-  deploy-apply:
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: |
+          set -o pipefail
+          terraform plan \
+            -lock-timeout=120s \
+            -out="$TFPLAN_FILE" \
+            -input=false \
+            | tee plan_output.txt
+
+          # Extract summary line
+          SUMMARY=$(grep -E "Plan:|No changes" plan_output.txt | tail -1 || echo "Plan completed")
+          echo "summary_line=$SUMMARY" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Terraform Plan Bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: terraform-plan-${{ matrix.dashboard.environment }}
+          path: |
+            ${{ matrix.dashboard.full_path }}/${{ env.TFPLAN_FILE }}
+            ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
+            ${{ matrix.dashboard.full_path }}/.terraform/
+          retention-days: 7
+
+      - name: Set Plan Output for PR Comment
+        id: set-plan-output
+        if: always()
+        working-directory: ${{ matrix.dashboard.full_path }}
+        env:
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          OUTPUT_DIR: ${{ matrix.dashboard.full_path }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          SUMMARY_LINE: ${{ steps.plan.outputs.summary_line }}
+        run: |
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
+          echo "<details>" >> message_body.txt
+          echo "<summary>Show Plan</summary>" >> message_body.txt
+          echo "" >> message_body.txt
+
+          if [ "$PLAN_OUTCOME" != 'success' ]; then
+            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          else
+            # Check plan file size and use summary if too long
+            if [ -f "plan_output.txt" ] && [ "$(wc -c < plan_output.txt)" -gt 60000 ]; then
+              echo "\`\`\`hcl" >> message_body.txt
+              echo "$SUMMARY_LINE" >> message_body.txt
+              echo "\`\`\`" >> message_body.txt
+              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            elif [ -f "plan_output.txt" ]; then
+              echo "\`\`\`hcl" >> message_body.txt
+              cat plan_output.txt >> message_body.txt
+              echo "\`\`\`" >> message_body.txt
+            fi
+          fi
+
+          echo "" >> message_body.txt
+          echo "</details>" >> message_body.txt
+
+      - name: Post Plan on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ matrix.dashboard.full_path }}/message_body.txt
+          search-pattern: "Terraform Plan (${{ matrix.dashboard.full_path }})"
+
+      - name: Check Terraform Plan Result
+        if: always() && steps.plan.outcome != 'success'
+        run: exit 1
+
+  tf_apply:
     name: Apply - ${{ matrix.dashboard.full_path }}
-    needs: generate
-    if: needs.generate.outputs.has_changes == 'true' && inputs.dry_run == false
+    needs: [generate, tf_plan]
+    if: needs.generate.outputs.has_changes == 'true'
+    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.github_environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       matrix:
         dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
       fail-fast: false
       max-parallel: 5
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
-    secrets: inherit
-    with:
-      environment: ${{ matrix.dashboard.environment }}
-      base_path: ${{ matrix.dashboard.base_path }}
-      use_private_agent: ${{ inputs.use_private_agent }}
-      use_labels: ${{ inputs.use_labels }}
-      override_labels: ${{ inputs.override_labels }}
-      override_github_environment: ${{ inputs.github_environment }}
-      env_vars: ${{ inputs.env_vars }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+
+      - name: Download Terraform Plan Bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: terraform-plan-${{ matrix.dashboard.environment }}
+          path: ${{ matrix.dashboard.full_path }}
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: |
+          set -o pipefail
+          terraform apply \
+            -lock-timeout=120s \
+            -auto-approve \
+            -input=false \
+            "$TFPLAN_FILE"
