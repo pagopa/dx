@@ -102,9 +102,9 @@ while IFS= read -r config; do
     fi
 
     if [ -n "${OA3_SPEC}" ]; then
-      # Handle relative paths
+      # Handle relative paths (relative to workspace root)
       if [[ "${OA3_SPEC}" != /* ]] && [[ "${OA3_SPEC}" != http* ]]; then
-        OA3_SPEC_FULL=$(cd "${CONFIG_DIR}" && normalize_path "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
+        OA3_SPEC_FULL=$(normalize_path "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
 
         if [ -n "${OA3_SPEC_FULL}" ] && echo "${CHANGED_FILES}" | grep -q "^${OA3_SPEC_FULL}$"; then
           echo "OpenAPI spec modified: ${OA3_SPEC_FULL} (referenced by ${config})"
