@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.16.0
+
+### Minor Changes
+
+- 20c2a64: Include environment generator in init command
+
 ## 0.15.5
 
 ### Patch Changes
