@@ -3,9 +3,10 @@
 "azure_storage_account": patch
 ---
 
-Add `endpoints.queue` output to storage account for RBAC configuration
+Expose storage account `primary_queue_endpoint` output.
 
-Both modules now expose the queue endpoint via `storage_account.endpoints.queue`. This enables RBAC authentication configuration on queues and provides a foundation for extending to other endpoints in the future.
+Both `azure_function_app` and `azure_storage_account` modules now expose the primary queue endpoint: `storage_account.primary_queue_endpoint`. 
+This enables RBAC authentication configuration on queues.
 
 ### Example
 
@@ -13,8 +14,8 @@ Configure managed identity authentication for Azure Functions queue triggers usi
 
 ```hcl
 app_settings = {
-  AzureWebJobsStorage__accountName      = module.storage.name
-  AzureWebJobsStorage__queueServiceUri  = module.storage.endpoints.queue
+  AzureWebJobsStorage__accountName      = module.storage.name                   # Set the storage account name for Azure Functions
+  AzureWebJobsStorage__queueServiceUri  = module.storage.primary_queue_endpoint # Set the queue service URI for Azure Functions to enable identity-based authentication
 }
 ```
 
