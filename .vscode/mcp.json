@@ -1,8 +1,29 @@
 {
   "servers": {
-    "terraform-mcp-server": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:0.1.0"]
+    "azure-learn-mcp-server": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "gallery": "https://mcp.dx.pagopa.it/workspaces/default",
+      "version": "1.0.0"
+    },
+    "dx-mcp-server": {
+      "type": "http",
+      "url": "https://api.dx.pagopa.it/mcp",
+      "gallery": "https://mcp.dx.pagopa.it/workspaces/default",
+      "version": "0.0.9"
+    },
+    "github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "gallery": "https://mcp.dx.pagopa.it/workspaces/default",
+      "version": "0.24.0"
+    },
+    "aws-knowledge-mcp-server": {
+      "type": "http",
+      "url": "https://knowledge-mcp.global.api.aws",
+      "gallery": "https://mcp.dx.pagopa.it/workspaces/default",
+      "version": "1.0.0"
     }
-  }
+  },
+  "inputs": []
 }
