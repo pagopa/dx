@@ -30,6 +30,7 @@ No inputs.
 |------|-------------|
 | <a name="output_action_group_id"></a> [action\_group\_id](#output\_action\_group\_id) | n/a |
 | <a name="output_environment"></a> [environment](#output\_environment) | n/a |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_service_bus_namespace_id"></a> [service\_bus\_namespace\_id](#output\_service\_bus\_namespace\_id) | n/a |
 | <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 <!-- END_TF_DOCS -->

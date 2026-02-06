@@ -1,5 +1,18 @@
 # docs
 
+## 0.12.3
+
+### Patch Changes
+
+- ad9c693: Put the server name and server URL in a code block, using three
+  backtick, to enable the copy to clipboard button
+
+## 0.12.2
+
+### Patch Changes
+
+- d7f2fdf: Document DX best practices when writing terraform
+
 ## 0.12.1
 
 ### Patch Changes
