@@ -10,7 +10,10 @@ import setProvisionTerraformBackendAction from "../../actions/provision-terrafor
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
 import getActions from "./actions.js";
-import getPrompts from "./prompts.js";
+import getPrompts, { Payload, payloadSchema } from "./prompts.js";
+
+export const PLOP_ENVIRONMENT_GENERATOR_NAME = "DX_DeploymentEnvironment";
+export { Payload, payloadSchema };
 
 export default function (
   plop: NodePlopAPI,
@@ -25,7 +28,7 @@ export default function (
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setInitCloudAccountsAction(plop, cloudAccountService);
 
-  plop.setGenerator("DX_DeploymentEnvironment", {
+  plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
     actions: getActions(templatesPath),
     description: "Generate a new deployment environment",
     prompts: getPrompts({ cloudAccountRepository, cloudAccountService }),
