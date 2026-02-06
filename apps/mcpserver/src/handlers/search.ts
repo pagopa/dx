@@ -63,7 +63,7 @@ export async function handleSearchEndpoint(
       config.aws.rerankingEnabled,
     );
 
-    // Format results with content, score, and source URL
+    // Format results with content, score, source URL, and source file URL
     const formattedResults = results.map((result) => ({
       content: result.content,
       score: result.score,
@@ -71,6 +71,7 @@ export async function handleSearchEndpoint(
         result.location?.type === "WEB"
           ? result.location.webLocation?.url
           : undefined,
+      source_file_url: result.sourceFileUrl,
     }));
 
     sendJsonResponse(res, 200, {
