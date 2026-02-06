@@ -92,6 +92,12 @@ resource "azurerm_dns_zone" "devex_pagopa_it" {
   tags = var.tags
 }
 
+# Create a test CDN profile for existing profile tests
+data "azurerm_cdn_frontdoor_profile" "test" {
+  name                = "dx-d-itn-test-afd-01"
+  resource_group_name = "dx-d-itn-integration-rg-01"
+}
+
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
 }
@@ -110,4 +116,12 @@ output "storage_account_host_name" {
 
 output "devex_pagopa_it_zone_name" {
   value = azurerm_dns_zone.devex_pagopa_it.name
+}
+
+output "storage_account_id" {
+  value = module.storage_account.id
+}
+
+output "cdn_profile_id" {
+  value = data.azurerm_cdn_frontdoor_profile.test.id
 }
