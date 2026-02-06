@@ -6,9 +6,9 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-infra/aws/0.0.5"
   },
   "azure": {
-    "hash": "59a8136be2d7a244f8b27d3e8a3f142435450f7a98ca451087e47f107b426bc0",
-    "version": "2.3.0",
+    "hash": "9c0422a339a43e12d91322a9fb114739127e4a94034de107066a7c64bff17ba0",
+    "version": "2.3.1",
     "name": "azure_core_infra",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/2.3.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/2.3.1"
   }
 }
