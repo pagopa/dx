@@ -59,19 +59,19 @@ resource "awscc_bedrock_data_source" "docs" {
         # overlap_tokens = 60: Maintains context continuity between chunks.
         # Small overlaps ensure smooth transitions between chunks while avoiding excessive redundancy.
         # This helps preserve semantic coherence when chunks are retrieved independently.
-        overlap_tokens = 60
+        overlap_tokens = 150
         level_configurations = [
           {
             # First level (coarse): max_tokens = 1500
             # Creates larger chunks suitable for capturing high-level topics and broad concepts.
             # Balances informativeness with manageability for semantic search.
-            max_tokens = 1500
+            max_tokens = 4000
           },
           {
             # Second level (fine): max_tokens = 300
             # Creates smaller, more granular chunks for detailed retrieval.
             # Helps answer specific technical questions with precise, focused context.
-            max_tokens = 300
+            max_tokens = 500
           }
         ]
       }
