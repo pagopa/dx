@@ -50,6 +50,12 @@ jobs:
             exit 0
           fi
 
+          # Skip validation if the workflow is named _validate-next-bundle.yaml
+          if echo "$NEW_FILES" | grep -q '^.github/workflows/_validate-next-bundle\.yaml$'; then
+            echo "Skipping validation for _validate-next-bundle.yaml"
+            exit 0
+          fi
+
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
           NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|go|azure|aws)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'

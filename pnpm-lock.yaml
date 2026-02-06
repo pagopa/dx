@@ -124,6 +124,8 @@ importers:
 
   actions/keep-alive: {}
 
+  actions/make-artifact: {}
+
   actions/pr-comment:
     dependencies:
       '@actions/core':
