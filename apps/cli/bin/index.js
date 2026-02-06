@@ -23,4 +23,4 @@ await configure({
   },
 });
 
-runCli(packageJson.version);
+runCli(packageJson.version).catch((error) => console.error(error.message));
