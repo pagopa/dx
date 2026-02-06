@@ -38,9 +38,7 @@ output "secondary_replica" {
   }
 }
 
-output "endpoints" {
-  description = "The endpoints of the Azure Storage Account."
-  value = {
-    queue = azurerm_storage_account.this.primary_queue_endpoint
-  }
+output "primary_queue_endpoint" {
+  value       = azurerm_storage_account.this.primary_queue_endpoint
+  description = "The primary queue endpoint of the Azure Storage Account."
 }
