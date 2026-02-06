@@ -117,7 +117,7 @@ runs:
         fi
 
         # Check if the tag exists on the remote
-        if git ls-remote --tags "$REMOTE_NAME" | grep "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+        if git ls-remote --tags "$REMOTE_NAME" | grep -qF "refs/tags/$TAG_NAME"; then
           echo "Tag $TAG_NAME already exists on the remote."
         else
           echo "Tag $TAG_NAME does not exist on the remote. Creating and pushing the tag..."
