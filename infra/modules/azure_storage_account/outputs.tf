@@ -37,3 +37,10 @@ output "secondary_replica" {
     primary_web_host = azurerm_storage_account.secondary_replica[0].primary_web_host
   }
 }
+
+output "endpoints" {
+  description = "The endpoints of the Azure Storage Account."
+  value = {
+    queue = azurerm_storage_account.this.primary_queue_endpoint
+  }
+}
