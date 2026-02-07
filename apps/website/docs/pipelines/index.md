@@ -41,6 +41,8 @@ application deployment, and infrastructure automation.
   validation
 - **[Infrastructure Apply](../terraform/infra-apply.md)** - Safe infrastructure
   deployments
+- **[OpEx Dashboard Deployment](./opex-dashboard.md)** - Automatically generate
+  and deploy Azure Dashboards from OpenAPI specs
 - **[Azure Login](../azure/iam/azure-login.md)** - Secure authentication to
   Azure
 

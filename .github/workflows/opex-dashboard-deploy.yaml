@@ -1,0 +1,324 @@
+name: OpEx Dashboard Deploy
+
+on:
+  workflow_call:
+    inputs:
+      config_pattern:
+        description: |
+          Glob pattern(s) to find dashboard config files. Supports multiple patterns (one per line).
+          Examples:
+            Single: 'infra/dashboards/**/config.yaml'
+            Multiple: |
+              infra/dashboards/**/config.yaml
+              .opex/**/config.yaml
+        type: string
+        required: true
+      github_environment:
+        description: GitHub Environment to use for Terraform operations (will use -ci suffix for plan, -cd suffix for apply)
+        type: string
+        required: true
+      node_version:
+        description: Node.js version to use
+        type: string
+        required: false
+        default: "22"
+      opex_dashboard_version:
+        description: Version of @pagopa/opex-dashboard to use
+        type: string
+        required: false
+        default: "latest"
+      base_ref:
+        description: Base git reference for change detection (defaults to github.event.before for push, github.event.pull_request.base.sha for PRs)
+        type: string
+        required: false
+        default: ""
+      use_private_agent:
+        description: Use a private agent to run Terraform operations
+        type: boolean
+        required: false
+        default: false
+      terraform_version:
+        description: Terraform version to use
+        type: string
+        required: false
+        default: "1.10.4"
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+
+concurrency:
+  group: ${{ github.workflow }}-opex-dashboards
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate Dashboard Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has_changes: ${{ steps.generate-action.outputs.has_changes }}
+      changed_directories: ${{ steps.generate-action.outputs.changed_directories }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Cache npm packages
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-opex-${{ inputs.opex_dashboard_version }}
+          restore-keys: |
+            ${{ runner.os }}-npm-opex-
+            ${{ runner.os }}-npm-
+
+      - name: Set base reference
+        id: set-base-ref
+        run: |
+          BASE_REF=""
+
+          # Try input parameter first
+          if [ -n "${BASE_REF_INPUT}" ]; then
+            BASE_REF="${BASE_REF_INPUT}"
+          # For pull requests, use base SHA
+          elif [ "${EVENT_NAME}" = "pull_request" ]; then
+            BASE_REF="${PR_BASE_SHA}"
+          # For push events, use event.before if valid
+          elif [ -n "${EVENT_BEFORE}" ] && [ "${EVENT_BEFORE}" != "0000000000000000000000000000000000000000" ]; then
+            BASE_REF="${EVENT_BEFORE}"
+          # Fallback to HEAD~1 if possible
+          elif git rev-parse HEAD~1 >/dev/null 2>&1; then
+            BASE_REF="HEAD~1"
+          # Last resort: use default branch
+          else
+            BASE_REF="origin/${DEFAULT_BRANCH}"
+          fi
+
+          echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
+          echo "Using base reference: ${BASE_REF}"
+        env:
+          BASE_REF_INPUT: ${{ inputs.base_ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+
+      - name: Generate dashboards
+        id: generate-action
+        uses: pagopa/dx/actions/opex-dashboard-generate@chores/opex-workflow
+        with:
+          config_pattern: ${{ inputs.config_pattern }}
+          opex_dashboard_version: ${{ inputs.opex_dashboard_version }}
+          base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
+
+      - name: Collect generated files
+        if: steps.generate-action.outputs.has_changes == 'true'
+        run: |
+          # Create collection directory
+          mkdir -p .terraform-artifacts
+
+          # Parse JSON and copy files from each changed directory
+          echo '${{ steps.generate-action.outputs.changed_directories }}' | jq -r '.[].full_path' | while read -r dir; do
+            if [ -d "$dir" ]; then
+              echo "Collecting files from $dir"
+              mkdir -p ".terraform-artifacts/$dir"
+              # Copy generated Terraform files
+              if ls "$dir"/*.tf 1> /dev/null 2>&1; then
+                cp "$dir"/*.tf ".terraform-artifacts/$dir/"
+              fi
+              # Copy tfvars files if exist
+              if ls "$dir"/*.tfvars 1> /dev/null 2>&1; then
+                cp "$dir"/*.tfvars ".terraform-artifacts/$dir/"
+              fi
+              # Copy lock file if exists
+              if [ -f "$dir/.terraform.lock.hcl" ]; then
+                cp "$dir/.terraform.lock.hcl" ".terraform-artifacts/$dir/"
+              fi
+            fi
+          done
+
+      - name: Upload generated Terraform files
+        if: steps.generate-action.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: generated-terraform
+          path: .terraform-artifacts/
+          retention-days: 7
+
+  tf_plan:
+    name: Plan - ${{ matrix.dashboard.full_path }}
+    needs: generate
+    if: needs.generate.outputs.has_changes == 'true'
+    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.github_environment }}-ci
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+          path: .
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: |
+          set -o pipefail
+          terraform plan \
+            -lock-timeout=120s \
+            -out="$TFPLAN_FILE" \
+            -input=false \
+            | tee plan_output.txt
+
+          # Extract summary line
+          SUMMARY=$(grep -E "Plan:|No changes" plan_output.txt | tail -1 || echo "Plan completed")
+          echo "summary_line=$SUMMARY" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Terraform Plan Bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: terraform-plan-${{ matrix.dashboard.environment }}
+          path: |
+            ${{ matrix.dashboard.full_path }}/${{ env.TFPLAN_FILE }}
+            ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
+            ${{ matrix.dashboard.full_path }}/.terraform/
+          retention-days: 7
+
+      - name: Set Plan Output for PR Comment
+        id: set-plan-output
+        if: always()
+        working-directory: ${{ matrix.dashboard.full_path }}
+        env:
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          OUTPUT_DIR: ${{ matrix.dashboard.full_path }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
+          SUMMARY_LINE: ${{ steps.plan.outputs.summary_line }}
+        run: |
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
+          echo "<details>" >> message_body.txt
+          echo "<summary>Show Plan</summary>" >> message_body.txt
+          echo "" >> message_body.txt
+
+          if [ "$PLAN_OUTCOME" != 'success' ]; then
+            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          else
+            # Check plan file size and use summary if too long
+            if [ -f "plan_output.txt" ] && [ "$(wc -c < plan_output.txt)" -gt 60000 ]; then
+              echo "\`\`\`hcl" >> message_body.txt
+              echo "$SUMMARY_LINE" >> message_body.txt
+              echo "\`\`\`" >> message_body.txt
+              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            elif [ -f "plan_output.txt" ]; then
+              echo "\`\`\`hcl" >> message_body.txt
+              cat plan_output.txt >> message_body.txt
+              echo "\`\`\`" >> message_body.txt
+            fi
+          fi
+
+          echo "" >> message_body.txt
+          echo "</details>" >> message_body.txt
+
+      - name: Post Plan on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ matrix.dashboard.full_path }}/message_body.txt
+          search-pattern: "Terraform Plan (${{ matrix.dashboard.full_path }})"
+
+      - name: Check Terraform Plan Result
+        if: always() && steps.plan.outcome != 'success'
+        run: exit 1
+
+  tf_apply:
+    name: Apply - ${{ matrix.dashboard.full_path }}
+    needs: [generate, tf_plan]
+    if: needs.generate.outputs.has_changes == 'true'
+    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    environment: ${{ inputs.github_environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+          path: .
+
+      - name: Download Terraform Plan Bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: terraform-plan-${{ matrix.dashboard.environment }}
+          path: ${{ matrix.dashboard.full_path }}
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: |
+          set -o pipefail
+          terraform apply \
+            -lock-timeout=120s \
+            -auto-approve \
+            -input=false \
+            "$TFPLAN_FILE"
