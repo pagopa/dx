@@ -137,6 +137,10 @@ jobs:
               if ls "$dir"/*.tf 1> /dev/null 2>&1; then
                 cp "$dir"/*.tf ".terraform-artifacts/$dir/"
               fi
+              # Copy tfvars files if exist
+              if ls "$dir"/*.tfvars 1> /dev/null 2>&1; then
+                cp "$dir"/*.tfvars ".terraform-artifacts/$dir/"
+              fi
               # Copy lock file if exists
               if [ -f "$dir/.terraform.lock.hcl" ]; then
                 cp "$dir/.terraform.lock.hcl" ".terraform-artifacts/$dir/"
