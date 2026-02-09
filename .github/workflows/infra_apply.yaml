@@ -104,7 +104,6 @@ jobs:
           BASE_PATH: ${{ inputs.base_path }}
         run: |
           set -euo pipefail
-
           if [ -z "$ENVIRONMENT" ]; then
             echo "Environment must be provided."
             exit 1
@@ -114,7 +113,6 @@ jobs:
             # Example: infra/resources/prod
             printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
-
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
 
@@ -124,12 +122,10 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-
           for i in "$ENV_VARS[@]"
           do
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
-
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
@@ -143,18 +139,26 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init -input=false
-
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -o pipefail
-
           terraform plan \
             -lock-timeout=120s \
             -out="$TFPLAN_FILE" \
             -input=false \
             | grep -v "hidden-link:"
-
+      - name: Encrypt Terraform Plan
+        working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
+        run: |
+          set -euo pipefail
+          openssl enc -aes-256-cbc -salt -pbkdf2 \
+            -in "$TFPLAN_FILE" \
+            -out "${TFPLAN_FILE}.enc" \
+            -pass env:ENCRYPTION_PASSPHRASE
+          rm -f "$TFPLAN_FILE"
       - name: Upload Terraform Bundle as Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         env:
@@ -162,10 +166,10 @@ jobs:
         with:
           name: terraform-bundle
           path: |
-            ${{ env.TERRAFORM_DIR }}/${{ env.TFPLAN_FILE }}
+            ${{ env.TERRAFORM_DIR }}/${{ env.TFPLAN_FILE }}.enc
             ${{ env.TERRAFORM_DIR }}/.terraform.lock.hcl
             ${{ env.TERRAFORM_DIR }}/.terraform/modules/
-          retention-days: 7
+          retention-days: 1
 
   tf_apply:
     name: "Terraform Apply"
@@ -193,6 +197,17 @@ jobs:
           name: terraform-bundle
           path: ${{ needs.tf_plan.outputs.working_dir }}
 
+      - name: Decrypt Terraform Plan
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        env:
+          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
+        run: |
+          set -euo pipefail
+          openssl enc -aes-256-cbc -d -pbkdf2 \
+            -in "${TFPLAN_FILE}.enc" \
+            -out "$TFPLAN_FILE" \
+            -pass env:ENCRYPTION_PASSPHRASE
+          rm -f "${TFPLAN_FILE}.enc"
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
@@ -202,12 +217,10 @@ jobs:
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
         run: |
           terraform init -input=false
-
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
         run: |
           set -o pipefail
-
           terraform apply \
             -lock-timeout=120s \
             -auto-approve \
