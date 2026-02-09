@@ -89,7 +89,7 @@ jobs:
       pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      TFPLAN_FILE: terraform-plan-${{ github.sha }}
+      TFPLAN_FILE: tf-outcome-${{ github.sha }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -182,7 +182,7 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TFPLAN_FILE: terraform-plan-${{ github.sha }}
+      TFPLAN_FILE: tf-outcome-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
