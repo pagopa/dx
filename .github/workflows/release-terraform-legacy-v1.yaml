@@ -92,7 +92,7 @@ jobs:
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      TFPLAN_FILE: tfplan-${{ inputs.azure_environment }}-${{ github.sha }}
+      TFPLAN_FILE: dx-terraform-plan-${{ inputs.azure_environment }}-${{ github.sha }}
     outputs:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
       artifact_name: ${{ steps.artifact-name.outputs.name }}
@@ -176,7 +176,7 @@ jobs:
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      TFPLAN_FILE: tfplan-${{ inputs.azure_environment }}-${{ github.sha }}
+      TFPLAN_FILE: dx-terraform-plan-${{ inputs.azure_environment }}-${{ github.sha }}
 
     steps:
       - name: Checkout
