@@ -136,9 +136,11 @@ jobs:
       - name: Terraform Plan
         shell: bash
         working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
           set -o pipefail
-          bash ./terraform.sh plan ${{ inputs.azure_environment }} \
+          bash ./terraform.sh plan "$AZURE_ENVIRONMENT" \
             -lock-timeout=3000s \
             -out="$TFPLAN_FILE" \
             -input=false \
