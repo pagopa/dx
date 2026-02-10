@@ -218,8 +218,10 @@ jobs:
       - name: Terraform Init
         shell: bash
         working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
-          bash ./terraform.sh init ${{ inputs.azure_environment }}
+          bash ./terraform.sh init "$AZURE_ENVIRONMENT"
 
       - name: Terraform Apply
         shell: bash
