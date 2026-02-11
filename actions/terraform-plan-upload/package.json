@@ -1,0 +1,6 @@
+{
+  "name": "@pagopa-dx/terraform-plan-upload",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub Action to encrypt and upload Terraform plan files"
+}

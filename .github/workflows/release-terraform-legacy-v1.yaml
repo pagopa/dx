@@ -150,24 +150,14 @@ jobs:
             -input=false \
             | grep -v "hidden-link:"
 
-      - name: Encrypt Terraform Plan
-        working-directory: ${{ inputs.dir }}
+      - name: Upload Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-upload@implement-upload-download-terraform-plan-actions
         env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          openssl enc -aes-256-cbc -salt -pbkdf2 \
-            -in "$TFPLAN_FILE" \
-            -out "${TFPLAN_FILE}.enc" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "$TFPLAN_FILE"
-
-      - name: Upload Terraform Plan as Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          name: ${{ steps.artifact-name.outputs.name }}
-          path: ${{ inputs.dir }}/${{ env.TFPLAN_FILE }}.enc
-          if-no-files-found: error
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ inputs.dir }}
+          artifact-name: ${{ steps.artifact-name.outputs.name }}
           retention-days: 1
 
   tf_apply:
@@ -188,23 +178,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: ${{ needs.tf_plan.outputs.artifact_name }}
-          path: ${{ inputs.dir }}
-
-      - name: Decrypt Terraform Plan
-        working-directory: ${{ inputs.dir }}
+      - name: Download Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-download@implement-upload-download-terraform-plan-actions
         env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          openssl enc -aes-256-cbc -d -pbkdf2 \
-            -in "${TFPLAN_FILE}.enc" \
-            -out "$TFPLAN_FILE" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "${TFPLAN_FILE}.enc"
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ inputs.dir }}
+          artifact-name: ${{ needs.tf_plan.outputs.artifact_name }}
 
       - name: Azure Login
         uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
