@@ -624,3 +624,166 @@ run "function_app_with_diagnostic_settings_enabled_but_no_destinations" {
     var.diagnostic_settings,
   ]
 }
+
+run "function_app_without_managed_identity_auth" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured when managed_identity_auth is null"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app_slot.this[0].auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured on staging slot when managed_identity_auth is null"
+  }
+
+  assert {
+    condition     = output.managed_identity_auth.enabled == false
+    error_message = "managed_identity_auth output should indicate auth is disabled"
+  }
+
+  assert {
+    condition     = output.managed_identity_auth.entra_application_client_id == null
+    error_message = "managed_identity_auth output should have null entra_application_client_id when disabled"
+  }
+}
+
+run "function_app_with_managed_identity_auth" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    managed_identity_auth = {
+      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
+      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].auth_enabled == true
+    error_message = "auth_settings_v2 should be enabled on Function App"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].require_authentication == true
+    error_message = "auth_settings_v2 should require authentication"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Unauthenticated requests should return 401"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    error_message = "Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].allowed_applications, "11111111-1111-1111-1111-111111111111")
+    error_message = "Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].tenant_auth_endpoint == "https://login.microsoftonline.com/7788edaf-0346-4068-9d79-c868aed15b3d/v2.0"
+    error_message = "Active Directory v2 tenant_auth_endpoint should be constructed from tenant_id"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].login[0].token_store_enabled == true
+    error_message = "Token store should be enabled"
+  }
+
+  # Slot assertions
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].auth_enabled == true
+    error_message = "auth_settings_v2 should be enabled on staging slot"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    error_message = "Staging slot Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].allowed_applications, "11111111-1111-1111-1111-111111111111")
+    error_message = "Staging slot Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Staging slot unauthenticated requests should return 401"
+  }
+
+  # Output assertions
+  assert {
+    condition     = output.managed_identity_auth.enabled == true
+    error_message = "managed_identity_auth output should indicate auth is enabled"
+  }
+
+  assert {
+    condition     = output.managed_identity_auth.entra_application_client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    error_message = "managed_identity_auth output should expose the Entra application client ID"
+  }
+}
+
+run "function_app_managed_identity_auth_empty_client_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    managed_identity_auth = {
+      entra_application_client_id = ""
+      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
+      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+    }
+  }
+
+  expect_failures = [
+    var.managed_identity_auth,
+  ]
+}
+
+run "function_app_managed_identity_auth_empty_allowed_applications" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    managed_identity_auth = {
+      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+      allowed_client_applications = []
+      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+    }
+  }
+
+  expect_failures = [
+    var.managed_identity_auth,
+  ]
+}
+
+run "function_app_managed_identity_auth_invalid_tenant_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    managed_identity_auth = {
+      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
+      tenant_id                   = "not-a-valid-uuid"
+    }
+  }
+
+  expect_failures = [
+    var.managed_identity_auth,
+  ]
+}

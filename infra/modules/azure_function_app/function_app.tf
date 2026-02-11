@@ -88,6 +88,26 @@ resource "azurerm_linux_function_app" "this" {
     )
   }
 
+  dynamic "auth_settings_v2" {
+    for_each = var.managed_identity_auth != null ? [var.managed_identity_auth] : []
+    content {
+      auth_enabled           = true
+      require_authentication = true
+      unauthenticated_action = "Return401"
+
+      active_directory_v2 {
+        allowed_applications = auth_settings_v2.value.allowed_client_applications
+        client_id            = auth_settings_v2.value.entra_application_client_id
+        tenant_auth_endpoint = "https://login.microsoftonline.com/${auth_settings_v2.value.tenant_id}/v2.0"
+      }
+
+      login {
+        token_store_enabled          = true
+        token_refresh_extension_time = 72
+      }
+    }
+  }
+
   lifecycle {
     ignore_changes = [
       site_config["health_check_eviction_time_in_min"],

@@ -43,3 +43,34 @@ module "azure_function_app" {
 
   tags = local.tags
 }
+
+# Function App with Managed Identity authentication via Entra ID.
+# Requires an existing Entra application (created by the DX CLI).
+module "azure_function_app_with_managed_identity" {
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 4.1"
+
+  environment         = merge(local.environment, { app_name = "auth" })
+  use_case            = "default"
+  resource_group_name = azurerm_resource_group.example.name
+
+  virtual_network = {
+    name                = local.virtual_network.name
+    resource_group_name = local.virtual_network.resource_group_name
+  }
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_cidr   = "10.50.249.0/24"
+
+  app_settings      = {}
+  slot_app_settings = {}
+
+  health_check_path = "/health"
+
+  managed_identity_auth = {
+    entra_application_client_id = azurerm_user_assigned_identity.example.client_id
+    allowed_client_applications = [azurerm_user_assigned_identity.example.client_id]
+    tenant_id                   = azurerm_user_assigned_identity.example.tenant_id
+  }
+
+  tags = local.tags
+}

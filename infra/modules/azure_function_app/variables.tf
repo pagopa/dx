@@ -234,6 +234,31 @@ variable "tls_version" {
   description = "Minimum TLS version for the App Service."
 }
 
+variable "managed_identity_auth" {
+  type = object({
+    entra_application_client_id = string
+    allowed_client_applications = list(string)
+    tenant_id                   = string
+  })
+  default     = null
+  description = "Optional Entra ID (Azure AD) authentication configuration for the Function App. When set, configures auth_settings_v2 with an Active Directory v2 identity provider so that only allowed client applications (e.g. APIM) can invoke the Function App via Managed Identity. When null (default), no authentication layer is added and the Function App uses classic key-based auth."
+
+  validation {
+    condition     = var.managed_identity_auth == null || length(var.managed_identity_auth.entra_application_client_id) > 0
+    error_message = "entra_application_client_id must not be empty when managed_identity_auth is set."
+  }
+
+  validation {
+    condition     = var.managed_identity_auth == null || length(var.managed_identity_auth.allowed_client_applications) > 0
+    error_message = "allowed_client_applications must contain at least one application ID when managed_identity_auth is set."
+  }
+
+  validation {
+    condition     = var.managed_identity_auth == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.managed_identity_auth.tenant_id))
+    error_message = "tenant_id must be a valid UUID when managed_identity_auth is set."
+  }
+}
+
 variable "diagnostic_settings" {
   type = object({
     enabled                                   = bool

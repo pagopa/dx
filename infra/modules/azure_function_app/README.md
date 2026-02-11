@@ -13,6 +13,7 @@ This module deploys an Azure Function App with a strong opinionated configuratio
 - **Subnet**: Manages subnet creation or reuse for outbound connectivity
 - **Durable Functions**: Optional support for Durable Functions with dedicated storage
 - **Monitoring**: Integrates with Application Insights and sets up health check alerts
+- **Managed Identity Authentication**: Optional Entra ID authentication via `managed_identity_auth` variable, enabling secure service-to-service communication without shared keys
 
 ## Use cases Comparison
 
@@ -107,6 +108,7 @@ No modules.
 | <a name="input_has_durable_functions"></a> [has\_durable\_functions](#input\_has\_durable\_functions) | Set to true if the Function App hosts Durable Functions. | `bool` | `false` | no |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The endpoint path where the health probe is exposed for the Function App. | `string` | n/a | yes |
 | <a name="input_java_version"></a> [java\_version](#input\_java\_version) | The version of Java to use for the Function App runtime. | `string` | `17` | no |
+| <a name="input_managed_identity_auth"></a> [managed\_identity\_auth](#input\_managed\_identity\_auth) | Optional Entra ID (Azure AD) authentication configuration for the Function App. When set, configures auth\_settings\_v2 with an Active Directory v2 identity provider so that only allowed client applications (e.g. APIM) can invoke the Function App via Managed Identity. When null (default), no authentication layer is added and the Function App uses classic key-based auth. | <pre>object({<br/>    entra_application_client_id = string<br/>    allowed_client_applications = list(string)<br/>    tenant_id                   = string<br/>  })</pre> | `null` | no |
 | <a name="input_node_version"></a> [node\_version](#input\_node\_version) | The version of Node.js to use for the Function App runtime. | `number` | `20` | no |
 | <a name="input_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#input\_private\_dns\_zone\_ids) | "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private\_dns\_zone\_resource\_group\_name\" (if provided) or Virtual Network resource group. Use this to reference DNS zones in different subscriptions." | <pre>object({<br/>    blob          = optional(string)<br/>    file          = optional(string)<br/>    queue         = optional(string)<br/>    table         = optional(string)<br/>    azurewebsites = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group. | `string` | `null` | no |
@@ -130,6 +132,7 @@ No modules.
 |------|-------------|
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the Function App. |
 | <a name="output_function_app"></a> [function\_app](#output\_function\_app) | Details of the Function App, including its resource group, service plan, and app-specific information such as ID, name, principal ID, and default hostname. Also includes details of the app slot if configured. |
+| <a name="output_managed_identity_auth"></a> [managed\_identity\_auth](#output\_managed\_identity\_auth) | Indicates whether Managed Identity authentication is enabled and the Entra application client ID used. Useful for downstream APIM policy configuration. |
 | <a name="output_storage_account"></a> [storage\_account](#output\_storage\_account) | Details of the primary storage account used by the Function App, including its ID and name. |
 | <a name="output_storage_account_durable"></a> [storage\_account\_durable](#output\_storage\_account\_durable) | Details of the storage account used for durable functions, including its ID and name. Returns null if not configured. |
 | <a name="output_subnet"></a> [subnet](#output\_subnet) | Details of the subnet used by the Function App, including its ID and name. |
