@@ -168,6 +168,10 @@ importers:
 
   actions/static-assets-deploy: {}
 
+  actions/terraform-plan-download: {}
+
+  actions/terraform-plan-upload: {}
+
   apps/cli:
     dependencies:
       '@azure/arm-authorization':
