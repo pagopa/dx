@@ -19,7 +19,11 @@ on:
         type: string
         required: true
       env_vars:
-        description: List of environment variables to set up, given in env=value format.
+        description: |
+          Multiline list of environment variables to set, each in KEY=VALUE format.
+          Example:
+            FOO=bar
+            HELLO=world
         type: string
         required: false
       use_private_agent:
@@ -115,10 +119,10 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-          for i in "$ENV_VARS[@]"
-          do
-            printf "%q\n" "$i" >> "$GITHUB_ENV"
-          done
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            echo "$line" >> "$GITHUB_ENV"
+          done <<< "$ENV_VARS"
 
       - name: Azure Login
         uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
