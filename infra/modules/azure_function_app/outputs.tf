@@ -52,3 +52,11 @@ output "diagnostic_settings" {
     id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
   }
 }
+
+output "managed_identity_auth" {
+  description = "Indicates whether Managed Identity authentication is enabled and the Entra application client ID used. Useful for downstream APIM policy configuration."
+  value = {
+    enabled                     = var.managed_identity_auth != null
+    entra_application_client_id = try(var.managed_identity_auth.entra_application_client_id, null)
+  }
+}
