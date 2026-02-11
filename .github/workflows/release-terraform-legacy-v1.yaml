@@ -230,9 +230,11 @@ jobs:
       - name: Terraform Apply
         shell: bash
         working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
           set -o pipefail
-          terraform apply \
+          bash ./terraform.sh apply "$AZURE_ENVIRONMENT" \
             -lock-timeout=3000s \
             -auto-approve \
             -input=false \
