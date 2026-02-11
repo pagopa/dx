@@ -151,7 +151,7 @@ jobs:
             | grep -v "hidden-link:"
 
       - name: Upload Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-upload@implement-upload-download-terraform-plan-actions
+        uses: pagopa/dx/actions/terraform-plan-upload@main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -179,7 +179,7 @@ jobs:
           persist-credentials: false
 
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-download@implement-upload-download-terraform-plan-actions
+        uses: pagopa/dx/actions/terraform-plan-download@main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
