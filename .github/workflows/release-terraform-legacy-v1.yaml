@@ -2,34 +2,44 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: Environment where the resources will be deployed.
+        description: GitHub Environment name (without -ci/-cd suffix).
         type: string
         required: true
-      base_path:
-        description: The base path on which the script will look for Terraform projects
+      dir:
+        description: >
+          The directory containing terraform.sh and the env/ folder.
+          Example: "src/domains/functions" or "src/domains/citizen-auth-common"
+        type: string
+        required: true
+      azure_environment:
+        description: >
+          The environment name passed to terraform.sh as its first argument.
+          Maps to env/<azure_environment>/ inside the dir.
+          Example: "prod", "weu-prod01"
         type: string
         required: true
       env_vars:
-        description: List of environment variables to set up, given in env=value format.
+        description: |
+          Multiline list of environment variables to set, each in KEY=VALUE format.
+          Example:
+            FOO=bar
+            HELLO=world
         type: string
         required: false
       use_private_agent:
-        description: Use a private agent to run the Terraform plan.
+        description: Use a private agent to run the workflow.
         type: boolean
         required: false
-        default: false
-      override_github_environment:
-        description: Set a value if GitHub Environment name is different than the TF environment folder
-        type: string
-        required: false
-        default: ""
+        default: true
       use_labels:
-        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        description: >
+          Use labels to start the right environment's GitHub runner.
+          If true, use_private_agent must also be true.
         type: boolean
         required: false
         default: false
       override_labels:
-        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label.
         type: string
         required: false
         default: ""
@@ -40,12 +50,10 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  ROLE_ARN: ${{ secrets.ROLE_ARN }}
-  AWS_REGION: ${{ secrets.AWS_REGION }}
   TF_IN_AUTOMATION: true
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.base_path }}-cd
+  group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.dir }}-cd
   cancel-in-progress: false
 
 jobs:
@@ -56,7 +64,7 @@ jobs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Get terraform version from .terraform-version file
         id: get-version
@@ -72,7 +80,7 @@ jobs:
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
       check_to_run: lock_modules
-      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      folder: ${{ inputs.dir }}/
       verbose: true
 
   tf_plan:
@@ -82,39 +90,28 @@ jobs:
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [get-terraform-version, tf-modules-check]
-    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+    environment: ${{ inputs.environment }}-ci
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      TFPLAN_FILE: tf-outcome-${{ github.sha }}
+      TFPLAN_FILE: dx-terraform-plan-${{ inputs.azure_environment }}-${{ github.sha }}
     outputs:
-      working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      artifact_name: ${{ steps.artifact-name.outputs.name }}
 
     steps:
-      # Set the directory where the Terraform files are located
-      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
-      - name: Set directory
-        id: directory
+      - name: Set Artifact Name
+        id: artifact-name
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          BASE_PATH: ${{ inputs.base_path }}
-        run: |
-          set -euo pipefail
-          if [ -z "$ENVIRONMENT" ]; then
-            echo "Environment must be provided."
-            exit 1
-          else
-            # The directory is expected to be in the format
-            #  ${inputs.base_path}/"$ENVIRONMENT""
-            # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
-          fi
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        name: Checkout
+          DIR: ${{ inputs.dir }}
+        run: echo "name=terraform-bundle-$(echo "$DIR" | tr '/' '-')" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
       - name: Set Environment Variables
         if: ${{ inputs.env_vars }}
@@ -122,34 +119,39 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-          for i in "$ENV_VARS[@]"
-          do
-            printf "%q\n" "$i" >> "$GITHUB_ENV"
-          done
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            echo "$line" >> "$GITHUB_ENV"
+          done <<< "$ENV_VARS"
+
+      - name: Azure Login
+        uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
-        id: set-terraform-version
+        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+          terraform_wrapper: true
 
-      - name: Terraform Init
-        working-directory: ${{ steps.directory.outputs.dir }}
-        run: |
-          terraform init -input=false
       - name: Terraform Plan
-        working-directory: ${{ steps.directory.outputs.dir }}
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
           set -o pipefail
-          terraform plan \
-            -lock-timeout=120s \
+          bash ./terraform.sh plan "$AZURE_ENVIRONMENT" \
+            -lock-timeout=3000s \
             -out="$TFPLAN_FILE" \
             -input=false \
             | grep -v "hidden-link:"
+
       - name: Encrypt Terraform Plan
-        working-directory: ${{ steps.directory.outputs.dir }}
+        working-directory: ${{ inputs.dir }}
         env:
           ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
         run: |
@@ -159,46 +161,41 @@ jobs:
             -out "${TFPLAN_FILE}.enc" \
             -pass env:ENCRYPTION_PASSPHRASE
           rm -f "$TFPLAN_FILE"
-      - name: Upload Terraform Bundle as Artifact
+
+      - name: Upload Terraform Plan as Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        env:
-          TERRAFORM_DIR: ${{ steps.directory.outputs.dir }}
         with:
-          name: terraform-bundle
-          path: |
-            ${{ env.TERRAFORM_DIR }}/${{ env.TFPLAN_FILE }}.enc
-            ${{ env.TERRAFORM_DIR }}/.terraform.lock.hcl
-            ${{ env.TERRAFORM_DIR }}/.terraform/modules/
+          name: ${{ steps.artifact-name.outputs.name }}
+          path: ${{ inputs.dir }}/${{ env.TFPLAN_FILE }}.enc
+          if-no-files-found: error
           retention-days: 1
 
   tf_apply:
     name: "Terraform Apply"
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [get-terraform-version, tf_plan]
-    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
+    environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TFPLAN_FILE: tf-outcome-${{ github.sha }}
+      TFPLAN_FILE: dx-terraform-plan-${{ inputs.azure_environment }}-${{ github.sha }}
 
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-        name: Checkout
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          persist-credentials: false
 
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Download Terraform Bundle as Artifact
+      - name: Download Terraform Plan Artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: terraform-bundle
-          path: ${{ needs.tf_plan.outputs.working_dir }}
+          name: ${{ needs.tf_plan.outputs.artifact_name }}
+          path: ${{ inputs.dir }}
 
       - name: Decrypt Terraform Plan
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        working-directory: ${{ inputs.dir }}
         env:
           ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
         run: |
@@ -208,21 +205,37 @@ jobs:
             -out "$TFPLAN_FILE" \
             -pass env:ENCRYPTION_PASSPHRASE
           rm -f "${TFPLAN_FILE}.enc"
-      - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+
+      - name: Azure Login
+        uses: azure/login@6b2456866fc08b011acb422a92a4aa20e2c4de32 # v2.1.0
         with:
-          terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
+        with:
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+          terraform_wrapper: true
 
       - name: Terraform Init
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
-          terraform init -input=false
+          bash ./terraform.sh init "$AZURE_ENVIRONMENT"
+
       - name: Terraform Apply
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        env:
+          AZURE_ENVIRONMENT: ${{ inputs.azure_environment }}
         run: |
           set -o pipefail
-          terraform apply \
-            -lock-timeout=120s \
+          bash ./terraform.sh apply "$AZURE_ENVIRONMENT" \
+            -lock-timeout=3000s \
             -auto-approve \
             -input=false \
             "$TFPLAN_FILE" \

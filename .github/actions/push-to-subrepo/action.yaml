@@ -31,16 +31,20 @@ runs:
   steps:
     - name: Setup git for subtree
       shell: bash
+      env:
+        GIT_EMAIL: ${{ inputs.git_email }}
+        GIT_NAME: ${{ inputs.git_name }}
+        GITHUB_PAT: ${{ inputs.github_pat }}
       run: |
         # Fix dubious ownership
         git config --global --add safe.directory /github/workspace
 
         # Set git email and name
-        git config --global user.email "${{ inputs.git_email }}"
-        git config --global user.name "${{ inputs.git_name }}"
+        git config --global user.email "$GIT_EMAIL"
+        git config --global user.name "$GIT_NAME"
 
         # Configure Git for authentication
-        git config --global url."https://api:${{ inputs.github_pat }}@github.com/".insteadOf "https://github.com/"
+        git config --global url."https://api:${GITHUB_PAT}@github.com/".insteadOf "https://github.com/"
         git config --unset http."https://github.com/".extraheader
 
     - name: Push Subtree to Repository
@@ -51,13 +55,28 @@ runs:
         REPO_TYPE: ${{ inputs.repo_type }}
       run: |
         set -euo pipefail
-        
+
+        if ! [[ "$ITEM_NAME" =~ ^[a-zA-Z0-9/_-]+$ ]]; then
+          echo "Error: Invalid name. Allowed: letters, numbers, /, _, -"
+          exit 1
+        fi
+
+        if ! [[ "$REPO_OWNER" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+          echo "Error: Invalid repo owner. Allowed: letters, numbers, ., _, -"
+          exit 1
+        fi
+
+        if ! [[ "$REPO_TYPE" =~ ^(module|provider)$ ]]; then
+          echo "Error: Invalid repo_type. Must be 'module' or 'provider'"
+          exit 1
+        fi
+
         # Handle different repository types
         if [[ "$REPO_TYPE" == "module" ]]; then
           # Module setup
           PREFIX_PATH="infra/modules/${ITEM_NAME}"
           REGISTRY_ITEM_NAME=${ITEM_NAME//_/\-}
-          PROVIDER=$(jq -r '.provider // "azurerm"' ${PREFIX_PATH}/package.json)
+          PROVIDER=$(jq -r '.provider // "azurerm"' "$PREFIX_PATH/package.json")
           REPO_URL="https://github.com/$REPO_OWNER/terraform-${PROVIDER}-${REGISTRY_ITEM_NAME}"
           BRANCH_NAME="${ITEM_NAME}-branch"
           REMOTE_NAME="module-repo"
@@ -68,28 +87,25 @@ runs:
           REPO_URL="https://github.com/$REPO_OWNER/terraform-provider-${REGISTRY_ITEM_NAME}"
           BRANCH_NAME="${ITEM_NAME}-branch"
           REMOTE_NAME="provider-repo"
-        else
-          echo "Error: Invalid repo_type. Must be 'module' or 'provider'"
-          exit 1
         fi
-        
+
         echo "Working with: $REPO_URL"
         echo "PREFIX_PATH: $PREFIX_PATH"
-        
+
         # Add remote repository
-        git remote add $REMOTE_NAME "$REPO_URL"
+        git remote add "$REMOTE_NAME" "$REPO_URL"
 
         # Extract the complete history of the subrepo
-        git subtree split --prefix=$PREFIX_PATH -b $BRANCH_NAME
+        git subtree split --prefix="$PREFIX_PATH" -b "$BRANCH_NAME"
 
         # Check if the main branch exists on the remote
-        git fetch $REMOTE_NAME main --tags
+        git fetch "$REMOTE_NAME" main --tags
 
         # Merge the changes without overwriting the history
-        git branch temp-branch $REMOTE_NAME/main
-        git checkout $BRANCH_NAME
+        git branch temp-branch "$REMOTE_NAME/main"
+        git checkout "$BRANCH_NAME"
         git merge --allow-unrelated-histories -s ours --no-edit temp-branch
-        
+
         # Define the tag name
         if [[ "$REPO_TYPE" == "provider" ]]; then
           # For providers, add 'v' prefix to the tag
@@ -101,15 +117,15 @@ runs:
         fi
 
         # Check if the tag exists on the remote
-        if git ls-remote --tags $REMOTE_NAME | grep "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+        if git ls-remote --tags "$REMOTE_NAME" | grep -qF "refs/tags/$TAG_NAME"; then
           echo "Tag $TAG_NAME already exists on the remote."
         else
           echo "Tag $TAG_NAME does not exist on the remote. Creating and pushing the tag..."
           # Create the tag locally
           git tag "$TAG_NAME"
           # Push the tag to the remote
-          git push $REMOTE_NAME "$TAG_NAME"
+          git push "$REMOTE_NAME" "$TAG_NAME"
         fi
 
         # Push changes and tags
-        git push $REMOTE_NAME ${BRANCH_NAME}:main
+        git push "$REMOTE_NAME" "${BRANCH_NAME}:main"

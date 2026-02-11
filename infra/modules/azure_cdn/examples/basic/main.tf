@@ -65,6 +65,7 @@ module "azure_cdn" {
 
   environment = local.environment
 
+  # Basic origin configuration
   origins = {
     primary = {
       host_name = module.storage_account.primary_web_host
