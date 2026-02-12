@@ -279,7 +279,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ matrix.dashboard.full_path }}
-        run: terraform init -input=false
+        run: terraform init -input=false -backend-config=backend.tfvars
 
       - name: Terraform Apply
         working-directory: ${{ matrix.dashboard.full_path }}
