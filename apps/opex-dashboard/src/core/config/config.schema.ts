@@ -180,6 +180,13 @@ export const ConfigSchema = z.object({
   queries: QueryConfigSchema.optional().describe(
     "Optional global query configuration overrides",
   ),
+  resource_group: z
+    .string()
+    .optional()
+    .default(DEFAULTS.resource_group)
+    .describe(
+      "Azure resource group name where dashboard and alerts will be created. Default: dashboards",
+    ),
   resource_type: z
     .enum(["app-gateway", "api-management"])
     .optional()

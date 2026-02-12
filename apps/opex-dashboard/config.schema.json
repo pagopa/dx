@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Configuration schema for generating operational dashboards from OpenAPI specifications",
   "title": "OpEx Dashboard Configuration",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "type": "object",
   "properties": {
     "action_groups": {
@@ -167,6 +167,11 @@
         "status_code_categories"
       ],
       "additionalProperties": false
+    },
+    "resource_group": {
+      "description": "Azure resource group name where dashboard and alerts will be created. Default: dashboards",
+      "default": "dashboards",
+      "type": "string"
     },
     "resource_type": {
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
@@ -410,7 +415,8 @@
     "data_source",
     "location",
     "name",
-    "oa3_spec"
+    "oa3_spec",
+    "resource_group"
   ],
   "additionalProperties": false
 }

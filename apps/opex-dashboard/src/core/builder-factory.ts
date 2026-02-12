@@ -23,6 +23,7 @@ interface AzureRawBuilderParams {
     status_code_categories: string[];
   };
   resolver: OA3Resolver;
+  resource_group: string;
   resource_type: string;
   resources: string[];
   response_time_threshold?: number;
@@ -78,6 +79,7 @@ async function createAzureTerraformBuilder(
     eventOccurrences: params.event_occurrences,
     location: params.location,
     name: params.name,
+    resourceGroup: params.resource_group,
     resourceType: params.resource_type,
     terraformConfig: params.terraform,
     timespan: params.timespan,
