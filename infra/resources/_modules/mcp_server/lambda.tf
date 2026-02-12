@@ -118,3 +118,40 @@ resource "aws_iam_role_policy_attachment" "lambda_bedrock_access" {
   role       = aws_iam_role.server.name
   policy_arn = aws_iam_policy.lambda_bedrock_access.arn
 }
+
+# Defines an IAM policy to allow the Lambda function to access S3 for pre-signed URLs.
+resource "aws_iam_policy" "lambda_s3_access" {
+  name = provider::awsdx::resource_name(merge(var.naming_config, {
+    name          = "lambda-s3-access"
+    resource_type = "iam_policy"
+  }))
+
+  description = "IAM policy for Lambda to generate pre-signed URLs for S3 knowledge base objects"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject"
+        ]
+        Resource = "${aws_s3_bucket.mcp_knowledge_base.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.mcp_knowledge_base.arn
+      }
+    ]
+  })
+  tags = var.tags
+}
+
+# Attaches the S3 access policy to the Lambda's IAM role.
+resource "aws_iam_role_policy_attachment" "lambda_s3_access" {
+  role       = aws_iam_role.server.name
+  policy_arn = aws_iam_policy.lambda_s3_access.arn
+}
