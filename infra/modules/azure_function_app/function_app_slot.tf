@@ -86,7 +86,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       }
 
       login {
-        token_store_enabled          = false
+        token_store_enabled = false
       }
     }
   }
