@@ -102,7 +102,7 @@ resource "azurerm_linux_function_app" "this" {
       }
 
       login {
-        token_store_enabled          = false
+        token_store_enabled = false
       }
     }
   }
