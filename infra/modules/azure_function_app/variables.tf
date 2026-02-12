@@ -234,28 +234,49 @@ variable "tls_version" {
   description = "Minimum TLS version for the App Service."
 }
 
-variable "managed_identity_auth" {
+variable "entra_id_authentication" {
   type = object({
     entra_application_client_id = string
     allowed_client_applications = list(string)
     tenant_id                   = string
   })
   default     = null
-  description = "Optional Entra ID (Azure AD) authentication configuration for the Function App. When set, configures auth_settings_v2 with an Active Directory v2 identity provider so that only allowed client applications (e.g. APIM) can invoke the Function App via Managed Identity. When null (default), no authentication layer is added and the Function App uses classic key-based auth."
+  description = <<-EOT
+    Enables Entra ID (Azure AD) authentication on the Function App, allowing callers
+    (e.g. APIM) to authenticate via their Managed Identity instead of using function keys.
+
+    When set, the module configures auth_settings_v2 with an Active Directory v2 identity
+    provider. Callers must present a valid JWT obtained from the specified Entra application;
+    unauthenticated requests receive HTTP 401.
+
+    When null (default), no authentication layer is added and the Function App uses classic
+    key-based auth (x-functions-key header).
+
+    Prerequisites:
+      - An Entra ID application must already exist (created by the DX CLI).
+      - Callers (e.g. APIM) must use <authentication-managed-identity> in their policy
+        to obtain a token for the Entra application before calling the Function App.
+
+    Fields:
+      - entra_application_client_id: Application (client) ID of the Entra app registration.
+      - allowed_client_applications: List of Application IDs of clients allowed to authenticate
+        (e.g. the APIM service principal Application ID).
+      - tenant_id: Azure AD tenant ID used to build the token endpoint.
+  EOT
 
   validation {
-    condition     = var.managed_identity_auth == null || length(var.managed_identity_auth.entra_application_client_id) > 0
-    error_message = "entra_application_client_id must not be empty when managed_identity_auth is set."
+    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.entra_application_client_id) > 0
+    error_message = "entra_application_client_id must not be empty when entra_id_authentication is set."
   }
 
   validation {
-    condition     = var.managed_identity_auth == null || length(var.managed_identity_auth.allowed_client_applications) > 0
-    error_message = "allowed_client_applications must contain at least one application ID when managed_identity_auth is set."
+    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.allowed_client_applications) > 0
+    error_message = "allowed_client_applications must contain at least one application ID when entra_id_authentication is set."
   }
 
   validation {
-    condition     = var.managed_identity_auth == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.managed_identity_auth.tenant_id))
-    error_message = "tenant_id must be a valid UUID when managed_identity_auth is set."
+    condition     = var.entra_id_authentication == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.tenant_id))
+    error_message = "tenant_id must be a valid UUID when entra_id_authentication is set."
   }
 }
 

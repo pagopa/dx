@@ -73,7 +73,7 @@ resource "azurerm_linux_function_app_slot" "this" {
   )
 
   dynamic "auth_settings_v2" {
-    for_each = var.managed_identity_auth != null ? [var.managed_identity_auth] : []
+    for_each = var.entra_id_authentication != null ? [var.entra_id_authentication] : []
     content {
       auth_enabled           = true
       require_authentication = true

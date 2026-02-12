@@ -89,7 +89,7 @@ resource "azurerm_linux_function_app" "this" {
   }
 
   dynamic "auth_settings_v2" {
-    for_each = var.managed_identity_auth != null ? [var.managed_identity_auth] : []
+    for_each = var.entra_id_authentication != null ? [var.entra_id_authentication] : []
     content {
       auth_enabled           = true
       require_authentication = true
@@ -101,6 +101,7 @@ resource "azurerm_linux_function_app" "this" {
         tenant_auth_endpoint = "https://login.microsoftonline.com/${auth_settings_v2.value.tenant_id}/v2.0"
       }
 
+      # TODO: make them configurable?
       login {
         token_store_enabled          = true
         token_refresh_extension_time = 72
