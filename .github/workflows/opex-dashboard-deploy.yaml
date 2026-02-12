@@ -197,9 +197,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ matrix.dashboard.full_path }}
-        run: |
-          ls -la .
-          terraform init -input=false -backend-config=backend.tfvars
+        run: terraform init -input=false -backend-config=backend.tfvars
 
       - name: Terraform Plan
         id: plan
