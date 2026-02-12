@@ -147,6 +147,7 @@ jobs:
               fi
             fi
           done
+          ls -R .terraform-artifacts
 
       - name: Upload generated Terraform files
         if: steps.generate-action.outputs.has_changes == 'true'
