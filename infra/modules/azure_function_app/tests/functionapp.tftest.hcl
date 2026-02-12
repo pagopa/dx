@@ -625,7 +625,7 @@ run "function_app_with_diagnostic_settings_enabled_but_no_destinations" {
   ]
 }
 
-run "function_app_without_managed_identity_auth" {
+run "function_app_without_entra_id_authentication" {
   command = plan
 
   variables {
@@ -634,32 +634,32 @@ run "function_app_without_managed_identity_auth" {
 
   assert {
     condition     = length(azurerm_linux_function_app.this.auth_settings_v2) == 0
-    error_message = "auth_settings_v2 should not be configured when managed_identity_auth is null"
+    error_message = "auth_settings_v2 should not be configured when entra_id_authentication is null"
   }
 
   assert {
     condition     = length(azurerm_linux_function_app_slot.this[0].auth_settings_v2) == 0
-    error_message = "auth_settings_v2 should not be configured on staging slot when managed_identity_auth is null"
+    error_message = "auth_settings_v2 should not be configured on staging slot when entra_id_authentication is null"
   }
 
   assert {
-    condition     = output.managed_identity_auth.enabled == false
-    error_message = "managed_identity_auth output should indicate auth is disabled"
+    condition     = output.entra_id_authentication.enabled == false
+    error_message = "entra_id_authentication output should indicate auth is disabled"
   }
 
   assert {
-    condition     = output.managed_identity_auth.entra_application_client_id == null
-    error_message = "managed_identity_auth output should have null entra_application_client_id when disabled"
+    condition     = output.entra_id_authentication.entra_application_client_id == null
+    error_message = "entra_id_authentication output should have null entra_application_client_id when disabled"
   }
 }
 
-run "function_app_with_managed_identity_auth" {
+run "function_app_with_entra_id_authentication" {
   command = plan
 
   variables {
     use_case = "default"
 
-    managed_identity_auth = {
+    entra_id_authentication = {
       entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
       allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
       tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -724,23 +724,23 @@ run "function_app_with_managed_identity_auth" {
 
   # Output assertions
   assert {
-    condition     = output.managed_identity_auth.enabled == true
-    error_message = "managed_identity_auth output should indicate auth is enabled"
+    condition     = output.entra_id_authentication.enabled == true
+    error_message = "entra_id_authentication output should indicate auth is enabled"
   }
 
   assert {
-    condition     = output.managed_identity_auth.entra_application_client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
-    error_message = "managed_identity_auth output should expose the Entra application client ID"
+    condition     = output.entra_id_authentication.entra_application_client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    error_message = "entra_id_authentication output should expose the Entra application client ID"
   }
 }
 
-run "function_app_managed_identity_auth_empty_client_id" {
+run "function_app_entra_id_authentication_empty_client_id" {
   command = plan
 
   variables {
     use_case = "default"
 
-    managed_identity_auth = {
+    entra_id_authentication = {
       entra_application_client_id = ""
       allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
       tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -748,17 +748,17 @@ run "function_app_managed_identity_auth_empty_client_id" {
   }
 
   expect_failures = [
-    var.managed_identity_auth,
+    var.entra_id_authentication,
   ]
 }
 
-run "function_app_managed_identity_auth_empty_allowed_applications" {
+run "function_app_entra_id_authentication_empty_allowed_applications" {
   command = plan
 
   variables {
     use_case = "default"
 
-    managed_identity_auth = {
+    entra_id_authentication = {
       entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
       allowed_client_applications = []
       tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
@@ -766,17 +766,17 @@ run "function_app_managed_identity_auth_empty_allowed_applications" {
   }
 
   expect_failures = [
-    var.managed_identity_auth,
+    var.entra_id_authentication,
   ]
 }
 
-run "function_app_managed_identity_auth_invalid_tenant_id" {
+run "function_app_entra_id_authentication_invalid_tenant_id" {
   command = plan
 
   variables {
     use_case = "default"
 
-    managed_identity_auth = {
+    entra_id_authentication = {
       entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
       allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
       tenant_id                   = "not-a-valid-uuid"
@@ -784,6 +784,6 @@ run "function_app_managed_identity_auth_invalid_tenant_id" {
   }
 
   expect_failures = [
-    var.managed_identity_auth,
+    var.entra_id_authentication,
   ]
 }

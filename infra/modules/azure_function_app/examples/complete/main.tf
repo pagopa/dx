@@ -44,7 +44,9 @@ module "azure_function_app" {
   tags = local.tags
 }
 
-# Function App with Managed Identity authentication via Entra ID.
+# Function App with Entra ID authentication.
+# When set, callers (e.g. APIM) must authenticate via their Managed Identity
+# to obtain a valid JWT from the Entra application before invoking the Function App.
 # Requires an existing Entra application (created by the DX CLI).
 module "azure_function_app_with_managed_identity" {
   source  = "pagopa-dx/azure-function-app/azurerm"
@@ -66,7 +68,7 @@ module "azure_function_app_with_managed_identity" {
 
   health_check_path = "/health"
 
-  managed_identity_auth = {
+  entra_id_authentication = {
     entra_application_client_id = azurerm_user_assigned_identity.example.client_id
     allowed_client_applications = [azurerm_user_assigned_identity.example.client_id]
     tenant_id                   = azurerm_user_assigned_identity.example.tenant_id
