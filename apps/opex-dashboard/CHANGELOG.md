@@ -1,5 +1,11 @@
 # @pagopa/opex-dashboard
 
+## 0.1.0
+
+### Minor Changes
+
+- 4a738dc: Support flat terraform configuration
+
 ## 0.0.2
 
 ### Patch Changes
