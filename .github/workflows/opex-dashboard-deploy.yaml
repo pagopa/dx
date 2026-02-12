@@ -212,15 +212,19 @@ jobs:
           SUMMARY=$(grep -E "Plan:|No changes" plan_output.txt | tail -1 || echo "Plan completed")
           echo "summary_line=$SUMMARY" >> "$GITHUB_OUTPUT"
 
-      - name: Upload Terraform Plan Bundle
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - name: Upload Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-upload@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          name: terraform-plan-${{ matrix.dashboard.environment }}
-          path: |
-            ${{ matrix.dashboard.full_path }}/${{ env.TFPLAN_FILE }}
-            ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
-            ${{ matrix.dashboard.full_path }}/.terraform/
-          retention-days: 7
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ matrix.dashboard.full_path }}
+          artifact-name: terraform-plan
+          retention-days: 1
+        #   path: |
+        #     ${{ matrix.dashboard.full_path }}/${{ env.TFPLAN_FILE }}
+        #     ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
+        #     ${{ matrix.dashboard.full_path }}/.terraform/
 
       - name: Set Plan Output for PR Comment
         id: set-plan-output
@@ -295,11 +299,14 @@ jobs:
           name: generated-terraform
           path: .
 
-      - name: Download Terraform Plan Bundle
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - name: Download Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-download@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
-          name: terraform-plan-${{ matrix.dashboard.environment }}
-          path: ${{ matrix.dashboard.full_path }}
+          plan-file: tfplan-${{ github.sha }}
+          working-directory: ${{ matrix.dashboard.full_path }}
+          artifact-name: terraform-plan
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
