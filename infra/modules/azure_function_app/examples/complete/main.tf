@@ -47,7 +47,7 @@ module "azure_function_app" {
 # Function App with Entra ID authentication.
 # When set, callers (e.g. APIM) must authenticate via their Managed Identity
 # to obtain a valid JWT from the Entra application before invoking the Function App.
-# Requires an existing Entra application (created by the DX CLI).
+# Requires an existing Entra application.
 module "azure_function_app_with_managed_identity" {
   source  = "pagopa-dx/azure-function-app/azurerm"
   version = "~> 4.1"

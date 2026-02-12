@@ -660,9 +660,9 @@ run "function_app_with_entra_id_authentication" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
-      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
-      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
+      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                   = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -682,17 +682,17 @@ run "function_app_with_entra_id_authentication" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "Active Directory v2 client_id should match Entra application client ID"
   }
 
   assert {
-    condition     = contains(azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].allowed_applications, "11111111-1111-1111-1111-111111111111")
+    condition     = contains(azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
     error_message = "Active Directory v2 allowed_applications should contain the specified client application"
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].tenant_auth_endpoint == "https://login.microsoftonline.com/7788edaf-0346-4068-9d79-c868aed15b3d/v2.0"
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].tenant_auth_endpoint == "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000003/v2.0"
     error_message = "Active Directory v2 tenant_auth_endpoint should be constructed from tenant_id"
   }
 
@@ -708,12 +708,12 @@ run "function_app_with_entra_id_authentication" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "Staging slot Active Directory v2 client_id should match Entra application client ID"
   }
 
   assert {
-    condition     = contains(azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].allowed_applications, "11111111-1111-1111-1111-111111111111")
+    condition     = contains(azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
     error_message = "Staging slot Active Directory v2 allowed_applications should contain the specified client application"
   }
 
@@ -729,7 +729,7 @@ run "function_app_with_entra_id_authentication" {
   }
 
   assert {
-    condition     = output.entra_id_authentication.entra_application_client_id == "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+    condition     = output.entra_id_authentication.entra_application_client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "entra_id_authentication output should expose the Entra application client ID"
   }
 }
@@ -742,8 +742,8 @@ run "function_app_entra_id_authentication_empty_client_id" {
 
     entra_id_authentication = {
       entra_application_client_id = ""
-      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
-      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                   = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -759,9 +759,9 @@ run "function_app_entra_id_authentication_empty_allowed_applications" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
+      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
       allowed_client_applications = []
-      tenant_id                   = "7788edaf-0346-4068-9d79-c868aed15b3d"
+      tenant_id                   = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -777,8 +777,8 @@ run "function_app_entra_id_authentication_invalid_tenant_id" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "8be7b28b-d984-480f-bf6b-5894dbd0906c"
-      allowed_client_applications = ["11111111-1111-1111-1111-111111111111"]
+      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
+      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
       tenant_id                   = "not-a-valid-uuid"
     }
   }

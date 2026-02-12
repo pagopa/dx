@@ -253,7 +253,7 @@ variable "entra_id_authentication" {
     key-based auth (x-functions-key header).
 
     Prerequisites:
-      - An Entra ID application must already exist (created by the DX CLI).
+      - An Entra ID application must already exist.
       - Callers (e.g. APIM) must use <authentication-managed-identity> in their policy
         to obtain a token for the Entra application before calling the Function App.
 
