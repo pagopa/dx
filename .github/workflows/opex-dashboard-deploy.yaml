@@ -187,11 +187,6 @@ jobs:
           name: generated-terraform
           path: .
 
-      - name: List files for debugging
-        run: |
-          ls -R ${{ matrix.dashboard.full_path }}
-          ls -R .terraform-artifacts
-
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
