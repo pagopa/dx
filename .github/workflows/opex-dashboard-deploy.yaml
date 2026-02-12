@@ -155,6 +155,7 @@ jobs:
         with:
           name: generated-terraform
           path: .terraform-artifacts/
+          include-hidden-files: true
           retention-days: 7
 
   tf_plan:
