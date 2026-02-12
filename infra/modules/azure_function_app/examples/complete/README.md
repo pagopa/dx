@@ -13,6 +13,7 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azurerm | ~> 4.1 |
+| <a name="module_azure_function_app_with_managed_identity"></a> [azure\_function\_app\_with\_managed\_identity](#module\_azure\_function\_app\_with\_managed\_identity) | pagopa-dx/azure-function-app/azurerm | ~> 4.1 |
 
 ## Resources
 
