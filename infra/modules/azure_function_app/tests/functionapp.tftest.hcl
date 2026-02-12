@@ -697,8 +697,8 @@ run "function_app_with_entra_id_authentication" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].login[0].token_store_enabled == true
-    error_message = "Token store should be enabled"
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].login[0].token_store_enabled == false
+    error_message = "Token store should be disabled"
   }
 
   # Slot assertions

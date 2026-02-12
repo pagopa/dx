@@ -86,8 +86,7 @@ resource "azurerm_linux_function_app_slot" "this" {
       }
 
       login {
-        token_store_enabled          = true
-        token_refresh_extension_time = 72
+        token_store_enabled          = false
       }
     }
   }

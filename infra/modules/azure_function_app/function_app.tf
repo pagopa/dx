@@ -101,10 +101,8 @@ resource "azurerm_linux_function_app" "this" {
         tenant_auth_endpoint = "https://login.microsoftonline.com/${auth_settings_v2.value.tenant_id}/v2.0"
       }
 
-      # TODO: make them configurable?
       login {
-        token_store_enabled          = true
-        token_refresh_extension_time = 72
+        token_store_enabled          = false
       }
     }
   }
