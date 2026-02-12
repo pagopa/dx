@@ -228,47 +228,6 @@ jobs:
         #     ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
         #     ${{ matrix.dashboard.full_path }}/.terraform/
 
-      - name: Set Plan Output for PR Comment
-        id: set-plan-output
-        if: always()
-        working-directory: ${{ matrix.dashboard.full_path }}
-        env:
-          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          OUTPUT_DIR: ${{ matrix.dashboard.full_path }}
-          PLAN_OUTCOME: ${{ steps.plan.outcome }}
-          SUMMARY_LINE: ${{ steps.plan.outputs.summary_line }}
-        run: |
-          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
-          echo "<details>" >> message_body.txt
-          echo "<summary>Show Plan</summary>" >> message_body.txt
-          echo "" >> message_body.txt
-
-          if [ "$PLAN_OUTCOME" != 'success' ]; then
-            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
-          else
-            # Check plan file size and use summary if too long
-            if [ -f "plan_output.txt" ] && [ "$(wc -c < plan_output.txt)" -gt 60000 ]; then
-              echo "\`\`\`hcl" >> message_body.txt
-              echo "$SUMMARY_LINE" >> message_body.txt
-              echo "\`\`\`" >> message_body.txt
-              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
-            elif [ -f "plan_output.txt" ]; then
-              echo "\`\`\`hcl" >> message_body.txt
-              cat plan_output.txt >> message_body.txt
-              echo "\`\`\`" >> message_body.txt
-            fi
-          fi
-
-          echo "" >> message_body.txt
-          echo "</details>" >> message_body.txt
-
-      - name: Post Plan on PR
-        if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/actions/pr-comment@main
-        with:
-          comment-body-file: ${{ matrix.dashboard.full_path }}/message_body.txt
-          search-pattern: "Terraform Plan (${{ matrix.dashboard.full_path }})"
-
       - name: Check Terraform Plan Result
         if: always() && steps.plan.outcome != 'success'
         run: exit 1
