@@ -54,6 +54,7 @@ async function createAzureRawBuilder(
     name: params.name,
     oa3Spec,
     queries: params.queries,
+    resourceGroup: params.resource_group,
     resources: params.resources,
     resourceType: params.resource_type,
     responseTimeThreshold: params.response_time_threshold,
