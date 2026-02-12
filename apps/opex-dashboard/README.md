@@ -193,6 +193,7 @@ action_groups: string[] # Array of Azure Action Group IDs
 
 # Optional fields (with defaults)
 resource_type: app-gateway | api-management # Default: app-gateway
+resource_group: string # Default: dashboards (Azure resource group for dashboard and alerts)
 timespan: string # Default: 5m
 evaluation_frequency: integer # Default: 10 (minutes)
 evaluation_time_window: integer # Default: 20 (minutes)

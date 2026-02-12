@@ -18,6 +18,7 @@ describe("createBuilder", () => {
     location: "eastus",
     name: "test",
     resolver: {} as OA3Resolver, // mock
+    resource_group: "dashboards",
     resource_type: "app-gateway",
     resources: ["res1"],
     timespan: "5m",
