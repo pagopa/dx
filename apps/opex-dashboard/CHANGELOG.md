@@ -1,5 +1,11 @@
 # @pagopa/opex-dashboard
 
+## 0.2.0
+
+### Minor Changes
+
+- e002efa: Support configurable resource group for dashboards and alerts
+
 ## 0.1.0
 
 ### Minor Changes
