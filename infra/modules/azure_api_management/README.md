@@ -52,7 +52,7 @@ After that, submit a new _Pull Request_ to update the variable to `false` and ap
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.1.0, < 5.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.6.5, < 1.0.0 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.8.3, < 1.0.0 |
 
 ## Modules
 

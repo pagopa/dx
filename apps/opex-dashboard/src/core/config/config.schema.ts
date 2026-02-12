@@ -108,17 +108,24 @@ const EnvironmentConfigSchema = z.object({
     .describe("Project prefix (max 6 chars, e.g., 'io', 'pagopa')"),
 });
 
-// Schema for Terraform configuration
-const TerraformConfigSchema = z.object({
-  environments: z
-    .object({
-      dev: EnvironmentConfigSchema.optional(),
-      prod: EnvironmentConfigSchema.optional(),
-      uat: EnvironmentConfigSchema.optional(),
-    })
-    .optional()
-    .describe("Environment-specific configurations for dev/uat/prod"),
-});
+// Schema for multi-environment Terraform configuration
+const TerraformEnvironmentsConfigSchema = z
+  .object({
+    environments: z
+      .object({
+        dev: EnvironmentConfigSchema.optional(),
+        prod: EnvironmentConfigSchema.optional(),
+        uat: EnvironmentConfigSchema.optional(),
+      })
+      .describe("Environment-specific configurations for dev/uat/prod"),
+  })
+  .strict();
+
+// Schema for Terraform configuration (union of flat and environments modes)
+const TerraformConfigSchema = z.union([
+  EnvironmentConfigSchema.strict(),
+  TerraformEnvironmentsConfigSchema,
+]);
 
 // Main configuration schema
 export const ConfigSchema = z.object({

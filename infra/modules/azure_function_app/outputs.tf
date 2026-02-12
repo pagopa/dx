@@ -9,8 +9,9 @@ output "subnet" {
 output "storage_account" {
   description = "Details of the primary storage account used by the Function App, including its ID and name."
   value = {
-    id   = azurerm_storage_account.this.id
-    name = azurerm_storage_account.this.name
+    id                     = azurerm_storage_account.this.id
+    name                   = azurerm_storage_account.this.name
+    primary_queue_endpoint = azurerm_storage_account.this.primary_queue_endpoint
   }
 }
 

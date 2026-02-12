@@ -1,8 +1,8 @@
+import { getLogger } from "@logtape/logtape";
 import chalk from "chalk";
 import { Command } from "commander";
-import { $ } from "execa";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
-import { PlopGenerator } from "node-plop";
+import { $, ExecaError } from "execa";
+import { okAsync, ResultAsync } from "neverthrow";
 import * as path from "node:path";
 import { oraPromise } from "ora";
 
@@ -10,17 +10,14 @@ import {
   GitHubService,
   PullRequest,
   Repository,
-  RepositoryNotFoundError,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import {
-  Payload as Answers,
-  payloadSchema as answersSchema,
-  PLOP_MONOREPO_GENERATOR_NAME,
-} from "../../plop/generators/monorepo/index.js";
-import { setMonorepoGenerator } from "../../plop/index.js";
-import { getGenerator, getPrompts, initPlop } from "../../plop/index.js";
-import { decode } from "../../zod/index.js";
+  getPlopInstance,
+  runDeploymentEnvironmentGenerator,
+  runMonorepoGenerator,
+} from "../../plop/index.js";
 import { exitWithError } from "../index.js";
 
 type InitResult = {
@@ -50,41 +47,8 @@ const withSpinner = <T>(
       successText,
       text,
     }),
-    (cause) => {
-      console.error(`Something went wrong: ${JSON.stringify(cause, null, 2)}`);
-      return new Error(failText, { cause });
-    },
+    (cause) => new Error(failText, { cause }),
   );
-
-// TODO: Check Cloud Environment exists
-// TODO: Check CSP CLI is installed
-// TODO: Check user has permissions to handle Terraform state
-const validateAnswers =
-  (githubService: GitHubService) =>
-  (answers: Answers): ResultAsync<Answers, Error> =>
-    ResultAsync.fromPromise(
-      githubService.getRepository(answers.repoOwner, answers.repoName),
-      (error) => error as Error,
-    )
-      .andThen(({ fullName }) =>
-        errAsync(new Error(`Repository ${fullName} already exists.`)),
-      )
-      .orElse((error) =>
-        error instanceof RepositoryNotFoundError
-          ? // If repository is not found, it's safe to proceed
-            okAsync(answers)
-          : // Otherwise, propagate the error
-            errAsync(error),
-      )
-      .map(() => answers);
-
-const runGeneratorActions = (generator: PlopGenerator) => (answers: Answers) =>
-  withSpinner(
-    "Creating workspace files...",
-    "Workspace files created successfully!",
-    "Failed to create workspace files.",
-    generator.runActions(answers),
-  ).map(() => answers);
 
 const displaySummary = (initResult: InitResult) => {
   const { pr, repository } = initResult;
@@ -119,27 +83,41 @@ const displaySummary = (initResult: InitResult) => {
   }
 };
 
-const checkTerraformCliIsInstalled = (
-  text: string,
-  successText: string,
-  failText: string,
-) => withSpinner(text, successText, failText, tf$`terraform -version`);
+const checkTerraformCliIsInstalled = () =>
+  withSpinner(
+    "Checking Terraform installation...",
+    "Terraform is installed!",
+    "Please install terraform CLI before running this command.",
+    tf$`terraform -version`,
+  );
+
+const checkAzLogin = () =>
+  withSpinner(
+    "Check Azure login status...",
+    "You are logged in to Azure",
+    "Please log in to Azure CLI using `az login` before running this command.",
+    tf$`az account show`,
+  );
 
 const checkPreconditions = () =>
-  checkTerraformCliIsInstalled(
-    "Checking Terraform CLI is installed...",
-    "Terraform CLI is installed!",
-    "Terraform CLI is not installed.",
-  );
+  checkTerraformCliIsInstalled().andThen(() => checkAzLogin());
 
 const createRemoteRepository = ({
   repoName,
   repoOwner,
-}: Answers): ResultAsync<Repository, Error> => {
-  const cwd = path.resolve(repoName, "infra", "repository");
+}: MonorepoPayload): ResultAsync<Repository, Error> => {
+  const logger = getLogger(["dx-cli", "init"]);
+  const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
   const applyTerraform = async () => {
-    await tf$({ cwd })`terraform init`;
-    await tf$({ cwd })`terraform apply -auto-approve`;
+    try {
+      await repo$`terraform init`;
+      await repo$`terraform apply -auto-approve`;
+    } catch (error) {
+      if (error instanceof ExecaError) {
+        logger.error(error.shortMessage);
+      }
+      throw error;
+    }
   };
   return withSpinner(
     "Creating GitHub repository...",
@@ -150,10 +128,8 @@ const createRemoteRepository = ({
 };
 
 const initializeGitRepository = (repository: Repository) => {
-  const cwd = path.resolve(repository.name);
   const branchName = "features/scaffold-workspace";
   const git$ = $({
-    cwd,
     shell: true,
   });
   const pushToOrigin = async () => {
@@ -161,14 +137,13 @@ const initializeGitRepository = (repository: Repository) => {
     await git$`git add README.md`;
     await git$`git commit --no-gpg-sign -m "Create README.md"`;
     await git$`git branch -M main`;
-    await git$`git remote add origin ${repository.ssh}`;
+    await git$`git remote add origin ${repository.origin}`;
     await git$`git push -u origin main`;
     await git$`git switch -c ${branchName}`;
     await git$`git add .`;
     await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
     await git$`git push -u origin ${branchName}`;
   };
-
   return withSpinner(
     "Pushing code to GitHub...",
     "Code pushed to GitHub successfully!",
@@ -179,8 +154,8 @@ const initializeGitRepository = (repository: Repository) => {
 
 const handleNewGitHubRepository =
   (githubService: GitHubService) =>
-  (answers: Answers): ResultAsync<RepositoryPullRequest, Error> =>
-    createRemoteRepository(answers)
+  (payload: MonorepoPayload): ResultAsync<RepositoryPullRequest, Error> =>
+    createRemoteRepository(payload)
       .andThen(initializeGitRepository)
       .andThen((localWorkspace) =>
         createPullRequest(githubService)(localWorkspace).map((pr) => ({
@@ -188,14 +163,6 @@ const handleNewGitHubRepository =
           repository: localWorkspace.repository,
         })),
       );
-
-const makeInitResult = (
-  answers: Answers,
-  { pr, repository }: RepositoryPullRequest,
-): InitResult => ({
-  pr,
-  repository,
-});
 
 const createPullRequest =
   (githubService: GitHubService) =>
@@ -219,6 +186,14 @@ const createPullRequest =
       // If PR creation fails, don't block the workflow
       .orElse(() => okAsync(undefined));
 
+const handleGeneratorError = (err: unknown) => {
+  const logger = getLogger(["dx-cli", "init"]);
+  if (err instanceof Error) {
+    logger.error(err.message);
+  }
+  return new Error("Failed to run the generator");
+};
+
 type InitCommandDependencies = {
   gitHubService: GitHubService;
 };
@@ -228,32 +203,35 @@ export const makeInitCommand = ({
 }: InitCommandDependencies): Command =>
   new Command()
     .name("init")
-    .description(
-      "Command to initialize resources (like projects, subscriptions, ...)",
-    )
-    .addCommand(
-      new Command("project")
-        .description("Initialize a new monorepo project")
-        .action(async function () {
-          await checkPreconditions()
-            .andThen(initPlop)
-            .andTee(setMonorepoGenerator)
-            .andThen((plop) => getGenerator(plop)(PLOP_MONOREPO_GENERATOR_NAME))
-            .andThen((generator) =>
-              // Ask the user the questions defined in the plop generator
-              getPrompts(generator)
-                // Decode the answers to match the Answers schema
-                .andThen(decode(answersSchema))
-                // Validate the answers (like checking permissions, checking GitHub user or org existence, etc.)
-                .andThen(validateAnswers(gitHubService))
-                // Run the generator with the provided answers (this will create the files locally)
-                .andThen(runGeneratorActions(generator)),
-            )
-            .andThen((answers) =>
-              handleNewGitHubRepository(gitHubService)(answers).map((repoPr) =>
-                makeInitResult(answers, repoPr),
-              ),
-            )
-            .match(displaySummary, exitWithError(this));
-        }),
-    );
+    .description("Initialize a new DX workspace")
+    .action(async function () {
+      await checkPreconditions()
+        .andTee(() => {
+          console.log(chalk.blue.bold("\nWorkspace Info"));
+        })
+        .andThen(() =>
+          ResultAsync.fromPromise(
+            getPlopInstance(),
+            () => new Error("Failed to initialize plop"),
+          ),
+        )
+        .andThen((plop) =>
+          ResultAsync.fromPromise(
+            runMonorepoGenerator(plop, gitHubService),
+            handleGeneratorError,
+          )
+            .andTee((payload) => {
+              process.chdir(payload.repoName);
+              console.log(chalk.blue.bold("\nCloud Environment"));
+            })
+            .andThen((payload) =>
+              ResultAsync.fromPromise(
+                runDeploymentEnvironmentGenerator(plop),
+                handleGeneratorError,
+              ).map(() => payload),
+            ),
+        )
+        .andTee(() => console.log()) // Print a new line before the gh repo creation logs
+        .andThen((payload) => handleNewGitHubRepository(gitHubService)(payload))
+        .match(displaySummary, exitWithError(this));
+    });
