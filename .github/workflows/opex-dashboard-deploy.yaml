@@ -18,11 +18,6 @@ on:
         type: string
         required: false
         default: "22"
-      opex_dashboard_version:
-        description: Version of @pagopa/opex-dashboard to use
-        type: string
-        required: false
-        default: "latest"
       base_ref:
         description: Base git reference for change detection (defaults to github.event.before for push, github.event.pull_request.base.sha for PRs)
         type: string
@@ -144,7 +139,7 @@ jobs:
         uses: pagopa/dx/actions/opex-dashboard-generate@chores/opex-workflow
         with:
           config_pattern: ${{ inputs.config_pattern }}
-          opex_dashboard_version: ${{ inputs.opex_dashboard_version }}
+          opex_dashboard_version: "latest"
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
 
       - name: Collect generated files
