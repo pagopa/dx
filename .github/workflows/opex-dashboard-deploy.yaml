@@ -155,7 +155,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      pull-requests: write
     strategy:
       matrix:
         dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
