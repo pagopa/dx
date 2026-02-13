@@ -10,6 +10,7 @@ import * as path from "path";
 import type { TerraformConfig } from "../../core/config/config.schema.js";
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
+import { DEFAULTS } from "../../core/config/defaults.js";
 import { FileError } from "../../core/errors/index.js";
 import { normalizeEndpointKeys } from "../../utils/index.js";
 import { AzDashboardRawBuilder } from "../azure-dashboard-raw/index.js";
@@ -26,6 +27,7 @@ export interface AzDashboardOptions {
   eventOccurrences: number;
   location: string;
   name: string;
+  resourceGroup?: string;
   resourceType: string;
   terraformConfig?: TerraformConfig;
   timespan: string;
@@ -45,6 +47,7 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
       hosts: [],
       location: options.location,
       name: options.name.replace(/ /g, "_"), // Replace spaces with underscores for Terraform compatibility
+      resource_group: options.resourceGroup ?? DEFAULTS.resource_group,
       resource_type: options.resourceType,
       time_window: options.evaluationTimeWindow,
       timespan: options.timespan,

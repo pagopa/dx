@@ -5,6 +5,7 @@ location: West Europe
 timespan: 5m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
 data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
 resource_type: app-gateway
+# resource_group: dashboards # Optional: Azure resource group name for dashboard and alerts (default: dashboards)
 action_groups:
   - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
   - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-slack
