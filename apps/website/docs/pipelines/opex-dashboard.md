@@ -55,8 +55,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "infra/dashboards/**/config.yaml"
-      - "apps/**/openapi.yaml"
+      - ".opex/**/config.yaml"
+      - "**/openapi.yaml"
 
 jobs:
   deploy:
@@ -72,8 +72,8 @@ name: Plan OpEx Dashboards
 on:
   pull_request:
     paths:
-      - "infra/dashboards/**/config.yaml"
-      - "apps/**/openapi.yaml"
+      - ".opex/**/config.yaml"
+      - "**/openapi.yaml"
 
 jobs:
   plan:
@@ -135,6 +135,8 @@ through:
 - For each config, checks if:
   - The config file itself changed
   - Referenced OpenAPI spec (via `oa3_spec` field) changed
+- Includes added/copied/modified/renamed files; excludes deleted files from
+  generation targets
 - Validates inputs to prevent injection attacks
 - Outputs JSON array of changed dashboard configs
 
@@ -231,37 +233,31 @@ paths. Each config directory should contain (or will receive):
 **Flat Structure:**
 
 ```
-infra/
-├── issuer-dashboard/
+.opex/
+├── issuer/
 │   ├── config.yaml
-│   └── backend.tf
-└── wallet-dashboard/
-    ├── config.yaml
-    └── backend.tf
+│   ├── backend.tf
+│   └── backend.tfvars
+└── wallet/
+  ├── config.yaml
+  ├── backend.tf
+  └── backend.tfvars
 ```
 
 **Environment-based:**
 
 ```
-infra/dashboards/
+.opex/
 ├── dev/
 │   ├── issuer/config.yaml
-│   └── wallet/config.yaml
+│   ├── issuer/backend.tfvars
+│   ├── wallet/config.yaml
+│   └── wallet/backend.tfvars
 └── prod/
-    ├── issuer/config.yaml
-    └── wallet/config.yaml
-```
-
-**Service-based:**
-
-```
-apps/
-├── issuer/
-│   ├── openapi.yaml
-│   └── infra/dashboard/config.yaml
-└── wallet/
-    ├── openapi.yaml
-    └── infra/dashboard/config.yaml
+  ├── issuer/config.yaml
+  ├── issuer/backend.tfvars
+  ├── wallet/config.yaml
+  └── wallet/backend.tfvars
 ```
 
 ### Environment Detection
@@ -286,19 +282,19 @@ to the new reusable workflow.
 
 - Dashboard `config.yaml` files exist in your repository
 - Each config references its OpenAPI spec via `oa3_spec` field
-- Each dashboard directory has (or will get) its own `backend.tf` for Terraform
-  state
+- Dashboard configs used by this reusable workflow are under
+  `.opex/**/config.yaml`
+- Each dashboard directory has `backend.tfvars` available for `terraform init`
 
 ### Migration Steps
 
 1. **Review Current Structure**
 
-   Identify where your dashboard configs are located. The workflow supports any
-   structure:
+Ensure your dashboard configs are under `.opex/**/config.yaml`:
 
-   ```bash
-   find . -name "config.yaml" -path "*/dashboard*"
-   ```
+```bash
+find . -path './.opex/**/config.yaml'
+```
 
 2. **Update Config Files**
 
@@ -367,14 +363,17 @@ to the new reusable workflow.
 
    # Verify generated files
    ls -la path/to/
-   # Should show: config.yaml, opex.tf, backend.tf, variables.tf, etc.
-
-   # Create a test PR to validate the workflow
-   git checkout -b test/opex-migration
-   git commit --allow-empty -m "test: trigger OpEx workflow"
-   git push origin test/opex-migration
-   gh pr create --title "Test OpEx Dashboard Workflow"
    ```
+
+# Should show: config.yaml, opex.tf, backend.tf, backend.tfvars, variables.tf, etc.
+
+# Create a test PR to validate the workflow
+
+git checkout -b test/opex-migration git commit --allow-empty -m "test: trigger
+OpEx workflow" git push origin test/opex-migration gh pr create --title "Test
+OpEx Dashboard Workflow"
+
+```
 
 ### Troubleshooting
 
@@ -383,17 +382,18 @@ to the new reusable workflow.
 - Verify config files are located in `.opex/**/config.yaml` paths
 - Check that OpenAPI specs or configs actually changed in the commit
 - Review automatic base reference detection in workflow logs (look for "Using
-  base reference" message)
+base reference" message)
 
 **Terraform plan fails:**
 
 - Check that dashboard directory has valid `backend.tfvars`
 - Verify Azure credentials and OIDC configuration
 - Ensure GitHub environment `opex-{environment}-ci` exists and has proper
-  secrets
+secrets
 
 **Terraform apply fails:**
 
 - Review plan output from the previous step
 - Check GitHub environment `opex-{environment}-cd` protection rules
 - Verify state backend accessibility and lock configuration
+```
