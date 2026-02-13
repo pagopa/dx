@@ -7,8 +7,8 @@ on:
     branches:
       - main
       - CES-1469-aggiungere-esempi-del-modulo-da-usare-per-i-test-e-2-e
-    paths:
-      - "infra/modules/azure_app_configuration/tests/apps/all_scenarios/**"
+    # paths:
+    #   - "infra/modules/azure_app_configuration/tests/apps/all_scenarios/**"
 
 env:
   MODULE_NAME: "azure_app_configuration"
