@@ -26,7 +26,7 @@ CHANGED_TF_FILES=$(git status --porcelain -- '*.tf' \
   | sed -E 's/.* -> //' || echo "")
 
 if [ -z "${CHANGED_TF_FILES}" ]; then
-  echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+  echo "has_changes=false" >> "${GITHUB_OUTPUT}"
   echo "changed_directories=[]" >> "${GITHUB_OUTPUT}"
   echo "No Terraform files generated (but other files changed)"
   exit 0

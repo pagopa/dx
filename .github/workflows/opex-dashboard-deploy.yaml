@@ -200,7 +200,7 @@ jobs:
         run: |
           # Create a safe artifact name from the dashboard path
           # Replace / and . with - to make it a valid artifact name
-          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.:.]/-/g')
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.]/-/g')
           ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
           echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "Generated artifact name: ${ARTIFACT_NAME}"
@@ -265,7 +265,7 @@ jobs:
         run: |
           # Create a safe artifact name from the dashboard path (same logic as in plan job)
           # Replace / and . with - to make it a valid artifact name
-          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.:.]/-/g')
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.]/-/g')
           ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
           echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "Generated artifact name: ${ARTIFACT_NAME}"

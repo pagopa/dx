@@ -48,7 +48,7 @@ if [[ "${BASE_REF}" =~ [^A-Za-z0-9/_^~.-] ]]; then
   echo "::error::BASE_REF may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^), tilde (~), dot (.)"
   exit 1
 fi
-CHANGED_FILES=$(git diff --name-only HEAD "${BASE_REF}" 2>/dev/null || echo "")
+CHANGED_FILES=$(git diff --name-only "${BASE_REF}" HEAD 2>/dev/null || echo "")
 
 echo "Changed files:"
 echo "${CHANGED_FILES}"
@@ -88,7 +88,7 @@ while IFS= read -r config; do
   SHOULD_REGENERATE=false
 
   # Check if config itself was modified
-  if echo "${CHANGED_FILES}" | grep -q "^${config}$"; then
+  if echo "${CHANGED_FILES}" | grep -Fqx "${config}"; then
     echo "Config modified: ${config}"
     SHOULD_REGENERATE=true
   fi
@@ -102,11 +102,17 @@ while IFS= read -r config; do
     fi
 
     if [ -n "${OA3_SPEC}" ]; then
-      # Handle relative paths (relative to workspace root)
-      if [[ "${OA3_SPEC}" != /* ]] && [[ "${OA3_SPEC}" != http* ]]; then
-        OA3_SPEC_FULL=$(normalize_path "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
+      # Skip remote specs
+      if [[ "${OA3_SPEC}" != http* ]]; then
+        if [[ "${OA3_SPEC}" = /* ]]; then
+          # Treat absolute repo paths as workspace-root relative by stripping leading slash
+          OA3_SPEC_FULL="${OA3_SPEC#/}"
+        else
+          # Handle relative paths (relative to workspace root)
+          OA3_SPEC_FULL=$(normalize_path "${OA3_SPEC}" 2>/dev/null | sed "s|^${WORKSPACE_ROOT}/||" || echo "")
+        fi
 
-        if [ -n "${OA3_SPEC_FULL}" ] && echo "${CHANGED_FILES}" | grep -q "^${OA3_SPEC_FULL}$"; then
+        if [ -n "${OA3_SPEC_FULL}" ] && echo "${CHANGED_FILES}" | grep -Fqx "${OA3_SPEC_FULL}"; then
           echo "OpenAPI spec modified: ${OA3_SPEC_FULL} (referenced by ${config})"
           SHOULD_REGENERATE=true
         fi
