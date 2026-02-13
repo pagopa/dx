@@ -115,12 +115,14 @@ jobs:
 
       - name: Collect generated files
         if: steps.generate-action.outputs.has_changes == 'true'
+        env:
+          CHANGED_DIRS_JSON: ${{ steps.generate-action.outputs.changed_directories }}
         run: |
           # Create collection directory
           mkdir -p .terraform-artifacts
 
           # Parse JSON and copy files from each changed directory
-          echo '${{ steps.generate-action.outputs.changed_directories }}' | jq -r '.[].full_path' | while read -r dir; do
+          echo "${CHANGED_DIRS_JSON}" | jq -r '.[].full_path' | while read -r dir; do
             if [ -d "$dir" ]; then
               echo "Collecting files from $dir"
               mkdir -p ".terraform-artifacts/$dir"
@@ -197,11 +199,14 @@ jobs:
 
       - name: Generate artifact name
         id: artifact-name
+        env:
+          DASHBOARD_PATH: ${{ matrix.dashboard.full_path }}
+          GIT_SHA: ${{ github.sha }}
         run: |
           # Create a safe artifact name from the dashboard path
           # Replace / and . with - to make it a valid artifact name
-          SAFE_NAME=$(echo "${{ matrix.dashboard.full_path }}" | sed 's/[\/.:]/-/g')
-          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${{ github.sha }}"
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.:/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
           echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "Generated artifact name: ${ARTIFACT_NAME}"
 
@@ -259,11 +264,14 @@ jobs:
 
       - name: Generate artifact name
         id: artifact-name
+        env:
+          DASHBOARD_PATH: ${{ matrix.dashboard.full_path }}
+          GIT_SHA: ${{ github.sha }}
         run: |
           # Create a safe artifact name from the dashboard path (same logic as in plan job)
           # Replace / and . with - to make it a valid artifact name
-          SAFE_NAME=$(echo "${{ matrix.dashboard.full_path }}" | sed 's/[\/.:]/-/g')
-          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${{ github.sha }}"
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.:/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
           echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
           echo "Generated artifact name: ${ARTIFACT_NAME}"
 
