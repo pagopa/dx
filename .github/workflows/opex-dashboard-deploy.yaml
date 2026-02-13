@@ -46,8 +46,10 @@ jobs:
           fetch-depth: 0
 
       - name: Check if running from fork
+        env:
+          IS_FORK: ${{ github.event.repository.fork }}
         run: |
-          if [ "${{ github.event.repository.fork }}" = "true" ]; then
+          if [ "$IS_FORK" = "true" ]; then
             echo "::error::This workflow cannot be run from a forked repository"
             exit 1
           fi
