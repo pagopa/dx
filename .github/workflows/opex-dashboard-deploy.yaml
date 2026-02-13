@@ -83,6 +83,45 @@ jobs:
             ${{ runner.os }}-npm-opex-
             ${{ runner.os }}-npm-
 
+      - name: Validate inputs
+        id: validate-inputs
+        run: |
+          # Validate base_ref input to prevent code injection
+          if [ -n "${BASE_REF_INPUT}" ]; then
+            if [[ "${BASE_REF_INPUT}" =~ [^A-Za-z0-9/_^~.-] ]]; then
+              echo "::error::Invalid characters in base_ref input: ${BASE_REF_INPUT}"
+              echo "::error::base_ref may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^), tilde (~), dot (.)"
+              exit 1
+            fi
+          fi
+
+          # Validate event_name
+          if [ -n "${EVENT_NAME}" ]; then
+            if [[ "${EVENT_NAME}" =~ [^a-z_] ]]; then
+              echo "::error::Invalid characters in event_name: ${EVENT_NAME}"
+              echo "::error::event_name may only contain: lowercase letters and underscore"
+              exit 1
+            fi
+          fi
+
+          # Validate git references (event.before and pull_request.base.sha)
+          for ref_name in "EVENT_BEFORE" "PR_BASE_SHA"; do
+            ref_value="${!ref_name}"
+            if [ -n "${ref_value}" ] && [ "${ref_value}" != "0000000000000000000000000000000000000000" ]; then
+              if [[ ! "${ref_value}" =~ ^[a-f0-9]{40}$ ]] && [[ ! "${ref_value}" =~ ^[A-Za-z0-9/_^~.-]+$ ]]; then
+                echo "::error::Invalid git reference in ${ref_name}: ${ref_value}"
+                exit 1
+              fi
+            fi
+          done
+
+          echo "Input validation passed"
+        env:
+          BASE_REF_INPUT: ${{ inputs.base_ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
       - name: Set base reference
         id: set-base-ref
         run: |
