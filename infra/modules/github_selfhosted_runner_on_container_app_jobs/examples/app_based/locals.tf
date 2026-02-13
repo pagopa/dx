@@ -19,6 +19,6 @@ locals {
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/github_selfhosted_runner_container_app_job/examples/pat_based"
+    Source         = "https://github.com/pagopa/dx/modules/github_selfhosted_runner_container_app_job/examples/app_based"
   }
 }
