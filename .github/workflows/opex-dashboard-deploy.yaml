@@ -13,11 +13,6 @@ on:
               .opex/**/config.yaml
         type: string
         required: true
-      use_private_agent:
-        description: Use a private agent to run Terraform operations
-        type: boolean
-        required: false
-        default: false
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -56,6 +51,7 @@ jobs:
           fi
 
       - name: Setup Node.js
+        id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Validate inputs
@@ -121,6 +117,7 @@ jobs:
           config_pattern: ${{ inputs.config_pattern }}
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
+          package_manager: ${{ steps.node-setup.outputs.package-manager }}
 
       - name: Collect generated files
         if: steps.generate-action.outputs.has_changes == 'true'
@@ -164,7 +161,7 @@ jobs:
     name: Plan - ${{ matrix.dashboard.full_path }}
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
-    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: "ubuntu-latest"
     environment: opex-${{ matrix.dashboard.environment }}-ci
     permissions:
       id-token: write
@@ -253,7 +250,7 @@ jobs:
     name: Apply - ${{ matrix.dashboard.full_path }}
     needs: [generate, tf_plan]
     if: needs.generate.outputs.has_changes == 'true'
-    runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: "ubuntu-latest"
     environment: opex-${{ matrix.dashboard.environment }}-cd
     permissions:
       id-token: write

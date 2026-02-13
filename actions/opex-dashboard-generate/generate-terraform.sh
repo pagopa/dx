@@ -5,6 +5,7 @@ set -euo pipefail
 # Inputs:
 #   CHANGED_DASHBOARDS - JSON array of dashboard config file paths
 #   OPEX_VERSION - Version of @pagopa/opex-dashboard to use
+#   PACKAGE_MANAGER - Package manager to use (npm, pnpm, yarn)
 
 # Validate OPEX_VERSION format to prevent command injection
 if [[ ! "${OPEX_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$|^latest$ ]]; then
@@ -12,6 +13,21 @@ if [[ ! "${OPEX_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$|^latest$ 
   echo "::error::Expected semantic version (e.g., 1.2.3) or 'latest'"
   exit 1
 fi
+
+# Determine the appropriate command based on package manager
+case "${PACKAGE_MANAGER:-npm}" in
+  pnpm)
+    RUN_CMD="pnpm dlx"
+    ;;
+  yarn)
+    RUN_CMD="yarn dlx"
+    ;;
+  npm|*)
+    RUN_CMD="npx --yes"
+    ;;
+esac
+
+echo "Using package manager: ${PACKAGE_MANAGER:-npm} (command: ${RUN_CMD})"
 
 # Function to generate a single dashboard
 generate_dashboard() {
@@ -22,7 +38,7 @@ generate_dashboard() {
   echo "Generating dashboard from: ${config}"
 
   # Generate Terraform in the same directory as the config
-  if npx --yes "@pagopa/opex-dashboard@${OPEX_VERSION}" generate \
+  if ${RUN_CMD} "@pagopa/opex-dashboard@${OPEX_VERSION}" generate \
     -t azure-dashboard \
     -c "${config}" \
     --package "${CONFIG_DIR}"; then
@@ -35,6 +51,7 @@ generate_dashboard() {
 
 export -f generate_dashboard
 export OPEX_VERSION
+export RUN_CMD
 
 # Generate dashboards in parallel (max 4 concurrent)
 echo "${CHANGED_DASHBOARDS}" | jq -r '.[]' | xargs -P 4 -I {} bash -c 'generate_dashboard "$@"' _ {}
