@@ -14,7 +14,7 @@ on:
         type: string
         required: true
       github_environment:
-        description: GitHub Environment to use for Terraform operations (will use -ci suffix for plan, -cd suffix for apply)
+        description: GitHub Environment to use for Terraform operations (without the -cd / -ci suffix)
         type: string
         required: true
       node_version:
@@ -163,7 +163,8 @@ jobs:
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
     runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.github_environment }}-ci
+    # We use cd environment for both plan and apply as plan needs to lock the state
+    environment: ${{ inputs.github_environment }}-cd
     permissions:
       id-token: write
       contents: read
