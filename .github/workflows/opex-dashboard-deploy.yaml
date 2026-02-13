@@ -34,7 +34,6 @@ jobs:
   generate:
     name: Generate Dashboard Terraform
     runs-on: ubuntu-latest
-    environment: opex-${{ matrix.dashboard.environment }}-ci
     permissions:
       contents: read
     outputs:
