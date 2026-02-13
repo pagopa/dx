@@ -13,10 +13,6 @@ on:
               .opex/**/config.yaml
         type: string
         required: true
-      github_environment:
-        description: GitHub Environment to use for Terraform operations (without the -cd / -ci suffix)
-        type: string
-        required: true
       node_version:
         description: Node.js version to use
         type: string
@@ -202,7 +198,7 @@ jobs:
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
     runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.github_environment }}-ci
+    environment: opex-${{ matrix.dashboard.environment }}-ci
     permissions:
       id-token: write
       contents: read
@@ -283,7 +279,7 @@ jobs:
     needs: [generate, tf_plan]
     if: needs.generate.outputs.has_changes == 'true'
     runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.github_environment }}-cd
+    environment: opex-${{ matrix.dashboard.environment }}-cd
     permissions:
       id-token: write
       contents: read
