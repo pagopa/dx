@@ -199,6 +199,16 @@ jobs:
         working-directory: ${{ matrix.dashboard.full_path }}
         run: terraform init -input=false -backend-config=backend.tfvars
 
+      - name: Generate artifact name
+        id: artifact-name
+        run: |
+          # Create a safe artifact name from the dashboard path
+          # Replace / and . with - to make it a valid artifact name
+          SAFE_NAME=$(echo "${{ matrix.dashboard.full_path }}" | sed 's/[\/.:]/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${{ github.sha }}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Generated artifact name: ${ARTIFACT_NAME}"
+
       - name: Terraform Plan
         id: plan
         working-directory: ${{ matrix.dashboard.full_path }}
@@ -222,12 +232,8 @@ jobs:
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ matrix.dashboard.full_path }}
-          artifact-name: terraform-plan
+          artifact-name: ${{ steps.artifact-name.outputs.name }}
           retention-days: 1
-        #   path: |
-        #     ${{ matrix.dashboard.full_path }}/${{ env.TFPLAN_FILE }}
-        #     ${{ matrix.dashboard.full_path }}/.terraform.lock.hcl
-        #     ${{ matrix.dashboard.full_path }}/.terraform/
 
       - name: Check Terraform Plan Result
         if: always() && steps.plan.outcome != 'success'
@@ -255,6 +261,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
+      - name: Generate artifact name
+        id: artifact-name
+        run: |
+          # Create a safe artifact name from the dashboard path (same logic as in plan job)
+          # Replace / and . with - to make it a valid artifact name
+          SAFE_NAME=$(echo "${{ matrix.dashboard.full_path }}" | sed 's/[\/.:]/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${{ github.sha }}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Generated artifact name: ${ARTIFACT_NAME}"
+
       - name: Download generated Terraform files
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -268,7 +284,7 @@ jobs:
         with:
           plan-file: tfplan-${{ github.sha }}
           working-directory: ${{ matrix.dashboard.full_path }}
-          artifact-name: terraform-plan
+          artifact-name: ${{ steps.artifact-name.outputs.name }}
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
