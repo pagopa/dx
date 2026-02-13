@@ -21,15 +21,20 @@ locals {
     })) : var.resource_group_name
   }
 
+  use_github_app = var.key_vault.app_key_secret_name != null
+
   runner_env_vars = merge(var.container_app_environment.env_vars, {
     REPO_URL                   = "https://github.com/${var.repository.owner}/${var.repository.name}"
     REGISTRATION_TOKEN_API_URL = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
   })
 
-  runner_secrets = merge(var.container_app_environment.secrets, {
-    GITHUB_APP_KEY             = var.key_vault.app_key_secret_name
-    GITHUB_APP_ID              = var.key_vault.app_id_secret_name
-    GITHUB_APP_INSTALLATION_ID = var.key_vault.installation_id_secret_name
+  runner_secrets = merge(var.container_app_environment.secrets,
+    local.use_github_app ? {
+      GITHUB_APP_KEY             = var.key_vault.app_key_secret_name
+      GITHUB_APP_ID              = var.key_vault.app_id_secret_name
+      GITHUB_APP_INSTALLATION_ID = var.key_vault.installation_id_secret_name
+      } : {
+      GITHUB_PAT = var.key_vault.secret_name
   })
 
   labels = join(",", coalescelist(var.container_app_environment.override_labels, [local.env[var.environment.env_short]]))
