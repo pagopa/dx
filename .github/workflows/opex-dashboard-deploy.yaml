@@ -13,11 +13,6 @@ on:
               .opex/**/config.yaml
         type: string
         required: true
-      base_ref:
-        description: Base git reference for change detection (defaults to github.event.before for push, github.event.pull_request.base.sha for PRs)
-        type: string
-        required: false
-        default: ""
       use_private_agent:
         description: Use a private agent to run Terraform operations
         type: boolean
@@ -57,15 +52,6 @@ jobs:
       - name: Validate inputs
         id: validate-inputs
         run: |
-          # Validate base_ref input to prevent code injection
-          if [ -n "${BASE_REF_INPUT}" ]; then
-            if [[ "${BASE_REF_INPUT}" =~ [^A-Za-z0-9/_^~.-] ]]; then
-              echo "::error::Invalid characters in base_ref input: ${BASE_REF_INPUT}"
-              echo "::error::base_ref may only contain: alphanumeric, hyphen (-), underscore (_), forward slash (/), caret (^), tilde (~), dot (.)"
-              exit 1
-            fi
-          fi
-
           # Validate event_name
           if [ -n "${EVENT_NAME}" ]; then
             if [[ "${EVENT_NAME}" =~ [^a-z_] ]]; then
@@ -88,7 +74,6 @@ jobs:
 
           echo "Input validation passed"
         env:
-          BASE_REF_INPUT: ${{ inputs.base_ref }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_BEFORE: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -98,11 +83,8 @@ jobs:
         run: |
           BASE_REF=""
 
-          # Try input parameter first
-          if [ -n "${BASE_REF_INPUT}" ]; then
-            BASE_REF="${BASE_REF_INPUT}"
           # For pull requests, use base SHA
-          elif [ "${EVENT_NAME}" = "pull_request" ]; then
+          if [ "${EVENT_NAME}" = "pull_request" ]; then
             BASE_REF="${PR_BASE_SHA}"
           # For push events, use event.before if valid
           elif [ -n "${EVENT_BEFORE}" ] && [ "${EVENT_BEFORE}" != "0000000000000000000000000000000000000000" ]; then
@@ -118,7 +100,6 @@ jobs:
           echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
           echo "Using base reference: ${BASE_REF}"
         env:
-          BASE_REF_INPUT: ${{ inputs.base_ref }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_BEFORE: ${{ github.event.before }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
