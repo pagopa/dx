@@ -304,10 +304,15 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
       - name: Terraform Setup
+        id: set-terraform-version
         uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
-          terraform_version: ${{ inputs.terraform_version }}
+          terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
       - name: Terraform Init
         working-directory: ${{ matrix.dashboard.full_path }}
