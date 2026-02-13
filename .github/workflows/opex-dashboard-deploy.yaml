@@ -2,17 +2,6 @@ name: OpEx Dashboard Deploy
 
 on:
   workflow_call:
-    inputs:
-      config_pattern:
-        description: |
-          Glob pattern(s) to find dashboard config files. Supports multiple patterns (one per line).
-          Examples:
-            Single: 'infra/dashboards/**/config.yaml'
-            Multiple: |
-              infra/dashboards/**/config.yaml
-              .opex/**/config.yaml
-        type: string
-        required: true
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -114,7 +103,7 @@ jobs:
         id: generate-action
         uses: pagopa/dx/actions/opex-dashboard-generate@chores/opex-workflow
         with:
-          config_pattern: ${{ inputs.config_pattern }}
+          config_pattern: ".opex/**/config.yaml"
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
           package_manager: ${{ steps.node-setup.outputs.package-manager }}
