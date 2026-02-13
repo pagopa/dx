@@ -45,6 +45,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check if running from fork
+        run: |
+          if [ "${{ github.event.repository.fork }}" = "true" ]; then
+            echo "::error::This workflow cannot be run from a forked repository"
+            exit 1
+          fi
+
       - name: Node Setup
         id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
