@@ -25,6 +25,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  OPEX_DASHBOARD_VERSION: "0.2.0"
 
 concurrency:
   group: ${{ github.workflow }}-opex-dashboards
@@ -63,7 +64,7 @@ jobs:
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-npm-opex-latest
+          key: ${{ runner.os }}-npm-opex-${{ env.OPEX_DASHBOARD_VERSION }}
           restore-keys: |
             ${{ runner.os }}-npm-opex-
             ${{ runner.os }}-npm-
@@ -129,7 +130,7 @@ jobs:
         uses: pagopa/dx/actions/opex-dashboard-generate@chores/opex-workflow
         with:
           config_pattern: ${{ inputs.config_pattern }}
-          opex_dashboard_version: "latest"
+          opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
 
       - name: Collect generated files
