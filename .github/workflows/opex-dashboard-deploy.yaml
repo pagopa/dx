@@ -54,9 +54,19 @@ jobs:
             exit 1
           fi
 
-      - name: Node Setup
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 22
+
+      - name: Cache npm packages
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-opex-latest
+          restore-keys: |
+            ${{ runner.os }}-npm-opex-
+            ${{ runner.os }}-npm-
 
       - name: Validate inputs
         id: validate-inputs
