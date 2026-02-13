@@ -51,11 +51,26 @@ variable "container_app_environment" {
 
 variable "key_vault" {
   type = object({
-    name                = string
-    resource_group_name = string
-    use_rbac            = optional(bool, false)
-    secret_name         = optional(string, "github-runner-pat")
+    name                        = string
+    resource_group_name         = string
+    use_rbac                    = optional(bool, false)
+    secret_name                 = optional(string, "github-runner-pat")
+    app_key_secret_name         = optional(string, null)
+    app_id_secret_name          = optional(string, null)
+    installation_id_secret_name = optional(string, null)
   })
 
-  description = "Details of the Key Vault used to store secrets for the Container App Job."
+  description = <<-EOT
+   "Details of the Key Vault used to store GitHub credentials. Use either:
+     - 'app_key_secret_name', 'app_id_secret_name', and 'installation_id_secret_name' for GitHub App authentication"
+     - (Legacy) 'secret_name' for PAT-based authentication
+  EOT
+
+  validation {
+    condition = (
+      (var.key_vault.secret_name != null && var.key_vault.app_key_secret_name == null && var.key_vault.app_id_secret_name == null && var.key_vault.installation_id_secret_name == null) ||
+      (var.key_vault.secret_name == null && var.key_vault.app_key_secret_name != null && var.key_vault.app_id_secret_name != null && var.key_vault.installation_id_secret_name != null)
+    )
+    error_message = "Either provide 'secret_name' for PAT-based authentication OR all three GitHub App credentials ('app_key_secret_name', 'app_id_secret_name', 'installation_id_secret_name'), but not both."
+  }
 }
