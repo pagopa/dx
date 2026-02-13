@@ -648,8 +648,8 @@ run "function_app_without_entra_id_authentication" {
   }
 
   assert {
-    condition     = output.entra_id_authentication.entra_application_client_id == null
-    error_message = "entra_id_authentication output should have null entra_application_client_id when disabled"
+    condition     = output.entra_id_authentication.audience_client_id == null
+    error_message = "entra_id_authentication output should have null audience_client_id when disabled"
   }
 }
 
@@ -660,9 +660,9 @@ run "function_app_with_entra_id_authentication" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
-      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
-      tenant_id                   = "00000000-0000-0000-0000-000000000003"
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -729,7 +729,7 @@ run "function_app_with_entra_id_authentication" {
   }
 
   assert {
-    condition     = output.entra_id_authentication.entra_application_client_id == "00000000-0000-0000-0000-000000000001"
+    condition     = output.entra_id_authentication.audience_client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "entra_id_authentication output should expose the Entra application client ID"
   }
 }
@@ -741,9 +741,9 @@ run "function_app_entra_id_authentication_empty_client_id" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = ""
-      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
-      tenant_id                   = "00000000-0000-0000-0000-000000000003"
+      audience_client_id         = ""
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -759,9 +759,9 @@ run "function_app_entra_id_authentication_empty_allowed_applications" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
-      allowed_client_applications = []
-      tenant_id                   = "00000000-0000-0000-0000-000000000003"
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = []
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
     }
   }
 
@@ -777,9 +777,9 @@ run "function_app_entra_id_authentication_invalid_tenant_id" {
     use_case = "default"
 
     entra_id_authentication = {
-      entra_application_client_id = "00000000-0000-0000-0000-000000000001"
-      allowed_client_applications = ["00000000-0000-0000-0000-000000000002"]
-      tenant_id                   = "not-a-valid-uuid"
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "not-a-valid-uuid"
     }
   }
 

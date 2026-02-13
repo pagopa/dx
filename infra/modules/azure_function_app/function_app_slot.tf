@@ -80,8 +80,8 @@ resource "azurerm_linux_function_app_slot" "this" {
       unauthenticated_action = "Return401"
 
       active_directory_v2 {
-        allowed_applications = auth_settings_v2.value.allowed_client_applications
-        client_id            = auth_settings_v2.value.entra_application_client_id
+        allowed_applications = auth_settings_v2.value.allowed_callers_client_ids
+        client_id            = auth_settings_v2.value.audience_client_id
         tenant_auth_endpoint = "https://login.microsoftonline.com/${auth_settings_v2.value.tenant_id}/v2.0"
       }
 

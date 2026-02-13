@@ -236,9 +236,9 @@ variable "tls_version" {
 
 variable "entra_id_authentication" {
   type = object({
-    entra_application_client_id = string
-    allowed_client_applications = list(string)
-    tenant_id                   = string
+    audience_client_id         = string
+    allowed_callers_client_ids = list(string)
+    tenant_id                  = string
   })
   default     = null
   description = <<-EOT
@@ -258,20 +258,21 @@ variable "entra_id_authentication" {
         to obtain a token for the Entra application before calling the Function App.
 
     Fields:
-      - entra_application_client_id: Application (client) ID of the Entra app registration.
-      - allowed_client_applications: List of Application IDs of clients allowed to authenticate
-        (e.g. the APIM service principal Application ID).
+      - audience_client_id: Application (client) ID of the Entra app registration that
+        represents the Function App. This becomes the "aud" (audience) claim in the JWT.
+      - allowed_callers_client_ids: List of Application IDs of clients allowed to call
+        the Function App (e.g. the APIM service principal Application ID).
       - tenant_id: Azure AD tenant ID used to build the token endpoint.
   EOT
 
   validation {
-    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.entra_application_client_id) > 0
-    error_message = "entra_application_client_id must not be empty when entra_id_authentication is set."
+    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.audience_client_id) > 0
+    error_message = "audience_client_id must not be empty when entra_id_authentication is set."
   }
 
   validation {
-    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.allowed_client_applications) > 0
-    error_message = "allowed_client_applications must contain at least one application ID when entra_id_authentication is set."
+    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.allowed_callers_client_ids) > 0
+    error_message = "allowed_callers_client_ids must contain at least one application ID when entra_id_authentication is set."
   }
 
   validation {

@@ -56,7 +56,7 @@ output "diagnostic_settings" {
 output "entra_id_authentication" {
   description = "Indicates whether Entra ID authentication (via caller Managed Identity) is enabled and the Entra application client ID used. Useful for downstream APIM policy configuration (e.g. <authentication-managed-identity resource=\"client_id\"/>)."
   value = {
-    enabled                     = var.entra_id_authentication != null
-    entra_application_client_id = try(var.entra_id_authentication.entra_application_client_id, null)
+    enabled            = var.entra_id_authentication != null
+    audience_client_id = try(var.entra_id_authentication.audience_client_id, null)
   }
 }

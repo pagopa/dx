@@ -31,8 +31,8 @@ module "function_app" {
   # ... other parameters ...
 
   entra_id_authentication = {
-    entra_application_client_id = data.azuread_application.my_app.client_id
-    allowed_client_applications = [data.azuread_service_principal.apim.client_id]
+    audience_client_id = data.azuread_application.my_app.client_id
+    allowed_callers_client_ids = [data.azuread_service_principal.apim.client_id]
     tenant_id                   = data.azurerm_subscription.current.tenant_id
   }
 }
