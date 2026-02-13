@@ -13,11 +13,6 @@ on:
               .opex/**/config.yaml
         type: string
         required: true
-      node_version:
-        description: Node.js version to use
-        type: string
-        required: false
-        default: "22"
       base_ref:
         description: Base git reference for change detection (defaults to github.event.before for push, github.event.pull_request.base.sha for PRs)
         type: string
