@@ -60,7 +60,11 @@ variable "key_vault" {
     installation_id_secret_name = optional(string, null)
   })
 
-  description = "Details of the Key Vault used to store GitHub credentials. Use 'secret_name' for PAT-based authentication (legacy) or 'app_key_secret_name', 'app_id_secret_name', and 'installation_id_secret_name' for GitHub App authentication (recommended)."
+  description = <<-EOT
+   "Details of the Key Vault used to store GitHub credentials. Use either:
+     - 'app_key_secret_name', 'app_id_secret_name', and 'installation_id_secret_name' for GitHub App authentication"
+     - (Legacy) 'secret_name' for PAT-based authentication
+  EOT
 
   validation {
     condition = (
