@@ -69,9 +69,9 @@ module "azure_function_app_with_managed_identity" {
   health_check_path = "/health"
 
   entra_id_authentication = {
-    entra_application_client_id = azurerm_user_assigned_identity.example.client_id
-    allowed_client_applications = [azurerm_user_assigned_identity.example.client_id]
-    tenant_id                   = azurerm_user_assigned_identity.example.tenant_id
+    audience_client_id         = azurerm_user_assigned_identity.example.client_id
+    allowed_callers_client_ids = [azurerm_user_assigned_identity.example.client_id]
+    tenant_id                  = azurerm_user_assigned_identity.example.tenant_id
   }
 
   tags = local.tags
