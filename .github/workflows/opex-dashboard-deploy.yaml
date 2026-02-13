@@ -163,8 +163,7 @@ jobs:
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
     runs-on: ${{ inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    # We use cd environment for both plan and apply as plan needs to lock the state
-    environment: ${{ inputs.github_environment }}-cd
+    environment: ${{ inputs.github_environment }}-ci
     permissions:
       id-token: write
       contents: read
@@ -203,10 +202,11 @@ jobs:
       - name: Terraform Plan
         id: plan
         working-directory: ${{ matrix.dashboard.full_path }}
+        # We use lock=false since the -ci environment cannot write to the state backend
         run: |
           set -o pipefail
           terraform plan \
-            -lock-timeout=120s \
+            -lock=false \
             -out="$TFPLAN_FILE" \
             -input=false \
             | tee plan_output.txt
