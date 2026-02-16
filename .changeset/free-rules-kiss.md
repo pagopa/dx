@@ -2,4 +2,4 @@
 "azure_app_configuration": patch
 ---
 
-Allow the module usage with unexisting resources with undeterministic names
+Allow the module usage with nonexistent resources with non-deterministic names
