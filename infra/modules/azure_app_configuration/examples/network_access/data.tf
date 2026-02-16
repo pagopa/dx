@@ -1,3 +1,5 @@
+data "azurerm_subscription" "current" {}
+
 data "azurerm_log_analytics_workspace" "e2e" {
   name                = local.e2e_log_analytics_workspace.name
   resource_group_name = local.e2e_virtual_network.resource_group_name
