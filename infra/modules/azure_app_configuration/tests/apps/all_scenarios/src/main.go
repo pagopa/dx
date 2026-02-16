@@ -87,6 +87,7 @@ func loadAzureAppConfiguration(ctx context.Context, hostname string, enableSecre
 	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		log.Printf("Failed to create credential: %v", err)
+		return nil, err
 	}
 
 	authOptions := azureappconfiguration.AuthenticationOptions{
