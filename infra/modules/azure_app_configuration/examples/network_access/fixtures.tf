@@ -103,58 +103,6 @@ resource "azurerm_container_group" "private_app" {
   tags = local.tags
 }
 
-#trivy:ignore:AVD-AZU-0016
-resource "azurerm_key_vault" "kv" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.appcs_instance.result }))
-  location                      = azurerm_resource_group.e2e_appcs.location
-  resource_group_name           = azurerm_resource_group.e2e_appcs.name
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  rbac_authorization_enabled    = true
-  sku_name                      = "standard"
-  purge_protection_enabled      = false
-  public_network_access_enabled = false
-
-  network_acls {
-    bypass         = "AzureServices"
-    default_action = "Deny"
-  }
-
-  tags = local.tags
-}
-
-#trivy:ignore:AVD-AZU-0015
-#trivy:ignore:AVD-AZU-0017
-resource "azurerm_key_vault_secret" "test_secret" {
-  name         = "secret-key"
-  key_vault_id = azurerm_key_vault.kv.id
-  value        = "secret-value"
-
-  depends_on = [
-    module.integration_github_roles
-  ]
-}
-
-resource "azurerm_private_endpoint" "kv" {
-  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.appcs_instance.result }))
-  location            = azurerm_resource_group.e2e_appcs.location
-  resource_group_name = azurerm_resource_group.e2e_appcs.name
-  subnet_id           = data.azurerm_subnet.pep.id
-
-  private_service_connection {
-    name                           = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.appcs_instance.result }))
-    private_connection_resource_id = azurerm_key_vault.kv.id
-    is_manual_connection           = false
-    subresource_names              = ["vault"]
-  }
-
-  private_dns_zone_group {
-    name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.kv.id]
-  }
-
-  tags = local.tags
-}
-
 module "role_appcs_private" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 1.0"
@@ -170,12 +118,6 @@ module "role_appcs_private" {
       role                = "reader"
     }
   ]
-
-  # key_vault = {
-  #   name                = module.private_keyvault.key_vault_name
-  #   resource_group_name = module.private_keyvault.resource_group_name
-  #   has_rbac_enabled    = true
-  # }
 }
 
 module "role_appcs_public" {
@@ -208,17 +150,6 @@ module "integration_github_roles" {
       resource_group_name = module.private_appcs.resource_group_name
       description         = "Allow GitHub to write settings on App Configuration"
       role                = "writer"
-    }
-  ]
-
-  key_vault = [
-    {
-      name                = azurerm_key_vault.kv.name
-      resource_group_name = azurerm_key_vault.kv.resource_group_name
-      description         = "Allow GitHub to write secrets on Key Vault"
-      roles = {
-        secrets = "writer"
-      }
     }
   ]
 }

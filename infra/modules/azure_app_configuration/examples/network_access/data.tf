@@ -16,6 +16,7 @@ data "azurerm_user_assigned_identity" "integration_github" {
   name                = "dx-d-itn-devex-integration-id-01"
   resource_group_name = "dx-d-itn-devex-rg-01"
 }
+
 data "azurerm_virtual_network" "e2e" {
   name                = local.e2e_virtual_network.name
   resource_group_name = local.e2e_virtual_network.resource_group_name

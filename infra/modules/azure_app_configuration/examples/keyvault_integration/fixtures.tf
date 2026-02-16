@@ -1,5 +1,10 @@
+resource "random_integer" "instance_number" {
+  min = 1
+  max = 99
+}
+
 resource "azurerm_resource_group" "e2e_appcs" {
-  name = provider::pagopa-dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = "e2e"
     name          = "appcs",
     resource_type = "resource_group"
@@ -10,15 +15,16 @@ resource "azurerm_resource_group" "e2e_appcs" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", domain = "e2e", instance_number = random_integer.appcs_instance.result }))
+  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.instance_number.result }))
   location                      = azurerm_resource_group.e2e_appcs.location
   resource_group_name           = azurerm_resource_group.e2e_appcs.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
   rbac_authorization_enabled    = true
-  purge_protection_enabled      = true
+  purge_protection_enabled      = false
   soft_delete_retention_days    = 7
   public_network_access_enabled = false
+
   network_acls {
     bypass         = "AzureServices"
     default_action = "Deny"
@@ -26,14 +32,26 @@ resource "azurerm_key_vault" "kv" {
   tags = local.tags
 }
 
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0017
+resource "azurerm_key_vault_secret" "test_secret" {
+  name         = "secret-key"
+  key_vault_id = azurerm_key_vault.kv.id
+  value        = "secret value"
+
+  depends_on = [
+    azurerm_role_assignment.github_kv_secrets_writer
+  ]
+}
+
 resource "azurerm_private_endpoint" "kv" {
-  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", domain = "e2e", instance_number = random_integer.appcs_instance.result }))
+  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
   location            = azurerm_resource_group.e2e_appcs.location
   resource_group_name = azurerm_resource_group.e2e_appcs.name
   subnet_id           = data.azurerm_subnet.pep.id
 
   private_service_connection {
-    name                           = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", domain = "e2e", instance_number = random_integer.appcs_instance.result }))
+    name                           = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
     private_connection_resource_id = azurerm_key_vault.kv.id
     is_manual_connection           = false
     subresource_names              = ["vault"]
@@ -108,4 +126,20 @@ resource "azurerm_container_group" "private_app" {
   }
 
   tags = local.tags
+}
+
+resource "azurerm_role_assignment" "github_kv_secrets_writer" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+
+  depends_on = [azurerm_key_vault.kv]
+}
+
+resource "azurerm_role_assignment" "github_appconfig_writer" {
+  scope                = module.appcs_with_kv.id
+  role_definition_name = "App Configuration Data Owner"
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+
+  depends_on = [module.appcs_with_kv]
 }
