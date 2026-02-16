@@ -4,7 +4,7 @@ This directory contains examples of how to use the GitHub SelfHosted Runner on A
 
 ## Basic Example
 
-The [basic example](./basic) demonstrates a simple implementation of the GitHub SelfHosted Runner on Azure Container App Job module.
+The [app-based example](./app-based) demonstrates a simple implementation of the GitHub SelfHosted Runner on Azure Container App Job module using GitHub App for authentication.
 
 ### Usage
 
