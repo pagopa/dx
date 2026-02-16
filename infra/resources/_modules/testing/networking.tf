@@ -129,7 +129,7 @@ module "cdn_origin_storage_account" {
 
   resource_group_name = data.azurerm_resource_group.tests["integration"].name
   use_case            = "default"
-  subnet_pep_id       = azurerm_subnet.pep_snets[0].id
+  subnet_pep_id       = azurerm_subnet.pep_snets["integration"].id
 
   force_public_network_access_enabled = true
 
