@@ -3,7 +3,7 @@ locals {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    instance_number = "01"
+    instance_number = "03"
   }
 
   repo_name = "dx"
