@@ -15,3 +15,7 @@ AVD-GIT-0004
 # The minimum TLS version for Storage Accounts should be TLS1_2
 
 AVD-AZU-0011
+
+# Add HEALTHCHECK instruction in your Dockerfile
+
+AVD-DS-0026
