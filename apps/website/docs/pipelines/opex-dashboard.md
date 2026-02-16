@@ -9,6 +9,13 @@ files and their referenced OpenAPI specifications, generating Azure Dashboard
 Terraform code, and deploying it to your infrastructure using parallel matrix
 strategy.
 
+## Prerequisites
+
+- Does not work with Yarn 1 (classic). Upgrade to [pnpm](https://pnpm.io/)
+  instead.
+- Requires `opex-prod-cd` and `opex-prod-ci` GitHub environments to authenticate
+  to CSP
+
 ## Features
 
 - 🔄 **Automatic Generation**: Uses `@pagopa/opex-dashboard` npm package to
