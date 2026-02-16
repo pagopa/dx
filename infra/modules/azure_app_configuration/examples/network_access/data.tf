@@ -1,15 +1,6 @@
-data "azurerm_client_config" "current" {}
-
-data "azurerm_subscription" "current" {}
-
 data "azurerm_log_analytics_workspace" "e2e" {
   name                = local.e2e_log_analytics_workspace.name
   resource_group_name = local.e2e_virtual_network.resource_group_name
-}
-
-data "azurerm_private_dns_zone" "kv" {
-  name                = "privatelink.vaultcore.azure.net"
-  resource_group_name = data.azurerm_resource_group.network.name
 }
 
 data "azurerm_user_assigned_identity" "integration_github" {

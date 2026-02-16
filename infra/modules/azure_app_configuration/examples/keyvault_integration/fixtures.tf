@@ -14,6 +14,7 @@ resource "azurerm_resource_group" "e2e_appcs" {
   tags = local.tags
 }
 
+#trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.instance_number.result }))
   location                      = azurerm_resource_group.e2e_appcs.location

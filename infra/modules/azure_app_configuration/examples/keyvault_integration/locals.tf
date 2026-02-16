@@ -44,7 +44,4 @@ locals {
   }
 
   docker_image = "ghcr.io/pagopa/e2e-appconfiguration-all-scenarios:latest"
-
-  # App Configuration can use random number since we use direct role assignments with static keys
-  kv_instance_number = 80
 }
