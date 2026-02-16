@@ -51,26 +51,26 @@ variable "container_app_environment" {
 
 variable "key_vault" {
   type = object({
-    name                        = string
-    resource_group_name         = string
-    use_rbac                    = optional(bool, false)
-    secret_name                 = optional(string, "github-runner-pat")
-    app_key_secret_name         = optional(string, null)
-    app_id_secret_name          = optional(string, null)
-    installation_id_secret_name = optional(string, null)
+    name                = string
+    resource_group_name = string
+    use_rbac            = optional(bool, false)
+    secret_name         = optional(string, "github-runner-pat")
   })
 
   description = <<-EOT
-   "Details of the Key Vault used to store GitHub credentials. Use either:
-     - 'app_key_secret_name', 'app_id_secret_name', and 'installation_id_secret_name' for GitHub App authentication"
-     - (Legacy) 'secret_name' for PAT-based authentication
+    Details of the Key Vault used to store GitHub credentials.
+    The field 'secret_name' is used only when 'use_github_app' is set to false.
   EOT
+}
 
-  validation {
-    condition = (
-      (var.key_vault.secret_name != null && var.key_vault.app_key_secret_name == null && var.key_vault.app_id_secret_name == null && var.key_vault.installation_id_secret_name == null) ||
-      (var.key_vault.secret_name == null && var.key_vault.app_key_secret_name != null && var.key_vault.app_id_secret_name != null && var.key_vault.installation_id_secret_name != null)
-    )
-    error_message = "Either provide 'secret_name' for PAT-based authentication OR all three GitHub App credentials ('app_key_secret_name', 'app_id_secret_name', 'installation_id_secret_name'), but not both."
-  }
+variable "use_github_app" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Set true to use GitHub App authentication instead of a Personal Access Token.
+    If true, the module expects the Key Vault to contain the following secrets:
+      - github-runner-app-installation-id: GitHub App Installation ID
+      - github-runner-app-id: GitHub App ID
+      - github-runner-app-key: GitHub App private key in PEM format
+  EOT
 }
