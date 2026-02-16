@@ -241,42 +241,30 @@ variable "entra_id_authentication" {
     tenant_id                  = string
   })
   default     = null
-  description = <<-EOT
-    Enables Entra ID (Azure AD) authentication on the Function App, allowing callers
-    (e.g. APIM) to authenticate via their Managed Identity instead of using function keys.
-
-    When set, the module configures auth_settings_v2 with an Active Directory v2 identity
-    provider. Callers must present a valid JWT obtained from the specified Entra application;
-    unauthenticated requests receive HTTP 401.
-
-    When null (default), no authentication layer is added and the Function App uses classic
-    key-based auth (x-functions-key header).
-
-    Prerequisites:
-      - An Entra ID application must already exist.
-      - Callers (e.g. APIM) must use <authentication-managed-identity> in their policy
-        to obtain a token for the Entra application before calling the Function App.
-
-    Fields:
-      - audience_client_id: Application (client) ID of the Entra app registration that
-        represents the Function App. This becomes the "aud" (audience) claim in the JWT.
-      - allowed_callers_client_ids: List of Application IDs of clients allowed to call
-        the Function App (e.g. the APIM service principal Application ID).
-      - tenant_id: Azure AD tenant ID used to build the token endpoint.
-  EOT
+  description = "Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples."
 
   validation {
-    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.audience_client_id) > 0
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.audience_client_id) > 0
     error_message = "audience_client_id must not be empty when entra_id_authentication is set."
   }
 
   validation {
-    condition     = var.entra_id_authentication == null || length(var.entra_id_authentication.allowed_callers_client_ids) > 0
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.audience_client_id))
+    error_message = "audience_client_id must be a valid UUID when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.allowed_callers_client_ids) > 0
     error_message = "allowed_callers_client_ids must contain at least one application ID when entra_id_authentication is set."
   }
 
   validation {
-    condition     = var.entra_id_authentication == null || can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.tenant_id))
+    condition     = var.entra_id_authentication == null ? true : alltrue([for id in var.entra_id_authentication.allowed_callers_client_ids : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", id))])
+    error_message = "All allowed_callers_client_ids must be valid UUIDs when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.tenant_id))
     error_message = "tenant_id must be a valid UUID when entra_id_authentication is set."
   }
 }
