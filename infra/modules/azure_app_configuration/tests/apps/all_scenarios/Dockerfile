@@ -1,5 +1,5 @@
 # Dockerfile
-FROM public.ecr.aws/docker/library/golang:tip-alpine3.22 AS build
+FROM public.ecr.aws/docker/library/golang:1.23-alpine3.22 AS build
 
 WORKDIR /src
 COPY go.mod .
