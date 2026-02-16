@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.3.0
+
+### Minor Changes
+
+- 92e5cc3: Switch to GitHub App-based authentication replacing PAT-based. This approach is generally more secure and scalable.
+
 ## 1.2.1
 
 ### Patch Changes
