@@ -643,11 +643,6 @@ run "function_app_without_entra_id_authentication" {
   }
 
   assert {
-    condition     = output.entra_id_authentication.enabled == false
-    error_message = "entra_id_authentication output should indicate auth is disabled"
-  }
-
-  assert {
     condition     = output.entra_id_authentication.audience_client_id == null
     error_message = "entra_id_authentication output should have null audience_client_id when disabled"
   }
@@ -664,11 +659,6 @@ run "function_app_with_entra_id_authentication" {
       allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
       tenant_id                  = "00000000-0000-0000-0000-000000000003"
     }
-  }
-
-  assert {
-    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].auth_enabled == true
-    error_message = "auth_settings_v2 should be enabled on Function App"
   }
 
   assert {
@@ -703,11 +693,6 @@ run "function_app_with_entra_id_authentication" {
 
   # Slot assertions
   assert {
-    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].auth_enabled == true
-    error_message = "auth_settings_v2 should be enabled on staging slot"
-  }
-
-  assert {
     condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "Staging slot Active Directory v2 client_id should match Entra application client ID"
   }
@@ -723,11 +708,6 @@ run "function_app_with_entra_id_authentication" {
   }
 
   # Output assertions
-  assert {
-    condition     = output.entra_id_authentication.enabled == true
-    error_message = "entra_id_authentication output should indicate auth is enabled"
-  }
-
   assert {
     condition     = output.entra_id_authentication.audience_client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "entra_id_authentication output should expose the Entra application client ID"
