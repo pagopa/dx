@@ -139,16 +139,19 @@ run "key_vault_integration" {
     ]
   }
 
-  override_data {
-    target = module.app_roles["11111111-1111-1111-1111-111111111111"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
+  assert {
+    condition     = length(azurerm_role_assignment.app_kv_secrets_user) == 1
+    error_message = "One Key Vault role assignment must be created for the principal"
   }
 
   assert {
-    condition     = length(module.app_roles) == 1
-    error_message = "One app_roles module instance must be created for the principal"
+    condition     = length(azurerm_role_assignment.app_appconfig_reader) == 1
+    error_message = "One App Configuration role assignment must be created for the principal"
+  }
+
+  assert {
+    condition     = length(local.app_principal_assignments) == 1
+    error_message = "One principal assignment must be identified"
   }
 }
 
@@ -171,28 +174,19 @@ run "key_vault_multiple_principals" {
     ]
   }
 
-  override_data {
-    target = module.app_roles["11111111-1111-1111-1111-111111111111"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
-  }
-
-  override_data {
-    target = module.app_roles["22222222-2222-2222-2222-222222222222"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
+  assert {
+    condition     = length(azurerm_role_assignment.app_kv_secrets_user) == 3
+    error_message = "Three Key Vault role assignments must be created (2 principals from KV1 + 1 principal from KV2)"
   }
 
   assert {
-    condition     = length(module.app_roles) == 2
-    error_message = "Two app_roles module instances must be created (one per distinct principal)"
+    condition     = length(azurerm_role_assignment.app_appconfig_reader) == 3
+    error_message = "Three App Configuration role assignments must be created (2 principals from KV1 + 1 principal from KV2)"
   }
 
   assert {
-    condition     = length(local.app_assignments) == 2
-    error_message = "Two distinct principals must be identified"
+    condition     = length(local.app_principal_assignments) == 3
+    error_message = "Three principal assignments must be identified (2 from KV1 + 1 from KV2)"
   }
 }
 
