@@ -82,10 +82,6 @@ interface SpanMarker {
   end?: Date;
   start?: Date;
 }
-interface SpanMarker {
-  end?: Date;
-  start?: Date;
-}
 
 type SpanStartLine = z.infer<typeof spanStartLineSchema>;
 
@@ -240,10 +236,25 @@ async function post(): Promise<void> {
 
   span.end();
 
-  // Ensure all telemetry is flushed before process exit
-  // Allow sufficient time for async exporter flush
-  const EXPORTER_FLUSH_DELAY_MS = 2000;
-  await new Promise((r) => setTimeout(r, EXPORTER_FLUSH_DELAY_MS));
+  // Flush all telemetry to Application Insights before process exit
+  const FLUSH_TIMEOUT_MS = 10_000;
+  try {
+    const tracerProvider = trace.getTracerProvider() as {
+      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
+    };
+    const loggerProvider = logs.getLoggerProvider() as {
+      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
+    };
+    await Promise.all([
+      tracerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
+      loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
+    ]);
+  } catch (flushErr) {
+    console.warn(
+      "Telemetry flush error (some data may be lost):",
+      flushErr instanceof Error ? flushErr.message : String(flushErr),
+    );
+  }
 
   console.log("Telemetry flushed");
 }

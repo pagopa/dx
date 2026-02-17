@@ -49,15 +49,19 @@ runs:
         if [ -n "$INPUT_NAME" ] && [ -n "$INPUT_SPAN_PHASE" ]; then
           # Validate phase
           if [ "$INPUT_SPAN_PHASE" = "start" ]; then
-            echo "{\"span\":\"$INPUT_NAME\",\"startSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
+            jq -cn --arg span "$INPUT_NAME" --arg startSpan "$NOW_ISO" \
+              '{span: $span, startSpan: $startSpan}' >> "$OTEL_EVENT_FILE"
           elif [ "$INPUT_SPAN_PHASE" = "end" ]; then
-            echo "{\"span\":\"$INPUT_NAME\",\"endSpan\":\"$NOW_ISO\"}" >> "$OTEL_EVENT_FILE"
+            jq -cn --arg span "$INPUT_NAME" --arg endSpan "$NOW_ISO" \
+              '{span: $span, endSpan: $endSpan}' >> "$OTEL_EVENT_FILE"
           else
             echo "Unknown span_phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
-            echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+            jq -cn --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exc "$EXC" \
+              '{name: $name, body: $body, exception: $exc}' >> "$OTEL_EVENT_FILE"
           fi
         else
-          echo "{\"name\":\"$INPUT_NAME\",\"body\":\"$INPUT_BODY\",\"exception\":$EXC}" >> "$OTEL_EVENT_FILE"
+          jq -cn --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exc "$EXC" \
+            '{name: $name, body: $body, exception: $exc}' >> "$OTEL_EVENT_FILE"
         fi
 
         cat "$OTEL_EVENT_FILE"
