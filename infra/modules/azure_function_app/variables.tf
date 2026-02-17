@@ -234,6 +234,41 @@ variable "tls_version" {
   description = "Minimum TLS version for the App Service."
 }
 
+variable "entra_id_authentication" {
+  type = object({
+    audience_client_id         = string
+    allowed_callers_client_ids = list(string)
+    tenant_id                  = string
+  })
+  default     = null
+  description = "Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples."
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.audience_client_id) > 0
+    error_message = "audience_client_id must not be empty when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.audience_client_id))
+    error_message = "audience_client_id must be a valid UUID when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.allowed_callers_client_ids) > 0
+    error_message = "allowed_callers_client_ids must contain at least one application ID when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : alltrue([for id in var.entra_id_authentication.allowed_callers_client_ids : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", id))])
+    error_message = "All allowed_callers_client_ids must be valid UUIDs when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.tenant_id))
+    error_message = "tenant_id must be a valid UUID when entra_id_authentication is set."
+  }
+}
+
 variable "diagnostic_settings" {
   type = object({
     enabled                                   = bool
