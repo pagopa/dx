@@ -39,9 +39,21 @@ jobs:
             exit 1
           fi
 
+      # The standard DX Node.js setup action cannot be used here
+      # because it only runs on JavaScript projects with a configured package manager
       - name: Setup Node.js
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 22
+
+      - name: Cache npm packages
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-opex-${{ env.OPEX_DASHBOARD_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-npm-opex-
+            ${{ runner.os }}-npm-
 
       - name: Validate inputs
         id: validate-inputs
@@ -106,7 +118,7 @@ jobs:
           config_pattern: ".opex/**/config.yaml"
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
           base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
-          package_manager: ${{ steps.node-setup.outputs.package-manager }}
+          package_manager: "npm"
 
       - name: Collect generated files
         if: steps.generate-action.outputs.has_changes == 'true'

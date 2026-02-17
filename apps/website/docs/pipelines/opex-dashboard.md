@@ -11,10 +11,10 @@ strategy.
 
 ## Prerequisites
 
-- Does not work with Yarn 1 (classic). Upgrade to [pnpm](https://pnpm.io/)
-  instead.
-- Requires `opex-prod-cd` and `opex-prod-ci` GitHub environments to authenticate
-  to CSP
+- GitHub environments `opex-prod-cd` and `opex-prod-ci` configured with secrets
+  for cloud service provider authentication
+- Dashboard configuration files located in `.opex/**/config.yaml` paths in the
+  repository, referencing OpenAPI specs
 
 ## Features
 
