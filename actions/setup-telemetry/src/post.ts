@@ -1,71 +1,228 @@
-import { readFileSync, existsSync } from "fs";
+/**
+ * Setup Telemetry Action - Post-Execution Handler
+ *
+ * Processes and exports telemetry data collected during the workflow run.
+ * Reads NDJSON event lines, reconstructs child spans from markers, emits custom
+ * events and exceptions, then flushes all telemetry to Azure Application Insights.
+ */
+
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import {
-  trace,
   context as otelContext,
   SpanKind,
   SpanStatusCode,
+  trace,
 } from "@opentelemetry/api";
+import { logs } from "@opentelemetry/api-logs";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { existsSync, readFileSync } from "node:fs";
+import { z } from "zod";
+
+// Debug logging helper
+const DEBUG = process.env.DEBUG === "true";
+function debug(...args: unknown[]): void {
+  if (DEBUG) {
+    console.debug(...args);
+  }
+}
+
+// Zod schemas for environment variables
+const postEnvSchema = z.object({
+  APPLICATIONINSIGHTS_CONNECTION_STRING: z.string().min(1),
+  CSP_LIST: z.string().default(""),
+  GITHUB_ACTION_PATH: z.string().default(""),
+  GITHUB_ACTOR: z.string().default(""),
+  GITHUB_EVENT_NAME: z.string().default(""),
+  GITHUB_REPOSITORY: z.string().default(""),
+  GITHUB_RUN_ATTEMPT: z.string().default(""),
+  GITHUB_RUN_ID: z.string().default(""),
+  GITHUB_SERVER_URL: z.string().default(""),
+  GITHUB_WORKFLOW: z.string().default("github-workflow"),
+  GITHUB_WORKFLOW_REF: z.string().default(""),
+  NODE_PACKAGE_MANAGER: z.string().default(""),
+  OTEL_EVENT_FILE: z.string().optional(),
+  OTEL_SESSION_START: z.string().default("0"),
+  PIPELINE_RESULT: z
+    .enum(["cancellation", "error", "failure", "skip", "success", "timeout"])
+    .default("success"),
+  TERRAFORM_VERSION: z.string().default(""),
+});
+
+// Zod schemas for NDJSON telemetry lines using discriminated unions
+const spanStartLineSchema = z.object({
+  span: z.string(),
+  startSpan: z.string(),
+  type: z.literal("spanStart").optional().default("spanStart"),
+});
+
+const spanEndLineSchema = z.object({
+  endSpan: z.string(),
+  span: z.string(),
+  type: z.literal("spanEnd").optional().default("spanEnd"),
+});
+
+const eventLineSchema = z.object({
+  attributes: z.record(z.string(), z.string()).optional(),
+  body: z.string().optional().default(""),
+  exception: z.boolean().default(false),
+  name: z.string(),
+  type: z.literal("event").optional().default("event"),
+});
+
+// Union of all telemetry line types
+const telemetryLineSchema = z.discriminatedUnion("type", [
+  spanStartLineSchema,
+  spanEndLineSchema,
+  eventLineSchema,
+]);
+
+type EventLine = z.infer<typeof eventLineSchema>;
+type SpanEndLine = z.infer<typeof spanEndLineSchema>;
+interface SpanMarker {
+  end?: Date;
+  start?: Date;
+}
+interface SpanMarker {
+  end?: Date;
+  start?: Date;
+}
+
+type SpanStartLine = z.infer<typeof spanStartLineSchema>;
+
+type TelemetryLine = z.infer<typeof telemetryLineSchema>;
+
+// Create child spans from processed markers
+function createChildSpans(
+  spanMarkers: Record<string, SpanMarker[]>,
+  parentSpan: ReturnType<ReturnType<typeof trace.getTracer>["startSpan"]>,
+): void {
+  const tracer = trace.getTracer("workflow-tracer");
+
+  for (const [spanName, occurrences] of Object.entries(spanMarkers)) {
+    for (const marker of occurrences) {
+      if (!marker.start || !marker.end) {
+        debug(`Skipping incomplete span marker for "${spanName}"`);
+        continue;
+      }
+
+      if (marker.end < marker.start) {
+        console.warn(
+          `Skipping span "${spanName}" due to end time (${marker.end.toISOString()}) before start time (${marker.start.toISOString()})`,
+        );
+        continue;
+      }
+
+      const child = tracer.startSpan(
+        spanName,
+        {
+          kind: SpanKind.INTERNAL,
+          startTime: marker.start,
+        },
+        trace.setSpan(otelContext.active(), parentSpan),
+      );
+      child.end(marker.end);
+    }
+  }
+}
+
+function isEventLine(line: TelemetryLine): line is EventLine {
+  return line.type === "event";
+}
+
+function isSpanEndLine(line: TelemetryLine): line is SpanEndLine {
+  return line.type === "spanEnd";
+}
+
+// Type guards
+function isSpanStartLine(line: TelemetryLine): line is SpanStartLine {
+  return line.type === "spanStart";
+}
+
+// Parse and validate a single NDJSON line
+function parseTelemetryLine(rawLine: string): null | TelemetryLine {
+  try {
+    const parsed = JSON.parse(rawLine);
+
+    // Infer type based on fields for backward compatibility
+    if (parsed.span && parsed.startSpan) {
+      parsed.type = "spanStart";
+    } else if (parsed.span && parsed.endSpan) {
+      parsed.type = "spanEnd";
+    } else {
+      parsed.type = "event";
+    }
+
+    const result = telemetryLineSchema.safeParse(parsed);
+    if (!result.success) {
+      console.warn("Invalid telemetry line format");
+      debug("Validation error:", z.prettifyError(result.error));
+      return null;
+    }
+    return result.data;
+  } catch {
+    console.warn("Skipping malformed JSON telemetry line");
+    return null;
+  }
+}
 
 async function post(): Promise<void> {
-  const { useAzureMonitor } = require("@azure/monitor-opentelemetry");
-  const { logs } = require("@opentelemetry/api-logs");
+  // Validate environment variables
+  const envResult = postEnvSchema.safeParse(process.env);
+  if (!envResult.success) {
+    console.error(
+      "Missing or invalid environment variables:",
+      z.prettifyError(envResult.error),
+    );
+    throw new Error("Environment validation failed");
+  }
 
-  const startMs = parseInt(process.env.OTEL_SESSION_START || "0", 10);
-  const eventsFile = process.env.OTEL_EVENT_FILE;
-  console.log(`Post telemetry: file=${eventsFile}`);
+  const env = envResult.data;
+  const startMs = parseInt(env.OTEL_SESSION_START, 10);
+  const eventsFile = env.OTEL_EVENT_FILE;
 
-  const workflowName = process.env.GITHUB_WORKFLOW || "github-workflow";
-  const workflowRef = process.env.GITHUB_WORKFLOW_REF || "";
-  const runId = process.env.GITHUB_RUN_ID || "";
-  const trigger = process.env.GITHUB_EVENT_NAME || "";
-  const attempt = process.env.GITHUB_RUN_ATTEMPT || "";
-  const repo = process.env.GITHUB_REPOSITORY || "";
-  const actor = process.env.GITHUB_ACTOR || "";
-  const workflowURL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-  const actionPath = process.env.GITHUB_ACTION_PATH || "";
-  const nodePackageManager = process.env.NODE_PACKAGE_MANAGER || "";
-  const tfVersion = process.env.TERRAFORM_VERSION || "";
-  const CSPs = process.env.CSP_LIST || "";
-  const pipelineResult = process.env.PIPELINE_RESULT || "success"; // cancellation, error, failure, skip, success, timeout
+  debug(`Post telemetry: file=${eventsFile}`);
 
-  const { resourceFromAttributes } = require("@opentelemetry/resources");
+  const workflowURL = `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`;
+
   const resource = resourceFromAttributes({
-    "service.name": workflowRef,
-    "service.instance.id": runId,
+    "enduser.id": env.GITHUB_ACTOR,
+    "service.instance.id": env.GITHUB_RUN_ID,
+    "service.name": env.GITHUB_WORKFLOW_REF,
     "service.namespace": "dx",
-    "enduser.id": actor,
   });
 
   useAzureMonitor({
-    resource,
     azureMonitorExporterOptions: {
-      connectionString: process.env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
     enableLiveMetrics: false,
+    resource,
   });
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
-  const span = tracer.startSpan(workflowName, {
+
+  const span = tracer.startSpan(env.GITHUB_WORKFLOW, {
+    attributes: {
+      "cicd.pipeline.action.name": env.GITHUB_WORKFLOW,
+      "cicd.pipeline.attempt": env.GITHUB_RUN_ATTEMPT,
+      "cicd.pipeline.author": env.GITHUB_ACTOR,
+      "cicd.pipeline.path": env.GITHUB_ACTION_PATH,
+      "cicd.pipeline.repository": env.GITHUB_REPOSITORY,
+      "cicd.pipeline.result": env.PIPELINE_RESULT,
+      "cicd.pipeline.run.id": env.GITHUB_RUN_ID,
+      "cicd.pipeline.run.url.full": workflowURL,
+      "cicd.pipeline.trigger": env.GITHUB_EVENT_NAME,
+      ...(env.NODE_PACKAGE_MANAGER
+        ? { "node.package_manager": env.NODE_PACKAGE_MANAGER }
+        : {}),
+      ...(env.TERRAFORM_VERSION
+        ? { "terraform.version": env.TERRAFORM_VERSION }
+        : {}),
+      ...(env.CSP_LIST ? { "cloud_provider.enabled": env.CSP_LIST } : {}),
+    },
     kind: SpanKind.SERVER,
     startTime: new Date(startMs),
-    attributes: {
-      "cicd.pipeline.action.name": workflowName,
-      "cicd.pipeline.run.id": runId,
-      "cicd.pipeline.attempt": attempt,
-      "cicd.pipeline.trigger": trigger,
-      "cicd.pipeline.repository": repo,
-      "cicd.pipeline.run.url.full": workflowURL,
-      "cicd.pipeline.author": actor,
-      "cicd.pipeline.result": pipelineResult,
-      "cdcd.pipeline.path": actionPath,
-      "error.type": "",
-      ...(nodePackageManager
-        ? { "node.package_manager": nodePackageManager }
-        : {}),
-      ...(tfVersion ? { "terraform.version": tfVersion } : {}),
-      ...(CSPs ? { "cloud_provider.enabled": CSPs } : {}),
-    },
   });
 
   if (eventsFile && existsSync(eventsFile)) {
@@ -73,102 +230,9 @@ async function post(): Promise<void> {
       .split(/\n/)
       .filter((l) => l.trim().length);
 
-    interface SpanMarker {
-      start?: Date;
-      end?: Date;
-    }
-    const spanMarkers: Record<string, SpanMarker[]> = {};
-
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
-      for (const line of lines) {
-        let parsed: any = null;
-
-        try {
-          parsed = JSON.parse(line);
-        } catch {
-          console.warn("Skipping malformed telemetry line: " + line);
-          continue;
-        }
-        if (!parsed) continue;
-
-        // Span marker branch
-        if (parsed.span && (parsed.startSpan || parsed.endSpan)) {
-          const arr = (spanMarkers[parsed.span] =
-            spanMarkers[parsed.span] || []);
-          // Choose the current open marker or create new
-          let current = arr[arr.length - 1];
-          if (!current || (current.start && current.end)) {
-            current = {};
-            arr.push(current);
-          }
-          if (parsed.startSpan) {
-            current.start = new Date(parsed.startSpan);
-          }
-          if (parsed.endSpan) {
-            // If end arrives before start (out-of-order), start a new marker with only end to avoid corrupting previous
-            if (!current || !current.start) {
-              current = { end: new Date(parsed.endSpan) };
-              arr.push(current);
-            } else {
-              current.end = new Date(parsed.endSpan);
-            }
-          }
-          continue;
-        }
-
-        // Regular event branch
-        const ev: {
-          name: string;
-          body: string;
-          exception: boolean;
-          attributes?: Record<string, string>;
-        } = parsed;
-
-        const attrs = {
-          "ci.pipeline.repo": repo,
-          "ci.pipeline.run.id": runId,
-          "enduser.id": actor,
-          ...ev.attributes,
-        };
-
-        if (ev.exception) {
-          span.recordException({
-            name: ev.name || "Exception",
-            message: ev.body || ev.name,
-          });
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: ev.body || ev.name,
-          });
-          span.setAttribute("cicd.pipeline.result", "error");
-        } else {
-          logger.emit({
-            body: ev.body || ev.name,
-            attributes: {
-              "microsoft.custom_event.name": ev.name || "CustomEvent",
-              ...attrs,
-            },
-          });
-        }
-      }
-
-      // After processing events, create child spans for completed markers
-      for (const [spanName, occurrences] of Object.entries(spanMarkers)) {
-        for (const marker of occurrences) {
-          if (!marker.start || !marker.end) continue; // incomplete pair
-          if (marker.end < marker.start) continue; // invalid ordering
-
-          const child = tracer.startSpan(
-            spanName,
-            {
-              kind: SpanKind.INTERNAL,
-              startTime: marker.start,
-            },
-            trace.setSpan(otelContext.active(), span),
-          );
-          child.end(marker.end);
-        }
-      }
+      const spanMarkers = processLinesAndGetMarkers(lines, span, logger, env);
+      createChildSpans(spanMarkers, span);
     });
   } else {
     console.log("No events file found or empty");
@@ -176,9 +240,97 @@ async function post(): Promise<void> {
 
   span.end();
 
-  await logs.getLoggerProvider().forceFlush?.();
-  await new Promise((r) => setTimeout(r, 2000));
+  // Ensure all telemetry is flushed before process exit
+  // Allow sufficient time for async exporter flush
+  const EXPORTER_FLUSH_DELAY_MS = 2000;
+  await new Promise((r) => setTimeout(r, EXPORTER_FLUSH_DELAY_MS));
+
   console.log("Telemetry flushed");
+}
+
+// Process an individual event line
+function processEventLine(
+  line: EventLine,
+  span: ReturnType<ReturnType<typeof trace.getTracer>["startSpan"]>,
+  logger: ReturnType<ReturnType<typeof logs.getLoggerProvider>["getLogger"]>,
+  env: z.infer<typeof postEnvSchema>,
+): void {
+  // Fix: Standard attributes should override custom ones (not vice versa)
+  const attrs = {
+    ...line.attributes,
+    "cicd.pipeline.repo": env.GITHUB_REPOSITORY,
+    "cicd.pipeline.run.id": env.GITHUB_RUN_ID,
+    "enduser.id": env.GITHUB_ACTOR,
+  };
+
+  if (line.exception) {
+    span.recordException({
+      message: line.body || line.name,
+      name: line.name || "Exception",
+    });
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: line.body || line.name,
+    });
+    span.setAttribute("cicd.pipeline.result", "error");
+  } else {
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": line.name || "CustomEvent",
+        ...attrs,
+      },
+      body: line.body || line.name,
+    });
+  }
+}
+
+// Process telemetry lines and return span markers
+function processLinesAndGetMarkers(
+  lines: string[],
+  span: ReturnType<ReturnType<typeof trace.getTracer>["startSpan"]>,
+  logger: ReturnType<ReturnType<typeof logs.getLoggerProvider>["getLogger"]>,
+  env: z.infer<typeof postEnvSchema>,
+): Record<string, SpanMarker[]> {
+  const spanMarkers: Record<string, SpanMarker[]> = {};
+
+  for (const rawLine of lines) {
+    const line = parseTelemetryLine(rawLine);
+    if (!line) continue;
+
+    // Handle span markers
+    if (isSpanStartLine(line) || isSpanEndLine(line)) {
+      const spanName = line.span;
+      const arr = (spanMarkers[spanName] = spanMarkers[spanName] || []);
+
+      let current = arr[arr.length - 1];
+      if (!current || (current.start && current.end)) {
+        current = {};
+        arr.push(current);
+      }
+
+      if (isSpanStartLine(line)) {
+        current.start = new Date(line.startSpan);
+      } else if (isSpanEndLine(line)) {
+        if (!current.start) {
+          console.warn(
+            `Orphaned endSpan for '${spanName}' at ${line.endSpan}: no matching startSpan.`,
+          );
+          current = { end: new Date(line.endSpan) };
+          arr.push(current);
+        } else {
+          current.end = new Date(line.endSpan);
+        }
+      }
+      continue;
+    }
+
+    // Handle event lines
+    if (isEventLine(line)) {
+      processEventLine(line, span, logger, env);
+    }
+  }
+
+  return spanMarkers;
 }
 
 post();
