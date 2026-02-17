@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "description": "An MCP server that supports developers using DX tools.",
+  "name": "it.pagopa/dx",
+  "packages": [
+    {
+      "httpHeaders": [],
+      "identifier": "https://api.dx.pagopa.it/mcp",
+      "registryType": "http",
+      "transport": {
+        "type": "streamable-http",
+        "url": "https://api.dx.pagopa.it/mcp"
+      },
+      "version": "0.1.2"
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "subfolder": "apps/mcpserver",
+    "url": "https://github.com/pagopa/dx"
+  },
+  "version": "0.1.2"
+}

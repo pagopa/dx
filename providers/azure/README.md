@@ -138,15 +138,15 @@ Generates a resource name based on the standardized prefix and additional parame
 
 **Inputs:**
 
-| Name        |  Type   | Required | Description                                                                       |
-| :---------- | :-----: | :------: | :-------------------------------------------------------------------------------- |
-| prefix      | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                       |
-| environment | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                     |
-| location    | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope). |
-| domain      | String  |    No    | Optional value that specify the domain.                                           |
-| resource    | String  |   Yes    | Name of the resource.                                                             |
-| type        | String  |   Yes    | Type of the resource (see table).                                                 |
-| instance    | Integer |   Yes    | Instance number of the resource.                                                  |
+| Name                       |  Type   | Required | Description                                                                          |
+| :------------------------- | :-----: | :------: | :----------------------------------------------------------------------------------- |
+| prefix                     | String  |   Yes    | Prefix that define the repository domain (2-4 characters).                           |
+| environment (or env_short) | String  |   Yes    | Environment where the resources will be deployed (d, u or p).                        |
+| location                   | String  |   Yes    | Location where the resources will be deployed (itn/italynorth or weu/westeurope).    |
+| domain                     | String  |    No    | Domain grouping (optional).                                                          |
+| name (or app_name)         | String  |    No    | Resource name (optional, cannot overlap with resource type abbreviation).            |
+| resource_type              | String  |   Yes    | Type of the resource (see table).                                                    |
+| instance_number            | Integer |   Yes    | Instance number of the resource (1-99), also accepts string format (e.g. "02", "4"). |
 
 **Example:**
 
@@ -166,8 +166,10 @@ output "resource_name" {
 
 - **Output**: dx-d-itn-app-blob-pep-01
 
-> [!NOTE]  
-> Remember that to call a function is needed the path provider::PROVIDER_NAME::FUNCTION_NAME(...)
+> [!NOTE]
+>
+> - To call a function use the format: `provider::PROVIDER_NAME::FUNCTION_NAME(...)`
+> - `name` cannot match or be part of the resource type abbreviation (e.g., don't use `name = "kv"` with `resource_type = "key_vault"`)
 
 **Resource Types:**
 
@@ -181,6 +183,8 @@ The following table lists the resource types and their abbreviations used in the
 | apim_network_security_group               |     apim-nsg     |
 | apim_subnet                               |    apim-snet     |
 | apim_private_endpoint                     |     apim-pep     |
+| app_configuration                         |      appcs       |
+| app_configuration_private_endpoint        |    appcs-pep     |
 | app_gateway                               |       agw        |
 | app_private_endpoint                      |     app-pep      |
 | app_service                               |       app        |
@@ -205,9 +209,12 @@ The following table lists the resource types and their abbreviations used in the
 | container_app_job                         |       caj        |
 | container_app_private_endpoint            |     cae-pep      |
 | container_app_subnet                      |     cae-snet     |
+| container_instance                        |        ci        |
+| container_instance_subnet                 |     ci-snet      |
 | cosmos_db                                 |      cosmos      |
 | cosmos_db_nosql                           |      cosno       |
 | cosmos_private_endpoint                   |    cosno-pep     |
+| customer_key_cosmos_db_nosql              |    cosno-cmk     |
 | customer_key_storage_account              |      stcmk       |
 | durable_function_storage_account          |       stfd       |
 | eventhub_namespace                        |      evhns       |
@@ -245,6 +252,7 @@ The following table lists the resource types and their abbreviations used in the
 | servicebus_namespace                      |       sbns       |
 | servicebus_private_endpoint               |     sbns-pep     |
 | static_web_app                            |      stapp       |
+| api_center                                |       apic       |
 | storage_account                           |        st        |
 | subnet                                    |       snet       |
 | table_private_endpoint                    |    table-pep     |

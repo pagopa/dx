@@ -1,5 +1,80 @@
 # azure_storage_account
 
+## 2.1.4
+
+### Patch Changes
+
+- dba6e7b: Expose storage account `primary_queue_endpoint` output.
+
+  Both `azure_function_app` and `azure_storage_account` modules now expose the primary queue endpoint: `storage_account.primary_queue_endpoint`.
+  This enables RBAC authentication configuration on queues.
+
+  ### Example
+
+  Configure managed identity authentication for Azure Functions queue triggers using the queue endpoint (where `module.storage` is an instance of the `azure_storage_account` module):
+
+  ```hcl
+  app_settings = {
+    AzureWebJobsStorage__accountName      = module.storage.name                   # Set the storage account name for Azure Functions
+    AzureWebJobsStorage__queueServiceUri  = module.storage.primary_queue_endpoint # Set the queue service URI for Azure Functions to enable identity-based authentication
+  }
+  ```
+
+  This enables identity-based connections without requiring connection strings, improving security for Azure Functions bindings.
+
+## 2.1.3
+
+### Patch Changes
+
+- a596707: fix variable validation when values are null
+
+## 2.1.2
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
+## 2.1.1
+
+### Patch Changes
+
+- 9cb1777: Add `override_infrastructure_encryption` variable to prevent storage account recreation for audit use case
+
+  In version 2.1.0, the `infrastructure_encryption_enabled` setting was enabled by default for the audit use case. This caused a breaking change for existing storage accounts, as modifying this parameter forces resource recreation in Azure.
+
+  This patch introduces the `override_infrastructure_encryption` variable (default: `false`) to allow disabling infrastructure encryption when needed, preventing the forced recreation of existing storage accounts while maintaining backward compatibility.
+
+  **Note**: This variable is marked as deprecated and will be removed in the next major version. Infrastructure encryption should be managed through proper use case configuration.
+
+## 2.1.0
+
+### Minor Changes
+
+- 89c46ca: Enhance security and compliance for Azure Storage Account.
+
+  ## Migration Guide
+
+  For existing audit storage accounts, add diagnostic settings:
+
+  ```hcl
+  module "audit_storage" {
+    source = "./modules/azure_storage_account"
+
+    use_case = "audit"
+
+    # NEW: Required for compliance
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+    }
+
+    # OPTIONAL: Override default retention (default changed from 1095 to 365 days)
+    audit_retention_days = 365
+  }
+  ```
+
+  Infrastructure encryption only applies to new storage accounts (Azure limitation).
+
 ## 2.0.0
 
 ### Major Changes

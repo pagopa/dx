@@ -1,9 +1,27 @@
 {
   "name": "provider-azure",
-  "version": "0.6.7",
+  "version": "0.8.3",
   "private": true,
   "description": "Terraform provider for DX on Azure, to enhance developer experience",
-  "scripts": {
-    "format": "go fmt"
+  "nx": {
+    "projectType": "library",
+    "targets": {
+      "format": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "go fmt ./...",
+          "forwardAllArgs": false
+        }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "go test ./...",
+          "forwardAllArgs": false
+        }
+      }
+    }
   }
 }

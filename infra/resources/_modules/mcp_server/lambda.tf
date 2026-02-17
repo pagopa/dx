@@ -17,7 +17,10 @@ resource "aws_lambda_function" "server" {
 
   environment {
     variables = {
-      BEDROCK_KNOWLEDGE_BASE_ID = var.bedrock_knowledge_base_id
+      BEDROCK_KNOWLEDGE_BASE_ID             = awscc_bedrock_knowledge_base.this.knowledge_base_id
+      BEDROCK_MODEL_ARN                     = local.bedrock_model_arn
+      APPLICATIONINSIGHTS_CONNECTION_STRING = var.application_insights_connection_string
+      APPINSIGHTS_SAMPLING_PERCENTAGE       = 100
     }
   }
 
@@ -92,9 +95,18 @@ resource "aws_iam_policy" "lambda_bedrock_access" {
           "bedrock:ListKnowledgeBases",
           "bedrock:GetKnowledgeBase",
           "bedrock:QueryKnowledgeBase",
-          "bedrock:Retrieve"
+          "bedrock:Retrieve",
+          "bedrock:RetrieveAndGenerate"
         ]
-        Resource = "arn:aws:bedrock:${var.naming_config.region}:${var.account_id}:knowledge-base/${var.bedrock_knowledge_base_id}"
+        Resource = ["arn:aws:bedrock:${var.naming_config.region}:${var.account_id}:knowledge-base/${awscc_bedrock_knowledge_base.this.knowledge_base_id}"]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:GetInferenceProfile"
+        ]
+        Resource = [local.bedrock_model_arn, local.bedrock_model_local_arn]
       }
     ]
   })

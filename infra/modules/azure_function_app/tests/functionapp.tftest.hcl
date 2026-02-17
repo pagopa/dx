@@ -329,3 +329,441 @@ run "function_app_override_size_fail" {
     var.size,
   ]
 }
+
+run "function_app_without_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 1
+    error_message = "storage_account_blob data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 1
+    error_message = "storage_account_file data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 1
+    error_message = "storage_account_queue data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_table) == 0
+    error_message = "storage_account_table data source should not be created when durable functions are disabled"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 1
+    error_message = "function_app data source should be created when no override is provided"
+  }
+
+  # Verify that private endpoints use the data source IDs
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_blob[0].id
+    error_message = "st_blob private endpoint should use the data source DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_file.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_file[0].id
+    error_message = "st_file private endpoint should use the data source DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.function_sites.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.function_app[0].id
+    error_message = "function_sites private endpoint should use the data source DNS zone ID"
+  }
+}
+
+run "function_app_with_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    # Override all DNS zone IDs
+    private_dns_zone_ids = {
+      blob          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      file          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+      queue         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.queue.core.windows.net"
+      table         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.table.core.windows.net"
+      azurewebsites = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    }
+  }
+
+  # Verify that data sources are NOT created (count = 0)
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 0
+    error_message = "storage_account_blob data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 0
+    error_message = "storage_account_file data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 0
+    error_message = "storage_account_queue data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_table) == 0
+    error_message = "storage_account_table data source should not be created when override is provided (even without durable)"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 0
+    error_message = "function_app data source should not be created when override is provided"
+  }
+
+  # Verify that private endpoints use the override IDs
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    error_message = "st_blob private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_file.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+    error_message = "st_file private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.function_sites.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    error_message = "function_sites private endpoint should use the override DNS zone ID"
+  }
+}
+
+run "function_app_with_partial_dns_zone_override" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    # Override only some DNS zone IDs
+    private_dns_zone_ids = {
+      blob = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      file = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+      # queue, table, azurewebsites are not overridden (null)
+    }
+  }
+
+  # Verify partial override: blob and file should not create data sources
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_blob) == 0
+    error_message = "storage_account_blob data source should not be created when override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_file) == 0
+    error_message = "storage_account_file data source should not be created when override is provided"
+  }
+
+  # queue and function_app should create data sources
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.storage_account_queue) == 1
+    error_message = "storage_account_queue data source should be created when no override is provided"
+  }
+
+  assert {
+    condition     = length(data.azurerm_private_dns_zone.function_app) == 1
+    error_message = "function_app data source should be created when no override is provided"
+  }
+
+  # Verify mixed usage
+  assert {
+    condition     = azurerm_private_endpoint.st_blob.private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    error_message = "st_blob private endpoint should use the override DNS zone ID"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.st_queue.private_dns_zone_group[0].private_dns_zone_ids[0] == data.azurerm_private_dns_zone.storage_account_queue[0].id
+    error_message = "st_queue private endpoint should use the data source DNS zone ID"
+  }
+}
+
+run "function_app_with_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this[0].enabled_log) > 0
+    error_message = "At least one log category should be enabled"
+  }
+
+  assert {
+    condition     = length([for log in azurerm_monitor_diagnostic_setting.this[0].enabled_log : log if log.category == "FunctionAppLogs"]) > 0
+    error_message = "FunctionAppLogs category should be enabled"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this[0].enabled_metric) > 0
+    error_message = "At least one metric category should be enabled"
+  }
+
+  assert {
+    condition     = length([for metric in azurerm_monitor_diagnostic_setting.this[0].enabled_metric : metric if metric.category == "AllMetrics"]) > 0
+    error_message = "AllMetrics category should be enabled"
+  }
+}
+
+run "function_app_without_diagnostic_settings" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = false
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
+    error_message = "Diagnostic settings should not be created when disabled"
+  }
+}
+
+run "function_app_with_diagnostic_settings_only_log_analytics" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Log Analytics workspace"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == null
+    error_message = "Storage account ID should be null when not provided"
+  }
+}
+
+run "function_app_with_diagnostic_settings_only_storage" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Storage Account"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == null
+    error_message = "Log Analytics workspace ID should be null when not provided"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+}
+
+run "function_app_with_diagnostic_settings_enabled_but_no_destinations" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  expect_failures = [
+    var.diagnostic_settings,
+  ]
+}
+
+run "function_app_without_entra_id_authentication" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured when entra_id_authentication is null"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app_slot.this[0].auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured on staging slot when entra_id_authentication is null"
+  }
+
+  assert {
+    condition     = output.entra_id_authentication.audience_client_id == null
+    error_message = "entra_id_authentication output should have null audience_client_id when disabled"
+  }
+}
+
+run "function_app_with_entra_id_authentication" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].require_authentication == true
+    error_message = "auth_settings_v2 should require authentication"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Unauthenticated requests should return 401"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
+    error_message = "Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].tenant_auth_endpoint == "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000003/v2.0"
+    error_message = "Active Directory v2 tenant_auth_endpoint should be constructed from tenant_id"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].login[0].token_store_enabled == false
+    error_message = "Token store should be disabled"
+  }
+
+  # Slot assertions
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "Staging slot Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
+    error_message = "Staging slot Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Staging slot unauthenticated requests should return 401"
+  }
+
+  # Output assertions
+  assert {
+    condition     = output.entra_id_authentication.audience_client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "entra_id_authentication output should expose the Entra application client ID"
+  }
+}
+
+run "function_app_entra_id_authentication_empty_client_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = ""
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}
+
+run "function_app_entra_id_authentication_empty_allowed_applications" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = []
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}
+
+run "function_app_entra_id_authentication_invalid_tenant_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "not-a-valid-uuid"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "make-artifact",
+  "description": "Action to create a zip artifact from a given folder.",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true
+}

@@ -1,5 +1,23 @@
 # azure_core_infra
 
+## 2.3.1
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
+## 2.3.0
+
+### Minor Changes
+
+- 442cb22: Add private endpoint for AppConfiguration service
+
+## 2.2.4
+
+### Patch Changes
+
+- 70fd2a5: Replace azurerm keyvault's deprecated property "enable_rbac_authorization" with "rbac_authorization_enabled"
+
 ## 2.2.3
 
 ### Patch Changes

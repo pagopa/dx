@@ -1,5 +1,46 @@
 # provider-azure
 
+## 0.8.3
+
+### Patch Changes
+
+- 5d6a57f: Add `env_short` and `app_name` inputs support for naming convention function, alternatively to `environment` and `name`
+
+## 0.8.2
+
+### Patch Changes
+
+- b0116b2: Add a new check for the `domain` in the naming convention: it must never be identical to the `name`.
+  Also add a control that detects when the name matches the first part of the resource abbreviation and removes the duplicate.
+  For example, if `name = kv` for a `key_vault` resource, the final name will not be
+  `[prefix]-[environment]-[location]-kv-kv-[instance number]`
+  but instead
+  `[prefix]-[environment]-[location]-kv-[instance number]`
+
+## 0.8.1
+
+### Patch Changes
+
+- e449c1c: Add abbreviation for API Center (apic) in resource_name function
+
+## 0.8.0
+
+### Minor Changes
+
+- bb20571: Add support for Azure App Configuration abbreviations
+
+## 0.7.1
+
+### Patch Changes
+
+- 1a2e810: Add support for Container Instance abbreviation
+
+## 0.7.0
+
+### Minor Changes
+
+- 277ee38: Add abbreviation for customer key cosmos db no sql
+
 ## 0.6.7
 
 ### Patch Changes

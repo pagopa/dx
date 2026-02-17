@@ -1,5 +1,5 @@
 data "azurerm_virtual_network" "common" {
-  name = provider::dx::resource_name(
+  name = provider::azuredx::resource_name(
     merge(
       local.environment,
       {
@@ -7,7 +7,7 @@ data "azurerm_virtual_network" "common" {
         name          = "common",
       }
   ))
-  resource_group_name = provider::dx::resource_name(
+  resource_group_name = provider::azuredx::resource_name(
     merge(
       local.environment,
       {
@@ -18,7 +18,7 @@ data "azurerm_virtual_network" "common" {
 }
 
 data "azurerm_subnet" "runner" {
-  name = provider::dx::resource_name(
+  name = provider::azuredx::resource_name(
     merge(
       local.environment,
       {
@@ -45,4 +45,20 @@ data "azurerm_private_dns_zone" "tests_peps" {
   resource_group_name = data.azurerm_virtual_network.common.resource_group_name
 }
 
+data "azurerm_subscription" "current" {}
+
+data "azurerm_resource_group" "dx" {
+  name = provider::azuredx::resource_name(merge(local.environment, { resource_type = "resource_group", name = "devex" }))
+}
+
+data "azurerm_user_assigned_identity" "infra_cd" {
+  name                = provider::azuredx::resource_name(merge(local.environment, { resource_type = "managed_identity", domain = "devex", name = "infra-github-cd" }))
+  resource_group_name = data.azurerm_resource_group.dx.name
+}
+
 data "aws_caller_identity" "current" {}
+
+data "azurerm_application_insights" "this" {
+  name                = module.azure_core_values.application_insights.name
+  resource_group_name = module.azure_core_values.application_insights.resource_group_name
+}

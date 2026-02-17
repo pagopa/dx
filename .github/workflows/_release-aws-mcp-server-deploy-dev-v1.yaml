@@ -1,0 +1,59 @@
+name: Deploy MCP Server to Dev
+
+# Automated workflow to build MCP Server Docker image and deploy it to
+# AWS Lambda when changes are made or new tags are pushed
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "apps/mcpserver/**"
+      - "packages/mcp-prompts/**"
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy MCP on AWS Lambda
+    runs-on: ubuntu-latest
+    environment: app-dev-cd
+    env:
+      AWS_REGION: eu-central-1
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      LAMBDA_FUNCTION_NAME: dx-d-euc1-mcp-server-lambda-01
+      IMAGE_NAME: dx/mcp-server
+    permissions:
+      contents: write
+      packages: read
+      actions: read
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Build and Push to ECR
+        id: build-and-push
+        uses: pagopa/dx/actions/docker-build-push@main
+        with:
+          registry: ecr
+          dockerfile_path: apps/mcpserver/Dockerfile
+          dockerfile_context: "."
+          docker_image_description: "DX MCP Server"
+          docker_image_authors: "DevEx"
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          build_platforms: linux/arm64
+          push_to_registry: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Lambda
+        uses: aws-actions/aws-lambda-deploy@29ea35c124579506cf0475e20df36198eb670d89 # v1.1.0
+        with:
+          function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
+          package-type: Image
+          image-uri: ${{ steps.build-and-push.outputs.image_uri }}

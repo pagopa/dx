@@ -6,11 +6,14 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 
 ## Features
 
-- **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile.
+- **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile or reuses an existing one.
+- **WAF Protection**: Optional Web Application Firewall policy with Prevention mode for enhanced security.
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
 - **Routing Rules**: Allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
+
+> **Note:** The module includes support for managed identity authentication to storage origins with automatic RBAC assignment. This feature is currently in preview and disabled by validation. It will be enabled once the feature becomes generally available. See [Azure documentation](https://learn.microsoft.com/en-us/azure/frontdoor/origin-authentication-with-managed-identities) for more information.
 
 ### Routing rules
 
@@ -50,6 +53,24 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
   }
 }
 ```
+
+### Origins Configuration
+
+The `origins` variable accepts a map of origin configurations. Each origin must have a `host_name` and optionally a `priority` for routing preference.
+
+#### Supported Origin Types
+
+| Origin Type                          | `host_name` Value       | Terraform Resource Attribute                                               | DX Module Attribute                                              | Example                                                     | Notes                                                  |
+| ------------------------------------ | ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------ |
+| **Storage Account (Static Website)** | Static website endpoint | `azurerm_storage_account.example.primary_web_host`                         | `module.storage_account.primary_web_host`                        | `example.z6.web.core.windows.net`                           | Requires static website enabled on the storage account |
+| **Storage Account (Blob)**           | Primary blob endpoint   | `azurerm_storage_account.example.primary_blob_host`                        | N/A                                                              | `example.blob.core.windows.net`                             | Direct blob access without static website hosting      |
+| **App Service**                      | Default hostname        | `azurerm_linux_web_app.example.default_hostname`                           | N/A                                                              | `myapp.azurewebsites.net`                                   | Works with both Windows and Linux App Services         |
+| **Function App**                     | Default hostname        | `azurerm_linux_function_app.example.default_hostname`                      | `module.function_app.function_app.function_app.default_hostname` | `myfunc.azurewebsites.net`                                  | Includes slot hostname if configured                   |
+| **API Management**                   | Gateway hostname        | `trim(azurerm_api_management.example.gateway_url, "https://")`             | `module.api_management.gateway_hostname`                         | `myapi.azure-api.net`                                       | Use `gateway_hostname` output (already trimmed)        |
+| **Application Gateway**              | Frontend public IP FQDN | `azurerm_public_ip.example.fqdn`                                           | N/A                                                              | `myappgw.westeurope.cloudapp.azure.com`                     | Requires public IP with DNS name configured            |
+| **Container Apps**                   | FQDN                    | `azurerm_container_app.example.latest_revision_fqdn`                       | `module.container_app.url`                                       | `myapp.nicecoast-12345678.westeurope.azurecontainerapps.io` | Use `url` output for Container Apps                    |
+| **VM / Load Balancer**               | Public IP FQDN or IP    | `azurerm_public_ip.example.fqdn` or `azurerm_public_ip.example.ip_address` | N/A                                                              | `myvm.westeurope.cloudapp.azure.com`                        | Prefer FQDN over IP when available                     |
+| **Custom Origin (External)**         | Custom domain or IP     | N/A                                                                        | N/A                                                              | `api.example.com` or `203.0.113.45`                         | Any external origin not managed by Terraform           |
 
 ### Custom domains
 
@@ -105,7 +126,7 @@ In these cases, you must provide custom certificate information through the cust
 
 ## Usage Example
 
-A complete example of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) directory.
+Complete examples of how to use this module can be found in the [examples/basic](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/basic) and [examples/advanced](https://github.com/pagopa-dx/terraform-azurerm-azure-cdn/tree/main/examples/advanced) directories.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -126,18 +147,22 @@ No modules.
 | [azurerm_cdn_frontdoor_custom_domain.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain) | resource |
 | [azurerm_cdn_frontdoor_custom_domain_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain_association) | resource |
 | [azurerm_cdn_frontdoor_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_endpoint) | resource |
+| [azurerm_cdn_frontdoor_firewall_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_firewall_policy) | resource |
 | [azurerm_cdn_frontdoor_origin.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_origin) | resource |
 | [azurerm_cdn_frontdoor_origin_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_origin_group) | resource |
 | [azurerm_cdn_frontdoor_profile.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_profile) | resource |
 | [azurerm_cdn_frontdoor_route.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_route) | resource |
 | [azurerm_cdn_frontdoor_rule_set.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_rule_set) | resource |
 | [azurerm_cdn_frontdoor_secret.certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_secret) | resource |
+| [azurerm_cdn_frontdoor_security_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_security_policy) | resource |
 | [azurerm_dns_a_record.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_a_record) | resource |
 | [azurerm_dns_cname_record.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record) | resource |
 | [azurerm_dns_txt_record.validation](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_txt_record) | resource |
 | [azurerm_key_vault_access_policy.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
-| [azurerm_monitor_diagnostic_setting.diagnostic_settings_cdn_profile](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
+| [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
+| [azurerm_role_assignment.origin_storage_blob_data_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_cdn_frontdoor_profile.existing](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/cdn_frontdoor_profile) | data source |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
 
@@ -146,18 +171,22 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_custom_domains"></a> [custom\_domains](#input\_custom\_domains) | Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created. If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used. To generate one in PagoPA context, please refer to the Confluence documentation. | <pre>list(object({<br/>    host_name = string<br/>    dns = optional(object({<br/>      zone_name                = string<br/>      zone_resource_group_name = string<br/>    }), { zone_name = null, zone_resource_group_name = null })<br/><br/>    custom_certificate = optional(object({<br/>      key_vault_certificate_versionless_id = string<br/>      key_vault_name                       = string<br/>      key_vault_resource_group_name        = string<br/>      key_vault_has_rbac_support           = optional(bool, true)<br/>    }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })<br/>  }))</pre> | `[]` | no |
-| <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>if it is:<br/>Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created) | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = string<br/>    diagnostic_setting_destination_storage_id = string<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
+| <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment configuration object for resource naming | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority) | <pre>map(object({<br/>    host_name = string<br/>    priority  = optional(number, 1)<br/>  }))</pre> | n/a | yes |
+| <a name="input_existing_cdn_frontdoor_profile_id"></a> [existing\_cdn\_frontdoor\_profile\_id](#input\_existing\_cdn\_frontdoor\_profile\_id) | Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile. | `string` | `null` | no |
+| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use\_managed\_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage\_account\_id if provided. | <pre>map(object({<br/>    host_name            = string<br/>    priority             = optional(number, 1)<br/>    storage_account_id   = optional(string, null)<br/>    use_managed_identity = optional(bool, false)<br/>  }))</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name where the CDN profile will be created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
+| <a name="input_waf_enabled"></a> [waf\_enabled](#input\_waf\_enabled) | Whether to enable the WAF policy and associate it with the endpoint. | `bool` | `false` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the CDN FrontDoor Profile. |
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |
+| <a name="output_endpoint_name"></a> [endpoint\_name](#output\_endpoint\_name) | The name of the CDN FrontDoor Endpoint |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the CDN FrontDoor Profile |
 | <a name="output_name"></a> [name](#output\_name) | The name of the CDN FrontDoor Profile |
 | <a name="output_origin_group_id"></a> [origin\_group\_id](#output\_origin\_group\_id) | The ID of the CDN FrontDoor Origin Group |

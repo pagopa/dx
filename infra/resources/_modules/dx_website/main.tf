@@ -9,6 +9,14 @@ resource "azurerm_static_web_app" "this" {
   resource_group_name = var.resource_group_name
   location            = "westeurope"
   sku_size            = "Standard"
+  sku_tier            = "Standard"
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      repository_branch,
+      repository_url,
+    ]
+  }
 }

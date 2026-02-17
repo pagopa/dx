@@ -1,0 +1,24 @@
+{
+  "name": "incremental-rollout",
+  "version": "0.2.1",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "nx": {
+    "targets": {
+      "shellcheck": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "actions/incremental-rollout",
+          "command": "shellcheck *.sh"
+        }
+      }
+    }
+  }
+}

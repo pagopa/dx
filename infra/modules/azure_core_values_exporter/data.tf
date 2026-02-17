@@ -7,6 +7,7 @@ data "terraform_remote_state" "core_azurerm" {
     storage_account_name = var.core_state.storage_account_name
     container_name       = var.core_state.container_name
     key                  = var.core_state.key
+    subscription_id      = var.core_state.subscription_id
   }
 }
 
@@ -21,3 +22,5 @@ data "terraform_remote_state" "core_s3" {
     dynamodb_table = var.core_state.dynamodb_table
   }
 }
+
+data "azurerm_subscription" "current" {}

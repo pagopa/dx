@@ -1,5 +1,17 @@
 # azure_service_bus_alerts
 
+## 0.2.0
+
+### Minor Changes
+
+- b4d944b: Make alerts resource group configurable
+
+## 0.1.4
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 0.1.3
 
 ### Patch Changes

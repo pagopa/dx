@@ -80,3 +80,7 @@ output "service_bus_namespace_id" {
 output "action_group_id" {
   value = azurerm_monitor_action_group.dx.id
 }
+
+output "resource_group_name" {
+  value = data.azurerm_resource_group.rg.name
+}

@@ -1,5 +1,17 @@
 # azure_cosmos_account
 
+## 0.4.0
+
+### Minor Changes
+
+- 62dd211: Add Diagnostic Settings configuration, update tests, align example
+
+## 0.3.1
+
+### Patch Changes
+
+- 12c2a31: Fix configuration when forcing public access
+
 ## 0.3.0
 
 ### Minor Changes

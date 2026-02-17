@@ -1,5 +1,15 @@
 # azure_container_app_environment
 
+## 1.1.0
+
+### Minor Changes
+
+- 37f5ab3: Allow setting of diagnostic settings
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 1.0.2
 
 ### Patch Changes
@@ -27,11 +37,9 @@
 ### Minor Changes
 
 - 52dfa04: Features:
-
   - Add NoDelete locks for Container App Environment and the user-assigned managed identity
 
   Bug Fixes:
-
   - Fix the user-assigned managed identity name
 
 ### Patch Changes

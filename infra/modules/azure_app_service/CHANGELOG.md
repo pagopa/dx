@@ -1,5 +1,22 @@
 # azure_app_service
 
+## 2.1.0
+
+### Minor Changes
+
+- a3c1352: Add support for diagnostic settings on App Service and App Service Slot resources
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+- d47286b: Disable diagnostic settings for the staging slot. Keeping diagnostic settings enabled for both production and staging slot may cause confusion at querying time.
+
+## 2.0.1
+
+### Patch Changes
+
+- f7fe153: Add nonsensitive function to show non sensitive appsettings as Plan outputs
+
 ## 2.0.0
 
 ### Major Changes

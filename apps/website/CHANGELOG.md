@@ -1,5 +1,135 @@
 # docs
 
+## 0.12.3
+
+### Patch Changes
+
+- ad9c693: Put the server name and server URL in a code block, using three
+  backtick, to enable the copy to clipboard button
+
+## 0.12.2
+
+### Patch Changes
+
+- d7f2fdf: Document DX best practices when writing terraform
+
+## 0.12.1
+
+### Patch Changes
+
+- d83d537: Remove PAT authentication from the MCP server.
+
+## 0.12.0
+
+### Minor Changes
+
+- e59245d: Improve DX CLI documentation, adding a page that describes the GitHub
+  Personal Access Token
+
+## 0.11.5
+
+### Patch Changes
+
+- dce58f4: Document MCP Server GH PAT setup in DX website
+- b327972: Switch package manager from Yarn to pnpm in documentation.
+
+## 0.11.4
+
+### Patch Changes
+
+- Updated dependencies [9fb9054]
+  - @pagopa/dx-mcpprompts@0.2.0
+
+## 0.11.3
+
+### Patch Changes
+
+- 84422c0: Update dependencies
+
+## 0.11.2
+
+### Patch Changes
+
+- af0079a: Fix formatting of the tip blocks that did not render as expected
+
+## 0.11.1
+
+### Patch Changes
+
+- 62b11e5: Add button to install the DX MCP server in VS Code
+
+## 0.11.0
+
+### Minor Changes
+
+- 9e0333e: Add Blog page about new DX tool: SaveMoney
+
+### Patch Changes
+
+- fcaf084: Remove the "Edit this page" link from website's pages
+
+## 0.10.3
+
+### Patch Changes
+
+- 6901bcd: Update Azure Custom Roles page
+
+## 0.10.2
+
+### Patch Changes
+
+- 8739151: Update docs for Azure App Configuration section
+
+## 0.10.1
+
+### Patch Changes
+
+- cfb975f: Update CLI doc with Static Web App check in SaveMoney tool
+
+## 0.10.0
+
+### Minor Changes
+
+- 8d0d661: Documents the init command of the CLI
+
+### Patch Changes
+
+- ccc9ff1: Update savemoney doc
+- Updated dependencies [e684e1a]
+  - @pagopa/dx-mcpprompts@0.1.0
+
+## 0.9.5
+
+### Patch Changes
+
+- e65b885: Fix the documentation about MCP server setup in VSCode with GitHub
+  Copilot
+
+## 0.9.4
+
+### Patch Changes
+
+- 9df8a84: Remove invalid value from allowed Azure Tags
+- 70fd2a5: Replace azurerm keyvault's deprecated property
+  "enable_rbac_authorization" with "rbac_authorization_enabled"
+- Updated dependencies [9db820c]
+  - @pagopa/dx-mcpprompts@0.0.3
+
+## 0.9.3
+
+### Patch Changes
+
+- 2c90daa: Fix broken links in Azure docs
+- 324e584: Avoid tracking each keystroke while searching the website
+- 6f8f23b: Add `onBrokenAnchors` so the website build fails whit any invalid
+  link
+
+## 0.9.2
+
+### Patch Changes
+
+- e0a46c7: Add Getting Support page, and minor refinement for deprecated pages
+
 ## 0.9.1
 
 ### Patch Changes

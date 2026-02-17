@@ -185,6 +185,20 @@ variable "private_dns_zone_resource_group_name" {
   description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the Virtual Network resource group."
 }
 
+variable "private_dns_zone_ids" {
+  type = object({
+    blob          = optional(string)
+    file          = optional(string)
+    queue         = optional(string)
+    table         = optional(string)
+    azurewebsites = optional(string)
+  })
+  default     = null
+  description = <<EOT
+  "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\" (if provided) or Virtual Network resource group. Use this to reference DNS zones in different subscriptions."
+  EOT
+}
+
 variable "subnet_service_endpoints" {
   type = object({
     cosmos  = optional(bool, false)
@@ -218,4 +232,68 @@ variable "tls_version" {
   type        = number
   default     = 1.2
   description = "Minimum TLS version for the App Service."
+}
+
+variable "entra_id_authentication" {
+  type = object({
+    audience_client_id         = string
+    allowed_callers_client_ids = list(string)
+    tenant_id                  = string
+  })
+  default     = null
+  description = "Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples."
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.audience_client_id) > 0
+    error_message = "audience_client_id must not be empty when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.audience_client_id))
+    error_message = "audience_client_id must be a valid UUID when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : length(var.entra_id_authentication.allowed_callers_client_ids) > 0
+    error_message = "allowed_callers_client_ids must contain at least one application ID when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : alltrue([for id in var.entra_id_authentication.allowed_callers_client_ids : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", id))])
+    error_message = "All allowed_callers_client_ids must be valid UUIDs when entra_id_authentication is set."
+  }
+
+  validation {
+    condition     = var.entra_id_authentication == null ? true : can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.entra_id_authentication.tenant_id))
+    error_message = "tenant_id must be a valid UUID when entra_id_authentication is set."
+  }
+}
+
+variable "diagnostic_settings" {
+  type = object({
+    enabled                                   = bool
+    log_analytics_workspace_id                = optional(string)
+    diagnostic_setting_destination_storage_id = optional(string)
+  })
+  default = {
+    enabled                                   = false
+    log_analytics_workspace_id                = null
+    diagnostic_setting_destination_storage_id = null
+  }
+  description = <<-EOT
+    Define if diagnostic settings should be enabled.
+    If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
+    optionally the ID of the Storage Account where logs should be sent.
+  EOT
+
+  validation {
+    condition = (
+      !var.diagnostic_settings.enabled
+      || (
+        var.diagnostic_settings.log_analytics_workspace_id != null
+        || var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
+      )
+    )
+    error_message = "At least one of log_analytics_workspace_id or diagnostic_setting_destination_storage_id must be specified when diagnostic settings are enabled."
+  }
 }

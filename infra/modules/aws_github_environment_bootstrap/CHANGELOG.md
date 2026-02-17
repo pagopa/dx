@@ -1,5 +1,17 @@
 # aws_github_environment_bootstrap
 
+## 0.0.6
+
+### Patch Changes
+
+- 01e27bb: Add examples and thorough explanation of input variables
+
+## 0.0.5
+
+### Patch Changes
+
+- 891ad2b: Add IAM Permission to App CD role for ECR Push
+
 ## 0.0.4
 
 ### Patch Changes

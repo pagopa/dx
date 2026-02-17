@@ -29,13 +29,13 @@ const isVersionValid = (version: string, minVersion: string): boolean => {
 
 export const checkPreCommitConfig = async (
   dependencies: Pick<Dependencies, "repositoryReader">,
-  config: Config,
+  repositoryRoot: string,
 ): Promise<ValidationCheckResult> => {
   const { repositoryReader } = dependencies;
   const checkName = "Pre-commit Configuration";
 
   const preCommitResult = await repositoryReader.fileExists(
-    fs.join(config.repository.root, ".pre-commit-config.yaml"),
+    fs.join(repositoryRoot, ".pre-commit-config.yaml"),
   );
 
   if (preCommitResult.isOk() && preCommitResult.value) {
@@ -60,14 +60,14 @@ export const checkPreCommitConfig = async (
 
 export const checkTurboConfig = async (
   dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
+  repositoryRoot: string,
   config: Config,
 ): Promise<ValidationCheckResult> => {
   const { packageJsonReader, repositoryReader } = dependencies;
   const checkName = "Turbo Configuration";
-  const repoRoot = config.repository.root;
 
   const turboResult = await repositoryReader.fileExists(
-    fs.join(repoRoot, "turbo.json"),
+    fs.join(repositoryRoot, "turbo.json"),
   );
   if (turboResult.isErr()) {
     return ok({
@@ -78,7 +78,7 @@ export const checkTurboConfig = async (
   }
 
   const dependenciesResult = await packageJsonReader.getDependencies(
-    repoRoot,
+    repositoryRoot,
     "dev",
   );
   if (dependenciesResult.isErr()) {

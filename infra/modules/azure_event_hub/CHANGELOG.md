@@ -1,5 +1,15 @@
 # azure_event_hub
 
+## 0.2.0
+
+### Minor Changes
+
+- bce0cd6: Allow setting of diagnostic settings
+
+### Patch Changes
+
+- 8f7ca94: Align examples
+
 ## 0.1.0
 
 ### Minor Changes

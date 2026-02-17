@@ -11,10 +11,12 @@ locals {
 
   # Defines the naming convention for APIM, dynamically handling cases where app_name
   # is not "apim" or a domain is specified, to avoid redundant naming logic.
+  apim_name = local.naming_config.name != "apim" ? local.naming_config.name : ""
+
   apim = {
-    name           = replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management" })), "-apim-apim-", "-apim-")
-    pep_name       = local.use_case_features.private_endpoint ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "apim_private_endpoint" })), "-apim-apim-", "-apim-") : null
-    autoscale_name = local.use_case_features.autoscale ? replace(provider::dx::resource_name(merge(local.naming_config, { resource_type = "api_management_autoscale" })), "-apim-apim-", "-apim-") : null
+    name           = provider::dx::resource_name(merge(local.naming_config, { name = local.apim_name, resource_type = "api_management" }))
+    pep_name       = local.use_case_features.private_endpoint ? provider::dx::resource_name(merge(local.naming_config, { name = local.apim_name, resource_type = "apim_private_endpoint" })) : null
+    autoscale_name = local.use_case_features.autoscale ? provider::dx::resource_name(merge(local.naming_config, { name = local.apim_name, resource_type = "api_management_autoscale" })) : null
 
     log_category_groups = ["allLogs", "audit"]
     log_category_types  = ["DeveloperPortalAuditLogs", "GatewayLogs", "WebSocketConnectionLogs"]
@@ -24,7 +26,6 @@ locals {
     development = {
       sku                  = "Developer_1"
       virtual_network_type = "Internal"
-      public_network       = false
       autoscale            = false
       alerts               = false
       private_endpoint     = false
@@ -33,7 +34,6 @@ locals {
     cost_optimized = {
       sku                  = "StandardV2_1"
       virtual_network_type = "External"
-      public_network       = false
       autoscale            = false
       alerts               = true
       private_endpoint     = true
@@ -42,7 +42,6 @@ locals {
     high_load = {
       sku                  = "Premium_2"
       virtual_network_type = "Internal"
-      public_network       = true
       autoscale            = true
       alerts               = true
       private_endpoint     = false
@@ -54,6 +53,32 @@ locals {
 
   virtual_network_type                  = var.virtual_network_type_internal != null ? (var.virtual_network_type_internal ? "Internal" : "None") : local.use_case_features.virtual_network_type
   virtual_network_configuration_enabled = local.virtual_network_type == "Internal" || var.use_case == "cost_optimized" ? true : false
-  public_network                        = var.enable_public_network_access != null ? var.enable_public_network_access : local.use_case_features.public_network
+  public_network                        = var.enable_public_network_access
   private_dns_zone_resource_group_name  = var.private_dns_zone_resource_group_name != null ? var.private_dns_zone_resource_group_name : data.azurerm_virtual_network.this.resource_group_name
+
+  # Private DNS Zone IDs - merges overrides with data source lookups
+  private_dns_zone_ids = {
+    azure_api_net             = var.private_dns_zone_ids != null && var.private_dns_zone_ids.azure_api_net != null ? var.private_dns_zone_ids.azure_api_net : data.azurerm_private_dns_zone.azure_api_net[0].id
+    management_azure_api_net  = var.private_dns_zone_ids != null && var.private_dns_zone_ids.management_azure_api_net != null ? var.private_dns_zone_ids.management_azure_api_net : data.azurerm_private_dns_zone.management_azure_api_net[0].id
+    scm_azure_api_net         = var.private_dns_zone_ids != null && var.private_dns_zone_ids.scm_azure_api_net != null ? var.private_dns_zone_ids.scm_azure_api_net : data.azurerm_private_dns_zone.scm_azure_api_net[0].id
+    privatelink_azure_api_net = var.private_dns_zone_ids != null && var.private_dns_zone_ids.privatelink_azure_api_net != null ? var.private_dns_zone_ids.privatelink_azure_api_net : (local.use_case_features.private_endpoint ? data.azurerm_private_dns_zone.apim[0].id : null)
+  }
+
+  # Calculate zone multiplier for autoscale defaults
+  zone_multiplier = local.use_case_features.zones != null ? length(local.use_case_features.zones) : 1
+
+  # Autoscale configuration with zone-aware defaults
+  autoscale_config = {
+    minimum_instances             = coalesce(try(var.autoscale.minimum_instances, null), local.zone_multiplier)
+    default_instances             = coalesce(try(var.autoscale.default_instances, null), local.zone_multiplier)
+    maximum_instances             = coalesce(try(var.autoscale.maximum_instances, null), 5 * local.zone_multiplier)
+    scale_out_capacity_percentage = coalesce(try(var.autoscale.scale_out_capacity_percentage, null), 60)
+    scale_out_time_window         = coalesce(try(var.autoscale.scale_out_time_window, null), "PT10M")
+    scale_out_value               = coalesce(try(var.autoscale.scale_out_value, null), tostring(local.zone_multiplier))
+    scale_out_cooldown            = coalesce(try(var.autoscale.scale_out_cooldown, null), "PT45M")
+    scale_in_capacity_percentage  = coalesce(try(var.autoscale.scale_in_capacity_percentage, null), 30)
+    scale_in_time_window          = coalesce(try(var.autoscale.scale_in_time_window, null), "PT30M")
+    scale_in_value                = coalesce(try(var.autoscale.scale_in_value, null), tostring(local.zone_multiplier))
+    scale_in_cooldown             = coalesce(try(var.autoscale.scale_in_cooldown, null), "PT30M")
+  }
 }

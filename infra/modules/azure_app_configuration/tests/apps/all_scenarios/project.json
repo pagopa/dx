@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "app_configuration_tests_all_scenarios",
+  "version": "0.0.0",
+  "description": "Simple application for Terraform E2E tests, which exposes endpoints to test connectivity and integration with App Configuration",
+  "private": true,
+  "targets": {
+    "docker:build": {
+      "options": {
+        "platform": "linux/amd64,linux/arm64"
+      }
+    },
+    "docker:run": {
+      "options": {
+        "p": "8080:8080"
+      }
+    }
+  }
+}

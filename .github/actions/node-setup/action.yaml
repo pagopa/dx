@@ -19,7 +19,7 @@ runs:
   using: "composite"
 
   steps:
-    - name: Setup yarn
+    - name: Enable Corepack
       shell: bash
       run: corepack enable
 

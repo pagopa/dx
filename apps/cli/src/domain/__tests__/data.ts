@@ -1,6 +1,8 @@
-import { mock } from "vitest-mock-extended";
+import { Octokit } from "octokit";
+import { DeepMockProxy, mock, mockDeep, MockProxy } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
+import { GitHubService } from "../github.js";
 import {
   Dependency,
   PackageJson,
@@ -26,8 +28,15 @@ export const makeMockPackageJson = (
   };
 };
 
-export const makeMockDependencies = () => ({
-  packageJson: makeMockPackageJson(),
+export const makeMockDependencies = (): {
+  gitHubService: MockProxy<GitHubService>;
+  octokit: DeepMockProxy<Octokit>;
+  packageJsonReader: MockProxy<PackageJsonReader>;
+  repositoryReader: MockProxy<RepositoryReader>;
+  validationReporter: MockProxy<ValidationReporter>;
+} => ({
+  gitHubService: mock<GitHubService>(),
+  octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
   validationReporter: mock<ValidationReporter>(),
@@ -37,7 +46,6 @@ export const makeMockConfig = (): Config => ({
   minVersions: {
     turbo: "2.5.0",
   },
-  repository: {
-    root: "a/repo/root",
-  },
 });
+
+export const makeMockRepositoryRoot = (): string => "a/repo/root";

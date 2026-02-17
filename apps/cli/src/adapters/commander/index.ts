@@ -9,7 +9,7 @@ import {
 import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
 import { makeInitCommand } from "./commands/init.js";
-import { makeVersionCommand } from "./commands/version.js";
+import { makeSavemoneyCommand } from "./commands/savemoney.js";
 
 export type CliDependencies = CodemodCommandDependencies;
 
@@ -17,23 +17,21 @@ export const makeCli = (
   deps: Dependencies,
   config: Config,
   cliDeps: CliDependencies,
+  version: string,
 ) => {
   const program = new Command();
 
-  program
-    .name("dx")
-    .description("The CLI for DX-Platform")
-    .version(__CLI_VERSION__);
+  program.name("dx").description("The CLI for DX-Platform").version(version);
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
-
-  if (process.env.ENABLE_INIT_COMMAND) {
-    program.addCommand(makeInitCommand());
-  }
-
-  program.addCommand(makeVersionCommand());
-  program.addCommand(makeInfoCommand(deps, config));
+  program.addCommand(makeInitCommand(deps));
+  program.addCommand(makeSavemoneyCommand());
+  program.addCommand(makeInfoCommand(deps));
 
   return program;
+};
+
+export const exitWithError = (command: Command) => (error: Error) => {
+  command.error(error.message);
 };

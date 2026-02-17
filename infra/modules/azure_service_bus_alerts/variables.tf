@@ -97,6 +97,12 @@ variable "service_bus_namespace_id" {
   description = "Id of the Service Bus Namespace to monitor for dead-lettered messages"
 }
 
+variable "resource_group_name" {
+  type        = string
+  default     = null
+  description = "Optional. Name of the resource group where the alert will be created. When null (the default), locals.tf uses coalesce(...) to derive the resource group name from service_bus_namespace_id; if a non-null value is provided, it overrides the derived value."
+}
+
 variable "action_group_ids" {
   type        = list(string)
   description = "Id list of the action groups to notify when the alert is triggered"

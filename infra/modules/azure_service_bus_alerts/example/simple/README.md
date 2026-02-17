@@ -12,8 +12,8 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_sbns"></a> [sbns](#module\_sbns) | ../../../azure_service_bus_namespace | n/a |
-| <a name="module_sbns_alert"></a> [sbns\_alert](#module\_sbns\_alert) | ../../ | n/a |
+| <a name="module_sbns"></a> [sbns](#module\_sbns) | pagopa-dx/azure-service-bus-namespace/azurerm | ~> 0.0 |
+| <a name="module_sbns_alert"></a> [sbns\_alert](#module\_sbns\_alert) | pagopa-dx/azure-service-bus-alerts/azurerm | ~> 0.1 |
 
 ## Resources
 

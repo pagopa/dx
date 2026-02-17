@@ -7,7 +7,7 @@ This package provides PagoPA's `eslint.config.js` as an extensible shared config
 1. Install `eslint` and `@pagopa/eslint-config`
 
    ```shell
-   yarn add -D eslint @pagopa/eslint-config
+   pnpm add -D eslint @pagopa/eslint-config
    ```
 
 2. Create a file names `eslint.config.js` at the root of your workspace with the following content

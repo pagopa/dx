@@ -8,7 +8,7 @@ on:
 jobs:
   drift_detection_dev:
     uses: ./.github/workflows/infra_drift_detection.yml
-    name: Drift Detection
+    name: Drift Detection - DEV
     permissions:
       contents: read
       actions: read
@@ -21,7 +21,7 @@ jobs:
 
   drift_detection_prod:
     uses: ./.github/workflows/infra_drift_detection.yml
-    name: Drift Detection
+    name: Drift Detection - PROD
     permissions:
       contents: read
       actions: read

@@ -66,7 +66,7 @@ export const migrateWorkflow =
             logger.debug("Updating uses value");
             return new YAML.Pair(
               "uses",
-              `pagopa/dx/.github/workflows/release-azure-appsvc.yaml@${sha}`,
+              `pagopa/dx/.github/workflows/release-azure-appsvc-v1.yaml@${sha}`,
             );
           }
         }

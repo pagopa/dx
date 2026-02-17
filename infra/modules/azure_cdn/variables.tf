@@ -22,10 +22,44 @@ variable "tags" {
 
 variable "origins" {
   type = map(object({
-    host_name = string
-    priority  = optional(number, 1)
+    host_name            = string
+    priority             = optional(number, 1)
+    storage_account_id   = optional(string, null)
+    use_managed_identity = optional(bool, false)
   }))
-  description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority)"
+  description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use_managed_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage_account_id if provided."
+
+  # NOTE: Remove this validation block when managed identity support is generally available
+  validation {
+    condition = alltrue([
+      for k, v in var.origins : !v.use_managed_identity
+    ])
+    error_message = "Managed identity for origins is currently in preview and not yet supported. Please set use_managed_identity to false for all origins."
+  }
+}
+
+variable "existing_cdn_frontdoor_profile_id" {
+  type        = string
+  description = "Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile."
+  default     = null
+
+  validation {
+    condition = (
+      var.existing_cdn_frontdoor_profile_id == null
+      || (
+        can(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id))
+        && lower(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id)["resource_provider"]) == "microsoft.cdn"
+        && lower(provider::azurerm::parse_resource_id(var.existing_cdn_frontdoor_profile_id)["resource_type"]) == "profiles"
+      )
+    )
+    error_message = "existing_cdn_frontdoor_profile_id must be a valid Azure resource ID for a Microsoft.Cdn/profiles resource, e.g. /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Cdn/profiles/<name>."
+  }
+}
+
+variable "waf_enabled" {
+  type        = bool
+  description = "Whether to enable the WAF policy and associate it with the endpoint."
+  default     = false
 }
 
 variable "custom_domains" {
@@ -65,8 +99,8 @@ variable "custom_domains" {
 variable "diagnostic_settings" {
   type = object({
     enabled                                   = bool
-    log_analytics_workspace_id                = string
-    diagnostic_setting_destination_storage_id = string
+    log_analytics_workspace_id                = optional(string)
+    diagnostic_setting_destination_storage_id = optional(string)
   })
   default = {
     enabled                                   = false
@@ -75,19 +109,18 @@ variable "diagnostic_settings" {
   }
   description = <<-EOT
     Define if diagnostic settings should be enabled.
-    if it is:
-    Specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
-    the ID of the Storage Account where logs should be sent. (Changing this forces a new resource to be created)
+    If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and
+    optionally the ID of the Storage Account where logs should be sent.
   EOT
 
   validation {
     condition = (
-      !(var.diagnostic_settings.enabled)
+      !var.diagnostic_settings.enabled
       || (
         var.diagnostic_settings.log_analytics_workspace_id != null
-        && var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
+        || var.diagnostic_settings.diagnostic_setting_destination_storage_id != null
       )
     )
-    error_message = "log_analytics_workspace_id and diagnostic_setting_destination_storage_id are mandatory if diagnostic is enabled."
+    error_message = "At least one of log_analytics_workspace_id or diagnostic_setting_destination_storage_id must be specified when diagnostic settings are enabled."
   }
 }

@@ -7,20 +7,18 @@ RUN corepack enable
 WORKDIR /app
 
 # 3. Copy monorepo configuration files
-COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./
+COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.json ./
 
 # 4. Copy source code for apps and packages
 COPY ./apps ./apps
 COPY ./packages ./packages
 
-
 # 5. Install ALL dependencies for mcpserver and its workspace dependencies
 RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
-RUN pnpm --filter @pagopa/dx-mcpserver build
+RUN pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
-
 
 # --- Final Image ---
 FROM public.ecr.aws/docker/library/node:slim@sha256:c0eadb278e6b0b608681b359291592692979133567710eaa703d6f989f33c6c1
@@ -33,4 +31,4 @@ COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1@sha256:46d6625e68cbb
 COPY --from=base /app/deploy .
 
 EXPOSE 8080
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/cli.js"]

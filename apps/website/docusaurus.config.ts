@@ -16,10 +16,13 @@ const config: Config = {
     locales: ["en"],
   },
   markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "warn",
+    },
     mermaid: true,
   },
+  onBrokenAnchors: "throw",
   onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -66,6 +69,7 @@ const config: Config = {
         enableClickAnalytics: false,
       },
     ],
+    require.resolve("./src/plugins/mcp-prompts-loader.ts"),
     [
       "docusaurus-plugin-llms",
       {
@@ -91,13 +95,9 @@ const config: Config = {
       "classic",
       {
         blog: {
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/pagopa/dx/tree/main/website/",
           showReadingTime: true,
         },
         docs: {
-          // Remove this to remove the "edit this page" links.
-          editUrl: "https://github.com/pagopa/dx/tree/main/website/",
           sidebarCollapsed: true,
           sidebarCollapsible: true,
           sidebarPath: "./sidebars.ts",
@@ -164,6 +164,12 @@ const config: Config = {
       items: [
         { label: "Docs", position: "left", to: "/docs" },
         { label: "Blog", position: "left", to: "/blog" },
+        {
+          className: "navbar-support-link",
+          label: "Support",
+          position: "left",
+          to: "/docs/support",
+        },
         {
           href: "https://github.com/pagopa/dx",
           label: "GitHub",

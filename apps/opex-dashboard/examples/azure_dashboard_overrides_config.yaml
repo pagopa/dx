@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../config.schema.json
+oa3_spec: test/data/io_backend.yaml # If start with http the file would be download from the internet
+name: My spec
+location: West Europe
+timespan: 5m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
+resource_type: app-gateway
+# resource_group: dashboards # Optional: Azure resource group name for dashboard and alerts (default: dashboards)
+action_groups:
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-slack
+# Global threshold defaults (can be overridden per-endpoint)
+availability_threshold: 0.99 # Default: 0.99 (99%)
+response_time_threshold: 1.0 # Default: 1.0 second
+overrides:
+  hosts: # Use these hosts instead of those inside the OpenApi spec
+    - https://example.com
+  endpoints:
+    /api/v1/services/{service_id}:
+      availability_threshold: 0.95 # Default: 99%
+      availability_evaluation_frequency: 30 # Default: 10
+      availability_evaluation_time_window: 50 # Default: 20
+      availability_event_occurrences: 3 # Default: 1
+      response_time_threshold: 2 # Default: 1
+      response_time_evaluation_frequency: 35 # Default: 10
+      response_time_evaluation_time_window: 55 # Default: 20
+      response_time_event_occurrences: 5 # Default: 1

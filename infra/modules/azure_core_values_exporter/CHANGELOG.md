@@ -1,5 +1,17 @@
 # azure_core_values_exporter
 
+## 0.4.0
+
+### Minor Changes
+
+- d47051f: Add support for core states with multiple Azure Subscriptions
+
+## 0.3.0
+
+### Minor Changes
+
+- 707b709: Add subscription_id variable
+
 ## 0.2.4
 
 ### Patch Changes

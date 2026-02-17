@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "cosmos_db_tests_network_access",
+  "version": "0.1.0",
+  "description": "Simple application for Terraform E2E tests, which exposes a single HTTP endpoint to test connectivity to Cosmos DB",
+  "private": true,
+  "targets": {
+    "docker:build": {
+      "options": {
+        "platform": "linux/amd64,linux/arm64"
+      }
+    },
+    "docker:run": {
+      "options": {
+        "p": "8080:8080"
+      }
+    }
+  }
+}

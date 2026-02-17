@@ -35,7 +35,7 @@ variables {
     {
       location          = "westeurope"
       failover_priority = 1
-      zone_redundant    = true
+      zone_redundant    = false
     }
   ]
 
@@ -71,7 +71,6 @@ override_data {
   }
 }
 
-// Assert Cosmos DB account baseline properties
 run "cosmos_account_basics" {
   command = plan
 
@@ -128,17 +127,16 @@ run "consistency_policy_custom_bounded" {
   }
 }
 
-// Assert private endpoint wiring at plan time
 run "private_endpoint_sql" {
   command = plan
 
   assert {
-    condition     = azurerm_private_endpoint.sql.subnet_id == var.subnet_pep_id
+    condition     = azurerm_private_endpoint.sql[0].subnet_id == var.subnet_pep_id
     error_message = "Private Endpoint must target provided PEP subnet"
   }
 
   assert {
-    condition     = azurerm_private_endpoint.sql.private_service_connection[0].subresource_names[0] == "Sql"
+    condition     = azurerm_private_endpoint.sql[0].private_service_connection[0].subresource_names[0] == "Sql"
     error_message = "Private Endpoint subresource_names must contain 'Sql'"
   }
 }
@@ -188,4 +186,128 @@ run "cosmos_account_local_auth_disabled" {
     )) == 0
     error_message = "The Cosmos DB account must not have capabilities EnableMongo, EnableCassandra, EnableTable, or EnableGremlin"
   }
+}
+
+run "cosmos_with_diagnostic_settings" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created when enabled"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this[0].enabled_log) > 0
+    error_message = "At least one log category should be enabled"
+  }
+
+  assert {
+    condition     = length([for log in azurerm_monitor_diagnostic_setting.this[0].enabled_log : log if log.category_group == "allLogs"]) > 0
+    error_message = "The category_group should be set to 'allLogs'"
+  }
+}
+
+run "cosmos_without_diagnostic_settings" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = false
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 0
+    error_message = "Diagnostic settings should not be created when disabled"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_only_log_analytics" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Log Analytics workspace"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.OperationalInsights/workspaces/test-law"
+    error_message = "Log Analytics workspace ID should match the provided value"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == null
+    error_message = "Storage account ID should be null when not provided"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_only_storage" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Diagnostic settings should be created with only Storage Account"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].log_analytics_workspace_id == null
+    error_message = "Log Analytics workspace ID should be null when not provided"
+  }
+
+  assert {
+    condition     = azurerm_monitor_diagnostic_setting.this[0].storage_account_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorage"
+    error_message = "Storage account ID should match the provided value"
+  }
+}
+
+run "cosmos_with_diagnostic_settings_enabled_but_no_destinations" {
+  command = plan
+
+  variables {
+    diagnostic_settings = {
+      enabled                                   = true
+      log_analytics_workspace_id                = null
+      diagnostic_setting_destination_storage_id = null
+    }
+  }
+
+  expect_failures = [
+    var.diagnostic_settings,
+  ]
 }

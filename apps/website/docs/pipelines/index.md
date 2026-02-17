@@ -2,22 +2,12 @@
 sidebar_position: 5
 ---
 
-# Managing DX Pipelines
+# Using DX Pipelines
 
-This section contains documentation on GitHub Actions workflows that automate
-the deployment of resources and applications, code quality checks, and security
-scanning.
-
-## Quick Start for Developers
-
-New to DX pipelines? Start here:
-
-1. **Set up code review workflow** - Automated linting, testing, and security
-   scanning
-2. **[Deploy applications](../azure/application-deployment/release-azure-appsvc.md)** -
-   Zero-downtime releases to Azure App Service
-3. **[Automate infrastructure](../terraform/infra-apply.md)** - Safe Terraform
-   deployments
+This section contains documentation about DX reusable workflows (GitHub
+Actions). These workflows are designed to be easily integrated into your own
+repositories, allowing you to automate common tasks such as code quality checks,
+application deployment, and infrastructure automation.
 
 ## Available Workflows
 
@@ -28,6 +18,11 @@ New to DX pipelines? Start here:
   quality scanning
 - **[Drift Detection](../terraform/drift-detection.md)** - Monitor
   infrastructure changes
+
+### 📦 Release & Versioning
+
+- **[Release Action](./release.md)** - Automate package versioning and
+  publishing
 
 ### 🚀 Application Deployment
 
@@ -109,20 +104,20 @@ Moving from older workflows? Check our migration guides:
 
 - **[Legacy Workflows](../legacy/index.md)** - Information about deprecated
   workflows
-- **[Migration Strategies](../legacy/index.md)** - How to upgrade to current
-  workflows
 
-:::warning **Legacy Content** The [legacy section](../legacy/index.md) contains
-deprecated workflows that are no longer maintained. New projects should use the
-current workflows documented above. :::
+:::warning **Legacy Content**
 
-## Getting Support
+The [legacy section](../legacy/index.md) contains deprecated workflows that are
+no longer maintained. New projects should use the current workflows documented
+above.
 
-- **Workflow issues?** Open an issue on the
-  [DX repository](https://github.com/pagopa/dx/issues)
-- **Feature requests** We welcome suggestions for new workflows
+:::
 
-:::tip **Pipeline Best Practices** Follow our
-[Git conventions](../github/git/index.md) and
+:::tip **Pipeline Best Practices**
+
+Follow our [Git conventions](../github/git/index.md) and
 [pull request guidelines](../github/pull-requests/index.md) to get the most out
-of DX pipelines. :::
+of DX pipelines. For questions or issues, visit our
+[support page](../support.md).
+
+:::

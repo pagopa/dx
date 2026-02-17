@@ -18,12 +18,13 @@ data "azurerm_subnet" "pep" {
 
 
 module "storage_account" {
-  source = "../../../azure_storage_account"
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.1"
 
   environment = local.environment
 
   resource_group_name = azurerm_resource_group.example.name
-  tier                = "s"
+  use_case            = "default"
   subnet_pep_id       = data.azurerm_subnet.pep.id
 
   force_public_network_access_enabled = true
@@ -57,12 +58,14 @@ data "azurerm_key_vault_certificate" "cert" {
 }
 
 module "azure_cdn" {
-  source = "../../"
+  source  = "pagopa-dx/azure-cdn/azurerm"
+  version = "~> 0.4"
 
   resource_group_name = azurerm_resource_group.example.name
 
   environment = local.environment
 
+  # Basic origin configuration
   origins = {
     primary = {
       host_name = module.storage_account.primary_web_host

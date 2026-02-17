@@ -1,5 +1,27 @@
 # github_environment_bootstrap
 
+## 1.1.4
+
+### Patch Changes
+
+- 2c0ec21: Fix link to the DX Monorepo Setup Guide
+
+## 1.1.3
+
+### Patch Changes
+
+- cea4909: Remove `advanced_security` block since the feature is enabled by default on public repos.
+
+  The module do not provide the creation of private repos, so this change will not affect existing users.
+  This will fix an issue when using the module:
+
+  ```text
+  │ Error: PATCH https://api.github.com/repos/pagopa-dx/test-cli: 422 Advanced security is always available for public repos. []
+  ```
+
+- 676dfdc: Refactored all `github_repository_environment` resources to use `github_repository.this.name` instead of `var.repository.name` for the repository argument.
+  This ensures proper Terraform dependency tracking and resolves issues with resource dependencies.
+
 ## 1.1.2
 
 ### Patch Changes

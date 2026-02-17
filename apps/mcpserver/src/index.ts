@@ -1,53 +1,30 @@
-import { FastMCP } from "fastmcp";
+/**
+ * PagoPA DX Knowledge Retrieval MCP Server
+ *
+ * This module exposes the main server startup logic without triggering side effects
+ * at import time. All runtime setup flows from the main entrypoint.
+ */
 
-import { verifyGithubUser } from "./auth/github.js";
-import { serverInstructions } from "./config/server.js";
-import { GenerateTerraformConfigurationPrompt } from "./prompts/GenerateTerraformConfiguration.js";
-import { QueryPagoPADXDocumentationTool } from "./tools/QueryPagoPADXDocumentation.js";
-import { SearchGitHubCodeTool } from "./tools/SearchGitHubCode.js";
-import { logger } from "./utils/logger.js";
+import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
+import * as http from "node:http";
 
-// Authentication is enabled based on the AUTH_REQUIRED environment variable.
+import { loadConfig } from "./config.js";
+import { configureLogging } from "./config/logging.js";
+import { configureAzureMonitoring } from "./config/monitoring.js";
+import { startHttpServer } from "./server.js";
 
-const server = new FastMCP({
-  authenticate: async (request) => {
-    const authHeader = request.headers["x-gh-pat"];
-    const apiKey =
-      typeof authHeader === "string"
-        ? authHeader
-        : Array.isArray(authHeader)
-          ? authHeader[0]
-          : undefined;
+export async function main(
+  env: NodeJS.ProcessEnv,
+): Promise<http.Server | undefined> {
+  const config = loadConfig(env);
 
-    if (!apiKey || !(await verifyGithubUser(apiKey))) {
-      throw new Response(null, {
-        status: 401,
-        statusText: "Unauthorized",
-      });
-    }
+  await configureLogging(config.logLevel);
+  configureAzureMonitoring(config.monitoring);
 
-    // The returned object is accessible in the `context.session`.
-    return {
-      id: 1,
-      token: apiKey,
-    };
-  },
-  instructions: serverInstructions,
-  name: "PagoPA DX Knowledge Retrieval MCP Server",
-  version: "0.0.0",
-});
+  const enabledPrompts = await getEnabledPrompts();
 
-logger.debug(`Server instructions: \n\n${serverInstructions}`);
+  const httpServer = await startHttpServer(config, enabledPrompts);
+  return httpServer;
+}
 
-server.addPrompt(GenerateTerraformConfigurationPrompt);
-server.addTool(QueryPagoPADXDocumentationTool);
-server.addTool(SearchGitHubCodeTool);
-
-// Starts the server in HTTP Stream mode.
-server.start({
-  httpStream: {
-    port: 8080,
-    stateless: true,
-  },
-  transportType: "httpStream",
-});
+export { startHttpServer };

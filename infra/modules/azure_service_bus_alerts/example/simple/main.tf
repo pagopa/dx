@@ -17,12 +17,13 @@ resource "azurerm_monitor_action_group" "dx" {
 }
 
 module "sbns" {
-  source = "../../../azure_service_bus_namespace"
+  source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
+  version = "~> 0.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  tier = "m"
+  use_case = "default"
 
   allowed_ips = ["127.0.0.1"]
 
@@ -40,7 +41,8 @@ resource "azurerm_servicebus_topic" "example" {
 }
 
 module "sbns_alert" {
-  source = "../../"
+  source  = "pagopa-dx/azure-service-bus-alerts/azurerm"
+  version = "~> 0.1"
 
   environment = local.environment
 

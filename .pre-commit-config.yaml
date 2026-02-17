@@ -52,6 +52,7 @@ repos:
       - id: terraform_trivy
         args:
           - --args=--skip-dirs="**/.terraform"
+          - --args=--skip-dirs="**/tests/apps/network_access"
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
           - --args=--tf-exclude-downloaded-modules
           - --hook-config=--parallelism-limit=1

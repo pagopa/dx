@@ -1,18 +1,12 @@
+/**
+ * AWS configuration helpers for the MCP server.
+ *
+ * This module is intentionally side-effect free to keep initialization
+ * controlled by the entrypoint.
+ */
+
 import { BedrockAgentRuntimeClient } from "@aws-sdk/client-bedrock-agent-runtime";
-
-import { logger } from "../utils/logger.js";
-
-// When true, enables reranking for the Bedrock knowledge base queries.
-export const kbRerankingEnabled =
-  (process.env.BEDROCK_KB_RERANKING_ENABLED || "true").trim().toLowerCase() ===
-  "true";
-export const knowledgeBaseId = process.env.BEDROCK_KNOWLEDGE_BASE_ID || "";
-
-logger.info(
-  `Default reranking enabled: ${kbRerankingEnabled} (from BEDROCK_KB_RERANKING_ENABLED)`,
-);
-
-export const region = process.env.AWS_REGION || "eu-central-1";
+import { Logger } from "@logtape/logtape";
 
 // List of AWS regions that support reranking
 export const rerankingSupportedRegions = [
@@ -23,14 +17,21 @@ export const rerankingSupportedRegions = [
   "us-west-2",
 ];
 
-let kbRuntimeClient: BedrockAgentRuntimeClient;
+export type AwsRuntimeConfig = {
+  knowledgeBaseId: string;
+  modelArn: string;
+  region: string;
+  rerankingEnabled: boolean;
+};
 
-try {
-  // Initializes the Bedrock Agent Runtime client with the specified region.
-  kbRuntimeClient = new BedrockAgentRuntimeClient({ region });
-} catch (e) {
-  logger.error(e, "Error getting bedrock agent client");
-  process.exit(1);
+export function createBedrockRuntimeClient(
+  region: string,
+  logger: Logger,
+): BedrockAgentRuntimeClient {
+  try {
+    return new BedrockAgentRuntimeClient({ region });
+  } catch (error) {
+    logger.error("Error getting bedrock agent client", { error });
+    throw error;
+  }
 }
-
-export { kbRuntimeClient };

@@ -1,20 +1,26 @@
 {
   "name": "@pagopa/dx",
-  "packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
   "devDependencies": {
-    "@changesets/cli": "^2.29.5",
-    "@devcontainers/cli": "^0.79.0",
+    "@changesets/cli": "^2.29.8",
+    "@devcontainers/cli": "^0.80.3",
+    "@nx/docker": "22.3.3",
+    "@nx/eslint": "22.3.3",
+    "@nx/js": "22.3.3",
+    "@nx/vitest": "22.3.3",
+    "@tsconfig/node22": "catalog:",
     "eslint": "catalog:",
+    "nx": "22.3.3",
     "prettier": "catalog:",
-    "turbo": "^2.5.5",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
-    "build": "turbo run build",
-    "code-review": "turbo run typecheck format:check lint:check test:coverage",
-    "version": "changeset version && pnpm i --lockfile-only",
-    "release": "pnpm build && changeset publish",
+    "version": "changeset version && pnpm i --lockfile-only && nx run-many --target=version",
+    "release": "nx run-many --target=build --projects=tag:npm:public && changeset publish",
     "sbom-generate": "sh sbom.sh --generate",
-    "sbom-validate": "sh sbom.sh --validate"
+    "sbom-validate": "sh sbom.sh --validate",
+    "dx": "node ./apps/cli/bin/index.js",
+    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check,typecheck --configuration=ci"
   }
 }

@@ -1,0 +1,57 @@
+name: Terraform modules integration tests (weekly)
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  TF_IN_AUTOMATION: true
+
+jobs:
+  terraform-integration-test:
+    name: Run Terraform Integration Tests
+    runs-on: ubuntu-latest
+    environment: integration-tests
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0
+
+      - name: Cloud Provider Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+      - name: Terraform Setup
+        id: set-terraform-version
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run Terraform Integration Tests
+        timeout-minutes: 120
+        run: |
+          npx nx run-many --target test:integration

@@ -1,0 +1,42 @@
+name: Upload Terraform Plan
+description: Encrypts a Terraform plan file and uploads it as a GitHub Actions artifact
+
+inputs:
+  plan-file:
+    description: Name of the Terraform plan file to encrypt and upload
+    required: true
+  working-directory:
+    description: Working directory containing the plan file
+    required: true
+  artifact-name:
+    description: Name for the uploaded artifact
+    required: true
+  retention-days:
+    description: Number of days to retain the artifact
+    required: false
+    default: "1"
+
+runs:
+  using: composite
+  steps:
+    - name: Encrypt Terraform Plan
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PLAN_FILE: ${{ inputs.plan-file }}
+        ENCRYPTION_PASSPHRASE: ${{ env.ARTIFACT_ENC_KEY }}
+      run: |
+        set -euo pipefail
+        openssl enc -aes-256-cbc -salt -pbkdf2 \
+          -in "$PLAN_FILE" \
+          -out "${PLAN_FILE}.enc" \
+          -pass env:ENCRYPTION_PASSPHRASE
+        rm -f "$PLAN_FILE"
+
+    - name: Upload Terraform Plan as Artifact
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}.enc
+        if-no-files-found: error
+        retention-days: ${{ inputs.retention-days }}

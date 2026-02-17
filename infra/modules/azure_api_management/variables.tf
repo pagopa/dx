@@ -44,35 +44,56 @@ variable "use_case" {
 variable "autoscale" {
   type = object(
     {
-      enabled                       = bool
-      default_instances             = number
-      minimum_instances             = number
-      maximum_instances             = number
-      scale_out_capacity_percentage = number
-      scale_out_time_window         = string
-      scale_out_value               = string
-      scale_out_cooldown            = string
-      scale_in_capacity_percentage  = number
-      scale_in_time_window          = string
-      scale_in_value                = string
-      scale_in_cooldown             = string
+      default_instances             = optional(number)
+      minimum_instances             = optional(number)
+      maximum_instances             = optional(number)
+      scale_out_capacity_percentage = optional(number)
+      scale_out_time_window         = optional(string)
+      scale_out_value               = optional(string)
+      scale_out_cooldown            = optional(string)
+      scale_in_capacity_percentage  = optional(number)
+      scale_in_time_window          = optional(string)
+      scale_in_value                = optional(string)
+      scale_in_cooldown             = optional(string)
     }
   )
-  default = {
-    enabled                       = true
-    default_instances             = 1
-    minimum_instances             = 1
-    maximum_instances             = 5
-    scale_out_capacity_percentage = 60
-    scale_out_time_window         = "PT10M"
-    scale_out_value               = "2"
-    scale_out_cooldown            = "PT45M"
-    scale_in_capacity_percentage  = 30
-    scale_in_time_window          = "PT30M"
-    scale_in_value                = "1"
-    scale_in_cooldown             = "PT30M"
-  }
+  default     = null
   description = "Configuration for autoscaling rules on capacity metrics."
+
+  validation {
+    condition = var.autoscale == null || local.use_case_features.zones == null ? true : (
+      # Validate user-provided values only (if not null)
+      (try(var.autoscale.minimum_instances, null) == null || var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.maximum_instances, null) == null || var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.default_instances, null) == null || var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.scale_out_value, null) == null || tonumber(var.autoscale.scale_out_value) % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
+      (try(var.autoscale.scale_in_value, null) == null || tonumber(var.autoscale.scale_in_value) % length(coalesce(local.use_case_features.zones, [1])) == 0)
+    )
+    error_message = "When zone redundancy is enabled (${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0} zones), all autoscaling parameters must be multiples of ${local.use_case_features.zones != null ? length(local.use_case_features.zones) : 0}. This ensures proper distribution across availability zones."
+  }
+
+  validation {
+    condition = var.autoscale == null ? true : (
+      try(var.autoscale.minimum_instances, null) == null || try(var.autoscale.default_instances, null) == null || try(var.autoscale.maximum_instances, null) == null ||
+      (var.autoscale.minimum_instances <= var.autoscale.default_instances && var.autoscale.default_instances <= var.autoscale.maximum_instances)
+    )
+    error_message = "The default_instances must be between minimum_instances and maximum_instances."
+  }
+
+  validation {
+    condition     = var.autoscale == null ? true : (try(var.autoscale.minimum_instances, null) == null || var.autoscale.minimum_instances > 0)
+    error_message = "The minimum_instances must be greater than 0."
+  }
+
+  validation {
+    condition     = var.autoscale == null ? true : (try(var.autoscale.scale_out_value, null) == null || tonumber(var.autoscale.scale_out_value) > 0)
+    error_message = "The scale_out_value must be greater than 0."
+  }
+
+  validation {
+    condition     = var.autoscale == null ? true : (try(var.autoscale.scale_in_value, null) == null || tonumber(var.autoscale.scale_in_value) > 0)
+    error_message = "The scale_in_value must be greater than 0."
+  }
 }
 
 #------------#
@@ -112,8 +133,8 @@ variable "virtual_network_type_internal" {
 
 variable "enable_public_network_access" {
   type        = bool
-  description = "Specifies whether public network access is enabled."
-  default     = null
+  description = "Specifies whether public network access is enabled (`true` as Default)."
+  default     = true
 }
 
 variable "public_ip_address_id" {
@@ -126,6 +147,17 @@ variable "private_dns_zone_resource_group_name" {
   type        = string
   description = "The resource group name of the private DNS zone. This is only required when the resource group name differs from the VNet resource group."
   default     = null
+}
+
+variable "private_dns_zone_ids" {
+  type = object({
+    azure_api_net             = optional(string)
+    management_azure_api_net  = optional(string)
+    scm_azure_api_net         = optional(string)
+    privatelink_azure_api_net = optional(string)
+  })
+  default     = null
+  description = "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\". Use this to reference DNS zones in different subscriptions."
 }
 
 #---------------------------#
@@ -156,32 +188,30 @@ variable "xml_content" {
 
 variable "hostname_configuration" {
   type = object({
-
-    proxy = list(object(
-      {
-        default_ssl_binding = bool
-        host_name           = string
-        key_vault_id        = string
-    }))
-
-    management = object({
+    proxy = optional(list(object({
+      host_name           = string
+      key_vault_id        = string
+      default_ssl_binding = optional(bool, false)
+    })), [])
+    management = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
-    portal = object({
+    })), [])
+    portal = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
-    developer_portal = object({
+    })), [])
+    developer_portal = optional(list(object({
       host_name    = string
       key_vault_id = string
-    })
-
+    })), [])
+    scm = optional(list(object({
+      host_name    = string
+      key_vault_id = string
+    })), [])
   })
-  default     = null
-  description = "Configuration for custom domains."
+  default     = {}
+  description = "Custom domain configurations organized by type. Each type (proxy, management, portal, developer_portal, scm) contains a list of domain configurations."
 }
 
 #---------------#

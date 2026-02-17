@@ -1,7 +1,14 @@
 {
   "name": "azure_cosmos_account",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings"
+  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'",
+    "test:integration": "terraform test -filter='tests/integration.tftest.hcl'",
+    "test:e2e": "go test -v -timeout 1h ./tests"
+  }
 }

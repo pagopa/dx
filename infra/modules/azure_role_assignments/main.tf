@@ -55,3 +55,11 @@ module "service_bus" {
   subscription_id = var.subscription_id
   service_bus     = var.service_bus
 }
+
+module "app_config" {
+  source = "./modules/app_config"
+
+  principal_id    = var.principal_id
+  subscription_id = var.subscription_id
+  app_config      = var.app_config
+}
