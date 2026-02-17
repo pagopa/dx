@@ -1,14 +1,11 @@
 
-data "azurerm_resource_group" "integration" {
+resource "azurerm_resource_group" "e2e" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "integration",
+    domain        = "e2e",
+    name          = "cdn",
     resource_type = "resource_group"
   }))
-}
-
-data "azurerm_cdn_frontdoor_profile" "integration" {
-  name                = "dx-d-itn-test-afd-01"
-  resource_group_name = data.azurerm_resource_group.integration.name
+  location = local.environment.location
 }
 
 data "azurerm_subnet" "pep" {
@@ -27,7 +24,7 @@ module "storage_account" {
 
   environment = local.environment
 
-  resource_group_name = data.azurerm_resource_group.integration.name
+  resource_group_name = azurerm_resource_group.e2e.name
   use_case            = "default"
   subnet_pep_id       = data.azurerm_subnet.pep.id
 
@@ -50,12 +47,9 @@ module "azure_cdn" {
   # version = "~> 0.5"
   source = "../../"
 
-  resource_group_name = data.azurerm_resource_group.integration.name
+  resource_group_name = azurerm_resource_group.e2e.name
 
   environment = local.environment
-
-  # Reuse the existing CDN profile created above
-  existing_cdn_frontdoor_profile_id = data.azurerm_cdn_frontdoor_profile.integration.id
 
   # WAF is already enabled on the profile, create security policy for this endpoint
   waf_enabled = true

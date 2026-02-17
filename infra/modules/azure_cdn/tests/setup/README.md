@@ -19,7 +19,6 @@
 | Name | Type |
 |------|------|
 | [azurerm_dns_zone.devex_pagopa_it](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_zone) | resource |
-| [azurerm_cdn_frontdoor_profile.test](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/cdn_frontdoor_profile) | data source |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subnet.snet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
@@ -35,7 +34,6 @@
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cdn_profile_id"></a> [cdn\_profile\_id](#output\_cdn\_profile\_id) | n/a |
 | <a name="output_devex_pagopa_it_zone_name"></a> [devex\_pagopa\_it\_zone\_name](#output\_devex\_pagopa\_it\_zone\_name) | n/a |
 | <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |

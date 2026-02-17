@@ -1,24 +1,4 @@
 # Integration Tests for Azure CDN Module
-#
-# IMPORTANT: These tests use an EXISTING CDN FrontDoor Profile to avoid long
-# provisioning times (45+ minutes for profile creation/deletion).
-#
-# The existing profile "dx-d-itn-pagopa-afd-02" is pre-provisioned in the
-# dev environment and referenced via the setup module.
-#
-# What we test:
-# - Endpoint creation with existing profile
-# - Origins configuration (single and multiple)
-# - Custom domains and DNS records
-# - WAF security policies
-# - Diagnostic settings
-# - Route configuration
-#
-# What we DON'T test here:
-# - CDN Profile creation (too slow, covered by unit tests with mocks)
-# - Profile deletion (too slow for CI/CD workflows)
-#
-# For full profile lifecycle testing, use manual tests or separate scheduled jobs.
 
 provider "azurerm" {
   features {}
@@ -63,10 +43,10 @@ run "apply_endpoint_with_existing_profile" {
   command = apply
 
   variables {
-    environment                       = var.environment
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
+    environment         = var.environment
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
+
 
     origins = {
       primary = {
@@ -123,9 +103,9 @@ run "apply_cdn_with_custom_domain" {
       app_name        = "test"
       instance_number = "02"
     }
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
+
 
     origins = {
       primary = {
@@ -187,10 +167,10 @@ run "apply_cdn_with_waf" {
       app_name        = "test"
       instance_number = "03"
     }
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
-    waf_enabled                       = true
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
+
+    waf_enabled = true
 
     origins = {
       primary = {
@@ -242,9 +222,9 @@ run "apply_cdn_with_multiple_origins" {
       app_name        = "test"
       instance_number = "05"
     }
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
+
 
     origins = {
       primary = {
