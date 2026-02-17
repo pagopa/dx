@@ -44,8 +44,8 @@ Event / Exception:
 Span Markers (child spans):
 
 ```jsonc
-{"span":"build","startSpan":"2025-10-21T09:30:12.123Z"}
-{"span":"build","endSpan":"2025-10-21T09:31:05.987Z"}
+{"span":"build","startSpan":"2026-01-15T09:30:12.123Z"}
+{"span":"build","endSpan":"2026-01-15T09:31:05.987Z"}
 ```
 
 The consumer will pair `startSpan`/`endSpan` with the same `span` name in order of appearance. Multiple occurrences produce multiple child spans. Orphaned starts or ends are ignored.
@@ -89,7 +89,7 @@ The consumer will pair `startSpan`/`endSpan` with the same `span` name in order 
     span_phase: end
 ```
 
-It is also possible to interleaving multiple spans:
+It is also possible to interleave multiple spans:
 
 ```yaml
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>

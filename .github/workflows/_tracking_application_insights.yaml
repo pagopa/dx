@@ -4,17 +4,13 @@ on:
   push:
     branches:
       - CES-1118-tracciare-package-manager-su-app-insights-via-workflow
-  workflow_dispatch:
-    inputs:
-      use_otel:
-        description: "Use OTEL SDK"
-        required: false
-        default: "true"
-        type: string
+  workflow_dispatch: {}
 
 jobs:
   tracker:
     runs-on: "ubuntu-latest"
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -35,7 +31,7 @@ jobs:
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
           name: Random work
-          phase: start
+          span_phase: start
 
       - name: Do random work and collect output
         shell: bash
@@ -48,7 +44,7 @@ jobs:
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow
         with:
           name: Random work
-          phase: end
+          span_phase: end
 
       - name: Log collected result as telemetry event
         uses: pagopa/dx/actions/log-telemetry-event@CES-1118-tracciare-package-manager-su-app-insights-via-workflow

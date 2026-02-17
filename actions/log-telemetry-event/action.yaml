@@ -27,7 +27,7 @@ runs:
     - name: Append event / span marker
       shell: bash
       env:
-        INPUT_NAME: ${{inputs.name }}
+        INPUT_NAME: ${{inputs.name}}
         INPUT_BODY: ${{inputs.body}}
         INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
         INPUT_SPAN_PHASE: ${{inputs.span_phase}}

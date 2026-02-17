@@ -81,9 +81,9 @@ Format:
 
 ```jsonc
 // start
-{"span":"build","startSpan":"2025-10-21T09:30:12.123Z"}
+{"span":"build","startSpan":"2026-01-15T09:30:12.123Z"}
 // end
-{"span":"build","endSpan":"2025-10-21T09:31:05.987Z"}
+{"span":"build","endSpan":"2026-01-15T09:31:05.987Z"}
 ```
 
 Reconstruction logic:
