@@ -53,7 +53,7 @@ run "app_service_is_correct_plan" {
   command = plan
 
   variables {
-    use_case            = "default"
+    use_case = "default"
   }
 
   # Checks some assertions

@@ -57,5 +57,20 @@ variable "key_vault" {
     secret_name         = optional(string, "github-runner-pat")
   })
 
-  description = "Details of the Key Vault used to store secrets for the Container App Job."
+  description = <<-EOT
+    Details of the Key Vault used to store GitHub credentials.
+    The field 'secret_name' is used only when 'use_github_app' is set to false.
+  EOT
+}
+
+variable "use_github_app" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Set true to use GitHub App authentication instead of a Personal Access Token.
+    If true, the module expects the Key Vault to contain the following secrets:
+      - github-runner-app-installation-id: GitHub App Installation ID
+      - github-runner-app-id: GitHub App ID
+      - github-runner-app-key: GitHub App private key in PEM format
+  EOT
 }

@@ -624,3 +624,146 @@ run "function_app_with_diagnostic_settings_enabled_but_no_destinations" {
     var.diagnostic_settings,
   ]
 }
+
+run "function_app_without_entra_id_authentication" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured when entra_id_authentication is null"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app_slot.this[0].auth_settings_v2) == 0
+    error_message = "auth_settings_v2 should not be configured on staging slot when entra_id_authentication is null"
+  }
+
+  assert {
+    condition     = output.entra_id_authentication.audience_client_id == null
+    error_message = "entra_id_authentication output should have null audience_client_id when disabled"
+  }
+}
+
+run "function_app_with_entra_id_authentication" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].require_authentication == true
+    error_message = "auth_settings_v2 should require authentication"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Unauthenticated requests should return 401"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
+    error_message = "Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].active_directory_v2[0].tenant_auth_endpoint == "https://login.microsoftonline.com/00000000-0000-0000-0000-000000000003/v2.0"
+    error_message = "Active Directory v2 tenant_auth_endpoint should be constructed from tenant_id"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.auth_settings_v2[0].login[0].token_store_enabled == false
+    error_message = "Token store should be disabled"
+  }
+
+  # Slot assertions
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "Staging slot Active Directory v2 client_id should match Entra application client ID"
+  }
+
+  assert {
+    condition     = contains(azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].active_directory_v2[0].allowed_applications, "00000000-0000-0000-0000-000000000002")
+    error_message = "Staging slot Active Directory v2 allowed_applications should contain the specified client application"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app_slot.this[0].auth_settings_v2[0].unauthenticated_action == "Return401"
+    error_message = "Staging slot unauthenticated requests should return 401"
+  }
+
+  # Output assertions
+  assert {
+    condition     = output.entra_id_authentication.audience_client_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "entra_id_authentication output should expose the Entra application client ID"
+  }
+}
+
+run "function_app_entra_id_authentication_empty_client_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = ""
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}
+
+run "function_app_entra_id_authentication_empty_allowed_applications" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = []
+      tenant_id                  = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}
+
+run "function_app_entra_id_authentication_invalid_tenant_id" {
+  command = plan
+
+  variables {
+    use_case = "default"
+
+    entra_id_authentication = {
+      audience_client_id         = "00000000-0000-0000-0000-000000000001"
+      allowed_callers_client_ids = ["00000000-0000-0000-0000-000000000002"]
+      tenant_id                  = "not-a-valid-uuid"
+    }
+  }
+
+  expect_failures = [
+    var.entra_id_authentication,
+  ]
+}

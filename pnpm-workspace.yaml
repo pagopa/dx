@@ -32,4 +32,6 @@ onlyBuiltDependencies:
   - nx
   - protobufjs
 
-pnpmfile: packages/pnpm-plugin-pagopa/pnpmfile.cjs
+linkWorkspacePackages: true
+packageImportMethod: "clone-or-copy"
+cleanupUnusedCatalogs: true

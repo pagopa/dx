@@ -9,8 +9,9 @@ output "subnet" {
 output "storage_account" {
   description = "Details of the primary storage account used by the Function App, including its ID and name."
   value = {
-    id   = azurerm_storage_account.this.id
-    name = azurerm_storage_account.this.name
+    id                     = azurerm_storage_account.this.id
+    name                   = azurerm_storage_account.this.name
+    primary_queue_endpoint = azurerm_storage_account.this.primary_queue_endpoint
   }
 }
 
@@ -49,5 +50,12 @@ output "diagnostic_settings" {
   description = "Details of the diagnostic settings configured for the Function App."
   value = {
     id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
+  }
+}
+
+output "entra_id_authentication" {
+  description = "Entra application client ID used when Entra ID authentication (via caller Managed Identity) is configured. Useful for downstream APIM policy configuration (e.g. <authentication-managed-identity resource=\"client_id\"/>)."
+  value = {
+    audience_client_id = try(var.entra_id_authentication.audience_client_id, null)
   }
 }

@@ -24,6 +24,7 @@ export interface AzDashboardRawOptions {
     response_time_percentile: number;
     status_code_categories: string[];
   };
+  resourceGroup: string;
   resources: string[];
   resourceType: string;
   responseTimeThreshold?: number;
@@ -48,6 +49,7 @@ export class AzDashboardRawBuilder extends Builder<TemplateContext> {
       location: options.location,
       name: options.name,
       queries: options.queries,
+      resource_group: options.resourceGroup,
       resource_type: options.resourceType,
       response_time_threshold: options.responseTimeThreshold,
       time_window: options.evaluationTimeWindow,

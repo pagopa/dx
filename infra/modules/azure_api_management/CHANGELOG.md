@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.2.2
+
+### Patch Changes
+
+- e33144c: Fix APIM naming with new provider configuration, avoid replace, use empty name
+
 ## 2.2.1
 
 ### Patch Changes
