@@ -1,6 +1,10 @@
 ---
 name: terraform-tests
 description: Generate tests for Terraform modules. Use everytime tests are missing or need to be updated.
+metadata:
+  author: pagopa-dx
+  version: "1.0"
+compatibility: requires terraform, go, and access to the internet
 ---
 
 # Terraform Module Testing Skill
