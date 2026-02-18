@@ -38,7 +38,7 @@ type RepositoryPullRequest = {
 
 const withSpinner = <T>(
   text: string,
-  successText: string | ((value: T) => string),
+  successText: ((value: T) => string) | string,
   failText: string,
   promise: Promise<T>,
 ): ResultAsync<T, Error> =>
