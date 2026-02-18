@@ -1,8 +1,7 @@
 # Module Under Test - the Azure CDN module being validated
 
 module "azure_cdn" {
-  source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  source = "../.." # Use local path to test latest code changes in the module
 
   resource_group_name = azurerm_resource_group.e2e.name
 
