@@ -5,6 +5,7 @@ import { $, ExecaError } from "execa";
 import { okAsync, ResultAsync } from "neverthrow";
 import * as path from "node:path";
 import { oraPromise } from "ora";
+import { z } from "zod";
 
 import {
   GitHubService,
@@ -37,7 +38,7 @@ type RepositoryPullRequest = {
 
 const withSpinner = <T>(
   text: string,
-  successText: string,
+  successText: string | ((value: T) => string),
   failText: string,
   promise: Promise<T>,
 ): ResultAsync<T, Error> =>
@@ -87,16 +88,34 @@ const checkTerraformCliIsInstalled = () =>
   withSpinner(
     "Checking Terraform installation...",
     "Terraform is installed!",
-    "Please install terraform CLI before running this command.",
+    "Please install terraform CLI before running this command. If you use tfenv, run: tfenv install latest && tfenv use latest",
     tf$`terraform -version`,
   );
+
+const azureAccountSchema = z.object({
+  user: z.object({
+    name: z.string().min(1),
+  }),
+});
+
+const ensureAzLogin = async (): Promise<string> => {
+  const { stdout } = await tf$`az account show`;
+  await tf$`az group list`;
+  const parsed = JSON.parse(stdout);
+  const result = azureAccountSchema.safeParse(parsed);
+  if (result.success) {
+    return result.data.user.name;
+  }
+
+  return "unknown user";
+};
 
 const checkAzLogin = () =>
   withSpinner(
     "Check Azure login status...",
-    "You are logged in to Azure",
+    (userName) => `You are logged in to Azure (${userName})`,
     "Please log in to Azure CLI using `az login` before running this command.",
-    tf$`az account show`,
+    ensureAzLogin(),
   );
 
 const checkPreconditions = () =>
