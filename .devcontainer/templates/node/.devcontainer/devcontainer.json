@@ -12,7 +12,6 @@
     },
     "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
     "ghcr.io/pagopa/devcontainer-features/plantuml:1": {},
-    "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
     "ghcr.io/devcontainers/features/node:1": {
       "version": "${templateOption:nodeVersion}",
       "installYarnUsingApt": false,
@@ -22,8 +21,7 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "postStartCommand": {
-    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-    "install-yarn-and-deps": "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 yarn install"
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
   },
   "customizations": {
     "vscode": {
