@@ -43,9 +43,8 @@ module "storage_account" {
 }
 
 module "azure_cdn" {
-  # source  = "pagopa-dx/azure-cdn/azurerm"
-  # version = "~> 0.5"
-  source = "../../"
+  source  = "pagopa-dx/azure-cdn/azurerm"
+  version = "~> 0.5"
 
   resource_group_name = azurerm_resource_group.e2e.name
 

@@ -13,7 +13,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_cdn"></a> [azure\_cdn](#module\_azure\_cdn) | ../../ | n/a |
+| <a name="module_azure_cdn"></a> [azure\_cdn](#module\_azure\_cdn) | pagopa-dx/azure-cdn/azurerm | ~> 0.5 |
 | <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | pagopa-dx/azure-storage-account/azurerm | ~> 2.1 |
 
 ## Resources

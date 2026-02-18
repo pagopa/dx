@@ -10,6 +10,11 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
   }
 
   tags = local.tags
+
+  timeouts {
+    delete = "60m"
+    update = "30m"
+  }
 }
 
 resource "azurerm_cdn_frontdoor_endpoint" "this" {
