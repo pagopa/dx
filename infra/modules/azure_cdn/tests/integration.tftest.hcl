@@ -30,7 +30,7 @@ variables {
 
 run "setup" {
   module {
-    source = "./tests/setup"
+    source = "./tests/setup_integration"
   }
 
   variables {
@@ -43,10 +43,10 @@ run "apply_endpoint_with_existing_profile" {
   command = apply
 
   variables {
-    environment         = var.environment
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
-
+    environment                       = var.environment
+    tags                              = var.tags
+    resource_group_name               = run.setup.resource_group_name
+    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
 
     origins = {
       primary = {
@@ -103,9 +103,9 @@ run "apply_cdn_with_custom_domain" {
       app_name        = "test"
       instance_number = "02"
     }
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
-
+    tags                              = var.tags
+    resource_group_name               = run.setup.resource_group_name
+    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
 
     origins = {
       primary = {
@@ -167,8 +167,9 @@ run "apply_cdn_with_waf" {
       app_name        = "test"
       instance_number = "03"
     }
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
+    tags                              = var.tags
+    resource_group_name               = run.setup.resource_group_name
+    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
 
     waf_enabled = true
 
@@ -222,9 +223,9 @@ run "apply_cdn_with_multiple_origins" {
       app_name        = "test"
       instance_number = "05"
     }
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
-
+    tags                              = var.tags
+    resource_group_name               = run.setup.resource_group_name
+    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
 
     origins = {
       primary = {
