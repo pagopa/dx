@@ -18,6 +18,3 @@ provider "azurerm" {
     }
   }
 }
-
-provider "random" {
-}

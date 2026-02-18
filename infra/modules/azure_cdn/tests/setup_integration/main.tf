@@ -82,8 +82,7 @@ resource "azurerm_dns_zone" "devex_pagopa_it" {
 }
 
 module "azure_cdn_integration" {
-  source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  source = "../.."
 
   resource_group_name = azurerm_resource_group.integration.name
 

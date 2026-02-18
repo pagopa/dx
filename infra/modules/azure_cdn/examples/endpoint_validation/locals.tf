@@ -33,6 +33,6 @@ locals {
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/azure_cdn/examples/e2e"
+    Source         = "https://github.com/pagopa/dx/modules/azure_cdn/examples/endpoint_validation"
   }
 }
