@@ -7,10 +7,7 @@ No requirements.
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_azure_cdn"></a> [azure\_cdn](#module\_azure\_cdn) | pagopa-dx/azure-cdn/azurerm | ~> 0.4 |
-| <a name="module_cdn_origin_storage_account"></a> [cdn\_origin\_storage\_account](#module\_cdn\_origin\_storage\_account) | pagopa-dx/azure-storage-account/azurerm | ~> 2.1 |
+No modules.
 
 ## Resources
 
