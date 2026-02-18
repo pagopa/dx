@@ -1,7 +1,7 @@
 {
   "name": "log-telemetry-event",
   "description": "Action to log easily OTEL events",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "private": true,
   "keywords": [
