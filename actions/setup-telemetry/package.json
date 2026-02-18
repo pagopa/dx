@@ -1,6 +1,6 @@
 {
   "name": "setup-telemetry-action",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Setup OpenTelemetry",
   "main": "dist/index.js",
