@@ -3,7 +3,7 @@ locals {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    instance_number = "01"
+    instance_number = "03"
   }
 
   repo_name = "dx"
@@ -19,6 +19,6 @@ locals {
     Environment    = "Dev"
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/github_selfhosted_runner_container_app_job/examples/basic"
+    Source         = "https://github.com/pagopa/dx/modules/github_selfhosted_runner_container_app_job/examples/app_based"
   }
 }

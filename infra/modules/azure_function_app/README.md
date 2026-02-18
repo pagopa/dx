@@ -13,6 +13,7 @@ This module deploys an Azure Function App with a strong opinionated configuratio
 - **Subnet**: Manages subnet creation or reuse for outbound connectivity
 - **Durable Functions**: Optional support for Durable Functions with dedicated storage
 - **Monitoring**: Integrates with Application Insights and sets up health check alerts
+- **Managed Identity Authentication**: Optional Entra ID authentication via `entra_id_authentication` variable, enabling callers (e.g. APIM) to authenticate via their Managed Identity instead of function keys
 
 ## Use cases Comparison
 
@@ -35,6 +36,56 @@ The allowed sizes are:
 ## Usage Example
 
 For a complete example, see the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/complete) folder in this repository.
+
+## Entra ID Authentication
+
+By default, Azure Functions use **key-based authentication** (`x-functions-key`), requiring shared secrets stored in Key Vault and injected by APIM. This creates key rotation overhead and broad access for any caller holding the key.
+
+The `entra_id_authentication` variable replaces this with **token-based authentication**: callers (e.g. APIM) use their Managed Identity to obtain a JWT from an Entra ID application, and the Function App validates it — no shared secrets involved.
+
+### How It Works
+
+```mermaid
+sequenceDiagram
+    participant APIM
+    participant Entra ID
+    participant Function App
+
+    APIM->>Entra ID: 1. Request token (Managed Identity)
+    Entra ID-->>APIM: 2. Signed JWT
+    APIM->>Function App: 3. Call with Authorization: Bearer <JWT>
+    Function App->>Function App: 4. Validate token (client_id, allowed_applications)
+    Function App-->>APIM: 5. Response (or 401 if invalid)
+```
+
+### Prerequisites
+
+- An **Entra ID application** must exist
+- APIM policy must include `<authentication-managed-identity resource="<client_id>"/>`
+- Function endpoints should use `authLevel: anonymous` since auth is handled at infra level
+
+### Usage
+
+```hcl
+# With Entra ID authentication (via caller Managed Identity)
+module "function_app" {
+  source = "pagopa-dx/azure-function-app/azurerm"
+  # ... other parameters ...
+
+  entra_id_authentication = {
+    audience_client_id         = data.azuread_application.my_app.client_id
+    allowed_callers_client_ids = [data.azuread_service_principal.apim.client_id]
+    tenant_id                   = data.azurerm_subscription.current.tenant_id
+  }
+}
+```
+
+| Aspect             | Key-based                 | Entra ID (Managed Identity)         |
+| ------------------ | ------------------------- | ----------------------------------- |
+| Secrets            | Function key in Key Vault | None (token-based)                  |
+| Caller control     | Any holder of the key     | Only `allowed_callers_client_ids`   |
+| APIM policy        | `x-functions-key` header  | `<authentication-managed-identity>` |
+| Function authLevel | `function`                | `anonymous`                         |
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -103,6 +154,7 @@ No modules.
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | The instrumentation key for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | The sampling percentage for Application Insights telemetry. Default is 5. | `number` | `5` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
+| <a name="input_entra_id_authentication"></a> [entra\_id\_authentication](#input\_entra\_id\_authentication) | Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples. | <pre>object({<br/>    audience_client_id         = string<br/>    allowed_callers_client_ids = list(string)<br/>    tenant_id                  = string<br/>  })</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_has_durable_functions"></a> [has\_durable\_functions](#input\_has\_durable\_functions) | Set to true if the Function App hosts Durable Functions. | `bool` | `false` | no |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The endpoint path where the health probe is exposed for the Function App. | `string` | n/a | yes |
@@ -129,6 +181,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the Function App. |
+| <a name="output_entra_id_authentication"></a> [entra\_id\_authentication](#output\_entra\_id\_authentication) | Entra application client ID used when Entra ID authentication (via caller Managed Identity) is configured. Useful for downstream APIM policy configuration (e.g. <authentication-managed-identity resource="client\_id"/>). |
 | <a name="output_function_app"></a> [function\_app](#output\_function\_app) | Details of the Function App, including its resource group, service plan, and app-specific information such as ID, name, principal ID, and default hostname. Also includes details of the app slot if configured. |
 | <a name="output_storage_account"></a> [storage\_account](#output\_storage\_account) | Details of the primary storage account used by the Function App, including its ID and name. |
 | <a name="output_storage_account_durable"></a> [storage\_account\_durable](#output\_storage\_account\_durable) | Details of the storage account used for durable functions, including its ID and name. Returns null if not configured. |

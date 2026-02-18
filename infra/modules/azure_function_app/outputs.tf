@@ -52,3 +52,10 @@ output "diagnostic_settings" {
     id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
   }
 }
+
+output "entra_id_authentication" {
+  description = "Entra application client ID used when Entra ID authentication (via caller Managed Identity) is configured. Useful for downstream APIM policy configuration (e.g. <authentication-managed-identity resource=\"client_id\"/>)."
+  value = {
+    audience_client_id = try(var.entra_id_authentication.audience_client_id, null)
+  }
+}
