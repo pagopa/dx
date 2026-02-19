@@ -1,39 +1,75 @@
+/**
+ * PagoPA Technology Authorization Adapter
+ *
+ * Implements the AuthorizationService interface for the PagoPA Azure
+ * authorization workflow. Encapsulates all platform-specific details:
+ * the target GitHub repository, file paths, branch naming, HCL file
+ * parsing, and pull request creation.
+ */
+
 import { getLogger } from "@logtape/logtape";
-import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
 
 import {
-  AzureAuthorizationService,
+  AuthorizationError,
+  AuthorizationResult,
+  AuthorizationService,
   IdentityAlreadyExistsError,
-  RequestAzureAuthorizationInput,
-} from "../domain/azure-authorization.js";
-import { GitHubService, PullRequest } from "../domain/github.js";
+  InvalidAuthorizationFileFormatError,
+  RequestAuthorizationInput,
+} from "../../domain/authorization.js";
+import { GitHubService } from "../../domain/github.js";
+
+// Matches the service_principals_name list inside the directory_readers block.
+const DIRECTORY_READERS_REGEX =
+  /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(][\s\S]*?})/;
+
+const addIdentity = (
+  content: string,
+  identityId: string,
+): Result<string, AuthorizationError> => {
+  const match = content.match(DIRECTORY_READERS_REGEX);
+
+  if (!match) {
+    return err(
+      new InvalidAuthorizationFileFormatError(
+        "Could not find directory_readers.service_principals_name list",
+      ),
+    );
+  }
+
+  const [, prefix, existingItems, suffix] = match;
+
+  if (existingItems.includes(`"${identityId}"`)) {
+    return err(new IdentityAlreadyExistsError(identityId));
+  }
+
+  // Build the new list content following HCL formatting rules:
+  // - Items are indented with 4 spaces; the LAST item must NOT have a trailing comma
+  const newListContent =
+    existingItems.trim().length > 0
+      ? `${existingItems.replace(/,?\s*$/, "")},\n    "${identityId}"\n  `
+      : `\n    "${identityId}"\n  `;
+
+  return ok(
+    content.replace(
+      DIRECTORY_READERS_REGEX,
+      `${prefix}${newListContent}${suffix}`,
+    ),
+  );
+};
 
 const REPO_OWNER = "pagopa";
 const REPO_NAME = "eng-azure-authorization";
 const BASE_BRANCH = "main";
 
-/**
- * Creates a pull request to add a bootstrap identity to the Azure authorization repository.
- *
- * This use case:
- * 1. Creates a new branch from main
- * 2. Fetches the terraform.tfvars file from the new branch
- * 3. Checks if the identity already exists (returns error if so)
- * 4. Appends the bootstrap identity to the directory_readers.service_principals_name list
- * 5. Updates the file on the new branch
- * 6. Creates a pull request
- *
- * @param gitHubService - The GitHub service for API operations
- * @param azureAuthorizationService - The service for managing Azure authorization
- * @returns A function that takes input and returns a ResultAsync with the created PullRequest
- */
-export const requestAzureAuthorization =
-  (
-    gitHubService: GitHubService,
-    azureAuthorizationService: AzureAuthorizationService,
-  ) =>
-  (input: RequestAzureAuthorizationInput): ResultAsync<PullRequest, Error> => {
-    const logger = getLogger(["dx-cli", "azure-auth"]);
+export const makeAuthorizationService = (
+  gitHubService: GitHubService,
+): AuthorizationService => ({
+  requestAuthorization(
+    input: RequestAuthorizationInput,
+  ): ResultAsync<AuthorizationResult, AuthorizationError> {
+    const logger = getLogger(["dx-cli", "pagopa-authorization"]);
     const { bootstrapIdentityId, subscriptionName } = input;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars`;
     const branchName = `feats/add-${subscriptionName}-bootstrap-identity`;
@@ -47,10 +83,9 @@ export const requestAzureAuthorization =
           owner: REPO_OWNER,
           repo: REPO_NAME,
         }),
-        (cause) =>
-          new Error(
+        () =>
+          new AuthorizationError(
             `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
-            { cause },
           ),
       )
         .orTee((error) => {
@@ -65,48 +100,36 @@ export const requestAzureAuthorization =
               ref: branchName,
               repo: REPO_NAME,
             }),
-            (cause) =>
-              new Error(
+            () =>
+              new AuthorizationError(
                 `Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`,
-                { cause },
               ),
           ),
         )
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Check for duplicates and modify the file content
-        .andThen(({ content, sha }) => {
-          // Verify the identity doesn't already exist to prevent duplicates
-          if (
-            azureAuthorizationService.containsIdentityId(
-              content,
-              bootstrapIdentityId,
-            )
-          ) {
-            logger.warn("Identity already exists", {
-              identityId: bootstrapIdentityId,
-              subscription: subscriptionName,
-            });
-            return errAsync(
-              new IdentityAlreadyExistsError(bootstrapIdentityId),
-            );
-          }
-
-          // Return both the file SHA (needed for update) and the updated content
-          return azureAuthorizationService
-            .addIdentity(content, bootstrapIdentityId)
+        // Modify the file content, detecting duplicates and format errors
+        .andThen(({ content, sha }) =>
+          addIdentity(content, bootstrapIdentityId)
             .mapErr((error) => {
-              logger.error("Failed to modify tfvars", {
-                error: error.message,
-              });
+              if (error instanceof IdentityAlreadyExistsError) {
+                logger.warn("Identity already exists", {
+                  identityId: bootstrapIdentityId,
+                  subscription: subscriptionName,
+                });
+              } else {
+                logger.error("Failed to modify tfvars", {
+                  error: error.message,
+                });
+              }
               return error;
             })
             .match(
               (updatedContent) => okAsync({ sha, updatedContent }),
               (error) => errAsync(error),
-            );
-        })
+            ),
+        )
         // Update the file on the new branch
         .andThen(({ sha, updatedContent }) =>
           ResultAsync.fromPromise(
@@ -117,12 +140,11 @@ export const requestAzureAuthorization =
               owner: REPO_OWNER,
               path: filePath,
               repo: REPO_NAME,
-              sha, // Required by GitHub API to prevent conflicts
+              sha,
             }),
-            (cause) =>
-              new Error(
+            () =>
+              new AuthorizationError(
                 `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
-                { cause },
               ),
           ),
         )
@@ -140,15 +162,16 @@ export const requestAzureAuthorization =
               repo: REPO_NAME,
               title: `Add directory reader for ${subscriptionName}`,
             }),
-            (cause) =>
-              new Error(
+            () =>
+              new AuthorizationError(
                 `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
-                { cause },
               ),
           ),
         )
         .orTee((error) => {
           logger.error(error.message);
         })
+        .map((pr) => new AuthorizationResult(pr.url))
     );
-  };
+  },
+});

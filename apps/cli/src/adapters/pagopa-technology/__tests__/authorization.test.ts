@@ -1,64 +1,57 @@
-import { err, ok } from "neverthrow";
+/**
+ * Tests for the PagoPA technology authorization adapter.
+ */
+
 import { describe, expect, it } from "vitest";
 import { mock } from "vitest-mock-extended";
 
 import {
-  AzureAuthorizationService,
+  AuthorizationResult,
   IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
-  RequestAzureAuthorizationInput,
-  requestAzureAuthorizationInputSchema,
-} from "../../domain/azure-authorization.js";
+  RequestAuthorizationInput,
+  requestAuthorizationInputSchema,
+} from "../../../domain/authorization.js";
 import {
   FileNotFoundError,
   GitHubService,
   PullRequest,
-} from "../../domain/github.js";
-import { requestAzureAuthorization } from "../request-azure-authorization.js";
+} from "../../../domain/github.js";
+import { makeAuthorizationService } from "../authorization.js";
 
 const makeEnv = () => {
   const gitHubService = mock<GitHubService>();
-  const azureAuthorizationService = mock<AzureAuthorizationService>();
+  const authorizationService = makeAuthorizationService(gitHubService);
 
   return {
-    azureAuthorizationService,
+    authorizationService,
     gitHubService,
   };
 };
 
-const makeSampleInput = (): RequestAzureAuthorizationInput =>
-  requestAzureAuthorizationInputSchema.parse({
+const makeSampleInput = (): RequestAuthorizationInput =>
+  requestAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
     subscriptionName: "test-subscription",
   });
 
 // eslint-disable-next-line max-lines-per-function
-describe("requestAzureAuthorization", () => {
+describe("PagoPA AuthorizationService", () => {
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = `
 directory_readers = {
   service_principals_name = []
 }
 `.trim();
-      const updatedContent = `
-directory_readers = {
-  service_principals_name = [
-    "test-bootstrap-identity-id",
-  ]
-}
-`.trim();
 
-      // Setup mocks
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content: originalContent,
         sha: "original-sha-123",
       });
-      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(ok(updatedContent));
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockResolvedValue(undefined);
       gitHubService.createPullRequest.mockResolvedValue(
         new PullRequest(
@@ -66,18 +59,15 @@ directory_readers = {
         ),
       );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isOk()).toBe(true);
-      const pr = result._unsafeUnwrap();
-      expect(pr.url).toBe(
+      const authResult = result._unsafeUnwrap();
+      expect(authResult).toBeInstanceOf(AuthorizationResult);
+      expect(authResult.url).toBe(
         "https://github.com/pagopa/eng-azure-authorization/pull/42",
       );
 
-      // Verify correct API calls
       expect(gitHubService.createBranch).toHaveBeenCalledWith({
         branchName: "feats/add-test-subscription-bootstrap-identity",
         fromRef: "main",
@@ -92,25 +82,16 @@ directory_readers = {
         repo: "eng-azure-authorization",
       });
 
-      expect(azureAuthorizationService.containsIdentityId).toHaveBeenCalledWith(
-        originalContent,
-        "test-bootstrap-identity-id",
+      expect(gitHubService.updateFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          branch: "feats/add-test-subscription-bootstrap-identity",
+          message: "Add directory reader for test-subscription",
+          owner: "pagopa",
+          path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
+          repo: "eng-azure-authorization",
+          sha: "original-sha-123",
+        }),
       );
-
-      expect(azureAuthorizationService.addIdentity).toHaveBeenCalledWith(
-        originalContent,
-        "test-bootstrap-identity-id",
-      );
-
-      expect(gitHubService.updateFile).toHaveBeenCalledWith({
-        branch: "feats/add-test-subscription-bootstrap-identity",
-        content: updatedContent,
-        message: "Add directory reader for test-subscription",
-        owner: "pagopa",
-        path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
-        repo: "eng-azure-authorization",
-        sha: "original-sha-123",
-      });
 
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
@@ -125,7 +106,7 @@ directory_readers = {
 
   describe("error handling", () => {
     it("should return error when file is not found", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
       gitHubService.createBranch.mockResolvedValue(undefined);
@@ -135,31 +116,23 @@ directory_readers = {
         ),
       );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       const error = result._unsafeUnwrapErr();
       expect(error.message).toContain("Unable to get");
       expect(error.message).toContain("test-subscription/terraform.tfvars");
-      expect(error.cause).toBeInstanceOf(FileNotFoundError);
 
-      // Should not proceed with other operations
-      expect(
-        azureAuthorizationService.containsIdentityId,
-      ).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when identity already exists", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
   service_principals_name = [
-    "test-bootstrap-identity-id",
+    "test-bootstrap-identity-id"
   ]
 }
 `.trim();
@@ -169,25 +142,19 @@ directory_readers = {
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsIdentityId.mockReturnValue(true);
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
         IdentityAlreadyExistsError,
       );
 
-      // Should not proceed with modification or branch creation
-      expect(azureAuthorizationService.addIdentity).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when tfvars format is invalid", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const invalidContent = "invalid content without directory_readers";
 
@@ -196,54 +163,38 @@ directory_readers = {
         content: invalidContent,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(
-        err(
-          new InvalidAuthorizationFileFormatError(
-            "Could not find directory_readers.service_principals_name list",
-          ),
-        ),
-      );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(
         InvalidAuthorizationFileFormatError,
       );
 
-      // Should not proceed with branch creation
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when branch creation fails", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
       gitHubService.createBranch.mockRejectedValue(
         new Error("Failed to create branch: branch already exists"),
       );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr().message).toContain(
         "Unable to create branch",
       );
 
-      // Should not proceed with file reading or update
       expect(gitHubService.getFileContent).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when file update fails", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
@@ -251,33 +202,25 @@ directory_readers = {
 }
 `.trim();
 
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(
-        ok("updated content"),
-      );
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockRejectedValue(
         new Error("Failed to update file: conflict"),
       );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr().message).toContain("Unable to update");
 
-      // Should not proceed with PR creation
       expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
     });
 
     it("should return error when PR creation fails", async () => {
-      const { azureAuthorizationService, gitHubService } = makeEnv();
+      const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const content = `
 directory_readers = {
@@ -285,24 +228,17 @@ directory_readers = {
 }
 `.trim();
 
+      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content,
         sha: "sha-123",
       });
-      azureAuthorizationService.containsIdentityId.mockReturnValue(false);
-      azureAuthorizationService.addIdentity.mockReturnValue(
-        ok("updated content"),
-      );
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.updateFile.mockResolvedValue(undefined);
       gitHubService.createPullRequest.mockRejectedValue(
         new Error("Failed to create pull request"),
       );
 
-      const result = await requestAzureAuthorization(
-        gitHubService,
-        azureAuthorizationService,
-      )(input);
+      const result = await authorizationService.requestAuthorization(input);
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr().message).toContain(

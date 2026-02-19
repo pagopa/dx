@@ -2,7 +2,6 @@ import "core-js/actual/set/index.js";
 import * as assert from "node:assert/strict";
 import { Octokit } from "octokit";
 
-import { makeAzureAuthorizationService } from "./adapters/azure-authorization/index.js";
 import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
 import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
@@ -12,19 +11,19 @@ import {
   getGitHubPAT,
   OctokitGitHubService,
 } from "./adapters/octokit/index.js";
+import { makeAuthorizationService } from "./adapters/pagopa-technology/authorization.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
 import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
-import { requestAzureAuthorization } from "./use-cases/request-azure-authorization.js";
+import { requestAuthorization } from "./use-cases/request-authorization.js";
 
 export const runCli = async (version: string) => {
   // Creating the adapters
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();
   const validationReporter = makeValidationReporter();
-  const azureAuthorizationService = makeAzureAuthorizationService();
 
   const auth = await getGitHubPAT();
 
@@ -38,9 +37,10 @@ export const runCli = async (version: string) => {
   });
 
   const gitHubService = new OctokitGitHubService(octokit);
+  const authorizationService = makeAuthorizationService(gitHubService);
 
   const deps: Dependencies = {
-    azureAuthorizationService,
+    authorizationService,
     gitHubService,
     packageJsonReader,
     repositoryReader,
@@ -52,10 +52,7 @@ export const runCli = async (version: string) => {
   const useCases = {
     applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
     listCodemods: listCodemods(codemodRegistry),
-    requestAzureAuthorization: requestAzureAuthorization(
-      gitHubService,
-      azureAuthorizationService,
-    ),
+    requestAuthorization: requestAuthorization(authorizationService),
   };
 
   const program = makeCli(deps, config, useCases, version);
