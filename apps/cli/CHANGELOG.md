@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.16.2
+
+### Patch Changes
+
+- c442a4d: Fix issues on published package
+
 ## 0.16.1
 
 ### Patch Changes
