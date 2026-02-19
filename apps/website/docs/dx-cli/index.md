@@ -30,28 +30,24 @@ pnpm dx --help
 
 ### `init` – Initialize Resources
 
-Bootstrap a new project following DevEx conventions, by creating a new
-monorepository and connect it with the cloud provider set as target. Depending
-on the selected provider and its actual state, the command provisions the
-required resources and configurations, such as GitHub repository, Azure
-resources, and CI/CD workflows.
+Bootstrap a new project following DevEx conventions.
 
-Depending on the target cloud provider and its actual state, the command alter
-its behavior. If a Terrafrom state file for the specified project is detected,
-the command provisions:
+**Always provisions**:
 
-- the monorepository (both locally and remotely on GitHub.com)
-- the required configuration to connect the repository with the target CSP
-- a self-hosted GitHub runner
-- IAM setup to allow automation to perform operattions on the target CSP
+- The monorepository, both locally and remotely on GitHub.com, with dotfiles and
+  a devcontainer configuration.
+- GitHub environments corresponding to the specified cloud environments
+- A self-hosted GitHub Runner with permissions to perform cloud operations, in
+  order to run workflows (GitHub Actions) that require cloud access
 
-In addition to the above, if the state file is not detected, the command also
-provisions:
+**Additionally provisions (if no Terraform state file is detected for the
+project):**
 
-- a VPN to access private resources
-- a standardized network configuration
-- a standardized monitoring configuration
-- the required infrastructure to manage Terraform state file
+- A VPN to let users access private cloud resources
+- Standardized network configuration
+- Standardized monitoring configuration
+- Infrastructure required to manage the Terraform state file (e.g., Azure
+  Storage Account with blob locking)
 
 This interactive command will prompt you for several inputs and then generate
 the project structure accordingly.
@@ -61,7 +57,6 @@ the project structure accordingly.
 :::info[Supported Cloud Providers]
 
 Currently, only Azure is supported as cloud provider for the `init` command.
-Support for AWS is planned for the future.
 
 :::
 
