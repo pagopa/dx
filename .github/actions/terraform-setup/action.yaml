@@ -26,3 +26,10 @@ runs:
       name: Setup Terraform
       with:
         terraform_version: ${{ inputs.terraform_version || steps.get-version.outputs.terraform_version }}
+
+    - name: Export Terraform Version
+      shell: bash
+      env:
+        tf_version: ${{ inputs.terraform_version || steps.get-version.outputs.terraform_version }}
+      run: |
+        echo "TERRAFORM_VERSION=$tf_version" >> "$GITHUB_ENV"

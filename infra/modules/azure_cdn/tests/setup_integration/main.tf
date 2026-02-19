@@ -37,11 +37,13 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
-data "azurerm_resource_group" "rg" {
+resource "azurerm_resource_group" "integration" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+    domain        = "integ",
+    name          = "cdn",
     resource_type = "resource_group"
   }))
+  location = var.environment.location
 }
 
 module "storage_account" {
@@ -56,7 +58,7 @@ module "storage_account" {
     instance_number = var.environment.instance_number
   }
 
-  resource_group_name                 = data.azurerm_resource_group.rg.name
+  resource_group_name                 = azurerm_resource_group.integration.name
   use_case                            = "development"
   subnet_pep_id                       = data.azurerm_subnet.pep.id
   force_public_network_access_enabled = true # just for testing
@@ -74,7 +76,26 @@ module "storage_account" {
 
 resource "azurerm_dns_zone" "devex_pagopa_it" {
   name                = "devex.pagopa.it"
-  resource_group_name = data.azurerm_resource_group.rg.name
+  resource_group_name = azurerm_resource_group.integration.name
+
+  tags = var.tags
+}
+
+module "azure_cdn_integration" {
+  source = "../.."
+
+  resource_group_name = azurerm_resource_group.integration.name
+
+  environment = var.environment
+
+  waf_enabled = false
+
+  origins = {
+    primary = {
+      host_name = module.storage_account.primary_web_host
+      priority  = 1
+    }
+  }
 
   tags = var.tags
 }
@@ -88,7 +109,7 @@ output "subnet_id" {
 }
 
 output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
+  value = azurerm_resource_group.integration.name
 }
 
 output "storage_account_host_name" {
@@ -101,4 +122,8 @@ output "devex_pagopa_it_zone_name" {
 
 output "storage_account_id" {
   value = module.storage_account.id
+}
+
+output "cdn_profile_id" {
+  value = module.azure_cdn_integration.id
 }

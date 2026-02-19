@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.16.1
+
+### Patch Changes
+
+- daa0c37: - Update error message to include tfenv setup instructions when Terraform is not found
+  - Display Azure account name in login success message
+
 ## 0.16.0
 
 ### Minor Changes

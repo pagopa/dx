@@ -1,5 +1,11 @@
 # csp-login
 
+## 0.1.0
+
+### Minor Changes
+
+- fd58eec: Export variable to integrate pipeline telemetry
+
 ## 0.0.1
 
 ### Patch Changes
