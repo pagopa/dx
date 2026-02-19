@@ -6,7 +6,7 @@ resource "azurerm_cdn_frontdoor_secret" "certificate" {
 
   secret {
     customer_certificate {
-      key_vault_certificate_id = each.value.dns.key_vault_certificate_versionless_id
+      key_vault_certificate_id = each.value.custom_certificate.key_vault_certificate_versionless_id
     }
   }
 }

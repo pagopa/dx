@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.5.1
+
+### Patch Changes
+
+- 7bb2917: Remove the old tests in favor of the new ones (contracts, integration, and e2e). Fix a typo on the `custom_certificate` and add `destroy` and `update` timeouts for the `frontdoor_profile` resource.
+
 ## 0.5.0
 
 ### Minor Changes
