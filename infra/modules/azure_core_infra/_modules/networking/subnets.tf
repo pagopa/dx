@@ -74,6 +74,14 @@ resource "azurerm_subnet" "runner_snet" {
   virtual_network_name = azurerm_virtual_network.vnet.name
   resource_group_name  = var.resource_group_name
   address_prefixes     = [dx_available_subnet_cidr.runner_cidr.cidr_block]
+
+  delegation {
+    name = "delegation"
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
 }
 
 resource "azurerm_subnet" "vpn_snet" {
