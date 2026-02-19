@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.1.3
+
+### Patch Changes
+
+- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
+
 ## 3.1.2
 
 ### Patch Changes
