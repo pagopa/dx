@@ -54,9 +54,14 @@ const runActions = async (generator: PlopGenerator, payload: Answers) => {
   const result = await generator.runActions(payload);
   if (result.failures.length > 0) {
     for (const failure of result.failures) {
-      logger.error(failure.message);
+      if (failure.error === "Aborted due to previous action failure") {
+        continue;
+      }
+      logger.error(`Error on {type} step. ${failure.message}`, {
+        type: failure.type,
+      });
+      throw new Error("One or more actions failed during generation.");
     }
-    throw new Error("One or more actions failed during generation.");
   }
 };
 
