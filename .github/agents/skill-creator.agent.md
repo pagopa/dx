@@ -48,6 +48,7 @@ license: Complete terms in LICENSE.txt
 | `name`        | Yes      | Lowercase, hyphens for spaces, max 64 characters (e.g., `webapp-testing`)           |
 | `description` | Yes      | Clear description of capabilities AND use cases, max 1024 characters                |
 | `license`     | No       | Reference to LICENSE.txt (e.g., `Complete terms in LICENSE.txt`) or SPDX identifier |
+| `metadata`    | No       | Optional free-form metadata for internal use (not used by Copilot)                  |
 
 ### Description Best Practices
 
