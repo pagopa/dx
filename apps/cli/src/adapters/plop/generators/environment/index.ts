@@ -4,6 +4,7 @@ import {
   CloudAccountRepository,
   CloudAccountService,
 } from "../../../../domain/cloud-account.js";
+import { GitHubRepo } from "../../../../domain/github-repo.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
@@ -21,6 +22,7 @@ export default function (
   templatesPath: string,
   cloudAccountRepository: CloudAccountRepository,
   cloudAccountService: CloudAccountService,
+  github?: GitHubRepo,
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
@@ -33,6 +35,10 @@ export default function (
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
     actions: getActions(templatesPath),
     description: "Generate a new deployment environment",
-    prompts: getPrompts({ cloudAccountRepository, cloudAccountService }),
+    prompts: getPrompts({
+      cloudAccountRepository,
+      cloudAccountService,
+      github,
+    }),
   });
 }
