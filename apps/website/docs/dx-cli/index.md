@@ -30,21 +30,47 @@ pnpm dx --help
 
 ### `init` – Initialize Resources
 
-Initialize new resources such as monorepo projects following PagoPA DevEx
-conventions.
+Bootstrap a new project following DevEx conventions, by creating a new
+monorepository and connect it with the cloud provider set as target. Depending
+on the selected provider and its actual state, the command provisions the
+required resources and configurations, such as GitHub repository, Azure
+resources, and CI/CD workflows.
+
+Depending on the target cloud provider and its actual state, the command alter
+its behavior. If a Terrafrom state file for the specified project is detected,
+the command provisions:
+
+- the monorepository (both locally and remotely on GitHub.com)
+- the required configuration to connect the repository with the target CSP
+- a self-hosted GitHub runner
+- IAM setup to allow automation to perform operattions on the target CSP
+
+In addition to the above, if the state file is not detected, the command also
+provisions:
+
+- a VPN to access private resources
+- a standardized network configuration
+- a standardized monitoring configuration
+- the required infrastructure to manage Terraform state file
 
 This interactive command will prompt you for several inputs and then generate
 the project structure accordingly.
 
-:::warning[GitHub Token Required]
+#### Requirements
 
-To have a complete experience with the `init` command, you need to be logged
-with underlying tools such as `az CLI` and `gh CLI`. These tools are required to
-navigate existing cloud resources and interacting with GitHub repositories.
+:::info[Supported Cloud Providers]
+
+Currently, only Azure is supported as cloud provider for the `init` command.
+Support for AWS is planned for the future.
 
 :::
 
-Example output:
+To work properly, the command requires access to GitHub and the target cloud
+provider. For this reason, before running the command ensure you are logged
+within GitHub (`gh auth login`) and the cloud provider CLI (`az login` for
+Azure).
+
+#### Example Usage
 
 ```text
 npx @pagopa/dx-cli init
