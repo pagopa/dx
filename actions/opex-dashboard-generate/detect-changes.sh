@@ -63,6 +63,7 @@ while IFS= read -r config; do
       grep -E "^[[:space:]]*oa3_spec:" "${config}" \
         | sed 's/^[[:space:]]*oa3_spec:[[:space:]]*//' \
         | tr -d "\"'" \
+        | sed 's/[[:space:]]*#.*$//' \
         | xargs
     )
 
