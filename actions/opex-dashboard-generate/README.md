@@ -13,11 +13,11 @@ The action performs two main functions:
 
 ## Inputs
 
-| Input                    | Description                                                                               | Required |
-| ------------------------ | ----------------------------------------------------------------------------------------- | -------- |
-| `config_pattern`         | Glob pattern(s) to find dashboard config files (supports multiple patterns, one per line) | Yes      |
-| `opex_dashboard_version` | Version of @pagopa/opex-dashboard to use                                                  | No       |
-| `base_ref`               | Base git reference for change detection (commit SHA or ref)                               | Yes      |
+| Input                    | Description                                                                                | Required |
+| ------------------------ | ------------------------------------------------------------------------------------------ | -------- |
+| `config_pattern`         | Glob pattern(s) to find dashboard config files (supports multiple patterns, one per line)  | Yes      |
+| `opex_dashboard_version` | Version of @pagopa/opex-dashboard to use                                                   | No       |
+| `base_ref`               | Base git reference for change detection. Leave empty for auto-detection from event context | No       |
 
 ## Outputs
 
@@ -26,6 +26,7 @@ The action performs two main functions:
 | `has_changes`         | Whether any dashboard changes were detected (boolean)          |
 | `changed_dashboards`  | JSON array of changed dashboard config paths                   |
 | `changed_directories` | JSON array of directories containing generated Terraform files |
+| `artifacts_path`      | Path to collected Terraform artifacts directory (for upload)   |
 
 ## Usage
 
@@ -40,25 +41,29 @@ This action is typically used within the [opex-dashboard-deploy workflow](https:
   with:
     config_pattern: "infra/dashboards/**/config.yaml"
     opex_dashboard_version: "latest"
-    base_ref: ${{ github.event.pull_request.base.sha }}
+    # base_ref is auto-detected from github event context when omitted
+
+- name: Upload artifacts
+  if: steps.generate-action.outputs.has_changes == 'true'
+  uses: actions/upload-artifact@v4
+  with:
+    name: generated-terraform
+    path: ${{ steps.generate-action.outputs.artifacts_path }}
 ```
 
 ## Architecture
 
-The action consists of three shell scripts:
+The action consists of five shell scripts:
 
+- **resolve-base-ref.sh**: Resolves the base git reference (auto-detects from event context or uses provided value)
 - **detect-changes.sh**: Finds modified config files and their referenced OpenAPI specs
 - **generate-terraform.sh**: Runs `@pagopa/opex-dashboard` to generate Terraform
 - **extract-directories.sh**: Formats generated Terraform directories for matrix deployment
+- **collect-artifacts.sh**: Collects generated files into a staging directory for artifact upload
 
 ### Cross-Platform Compatibility
 
-The scripts are designed to work on both GNU/Linux (GitHub Actions runners) and BSD-based systems (macOS):
-
-- Path normalization uses a fallback mechanism that works without the GNU-specific `realpath -m` flag
-- All scripts require bash; they are invoked with `shell: bash`, use bash-specific features, and are not guaranteed to work with generic POSIX shells
-
-For local testing on macOS, ensure you have basic POSIX tools available (`bash`, `find`, `grep`, `sed`, `git`, `jq`). Optional tools like `yq` provide enhanced parsing but have graceful fallbacks.
+The scripts require bash and standard GNU/Linux tools (`find`, `grep`, `sed`, `git`, `jq`, `awk`). They are designed to run on GitHub Actions Ubuntu runners.
 
 ## Documentation
 
