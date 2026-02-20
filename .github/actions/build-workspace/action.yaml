@@ -35,11 +35,10 @@ runs:
       id: get-workspace-path
       shell: bash
       run: |
-        $run_command="$PACKAGE_MANAGER dlx"
         if [ "$BUILD_TOOL" == "turbo" ]; then
           WORKSPACE_PATH=$(npx --yes turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
         else
-          $workspace_detail=$($run_command nx show project "$WORKSPACE_NAME" --json)
+          $workspace_detail=$(npx --yes nx show project "$WORKSPACE_NAME" --json)
           echo "::group::Workspace Detail"
           echo "$workspace_detail"
           echo "::endgroup::"
