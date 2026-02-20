@@ -11,7 +11,7 @@ strategy.
 
 ## Prerequisites
 
-- GitHub environments `opex-prod-cd` and `opex-prod-ci` configured with secrets
+- GitHub Environments `opex-prod-cd` and `opex-prod-ci` configured with secrets
   for Cloud Service Provider authentication
 - Dashboard configuration files located in `.opex/**/config.yaml` paths in the
   repository, referencing OpenAPI specs
