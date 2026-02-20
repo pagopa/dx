@@ -38,11 +38,16 @@ runs:
         if [ "$BUILD_TOOL" == "turbo" ]; then
           WORKSPACE_PATH=$(npx --yes turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
         else
-          WORKSPACE_PATH=$(npx --yes nx show project "$WORKSPACE_NAME" --json | jq -r .root)
+          $workspace_detail=$(npx --yes nx show project "$WORKSPACE_NAME" --json)
+          echo "::group::Workspace Detail"
+          echo "$workspace_detail"
+          echo "::endgroup::"
+          WORKSPACE_PATH=$(echo "$workspace_detail" | jq -r .root)
         fi
         echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
       env:
         WORKSPACE_NAME: ${{ inputs.workspace_name }}
+        PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
         BUILD_TOOL: ${{ steps.detect-build-tool.outputs.build-tool }}
 
     # If certain conditions are met, use flat node_modules structure
