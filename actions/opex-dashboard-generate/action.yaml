@@ -19,7 +19,7 @@ inputs:
   opex_dashboard_version:
     description: "Version of @pagopa/opex-dashboard to use"
     required: false
-    default: "latest"
+    default: "0.2.0"
   base_ref:
     description: "Base git reference for change detection. Leave empty for auto-detection from GitHub event context."
     required: false

@@ -14,6 +14,10 @@ if [[ ! "${OPEX_VERSION}" =~ ^([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?|latest)$ 
   exit 1
 fi
 
+if [[ "${OPEX_VERSION}" == "latest" ]]; then
+  echo "::warning::opex_dashboard_version is set to 'latest'. Pin to an explicit version to avoid supply-chain risks."
+fi
+
 # --- Determine package manager command ---
 
 case "${PACKAGE_MANAGER:-npm}" in
@@ -24,13 +28,15 @@ esac
 
 echo "Using: ${PACKAGE_MANAGER:-npm} (${RUN_CMD})"
 
-# --- Generate dashboards ---
+# --- Parse dashboard list upfront so jq errors stop the script under set -e ---
 
-failures=0
+DASHBOARD_LIST=$(jq -er '.[]' <<< "${CHANGED_DASHBOARDS}")
 
-while IFS= read -r config; do
-  [[ -z "${config}" ]] && continue
+# --- Generate dashboards in parallel (max 4 concurrent) ---
 
+generate_dashboard() {
+  local config="$1"
+  local config_dir
   config_dir=$(dirname "${config}")
   echo "Generating dashboard from: ${config}"
 
@@ -39,11 +45,14 @@ while IFS= read -r config; do
     echo "Generated Terraform in: ${config_dir}"
   else
     echo "::error::Failed to generate dashboard for: ${config}"
-    failures=$((failures + 1))
+    return 1
   fi
-done < <(jq -r '.[]' <<< "${CHANGED_DASHBOARDS}")
+}
 
-if [[ ${failures} -gt 0 ]]; then
-  echo "::error::${failures} dashboard(s) failed to generate"
+export -f generate_dashboard
+export OPEX_VERSION RUN_CMD
+
+if ! echo "${DASHBOARD_LIST}" | xargs -r -P 4 -I {} bash -c 'generate_dashboard "$@"' _ {}; then
+  echo "::error::One or more dashboards failed to generate"
   exit 1
 fi
