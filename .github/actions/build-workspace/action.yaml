@@ -37,8 +37,7 @@ runs:
       run: |
         $run_command="$PACKAGE_MANAGER dlx"
         if [ "$BUILD_TOOL" == "turbo" ]; then
-          $workspace_list=$($run_command turbo ls --output=json)
-          WORKSPACE_PATH=$(echo "$workspace_list" | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
+          WORKSPACE_PATH=$(npx --yes turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
         else
           $workspace_detail=$($run_command nx show project "$WORKSPACE_NAME" --json)
           echo "::group::Workspace Detail"
