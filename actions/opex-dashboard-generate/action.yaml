@@ -1,0 +1,70 @@
+name: OpEx Dashboard Generate
+description: Generate Azure Dashboard Terraform from OpenAPI specifications
+author: PagoPA
+
+branding:
+  icon: bar-chart-2
+  color: blue
+
+inputs:
+  config_pattern:
+    description: |
+      Glob pattern(s) to find dashboard config files. Supports multiple patterns (one per line).
+      Examples:
+        Single: 'infra/dashboards/**/config.yaml'
+        Multiple: |
+          infra/dashboards/**/config.yaml
+          .opex/**/config.yaml
+    required: true
+  opex_dashboard_version:
+    description: "Version of @pagopa/opex-dashboard to use"
+    required: false
+    default: "latest"
+  base_ref:
+    description: "Base git reference for change detection (commit SHA or ref)"
+    required: true
+  package_manager:
+    description: "Package manager to use (npm, pnpm, yarn)"
+    required: false
+    default: "npm"
+
+outputs:
+  has_changes:
+    description: "Whether any dashboard changes were detected"
+    value: ${{ steps.extract-dirs.outputs.has_changes }}
+  changed_dashboards:
+    description: "JSON array of changed dashboard config paths"
+    value: ${{ steps.detect.outputs.changed_dashboards }}
+  changed_directories:
+    description: "JSON array of directories containing generated Terraform files"
+    value: ${{ steps.extract-dirs.outputs.changed_directories }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect modified configs and OpenAPI specs
+      id: detect
+      shell: bash
+      env:
+        CONFIG_PATTERN: ${{ inputs.config_pattern }}
+        BASE_REF: ${{ inputs.base_ref }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/detect-changes.sh"
+
+    - name: Generate Terraform for changed dashboards
+      id: generate
+      if: fromJson(steps.detect.outputs.changed_dashboards)[0] != null
+      shell: bash
+      env:
+        CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
+        OPEX_VERSION: ${{ inputs.opex_dashboard_version }}
+        PACKAGE_MANAGER: ${{ inputs.package_manager }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/generate-terraform.sh"
+
+    - name: Extract changed directories
+      id: extract-dirs
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/extract-directories.sh"
