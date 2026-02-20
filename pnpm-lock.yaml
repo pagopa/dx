@@ -129,6 +129,8 @@ importers:
 
   actions/make-artifact: {}
 
+  actions/opex-dashboard-generate: {}
+
   actions/pr-comment:
     dependencies:
       '@actions/core':
