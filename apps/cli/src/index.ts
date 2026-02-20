@@ -11,11 +11,13 @@ import {
   getGitHubPAT,
   OctokitGitHubService,
 } from "./adapters/octokit/index.js";
+import { makeAuthorizationService } from "./adapters/pagopa-technology/authorization.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
 import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
+import { requestAuthorization } from "./use-cases/request-authorization.js";
 
 export const runCli = async (version: string) => {
   // Creating the adapters
@@ -35,8 +37,10 @@ export const runCli = async (version: string) => {
   });
 
   const gitHubService = new OctokitGitHubService(octokit);
+  const authorizationService = makeAuthorizationService(gitHubService);
 
   const deps: Dependencies = {
+    authorizationService,
     gitHubService,
     packageJsonReader,
     repositoryReader,
@@ -48,6 +52,7 @@ export const runCli = async (version: string) => {
   const useCases = {
     applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
     listCodemods: listCodemods(codemodRegistry),
+    requestAuthorization: requestAuthorization(authorizationService),
   };
 
   const program = makeCli(deps, config, useCases, version);
