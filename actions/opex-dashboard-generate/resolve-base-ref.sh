@@ -22,14 +22,28 @@ fi
 # Auto-detect base reference from event context
 BASE_REF=""
 
-if [[ "${EVENT_NAME:-}" == "pull_request" ]]; then
-  BASE_REF="${PR_BASE_SHA:-}"
+if [[ "${EVENT_NAME:-}" == "pull_request" && -n "${PR_BASE_SHA:-}" ]]; then
+  # For pull_request events, prefer the PR base SHA when available
+  BASE_REF="${PR_BASE_SHA}"
 elif [[ -n "${EVENT_BEFORE:-}" && "${EVENT_BEFORE}" != "0000000000000000000000000000000000000000" ]]; then
+  # For push events, use the "before" SHA when it is a valid commit
   BASE_REF="${EVENT_BEFORE}"
-elif git rev-parse HEAD~1 >/dev/null 2>&1; then
-  BASE_REF="HEAD~1"
 else
-  BASE_REF="origin/${DEFAULT_BRANCH:-main}"
+  # For other events or when above data is unavailable, prefer merge-base
+  # with the remote default branch, falling back conservatively.
+  DEFAULT_REMOTE_REF="origin/${DEFAULT_BRANCH:-main}"
+  if git rev-parse --verify "${DEFAULT_REMOTE_REF}" >/dev/null 2>&1; then
+    if MERGE_BASE_SHA="$(git merge-base HEAD "${DEFAULT_REMOTE_REF}" 2>/dev/null)"; then
+      BASE_REF="${MERGE_BASE_SHA}"
+    else
+      BASE_REF="${DEFAULT_REMOTE_REF}"
+    fi
+  elif git rev-parse HEAD~1 >/dev/null 2>&1; then
+    BASE_REF="HEAD~1"
+  else
+    # Last-resort fallback to avoid emitting an empty base_ref
+    BASE_REF="HEAD"
+  fi
 fi
 
 echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
