@@ -19,10 +19,11 @@ inputs:
   opex_dashboard_version:
     description: "Version of @pagopa/opex-dashboard to use"
     required: false
-    default: "latest"
+    default: "0.2.0"
   base_ref:
-    description: "Base git reference for change detection (commit SHA or ref)"
-    required: true
+    description: "Base git reference for change detection. Leave empty for auto-detection from GitHub event context."
+    required: false
+    default: ""
   package_manager:
     description: "Package manager to use (npm, pnpm, yarn)"
     required: false
@@ -38,16 +39,31 @@ outputs:
   changed_directories:
     description: "JSON array of directories containing generated Terraform files"
     value: ${{ steps.extract-dirs.outputs.changed_directories }}
+  artifacts_path:
+    description: "Path to collected Terraform artifacts directory (for upload)"
+    value: ${{ steps.collect.outputs.artifacts_path }}
 
 runs:
   using: composite
   steps:
+    - name: Resolve base reference
+      id: resolve-ref
+      shell: bash
+      env:
+        INPUT_BASE_REF: ${{ inputs.base_ref }}
+        EVENT_NAME: ${{ github.event_name }}
+        EVENT_BEFORE: ${{ github.event.before }}
+        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/resolve-base-ref.sh"
+
     - name: Detect modified configs and OpenAPI specs
       id: detect
       shell: bash
       env:
         CONFIG_PATTERN: ${{ inputs.config_pattern }}
-        BASE_REF: ${{ inputs.base_ref }}
+        BASE_REF: ${{ steps.resolve-ref.outputs.base_ref }}
         ACTION_PATH: ${{ github.action_path }}
       run: "${ACTION_PATH}/detect-changes.sh"
 
@@ -68,3 +84,12 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
       run: "${ACTION_PATH}/extract-directories.sh"
+
+    - name: Collect Terraform artifacts
+      id: collect
+      if: steps.extract-dirs.outputs.has_changes == 'true'
+      shell: bash
+      env:
+        CHANGED_DIRS_JSON: ${{ steps.extract-dirs.outputs.changed_directories }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: "${ACTION_PATH}/collect-artifacts.sh"

@@ -55,77 +55,20 @@ jobs:
             ${{ runner.os }}-npm-opex-
             ${{ runner.os }}-npm-
 
-      - name: Set base reference
-        id: set-base-ref
-        run: |
-          BASE_REF=""
-
-          # For pull requests, use base SHA
-          if [ "${EVENT_NAME}" = "pull_request" ]; then
-            BASE_REF="${PR_BASE_SHA}"
-          # For push events, use event.before if valid
-          elif [ -n "${EVENT_BEFORE}" ] && [ "${EVENT_BEFORE}" != "0000000000000000000000000000000000000000" ]; then
-            BASE_REF="${EVENT_BEFORE}"
-          # Fallback to HEAD~1 if possible
-          elif git rev-parse HEAD~1 >/dev/null 2>&1; then
-            BASE_REF="HEAD~1"
-          # Last resort: use default branch
-          else
-            BASE_REF="origin/${DEFAULT_BRANCH}"
-          fi
-
-          echo "base_ref=${BASE_REF}" >> "${GITHUB_OUTPUT}"
-          echo "Using base reference: ${BASE_REF}"
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_BEFORE: ${{ github.event.before }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-
       - name: Generate dashboards
         id: generate-action
         uses: pagopa/dx/actions/opex-dashboard-generate@main
         with:
           config_pattern: ".opex/**/config.yaml"
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
-          base_ref: ${{ steps.set-base-ref.outputs.base_ref }}
           package_manager: "npm"
-
-      - name: Collect generated files
-        if: steps.generate-action.outputs.has_changes == 'true'
-        env:
-          CHANGED_DIRS_JSON: ${{ steps.generate-action.outputs.changed_directories }}
-        run: |
-          # Create collection directory
-          mkdir -p .terraform-artifacts
-
-          # Parse JSON and copy files from each changed directory
-          echo "${CHANGED_DIRS_JSON}" | jq -r '.[].full_path' | while read -r dir; do
-            if [ -d "$dir" ]; then
-              echo "Collecting files from $dir"
-              mkdir -p ".terraform-artifacts/$dir"
-              # Copy generated Terraform files
-              if ls "$dir"/*.tf 1> /dev/null 2>&1; then
-                cp "$dir"/*.tf ".terraform-artifacts/$dir/"
-              fi
-              # Copy tfvars files if exist
-              if ls "$dir"/*.tfvars 1> /dev/null 2>&1; then
-                cp "$dir"/*.tfvars ".terraform-artifacts/$dir/"
-              fi
-              # Copy lock file if exists
-              if [ -f "$dir/.terraform.lock.hcl" ]; then
-                cp "$dir/.terraform.lock.hcl" ".terraform-artifacts/$dir/"
-              fi
-            fi
-          done
-          ls -R .terraform-artifacts
 
       - name: Upload generated Terraform files
         if: steps.generate-action.outputs.has_changes == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: generated-terraform
-          path: .terraform-artifacts/
+          path: ${{ steps.generate-action.outputs.artifacts_path }}
           include-hidden-files: true
           retention-days: 7
 
