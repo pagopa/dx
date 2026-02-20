@@ -55,35 +55,6 @@ jobs:
             ${{ runner.os }}-npm-opex-
             ${{ runner.os }}-npm-
 
-      - name: Validate inputs
-        id: validate-inputs
-        run: |
-          # Validate event_name
-          if [ -n "${EVENT_NAME}" ]; then
-            if [[ "${EVENT_NAME}" =~ [^a-z_] ]]; then
-              echo "::error::Invalid characters in event_name: ${EVENT_NAME}"
-              echo "::error::event_name may only contain: lowercase letters and underscore"
-              exit 1
-            fi
-          fi
-
-          # Validate git references (event.before and pull_request.base.sha)
-          for ref_name in "EVENT_BEFORE" "PR_BASE_SHA"; do
-            ref_value="${!ref_name}"
-            if [ -n "${ref_value}" ] && [ "${ref_value}" != "0000000000000000000000000000000000000000" ]; then
-              if [[ ! "${ref_value}" =~ ^[a-f0-9]{40}$ ]] && [[ ! "${ref_value}" =~ ^[A-Za-z0-9/_^~.-]+$ ]]; then
-                echo "::error::Invalid git reference in ${ref_name}: ${ref_value}"
-                exit 1
-              fi
-            fi
-          done
-
-          echo "Input validation passed"
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_BEFORE: ${{ github.event.before }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-
       - name: Set base reference
         id: set-base-ref
         run: |
@@ -113,7 +84,7 @@ jobs:
 
       - name: Generate dashboards
         id: generate-action
-        uses: pagopa/dx/actions/opex-dashboard-generate@chores/opex-workflow
+        uses: pagopa/dx/actions/opex-dashboard-generate@main
         with:
           config_pattern: ".opex/**/config.yaml"
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
@@ -249,7 +220,8 @@ jobs:
   tf_apply:
     name: Apply - ${{ matrix.dashboard.full_path }}
     needs: [generate, tf_plan]
-    if: needs.generate.outputs.has_changes == 'true'
+    # Only apply on pushes to the default branch (i.e., merged PRs); skip for PRs, forks, or any other branch
+    if: needs.generate.outputs.has_changes == 'true' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: "ubuntu-latest"
     environment: opex-${{ matrix.dashboard.environment }}-cd
     permissions:

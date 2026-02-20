@@ -60,44 +60,6 @@ jobs:
     secrets: inherit
 ```
 
-## How It Works
-
-### 1. Generation Job
-
-- Detects base reference from event context (PR base SHA, push before SHA, or
-  fallback).
-- Calls the composite action to detect changes and generate Terraform.
-- Collects and uploads generated files as artifacts.
-
-### 2. Detection Phase (in Action)
-
-- Compares HEAD against base_ref using git diff.
-- Identifies changed `.opex/**/config.yaml` files and their referenced OpenAPI
-  specs.
-
-### 3. Generation Phase (in Action)
-
-- Generates Terraform files for each changed config in parallel (max 4
-  concurrent).
-
-### 4. Deployment Phase (Matrix Strategy)
-
-- **Terraform Plan Job**: Runs in parallel (max 5), initializes, plans
-  (lock=false), uploads plan; uses `opex-{env}-ci` environment.
-- **Terraform Apply Job**: Applies approved plans sequentially per dashboard;
-  uses `opex-{env}-cd` environment; matrix with fail-fast=false.
-
-Each dashboard deploys independently with state locking for safety.
-
-## Concurrency Control
-
-- Workflow-level: `group: ${{ github.workflow }}-opex-dashboards`,
-  `cancel-in-progress: false`
-- Prevents multiple workflow runs from deploying dashboards simultaneously
-- Individual dashboards deploy in parallel within a single workflow run (max 5
-  concurrent)
-- Terraform state locking provides additional protection during apply operations
-
 ## Config File Format
 
 Dashboard config files should reference their OpenAPI specs using the `oa3_spec`
