@@ -30,44 +30,84 @@ pnpm dx --help
 
 ### `init` – Initialize Resources
 
-Initialize new resources such as monorepo projects following PagoPA DevEx
-conventions.
+Bootstrap a new project following DevEx conventions.
 
-:::warning[GitHub Token Required]
+**Always provisions**:
 
-To have a complete experience with the `init` command, you need to set up a
-`GITHUB_TOKEN` environment variable. This token is required for certain
-operations like creating pull requests and interacting with GitHub repositories.
+- The monorepository, both locally and remotely on GitHub.com, with dotfiles and
+  a devcontainer configuration.
+- GitHub environments corresponding to the specified cloud environments
+- A self-hosted GitHub Runner with permissions to perform cloud operations, in
+  order to run workflows (GitHub Actions) that require cloud access
 
-See the [GitHub Personal Access Token Setup](./github-pat.md) guide for detailed
-instructions on how to generate and configure your token.
+**Additionally provisions (if no Terraform state file is detected for the
+project):**
 
-:::
-
-#### `init project` - Create a new monorepo project
-
-Create a new monorepo project with complete scaffolding, configuration files,
-and infrastructure templates.
-
-```bash
-npx @pagopa/dx-cli init project
-```
+- A VPN to let users access private cloud resources
+- Standardized network configuration
+- Standardized monitoring configuration
+- Infrastructure required to manage the Terraform state file (e.g., Azure
+  Storage Account with blob locking)
 
 This interactive command will prompt you for several inputs and then generate
 the project structure accordingly.
 
-Example output:
+#### Requirements
+
+:::info[Supported Cloud Providers]
+
+Currently, only Azure is supported as cloud provider for the `init` command.
+
+:::
+
+To work properly, the command requires access to GitHub and the target cloud
+provider. For this reason, before running the command ensure you are logged
+within GitHub (`gh auth login`) and the cloud provider CLI (`az login` for
+Azure).
+
+#### Example Usage
 
 ```text
-? Where do you want to create the repository? /Users/projects
-? What is the repository name? my-monorepo
-? What is the repository description? My new monorepo
-? What Cloud Provider would you like to use?
-❯ Amazon Web Services
-  Microsoft Azure
-...
-Monorepo initialized successfully ✅
+npx @pagopa/dx-cli init
+
+✔ Terraform is installed!
+✔ You are logged in to Azure (andrea.grillo@pagopa.it)
+
+Workspace Info
+? Name test-project
+? GitHub Organization pagopa-dx
+? Description a custom description
+✔ Workspace files created successfully!
+
+Cloud Environment
+? Environment name PROD
+? Cloud provider(s) Microsoft Azure
+? Account(s) (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
+ ◯ DEV-ENGINEERING
+ ◯ DEV-IO
+❯◯ DEV-DEVEX
+ ◯ UAT-DEVEX
+(Move up and down to reveal more choices)
+
+[...]
+
+✔ Environment created successfully!
+
+✔ GitHub repository created successfully!
+✔ Code pushed to GitHub successfully!
+✔ Pull Request created successfully!
+
+Workspace created successfully!
+- Name: test-project
+- GitHub Repository: https://github.com/pagopa-dx/test-project
+
+Next Steps:
+1. Review the Pull Request in the GitHub repository: https://github.com/pagopa-dx/test-project/pull/1
+2. Visit https://dx.pagopa.it/getting-started to deploy your first project
 ```
+
+After the command completes, you will have a new GitHub repository with an open
+Pull Request to merge the initial project structure.
 
 ### `doctor` – Repository Validation
 
