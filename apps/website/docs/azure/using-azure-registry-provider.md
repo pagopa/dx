@@ -97,6 +97,33 @@ output "resource_name" {
 
 **Output**: `dx-d-itn-app-apim-pep-01`
 
+:::warning Resource abbreviation cannot start with the name
+
+The `name` parameter must **not** be a prefix of the resource abbreviation. If
+it is, you will get an error like:
+
+```
+Error: Error in function call
+Call to function "provider::dx::resource_name" failed: Resource name cannot be
+part of the resource abbreviation. The abbreviation already contains the name prefix.
+```
+
+**Examples:**
+
+- ❌ Wrong: `name = "cosno"` with `resource_type = "cosmos_db_nosql"`
+  (abbreviation is `cosno`, starts with name)
+- ✅ Correct: `name = "db"` with `resource_type = "cosmos_db_nosql"`
+- ❌ Wrong: `name = "psql"` with `resource_type = "postgresql"` (abbreviation is
+  `psql`, starts with name)
+- ✅ Correct: `name = "inventory"` with `resource_type = "postgresql"`
+- ✅ Correct: `name = "func-processor"` with `resource_type = "function_app"`
+  (abbreviation is `func`, which is fine)
+
+The function will automatically add the resource abbreviation, so choose a
+`name` that doesn't match the beginning of that abbreviation.
+
+:::
+
 :::note
 
 To call a function, use the syntax:
