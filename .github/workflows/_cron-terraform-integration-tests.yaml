@@ -58,6 +58,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Cache Nx
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: .nx
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-cache-
+
       - name: Run Terraform Integration Tests
         timeout-minutes: 120
         run: |
