@@ -1,6 +1,6 @@
 resource "github_actions_secret" "slack_webhook_url_drift_detection" {
   repository      = module.github_repository.name
-  secret_name     = "SLACK_WEBHOOK_URL_DRIFT_DETECTION"
+  secret_name     = "SLACK_WEBHOOK_URL"
   plaintext_value = "placeholder"
 
   lifecycle {
