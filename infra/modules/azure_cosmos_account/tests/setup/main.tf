@@ -112,7 +112,10 @@ resource "azurerm_key_vault_key" "cmk" {
   key_opts        = ["wrapKey", "unwrapKey"]
   expiration_date = timeadd(timestamp(), "2h")
 
-  depends_on = [azurerm_role_assignment.kv_cosmos_uai]
+  depends_on = [
+    azurerm_role_assignment.kv_cosmos_uai,
+    azurerm_role_assignment.integration_keyvault_data_access_admin,
+  ]
 }
 
 output "pep_id" {

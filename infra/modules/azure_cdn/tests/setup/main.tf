@@ -1,28 +1,22 @@
 locals {
   virtual_network = {
     name = provider::dx::resource_name(merge(var.environment, {
-      app_name      = "common",
+      domain        = null
+      app_name      = "integration",
       resource_type = "virtual_network"
     }))
     resource_group_name = provider::dx::resource_name(merge(var.environment, {
-      app_name      = "network",
+      domain        = null
+      app_name      = "integration",
       resource_type = "resource_group"
     }))
   }
 }
 
-data "azurerm_subnet" "snet" {
-  name = provider::dx::resource_name(merge(var.environment, {
-    app_name      = "test",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
-}
-
 data "azurerm_subnet" "pep" {
   name = provider::dx::resource_name(merge(var.environment, {
-    name          = "pep",
+    domain        = null,
+    app_name      = "pep",
     resource_type = "subnet"
   }))
   virtual_network_name = local.virtual_network.name
@@ -38,8 +32,9 @@ resource "azurerm_resource_group" "rg" {
 
 data "azurerm_resource_group" "network" {
   name = provider::dx::resource_name(merge(var.environment, {
+    domain        = null,
     resource_type = "resource_group"
-    name          = "network"
+    app_name      = "network"
   }))
 }
 
@@ -92,10 +87,6 @@ resource "azurerm_cdn_frontdoor_profile" "this" {
 
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
-}
-
-output "subnet_id" {
-  value = data.azurerm_subnet.snet.id
 }
 
 output "resource_group_name" {
