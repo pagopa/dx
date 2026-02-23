@@ -10,7 +10,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "int"
-    app_name        = "st"
+    app_name        = "assets"
     instance_number = "01"
   }
 
