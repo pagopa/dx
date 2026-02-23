@@ -93,6 +93,15 @@ resource "azurerm_role_assignment" "integration_keyvault_key_officer" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto Officer"
   description          = "Allow GitHub workflow to access the key"
+
+  depends_on = [azurerm_role_assignment.integration_keyvault_data_access_admin]
+}
+
+resource "azurerm_role_assignment" "integration_keyvault_data_access_admin" {
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Data Access Administrator"
+  description          = "Allow GitHub workflow to manage roles"
 }
 
 resource "azurerm_key_vault_key" "cmk" {
