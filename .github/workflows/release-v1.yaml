@@ -29,6 +29,21 @@ jobs:
           fetch-tags: "true"
           fetch-depth: 0
 
+      - name: Detect Release tool
+        id: detect-release-tool
+        shell: bash
+        run: |
+          if [ -f ".changeset/config.json" ]; then
+            echo "This repository uses Changesets for managing releases."
+            echo "tool=changeset" >> $GITHUB_OUTPUT
+          elif [ -f "nx.json" ]; then
+            echo "This repository uses Nx for managing releases."
+            echo "tool=nx" >> $GITHUB_OUTPUT
+          else
+            echo "No supported release tool detected. Please ensure either Changesets or Nx is configured."
+            exit 1
+          fi
+
       - name: Setup Node.js
         id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -53,11 +68,61 @@ jobs:
         run: npm ci
 
       - name: Create Release Pull Request or Publish to npm
+        if: steps.detect-release-tool.outputs.tool == 'changeset'
         id: release
         uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
           version: ${{ steps.node-setup.outputs.package-manager }} run version
           publish: ${{ steps.node-setup.outputs.package-manager }} run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Detect Nx Context
+        id: nx-context
+        if: steps.detect-release-tool.outputs.tool == 'nx'
+        shell: bash
+        run: |
+          # Analyze the file changes between the previous commit and HEAD.
+          # 1. Version plans in .nx/version-plans/ are DELETED (consumed).
+          # 2. Version files (package.json or pom.xml) are MODIFIED (bumped).
+
+          # Get the list of changed files with their status (A=Added, M=Modified, D=Deleted)
+          DIFF_STATUS=$(git diff --name-status HEAD~1 HEAD)
+
+          # Check if any file in .nx/version-plans/ was Deleted
+          HAS_DELETED_PLANS=$(echo "$DIFF_STATUS" | grep "^D.*\.nx/version-plans/" || true)
+
+          # Check if any package.json or pom.xml was Modified
+          HAS_MODIFIED_VERSIONS=$(echo "$DIFF_STATUS" | grep -E "^M.*(package\.json|pom\.xml)" || true)
+
+          echo "DEBUG: Deleted Plans found: ${HAS_DELETED_PLANS:-none}"
+          echo "DEBUG: Modified Versions found: ${HAS_MODIFIED_VERSIONS:-none}"
+
+          # If plans were consumed AND versions were bumped -> PUBLISH
+          if [[ -n "$HAS_DELETED_PLANS" ]] && [[ -n "$HAS_MODIFIED_VERSIONS" ]]; then
+            echo "::notice ::Release plans consumed and versions updated. Action: PUBLISH"
+            echo "action=publish" >> $GITHUB_OUTPUT
+          else
+            echo "::notice ::Standard commit or new plans added. Action: CREATE/UPDATE PR"
+            echo "action=create-pr" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Nx Create Release PR
+        if: steps.detect-release-tool.outputs.tool == 'nx' && steps.nx-context.outputs.action == 'create-pr'
+        # uses: pagopa/dx/.github/actions/nx-create-version-release-pr@main
+        shell: bash
+        run: |
+          echo "TEST: Create/Update PR for Nx release plans"
+        env:
+          GITHUB_TOKEN: ${{ secrets.github-token }}
+
+      - name: Nx Publish
+        if: steps.detect-release-tool.outputs.tool == 'nx' && steps.nx-context.outputs.action == 'publish'
+        # uses: pagopa/dx/.github/actions/nx-publish-version-release@main
+        shell: bash
+        run: |
+          echo "TEST: Publish Nx release to npm"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
           NPM_CONFIG_PROVENANCE: true
