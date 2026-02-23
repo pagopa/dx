@@ -1,5 +1,3 @@
-# Integration Tests for Azure CDN Module
-
 provider "azurerm" {
   features {}
 }
@@ -11,8 +9,8 @@ variables {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    domain          = "integ"
-    app_name        = "test"
+    domain          = "int"
+    app_name        = "cdn"
     instance_number = "01"
   }
 
@@ -30,12 +28,63 @@ variables {
 
 run "setup" {
   module {
-    source = "./tests/setup_integration"
+    source = "./tests/setup"
   }
 
   variables {
     environment = var.environment
     tags        = var.tags
+  }
+}
+
+run "apply_cdn" {
+  command = apply
+
+  variables {
+    environment         = var.environment
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
+
+    origins = {
+      primary = {
+        host_name = run.setup.storage_account_host_name
+      }
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_profile.this) == 1
+    error_message = "CDN profile must be created when using existing profile"
+  }
+
+  assert {
+    condition     = length(data.azurerm_cdn_frontdoor_profile.existing) == 0
+    error_message = "Data source for existing profile must not be used"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["primary"].host_name == run.setup.storage_account_host_name
+    error_message = "Origin hostname must match storage account hostname"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_endpoint.this.enabled == true
+    error_message = "CDN endpoint must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_route.this.enabled == true
+    error_message = "CDN route must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_route.this.forwarding_protocol == "HttpsOnly"
+    error_message = "Route must use HTTPS-only forwarding"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_route.this.https_redirect_enabled == true
+    error_message = "HTTPS redirect must be enabled"
   }
 }
 
@@ -95,17 +144,9 @@ run "apply_cdn_with_custom_domain" {
   command = apply
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "integ"
-      app_name        = "test"
-      instance_number = "02"
-    }
-    tags                              = var.tags
-    resource_group_name               = run.setup.resource_group_name
-    existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
+    environment         = var.environment
+    tags                = var.tags
+    resource_group_name = run.setup.resource_group_name
 
     origins = {
       primary = {
@@ -115,9 +156,9 @@ run "apply_cdn_with_custom_domain" {
 
     custom_domains = [
       {
-        host_name = "cdn-test.devex.pagopa.it"
+        host_name = "cdn.${run.setup.dns_zone_name}"
         dns = {
-          zone_name                = run.setup.devex_pagopa_it_zone_name
+          zone_name                = run.setup.dns_zone_name
           zone_resource_group_name = run.setup.resource_group_name
         }
       }
@@ -130,7 +171,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_cdn_frontdoor_custom_domain.this["cdn-test.devex.pagopa.it"].host_name == "cdn-test.devex.pagopa.it"
+    condition     = azurerm_cdn_frontdoor_custom_domain.this["cdn.${run.setup.dns_zone_name}"].host_name == "cdn.${run.setup.dns_zone_name}"
     error_message = "Custom domain hostname must match"
   }
 
@@ -140,7 +181,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_dns_txt_record.validation["cdn-test.devex.pagopa.it"].name == "_dnsauth.cdn-test"
+    condition     = azurerm_dns_txt_record.validation["cdn.${run.setup.dns_zone_name}"].name == "_dnsauth.cdn"
     error_message = "DNS TXT record must have correct name"
   }
 
@@ -150,7 +191,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_dns_cname_record.this["cdn-test.devex.pagopa.it"].name == "cdn-test"
+    condition     = azurerm_dns_cname_record.this["cdn.${run.setup.dns_zone_name}"].name == "cdn"
     error_message = "DNS CNAME record must have correct name"
   }
 }
@@ -159,14 +200,7 @@ run "apply_cdn_with_waf" {
   command = apply
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "integ"
-      app_name        = "test"
-      instance_number = "03"
-    }
+    environment                       = var.environment
     tags                              = var.tags
     resource_group_name               = run.setup.resource_group_name
     existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id
@@ -178,16 +212,6 @@ run "apply_cdn_with_waf" {
         host_name = run.setup.storage_account_host_name
       }
     }
-
-    custom_domains = [
-      {
-        host_name = "secure-cdn.devex.pagopa.it"
-        dns = {
-          zone_name                = run.setup.devex_pagopa_it_zone_name
-          zone_resource_group_name = run.setup.resource_group_name
-        }
-      }
-    ]
   }
 
   assert {
@@ -215,14 +239,7 @@ run "apply_cdn_with_multiple_origins" {
   command = apply
 
   variables {
-    environment = {
-      prefix          = "dx"
-      env_short       = "d"
-      location        = "italynorth"
-      domain          = "integ"
-      app_name        = "test"
-      instance_number = "05"
-    }
+    environment                       = var.environment
     tags                              = var.tags
     resource_group_name               = run.setup.resource_group_name
     existing_cdn_frontdoor_profile_id = run.setup.cdn_profile_id

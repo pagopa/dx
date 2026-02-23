@@ -1,18 +1,10 @@
 locals {
-  naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location
-    name            = var.environment.app_name,
-    instance_number = tonumber(var.environment.instance_number),
-  }
-
   virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
+    name = provider::dx::resource_name(merge(var.environment, {
       name          = "common",
       resource_type = "virtual_network"
     }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    resource_group_name = provider::dx::resource_name(merge(var.environment, {
       name          = "network",
       resource_type = "resource_group"
     }))
@@ -20,7 +12,7 @@ locals {
 }
 
 data "azurerm_subnet" "snet" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(var.environment, {
     name          = "test",
     resource_type = "subnet"
   }))
@@ -29,7 +21,7 @@ data "azurerm_subnet" "snet" {
 }
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(var.environment, {
     name          = "pep",
     resource_type = "subnet"
   }))
@@ -38,8 +30,7 @@ data "azurerm_subnet" "pep" {
 }
 
 resource "azurerm_resource_group" "integration" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = "integ",
+  name = provider::dx::resource_name(merge(var.environment, {
     name          = "cdn",
     resource_type = "resource_group"
   }))
@@ -49,19 +40,12 @@ resource "azurerm_resource_group" "integration" {
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
   version = "~> 2.0"
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
-  }
 
+  environment                         = var.environment
   resource_group_name                 = azurerm_resource_group.integration.name
   use_case                            = "development"
   subnet_pep_id                       = data.azurerm_subnet.pep.id
-  force_public_network_access_enabled = true # just for testing
+  force_public_network_access_enabled = true
   static_website = {
     enabled        = true
     index_document = "index.html"

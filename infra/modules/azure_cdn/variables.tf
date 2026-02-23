@@ -63,7 +63,6 @@ variable "waf_enabled" {
 }
 
 variable "custom_domains" {
-  description = "Map of custom domain configurations to associate with the CDN endpoint. If dns parameter is set, DNS records are created. If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used. To generate one in PagoPA context, please refer to the Confluence documentation."
   type = list(object({
     host_name = string
     dns = optional(object({
@@ -79,6 +78,13 @@ variable "custom_domains" {
     }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })
   }))
   default = []
+
+  description = <<-EOT
+    Map of custom domain configurations to associate with the CDN endpoint.
+    If dns parameter is set, DNS records are created.
+    If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used.
+    To generate one in PagoPA context, please refer to the Confluence documentation.
+  EOT
 
   # Validate that all cases where zone_name is equal to host_name (meaning that the custom domain is a root domain of that zone), the custom_certificate keys are set.
   validation {

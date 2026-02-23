@@ -1,27 +1,19 @@
 locals {
-  naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location
-    name            = var.environment.app_name,
-    instance_number = tonumber(var.environment.instance_number),
-  }
-
   virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "common",
+    name = provider::dx::resource_name(merge(var.environment, {
+      app_name      = "common",
       resource_type = "virtual_network"
     }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "network",
+    resource_group_name = provider::dx::resource_name(merge(var.environment, {
+      app_name      = "network",
       resource_type = "resource_group"
     }))
   }
 }
 
 data "azurerm_subnet" "snet" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+  name = provider::dx::resource_name(merge(var.environment, {
+    app_name      = "test",
     resource_type = "subnet"
   }))
   virtual_network_name = local.virtual_network.name
@@ -29,7 +21,7 @@ data "azurerm_subnet" "snet" {
 }
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(var.environment, {
     name          = "pep",
     resource_type = "subnet"
   }))
@@ -37,29 +29,29 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
-data "azurerm_resource_group" "rg" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+resource "azurerm_resource_group" "rg" {
+  name = provider::dx::resource_name(merge(var.environment, {
     resource_type = "resource_group"
+  }))
+  location = var.environment.location
+}
+
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(var.environment, {
+    resource_type = "resource_group"
+    name          = "network"
   }))
 }
 
 module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
-  environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
-  }
+  source      = "pagopa-dx/azure-storage-account/azurerm"
+  version     = "~> 2.0"
+  environment = var.environment
 
-  resource_group_name                 = data.azurerm_resource_group.rg.name
+  resource_group_name                 = azurerm_resource_group.rg.name
   use_case                            = "development"
   subnet_pep_id                       = data.azurerm_subnet.pep.id
-  force_public_network_access_enabled = true # just for testing
+  force_public_network_access_enabled = true
   static_website = {
     enabled        = true
     index_document = "index.html"
@@ -72,11 +64,30 @@ module "storage_account" {
   tags = var.tags
 }
 
-resource "azurerm_dns_zone" "devex_pagopa_it" {
-  name                = "devex.pagopa.it"
-  resource_group_name = data.azurerm_resource_group.rg.name
+data "azurerm_dns_zone" "integration_dx_pagopa_it" {
+  name                = "integration.dx.pagopa.it"
+  resource_group_name = data.azurerm_resource_group.network.name
+}
+
+resource "azurerm_cdn_frontdoor_profile" "this" {
+  name = provider::dx::resource_name(merge(
+    var.environment, {
+      resource_type   = "cdn_frontdoor_profile",
+      instance_number = "02"
+  }))
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name            = "Standard_AzureFrontDoor"
+
+  identity {
+    type = "SystemAssigned"
+  }
 
   tags = var.tags
+
+  timeouts {
+    delete = "60m"
+    update = "30m"
+  }
 }
 
 output "pep_id" {
@@ -88,17 +99,21 @@ output "subnet_id" {
 }
 
 output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
+  value = azurerm_resource_group.rg.name
 }
 
 output "storage_account_host_name" {
   value = module.storage_account.primary_web_host
 }
 
-output "devex_pagopa_it_zone_name" {
-  value = azurerm_dns_zone.devex_pagopa_it.name
+output "dns_zone_name" {
+  value = data.azurerm_dns_zone.integration_dx_pagopa_it.name
 }
 
 output "storage_account_id" {
   value = module.storage_account.id
+}
+
+output "cdn_profile_id" {
+  value = azurerm_cdn_frontdoor_profile.this.id
 }
