@@ -66,6 +66,19 @@ resource "random_integer" "appcs_kv_instance" {
   max = 99
 }
 
+# Generate a random base instance number tied to the current timestamp.
+# Using timestamp() as a keeper forces regeneration on every test execution,
+# ensuring test runs are isolated from each other even with persistent state.
+# The base range (10-24) guarantees that all 4 derived instance numbers
+# (base, base+25, base+50, base+75) stay within the valid 2-digit range (10-99).
+resource "random_integer" "instance_base" {
+  min = 10
+  max = 24
+  keepers = {
+    run_timestamp = timestamp()
+  }
+}
+
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.appcs_kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
@@ -144,4 +157,13 @@ output "subscription_id" {
 
 output "managed_identity_principal_id" {
   value = data.azurerm_user_assigned_identity.test.principal_id
+}
+
+output "instance_numbers" {
+  value = {
+    default        = tostring(random_integer.instance_base.result)
+    premium        = tostring(random_integer.instance_base.result + 25)
+    developer      = tostring(random_integer.instance_base.result + 50)
+    kv_integration = tostring(random_integer.instance_base.result + 75)
+  }
 }

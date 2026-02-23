@@ -1,5 +1,5 @@
 resource "azurerm_app_configuration" "this" {
-  name                = provider::pagopa-dx::resource_name(merge(local.naming_config, { resource_type = "app_configuration" }))
+  name                = provider::pagopa-dx::resource_name(merge(var.environment, { resource_type = "app_configuration" }))
   resource_group_name = var.resource_group_name
   location            = var.environment.location
 

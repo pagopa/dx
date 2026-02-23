@@ -21,6 +21,7 @@ No modules.
 | [azurerm_private_endpoint.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_resource_group.sut](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [random_integer.appcs_kv_instance](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
+| [random_integer.instance_base](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_private_dns_zone.appcs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
 | [azurerm_private_dns_zone.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
@@ -42,6 +43,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_instance_numbers"></a> [instance\_numbers](#output\_instance\_numbers) | n/a |
 | <a name="output_key_vaults"></a> [key\_vaults](#output\_key\_vaults) | n/a |
 | <a name="output_managed_identity_principal_id"></a> [managed\_identity\_principal\_id](#output\_managed\_identity\_principal\_id) | n/a |
 | <a name="output_private_dns_zone_appcs"></a> [private\_dns\_zone\_appcs](#output\_private\_dns\_zone\_appcs) | n/a |

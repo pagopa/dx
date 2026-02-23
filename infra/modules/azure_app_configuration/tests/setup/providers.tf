@@ -23,7 +23,7 @@ provider "azurerm" {
     }
     app_configuration {
       purge_soft_delete_on_destroy = true
-      recover_soft_deleted         = true
+      recover_soft_deleted         = false
     }
     resource_group {
       prevent_deletion_if_contains_resources = false
