@@ -26,7 +26,7 @@ resource "azurerm_dns_zone" "integration_dx_pagopa_it" {
 }
 
 resource "azurerm_dns_ns_record" "integration_dx_pagopa_it" {
-  name                = "@"
+  name                = "integration"
   resource_group_name = module.azure_core_values.network_resource_group_name
   records             = azurerm_dns_zone.integration_dx_pagopa_it.name_servers
   ttl                 = 172800
