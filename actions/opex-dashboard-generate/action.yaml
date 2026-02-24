@@ -51,23 +51,30 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        INPUT_BASE_REF: ${{ inputs.base_ref }}
+        INPUT_EVENT_NAME: ${{ github.event_name }}
+        INPUT_EVENT_BEFORE: ${{ github.event.before }}
+        INPUT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        INPUT_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       run: |
         "${ACTION_PATH}/resolve-base-ref.sh" \
-          --base-ref "${{ inputs.base_ref }}" \
-          --event-name "${{ github.event_name }}" \
-          --event-before "${{ github.event.before }}" \
-          --pr-base-sha "${{ github.event.pull_request.base.sha }}" \
-          --default-branch "${{ github.event.repository.default_branch }}"
+          --base-ref "${INPUT_BASE_REF}" \
+          --event-name "${INPUT_EVENT_NAME}" \
+          --event-before "${INPUT_EVENT_BEFORE}" \
+          --pr-base-sha "${INPUT_PR_BASE_SHA}" \
+          --default-branch "${INPUT_DEFAULT_BRANCH}"
 
     - name: Detect modified configs and OpenAPI specs
       id: detect
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        INPUT_CONFIG_PATTERN: ${{ inputs.config_pattern }}
+        INPUT_BASE_REF: ${{ steps.resolve-ref.outputs.base_ref }}
       run: |
         "${ACTION_PATH}/detect-changes.sh" \
-          --config-pattern "${{ inputs.config_pattern }}" \
-          --base-ref "${{ steps.resolve-ref.outputs.base_ref }}"
+          --config-pattern "${INPUT_CONFIG_PATTERN}" \
+          --base-ref "${INPUT_BASE_REF}"
 
     - name: Generate Terraform for changed dashboards
       id: generate
@@ -75,11 +82,14 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        INPUT_CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
+        INPUT_OPEX_VERSION: ${{ inputs.opex_dashboard_version }}
+        INPUT_PACKAGE_MANAGER: ${{ inputs.package_manager }}
       run: |
         "${ACTION_PATH}/generate-terraform.sh" \
-          --changed-dashboards '${{ steps.detect.outputs.changed_dashboards }}' \
-          --opex-version "${{ inputs.opex_dashboard_version }}" \
-          --package-manager "${{ inputs.package_manager }}"
+          --changed-dashboards "${INPUT_CHANGED_DASHBOARDS}" \
+          --opex-version "${INPUT_OPEX_VERSION}" \
+          --package-manager "${INPUT_PACKAGE_MANAGER}"
 
     - name: Extract changed directories
       id: extract-dirs
@@ -94,6 +104,7 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        INPUT_CHANGED_DIRS: ${{ steps.extract-dirs.outputs.changed_directories }}
       run: |
         "${ACTION_PATH}/collect-artifacts.sh" \
-          --changed-dirs '${{ steps.extract-dirs.outputs.changed_directories }}'
+          --changed-dirs "${INPUT_CHANGED_DIRS}"
