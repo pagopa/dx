@@ -131,12 +131,18 @@ runs:
         )
 
         # Extract modified CHANGELOG.md files and include versions
-        CHANGELOGS=$(git diff --cached --name-only | grep CHANGELOG.md || true)
+        # Use git diff HEAD to see changes after commit
+        CHANGELOGS=$(git diff HEAD~1 --name-only | grep CHANGELOG.md || true)
         if [[ -n "$CHANGELOGS" ]]; then
           for changelog in $CHANGELOGS; do
             if [[ -f "$changelog" ]]; then
-              # Extract the top section (first release entry) from each changelog
-              SECTION=$(head -30 "$changelog" | sed -n '/^## /,/^---/p' || true)
+              # Extract from first ## heading until the next ## heading or end of file
+              # This captures the first release entry completely
+              SECTION=$(sed -n '/^## /,/^## /p' "$changelog" | head -n -1)
+              if [[ -z "$SECTION" ]]; then
+                # Fallback: if pattern doesn't match, take first 50 lines
+                SECTION=$(head -50 "$changelog")
+              fi
               if [[ -n "$SECTION" ]]; then
                 PR_BODY="$PR_BODY"$'\n'"$SECTION"$'\n'
               fi
