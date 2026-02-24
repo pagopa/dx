@@ -18,7 +18,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Avoid barrel files; import directly from source files.
 - Add a short file header that states the module purpose.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
-- Favor functional programming patterns for control flow over imperative statements to improve predictability and expressiveness.
+- Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
 - Use `async/await` for asynchronous code for clarity.
 - Document non-obvious decisions and the rationale (the "why") in comments.
 - Use clear and descriptive names for all identifiers, avoiding abbreviations that obscure intent.

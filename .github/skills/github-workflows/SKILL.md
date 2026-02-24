@@ -48,3 +48,13 @@ Avoid "YAML hell" by keeping workflow files focused on orchestration rather than
 - **External Scripts**: If a shell script exceeds a few lines or involves complex logic (branching, loops, error handling), isolate it into an external Bash or TypeScript script.
 - **Reusable Versioned Actions**: For complex logic that requires dependencies or is reused across multiple workflows, create a dedicated reusable action with its own `package.json`. This allows for independent testing and versioning.
 - **Maintainability**: Smaller YAML files are easier to audit and understand. Complex logic belongs in languages with better tooling for testing and linting (like TypeScript).
+
+### 5. Concurrency and State Management
+
+- **Concurrency Groups**: Use concurrency groups to prevent parallel runs where sequential execution is needed.
+
+### 6. Documentation
+
+- **Hidden Requirements**: Clearly document any hidden requirements or dependencies in pipelines.
+- **Input Descriptions**: Provide detailed descriptions for each input parameter to clarify their purpose and usage.
+- **Examples**: Include example usage in the workflow's website documentation.

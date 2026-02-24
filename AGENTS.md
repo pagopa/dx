@@ -6,6 +6,7 @@ Guidelines and architectural context for DevEx initiative development.
 
 - **No Unsolicited PRs**: NEVER commit or open pull requests without explicit user instructions.
 - **Changesets Mandatory**: Every PR with user-facing changes MUST include a changeset: `pnpm changeset`.
+- **Breaking Changes**: Be extremely cautious with breaking changes for reusable Terraform modules and GitHub workflows. Always provide clear migration paths in changesets. When renaming resources or changing interfaces, try to keep backward compatibility.
 
 ## Repository Map
 

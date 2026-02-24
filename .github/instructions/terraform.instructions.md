@@ -14,6 +14,7 @@ applyTo: "**/*.tf, **/*.tfvars"
 - Organize infrastructure by environment and region in `infra/resources/<env>/<region>/`.
 - Minimize parameter (argument) count with sensible defaults to maximize usability and reduce cognitive load for end users.
 - Protect sensitive data using proper mechanisms (e.g., `sensitive = true`, secrets management).
+- If you have a resource ID, compute related information internally rather than requiring separate inputs.
 
 ## Modules
 
