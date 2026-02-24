@@ -17,7 +17,7 @@ inputs:
   pr-title:
     description: "Title for the release pull request"
     required: false
-    default: "chore: Release (Version Packages)"
+    default: "Version Packages"
   commit-message:
     description: "Commit message for generated version bumps"
     required: false
