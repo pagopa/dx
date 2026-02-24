@@ -29,12 +29,6 @@ Guidelines and architectural context for DevEx initiative development.
   - `pnpm dx`: Local CLI access (shorthand for [apps/cli](apps/cli/)).
   - `mcpserver`: MCP server for DX documentation and code search.
 
-## Patterns
-
-- **Terraform Modules**: Must include `README.md`, `examples/`, and `tests/`.
-- **Cross-refs**: Libraries must use `workspace:` protocol for monorepo integrity.
-- **Monorepo Structure**: Standard layouts for consistency across apps and packages.
-
 ## References
 
 - [DX Documentation site](https://dx.pagopa.it/docs/)
