@@ -6,19 +6,21 @@ sidebar_position: 50
 
 The
 [existing Drift Detection workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml)
-is a GitHub Action that identifies any differences between the Terraform code
-and the current state of the resources stored in the `*.tfstate` file. It also
-verifies if there are any inconsistencies between the state and the resources
-deployed on Azure.
+is a GitHub Action that identifies drifts between the Terraform code and the
+current state of the resources provisioned on the target CSP.
 
 :::note
 
-Slack notifications will be sent if drift is detected.
+You may find more information about the issue in this HashiCorp
+[post about drift detection](https://www.hashicorp.com/en/blog/detecting-and-managing-drift-with-terraform).
 
 :::
 
-You may find more information in this
-[article about drift detection](https://www.hashicorp.com/blog/detecting-and-resolving-terraform-drift).
+The workflow runs the `terraform plan` command and checks the output for any
+differences between the desired state (defined in the Terraform code) and the
+actual state of the infrastructure. If any differences are found, the workflow
+will fail, and a notification will be sent to the configured Slack channel with
+details about the detected drift.
 
 ## Usage
 
@@ -65,46 +67,52 @@ Make sure to configure `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, and
 
 To receive notifications in Slack when drift is detected:
 
-- [Create a Slack app and generate a webhook URL](https://api.slack.com/messaging/webhooks#getting_started).
-- Save the webhook URL in your Azure KeyVault as a secret
-- Save the webhook URL as a GitHub secret named `SLACK_WEBHOOK_URL` in your
-  GitHub repository settings. This step can be done easily using Terraform.
-  Below is an example of how to do it:
+- [Create a Slack app and generate a webhook URL](https://api.slack.com/messaging/webhooks#getting_started)
+- Take note of it
+- Create a new repository secret in GitHub named `SLACK_WEBHOOK_URL` via
+  Terraform, next to the `github-environment-bootstrap`
+  [module](https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/latest):
+  - Set a random value to `plaintext_value` property, like `placeholder`
+  - Set the `ignore_changes` lifecycle for the `remote_updated_at` property
+- Apply the Terraform code
+- Once applied, manually change the secret value of `SLACK_WEBHOOK_URL` via
+  GitHub portal with the actual webhook URL you generated in the previous step.
+  This is necessary to prevent the webhook URL from being stored in the
+  Terraform state file, which could pose a security risk
+
+Below is an example of the steps described above:
 
 ```hcl
-data "azurerm_key_vault_secret" "slack_webhook_url" {
-  key_vault_id = data.azurerm_key_vault.your_kv.id
-  name         = "slack-webhook-url-terraform-drift"
+module "repo" {
+  source  = "pagopa-dx/github-environment-bootstrap/github"
+  version = "~> 1.0"
+  [...]
 }
 
-locals {
-  # you may already have this section in `locals.tf`file. If so, just add the value to the existing `repo_secrets` map.
-  repo_secrets = {
-    "SLACK_WEBHOOK_URL" = data.azurerm_key_vault_secret.slack_webhook_url.value
-  }
-}
-
-# you may already have this
-resource "github_actions_secret" "repo_secrets" {
-  for_each = local.repo_secrets
-
+resource "github_actions_secret" "slack_webhook_url" {
   repository      = module.repo.repository.name
-  secret_name     = each.key
-  plaintext_value = each.value
+  secret_name     = "SLACK_WEBHOOK_URL"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
 }
 ```
 
-When drift is detected, a Slack message similar to the following will be sent:
+When a drift is detected, a Slack message is sent to the selected channel. It
+appears similar to this:
 
 ```plaintext
-Drift detected! Drift Detection action has failed
+:x: Drift detected by Drift Detection.
+
 Drift Detection results:
-Owner: [COMMIT OWNER NAME]
-Commit URL: 12345XY
-Commit message: [COMMIT MESSAGE]
-Terraform plan results:
-  + Resource to add: 0
-  ~ Resource to change: 1
-  - Resource to destroy: 0
-Linked Repo: [REPOSITORY LINK]
+:shipit: Owner: Krusty93
+:diamond_shape_with_a_dot_inside: Commit URL: 877c7f1d7ae22fe1a27db5275c290225d2c0eea4
+:envelope: Commit message: update slack workflow
+:page_with_curl: Terraform plan results:
+:heavy_plus_sign: Resource to add: 1
+:wavy_dash: Resource to change: 4
+:heavy_minus_sign: Resource to destroy: 3
+ Linked Repo: pagopa/dx
 ```
