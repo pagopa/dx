@@ -156,10 +156,10 @@ run "apply_cdn_with_custom_domain" {
 
     custom_domains = [
       {
-        host_name = "cdn.${run.setup.dns_zone_name}"
+        host_name = "cdn.${run.setup.dns_zone.name}"
         dns = {
-          zone_name                = run.setup.dns_zone_name
-          zone_resource_group_name = run.setup.resource_group_name
+          zone_name                = run.setup.dns_zone.name
+          zone_resource_group_name = run.setup.dns_zone.resource_group_name
         }
       }
     ]
@@ -171,7 +171,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_cdn_frontdoor_custom_domain.this["cdn.${run.setup.dns_zone_name}"].host_name == "cdn.${run.setup.dns_zone_name}"
+    condition     = azurerm_cdn_frontdoor_custom_domain.this["cdn.${run.setup.dns_zone.name}"].host_name == "cdn.${run.setup.dns_zone.name}"
     error_message = "Custom domain hostname must match"
   }
 
@@ -181,7 +181,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_dns_txt_record.validation["cdn.${run.setup.dns_zone_name}"].name == "_dnsauth.cdn"
+    condition     = azurerm_dns_txt_record.validation["cdn.${run.setup.dns_zone.name}"].name == "_dnsauth.cdn"
     error_message = "DNS TXT record must have correct name"
   }
 
@@ -191,7 +191,7 @@ run "apply_cdn_with_custom_domain" {
   }
 
   assert {
-    condition     = azurerm_dns_cname_record.this["cdn.${run.setup.dns_zone_name}"].name == "cdn"
+    condition     = azurerm_dns_cname_record.this["cdn.${run.setup.dns_zone.name}"].name == "cdn"
     error_message = "DNS CNAME record must have correct name"
   }
 }

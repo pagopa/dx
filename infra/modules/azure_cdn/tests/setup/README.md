@@ -36,7 +36,7 @@
 | Name | Description |
 |------|-------------|
 | <a name="output_cdn_profile_id"></a> [cdn\_profile\_id](#output\_cdn\_profile\_id) | n/a |
-| <a name="output_dns_zone_name"></a> [dns\_zone\_name](#output\_dns\_zone\_name) | n/a |
+| <a name="output_dns_zone"></a> [dns\_zone](#output\_dns\_zone) | n/a |
 | <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_storage_account_host_name"></a> [storage\_account\_host\_name](#output\_storage\_account\_host\_name) | n/a |

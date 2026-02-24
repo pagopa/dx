@@ -97,8 +97,11 @@ output "storage_account_host_name" {
   value = module.storage_account.primary_web_host
 }
 
-output "dns_zone_name" {
-  value = data.azurerm_dns_zone.integration_dx_pagopa_it.name
+output "dns_zone" {
+  value = {
+    name                = data.azurerm_dns_zone.integration_dx_pagopa_it.name
+    resource_group_name = data.azurerm_dns_zone.integration_dx_pagopa_it.resource_group_name
+  }
 }
 
 output "storage_account_id" {
