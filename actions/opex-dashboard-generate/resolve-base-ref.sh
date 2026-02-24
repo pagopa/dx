@@ -4,7 +4,7 @@ set -euo pipefail
 # Resolve the base git reference for change detection.
 # If --base-ref is provided, use it directly.
 # Otherwise, auto-detect from the GitHub event context.
-# 
+#
 # Usage:
 #   resolve-base-ref.sh [OPTIONS]
 #
