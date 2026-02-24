@@ -2,7 +2,6 @@ locals {
   azure_environment = {
     prefix          = "dx"
     location        = "italynorth"
-    location_short  = "itn"
     env_short       = "d"
     app_name        = "core"
     instance_number = "01"
