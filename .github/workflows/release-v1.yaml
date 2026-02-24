@@ -70,10 +70,13 @@ jobs:
       - name: Create Release Pull Request or Publish to npm
         if: steps.detect-release-tool.outputs.tool == 'changeset'
         id: release
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
-        with:
-          version: ${{ steps.node-setup.outputs.package-manager }} run version
-          publish: ${{ steps.node-setup.outputs.package-manager }} run release
+        # uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+        # with:
+        #   version: ${{ steps.node-setup.outputs.package-manager }} run version
+        #   publish: ${{ steps.node-setup.outputs.package-manager }} run release
+        shell: bash
+        run: |
+          echo "TEST: Create/Update PR with Changesets"
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
           NPM_CONFIG_PROVENANCE: true
