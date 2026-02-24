@@ -50,33 +50,36 @@ runs:
       id: resolve-ref
       shell: bash
       env:
-        INPUT_BASE_REF: ${{ inputs.base_ref }}
-        EVENT_NAME: ${{ github.event_name }}
-        EVENT_BEFORE: ${{ github.event.before }}
-        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         ACTION_PATH: ${{ github.action_path }}
-      run: "${ACTION_PATH}/resolve-base-ref.sh"
+      run: |
+        "${ACTION_PATH}/resolve-base-ref.sh" \
+          --base-ref "${{ inputs.base_ref }}" \
+          --event-name "${{ github.event_name }}" \
+          --event-before "${{ github.event.before }}" \
+          --pr-base-sha "${{ github.event.pull_request.base.sha }}" \
+          --default-branch "${{ github.event.repository.default_branch }}"
 
     - name: Detect modified configs and OpenAPI specs
       id: detect
       shell: bash
       env:
-        CONFIG_PATTERN: ${{ inputs.config_pattern }}
-        BASE_REF: ${{ steps.resolve-ref.outputs.base_ref }}
         ACTION_PATH: ${{ github.action_path }}
-      run: "${ACTION_PATH}/detect-changes.sh"
+      run: |
+        "${ACTION_PATH}/detect-changes.sh" \
+          --config-pattern "${{ inputs.config_pattern }}" \
+          --base-ref "${{ steps.resolve-ref.outputs.base_ref }}"
 
     - name: Generate Terraform for changed dashboards
       id: generate
       if: fromJson(steps.detect.outputs.changed_dashboards)[0] != null
       shell: bash
       env:
-        CHANGED_DASHBOARDS: ${{ steps.detect.outputs.changed_dashboards }}
-        OPEX_VERSION: ${{ inputs.opex_dashboard_version }}
-        PACKAGE_MANAGER: ${{ inputs.package_manager }}
         ACTION_PATH: ${{ github.action_path }}
-      run: "${ACTION_PATH}/generate-terraform.sh"
+      run: |
+        "${ACTION_PATH}/generate-terraform.sh" \
+          --changed-dashboards '${{ steps.detect.outputs.changed_dashboards }}' \
+          --opex-version "${{ inputs.opex_dashboard_version }}" \
+          --package-manager "${{ inputs.package_manager }}"
 
     - name: Extract changed directories
       id: extract-dirs
@@ -90,6 +93,7 @@ runs:
       if: steps.extract-dirs.outputs.has_changes == 'true'
       shell: bash
       env:
-        CHANGED_DIRS_JSON: ${{ steps.extract-dirs.outputs.changed_directories }}
         ACTION_PATH: ${{ github.action_path }}
-      run: "${ACTION_PATH}/collect-artifacts.sh"
+      run: |
+        "${ACTION_PATH}/collect-artifacts.sh" \
+          --changed-dirs '${{ steps.extract-dirs.outputs.changed_directories }}'

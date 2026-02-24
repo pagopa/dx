@@ -2,11 +2,37 @@
 set -euo pipefail
 
 # Detect modified dashboard configs and their referenced OpenAPI specifications.
-# Inputs (env vars):
-#   CONFIG_PATTERN - Glob pattern(s) to find dashboard config files (newline-separated)
-#   BASE_REF       - Base git reference for change detection
+#
+# Usage:
+#   detect-changes.sh --config-pattern <pattern> --base-ref <ref>
+#
+# Options:
+#   --config-pattern <pattern>  Glob pattern(s) to find dashboard config files (newline-separated)
+#   --base-ref <ref>            Base git reference for change detection
+#
 # Output (GITHUB_OUTPUT):
 #   changed_dashboards - JSON array of config file paths that need regeneration
+
+# Parse command-line arguments
+CONFIG_PATTERN=""
+BASE_REF=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --config-pattern)
+      CONFIG_PATTERN="$2"
+      shift 2
+      ;;
+    --base-ref)
+      BASE_REF="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
 
 # --- Input validation ---
 
@@ -15,8 +41,8 @@ if [[ "${CONFIG_PATTERN}" =~ [\;\|\&\`\$\(\)] ]]; then
   exit 1
 fi
 
-if [[ -z "${BASE_REF:-}" ]]; then
-  echo "::error::BASE_REF environment variable is required"
+if [[ -z "${BASE_REF}" ]]; then
+  echo "::error::base_ref is required"
   exit 1
 fi
 

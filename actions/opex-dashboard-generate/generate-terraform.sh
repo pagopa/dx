@@ -2,31 +2,57 @@
 set -euo pipefail
 
 # Generate Terraform for changed dashboard configurations.
-# Inputs (env vars):
-#   CHANGED_DASHBOARDS - JSON array of dashboard config file paths
-#   OPEX_VERSION       - Version of @pagopa/opex-dashboard to use
-#   PACKAGE_MANAGER    - Package manager to use (npm, pnpm, yarn)
+#
+# Usage:
+#   generate-terraform.sh --changed-dashboards <json> --opex-version <version> [--package-manager <manager>]
+#
+# Options:
+#   --changed-dashboards <json>  JSON array of dashboard config file paths
+#   --opex-version <version>     Version of @pagopa/opex-dashboard to use
+#   --package-manager <manager>  Package manager to use (npm, pnpm, yarn) (default: npm)
+
+# Parse command-line arguments
+CHANGED_DASHBOARDS=""
+OPEX_VERSION=""
+PACKAGE_MANAGER="npm"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --changed-dashboards)
+      CHANGED_DASHBOARDS="$2"
+      shift 2
+      ;;
+    --opex-version)
+      OPEX_VERSION="$2"
+      shift 2
+      ;;
+    --package-manager)
+      PACKAGE_MANAGER="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
 
 # --- Input validation ---
 
-if [[ ! "${OPEX_VERSION}" =~ ^([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?|latest)$ ]]; then
+if [[ ! "${OPEX_VERSION}" =~ ^([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?)$ ]]; then
   echo "::error::Invalid opex_dashboard_version format: ${OPEX_VERSION}"
   exit 1
 fi
 
-if [[ "${OPEX_VERSION}" == "latest" ]]; then
-  echo "::warning::opex_dashboard_version is set to 'latest'. Pin to an explicit version to avoid supply-chain risks."
-fi
-
 # --- Determine package manager command ---
 
-case "${PACKAGE_MANAGER:-npm}" in
+case "${PACKAGE_MANAGER}" in
   pnpm) RUN_CMD="pnpm dlx" ;;
   yarn) RUN_CMD="yarn dlx" ;;
   *)    RUN_CMD="npx --yes" ;;
 esac
 
-echo "Using: ${PACKAGE_MANAGER:-npm} (${RUN_CMD})"
+echo "Using: ${PACKAGE_MANAGER} (${RUN_CMD})"
 
 # --- Parse dashboard list upfront so jq errors stop the script under set -e ---
 

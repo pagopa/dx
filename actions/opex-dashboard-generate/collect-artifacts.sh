@@ -2,15 +2,39 @@
 set -euo pipefail
 
 # Collect generated Terraform files into a staging directory for artifact upload.
-# Inputs (env vars):
-#   CHANGED_DIRS_JSON - JSON array of changed directories (from extract-directories.sh)
-#   ARTIFACTS_PATH    - Destination directory for collected files (default: .terraform-artifacts)
+#
+# Usage:
+#   collect-artifacts.sh --changed-dirs <json> [--artifacts-path <path>]
+#
+# Options:
+#   --changed-dirs <json>      JSON array of changed directories (from extract-directories.sh)
+#   --artifacts-path <path>    Destination directory for collected files (default: .terraform-artifacts)
+#
 # Output (GITHUB_OUTPUT):
 #   artifacts_path - Path to the collected artifacts directory
 
-ARTIFACTS_PATH="${ARTIFACTS_PATH:-.terraform-artifacts}"
+# Parse command-line arguments
+CHANGED_DIRS_JSON=""
+ARTIFACTS_PATH=".terraform-artifacts"
 
-if [[ -z "${CHANGED_DIRS_JSON:-}" || "${CHANGED_DIRS_JSON}" == "[]" ]]; then
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --changed-dirs)
+      CHANGED_DIRS_JSON="$2"
+      shift 2
+      ;;
+    --artifacts-path)
+      ARTIFACTS_PATH="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "${CHANGED_DIRS_JSON}" || "${CHANGED_DIRS_JSON}" == "[]" ]]; then
   echo "No directories to collect"
   exit 0
 fi
