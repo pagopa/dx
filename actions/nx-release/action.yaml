@@ -130,12 +130,27 @@ runs:
         if [[ -n "$CHANGELOGS" ]]; then
           for changelog in $CHANGELOGS; do
             if [[ -f "$changelog" ]]; then
-              PKG_NAME=$(dirname "$changelog" | xargs basename)
+              DIR=$(dirname "$changelog")
+              PKG_NAME=""
+
+              if [ -f "$DIR/package.json" ]; then
+                # Estrae il nome e rimuove lo scope (es. @pagopa/iam-ms -> iam-ms)
+                PKG_NAME=$(jq -r '.name // empty' "$DIR/package.json" | sed 's/@.*\///g')
+              fi
+
+              if [[ -z "$PKG_NAME" ]] && [ -f "$DIR/pom.xml" ]; then
+                PKG_NAME=$(grep -oP '(?<=<artifactId>)[^<]+' "$DIR/pom.xml" | head -1)
+              fi
+
+              if [[ -z "$PKG_NAME" ]]; then
+                PKG_NAME=$(basename "$DIR")
+              fi
+
               echo "Extracting new entry from $changelog..."
-              ENTRY=$(awk '/^## / { count++; if (count == 2) exit; p=1 } p { print }' "$changelog")
+              ENTRY=$(awk -v pkg="$PKG_NAME" '/^## / { if (p) exit; p=1; sub(/^## /, ""); print "### " pkg " - " $0; next } p { print }' "$changelog")
 
               if [[ -n "$ENTRY" ]]; then
-                PR_BODY="$PR_BODY"$'\n'"### $PKG_NAME"$'\n'"$ENTRY"$'\n'
+                PR_BODY="$PR_BODY"$'\n'"$ENTRY"$'\n'
               fi
             fi
           done
