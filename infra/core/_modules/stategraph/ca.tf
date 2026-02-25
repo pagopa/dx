@@ -38,8 +38,8 @@ resource "azurerm_container_app_environment" "stategraph" {
   zone_redundancy_enabled    = true
 
   workload_profile {
-    maximum_count         = 0
-    minimum_count         = 0
+    maximum_count         = 1
+    minimum_count         = 1
     name                  = "Consumption"
     workload_profile_type = "Consumption"
   }

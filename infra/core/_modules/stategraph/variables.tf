@@ -35,6 +35,8 @@ variable "vnet" {
     name                = string
     resource_group_name = string
   })
+
+  description = "Virtual network configuration where the Stategraph resources will be deployed."
 }
 
 variable "pep_subnet_id" {
