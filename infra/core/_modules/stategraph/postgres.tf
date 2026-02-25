@@ -3,6 +3,15 @@ resource "dx_available_subnet_cidr" "psql_subnet_cidr" {
   prefix_length      = 24
 }
 
+ephemeral "random_password" "psql" {
+  length      = 16
+  special     = true
+  min_lower   = 1
+  min_upper   = 1
+  min_numeric = 1
+  min_special = 1
+}
+
 resource "azurerm_subnet" "stategraph_psql" {
   name = provider::dx::resource_name(merge(var.environment, {
     resource_type = "subnet",
@@ -25,7 +34,6 @@ resource "azurerm_subnet" "stategraph_psql" {
   }
 }
 
-# manually enable the extension "azure.extensions"
 #trivy:ignore:AZU-0019
 #trivy:ignore:AZU-0021
 #trivy:ignore:AZU-0024
@@ -61,12 +69,11 @@ resource "azurerm_postgresql_flexible_server" "stategraph" {
     active_directory_auth_enabled = true
     password_auth_enabled         = true
     tenant_id                     = var.tenant_id
-
   }
 
   administrator_login               = "stategraph"
-  administrator_password_wo         = "123456789"
-  administrator_password_wo_version = 0
+  administrator_password_wo         = ephemeral.random_password.psql.result
+  administrator_password_wo_version = 1
 
   tags = var.tags
 }
@@ -82,28 +89,51 @@ resource "azurerm_postgresql_flexible_server_active_directory_administrator" "ad
   principal_type      = "User"
 }
 
-resource "azurerm_private_endpoint" "psql_stategraph" {
+resource "azurerm_postgresql_flexible_server_configuration" "azure_extensions" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.stategraph.id
+  value     = "PGCRYPTO"
+}
+
+resource "azurerm_network_security_group" "psql" {
   name = provider::dx::resource_name(merge(var.environment, {
-    resource_type = "postgre_private_endpoint",
+    resource_type = "network_security_group",
+    app_name      = "stategraph-psql"
   }))
   resource_group_name = var.resource_group_name
   location            = var.environment.location
-  subnet_id           = var.pep_subnet_id
-
-  private_service_connection {
-    name = provider::dx::resource_name(merge(var.environment, {
-      resource_type = "postgre_private_endpoint",
-    }))
-    private_connection_resource_id = azurerm_postgresql_flexible_server.stategraph.id
-    is_manual_connection           = false
-    subresource_names              = ["postgresqlServer"]
-  }
-
-  private_dns_zone_group {
-    name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [var.postgres_dns_zone_id]
-  }
 
   tags = var.tags
 }
 
+resource "azurerm_network_security_rule" "allow_inbound_ca_to_psql" {
+  name                       = "AllowAccessFromCA"
+  access                     = "Allow"
+  description                = "Allow Stategraph container to access PostgreSQL server"
+  priority                   = 100
+  direction                  = "Inbound"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  source_address_prefix      = dx_available_subnet_cidr.cae_subnet_cidr.cidr_block
+  destination_port_range     = "5432"
+  destination_address_prefix = dx_available_subnet_cidr.psql_subnet_cidr.cidr_block
+
+  network_security_group_name = azurerm_network_security_group.psql.name
+  resource_group_name         = var.resource_group_name
+}
+
+resource "azurerm_network_security_rule" "deny_inbound_all_to_psql" {
+  name                       = "DenyAllInbound"
+  access                     = "Deny"
+  description                = "Deny all inbound traffic"
+  priority                   = 200
+  direction                  = "Inbound"
+  protocol                   = "*"
+  source_port_range          = "*"
+  source_address_prefix      = "*"
+  destination_port_range     = "*"
+  destination_address_prefix = "*"
+
+  network_security_group_name = azurerm_network_security_group.psql.name
+  resource_group_name         = var.resource_group_name
+}

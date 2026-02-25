@@ -147,6 +147,10 @@ resource "azurerm_container_app" "stategraph" {
     }
   }
 
+  depends_on = [
+    azurerm_key_vault_secret.stategraph_postgres_password
+  ]
+
   tags = var.tags
 }
 
