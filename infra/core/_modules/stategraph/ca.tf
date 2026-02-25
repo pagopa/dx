@@ -44,6 +44,13 @@ resource "azurerm_container_app_environment" "stategraph" {
     workload_profile_type = "Consumption"
   }
 
+  lifecycle {
+    ignore_changes = [
+      infrastructure_resource_group_name,
+      workload_profile,
+    ]
+  }
+
   tags = var.tags
 }
 
@@ -74,7 +81,8 @@ resource "azurerm_private_endpoint" "cae_stategraph" {
 
 resource "azurerm_container_app" "stategraph" {
   name = provider::dx::resource_name(merge(var.environment, {
-    resource_type = "container_app",
+    resource_type   = "container_app",
+    instance_number = "02"
   }))
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -122,18 +130,20 @@ resource "azurerm_container_app" "stategraph" {
       }
 
       liveness_probe {
-        initial_delay    = 10
-        interval_seconds = 10
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 5
+        interval_seconds        = 10
+        failure_count_threshold = 3
+        path                    = "/health/live"
+        port                    = 8080
+        transport               = "HTTP"
       }
       readiness_probe {
-        initial_delay    = 5
-        interval_seconds = 5
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 10
+        interval_seconds        = 10
+        failure_count_threshold = 10
+        path                    = "/health/ready"
+        port                    = 8080
+        transport               = "HTTP"
       }
     }
   }
@@ -145,6 +155,10 @@ resource "azurerm_container_app" "stategraph" {
       key_vault_secret_id = "https://${var.key_vault.name}.vault.azure.net/secrets/${lower(replace(secret.value, "_", "-"))}"
       identity            = "System"
     }
+  }
+
+  lifecycle {
+    ignore_changes = [workload_profile_name]
   }
 
   depends_on = [

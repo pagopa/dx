@@ -10,7 +10,6 @@ locals {
   }
 
   environment_secrets = [
-    "DB_PASS",    # TODO: create secret
-    "LICENSE_KEY" # TODO: create secret
+    "DB_PASS",
   ]
 }

@@ -4,6 +4,8 @@ resource "azurerm_resource_group" "stategraph" {
     app_name      = "stategraph"
   }))
   location = local.azure_environment.location
+
+  tags = local.tags
 }
 
 module "stategraph" {
