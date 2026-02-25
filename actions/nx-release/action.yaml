@@ -134,7 +134,6 @@ runs:
               PKG_NAME=""
 
               if [ -f "$DIR/package.json" ]; then
-                # Estrae il nome e rimuove lo scope (es. @pagopa/iam-ms -> iam-ms)
                 PKG_NAME=$(jq -r '.name // empty' "$DIR/package.json" | sed 's/@.*\///g')
               fi
 
