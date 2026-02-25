@@ -11,6 +11,7 @@ This action automates the Nx release flow in two phases:
 **Trigger**: When `.nx/version-plans/**` files are added or modified on the main branch.
 
 **Actions**:
+
 1. Detects new or modified version plan files
 2. Checks out to `changeset-release/main` branch
 3. Runs `nx release version --no-commit` to:
@@ -27,6 +28,7 @@ This action automates the Nx release flow in two phases:
 **Trigger**: When version plan files are deleted and version bumps are detected on main (PR merge).
 
 **Actions**:
+
 1. Runs `npx nx release publish --yes` to:
    - Build and publish packages to npm
    - Create git tags for each package
@@ -34,22 +36,22 @@ This action automates the Nx release flow in two phases:
 
 ## Inputs
 
-| Input | Description | Default | Required |
-| --- | --- | --- | --- |
-| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}` | false |
-| `base-branch` | Base branch where release flow runs | `main` | false |
-| `release-branch` | Branch used for Version Packages PR | `changeset-release/main` | false |
-| `pr-title` | Title for the release pull request | `chore: Release (Version Packages)` | false |
-| `commit-message` | Commit message for generated version bumps | `chore: version packages` | false |
+| Input            | Description                                                              | Default                             | Required |
+| ---------------- | ------------------------------------------------------------------------ | ----------------------------------- | -------- |
+| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}`               | false    |
+| `base-branch`    | Base branch where release flow runs                                      | `main`                              | false    |
+| `release-branch` | Branch used for Version Packages PR                                      | `changeset-release/main`            | false    |
+| `pr-title`       | Title for the release pull request                                       | `chore: Release (Version Packages)` | false    |
+| `commit-message` | Commit message for generated version bumps                               | `chore: version packages`           | false    |
 
 ## Outputs
 
-| Output | Description |
-| --- | --- |
-| `mode` | Detected mode: `create-pr`, `publish`, or `noop` |
-| `pull-request-number` | PR number created/updated for Version Packages |
-| `pull-request-url` | PR URL created/updated for Version Packages |
-| `published` | Whether publish command ran successfully (`true` or `false`) |
+| Output                | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| `mode`                | Detected mode: `create-pr`, `publish`, or `noop`             |
+| `pull-request-number` | PR number created/updated for Version Packages               |
+| `pull-request-url`    | PR URL created/updated for Version Packages                  |
+| `published`           | Whether publish command ran successfully (`true` or `false`) |
 
 ## Prerequisites
 
@@ -86,7 +88,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - run: corepack enable && corepack prepare pnpm@10.30.0 --activate
       - run: pnpm install --frozen-lockfile

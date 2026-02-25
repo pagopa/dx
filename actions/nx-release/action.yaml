@@ -76,7 +76,6 @@ runs:
         fi
 
     - name: Configure Git user
-      if: steps.intent.outputs.mode == 'create-pr'
       shell: bash
       run: |
         git config user.name "dx-pagopa-bot"
@@ -131,25 +130,19 @@ runs:
         )
 
         # Extract modified CHANGELOG.md files and include versions
-        # Use git diff HEAD to see changes after commit
-        CHANGELOGS=$(git diff HEAD~1 --name-only | grep CHANGELOG.md || true)
+        CHANGELOGS=$(git diff --name-only | grep "CHANGELOG.md" || true)
         if [[ -n "$CHANGELOGS" ]]; then
           for changelog in $CHANGELOGS; do
             if [[ -f "$changelog" ]]; then
-              # Extract from first ## heading until the next ## heading or end of file
-              # This captures the first release entry completely
-              SECTION=$(sed -n '/^## /,/^## /p' "$changelog" | head -n -1)
-              if [[ -z "$SECTION" ]]; then
-                # Fallback: if pattern doesn't match, take first 50 lines
-                SECTION=$(head -50 "$changelog")
-              fi
-              if [[ -n "$SECTION" ]]; then
-                PR_BODY="$PR_BODY"$'\n'"$SECTION"$'\n'
+              echo "Extracting new entry from $changelog..."
+              NEW_ENTRY=$(awk '/^## / { if (p) { exit }; p=1; print; next } p { print }' "$changelog")
+              if [[ -n "$NEW_ENTRY" ]]; then
+                PR_BODY="$PR_BODY"$'\n'"$NEW_ENTRY"$'\n'
               fi
             fi
           done
         else
-          PR_BODY="$PR_BODY"$'\n'"See individual package CHANGELOGs for details."$'\n'
+          PR_BODY="$PR_BODY"$'\n'"No changelog changes detected (version bump only)."
         fi
 
         # Create or update PR
@@ -168,84 +161,78 @@ runs:
         echo "pull-request-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
-    - name: Configure Git user for publish
-      if: steps.intent.outputs.mode == 'publish'
-      shell: bash
-      run: |
-        git config user.name "dx-pagopa-bot"
-        git config user.email "dx-pagopa-bot@pagopa.it"
-
-    - name: Create and push git tags
+    - name: Create Git Tags and GitHub Releases
       if: steps.intent.outputs.mode == 'publish'
       id: tags
       shell: bash
       run: |
         set -euo pipefail
 
-        echo "::notice::Creating git tags for published packages"
+        echo "::notice::Creating tags and releases for published packages"
 
         TAGS_CREATED=""
 
-        # Process package.json files
-        while IFS= read -r pkg_file; do
-          if [[ ! -f "$pkg_file" ]]; then
-            continue
+        # Support function to create GitHub release with proper handling of pre-releases and idempotency
+        create_release() {
+          local name=$1
+          local version=$2
+          local tag_name="${name}@v${version}"
+
+          # Prerelease check (es: 1.0.0-rc.1)
+          local prerelease_flag=""
+          if [[ "$version" == *"-"* ]]; then
+            prerelease_flag="--prerelease"
+            echo "::notice::Detected Prerelease version: $version"
           fi
 
-          # Extract package name and version from package.json
+          # Verify if tag already exists
+          if git rev-parse "$tag_name" >/dev/null 2>&1; then
+            echo "::notice::Tag $tag_name already exists, skipping"
+            return
+          fi
+
+          echo "::notice::Creating Release & Tag: $tag_name (Pre-release: ${prerelease_flag:-false})"
+
+          # Create GitHub release
+          gh release create "$tag_name" \
+            --title "$tag_name" \
+            --generate-notes \
+            $prerelease_flag
+
+          TAGS_CREATED="$TAGS_CREATED $tag_name"
+        }
+
+        # --- PROCESS PACKAGE.JSON ---
+        while IFS= read -r pkg_file; do
+          if [[ ! -f "$pkg_file" ]]; then continue; fi
+
           PKG_NAME=$(jq -r '.name // empty' "$pkg_file" 2>/dev/null | sed 's/@.*\///g')
           PKG_VERSION=$(jq -r '.version // empty' "$pkg_file" 2>/dev/null)
 
-          if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" || "$PKG_VERSION" == "null" ]]; then
-            continue
-          fi
+          if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" || "$PKG_VERSION" == "null" ]]; then continue; fi
 
-          TAG_NAME="${PKG_NAME}-v${PKG_VERSION}"
+          create_release "$PKG_NAME" "$PKG_VERSION"
 
-          # Check if tag already exists
-          if git rev-parse "$TAG_NAME" 2>/dev/null; then
-            echo "::notice::Tag $TAG_NAME already exists, skipping"
-            continue
-          fi
-
-          echo "::notice::Creating tag: $TAG_NAME (from package.json)"
-          git tag "$TAG_NAME" -m "Release $PKG_NAME v$PKG_VERSION"
-          TAGS_CREATED="$TAGS_CREATED $TAG_NAME"
         done < <(git diff HEAD~1 --name-only | grep -E 'package\.json$' || true)
 
-        # Process pom.xml files
+        # --- PROCESS POM.XML ---
         while IFS= read -r pom_file; do
-          if [[ ! -f "$pom_file" ]]; then
-            continue
-          fi
+          if [[ ! -f "$pom_file" ]]; then continue; fi
 
-          # Extract artifactId and version from pom.xml
           PKG_NAME=$(grep -oP '(?<=<artifactId>)[^<]+' "$pom_file" | head -1)
           PKG_VERSION=$(grep -oP '(?<=<version>)[^<]+' "$pom_file" | head -1)
 
-          if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" ]]; then
-            continue
-          fi
+          if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" ]]; then continue; fi
 
-          TAG_NAME="${PKG_NAME}-v${PKG_VERSION}"
+          create_release "$PKG_NAME" "$PKG_VERSION"
 
-          # Check if tag already exists
-          if git rev-parse "$TAG_NAME" 2>/dev/null; then
-            echo "::notice::Tag $TAG_NAME already exists, skipping"
-            continue
-          fi
-
-          echo "::notice::Creating tag: $TAG_NAME (from pom.xml)"
-          git tag "$TAG_NAME" -m "Release $PKG_NAME v$PKG_VERSION"
-          TAGS_CREATED="$TAGS_CREATED $TAG_NAME"
         done < <(git diff HEAD~1 --name-only | grep -E 'pom\.xml$' || true)
 
+        # Output
         if [[ -n "$TAGS_CREATED" ]]; then
-          echo "::notice::Pushing tags: $TAGS_CREATED"
-          git push origin --tags
           echo "tags=$TAGS_CREATED" >> "$GITHUB_OUTPUT"
         else
-          echo "::notice::No new tags to push (already exist or no package.json/pom.xml changes detected)"
+          echo "::notice::No new tags created."
           echo "tags=" >> "$GITHUB_OUTPUT"
         fi
 
@@ -259,6 +246,10 @@ runs:
       run: |
         set -euo pipefail
         echo "::notice::Executing nx release publish"
+
+        npx nx run-many --target=build --projects=tag:npm:public
+
         npx nx release publish
+
         echo "published=true" >> "$GITHUB_OUTPUT"
 
