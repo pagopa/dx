@@ -130,10 +130,12 @@ runs:
         if [[ -n "$CHANGELOGS" ]]; then
           for changelog in $CHANGELOGS; do
             if [[ -f "$changelog" ]]; then
+              PKG_NAME=$(dirname "$changelog" | xargs basename)
               echo "Extracting new entry from $changelog..."
-              NEW_ENTRY=$(awk '/^## / { if (p) { exit }; p=1; print; next } p { print }' "$changelog")
-              if [[ -n "$NEW_ENTRY" ]]; then
-                PR_BODY="$PR_BODY"$'\n'"$NEW_ENTRY"$'\n'
+              ENTRY=$(awk '/^## / { count++; if (count == 2) exit; p=1 } p { print }' "$changelog")
+
+              if [[ -n "$ENTRY" ]]; then
+                PR_BODY="$PR_BODY"$'\n'"### $PKG_NAME"$'\n'"$ENTRY"$'\n'
               fi
             fi
           done
