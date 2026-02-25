@@ -49,7 +49,7 @@ variable "postgres_dns_zone_id" {
 
 variable "cae_dns_zone_id" {
   type        = string
-  description = "The ID of the private DNS zone for PostgreSQL flexible server."
+  description = "The ID of the private DNS zone for Container App Environment."
 }
 
 variable "tenant_id" {

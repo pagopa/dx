@@ -9,11 +9,11 @@ data "azuread_users" "admin_members" {
 }
 
 data "azurerm_private_dns_zone" "postgres" {
-  name                = module.azure.private_dns_zones[1]
+  name                = one([for zone in module.azure.private_dns_zones : zone if can(regex("postgres.database", zone))])
   resource_group_name = module.azure.network_resource_group_name
 }
 
 data "azurerm_private_dns_zone" "cae" {
-  name                = module.azure.private_dns_zones[14]
+  name                = one([for zone in module.azure.private_dns_zones : zone if can(regex("${local.azure_environment.location}.azurecontainerapps", zone))])
   resource_group_name = module.azure.network_resource_group_name
 }

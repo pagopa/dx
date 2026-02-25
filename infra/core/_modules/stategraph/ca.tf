@@ -3,7 +3,7 @@ resource "dx_available_subnet_cidr" "cae_subnet_cidr" {
   prefix_length      = 27
 }
 
-resource "azurerm_subnet" "staegraph_cae" {
+resource "azurerm_subnet" "stategraph_cae" {
   name = provider::dx::resource_name(merge(var.environment, {
     resource_type = "container_app_subnet",
   }))
@@ -30,7 +30,7 @@ resource "azurerm_container_app_environment" "stategraph" {
 
   identity { type = "SystemAssigned" }
 
-  infrastructure_subnet_id       = azurerm_subnet.staegraph_cae.id
+  infrastructure_subnet_id       = azurerm_subnet.stategraph_cae.id
   internal_load_balancer_enabled = false
   public_network_access          = "Disabled"
 
@@ -100,7 +100,7 @@ resource "azurerm_container_app" "stategraph" {
     }
 
     container {
-      image  = "ghcr.io/stategraph/stategraph-server:latest"
+      image  = "ghcr.io/stategraph/stategraph-server:0.1.25"
       cpu    = 1
       memory = "2Gi"
       name   = "stategraph"

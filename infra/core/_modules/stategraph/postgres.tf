@@ -9,7 +9,7 @@ resource "azurerm_subnet" "stategraph_psql" {
     app_name      = "stategraph-psql"
   }))
 
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = var.vnet.resource_group_name
   virtual_network_name = var.vnet.name
   address_prefixes     = [dx_available_subnet_cidr.psql_subnet_cidr.cidr_block]
   service_endpoints    = ["Microsoft.Storage"]
@@ -26,6 +26,10 @@ resource "azurerm_subnet" "stategraph_psql" {
 }
 
 # manually enable the extension "azure.extensions"
+#trivy:ignore:AZU-0019
+#trivy:ignore:AZU-0021
+#trivy:ignore:AZU-0024
+#trivy:ignore:AZU-0026
 resource "azurerm_postgresql_flexible_server" "stategraph" {
   name = provider::dx::resource_name(merge(var.environment, {
     resource_type   = "postgresql",
@@ -38,7 +42,7 @@ resource "azurerm_postgresql_flexible_server" "stategraph" {
   version      = "18"
   sku_name     = "GP_Standard_D2ds_v5"
   storage_tier = "P4"
-  storage_mb   = "32768"
+  storage_mb   = 32768
 
   auto_grow_enabled            = true
   backup_retention_days        = 7

@@ -9,6 +9,10 @@ resource "azurerm_resource_group" "stategraph" {
 module "stategraph" {
   source = "../_modules/stategraph"
 
+  providers = {
+    dx = azuredx
+  }
+
   environment         = merge(local.azure_environment, { app_name = "stategraph" })
   resource_group_name = azurerm_resource_group.stategraph.name
 

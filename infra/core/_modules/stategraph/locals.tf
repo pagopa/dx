@@ -1,6 +1,6 @@
 locals {
   environment_variables = {
-    "DB_HOST"                        = "",
+    "DB_HOST"                        = azurerm_postgresql_flexible_server.stategraph.fqdn,
     "DB_PORT"                        = "5432"
     "DB_USER"                        = "stategraph",
     "DB_NAME"                        = "stategraph",
