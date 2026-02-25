@@ -14,6 +14,14 @@ resource "azurerm_container_app_environment" "cae" {
   infrastructure_subnet_id       = var.runner_snet
   zone_redundancy_enabled        = false
   internal_load_balancer_enabled = false
+  public_network_access          = "Disabled"
+
+  workload_profile {
+    maximum_count         = 1
+    minimum_count         = 1
+    name                  = "Consumption"
+    workload_profile_type = "Consumption"
+  }
 
   tags = var.tags
 }
