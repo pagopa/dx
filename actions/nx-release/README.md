@@ -13,14 +13,14 @@ This action automates the Nx release flow in two phases:
 **Actions**:
 
 1. Detects new or modified version plan files
-2. Checks out to `changeset-release/main` branch
-3. Runs `nx release version --no-commit` to:
+2. Checks out to `nx-release/main` branch
+3. Runs `npx nx release --skip-publish` to:
    - Consume version plans
    - Generate or update version bumps in `package.json`/`pom.xml`
    - Generate or update `CHANGELOG.md` files
    - Remove `.nx/version-plans/**` files
-4. Commits all changes with message `chore: version packages`
-5. Creates or updates PR with title `chore: Release (Version Packages)`
+4. Commits all changes
+5. Creates or updates PR with title `Version Packages`
 6. PR body includes extracted release notes from changelogs
 
 ### Phase 2: Publish Release
@@ -29,20 +29,20 @@ This action automates the Nx release flow in two phases:
 
 **Actions**:
 
-1. Runs `npx nx release publish --yes` to:
+1. Runs `npx nx release publish` to:
+   - Create git tags and github release for each package
    - Build and publish packages to npm
-   - Create git tags for each package
    - Ensure npm provenance is enabled
 
 ## Inputs
 
-| Input            | Description                                                              | Default                             | Required |
-| ---------------- | ------------------------------------------------------------------------ | ----------------------------------- | -------- |
-| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}`               | false    |
-| `base-branch`    | Base branch where release flow runs                                      | `main`                              | false    |
-| `release-branch` | Branch used for Version Packages PR                                      | `changeset-release/main`            | false    |
-| `pr-title`       | Title for the release pull request                                       | `chore: Release (Version Packages)` | false    |
-| `commit-message` | Commit message for generated version bumps                               | `chore: version packages`           | false    |
+| Input            | Description                                                              | Default                   | Required |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------- | -------- |
+| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}`     | false    |
+| `base-branch`    | Base branch where release flow runs                                      | `main`                    | false    |
+| `release-branch` | Branch used for Version Packages PR                                      | `nx-release/main`         | false    |
+| `pr-title`       | Title for the release pull request                                       | `Version Packages`        | false    |
+| `commit-message` | Commit message for generated version bumps                               | `chore: version packages` | false    |
 
 ## Outputs
 
@@ -96,27 +96,9 @@ jobs:
       - uses: pagopa/dx/.github/actions/nx-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
 ```
 
 ## Behavior
-
-### When version plans are pushed
-
-1. Action detects added/modified `.nx/version-plans/**` files
-2. Executes `nx release version --no-commit`
-3. Creates or updates PR on `changeset-release/main` with all changes:
-   - Version bumps
-   - Changelog entries
-   - Consumed version plans (deleted)
-
-### When PR is merged
-
-1. Action detects consumed version plans + version bumps
-2. Executes `nx release publish`
-3. Publishes packages to npm with git tags
 
 ### No action needed
 
@@ -124,7 +106,6 @@ If no version plans or no version changes are detected, action exits cleanly wit
 
 ## Compatibility
 
-- ✅ Works alongside Changesets (Changesets takes priority if both are configured)
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
 - ✅ npm provenance enabled by default
@@ -135,7 +116,7 @@ If no version plans or no version changes are detected, action exits cleanly wit
 
 - Ensure `.nx/version-plans/` directory exists
 - Verify `gh` CLI has authentication; check GITHUB_TOKEN is set
-- Check that version plans produce actual version changes (run `nx release version --dry-run`)
+- Check that version plans produce actual version changes (run `nx release --dry-run`)
 
 ### Publish fails
 
@@ -146,7 +127,7 @@ If no version plans or no version changes are detected, action exits cleanly wit
 ### Duplicate PRs or releases
 
 - Re-run workflow on the same commit should detect and skip
-- If issues persist, manually review branch `changeset-release/main` and tags
+- If issues persist, manually review branch `nx-release/main` and tags
 
 ---
 

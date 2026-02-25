@@ -13,7 +13,7 @@ inputs:
   release-branch:
     description: "Branch used for Version Packages PR"
     required: false
-    default: "changeset-release/main"
+    default: "nx-release/main"
   pr-title:
     description: "Title for the release pull request"
     required: false
