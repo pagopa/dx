@@ -10,6 +10,10 @@ This action automates the Nx release flow in two phases:
 
 **Trigger**: When `.nx/version-plans/**` files are added or modified on the main branch.
 
+> [!TIP]
+> To generate version plan files, you can use `npx nx release plan` command in your local environment.
+> E.g. `npx nx release plan --projects="@pagopa/package-name" --only-touched=false`
+
 **Actions**:
 
 1. Detects new or modified version plan files
