@@ -181,6 +181,8 @@ runs:
     - name: Create Git Tags and GitHub Releases
       if: steps.intent.outputs.mode == 'publish'
       id: tags
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       shell: bash
       run: |
         set -euo pipefail
@@ -189,31 +191,60 @@ runs:
 
         TAGS_CREATED=""
 
-        # Support function to create GitHub release with proper handling of pre-releases and idempotency
+        # --- Function for changelog note extraction ---
+        extract_notes() {
+          local file_path=$1
+          local version=$2
+          local dir_path=$(dirname "$file_path")
+          local changelog="$dir_path/CHANGELOG.md"
+          local notes_file="release_notes_tmp.md"
+
+          echo "" > "$notes_file"
+
+          if [[ -f "$changelog" ]]; then
+            echo "::notice::Extracting changelog for version $version from $changelog"
+
+            awk -v ver="$version" '
+              /^## / {
+                if ($0 ~ "^## \\[?" ver) {
+                  p=1; print; next
+                }
+                if (p) exit
+              }
+              p { print }
+            ' "$changelog" > "$notes_file"
+          else
+            echo "Release $version" > "$notes_file"
+          fi
+        }
+
+        # --- Function for release creation ---
         create_release() {
           local name=$1
           local version=$2
-          local tag_name="${name}@v${version}"
+          local source_file=$3 # package.json o pom.xml per trovare il changelog
 
-          # Prerelease check (es: 1.0.0-rc.1)
+          local tag_name="${name}@v${version}" # Formato tag standard
+
+          # Controllo Prerelease
           local prerelease_flag=""
           if [[ "$version" == *"-"* ]]; then
             prerelease_flag="--prerelease"
-            echo "::notice::Detected Prerelease version: $version"
           fi
 
-          # Verify if tag already exists
           if git rev-parse "$tag_name" >/dev/null 2>&1; then
             echo "::notice::Tag $tag_name already exists, skipping"
             return
           fi
 
-          echo "::notice::Creating Release & Tag: $tag_name (Pre-release: ${prerelease_flag:-false})"
+          # 1. Prepara le note
+          extract_notes "$source_file" "$version"
 
-          # Create GitHub release
+          echo "::notice::Creating Release & Tag: $tag_name"
+
           gh release create "$tag_name" \
             --title "$tag_name" \
-            --generate-notes \
+            --notes-file "release_notes_tmp.md" \
             $prerelease_flag
 
           TAGS_CREATED="$TAGS_CREATED $tag_name"
@@ -228,7 +259,7 @@ runs:
 
           if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" || "$PKG_VERSION" == "null" ]]; then continue; fi
 
-          create_release "$PKG_NAME" "$PKG_VERSION"
+          create_release "$PKG_NAME" "$PKG_VERSION" "$pkg_file"
 
         done < <(git diff HEAD~1 --name-only | grep -E 'package\.json$' || true)
 
@@ -241,15 +272,16 @@ runs:
 
           if [[ -z "$PKG_NAME" || -z "$PKG_VERSION" ]]; then continue; fi
 
-          create_release "$PKG_NAME" "$PKG_VERSION"
+          create_release "$PKG_NAME" "$PKG_VERSION" "$pom_file"
 
         done < <(git diff HEAD~1 --name-only | grep -E 'pom\.xml$' || true)
 
-        # Output
+        # Clean up
+        rm -f release_notes_tmp.md
+
         if [[ -n "$TAGS_CREATED" ]]; then
           echo "tags=$TAGS_CREATED" >> "$GITHUB_OUTPUT"
         else
-          echo "::notice::No new tags created."
           echo "tags=" >> "$GITHUB_OUTPUT"
         fi
 
